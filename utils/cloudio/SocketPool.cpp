@@ -64,13 +64,6 @@ SocketPool::SocketPool()
         log(logging::LOG_TYPE_CRITICAL, os.str());
         maxSockets = defaultSockets;
     }
-    clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
-    if (clientSocket < 0) 
-    {
-        char buf[80], *ptr;
-        ptr = strerror_r(errno, buf, 80);
-        throw runtime_error("SocketPool(): Failed to get clientSocket, got " + string(ptr));
-    }
 }
 
 SocketPool::~SocketPool()
@@ -79,12 +72,12 @@ SocketPool::~SocketPool()
 
     for (uint i = 0; i < allSockets.size(); i++)
         ::close(allSockets[i]);
-    ::close(clientSocket);
 }
 
 #define sm_check_error \
     if (err < 0) \
     { \
+        cout << "SP: got an error on the socket" << endl; \
         returnSocket(sock); \
         return -1; \
     }
@@ -109,49 +102,63 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
         count += err;
         in.advance(err);
     }
+    //cout << "SP sent the msg" << endl;
     
     out->restart();
     uint8_t *outbuf;
     uint8_t window[8192];
-    bool foundHeader = false;
     length = 0;
     uint remainingBytes = 0;
     uint i;
     
-    /* TODO: consider adding timeouts on msg recv if we start using tcp sockets */
-    while (!foundHeader)
+    while (1)
     {
         // here remainingBytes means the # of bytes from the previous message
         err = ::read(sock, &window[remainingBytes], 8192 - remainingBytes);
         sm_check_error;
+        if (err == 0)
+        {
+            remoteClosed(sock);
+            // TODO, a retry loop
+            return -1;
+        }
         uint endOfData = remainingBytes + err;   // for clarity
         
         // scan for the 8-byte header.  If it is fragmented, move the fragment to the front of the buffer
         // for the next iteration to handle.
-        for (i = 0; i <= endOfData - 8 && !foundHeader; i++)
+        
+        if (endOfData < 8)
+        {
+            remainingBytes = endOfData;
+            continue;
+        }
+        
+        for (i = 0; i <= endOfData - 8; i++)
         {
             if (*((uint *) &window[i]) == storagemanager::SM_MSG_START)
             {
                 length = *((uint *) &window[i+4]);
-                foundHeader = true;
+                break;
             }
         }
         
-        if (!foundHeader)
+        if (length == 0)    // didn't find the header yet
         {
+            // i == endOfData - 7 here
             remainingBytes = endOfData - i;
-            if (i != 0)
-                memmove(window, &window[i], remainingBytes);
-            else
-                continue;   // if i == 0, then the read was too short to see the whole header, do another read().
+            memmove(window, &window[i], remainingBytes);
         }
         else
         {
+            // i == first byte of the header here
             // copy the payload fragment we got into the output bytestream
+            uint startOfPayload = i + 8;   // for clarity
             out->needAtLeast(length);
             outbuf = out->getInputPtr();
-            memcpy(outbuf, &window[i+8], endOfData - (i+8));
-            remainingBytes = length - (endOfData - (i+8));    // remainingBytes is now the # of bytes left to read
+            memcpy(outbuf, &window[startOfPayload], endOfData - startOfPayload);
+            remainingBytes = length - (endOfData - startOfPayload);    // remainingBytes is now the # of bytes left to read
+            out->advanceInputPtr(endOfData - startOfPayload);
+            break;   // done looking for the header, can fill the output buffer directly now.
         }
     }
     
@@ -170,7 +177,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
 int SocketPool::getSocket()
 {
     boost::mutex::scoped_lock lock(mutex);
-    int ret;
+    int clientSocket;
     
     if (freeSockets.size() == 0 && allSockets.size() < maxSockets)
     {
@@ -178,29 +185,31 @@ int SocketPool::getSocket()
         struct sockaddr_un addr;
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
-        strcpy(&addr.sun_path[0], storagemanager::socket_name);
-        ret = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
-        if (ret >= 0)
-            allSockets.push_back(ret);
+        strcpy(&addr.sun_path[1], &storagemanager::socket_name[1]);   // first char is null...
+        clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        int err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
+        if (err >= 0)
+            allSockets.push_back(clientSocket);
         else
         {
             int saved_errno = errno;
             ostringstream os;
             char buf[80];
             os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80);
+            cout << os.str() << endl;
             log(logging::LOG_TYPE_CRITICAL, os.str());
             errno = saved_errno;
         }
-        return ret;
+        return clientSocket;
     }
     
     // wait for a socket to become free
     while (freeSockets.size() == 0)
         socketAvailable.wait(lock);
     
-    ret = freeSockets.front();
+    clientSocket = freeSockets.front();
     freeSockets.pop_front();
-    return ret;
+    return clientSocket;
 }
     
 void SocketPool::returnSocket(const int sock)
@@ -209,5 +218,18 @@ void SocketPool::returnSocket(const int sock)
     freeSockets.push_back(sock);
     socketAvailable.notify_one();
 }
+
+void SocketPool::remoteClosed(const int sock)
+{
+    boost::mutex::scoped_lock lock(mutex);
+    ::close(sock);
+    for (vector<int>::iterator i = allSockets.begin(); i != allSockets.end(); ++i)
+        if (*i == sock)
+        {
+            allSockets.erase(i, i+1);
+            break;
+        }
+}
+
 
 }

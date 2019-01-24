@@ -42,14 +42,15 @@ class SocketPool : public boost::noncopyable
     private:
         int getSocket();
         void returnSocket(const int sock);
+        void remoteClosed(const int sock);
         
         std::vector<int> allSockets;
         std::deque<int> freeSockets;
         boost::mutex mutex;
         boost::condition_variable socketAvailable;
-        int clientSocket;
         uint maxSockets;
         static const uint defaultSockets = 20;
+        
 };
 
 }

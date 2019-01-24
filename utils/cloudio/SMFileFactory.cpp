@@ -90,7 +90,7 @@ IDBDataFile* SMFileFactory::open(const char *filename, const char *mode, unsigne
     SMComm *comm = SMComm::get();
     struct stat _stat;
     int err = comm->open(filename, posix_flags, &_stat);
-    if (!err)
+    if (err)
         return NULL;
         
     SMDataFile *ret = new SMDataFile(filename, posix_flags, _stat);

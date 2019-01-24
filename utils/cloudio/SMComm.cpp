@@ -85,7 +85,7 @@ int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
-    
+        
     check_for_error(command, response, err);
     memcpy(statbuf, response->buf(), sizeof(*statbuf));
     common_exit(command, response, err);
