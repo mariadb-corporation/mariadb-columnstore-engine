@@ -45,7 +45,7 @@ off64_t SMFileSystem::size(const char *filename) const
     
     SMComm *smComm = SMComm::get();
     int err = smComm->stat(filename, &_stat);
-    if (!err)
+    if (err)
         return err;
     
     return _stat.st_size;

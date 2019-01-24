@@ -87,7 +87,7 @@ void error_server_thread()
                 continue;
             }
             else {
-                char errbuf[80];
+                //char errbuf[80];
                 //cout << "server thread got an error: " << strerror_r(errno, errbuf, 80) << endl;
                 close(client_socket);
                 errCode = -1;
@@ -151,6 +151,15 @@ int test1()
     }
     assert(gotException && !die);
     
+    cout << "rename" << endl;
+    try {
+        filesystem.rename("dummy1", "dummy2");
+    }
+    catch (NotImplementedYet &) {
+        gotException = true;
+    }
+    assert(gotException && !die);
+    
     cout << "exists" << endl;
     err = filesystem.exists("dummy");
     assert(!err);
@@ -167,6 +176,18 @@ int test1()
     list<string> filenames;
     err = filesystem.listDirectory("dummy", filenames);
     assert(err == -1 && filenames.empty() && !die);
+    
+    cout << "remove" << endl;
+    err = filesystem.remove("dummy");
+    assert(err == -1 && !die);
+    
+    cout << "size" << endl;
+    err = filesystem.size("dummy");
+    assert(err == -1 && !die);
+    
+    cout << "mkdir" << endl;
+    err = filesystem.mkdir("dummy");
+    assert(err == 0 && !die);
     
     // done, return errCode
     die = true;
