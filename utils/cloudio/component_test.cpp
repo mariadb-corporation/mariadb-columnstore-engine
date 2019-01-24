@@ -20,8 +20,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+<<<<<<< HEAD
 #include <sys/stat.h>
 #include <fcntl.h>
+=======
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
 #include <boost/thread.hpp>
 #include <unistd.h>
 #include <list>
@@ -89,7 +92,11 @@ void error_server_thread()
                 continue;
             }
             else {
+<<<<<<< HEAD
                 //char errbuf[80];
+=======
+                char errbuf[80];
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
                 //cout << "server thread got an error: " << strerror_r(errno, errbuf, 80) << endl;
                 close(client_socket);
                 errCode = -1;
@@ -129,8 +136,13 @@ int test1()
     SMFileFactory factory;
     
     cout << "open" << endl;
+<<<<<<< HEAD
     IDBDataFile *file = factory.open("dummy", "r", 0, 0);
     assert(file == NULL && errno == EINVAL && !die);
+=======
+    IDBDataFile *f = factory.open("dummy", "r", 0, 0);
+    assert(f == NULL && errno == EINVAL && !die);
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     
     SMFileSystem filesystem;
     
@@ -153,6 +165,7 @@ int test1()
     }
     assert(gotException && !die);
     
+<<<<<<< HEAD
     cout << "rename" << endl;
     try {
         filesystem.rename("dummy1", "dummy2");
@@ -173,10 +186,24 @@ int test1()
     cout << "isdir" << endl;
     err = filesystem.isDir("dummy");
     assert(!err && errno == EINVAL && !die);
+=======
+    cout << "exists" << endl;
+    err = filesystem.exists("dummy");
+    assert(!err);
+    
+    cout << "filesystemisup" << endl;
+    err = filesystem.filesystemIsUp();
+    assert(!err && !die);
+    
+    cout << "isdir" << endl;
+    err = filesystem.isDir("dummy");
+    assert(!err && !die);
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     
     cout << "listdirectory" << endl;
     list<string> filenames;
     err = filesystem.listDirectory("dummy", filenames);
+<<<<<<< HEAD
     assert(err == -1 && errno == EINVAL && filenames.empty() && !die);
     
     cout << "remove" << endl;
@@ -247,6 +274,12 @@ int test1()
     // done, return errCode
     die = true;
     cout << "done, waiting for server thread to stop" << endl;
+=======
+    assert(err == -1 && filenames.empty() && !die);
+    
+    // done, return errCode
+    die = true;
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     server_thread.join();
     return errCode;
 }

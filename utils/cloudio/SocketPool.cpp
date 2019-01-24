@@ -77,10 +77,15 @@ SocketPool::~SocketPool()
 #define sm_check_error \
     if (err < 0) \
     { \
+<<<<<<< HEAD
         char _smbuf[80]; \
         int l_errno = errno; \
         log(logging::LOG_TYPE_ERROR, string("SocketPool: got a network error: ") + strerror_r(l_errno, _smbuf, 80)); \
         remoteClosed(sock); \
+=======
+        cout << "SP: got an error on the socket" << endl; \
+        returnSocket(sock); \
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
         return -1; \
     }
     
@@ -133,11 +138,19 @@ retry:
         count += err;
         in.advance(err);
     }
+<<<<<<< HEAD
     //cout << "SP sent msg with length = " << length << endl;
+=======
+    //cout << "SP sent the msg" << endl;
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     
     out->restart();
     uint8_t *outbuf;
     uint8_t window[8192];
+<<<<<<< HEAD
+=======
+    length = 0;
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     uint remainingBytes = 0;
     uint i;
     storagemanager::sm_msg_header *resp = NULL;
@@ -159,24 +172,41 @@ retry:
         // scan for the 8-byte header.  If it is fragmented, move the fragment to the front of the buffer
         // for the next iteration to handle.
         
+<<<<<<< HEAD
         if (endOfData < storagemanager::SM_HEADER_LEN)
+=======
+        if (endOfData < 8)
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
         {
             remainingBytes = endOfData;
             continue;
         }
         
+<<<<<<< HEAD
         
         for (i = 0; i <= endOfData - storagemanager::SM_HEADER_LEN; i++)
         {
             if (*((uint *) &window[i]) == storagemanager::SM_MSG_START)
             {
                 resp = (storagemanager::sm_msg_header *) &window[i];
+=======
+        for (i = 0; i <= endOfData - 8; i++)
+        {
+            if (*((uint *) &window[i]) == storagemanager::SM_MSG_START)
+            {
+                length = *((uint *) &window[i+4]);
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
                 break;
             }
         }
         
+<<<<<<< HEAD
         if (resp == NULL)    // didn't find the header yet
+=======
+        if (length == 0)    // didn't find the header yet
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
         {
+            // i == endOfData - 7 here
             remainingBytes = endOfData - i;
             memmove(window, &window[i], remainingBytes);
         }
@@ -184,6 +214,7 @@ retry:
         {
             // i == first byte of the header here
             // copy the payload fragment we got into the output bytestream
+<<<<<<< HEAD
             uint startOfPayload = i + storagemanager::SM_HEADER_LEN;   // for clarity
             out->needAtLeast(resp->payloadLen);
             outbuf = out->getInputPtr();
@@ -192,6 +223,13 @@ retry:
                     " endOfData = " << endOfData << " startOfPayload = " << startOfPayload << endl;
             memcpy(outbuf, &window[startOfPayload], endOfData - startOfPayload);
             remainingBytes = resp->payloadLen - (endOfData - startOfPayload);    // remainingBytes is now the # of bytes left to read
+=======
+            uint startOfPayload = i + 8;   // for clarity
+            out->needAtLeast(length);
+            outbuf = out->getInputPtr();
+            memcpy(outbuf, &window[startOfPayload], endOfData - startOfPayload);
+            remainingBytes = length - (endOfData - startOfPayload);    // remainingBytes is now the # of bytes left to read
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
             out->advanceInputPtr(endOfData - startOfPayload);
             break;   // done looking for the header, can fill the output buffer directly now.
         }
@@ -230,10 +268,16 @@ int SocketPool::getSocket()
             int saved_errno = errno;
             ostringstream os;
             char buf[80];
+<<<<<<< HEAD
             os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80) << "'";
             cout << os.str() << endl;
             log(logging::LOG_TYPE_ERROR, os.str());
             close(clientSocket);
+=======
+            os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80);
+            cout << os.str() << endl;
+            log(logging::LOG_TYPE_CRITICAL, os.str());
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
             errno = saved_errno;
             return -1;
         }
@@ -260,7 +304,10 @@ void SocketPool::returnSocket(const int sock)
 void SocketPool::remoteClosed(const int sock)
 {
     boost::mutex::scoped_lock lock(mutex);
+<<<<<<< HEAD
     //cout << "closing socket " << sock << endl;
+=======
+>>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
     ::close(sock);
     for (vector<int>::iterator i = allSockets.begin(); i != allSockets.end(); ++i)
         if (*i == sock)

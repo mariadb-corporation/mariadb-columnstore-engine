@@ -52,6 +52,9 @@ bool IDBFactory::installDefaultPlugins()
 
     s_plugins[IDBDataFile::BUFFERED] = FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(), new PosixFileSystem());
     s_plugins[IDBDataFile::UNBUFFERED] = FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered", new UnbufferedFileFactory(), new PosixFileSystem());
+    
+    // TODO: use the installPlugin fcn below instead of declaring this statically, then remove the dependency
+    // IDBDatafile -> cloudio
     s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
     
     return false;
