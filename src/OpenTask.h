@@ -10,10 +10,14 @@ namespace storagemanager
 class OpenTask : public PosixTask
 {
     public:
-        OpenTask(int _sock, uint length) : PosixTask(_sock)
-        WORKING HERE
-
-}
+        OpenTask(int sock, uint length);
+        virtual ~OpenTask();
+        
+        void run();
+    
+    private:
+        OpenTask();
+};
 
 
 }

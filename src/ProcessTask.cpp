@@ -34,6 +34,7 @@ void ProcessTask::operator()()
     int err;
     uint8_t opcode;
     
+    /* D'oh, a 1-byte read....   TODO! */
     err = ::read(sock, &opcode, 1);
     if (err <= 0)
     {

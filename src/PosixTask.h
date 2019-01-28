@@ -14,19 +14,27 @@ class PosixTask
         virtual void run() = 0;
         
     protected:
-        int read(std::vector<uint8_t> *buf, uint offset, uint length);
+        int read(uint8_t *buf, uint length);
         bool write(const std::vector<uint8_t> &buf);
+        bool write(void *buf, uint length);
+        uint getLength();  // returns the total length of the msg
+        uint getRemainingLength();   // returns the remaining length from the caller's perspective
+        void handleError(const char *name, int errCode);
+        void returnSocket();
+        void socketError();
         
     private:
         PosixTask();
         
-        void handleError();
-        
         int sock;
-        uint remainingLength;
-        uint8_t buffer[4096];
+        int totalLength;
+        uint remainingLengthInStream;
+        uint remainingLengthForCaller;
+        static const uint bufferSize = 4096;
+        uint8_t localBuffer[bufferSize];
         uint bufferPos;
         uint bufferLen;
+        bool socketReturned;
 };
 
 
