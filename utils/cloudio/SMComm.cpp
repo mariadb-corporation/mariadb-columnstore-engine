@@ -83,7 +83,7 @@ int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    *command << (uint8_t) storagemanager::OPEN << filename << mode;
+    *command << (uint8_t) storagemanager::OPEN << mode << filename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -99,7 +99,7 @@ ssize_t SMComm::pread(const string &filename, void *buf, const size_t count, con
     ByteStream *response = buffers.getByteStream();
     int err;
 
-    *command << (uint8_t) storagemanager::READ << filename << count << offset;
+    *command << (uint8_t) storagemanager::READ << count << offset << filename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -115,7 +115,7 @@ ssize_t SMComm::pwrite(const string &filename, const void *buf, const size_t cou
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    *command << (uint8_t) storagemanager::WRITE << filename << count << offset;
+    *command << (uint8_t) storagemanager::WRITE << count << offset << filename;
     command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
@@ -133,7 +133,7 @@ ssize_t SMComm::append(const string &filename, const void *buf, const size_t cou
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    *command << (uint8_t) storagemanager::APPEND << filename << count;
+    *command << (uint8_t) storagemanager::APPEND << count << filename;
     command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
