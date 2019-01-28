@@ -1,6 +1,6 @@
 
 #ifndef OPENTASK_H_
-#define OPENTASH_H_
+#define OPENTASK_H_
 
 #include "PosixTask.h"
 
@@ -17,6 +17,12 @@ class OpenTask : public PosixTask
     
     private:
         OpenTask();
+        
+        struct cmd_overlay {
+            int openmode;
+            uint flen;
+            char filename[];
+        };
 };
 
 

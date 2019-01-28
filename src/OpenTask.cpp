@@ -20,8 +20,15 @@ void OpenTask::run()
         return the result
     */
     bool success;
-    uint8_t *buf = alloca(max(getLength(), sizeof(struct stat) + SM_HEADER_LEN));
+    uint8_t *buf;
     
+    if (getLength() > 1024)
+    {
+        handleError("OpenTask read", ENAMETOOLONG);
+        return;
+    }
+    
+    buf = alloca(getLength());
     success = read(&buf, getLength());
     if (!success)
     {
@@ -29,14 +36,12 @@ void OpenTask::run()
         return;
     }
     
-    uint32_t flen = *((uint32_t *) &buf[0]);
-    string filename((char *) &buf[4], flen);   // might want to require filenames to be NULL-terminated for efficiency
-    int openmode = *((int *) &buf[4+flen]);
+    cmd_overlay *cmd = (cmd_overlay *) buf;
     
     // IOC->open(filename, openmode, &buf[SM_HEADER_LEN])
     
     // stand-in dummy response
-    uint32_t *buf32 = (uint32_t *) &buf[0];
+    uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = sizeof(struct stat);
     success = write(buf, sizeof(struct stat) + SM_HEADER_LEN);

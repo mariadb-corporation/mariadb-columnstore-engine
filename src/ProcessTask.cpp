@@ -75,6 +75,7 @@ void ProcessTask::operator()()
         default:
             throw runtime_error("ProcessTask: got an unknown opcode");
     }
+    task->primeBuffer();
     task->run();
 }
 

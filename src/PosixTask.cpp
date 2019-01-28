@@ -101,6 +101,12 @@ bool PosixTask::read(uint8_t *buf, uint length)
     
     /* The caller's request has been satisfied here.  If there is remaining data in the stream
     get what's available. */
+    primeBuffer();
+    return true;
+}
+
+void PosixTask::primeBuffer()
+{
     if (remainingLengthInStream > 0)
     {
         // Reset the buffer to allow a larger read.
@@ -111,6 +117,8 @@ bool PosixTask::read(uint8_t *buf, uint length)
         }
         else if (bufferLen - bufferPos < 1024)  // if < 1024 in the buffer, move data to the front
         {
+            // debating whether it is more efficient to use a circular buffer + more
+            // recv's, or to move data to reduce the # of recv's.  WAG: moving data.
             memmove(buffer, &buffer[bufferPos], bufferLen - bufferPos);
             bufferLen -= bufferPos;
             bufferPos = 0;
@@ -118,7 +126,7 @@ bool PosixTask::read(uint8_t *buf, uint length)
         
         uint toRead = min(remainingLengthInStream, bufferSize - bufferLen);
         err = ::recv(sock, &localBuffer[bufferLen], toRead, MSG_NOBLOCK);
-        // ignoring errors here since the request has been satisfied successfully.
+        // ignoring errors here since this is supposed to be silent.
         // errors will be caught by the next read
         if (err > 0) 
         {
@@ -126,7 +134,6 @@ bool PosixTask::read(uint8_t *buf, uint length)
             remainingLengthInStream -= err;
         }
     }
-    return true;
 }
 
 bool PosixTask::write(uint8_t *buf, uint len)

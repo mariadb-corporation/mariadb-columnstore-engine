@@ -18,17 +18,15 @@ void ReadTask::run()
 {
 
     // get the parameters
+    if (getLength() > 1024) {
+        handleError("ReadTask read", EFAULT);
+        return;
+    }
+    
     bool success;
     uint8_t *buf = alloca(getLength());
-    int boff = 0;
     success = read(&buf, getLength());
-    uint flen = *((uint *) &buf[0])
-    boff += 4;
-    string filename(&buf[boff], flen);
-    boff += flen;
-    size_t count = *((size_t *) &buf[boff]);
-    boff += sizeof(size_t);
-    off_t offset = *((off_t *) &buf[boff]);
+    cmd_overlay *cmd = (cmd_overlay *) buf;
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;

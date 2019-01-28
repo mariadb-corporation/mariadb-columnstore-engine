@@ -17,7 +17,7 @@ WriteTask::~WriteTask()
 #define check_error(msg) \
     if (!success) \
     { \
-        handleError(msg); \
+        handleError(msg, errno); \
         return; \
     }
 

@@ -61,7 +61,7 @@ enum Opcodes {
     OPEN
     ----
     command format:
-    1-byte opcode|4-byte filename length|filename|4-byte openmode
+    1-byte opcode|4-byte openmode|4-byte filename length|filename
 
     response format:
     struct stat
@@ -69,7 +69,7 @@ enum Opcodes {
     READ
     ----
     command format:
-    1-byte opcode|4-byte filename length|filename|size_t count|off_t offset
+    1-byte opcode|size_t count|off_t offset|4-byte filename length|filename
 
     response format:
     data (size is stored in the return code)

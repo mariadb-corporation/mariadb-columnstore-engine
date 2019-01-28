@@ -12,6 +12,7 @@ class PosixTask
         virtual ~PosixTask();
         
         virtual void run() = 0;
+        void primeBuffer();
         
     protected:
         int read(uint8_t *buf, uint length);
