@@ -1,5 +1,7 @@
 
 #include "ReadTask.h"
+#include "messageFormat.h"
+#include <errno.h>
 
 using namespace std;
 
@@ -16,24 +18,24 @@ ReadTask::~ReadTask()
 
 void ReadTask::run()
 {
+    uint8_t buf[1024] = {0};
 
     // get the parameters
-    if (getLength() > 1024) {
+    if (getLength() > 1023) {
         handleError("ReadTask read", EFAULT);
         return;
     }
     
     bool success;
-    uint8_t *buf = alloca(getLength());
-    success = read(&buf, getLength());
+    success = read(buf, getLength());
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
-    outbuf.resize(count + SM_HEADER_LEN);
+    outbuf.resize(cmd->count + SM_HEADER_LEN);
     uint32_t *outbuf32 = (uint32_t *) &outbuf[0];
     outbuf32[0] = SM_MSG_START;
-    outbuf32[1] = length;
+    outbuf32[1] = cmd->count;
     
     // do the reading and writing in chunks
     // IOC->willRead(filename, offset, length);

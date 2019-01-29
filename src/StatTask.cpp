@@ -1,5 +1,11 @@
 
 #include "StatTask.h"
+#include "messageFormat.h"
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdint.h>
+#include <string.h>
 
 using namespace std;
 
@@ -13,6 +19,13 @@ StatTask::StatTask(int sock, uint len) : PosixTask(sock, len)
 StatTask::~StatTask()
 {
 }
+
+#define check_error(msg) \
+    if (!success) \
+    { \
+        handleError(msg, errno); \
+        return; \
+    }
 
 void StatTask::run()
 {
@@ -39,3 +52,6 @@ void StatTask::run()
     memcpy(&buf[SM_HEADER_LEN], &_stat, sizeof(_stat));
     write(buf, SM_HEADER_LEN + sizeof(_stat));
 }
+
+}
+

@@ -1,7 +1,10 @@
 
 
 #include "OpenTask.h"
+#include "messageFormat.h"
 #include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
 
 using namespace std;
 
@@ -9,6 +12,10 @@ namespace storagemanager
 {
 
 OpenTask::OpenTask(int sock, uint len) : PosixTask(sock, len)
+{
+}
+
+OpenTask::~OpenTask()
 {
 }
 
@@ -20,16 +27,15 @@ void OpenTask::run()
         return the result
     */
     bool success;
-    uint8_t *buf;
+    uint8_t buf[1024] = {0};
     
-    if (getLength() > 1024)
+    if (getLength() > 1023)
     {
         handleError("OpenTask read", ENAMETOOLONG);
         return;
     }
     
-    buf = alloca(getLength());
-    success = read(&buf, getLength());
+    success = read(buf, getLength());
     if (!success)
     {
         handleError("OpenTask read", errno);
@@ -38,12 +44,13 @@ void OpenTask::run()
     
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
-    // IOC->open(filename, openmode, &buf[SM_HEADER_LEN])
+    // IOC->open(cmd->filename, cmd->openmode, &buf[SM_HEADER_LEN])
     
     // stand-in dummy response
     uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = sizeof(struct stat);
+    memset(&buf[SM_HEADER_LEN], 0, sizeof(struct stat));
     success = write(buf, sizeof(struct stat) + SM_HEADER_LEN);
     if (!success)
         handleError("OpenTask write", errno);

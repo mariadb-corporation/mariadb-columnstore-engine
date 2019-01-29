@@ -2,7 +2,7 @@
 
 
 #include "ThreadPool.h"
-#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
 
 using namespace std;
 
@@ -22,7 +22,7 @@ ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), 
 
 ThreadPool::~ThreadPool()
 {
-    boost::mutex::unique_lock s(m);
+    boost::mutex::scoped_lock s(m);
     die = true;
     jobs.clear();
     jobAvailable.notify_all();
@@ -34,12 +34,11 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::addJob(Job &j)
 {
-    
-    boost::mutex::unique_lock s(m);
+    boost::mutex::scoped_lock s(m);
     jobs.push_back(j);
     // Start another thread if necessary
     if (threadsWaiting == 0 && threads.size() < maxThreads) {
-        boost::scoped_ptr<boost::thread> thread(new boost::thread(processingLoop));
+        boost::shared_ptr<boost::thread> thread(new boost::thread(Runner(this)));
         threads.push_back(thread);
     }
     else
@@ -48,7 +47,7 @@ void ThreadPool::addJob(Job &j)
 
 void ThreadPool::processingLoop()
 {
-    boost::mutex::scoped_lock s(m, boost::defer_lock_t);
+    boost::mutex::scoped_lock s(m, boost::defer_lock);
     
     while (!die)
     {

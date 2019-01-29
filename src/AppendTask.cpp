@@ -1,5 +1,6 @@
 
 #include "AppendTask.h"
+#include <errno.h>
 
 using namespace std;
 
@@ -17,9 +18,11 @@ AppendTask::~AppendTask()
 #define check_error(msg) \
     if (!success) \
     { \
-        handleError(msg); \
+        handleError(msg, errno); \
         return; \
     }
+    
+#define min(x, y) (x < y ? x : y)
 
 void AppendTask::run()
 {
@@ -28,7 +31,7 @@ void AppendTask::run()
 
     success = read(cmdbuf, sizeof(struct cmd_overlay));
     check_error("AppendTask read");
-    cmd_overlay *cmd = cmdbuf;
+    cmd_overlay *cmd = (cmd_overlay *) cmdbuf;
     
     success = read(&cmdbuf[sizeof(*cmd)], min(cmd->filename_len, 1024 - sizeof(*cmd) - 1));
     check_error("AppendTask read");

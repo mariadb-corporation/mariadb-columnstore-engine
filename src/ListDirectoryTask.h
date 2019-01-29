@@ -3,6 +3,7 @@
 #define LIST_DIRECTORYTASK_H_
 
 #include "PosixTask.h"
+#include <string>
 
 namespace storagemanager
 {
@@ -18,7 +19,7 @@ class ListDirectoryTask : public PosixTask
     private:
         ListDirectoryTask();
         
-        void writeString(uint8_t buf, int *offset, int size, const std::string &str);
+        bool writeString(uint8_t *buf, int *offset, int size, const std::string &str);
         struct cmd_overlay {
             uint plen;
             char path[];

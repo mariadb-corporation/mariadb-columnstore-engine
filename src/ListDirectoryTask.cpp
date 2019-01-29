@@ -1,5 +1,8 @@
 
 #include "ListDirectoryTask.h"
+#include "messageFormat.h"
+#include <errno.h>
+#include <string.h>
 
 using namespace std;
 
@@ -27,8 +30,10 @@ ListDirectoryTask::~ListDirectoryTask()
         handleError(msg, errno); \
         return false; \
     }
+    
+#define min(x, y) (x < y ? x : y)
 
-bool ListDirectoryTask::writeString(uint8_t buf, int *offset, int size, const string &str)
+bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const string &str)
 {
     bool success;
     if (size - *offset < 4)   // eh, let's not frag 4 bytes.
@@ -85,10 +90,10 @@ void ListDirectoryTask::run()
     buf32[0] = SM_MSG_START;
     buf32[1] = payloadLen;
     
-    int offset = 8;
+    int offset = SM_HEADER_LEN;
     for (uint i = 0; i < listing.size(); i++)
     {
-        success = writeString(buf, &offset, 1024, listing);
+        success = writeString(buf, &offset, 1024, listing[i]);
         check_error("ListDirectoryTask write");
     }
         

@@ -1,5 +1,7 @@
 
 #include "UnlinkTask.h"
+#include <errno.h>
+#include "messageFormat.h"
 
 using namespace std;
 
@@ -13,6 +15,14 @@ UnlinkTask::UnlinkTask(int sock, uint len) : PosixTask(sock, len)
 UnlinkTask::~UnlinkTask()
 {
 }
+
+#define check_error(msg) \
+    if (!success) \
+    { \
+        handleError(msg, errno); \
+        return; \
+    }
+
 
 void UnlinkTask::run()
 {
@@ -31,9 +41,11 @@ void UnlinkTask::run()
     // IOC->unlink(cmd->filename);
     
     // generic success msg
-    uint32_t *buf32 = buf;
+    uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = 4;
     buf32[2] = 0;
     write(buf, 12);
+}
+
 }

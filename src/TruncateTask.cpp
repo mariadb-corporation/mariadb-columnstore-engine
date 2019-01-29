@@ -1,5 +1,7 @@
 
 #include "TruncateTask.h"
+#include <errno.h>
+#include "messageFormat.h"
 
 using namespace std;
 
@@ -13,6 +15,13 @@ TruncateTask::TruncateTask(int sock, uint len) : PosixTask(sock, len)
 TruncateTask::~TruncateTask()
 {
 }
+
+#define check_error(msg) \
+    if (!success) \
+    { \
+        handleError(msg, errno); \
+        return; \
+    }
 
 void TruncateTask::run()
 {
@@ -31,9 +40,11 @@ void TruncateTask::run()
     // IOC->truncate(cmd->filename, cmd->newSize);
     
     // generic success msg
-    uint32_t *buf32 = buf;
+    uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = 4;
     buf32[2] = 0;
     write(buf, 12);
+}
+
 }

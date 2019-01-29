@@ -1,6 +1,8 @@
 
 
 #include "ClientRequestProcessor.h"
+#include "ProcessTask.h"
+#include <sys/types.h>
 
 namespace storagemanager
 {
@@ -13,9 +15,9 @@ ClientRequestProcessor::~ClientRequestProcessor()
 {
 }
 
-ClientRequestProcessor::processRequest(int sock)
+void ClientRequestProcessor::processRequest(int sock, uint len)
 {
-    ProcessTask t(sock);
+    ProcessTask t(sock, len);
     threadPool.addJob(t);
 }
 

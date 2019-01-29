@@ -1,7 +1,14 @@
 
 #include "PosixTask.h"
+#include "messageFormat.h"
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
+
+#define min(x, y) (x < y ? x : y)
+
+using namespace std;
 
 namespace storagemanager
 {
@@ -19,7 +26,7 @@ PosixTask::PosixTask(int _sock, uint _length) :
 
 PosixTask::~PosixTask()
 {
-    comsumeMsg();
+    consumeMsg();
     if (!socketReturned)
         returnSocket();
 }
@@ -29,12 +36,12 @@ void PosixTask::handleError(const char *name, int errCode)
     char buf[80];
     
     // send an error response if possible
-    int32_t *buf32;
+    int32_t *buf32 = (int32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = 8;
     buf32[2] = -1;
     buf32[3] = errCode;
-    write(buf32, 16);
+    write((uint8_t *) buf, 16);
     
     // TODO: construct and log a message
     cout << name << " caught an error reading from a socket: " << strerror_r(errCode, buf, 80) << endl;
@@ -66,7 +73,6 @@ bool PosixTask::read(uint8_t *buf, uint length)
 {
     if (length > remainingLengthForCaller)
         length = remainingLengthForCaller;
-    
     if (length == 0)
         return false;
     
@@ -124,13 +130,13 @@ void PosixTask::primeBuffer()
         {
             // debating whether it is more efficient to use a circular buffer + more
             // recv's, or to move data to reduce the # of recv's.  WAG: moving data.
-            memmove(buffer, &buffer[bufferPos], bufferLen - bufferPos);
+            memmove(localBuffer, &localBuffer[bufferPos], bufferLen - bufferPos);
             bufferLen -= bufferPos;
             bufferPos = 0;
         }
         
         uint toRead = min(remainingLengthInStream, bufferSize - bufferLen);
-        err = ::recv(sock, &localBuffer[bufferLen], toRead, MSG_NOBLOCK);
+        int err = ::recv(sock, &localBuffer[bufferLen], toRead, MSG_DONTWAIT);
         // ignoring errors here since this is supposed to be silent.
         // errors will be caught by the next read
         if (err > 0) 
@@ -141,14 +147,14 @@ void PosixTask::primeBuffer()
     }
 }
 
-bool PosixTask::write(uint8_t *buf, uint len)
+bool PosixTask::write(const uint8_t *buf, uint len)
 {
     int err;
     uint count = 0;
     
     while (count < len)
     {
-        err = ::write(sock, &buf[count], len - count);
+        err = ::send(sock, &buf[count], len - count, 0);
         if (err < 0)
             return false;
         count += err;
@@ -172,7 +178,7 @@ void PosixTask::consumeMsg()
     
     while (remainingLengthInStream > 0)
     {
-        err = ::read(sock, buf, min(remainingLengthInStream, 1024));
+        err = ::recv(sock, buf, min(remainingLengthInStream, 1024), 0);
         if (err <= 0) {
             remainingLengthInStream = 0;
             break;

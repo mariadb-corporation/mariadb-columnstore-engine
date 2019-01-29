@@ -3,10 +3,12 @@
 #ifndef PROCESS_TASK_H_
 #define PROCESS_TASK_H_
 
+#include "ThreadPool.h"
+
 namespace storagemanager
 {
 
-class ProcessTask
+class ProcessTask : public ThreadPool::Job
 {
     public:
         ProcessTask(int sock, uint length);   // _sock is the socket to read from
@@ -17,9 +19,10 @@ class ProcessTask
     private:
         ProcessTask();
         
-        void handleError();
+        void handleError(int errCode);
         int sock;
         uint length;
+        bool returnedSock;
 };
 
 

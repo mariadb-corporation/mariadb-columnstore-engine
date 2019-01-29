@@ -8,7 +8,7 @@
 namespace storagemanager
 {
 
-class AppendTask : PosixTask
+class AppendTask : public PosixTask
 {
     public:
         AppendTask(int sock, uint length);

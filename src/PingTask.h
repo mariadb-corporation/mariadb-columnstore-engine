@@ -8,7 +8,7 @@
 namespace storagemanager
 {
 
-class PingTask : PosixTask
+class PingTask : public PosixTask
 {
     public:
         PingTask(int sock, uint length);

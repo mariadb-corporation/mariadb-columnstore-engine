@@ -1,5 +1,6 @@
 
 #include "WriteTask.h"
+#include <errno.h>
 
 using namespace std;
 
@@ -21,6 +22,8 @@ WriteTask::~WriteTask()
         return; \
     }
 
+#define min(x, y) (x < y ? x : y)
+
 void WriteTask::run()
 {
     bool success;
@@ -28,7 +31,7 @@ void WriteTask::run()
 
     success = read(cmdbuf, sizeof(struct cmd_overlay));
     check_error("WriteTask read");
-    cmd_overlay *cmd = cmdbuf;
+    cmd_overlay *cmd = (cmd_overlay *) cmdbuf;
     
     success = read(&cmdbuf[sizeof(*cmd)], min(cmd->filename_len, 1024 - sizeof(*cmd) - 1));
     check_error("WriteTask read");

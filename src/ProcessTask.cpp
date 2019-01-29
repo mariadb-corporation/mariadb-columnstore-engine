@@ -1,24 +1,40 @@
 
 #include "ProcessTask.h"
 #include <vector>
+#include <iostream>
+#include "messageFormat.h"
+
+#include "AppendTask.h"
+#include "ListDirectoryTask.h"
+#include "OpenTask.h"
+#include "PingTask.h"
+#include "ReadTask.h"
+#include "StatTask.h"
+#include "TruncateTask.h"
+#include "UnlinkTask.h"
+#include "WriteTask.h"
 
 using namespace std;
 
 namespace storagemanager
 {
 
-ProcessTask::ProcessTask(int _sock, uint _length) : sock(_sock), length(_length)
+ProcessTask::ProcessTask(int _sock, uint _length) : sock(_sock), length(_length), returnedSock(false)
 {
     assert(length > 0);
 }
 
 ProcessTask::~ProcessTask()
 {
+    if (!returnedSock)
+        ;   // SM->returnSocket(sock);
 }
 
 void ProcessTask::handleError(int saved_errno)
 {
     // return sock to SessionManager
+    // SM->socketError(sock);
+    returnedSock = true;
     char buf[80];
     cout << "ProcessTask: got an error during a socket read: " << strerror_r(saved_errno, buf, 80) << endl;
 }

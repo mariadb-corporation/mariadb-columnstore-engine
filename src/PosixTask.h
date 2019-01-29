@@ -4,6 +4,11 @@
 #define POSIX_TASK_H_
 
 #include <vector>
+#include <sys/types.h>
+#include <stdint.h>
+
+namespace storagemanager
+{
 
 class PosixTask
 {
@@ -15,9 +20,9 @@ class PosixTask
         void primeBuffer();
         
     protected:
-        int read(uint8_t *buf, uint length);
+        bool read(uint8_t *buf, uint length);
         bool write(const std::vector<uint8_t> &buf);
-        bool write(void *buf, uint length);
+        bool write(const uint8_t *buf, uint length);
         void consumeMsg();   // drains the remaining portion of the message
         uint getLength();  // returns the total length of the msg
         uint getRemainingLength();   // returns the remaining length from the caller's perspective
@@ -39,9 +44,5 @@ class PosixTask
         bool socketReturned;
 };
 
-
-
-
-
-
+}
 #endif
