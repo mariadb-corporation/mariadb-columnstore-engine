@@ -19,6 +19,7 @@ PosixTask::PosixTask(int _sock, uint _length) :
 
 PosixTask::~PosixTask()
 {
+    comsumeMsg();
     if (!socketReturned)
         returnSocket();
 }
@@ -60,10 +61,14 @@ uint PosixTask::getLength()
     return totalLength;
 }
 
+// todo, need this to return an int instead of a bool b/c it modifies the length of the read
 bool PosixTask::read(uint8_t *buf, uint length)
 {
     if (length > remainingLengthForCaller)
         length = remainingLengthForCaller;
+    
+    if (length == 0)
+        return false;
     
     uint count = 0;
     int err;
@@ -154,6 +159,26 @@ bool PosixTask::write(uint8_t *buf, uint len)
 bool PosixTask::write(const vector<uint8_t> &buf)
 {
     return write(&buf[0], buf.size());
+}
+
+void PosixTask::consumeMsg()
+{
+    uint8_t buf[1024];
+    int err;
+    
+    bufferLen = 0;
+    bufferPos = 0;
+    remainingLengthForCaller = 0;
+    
+    while (remainingLengthInStream > 0)
+    {
+        err = ::read(sock, buf, min(remainingLengthInStream, 1024));
+        if (err <= 0) {
+            remainingLengthInStream = 0;
+            break;
+        }
+        remainingLengthInStream -= err;
+    }
 }
 
 }

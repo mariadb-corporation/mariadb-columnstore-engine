@@ -59,9 +59,9 @@ bool ListDirectoryTask::writeString(uint8_t buf, int *offset, int size, const st
 void ListDirectoryTask::run()
 {
     bool success;
-    uint8_t buf[1024];
+    uint8_t buf[1024] = {0};
     
-    if (getLength() > 1024) {
+    if (getLength() > 1023) {
         handleError("ListDirectoryTask read", ENAMETOOLONG);
         return;
     }
@@ -71,7 +71,7 @@ void ListDirectoryTask::run()
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
     vector<string> listing;
-    //  IOC->listDirectory(path, &listing)
+    //  IOC->listDirectory(cmd->path, &listing)
     
     // bogus response
     listing.push_back("dummy1");

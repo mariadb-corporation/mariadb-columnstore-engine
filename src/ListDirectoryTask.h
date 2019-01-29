@@ -18,9 +18,9 @@ class ListDirectoryTask : public PosixTask
     private:
         ListDirectoryTask();
         
-        void writeString(uint8_t buf, int *offset, int size, const std::string &str)
+        void writeString(uint8_t buf, int *offset, int size, const std::string &str);
         struct cmd_overlay {
-            uint flen;
+            uint plen;
             char path[];
         };
 };

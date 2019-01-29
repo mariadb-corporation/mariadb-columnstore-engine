@@ -106,7 +106,7 @@ enum Opcodes {
     TRUNCATE
     --------
     command format:
-    1-byte opcode|4-byte filename length|filename|off64_t length
+    1-byte opcode|off64_t length|4-byte filename length|filename
    
     response format:
     

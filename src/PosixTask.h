@@ -18,6 +18,7 @@ class PosixTask
         int read(uint8_t *buf, uint length);
         bool write(const std::vector<uint8_t> &buf);
         bool write(void *buf, uint length);
+        void consumeMsg();   // drains the remaining portion of the message
         uint getLength();  // returns the total length of the msg
         uint getRemainingLength();   // returns the remaining length from the caller's perspective
         void handleError(const char *name, int errCode);
