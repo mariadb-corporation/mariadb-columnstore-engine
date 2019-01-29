@@ -16,12 +16,13 @@ set(storagemanager_SRCS
     src/TruncateTask.cpp
     src/UnlinkTask.cpp
     src/WriteTask.cpp
+    src/IOCoordinator.cpp
     main.cpp 
 #    SessionManager.cpp
 )
 
 add_executable(StorageManager ${storagemanager_SRCS})
-target_link_libraries(StorageManager boost_system boost_thread)
+target_link_libraries(StorageManager boost_system boost_thread boost_filesystem)
 
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
