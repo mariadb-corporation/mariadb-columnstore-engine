@@ -181,7 +181,7 @@ int SMComm::truncate(const string &filename, const off64_t length)
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    *command << (uint8_t) storagemanager::TRUNCATE << filename << length;
+    *command << (uint8_t) storagemanager::TRUNCATE << length << filename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
