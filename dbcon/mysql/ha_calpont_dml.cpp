@@ -1173,6 +1173,20 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                     break;
                 }
 
+                case CalpontSystemCatalog::LONGDOUBLE:
+                {
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                        fprintf(ci.filePtr, "%c", ci.delimiter);
+                    else
+                    {
+                        fprintf(ci.filePtr, "%.15Lg%c", *((long double*)buf), ci.delimiter);
+                        //printf("%.15g|", *((double*)buf));
+                    }
+
+                    buf += 8;
+                    break;
+                }
+
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                 {

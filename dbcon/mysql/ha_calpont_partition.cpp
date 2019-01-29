@@ -190,6 +190,9 @@ string name(CalpontSystemCatalog::ColType& ct)
         case CalpontSystemCatalog::UDOUBLE:
             return "UDOUBLE";
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return "LONGDOUBLE";
+
         default:
             return "Unknown Type";
     }

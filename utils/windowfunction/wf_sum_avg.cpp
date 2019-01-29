@@ -159,7 +159,7 @@ template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const string& name, int ct)
 {
     boost::shared_ptr<WindowFunctionType> func;
-
+#if 0
     switch (ct)
     {
         case CalpontSystemCatalog::TINYINT:
@@ -198,6 +198,35 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const 
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_sum_avg<long double>(id, name));
+            break;
+        }
+#endif
+    switch (ct)
+    {
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UBIGINT:
+        case CalpontSystemCatalog::UDECIMAL:
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::UFLOAT:
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_sum_avg<long double>(id, name));
+            break;
+        }
         default:
         {
             string errStr = name + "(" + colType2String[ct] + ")";

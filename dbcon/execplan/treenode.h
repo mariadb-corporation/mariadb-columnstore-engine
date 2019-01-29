@@ -249,6 +249,7 @@ struct Result
     // when converting origIntVal
     uint64_t dummy;
     double doubleVal;
+    long double longDoubleVal;
     float floatVal;
     bool boolVal;
     std::string strVal;
@@ -375,6 +376,10 @@ public:
     virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
     {
         return fResult.doubleVal;
+    }
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fResult.longDoubleVal;
     }
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
@@ -517,6 +522,9 @@ inline bool TreeNode::getBoolVal()
         case CalpontSystemCatalog::UDOUBLE:
             return (fResult.doubleVal != 0);
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return (fResult.longDoubleVal != 0);
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
             return (fResult.decimalVal.value != 0);
@@ -653,6 +661,40 @@ inline const std::string& TreeNode::getStrVal()
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            if ((fabsl(fResult.longDoubleVal) > (1.0 / IDB_pow[13])) &&
+                    (fabsl(fResult.longDoubleVal) < (float) IDB_pow[15]))
+            {
+                snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
+                fResult.strVal = removeTrailing0(tmp, 312);
+            }
+            else
+            {
+                // MCOL-299 Print scientific with 9 mantissa and no + sign for exponent
+                int exponent  = (int)floorl(log10( fabsl(fResult.longDoubleVal)));  // This will round down the exponent
+                long double base   = fResult.longDoubleVal * pow(10, -1.0 * exponent);
+
+                if (isnan(exponent) || isnan(base))
+                {
+                    snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
+                    fResult.strVal = removeTrailing0(tmp, 312);
+                }
+                else
+                {
+                    snprintf(tmp, 312, "%.14Lf", base);
+                    fResult.strVal = removeTrailing0(tmp, 312);
+                    snprintf(tmp, 312, "e%02d", exponent);
+                    fResult.strVal += tmp;
+                }
+
+//				snprintf(tmp, 312, "%e", fResult.doubleVal);
+//				fResult.strVal = tmp;
+            }
+
+            break;
+        }
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
@@ -736,6 +778,9 @@ inline int64_t TreeNode::getIntVal()
         case CalpontSystemCatalog::UDOUBLE:
             return (int64_t)fResult.doubleVal;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return (int64_t)fResult.longDoubleVal;
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
@@ -778,6 +823,9 @@ inline uint64_t TreeNode::getUintVal()
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
             return (uint64_t)fResult.doubleVal;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return (uint64_t)fResult.longDoubleVal;
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
@@ -841,6 +889,9 @@ inline float TreeNode::getFloatVal()
 
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
+            return (float)fResult.doubleVal;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
             return (float)fResult.doubleVal;
 
         case CalpontSystemCatalog::DECIMAL:
@@ -977,6 +1028,9 @@ inline IDB_Decimal TreeNode::getDecimalVal()
 
         case CalpontSystemCatalog::UDOUBLE:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from double unsigned");
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from long double");
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:

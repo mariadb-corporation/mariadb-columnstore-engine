@@ -96,6 +96,12 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_stats<long double>(id, name));
+            break;
+        }
+
         default:
         {
             string errStr = name + "(" + colType2String[ct] + ")";

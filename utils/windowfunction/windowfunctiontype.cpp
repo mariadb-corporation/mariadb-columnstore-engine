@@ -290,6 +290,16 @@ template<> void WindowFunctionType::getValue<float>(uint64_t i, float& t, CDT* c
     }
 }
 
+template<> void WindowFunctionType::getValue<long double>(uint64_t i, long double& t, CDT* cdt)
+{
+    t = fRow.getLongDoubleField(i);
+
+    if (cdt)
+    {
+        *cdt = execplan::CalpontSystemCatalog::LONGDOUBLE;
+    }
+}
+
 template<> void WindowFunctionType::getValue<string>(uint64_t i, string& t, CDT* cdt)
 {
     t = fRow.getStringField(i);
@@ -318,6 +328,11 @@ template<> void WindowFunctionType::setValue<double>(uint64_t i, double& t)
 template<> void WindowFunctionType::setValue<float>(uint64_t i, float& t)
 {
     fRow.setFloatField(t, i);
+}
+
+template<> void WindowFunctionType::setValue<long double>(uint64_t i, long double& t)
+{
+    fRow.setLongDoubleField(t, i);
 }
 
 template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
@@ -406,6 +421,14 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
                 setValue(i, fv);
                 break;
             }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double dv = *v;
+                setValue(i, dv);
+                break;
+            }
+
             default:
             {
                 setValue(i, *v);
@@ -524,6 +547,12 @@ void WindowFunctionType::getConstValue<double>(ConstantColumn* cc, double& t, bo
 }
 
 template<>
+void WindowFunctionType::getConstValue<long double>(ConstantColumn* cc, long double& t, bool& b)
+{
+    t = cc->getLongDoubleVal(fRow, b);
+}
+
+template<>
 void WindowFunctionType::getConstValue<float>(ConstantColumn* cc, float& t, bool& b)
 {
     t = cc->getFloatVal(fRow, b);
@@ -539,11 +568,13 @@ template void WindowFunctionType::implicit2T<int64_t>(uint64_t, int64_t&, int);
 template void WindowFunctionType::implicit2T<uint64_t>(uint64_t, uint64_t&, int);
 template void WindowFunctionType::implicit2T<float>(uint64_t, float&, int);
 template void WindowFunctionType::implicit2T<double>(uint64_t, double&, int);
+template void WindowFunctionType::implicit2T<long double>(uint64_t, long double&, int);
 
 template void WindowFunctionType::setValue<int64_t>(int, int64_t, int64_t, int64_t, int64_t*);
 template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int64_t, uint64_t*);
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
+template void WindowFunctionType::setValue<long double>(int, int64_t, int64_t, int64_t, long double*);
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
 {
@@ -557,6 +588,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
     static uint64_t utinyIntNull  = joblist::UTINYINTNULL;
     static uint64_t floatNull     = joblist::FLOATNULL;
     static uint64_t doubleNull    = joblist::DOUBLENULL;
+    static long double longDoubleNull= joblist::LONGDOUBLENULL;
     static uint64_t dateNull      = joblist::DATENULL;
     static uint64_t datetimeNull  = joblist::DATETIMENULL;
     static uint64_t timeNull      = joblist::TIMENULL;
@@ -691,6 +723,9 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
             break;
 
         case CalpontSystemCatalog::LONGDOUBLE:
+            v = &longDoubleNull;
+            break;
+
         case CalpontSystemCatalog::VARBINARY:
         default:
             std::ostringstream oss;

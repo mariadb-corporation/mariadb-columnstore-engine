@@ -498,6 +498,14 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 
             break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            if (row.equals(LONGDOUBLENULL, fInputIndex))
+                isNull = true;
+            else
+                fResult.longDoubleVal = row.getLongDoubleField(fInputIndex);
+
+            break;
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
             switch (fResultType.colWidth)

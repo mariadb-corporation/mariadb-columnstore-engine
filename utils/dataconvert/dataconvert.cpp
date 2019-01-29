@@ -871,7 +871,7 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
 
 bool mysql_str_to_time( const string& input, Time& output, long decimals )
 {
-    int32_t datesepct = 0;
+//    int32_t datesepct = 0;
     uint32_t dtend = 0;
     bool isNeg = false;
 
@@ -2995,6 +2995,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::DOUBLE:
                     case CalpontSystemCatalog::UFLOAT:
                     case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::LONGDOUBLE:
                     default:
                         break;
                 }
@@ -3022,6 +3023,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UDECIMAL:
                     case CalpontSystemCatalog::UFLOAT:
                     case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::LONGDOUBLE:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.scale = 0;
                         unionedType.colWidth = 20;
@@ -3070,6 +3072,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UFLOAT:
                     case CalpontSystemCatalog::UDOUBLE:
                     case CalpontSystemCatalog::TIME:
+                    case CalpontSystemCatalog::LONGDOUBLE:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.scale = 0;
                         unionedType.colWidth = 26;
@@ -3159,6 +3162,63 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                switch (unionedType.colDataType)
+                {
+                    case CalpontSystemCatalog::DATE:
+                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
+                        unionedType.scale = 0;
+                        unionedType.colWidth = 20;
+                        break;
+
+                    case CalpontSystemCatalog::DATETIME:
+                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
+                        unionedType.scale = 0;
+                        unionedType.colWidth = 26;
+                        break;
+
+                    case CalpontSystemCatalog::CHAR:
+                        if (unionedType.colWidth < 20)
+                            unionedType.colWidth = 20;
+
+                        break;
+
+                    case CalpontSystemCatalog::VARCHAR:
+                        if (unionedType.colWidth < 21)
+                            unionedType.colWidth = 21;
+
+                        break;
+
+                    case CalpontSystemCatalog::TINYINT:
+                    case CalpontSystemCatalog::SMALLINT:
+                    case CalpontSystemCatalog::MEDINT:
+                    case CalpontSystemCatalog::INT:
+                    case CalpontSystemCatalog::BIGINT:
+                    case CalpontSystemCatalog::DECIMAL:
+                    case CalpontSystemCatalog::FLOAT:
+                    case CalpontSystemCatalog::DOUBLE:
+                    case CalpontSystemCatalog::UTINYINT:
+                    case CalpontSystemCatalog::USMALLINT:
+                    case CalpontSystemCatalog::UMEDINT:
+                    case CalpontSystemCatalog::UINT:
+                    case CalpontSystemCatalog::UBIGINT:
+                    case CalpontSystemCatalog::UDECIMAL:
+                    case CalpontSystemCatalog::UFLOAT:
+                    case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                        unionedType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                        unionedType.scale = 0;
+                        unionedType.colWidth = sizeof(long double);
+                        break;
+
+                    default:
+                        break;
+                }
+
+                break;
+            }
+
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::VARCHAR:
             {
@@ -3180,6 +3240,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UDECIMAL:
                     case CalpontSystemCatalog::UFLOAT:
                     case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::LONGDOUBLE:
                         unionedType.scale = 0;
                         unionedType.colWidth = (types[i].colWidth > 20) ? types[i].colWidth : 20;
                         break;

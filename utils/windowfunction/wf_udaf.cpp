@@ -398,6 +398,48 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
                         break;
                     }
 
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                    {
+                        double valIn;
+
+                        if (cc)
+                        {
+                            valIn = cc->getLongDoubleVal(fRow, isNull);
+                        }
+                        else
+                        {
+                            getValue(colIn, valIn);
+                        }
+
+                        // Check for distinct, if turned on.
+                        // Currently, distinct only works on the first parameter.
+                        if (k == 0)
+                        {
+                            if (fDistinct)
+                            {
+                                DistinctMap::iterator distinct;
+                                distinct = fDistinctMap.find(valIn);
+                                if (distinct != fDistinctMap.end())
+                                {
+                                    // This is a duplicate: decrement the count
+                                    --(*distinct).second;
+                                    if ((*distinct).second > 0) // still more of these
+                                    {
+                                        bSkipIt = true;
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        fDistinctMap.erase(distinct);
+                                    }
+                                }
+                            }
+                        }
+
+                        datum.columnData = valIn;
+                        break;
+                    }
+
                     case CalpontSystemCatalog::CHAR:
                     case CalpontSystemCatalog::VARCHAR:
                     case CalpontSystemCatalog::VARBINARY:
@@ -946,6 +988,38 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (cc)
                             {
                                 valIn = cc->getFloatVal(fRow, isNull);
+                            }
+                            else
+                            {
+                                getValue(colIn, valIn);
+                            }
+
+                            // Check for distinct, if turned on.
+                            // Currently, distinct only works on the first parameter.
+                            if (k == 0 && fDistinct)
+                            {
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
+                                {
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
+                                }
+                            }
+
+                            datum.columnData = valIn;
+                            break;
+                        }
+
+                        case CalpontSystemCatalog::LONGDOUBLE:
+                        {
+                            long double valIn;
+
+                            if (cc)
+                            {
+                                valIn = cc->getLongDoubleVal(fRow, isNull);
                             }
                             else
                             {

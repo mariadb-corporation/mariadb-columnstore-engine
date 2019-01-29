@@ -592,6 +592,12 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            fResult.longDoubleVal = row.getLongDoubleField(fInputIndex);
+            break;
+        }
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {

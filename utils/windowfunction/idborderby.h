@@ -119,6 +119,14 @@ public:
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
+class LongDoubleCompare : public Compare
+{
+public:
+    LongDoubleCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
 
 class FloatCompare : public Compare
 {

@@ -123,6 +123,12 @@ int64_t Func_ceil::getIntVal(Row& row,
         }
         break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            ret = (int64_t) ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
+        }
+        break;
+
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::TEXT:

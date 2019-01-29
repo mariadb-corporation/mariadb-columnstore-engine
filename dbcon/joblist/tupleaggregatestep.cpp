@@ -266,6 +266,9 @@ inline string colTypeIdString(CalpontSystemCatalog::ColDataType type)
         case CalpontSystemCatalog::DOUBLE:
             return string("DOUBLE");
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return string("LONGDOUBLE");
+
         case CalpontSystemCatalog::DATETIME:
             return string("DATETIME");
 

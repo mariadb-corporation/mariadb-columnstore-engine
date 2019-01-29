@@ -330,6 +330,7 @@ public:
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
     inline int64_t getIntField(uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
+    inline bool equals(long double val, uint32_t colIndex) const;
     inline bool equals(const std::string& val, uint32_t colIndex) const;
 
     inline double getDoubleField(uint32_t colIndex) const;
@@ -614,6 +615,11 @@ inline bool Row::equals(uint64_t val, uint32_t colIndex) const
             idbassert(0);
             throw std::logic_error("Row::equals(): bad length.");
     }
+}
+
+inline bool Row::equals(long double val, uint32_t colIndex) const
+{
+    return *((long double*) &data[offsets[colIndex]]) == val;
 }
 
 inline bool Row::equals(const std::string& val, uint32_t colIndex) const

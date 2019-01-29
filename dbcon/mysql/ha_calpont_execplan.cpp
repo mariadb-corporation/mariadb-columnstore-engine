@@ -4499,7 +4499,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
+                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                ct.scale += 4;
+//                ct.colWidth = 8;
 
+#if 0
                 switch (ct.colDataType)
                 {
                     case CalpontSystemCatalog::TINYINT:
@@ -4514,12 +4518,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     case CalpontSystemCatalog::UMEDINT:
                     case CalpontSystemCatalog::UINT:
                     case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::DECIMAL;
-                        ct.colWidth = 8;
                         ct.scale += 4;
                         break;
-
-#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
 
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
@@ -4528,12 +4528,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                         ct.colDataType = CalpontSystemCatalog::DOUBLE;
                         ct.colWidth = 8;
                         break;
-#endif
 
                     default:
                         break;
                 }
-
+#endif
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
@@ -4549,7 +4548,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                      isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
-
+                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                ct.scale += 4;
+#if 0
                 switch (ct.colDataType)
                 {
                     case CalpontSystemCatalog::TINYINT:
@@ -4589,7 +4590,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     default:
                         break;
                 }
-
+#endif
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||

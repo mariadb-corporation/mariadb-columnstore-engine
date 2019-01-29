@@ -154,6 +154,11 @@ public:
      */
     EXPORT ByteStream& operator<<(const double d);
     /**
+     *  push a long double onto the end of the stream. The byte
+     *  order is whatever the native byte order is.
+     */
+    EXPORT ByteStream& operator<<(const long double d);
+    /**
      * push a std::string onto the end of the stream.
      */
     EXPORT ByteStream& operator<<(const std::string& s);
@@ -212,6 +217,11 @@ public:
      *  order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator>>(double& d);
+    /**
+     *  extract a long double from the front of the stream. The byte
+     *  order is whatever the native byte order is.
+     */
+    EXPORT ByteStream& operator>>(long double& d);
     /**
      * extract a std::string from the front of the stream.
      */
@@ -277,6 +287,11 @@ public:
      *  order is whatever the native byte order is.
      */
     EXPORT void peek(double& f) const;
+    /**
+     *  Peek at a long double from the front of the stream. The byte
+     *  order is whatever the native byte order is.
+     */
+    EXPORT void peek(long double& f) const;
     /**
      * Peek at a std::string from the front of the stream.
      */

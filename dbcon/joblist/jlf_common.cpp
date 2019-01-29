@@ -838,6 +838,17 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
 
             break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            if (forJoin && (dt2 != CalpontSystemCatalog::LONGDOUBLE))
+                return false;
+            else if (dt2 != CalpontSystemCatalog::FLOAT &&
+                     dt2 != CalpontSystemCatalog::DOUBLE &&
+                     dt2 != CalpontSystemCatalog::UFLOAT &&
+                     dt2 != CalpontSystemCatalog::UDOUBLE &&
+                     dt2 != CalpontSystemCatalog::LONGDOUBLE) return false;
+
+            break;
+
         default:
             return false;
             break;

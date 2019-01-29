@@ -250,6 +250,12 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                fRowConst.setLongDoubleField(c.longDoubleVal, *i);
+                break;
+            }
+
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::VARCHAR:
             case CalpontSystemCatalog::TEXT:

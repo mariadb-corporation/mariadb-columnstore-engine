@@ -61,7 +61,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     if (isNull)
         return "";
 
-    int64_t count = fp[2]->data()->getIntVal(row, isNull);
+    size_t count = fp[2]->data()->getIntVal(row, isNull);
 
     if (isNull)
         return "";
@@ -71,7 +71,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
 
     size_t end = strlen(str.c_str());
 
-    if ( count > (int64_t) end )
+    if ( count >  end )
         return str;
 
     if (( count < 0 ) && ((count * -1) > end))
@@ -83,7 +83,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     {
         int pointer = 0;
 
-        for ( int i = 0 ; i < count ; i ++ )
+        for ( size_t i = 0 ; i < count ; i ++ )
         {
             string::size_type pos = str.find(delim, pointer);
 
@@ -102,13 +102,13 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
         int pointer = end;
         int start = 0;
 
-        for ( int i = 0 ; i < count ; i ++ )
+        for ( size_t i = 0 ; i < count ; i ++ )
         {
             string::size_type pos = str.rfind(delim, pointer);
 
             if (pos != string::npos)
             {
-                if ( count > (int64_t) end )
+                if ( count > end )
                     return "";
 
                 pointer = pos - 1;

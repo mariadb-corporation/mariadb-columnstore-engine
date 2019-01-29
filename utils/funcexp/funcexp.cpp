@@ -439,6 +439,18 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double val = expression[i]->getLongDoubleVal(row, isNull);
+
+                if (isNull)
+                    row.setLongDoubleField(LONGDOUBLENULL, expression[i]->outputIndex());
+                else
+                    row.setLongDoubleField(val, expression[i]->outputIndex());
+
+                break;
+            }
+
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {

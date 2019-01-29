@@ -196,6 +196,24 @@ inline bool getBool(rowgroup::Row& row,
                    numericLE(val, pm[2]->data()->getDoubleVal(row, isNull));
         }
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (notBetween)
+            {
+                if (!numericGE(val, pm[1]->data()->getLongDoubleVal(row, isNull)) && !isNull)
+                    return true;
+
+                isNull = false;
+                return (!numericLE(val, pm[2]->data()->getLongDoubleVal(row, isNull)) && !isNull);
+            }
+
+            return !isNull &&
+                   numericGE(val, pm[1]->data()->getLongDoubleVal(row, isNull)) &&
+                   numericLE(val, pm[2]->data()->getLongDoubleVal(row, isNull));
+        }
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {

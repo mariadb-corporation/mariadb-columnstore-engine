@@ -90,6 +90,12 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_lead_lag<long double>(id, name));
+            break;
+        }
+
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
         {

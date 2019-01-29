@@ -103,6 +103,21 @@ string Func_hex::getStrVal(rowgroup::Row& row,
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            char buf[256];
+            long double val = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+#ifdef _MSC_VER
+            sprintf(buf, "%llA", val);
+
+#else
+            sprintf(buf, "%LA", val);
+#endif
+            retval = buf;
+            break;
+        }
+
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         {

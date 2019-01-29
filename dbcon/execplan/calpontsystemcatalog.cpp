@@ -155,6 +155,10 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
             return "double";
             break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return "long double";
+            break;
+
         case CalpontSystemCatalog::DATETIME:
             return "datetime";
             break;

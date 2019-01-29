@@ -174,7 +174,6 @@ int DoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     return ret;
 }
 
-
 int FloatCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
@@ -196,6 +195,37 @@ int FloatCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     {
         float v1 = l->row1().getFloatField(fSpec.fIndex);
         float v2 = l->row2().getFloatField(fSpec.fIndex);
+
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int LongDoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    bool b1 = l->row1().isNullValue(fSpec.fIndex);
+    bool b2 = l->row2().isNullValue(fSpec.fIndex);
+
+    int ret = 0;
+
+    if (b1 == true || b2 == true)
+    {
+        if (b1 == false && b2 == true)
+            ret = fSpec.fNf;
+        else if (b1 == true && b2 == false)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        long double v1 = l->row1().getLongDoubleField(fSpec.fIndex);
+        long double v2 = l->row2().getLongDoubleField(fSpec.fIndex);
 
         if (v1 > v2)
             ret = fSpec.fAsc;
@@ -275,6 +305,13 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
             case CalpontSystemCatalog::UFLOAT:
             {
                 Compare* c = new FloatCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                Compare* c = new LongDoubleCompare(*i);
                 fCompares.push_back(c);
                 break;
             }
@@ -439,6 +476,12 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::UFLOAT:
             {
                 eq = (fRow1.getFloatField(*i) == fRow2.getFloatField(*i));
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                eq = (fRow1.getLongDoubleField(*i) == fRow2.getLongDoubleField(*i));
                 break;
             }
 

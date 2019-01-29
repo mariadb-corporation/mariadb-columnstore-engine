@@ -203,6 +203,10 @@ public:
     /**
      * ctor
      */
+    ConstantColumn(const std::string& sql, const long double val);
+    /**
+     * ctor
+     */
     ConstantColumn(const std::string& sql, const int64_t val, TYPE type = NUM);
     /**
      * ctor

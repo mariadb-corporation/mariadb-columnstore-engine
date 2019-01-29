@@ -96,6 +96,12 @@ boost::shared_ptr<WindowFunctionType> WF_min_max<T>::makeFunction(int id, const 
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_min_max<long double>(id, name));
+            break;
+        }
+
         default:
         {
             func.reset(new WF_min_max<string>(id, name));

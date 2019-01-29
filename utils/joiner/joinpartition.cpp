@@ -118,7 +118,6 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     totalBytesWritten(0), maxLargeSize(0), maxSmallSize(0),
     nextSmallOffset(0), nextLargeOffset(0)
 {
-    config::Config* config = config::Config::makeConfig();
     boost::posix_time::ptime t;
     ostringstream os;
 

@@ -488,6 +488,12 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                oss << setprecision(15) << row.getLongDoubleField(*i);
+                break;
+            }
+
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
             {
@@ -632,6 +638,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::UDOUBLE:
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
+            case CalpontSystemCatalog::LONGDOUBLE:
             {
                 fieldLen = 1; // minimum length
                 break;
