@@ -17,8 +17,9 @@ set(storagemanager_SRCS
     src/UnlinkTask.cpp
     src/WriteTask.cpp
     src/IOCoordinator.cpp
-    main.cpp 
-#    SessionManager.cpp
+    #src/SessionManager.cpp
+    src/main.cpp 
+
 )
 
 add_executable(StorageManager ${storagemanager_SRCS})
