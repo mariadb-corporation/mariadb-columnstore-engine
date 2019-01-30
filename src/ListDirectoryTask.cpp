@@ -1,10 +1,13 @@
 
 #include "ListDirectoryTask.h"
+#include "IOCoordinator.h"
 #include "messageFormat.h"
 #include <errno.h>
 #include <string.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -65,6 +68,7 @@ void ListDirectoryTask::run()
 {
     bool success;
     uint8_t buf[1024] = {0};
+    int err;
     
     if (getLength() > 1023) {
         handleError("ListDirectoryTask read", ENAMETOOLONG);
@@ -76,11 +80,7 @@ void ListDirectoryTask::run()
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
     vector<string> listing;
-    //  IOC->listDirectory(cmd->path, &listing)
-    
-    // bogus response
-    listing.push_back("dummy1");
-    listing.push_back("dummy2");
+    err = ioc->listDirectory(cmd->path, &listing);
     
     uint payloadLen = 4 * listing.size();
     for (uint i = 0; i < listing.size(); i++)
@@ -103,8 +103,5 @@ void ListDirectoryTask::run()
         check_error("ListDirectoryTask write");
     }
 }
-    
-    
-    
     
 }

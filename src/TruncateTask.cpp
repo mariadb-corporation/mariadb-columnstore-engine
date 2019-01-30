@@ -1,9 +1,12 @@
 
 #include "TruncateTask.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 #include "messageFormat.h"
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -37,9 +40,13 @@ void TruncateTask::run()
     check_error("TruncateTask read");
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
-    // IOC->truncate(cmd->filename, cmd->newSize);
+    int err = ioc->truncate(cmd->filename, cmd->newSize);
+    if (err)
+    {
+        handleError("TruncateTask truncate", errno);
+        return;
+    }
     
-    // generic success msg
     uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = 4;

@@ -1,12 +1,15 @@
 
 
 #include "OpenTask.h"
+#include "IOCoordinator.h"
 #include "messageFormat.h"
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -44,13 +47,16 @@ void OpenTask::run()
     
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
-    // IOC->open(cmd->filename, cmd->openmode, &buf[SM_HEADER_LEN])
+    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &buf[SM_HEADER_LEN]);
+    if (err)
+    {
+        handleError("OpenTask open", errno);
+        return;
+    }
     
-    // stand-in dummy response
     uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = sizeof(struct stat);
-    memset(&buf[SM_HEADER_LEN], 0, sizeof(struct stat));
     success = write(buf, sizeof(struct stat) + SM_HEADER_LEN);
     if (!success)
         handleError("OpenTask write", errno);

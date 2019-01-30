@@ -1,9 +1,12 @@
 
 #include "ReadTask.h"
 #include "messageFormat.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -15,6 +18,13 @@ ReadTask::ReadTask(int sock, uint len) : PosixTask(sock, len)
 ReadTask::~ReadTask()
 {
 }
+
+#define check_error(msg) \
+    if (!success) \
+    { \
+        handleError(msg, errno); \
+        return; \
+    }
 
 void ReadTask::run()
 {
@@ -28,6 +38,7 @@ void ReadTask::run()
     
     bool success;
     success = read(buf, getLength());
+    check_error("ReadTask read cmd");
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
     // read from IOC, write to the socket
@@ -38,8 +49,23 @@ void ReadTask::run()
     outbuf32[1] = cmd->count;
     
     // do the reading and writing in chunks
-    // IOC->willRead(filename, offset, length);
-    // IOC->read(filename, offset, length, &outbuf[SM_HEADER_LEN]);
+    ioc->willRead(cmd->filename, cmd->offset, cmd->count);
+    int count = 0, err;
+    while (count < cmd->count)
+    {
+        err = ioc->read(cmd->filename, &outbuf[SM_HEADER_LEN + count], cmd->offset + count, cmd->count - count);
+        if (err < 0)
+        {
+            handleError("ReadTask read data", errno);
+            return;
+        }
+        else if (err == 0)
+        {
+            handleError("ReadTask EOF", errno);
+            return;
+        }
+        count += err;
+    }
     
     write(outbuf);
 }

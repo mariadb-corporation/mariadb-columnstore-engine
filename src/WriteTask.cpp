@@ -1,8 +1,11 @@
 
 #include "WriteTask.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -46,7 +49,17 @@ void WriteTask::run()
         success = read(&databuf[count], cmd->count - count);
         check_error("WriteTask read data");
         count += cmd->count;
-        // IOC->write()
+        int count2 = 0;
+        while (count2 < count)
+        {
+            int err = ioc->write(cmd->filename, &databuf[count + count2], cmd->offset + count2, cmd->count - count2);
+            if (err <= 0)
+            {
+                handleError("WriteTask write", errno);
+                return;
+            }
+            count2 += err;
+        }
     }
 }
 

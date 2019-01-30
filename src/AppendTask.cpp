@@ -1,8 +1,11 @@
 
 #include "AppendTask.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -28,7 +31,8 @@ void AppendTask::run()
 {
     bool success;
     uint8_t cmdbuf[1024] = {0};
-
+    int err;
+    
     success = read(cmdbuf, sizeof(struct cmd_overlay));
     check_error("AppendTask read");
     cmd_overlay *cmd = (cmd_overlay *) cmdbuf;
@@ -45,8 +49,19 @@ void AppendTask::run()
     {
         success = read(&databuf[count], cmd->count - count);
         check_error("AppendTask read data");
+        
+        uint count2 = 0;
+        while (count2 < cmd->count - count)
+        {
+            err = ioc->append(cmd->filename, &databuf[count], cmd->count - count);
+            if (err <= 0)
+            {
+                handleError("AppendTask write data", errno);
+                return;
+            }
+            count2 += err;
+        }
         count += cmd->count;
-        // IOC->append()
     }
 }
 

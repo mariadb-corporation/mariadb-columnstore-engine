@@ -1,9 +1,12 @@
 
 #include "UnlinkTask.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 #include "messageFormat.h"
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -38,9 +41,13 @@ void UnlinkTask::run()
     check_error("UnlinkTask read");
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
-    // IOC->unlink(cmd->filename);
+    int err = ioc->unlink(cmd->filename);
+    if (err)
+    {
+        handleError("UnlinkTask unlink", errno);
+        return;
+    }
     
-    // generic success msg
     uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
     buf32[1] = 4;

@@ -1,6 +1,7 @@
 
 #include "StatTask.h"
 #include "messageFormat.h"
+#include "IOCoordinator.h"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -8,6 +9,8 @@
 #include <string.h>
 
 using namespace std;
+
+extern storagemanager::IOCoordinator *ioc;
 
 namespace storagemanager
 {
@@ -41,16 +44,17 @@ void StatTask::run()
     check_error("StatTask read");
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
-    struct stat _stat;
-    // IOC->stat(cmd->path, &_stat);
+    int err = ioc->stat(cmd->path, (struct stat *) &buf[SM_HEADER_LEN]);
+    if (err)
+    {
+        handleError("StatTask stat", errno);
+        return;
+    }
     
-    // bogus response
-    memset(&_stat, 0, sizeof(_stat));
     uint32_t *buf32 = (uint32_t *) buf;
     buf32[0] = SM_MSG_START;
-    buf32[1] = sizeof(_stat);
-    memcpy(&buf[SM_HEADER_LEN], &_stat, sizeof(_stat));
-    write(buf, SM_HEADER_LEN + sizeof(_stat));
+    buf32[1] = sizeof(struct stat);
+    write(buf, SM_HEADER_LEN + sizeof(struct stat));
 }
 
 }
