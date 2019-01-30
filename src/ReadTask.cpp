@@ -48,21 +48,22 @@ void ReadTask::run()
     outbuf32[0] = SM_MSG_START;
     outbuf32[1] = cmd->count;
     
-    // do the reading and writing in chunks
+    // todo: do the reading and writing in chunks
     ioc->willRead(cmd->filename, cmd->offset, cmd->count);
     int count = 0, err;
     while (count < cmd->count)
     {
         err = ioc->read(cmd->filename, &outbuf[SM_HEADER_LEN + count], cmd->offset + count, cmd->count - count);
-        if (err < 0)
-        {
-            handleError("ReadTask read data", errno);
-            return;
-        }
-        else if (err == 0)
-        {
-            handleError("ReadTask EOF", errno);
-            return;
+        if (err <= 0) {
+            if (count > 0)
+                outbuf32[1] = count;
+            else {
+                outbuf.resize(16);
+                outbuf32[1] = 8;
+                outbuf32[2] = err;
+                outbuf32[3] = errno;
+            }
+            break;
         }
         count += err;
     }

@@ -10,12 +10,17 @@
 using namespace std;
 
 #include "SessionManager.h"
+#include "IOCoordinator.h"
+
 using namespace storagemanager;
+
+IOCoordinator *ioc;
 
 int main(int argc, char** argv)
 {
     int ret = 0;
     SessionManager sessionManager = SessionManager();
+    ioc = new IOCoordinator();
 
     ret = sessionManager.start();
 
