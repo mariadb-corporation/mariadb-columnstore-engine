@@ -70,6 +70,8 @@ template <class T> bool isnan(T);
 #include "item_windowfunc.h"
 #include "sql_cte.h"
 #include "tztime.h"
+#include "derived_handler.h"
+#include "select_handler.h"
 
 // Now clean up the pollution as best we can...
 #undef min

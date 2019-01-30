@@ -192,6 +192,150 @@ bool nonConstFunc(Item_func* ifp)
     return false;
 }
 
+/*@brief getColNameFromItem - builds a name from an Item    */
+/***********************************************************
+ * DESCRIPTION:
+ * This f() looks for a first proper Item_ident and populate
+ * ostream with schema, table and column names.
+ * Used to build db.table.field tuple for debugging output
+ * in getSelectPlan(). TBD getGroupPlan must use this also.
+ * PARAMETERS:
+ *   item               source Item*
+ *   ostream            output stream
+ * RETURNS
+ *  void
+ ***********************************************************/
+void getColNameFromItem(std::ostringstream& ostream, Item* item)
+{
+// MCOL-2121 WIP
+// Item_func doesn't have proper db.table.field values 
+// inherited from Item_ident. TBD what is the valid output.
+// !!!dynamic_cast fails compilation
+    ostream << "'";
+
+    if (item->type() != Item::FIELD_ITEM)
+    {
+        ostream << "unknown db" << '.';
+        ostream << "unknown table" << '.';
+        ostream << "unknown field";
+    }
+    else
+    {
+        Item_ident* iip = reinterpret_cast<Item_ident*>(item);
+
+        if (iip->db_name)
+            ostream << iip->db_name << '.';
+        else
+            ostream << "unknown db" << '.';
+
+        if (iip->table_name)
+            ostream << iip->table_name << '.';
+        else
+            ostream << "unknown table" << '.';
+
+        if (iip->field_name.length)
+            ostream << iip->field_name.str;
+        else
+            ostream << "unknown field";
+    }
+
+    ostream << "'";
+    return;
+}
+
+/*@brf sortItemIsInGroupRec - seeks for an item in grouping*/
+/***********************************************************
+ * DESCRIPTION:
+ * This f() recursively traverses grouping items and looks
+ * for an FUNC_ITEM, REF_ITEM or FIELD_ITEM.
+ * f() is used by sortItemIsInGrouping().
+ * PARAMETERS:
+ *   sort_item          Item* used to build aggregation.
+ *   group_item         GROUP BY item.
+ * RETURNS
+ *  bool
+ ***********************************************************/
+bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
+{
+    bool found = false;
+    // If ITEM_REF::ref is NULL
+    if (sort_item == NULL)
+    {
+        return found;
+    }
+
+    Item_func* ifp_sort = reinterpret_cast<Item_func*>(sort_item);
+
+    // base cases for Item_field and Item_ref. The second arg is binary cmp switch
+    found = group_item->eq(sort_item, false);
+    if (!found && sort_item->type() == Item::REF_ITEM)
+    {
+        Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(sort_item);
+        found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
+    }
+
+    // seeking for a group_item match
+    for (uint32_t i = 0; !found && i < ifp_sort->argument_count(); i++)
+    {
+        Item* ifp_sort_arg = ifp_sort->arguments()[i];
+        if (ifp_sort_arg->type() == Item::FUNC_ITEM
+            || ifp_sort_arg->type() == Item::FIELD_ITEM)
+        {
+            Item* ifp_sort_arg = ifp_sort->arguments()[i];
+            found = sortItemIsInGroupRec(ifp_sort_arg, group_item);
+        }
+        else if (ifp_sort_arg->type() == Item::REF_ITEM)
+        {
+            // dereference the Item
+            Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(ifp_sort_arg);
+            found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
+        }
+    }
+
+    return found;
+}
+
+/*@brief sortItemIsInGrouping- seeks for an item in grouping*/
+/***********************************************************
+ * DESCRIPTION:
+ * This f() traverses grouping items and looks for an item.
+ * only Item_fields, Item_func are considered. However there
+ * could be Item_ref down the tree.
+ * f() is used in sorting parsing by getSelectPlan().
+ * PARAMETERS:
+ *   sort_item          Item* used to build aggregation.
+ *   groupcol           GROUP BY items from this unit.
+ * RETURNS
+ *  bool
+ ***********************************************************/
+bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
+{
+    bool found = false;
+
+    if(sort_item->type() == Item::SUM_FUNC_ITEM)
+    {
+        found = true;
+    }
+
+    for (; !found && groupcol; groupcol = groupcol->next)
+    {
+        Item* group_item = *(groupcol->item);
+        found = (group_item->eq(sort_item, false)) ? true : false;
+        // Detect aggregation functions first then traverse 
+        // if sort field is a Func and group field
+        // is either Field or Func
+        // Consider nonConstFunc() check here
+        if(!found && sort_item->type() == Item::FUNC_ITEM
+            && (group_item->type() == Item::FUNC_ITEM
+                || group_item->type() == Item::FIELD_ITEM))
+        {
+            found = sortItemIsInGroupRec(sort_item, group_item);
+        }
+    }
+
+    return found;
+}
+
 /*@brief  buildAggFrmTempField- build aggr func from extSELECT list item*/
 /***********************************************************
  * DESCRIPTION:
@@ -230,7 +374,6 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
         std::vector<Item*>::iterator iter = gwi.extSelAggColsItems.begin();
         for ( ; iter != gwi.extSelAggColsItems.end(); iter++ )
         {
-            //Item* temp_isfp = *iter;
             isfp = reinterpret_cast<Item_func_or_sum*>(*iter);
 
             if ( isfp->type() == Item::SUM_FUNC_ITEM &&
@@ -4079,10 +4222,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     {
         // check foreign engine
         if (ifp->cached_table && ifp->cached_table->table)
-            infiniDB = isInfiniDB(ifp->cached_table->table);
+            infiniDB = isMCSTable(ifp->cached_table->table);
         // @bug4509. ifp->cached_table could be null for myisam sometimes
         else if (ifp->field && ifp->field->table)
-            infiniDB = isInfiniDB(ifp->field->table);
+            infiniDB = isMCSTable(ifp->field->table);
 
         if (infiniDB)
         {
@@ -5732,7 +5875,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
     }
 }
 
-bool isInfiniDB(TABLE* table_ptr)
+bool isMCSTable(TABLE* table_ptr)
 {
 #if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
 
@@ -5754,14 +5897,18 @@ bool isInfiniDB(TABLE* table_ptr)
         return false;
 }
 
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion)
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
+    SCSEP& csep,
+    bool isUnion,
+    bool isPushdownHand)
 {
 #ifdef DEBUG_WALK_COND
     cerr << "getSelectPlan()" << endl;
 #endif
 
     // by pass the derived table resolve phase of mysql
-    if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
+    if ( !isPushdownHand &&
+            !(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
@@ -5913,7 +6060,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)
@@ -5965,6 +6112,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     bool unionSel = false;
 
+    // UNION master unit check
+    // Existed pushdown handlers won't get in this scope
+    // except UNION pushdown that is to come.
+    // is_unit_op() give a segv for derived_handler's SELECT_LEX
     if (!isUnion && select_lex.master_unit()->is_unit_op())
     {
         gwi.thd->infinidb_vtable.isUnion = true;
@@ -7212,16 +7363,29 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         {
             if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
                 gwi.hasWindowFunc = true;
+            // MCOL-2166 Looking for this sorting item in GROUP_BY items list.
+            if(isPushdownHand
+                && !sortItemIsInGrouping(*ordercol->item, select_lex.group_list.first))
+            {
+                std::ostringstream ostream;
+                std::ostringstream& osr = ostream;
+                getColNameFromItem(osr, *ordercol->item);
+                Message::Args args;
+                args.add(ostream.str());
+                string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
+                gwi.parseErrorText = emsg;
+                setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+                return ERR_NOT_GROUPBY_EXPRESSION;
+            }
         }
 
         // re-visit the first of ordercol list
         ordercol = reinterpret_cast<ORDER*>(order_list.first);
 
-        // for subquery, order+limit by will be supported in infinidb. build order by columns
-        // @todo union order by and limit support
-        if (gwi.hasWindowFunc
-            || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT
-            || ( isUnion && ordercol ))
+        // for subquery or pushdown query, order+limit by will be supported in CS
+        // union order by and limit are supported
+        if (gwi.hasWindowFunc || isPushdownHand || ( isUnion && ordercol )
+        || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT )
         {
             for (; ordercol; ordercol = ordercol->next)
             {
@@ -7654,12 +7818,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 gwi.returnedCols.push_back(minSc);
         }
 
-        if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
+        // ORDER BY translation part
+        if (!isUnion && !gwi.hasWindowFunc
+                && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT )
         {
             std::ostringstream vtb;
             vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
 
-            //vtb << "$vtable_" << gwi.thd->thread_id;
             // re-construct the select query and redo phase 1
             if (redo)
             {
@@ -7927,11 +8092,20 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             {
                 gwi.thd->infinidb_vtable.has_order_by = true;
                 csep->hasOrderBy(true);
+                // To activate LimitedOrderBy
+                if(isPushdownHand)
+                {
+                    csep->specHandlerProcessed(true);
+                }
                 ord_cols = " order by " + ord_cols;
                 select_query += ord_cols;
             }
         }
 
+        // LIMIT processing part
+        uint64_t limitNum = std::numeric_limits<uint64_t>::max();
+
+        // non-MAIN union branch
         if (unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
         {
             if (select_lex.master_unit()->global_parameters()->explicit_limit)
@@ -7958,6 +8132,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 }
             }
         }
+        // union with explicit select at the top level
         else if (isUnion && select_lex.explicit_limit)
         {
             if (select_lex.braces)
@@ -7969,10 +8144,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                     csep->limitNum(((Item_int*)select_lex.select_limit)->val_int());
             }
         }
+        // other types of queries that have explicit LIMIT
         else if (select_lex.explicit_limit)
         {
             uint32_t limitOffset = 0;
-            uint32_t limitNum = std::numeric_limits<uint32_t>::max();
 
             if (join)
             {
@@ -8027,12 +8202,24 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 csep->limitStart(limitOffset);
                 csep->limitNum(limitNum);
             }
+            // Pushdown queries w ORDER BY and LIMIT
+            else if (isPushdownHand && csep->hasOrderBy())
+            {
+                csep->limitStart(limitOffset);
+                csep->limitNum(limitNum);
+            }
             else
             {
                 ostringstream limit;
                 limit << " limit " << limitOffset << ", " << limitNum;
                 select_query += limit.str();
             }
+        }
+        // Pushdown queries with ORDER BY w/o explicit limit
+        else if (isPushdownHand && csep->hasOrderBy())
+        {
+            // We must set this to activate LimitedOrderBy in ExeMgr
+            csep->limitNum((uint64_t) - 2);
         }
 
         gwi.thd->infinidb_vtable.select_vtable_query.free();
@@ -8047,9 +8234,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-    }
+    } // LIMIT processing finishes here
 
-    if (/*join->select_options*/select_lex.options & SELECT_DISTINCT)
+    if (select_lex.options & SELECT_DISTINCT)
         csep->distinct(true);
 
     // add the smallest column to count(*) parm.
@@ -8283,6 +8470,49 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     return 0;
 }
 
+int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
+{
+    SELECT_LEX select_lex = *handler->select;
+    gp_walk_info gwi;
+    gwi.thd = thd;
+    int status = getSelectPlan(gwi, select_lex, csep, false, true);
+
+    if (status > 0)
+        return ER_INTERNAL_ERROR;
+    else if (status < 0)
+        return status;
+
+#ifdef DEBUG_WALK_COND
+    cerr << "---------------- cp_get_derived_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+#endif
+
+    return 0;
+}
+
+int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep)
+{
+    SELECT_LEX select_lex = *handler->select;
+    gp_walk_info gwi;
+    gwi.thd = thd;
+    int status = getSelectPlan(gwi, select_lex, csep, false, true);
+
+    if (status > 0)
+        return ER_INTERNAL_ERROR;
+    else if (status < 0)
+        return status;
+
+#ifdef DEBUG_WALK_COND
+    cerr << "---------------- cp_get_select_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+#endif
+
+    return 0;
+}
+
+
 /*@brief  buildConstColFromFilter- change SimpleColumn into ConstColumn*/
 /***********************************************************
  * DESCRIPTION:
@@ -8290,6 +8520,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
  * filter predicate is used, e.g.
  * field = 'AIR', field IN ('AIR'). This utility function tries to
  * replace such fields with ConstantColumns using cond_pushed filters.
+ * TBD Take into account that originalSC SimpleColumn could be:
+ * SimpleColumn, ArithmeticColumn, FunctionColumn.
  * PARAMETERS:
  *    originalSC    SimpleColumn* removed field
  *    gwi           main strucutre
@@ -8470,7 +8702,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)
@@ -9652,6 +9884,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     } // GROUP processing ends here
 
 
+    // ORDER BY processing starts here
     if (gwi.thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
     {
         ORDER* ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
@@ -9752,26 +9985,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     // this ORDER BY item.
                     if ( iter == gwi.groupByCols.end() )
                     {
-                        Item_ident* iip = reinterpret_cast<Item_ident*>(ord_item);
                         std::ostringstream ostream;
-                        ostream << "'";
-
-                        if (iip->db_name)
-                            ostream << iip->db_name << '.';
-                        else
-                            ostream << "unknown db" << '.';
-
-                        if (iip->table_name)
-                            ostream << iip->table_name << '.';
-                        else
-                            ostream << "unknown table" << '.';
-
-                        if (iip->field_name.length)
-                            ostream << iip->field_name.str;
-                        else
-                            ostream << "unknown field";
-
-                        ostream << "'";
+                        std::ostringstream& osr = ostream;
+                        getColNameFromItem(osr, *ordercol->item);
                         Message::Args args;
                         args.add(ostream.str());
                         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);

@@ -117,7 +117,7 @@ void View::transform()
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)

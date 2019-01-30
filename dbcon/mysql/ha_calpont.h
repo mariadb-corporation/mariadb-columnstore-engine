@@ -24,7 +24,7 @@
 extern handlerton* calpont_hton;
 
 /** @brief
-  This structure will be shared among all open handlers.
+  INFINIDB_SHARE is a structure that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
 */
 typedef struct st_calpont_share
@@ -228,51 +228,4 @@ public:
     }
 
 };
-
-/*@brief  group_by_handler class*/
-/***********************************************************
- * DESCRIPTION:
- * Provides server with group_by_handler API methods.
- * One should read comments in server/sql/group_by_handler.h
- * Attributes:
- * select - attribute contains all GROUP BY, HAVING, ORDER items and calls it
- *              an extended SELECT list according to comments in
- *              server/sql/group_handler.cc.
- *              So the temporary table for
- *              select count(*) from b group by a having a > 3 order by a
- *              will have 4 columns not 1.
- *              However server ignores all NULLs used in
- *              GROUP BY, HAVING, ORDER.
- * select_list_descr - contains Item description returned by Item->print()
- *              that is used in lookup for corresponding columns in
- *              extended SELECT list.
- * table_list - contains all tables involved. Must be CS tables only.
- * distinct - looks like a useless thing for now. Couldn't get it set by server.
- * where - where items.
- * group_by - group by ORDER items.
- * order_by - order by ORDER items.
- * having - having Item.
- * Methods:
- * init_scan - get plan and send it to ExeMgr. Get the execution result.
- * next_row - get a row back from sm.
- * end_scan - finish and clean the things up.
- ***********************************************************/
-class ha_calpont_group_by_handler: public group_by_handler
-{
-public:
-    ha_calpont_group_by_handler(THD* thd_arg, Query* query);
-    ~ha_calpont_group_by_handler();
-    int init_scan();
-    int next_row();
-    int end_scan();
-
-    List<Item>* select;
-    TABLE_LIST* table_list;
-    bool        distinct;
-    Item*       where;
-    ORDER*      group_by;
-    ORDER*      order_by;
-    Item*       having;
-};
 #endif //HA_CALPONT_H__
-
