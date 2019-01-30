@@ -1,5 +1,6 @@
 
 #include "AppendTask.h"
+#include "messageFormat.h"
 #include "IOCoordinator.h"
 #include <errno.h>
 
