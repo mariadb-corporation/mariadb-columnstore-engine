@@ -39,12 +39,12 @@ void WriteTask::run()
     
     success = read(&cmdbuf[sizeof(*cmd)], min(cmd->filename_len, 1024 - sizeof(*cmd) - 1));
     check_error("WriteTask read");
-    
+            
     size_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
     uint bufsize = 1 << 20;   // 1 MB
     databuf.resize(bufsize);  // 1 MB
-    
+
     while (readCount < cmd->count)
     {
         uint toRead = min(cmd->count - readCount, bufsize);    // 1 MB
@@ -61,11 +61,22 @@ void WriteTask::run()
         if (writeCount != readCount)
             break;
     }
-    uint32_t *buf32 = (uint32_t *) cmdbuf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = 4;
-    buf32[2] = writeCount;
-    write(cmdbuf, 12);
+    
+    uint32_t response[4];
+    response[0] = SM_MSG_START;
+    if (cmd->count != 0 && writeCount == 0)
+    {
+        response[1] = 8;
+        response[2] = -1;
+        response[3] = errno;
+        write((uint8_t *) response, 16);
+    }
+    else
+    {
+        response[1] = 4;
+        response[2] = writeCount;
+        write((uint8_t *) response, 12);
+    }
 }
 
 }

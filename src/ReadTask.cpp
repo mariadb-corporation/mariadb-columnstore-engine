@@ -58,10 +58,11 @@ void ReadTask::run()
             if (count > 0)
                 outbuf32[1] = count;
             else {
+                int l_errno = errno;
                 outbuf.resize(16);
                 outbuf32[1] = 8;
                 outbuf32[2] = err;
-                outbuf32[3] = errno;
+                outbuf32[3] = l_errno;
             }
             break;
         }

@@ -62,11 +62,22 @@ void AppendTask::run()
         if (readCount != writeCount)
             break;
     }
-    uint32_t *buf32 = (uint32_t *) cmdbuf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = 4;
-    buf32[2] = writeCount;
-    write(cmdbuf, 12);
+    
+    uint32_t response[4];
+    response[0] = SM_MSG_START;
+    if (cmd->count != 0 && writeCount == 0)
+    {
+        response[1] = 8;
+        response[2] = -1;
+        response[3] = errno;
+        write((uint8_t *) response, 16);
+    }
+    else
+    {
+        response[1] = 4;
+        response[2] = writeCount;
+        write((uint8_t *) response, 12);
+    }
 }
 
 }
