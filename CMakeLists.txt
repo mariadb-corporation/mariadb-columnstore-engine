@@ -17,7 +17,7 @@ set(storagemanager_SRCS
     src/UnlinkTask.cpp
     src/WriteTask.cpp
     src/IOCoordinator.cpp
-    #src/SessionManager.cpp
+    src/SessionManager.cpp
     src/main.cpp 
 
 )
