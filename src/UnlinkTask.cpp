@@ -39,7 +39,7 @@ void UnlinkTask::run()
     
     success = read(buf, getLength());
     check_error("UnlinkTask read");
-    cmd_overlay *cmd = (cmd_overlay *) buf;
+    unlink_cmd *cmd = (unlink_cmd *) buf;
     
     int err = ioc->unlink(cmd->filename);
     if (err)
@@ -48,11 +48,11 @@ void UnlinkTask::run()
         return;
     }
     
-    uint32_t *buf32 = (uint32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = 4;
-    buf32[2] = 0;
-    write(buf, 12);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    resp->type = SM_MSG_START;
+    resp->payloadLen = 4;
+    resp->returnCode = 0;
+    write(buf, sizeof(*resp));
 }
 
 }

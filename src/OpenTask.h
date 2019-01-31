@@ -17,12 +17,6 @@ class OpenTask : public PosixTask
     
     private:
         OpenTask();
-        
-        struct cmd_overlay {
-            int openmode;
-            uint flen;
-            char filename[];
-        };
 };
 
 

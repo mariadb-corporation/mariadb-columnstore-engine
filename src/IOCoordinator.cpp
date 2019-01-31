@@ -37,7 +37,7 @@ struct scoped_closer {
 };
 
 #define OPEN(name, mode) \
-    fd = ::open(filename, mode); \
+    fd = ::open(filename, mode, 0666); \
     if (fd < 0) \
         return fd; \
     scoped_closer sc(fd);

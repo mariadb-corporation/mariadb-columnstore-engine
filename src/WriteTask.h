@@ -18,13 +18,6 @@ class WriteTask : public PosixTask
     
     private:
         WriteTask();
-        
-        struct cmd_overlay {
-            size_t count;
-            off_t offset;
-            uint filename_len;
-            char filename[];
-        };
 };
 
 }

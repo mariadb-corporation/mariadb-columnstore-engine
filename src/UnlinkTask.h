@@ -17,11 +17,6 @@ class UnlinkTask : public PosixTask
     
     private:
         UnlinkTask();
-        
-        struct cmd_overlay {
-            uint flen;
-            char filename[];
-        };
 };
 
 

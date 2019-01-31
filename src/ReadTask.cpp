@@ -49,6 +49,7 @@ void ReadTask::run()
     outbuf32[1] = cmd->count;
     
     // todo: do the reading and writing in chunks
+    // todo: need to make this use O_DIRECT
     ioc->willRead(cmd->filename, cmd->offset, cmd->count);
     int count = 0, err;
     while (count < cmd->count)

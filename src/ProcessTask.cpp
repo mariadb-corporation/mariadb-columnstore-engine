@@ -14,6 +14,8 @@
 #include "UnlinkTask.h"
 #include "WriteTask.h"
 
+#include <sys/socket.h>
+
 using namespace std;
 
 namespace storagemanager
@@ -50,8 +52,7 @@ void ProcessTask::operator()()
     int err;
     uint8_t opcode;
     
-    /* D'oh, a 1-byte read....   TODO! */
-    err = ::read(sock, &opcode, 1);
+    err = ::recv(sock, &opcode, 1, MSG_PEEK);
     if (err <= 0)
     {
         handleError(errno);

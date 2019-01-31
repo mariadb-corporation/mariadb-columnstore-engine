@@ -36,15 +36,15 @@ void PosixTask::handleError(const char *name, int errCode)
     char buf[80];
     
     // send an error response if possible
-    int32_t *buf32 = (int32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = 8;
-    buf32[2] = -1;
-    buf32[3] = errCode;
-    write((uint8_t *) buf, 16);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    resp->type = SM_MSG_START;
+    resp->payloadLen = 8;
+    resp->returnCode = -1;
+    *((int *) resp->payload) = errCode;
+    write((uint8_t *) buf, sizeof(*resp) + 4);
     
     // TODO: construct and log a message
-    cout << name << " caught an error reading from a socket: " << strerror_r(errCode, buf, 80) << endl;
+    cout << name << " caught an error: " << strerror_r(errCode, buf, 80) << endl;
     socketError();
 }
 

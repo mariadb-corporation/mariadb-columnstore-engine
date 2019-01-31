@@ -45,19 +45,20 @@ void OpenTask::run()
         return;
     }
     
-    cmd_overlay *cmd = (cmd_overlay *) buf;
-    
-    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &buf[SM_HEADER_LEN]);
+    open_cmd *cmd = (open_cmd *) buf;
+
+    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &buf[sizeof(sm_msg_resp)]);
     if (err)
     {
         handleError("OpenTask open", errno);
         return;
     }
     
-    uint32_t *buf32 = (uint32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = sizeof(struct stat);
-    success = write(buf, sizeof(struct stat) + SM_HEADER_LEN);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    resp->type = SM_MSG_START;
+    resp->payloadLen = sizeof(struct stat) + 4;
+    resp->returnCode = 0;
+    success = write(buf, sizeof(struct stat) + sizeof(sm_msg_resp));
     if (!success)
         handleError("OpenTask write", errno);
 }

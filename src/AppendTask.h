@@ -18,12 +18,6 @@ class AppendTask : public PosixTask
     
     private:
         AppendTask();
-        
-        struct cmd_overlay {
-            size_t count;
-            uint filename_len;
-            char filename[];
-        };
 };
 
 }

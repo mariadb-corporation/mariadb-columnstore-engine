@@ -7,29 +7,47 @@
 #ifndef MESSAGEFORMAT_H_
 #define MESSAGEFORMAT_H_
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdint.h>
+
+
 namespace storagemanager
 {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
+#pragma pack(push, 1)
+struct sm_msg_header {
+    uint32_t type;   // SM_MSG_{START,CONT,END}
+    uint32_t payloadLen;
+    uint8_t payload[];
+};
+
+struct sm_msg_resp {
+    uint32_t type;
+    uint32_t payloadLen;
+    int32_t returnCode;   // if < 0 it indicates an error, and payload contains a 4-byte errno value
+    uint8_t payload[];
+};
+
 // all msgs to and from StorageManager begin with this magic and a payload length
-static const uint SM_MSG_START=0xbf65a7e1;
+static const uint32_t SM_MSG_START=0xbf65a7e1;
 
 // for read/write/append, which may break a message into chunks, messages not the 
 // beginning or end of the larger message will preface a chunk with this magic 
-static const uint SM_MSG_CONT=0xfa371bd2;
+static const uint32_t SM_MSG_CONT=0xfa371bd2;
 
 // for read/write/append, the last chunk of a message should begin with this magic
-static const uint SM_MSG_END=0x9d5bc31b;
+static const uint32_t SM_MSG_END=0x9d5bc31b;
 
-static const uint SM_HEADER_LEN = 8;
+static const uint32_t SM_HEADER_LEN = sizeof(sm_msg_header);
 
 // the unix socket StorageManager is listening on
 static const char *socket_name = "\0storagemanager";
 
 #pragma GCC diagnostic pop
-
 
 // opcodes understood by StorageManager.  Cast these to
 // a uint8_t to use them.
@@ -57,7 +75,9 @@ enum Opcodes {
     On success, what follows is any output parameters from the call.
     
     TBD: Require filenames to be NULL-terminated.  Currently they are not.
+*/
 
+/*
     OPEN
     ----
     command format:
@@ -65,7 +85,19 @@ enum Opcodes {
 
     response format:
     struct stat
+*/
+struct open_cmd {
+    uint8_t opcode;   // == OPEN 
+    int32_t openmode;
+    uint32_t flen;
+    char filename[];
+};
 
+struct open_resp {
+    struct stat statbuf;
+};
+
+/*
     READ
     ----
     command format:
@@ -73,28 +105,66 @@ enum Opcodes {
 
     response format:
     data (size is stored in the return code)
+*/
+struct read_cmd {
+    uint8_t opcode;   // == READ
+    size_t count;
+    off_t offset;
+    uint32_t flen;
+    char filename[];
+};
 
+typedef uint8_t read_resp;
+        
+/*
     WRITE
     -----
     command format:
     1-byte opcode|size_t count|off_t offset|4-byte filename length|filename|data
 
     response format:
+*/
+struct write_cmd {
+    uint8_t opcode;   // == WRITE
+    size_t count;
+    off_t offset;
+    uint32_t flen;
+    char filename[];
+    // after this is the data to be written, ie at &filename[flen]
+};    
 
+/*
     APPEND
     ------
     command format:
-    1-byte opcode|4-byte filename length|filename|size_t count|data
+    1-byte opcode|size_t count|4-byte filename length|filename|data
 
     response format:
+*/
+struct append_cmd {
+    uint8_t opcode;    // == APPEND
+    size_t count;
+    uint32_t flen;
+    char filename[];
+    // after this is the data to be written, ie at &filename[flen]
+};
 
+/*
     UNLINK
     ------
     command format:
     1-byte opcode|4-byte filename length|filename
 
     response format:
-    
+*/
+struct unlink_cmd {
+    uint8_t opcode; // == UNLINK
+    uint32_t flen;
+    char filename[];
+};
+
+/*
+
     STAT
     ----
     command format:
@@ -102,7 +172,19 @@ enum Opcodes {
 
     response format:
     struct stat
+*/
+struct stat_cmd {
+    uint8_t opcode;   // == STAT
+    uint32_t flen;
+    char filename[];
+};
 
+struct stat_resp {
+    struct stat statbuf;
+}
+
+/*
+    
     TRUNCATE
     --------
     command format:
@@ -127,6 +209,8 @@ enum Opcodes {
     reponse format:
 
 */
+
+#pragma pack(pop)
 
 }
 
