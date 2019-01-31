@@ -34,14 +34,14 @@ void OpenTask::run()
     
     if (getLength() > 1023)
     {
-        handleError("OpenTask read", ENAMETOOLONG);
+        handleError("OpenTask read1", ENAMETOOLONG);
         return;
     }
     
     success = read(buf, getLength());
     if (!success)
     {
-        handleError("OpenTask read", errno);
+        handleError("OpenTask read2", errno);
         return;
     }
     

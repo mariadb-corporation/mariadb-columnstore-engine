@@ -44,11 +44,11 @@ void AppendTask::run()
     size_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
     uint bufsize = 1 << 20;   // 1 MB
-    databuf.resize(bufsize);  // 1 MB
+    databuf.resize(bufsize);
     
     while (readCount < cmd->count)
     {
-        uint toRead = min(cmd->count - readCount, bufsize);    // 1 MB
+        uint toRead = min(cmd->count - readCount, bufsize);
         success = read(&databuf[0], toRead);
         check_error("AppendTask read data");
         readCount += toRead;
