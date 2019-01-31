@@ -6,7 +6,6 @@
 #include <deque>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
-#include <boost/utility.hpp>
 
 namespace storagemanager
 {
@@ -19,7 +18,12 @@ class ThreadPool : public boost::noncopyable
         virtual ~ThreadPool();
         
         // addJob doesn't block
-        typedef boost::function0<void> Job;
+        class Job
+        {
+            public:
+                virtual void operator()() = 0;
+        };
+        
         void addJob(const boost::shared_ptr<Job> &j);
 
     private:
