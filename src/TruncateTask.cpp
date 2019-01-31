@@ -38,20 +38,20 @@ void TruncateTask::run()
     
     success = read(buf, getLength());
     check_error("TruncateTask read");
-    cmd_overlay *cmd = (cmd_overlay *) buf;
+    truncate_cmd *cmd = (truncate_cmd *) buf;
     
-    int err = ioc->truncate(cmd->filename, cmd->newSize);
+    int err = ioc->truncate(cmd->filename, cmd->length);
     if (err)
     {
         handleError("TruncateTask truncate", errno);
         return;
     }
     
-    uint32_t *buf32 = (uint32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = 4;
-    buf32[2] = 0;
-    write(buf, 12);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    resp->type = SM_MSG_START;
+    resp->payloadLen = 4;
+    resp->returnCode = 0;
+    write(buf, sizeof(sm_msg_resp));
 }
 
 }

@@ -181,17 +181,25 @@ struct stat_cmd {
 
 struct stat_resp {
     struct stat statbuf;
-}
+};
 
 /*
     
     TRUNCATE
     --------
     command format:
-    1-byte opcode|off64_t length|4-byte filename length|filename
+    1-byte opcode|off_t length|4-byte filename length|filename
    
     response format:
-    
+*/
+struct truncate_cmd {
+    uint8_t opcode;   // == TRUNCATE
+    off_t length;
+    uint32_t flen;
+    char filename[];
+};
+
+/*
     LIST_DIRECTORY
     --------------
     command format:
@@ -200,15 +208,38 @@ struct stat_resp {
     response format:
     4-byte num elements|
     (4-byte filename length|filename) * num elements
-    
+*/
+
+struct listdir_cmd {
+    uint8_t opcode;   // == LIST_DIRECTORY
+    uint32_t plen;
+    char path[];
+};
+
+struct listdir_resp_entry {
+    uint32_t flen;
+    char filename[];
+};
+
+struct listdir_resp {
+    uint32_t elements;
+    listdir_resp_entry entries[];
+    // followed by (elements * listdir_resp_entry)
+};
+
+/*
     PING
     ----
     command format:
     1-byte opcode
 
-    reponse format:
-
+    response format:
+    nothing yet
 */
+struct ping_cmd {
+    uint8_t opcode;
+};
+
 
 #pragma pack(pop)
 

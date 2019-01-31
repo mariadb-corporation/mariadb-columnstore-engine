@@ -4,6 +4,7 @@
 #include "messageFormat.h"
 #include <errno.h>
 #include <string.h>
+#include <iostream>
 
 using namespace std;
 
@@ -77,20 +78,24 @@ void ListDirectoryTask::run()
     
     success = read(buf, getLength());
     check_error("ListDirectoryTask read");
-    cmd_overlay *cmd = (cmd_overlay *) buf;
+    listdir_cmd *cmd = (listdir_cmd *) buf;
     
     vector<string> listing;
     err = ioc->listDirectory(cmd->path, &listing);
     
-    uint payloadLen = 4 * listing.size();
+    // be careful modifying the listdir return types...
+    uint payloadLen = sizeof(listdir_resp_entry) * listing.size();
     for (uint i = 0; i < listing.size(); i++)
         payloadLen += listing.size();
     
-    uint32_t *buf32 = (uint32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = payloadLen;
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    resp->type = SM_MSG_START;
+    resp->payloadLen = payloadLen + sizeof(listdir_resp);
+    resp->returnCode = 0;
+    listdir_resp *r = (listdir_resp *) resp->payload;
+    r->elements = listing.size();
     
-    int offset = SM_HEADER_LEN;
+    int offset = (uint64_t) r->entries - (uint64_t) buf;
     for (uint i = 0; i < listing.size(); i++)
     {
         success = writeString(buf, &offset, 1024, listing[i]);

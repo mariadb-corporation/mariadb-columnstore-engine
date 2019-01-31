@@ -2,6 +2,10 @@
 #include "WriteTask.h"
 #include "AppendTask.h"
 #include "UnlinkTask.h"
+#include "StatTask.h"
+#include "TruncateTask.h"
+#include "ListDirectoryTask.h"
+#include "PingTask.h"
 #include "IOCoordinator.h"
 #include "messageFormat.h"
 #include <iostream>
@@ -254,6 +258,148 @@ bool unlinktask()
     cout << "unlink task OK" << endl;
 }
 
+bool stattask()
+{
+    const char *filename = "stattest1";
+    ::unlink(filename);
+    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
+    assert(fd > 0);
+    scoped_closer f(fd);
+
+    uint8_t buf[1024];
+    stat_cmd *cmd = (stat_cmd *) buf;
+    
+    cmd->opcode = STAT;
+    cmd->flen = strlen(filename);
+    strcpy((char *) cmd->filename, filename);
+    
+    ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
+    StatTask s(clientSock, sizeof(*cmd) + cmd->flen);
+    s.run();
+    
+    // read the response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    assert(err == sizeof(struct stat) + sizeof(sm_msg_resp));
+    assert(resp->type == SM_MSG_START);
+    assert(resp->payloadLen == sizeof(struct stat) + 4);
+    assert(resp->returnCode == 0);
+    struct stat *_stat = (struct stat *) resp->payload;
+    
+    // what can we verify about the stat...
+    assert(_stat->st_uid == getuid());
+    assert(_stat->st_gid == getgid());
+    assert(_stat->st_size == 0);
+    
+    ::unlink(filename);
+    cout << "stattask OK" << endl;
+    return true;
+}
+
+bool truncatetask()
+{
+    const char *filename = "trunctest1";
+    ::unlink(filename);
+    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
+    assert(fd > 0);
+    scoped_closer f(fd);
+
+    uint8_t buf[1024];
+    truncate_cmd *cmd = (truncate_cmd *) buf;
+    
+    cmd->opcode = TRUNCATE;
+    cmd->length = 1000;
+    cmd->flen = strlen(filename);
+    strcpy((char *) cmd->filename, filename);
+    
+    ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
+    TruncateTask t(clientSock, sizeof(*cmd) + cmd->flen);
+    t.run();
+    
+    // read the response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    assert(err == sizeof(sm_msg_resp));
+    assert(resp->type == SM_MSG_START);
+    assert(resp->payloadLen == 4);
+    assert(resp->returnCode == 0);
+    
+    struct stat statbuf;
+    ::stat(filename, &statbuf);
+    assert(statbuf.st_size == 1000);
+    ::unlink(filename);
+    cout << "truncate task OK" << endl;
+    return true;
+}
+
+bool listdirtask()
+{
+    // make a file, make sure it's in the list returned.
+    const char *filename = "listdirtest1";
+    ::unlink(filename);
+    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
+    assert(fd > 0);
+    scoped_closer f(fd);
+    
+    uint8_t buf[1024];
+    listdir_cmd *cmd = (listdir_cmd *) buf;
+    
+    cmd->opcode = LIST_DIRECTORY;
+    cmd->plen = 1;
+    cmd->path[0] = '.';
+    
+    ::write(sessionSock, cmd, sizeof(*cmd) + cmd->plen);
+    ListDirectoryTask l(clientSock, sizeof(*cmd) + cmd->plen);
+    l.run();
+
+    /* going to keep this simple. Don't run this in a big dir. */
+    /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    assert(err > 0);
+    assert(resp->type == SM_MSG_START);
+    assert(resp->returnCode == 0);
+    listdir_resp *r = (listdir_resp *) resp->payload;
+    //cout << "resp has " << r->elements << " elements" << endl;
+    int off = sizeof(sm_msg_resp) + sizeof(listdir_resp);
+    while (off < err)
+    {
+        listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
+        //cout << "len = " << e->flen << endl;
+        assert(off + e->flen + sizeof(listdir_resp_entry) < 1024);
+        if (!strncmp(e->filename, filename, strlen(filename))) {
+            cout << "listdirtask OK" << endl;
+            return true;
+        }
+        //string name(e->filename, e->flen);
+        //cout << "name = " << name << endl;
+        off += e->flen + sizeof(listdir_resp_entry);
+    }
+    cout << "listdirtask().  Didn't find '" << filename << " in the listing.  Dir too large for this test?" << endl;
+    assert(1);
+    return false;
+}
+
+bool pingtask()
+{
+    uint8_t buf[1024];
+    ping_cmd *cmd = (ping_cmd *) buf;
+    cmd->opcode = PING;
+    
+    ::write(sessionSock, cmd, sizeof(*cmd));
+    PingTask p(clientSock, sizeof(*cmd));
+    p.run();
+    
+    // read the response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    assert(err == sizeof(sm_msg_resp));
+    assert(resp->type == SM_MSG_START);
+    assert(resp->payloadLen == 4);
+    assert(resp->returnCode == 0);
+    cout << "pingtask OK" << endl;
+}
+
 int main()
 {
     ioc = new IOCoordinator();
@@ -265,5 +411,9 @@ int main()
     writetask();
     appendtask();
     unlinktask();
+    stattask();
+    truncatetask();
+    listdirtask();
+    pingtask();
     return 0;
 }

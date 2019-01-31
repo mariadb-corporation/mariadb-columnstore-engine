@@ -17,12 +17,6 @@ class TruncateTask : public PosixTask
     
     private:
         TruncateTask();
-        
-        struct cmd_overlay {
-            off64_t newSize;
-            uint flen;
-            char filename[];
-        };
 };
 
 

@@ -17,11 +17,6 @@ class StatTask : public PosixTask
     
     private:
         StatTask();
-        
-        struct cmd_overlay {
-            uint plen;
-            char path[];
-        };
 };
 
 

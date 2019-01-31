@@ -42,19 +42,20 @@ void StatTask::run()
     
     success = read(buf, getLength());
     check_error("StatTask read");
-    cmd_overlay *cmd = (cmd_overlay *) buf;
+    stat_cmd *cmd = (stat_cmd *) buf;
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
     
-    int err = ioc->stat(cmd->path, (struct stat *) &buf[SM_HEADER_LEN]);
+    int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);
     if (err)
     {
         handleError("StatTask stat", errno);
         return;
     }
-    
-    uint32_t *buf32 = (uint32_t *) buf;
-    buf32[0] = SM_MSG_START;
-    buf32[1] = sizeof(struct stat);
-    write(buf, SM_HEADER_LEN + sizeof(struct stat));
+
+    resp->type = SM_MSG_START;
+    resp->payloadLen = sizeof(struct stat) + 4;
+    resp->returnCode = 0;
+    write(buf, sizeof(*resp) + sizeof(struct stat));
 }
 
 }
