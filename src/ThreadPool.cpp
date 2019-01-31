@@ -32,7 +32,7 @@ ThreadPool::~ThreadPool()
         threads[i]->join();
 }
 
-void ThreadPool::addJob(Job &j)
+void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
 {
     boost::mutex::scoped_lock s(m);
     jobs.push_back(j);
@@ -60,11 +60,11 @@ void ThreadPool::processingLoop()
         }
         if (die)
             return;
-        Job job = jobs.front();
+        boost::shared_ptr<Job> job = jobs.front();
         jobs.pop_front();
         s.unlock();
         
-        job();
+        (*job)();
     }
 }
 

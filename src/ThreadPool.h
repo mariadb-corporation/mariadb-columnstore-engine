@@ -20,7 +20,7 @@ class ThreadPool : public boost::noncopyable
         
         // addJob doesn't block
         typedef boost::function0<void> Job;
-        void addJob(Job &j);
+        void addJob(const boost::shared_ptr<Job> &j);
 
     private:
         struct Runner {
@@ -36,7 +36,7 @@ class ThreadPool : public boost::noncopyable
         int threadsWaiting;
         std::vector<boost::shared_ptr<boost::thread> > threads;
         boost::condition jobAvailable;
-        std::deque<Job> jobs;
+        std::deque<boost::shared_ptr<Job> > jobs;
         boost::mutex m;
 };
 
