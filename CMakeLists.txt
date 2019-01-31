@@ -17,7 +17,7 @@ set(storagemanager_SRCS
     src/UnlinkTask.cpp
     src/WriteTask.cpp
     src/IOCoordinator.cpp
-    #src/SessionManager.cpp
+    src/SessionManager.cpp
 )
 
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
@@ -25,7 +25,6 @@ target_link_libraries(StorageManager boost_system boost_thread boost_filesystem)
 
 add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
 target_link_libraries(unit_tests boost_system boost_thread boost_filesystem)
-
 
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
