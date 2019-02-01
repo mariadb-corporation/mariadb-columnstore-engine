@@ -65,9 +65,11 @@ int SMFileSystem::remove(const char *filename)
 
 int SMFileSystem::rename(const char *oldFile, const char *newFile)
 {
-    // This will actually be pretty expensive to do b/c we store the filename in 
-    // the key in cloud.  If we do this a lot, we'll have to implement copy() in the SM.
-    throw NotImplementedYet(__func__);
+    int err = copyFile(oldFile, newFile);
+    if (err)
+        return err;
+    err = unlink(oldFile);
+    return err;
 }
 
 bool SMFileSystem::exists(const char *filename) const
@@ -98,7 +100,8 @@ bool SMFileSystem::isDir(const char *path) const
 
 int SMFileSystem::copyFile(const char *src, const char *dest) const
 {
-    throw NotImplementedYet(__func__);
+    SMComm *comm = SMComm::get();
+    return comm->copyFile(src, dest);
 }
     
 bool SMFileSystem::filesystemIsUp() const

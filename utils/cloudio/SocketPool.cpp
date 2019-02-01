@@ -78,7 +78,7 @@ SocketPool::~SocketPool()
     if (err < 0) \
     { \
         cout << "SP: got an error on the socket" << endl; \
-        returnSocket(sock); \
+        remoteClosed(sock); \
         return -1; \
     }
     

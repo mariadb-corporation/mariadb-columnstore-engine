@@ -59,13 +59,18 @@ class SMComm : public boost::noncopyable
         // the specified S3 bucket.  Need to define specific error codes.
         int ping();
         
+        int copyFile(const std::string &file1, const std::string &file2);
+        
         virtual ~SMComm();
         
     private:
         SMComm();
         
+        std::string getAbsFilename(const std::string &filename);
+        
         SocketPool sockets;
         messageqcpp::ByteStreamPool buffers;
+        std::string cwd;
 };
 
 }

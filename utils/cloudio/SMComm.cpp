@@ -71,19 +71,31 @@ SMComm * SMComm::get()
     
 SMComm::SMComm()
 {
+    char buf[4096];
+    cwd = ::getcwd(buf, 4096);
+    cout << "got cwd = " << cwd << endl;
 }
 
 SMComm::~SMComm()
 {
 }
-    
+
+string SMComm::getAbsFilename(const string &filename)
+{
+    if (filename[0] == '/')
+        return filename;
+    else
+        return cwd + '/' + filename;
+}
+
 int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string absfilename(getAbsFilename(filename));
     
-    *command << (uint8_t) storagemanager::OPEN << mode << filename;
+    *command << (uint8_t) storagemanager::OPEN << mode << absfilename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -98,8 +110,9 @@ ssize_t SMComm::pread(const string &filename, void *buf, const size_t count, con
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
-
-    *command << (uint8_t) storagemanager::READ << count << offset << filename;
+    string absfilename(getAbsFilename(filename));
+    
+    *command << (uint8_t) storagemanager::READ << count << offset << absfilename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -114,8 +127,9 @@ ssize_t SMComm::pwrite(const string &filename, const void *buf, const size_t cou
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string absfilename(getAbsFilename(filename));
     
-    *command << (uint8_t) storagemanager::WRITE << count << offset << filename;
+    *command << (uint8_t) storagemanager::WRITE << count << offset << absfilename;
     command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
@@ -132,8 +146,9 @@ ssize_t SMComm::append(const string &filename, const void *buf, const size_t cou
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
-    
-    *command << (uint8_t) storagemanager::APPEND << count << filename;
+    string absfilename(getAbsFilename(filename));
+
+    *command << (uint8_t) storagemanager::APPEND << count << absfilename;
     command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
@@ -150,8 +165,9 @@ int SMComm::unlink(const string &filename)
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string absfilename(getAbsFilename(filename));
     
-    *command << (uint8_t) storagemanager::UNLINK << filename;
+    *command << (uint8_t) storagemanager::UNLINK << absfilename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -164,8 +180,9 @@ int SMComm::stat(const string &filename, struct stat *statbuf)
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string absfilename(getAbsFilename(filename));
     
-    *command << (uint8_t) storagemanager::STAT << filename;
+    *command << (uint8_t) storagemanager::STAT << absfilename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -180,8 +197,9 @@ int SMComm::truncate(const string &filename, const off64_t length)
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string absfilename(getAbsFilename(filename));
     
-    *command << (uint8_t) storagemanager::TRUNCATE << length << filename;
+    *command << (uint8_t) storagemanager::TRUNCATE << length << absfilename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -194,8 +212,9 @@ int SMComm::listDirectory(const string &path, list<string> *entries)
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
+    string abspath(getAbsFilename(path));
     
-    *command << (uint8_t) storagemanager::LIST_DIRECTORY << path;
+    *command << (uint8_t) storagemanager::LIST_DIRECTORY << abspath;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -219,6 +238,22 @@ int SMComm::ping()
     int err;
     
     *command << (uint8_t) storagemanager::PING;
+    err = sockets.send_recv(*command, response);
+    if (err)
+        common_exit(command, response, err);
+    check_for_error(command, response, err);
+    common_exit(command, response, err);
+}
+
+int SMComm::copyFile(const string &file1, const string &file2)
+{
+    ByteStream *command = buffers.getByteStream();
+    ByteStream *response = buffers.getByteStream();
+    int err;
+    string absfilename1(getAbsFilename(file1));
+    string absfilename2(getAbsFilename(file2));
+    
+    *command << (uint8_t) storagemanager::COPY << absfilename1 << absfilename2;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
