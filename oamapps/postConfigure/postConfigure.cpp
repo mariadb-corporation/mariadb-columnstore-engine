@@ -55,7 +55,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
-#include <stdio.h>
 
 #include <string.h> /* for strncpy */
 #include <sys/types.h>
@@ -111,8 +110,6 @@ typedef std::vector<ModuleIP> ModuleIpList;
 void offLineAppCheck();
 bool setOSFiles(string parentOAMModuleName, int serverTypeInstall);
 bool checkSaveConfigFile();
-string getModuleName();
-bool setModuleName(string moduleName);
 bool updateBash();
 bool makeModuleFile(string moduleName, string parentOAMModuleName);
 bool updateProcessConfig();
@@ -126,6 +123,7 @@ bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
 bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
 void singleServerConfigSetup(Config* sysConfig);
+std::string resolveHostNameToReverseDNSName(std::string hostname);
 
 void remoteInstallThread(void*);
 
@@ -193,6 +191,7 @@ bool single_server_quick_install = false;
 bool multi_server_quick_install = false;
 bool amazon_quick_install = false;
 bool doNotResolveHostNames = false;
+bool resolveHostNamesToReverseDNSNames = false;
 
 string DataFileEnvFile;
 
@@ -316,7 +315,7 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
             cout << "   -h  Help" << endl;
             cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
             cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -332,6 +331,7 @@ int main(int argc, char* argv[])
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
+            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in combination with -x" << endl;
             cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
             cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
             cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
@@ -341,6 +341,10 @@ int main(int argc, char* argv[])
         else if (string("-x") == argv[i])
         {
             doNotResolveHostNames = true;
+        }
+        else if (string("-xr") == argv[i])
+        {
+            resolveHostNamesToReverseDNSNames = true;
         }
 		else if( string("-qs") == argv[i] )
 		{
@@ -517,7 +521,7 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
 			exit (1);
 		}
 	}
@@ -2566,7 +2570,12 @@ int main(int argc, char* argv[])
                                 //get IP Address
                                 string IPAddress;
                                 if (doNotResolveHostNames)
-                                    IPAddress = newModuleHostName;
+                                    if (resolveHostNamesToReverseDNSNames) {
+                                        IPAddress = resolveHostNameToReverseDNSName(newModuleHostName);
+                                    }
+                                    else {
+                                        IPAddress = newModuleHostName;
+                                    }
                                 else
                                     IPAddress = oam.getIPAddress( newModuleHostName);
 
@@ -6550,7 +6559,12 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
                 //get IP Address
                 string IPAddress;
                 if (doNotResolveHostNames)
-                    IPAddress = moduleHostName;
+                    if (resolveHostNamesToReverseDNSNames) {
+                        IPAddress = resolveHostNameToReverseDNSName(moduleHostName);
+                    }
+                    else {
+                        IPAddress = moduleHostName;
+                    }
                 else
                     IPAddress = oam.getIPAddress( moduleHostName);
 
@@ -7011,29 +7025,29 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
             command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
             status = system(command.c_str());
 
-            if (WEXITSTATUS(status) != 0 )
-            {
-                cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
-                exit(1);
-            }
+if (WEXITSTATUS(status) != 0)
+{
+    cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+    exit(1);
+}
 
-            command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
-            status = system(command.c_str());
+command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+status = system(command.c_str());
 
-            if (WEXITSTATUS(status) != 0 )
-            {
-                cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
-                exit(1);
-            }
+if (WEXITSTATUS(status) != 0)
+{
+    cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+    exit(1);
+}
 
-            command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
-            status = system(command.c_str());
+command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+status = system(command.c_str());
 
-            if (WEXITSTATUS(status) != 0 )
-            {
-                cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
-                exit(1);
-            }
+if (WEXITSTATUS(status) != 0)
+{
+    cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+    exit(1);
+}
         }
 
         cout << "DONE" << endl;
@@ -7047,70 +7061,89 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
 void singleServerConfigSetup(Config* sysConfig)
 {
 
-	try
-	{
-		sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("ExeMgr1", "Module", "pm1");
-		sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
-		sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
-		sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
-		sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
-		sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
-		sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
-		sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
-		sysConfig->setConfig("Installation", "SingleServerInstall", "y");
-		sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
-	}
-	catch (...)
-	{
-	cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
-	exit(1);
-	}
+    try
+    {
+        sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+        sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+        sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+        sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+        sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+        sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+        sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+        sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+        sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+        sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+        exit(1);
+    }
 
-	return;
+    return;
 }
 
-
+/**
+    Resolves the given hostname into its reverse DNS name.
+    
+    @param hostname the hostname to resolve.
+    @return the reverse dns name of given hostname or an empty string in case the hostname could not be resolved.
+*/
+std::string resolveHostNameToReverseDNSName(std::string hostname) {
+    struct hostent *hp = gethostbyname(hostname.c_str());
+    if (hp == NULL) {
+        std::cout << "Error: Couldn't resolve hostname " << hostname << " to ip address" << std::endl;
+        return "";
+    }
+    struct hostent *rl = gethostbyaddr(hp->h_addr_list[0], sizeof hp->h_addr_list[0], AF_INET);
+    if (rl == NULL) {
+        std::cout << "Error: Couldn't resolve ip address of hostname " << hostname << " back to a hostname" << std::endl;
+        return "";
+    }
+    hostname = rl->h_name;
+    return hostname;
+}
 
 // vim:ts=4 sw=4:
