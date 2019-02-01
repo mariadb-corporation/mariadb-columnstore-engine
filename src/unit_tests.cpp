@@ -369,6 +369,7 @@ bool listdirtask()
         assert(off + e->flen + sizeof(listdir_resp_entry) < 1024);
         if (!strncmp(e->filename, filename, strlen(filename))) {
             cout << "listdirtask OK" << endl;
+            ::unlink(filename);
             return true;
         }
         //string name(e->filename, e->flen);
