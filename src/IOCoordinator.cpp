@@ -10,6 +10,12 @@
 
 using namespace std;
 
+namespace
+{
+    storagemanager::IOCoordinator *ioc = NULL;
+    boost::mutex m;
+}
+
 namespace storagemanager
 {
 
@@ -19,6 +25,17 @@ IOCoordinator::IOCoordinator()
 
 IOCoordinator::~IOCoordinator()
 {
+}
+
+IOCoordinator * IOCoordinator::get()
+{
+    if (ioc)
+        return ioc;
+    boost::mutex::scoped_lock s(m);
+    if (ioc)
+        return ioc;
+    ioc = new IOCoordinator();
+    return ioc;
 }
 
 void IOCoordinator::willRead(const char *, off_t, size_t)

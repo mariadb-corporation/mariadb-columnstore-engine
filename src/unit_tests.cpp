@@ -6,7 +6,6 @@
 #include "TruncateTask.h"
 #include "ListDirectoryTask.h"
 #include "PingTask.h"
-#include "IOCoordinator.h"
 #include "messageFormat.h"
 #include <iostream>
 #include <stdlib.h>
@@ -25,8 +24,6 @@
 
 using namespace storagemanager;
 using namespace std;
-
-IOCoordinator *ioc;
 
 struct scoped_closer {
     scoped_closer(int f) : fd(f) { }
@@ -403,7 +400,6 @@ bool pingtask()
 
 int main()
 {
-    ioc = new IOCoordinator();
     cout << "connecting" << endl;
     makeConnection();
     cout << "connected" << endl;

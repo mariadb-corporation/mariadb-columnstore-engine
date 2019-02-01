@@ -9,8 +9,6 @@
 
 using namespace std;
 
-extern storagemanager::IOCoordinator *ioc;
-
 namespace storagemanager
 {
 

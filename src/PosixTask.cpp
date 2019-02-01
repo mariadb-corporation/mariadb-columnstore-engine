@@ -22,6 +22,7 @@ PosixTask::PosixTask(int _sock, uint _length) :
     bufferLen(0),
     socketReturned(false)
 {
+    ioc = IOCoordinator::get();
 }
 
 PosixTask::~PosixTask()

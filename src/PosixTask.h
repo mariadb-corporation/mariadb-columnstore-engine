@@ -6,6 +6,7 @@
 #include <vector>
 #include <sys/types.h>
 #include <stdint.h>
+#include "IOCoordinator.h"
 
 namespace storagemanager
 {
@@ -29,6 +30,8 @@ class PosixTask
         void handleError(const char *name, int errCode);
         void returnSocket();
         void socketError();
+        
+        IOCoordinator *ioc;
         
     private:
         PosixTask();

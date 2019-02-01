@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace storagemanager
 {
@@ -15,7 +16,7 @@ namespace storagemanager
 class IOCoordinator : public boost::noncopyable
 {
     public:
-        IOCoordinator();
+        static IOCoordinator *get();
         virtual ~IOCoordinator();
 
         void willRead(const char *filename, off_t offset, size_t length);
@@ -27,6 +28,9 @@ class IOCoordinator : public boost::noncopyable
         int stat(const char *path, struct stat *out);
         int truncate(const char *path, size_t newsize);
         int unlink(const char *path);
+        
+    private:
+        IOCoordinator();
 };
 
 }
