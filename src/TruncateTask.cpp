@@ -1,6 +1,5 @@
 
 #include "TruncateTask.h"
-#include "IOCoordinator.h"
 #include <errno.h>
 #include "messageFormat.h"
 

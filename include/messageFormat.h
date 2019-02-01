@@ -60,7 +60,8 @@ enum Opcodes {
     APPEND,
     TRUNCATE,
     LIST_DIRECTORY,
-    PING
+    PING,
+    COPY
 };
 
 /*
@@ -74,7 +75,8 @@ enum Opcodes {
 
     On success, what follows is any output parameters from the call.
     
-    TBD: Require filenames to be NULL-terminated.  Currently they are not.
+    Note: filenames and pathnames in the following parameters should
+    be absolute rather than relative.
 */
 
 /*
@@ -240,7 +242,26 @@ struct ping_cmd {
     uint8_t opcode;
 };
 
+/* 
+    COPY
+    ----
+    command format:
+    1-byte opcode|4-byte filename1 length|filename2|4-byte filename2 length|filename2
 
+    response format:
+*/
+
+struct f_name {
+    uint32_t flen;
+    char filename[];
+};
+
+struct copy_cmd {
+    uint8_t opcode;
+    f_name file1;
+    // use f_name as an overlay at the end of file1 to get file2.
+};
+    
 #pragma pack(pop)
 
 }

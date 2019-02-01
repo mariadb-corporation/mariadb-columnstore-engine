@@ -1,6 +1,5 @@
 
 #include "ListDirectoryTask.h"
-#include "IOCoordinator.h"
 #include "messageFormat.h"
 #include <errno.h>
 #include <string.h>

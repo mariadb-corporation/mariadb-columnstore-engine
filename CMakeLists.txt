@@ -16,6 +16,7 @@ set(storagemanager_SRCS
     src/TruncateTask.cpp
     src/UnlinkTask.cpp
     src/WriteTask.cpp
+    src/CopyTask.cpp
     src/IOCoordinator.cpp
     src/SessionManager.cpp
 )

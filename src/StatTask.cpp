@@ -1,7 +1,6 @@
 
 #include "StatTask.h"
 #include "messageFormat.h"
-#include "IOCoordinator.h"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>

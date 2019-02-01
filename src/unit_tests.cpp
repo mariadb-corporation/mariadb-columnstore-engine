@@ -6,6 +6,7 @@
 #include "TruncateTask.h"
 #include "ListDirectoryTask.h"
 #include "PingTask.h"
+#include "CopyTask.h"
 #include "messageFormat.h"
 #include <iostream>
 #include <stdlib.h>
@@ -398,6 +399,52 @@ bool pingtask()
     cout << "pingtask OK" << endl;
 }
 
+bool copytask()
+{
+    /*  
+        make a file
+        copy it
+        verify it exists
+    */
+    const char *filename = "copytest1";
+    ::unlink(filename);
+    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
+    assert(fd > 0);
+    scoped_closer f(fd);
+    int err = ::write(fd, "testjunk", 8);
+    assert(err == 8);
+    
+    uint8_t buf[1024];
+    copy_cmd *cmd = (copy_cmd *) buf;
+    cmd->opcode = COPY;
+    cmd->file1.flen = strlen(filename);
+    strncpy(cmd->file1.filename, filename, cmd->file1.flen);
+    const char *filename2 = "copytest2";
+    f_name *file2 = (f_name *) &cmd->file1.filename[cmd->file1.flen];
+    file2->flen = strlen(filename2);
+    strncpy(file2->filename, filename2, file2->flen);
+    
+    uint len = (uint64_t) &file2->filename[file2->flen] - (uint64_t) buf;
+    ::write(sessionSock, buf, len);
+    CopyTask c(clientSock, len);
+    c.run();
+    
+    // read the response
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    assert(err == sizeof(sm_msg_resp));
+    assert(resp->type == SM_MSG_START);
+    assert(resp->payloadLen == 4);
+    assert(resp->returnCode == 0);
+    
+    // verify copytest2 is there
+    assert(boost::filesystem::exists(filename2));
+    ::unlink(filename);
+    ::unlink(filename2);
+    cout << "copytask OK " << endl;
+    return true;
+}
+
 int main()
 {
     cout << "connecting" << endl;
@@ -412,5 +459,6 @@ int main()
     truncatetask();
     listdirtask();
     pingtask();
+    copytask();
     return 0;
 }

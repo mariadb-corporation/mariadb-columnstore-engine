@@ -28,6 +28,7 @@ class IOCoordinator : public boost::noncopyable
         int stat(const char *path, struct stat *out);
         int truncate(const char *path, size_t newsize);
         int unlink(const char *path);
+        int copyFile(const char *filename1, const char *filename2);
         
     private:
         IOCoordinator();

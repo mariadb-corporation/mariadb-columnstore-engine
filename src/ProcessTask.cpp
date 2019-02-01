@@ -5,6 +5,7 @@
 #include "messageFormat.h"
 
 #include "AppendTask.h"
+#include "CopyTask.h"
 #include "ListDirectoryTask.h"
 #include "OpenTask.h"
 #include "PingTask.h"
@@ -88,6 +89,9 @@ void ProcessTask::operator()()
             break;
         case PING:
             task = new PingTask(sock, length);
+            break;
+        case COPY:
+            task = new CopyTask(sock, length);
             break;
         default:
             throw runtime_error("ProcessTask: got an unknown opcode");

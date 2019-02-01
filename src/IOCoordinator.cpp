@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <boost/filesystem.hpp>
+#include <iostream>
 
 using namespace std;
 
@@ -54,7 +55,7 @@ struct scoped_closer {
 };
 
 #define OPEN(name, mode) \
-    fd = ::open(filename, mode, 0666); \
+    fd = ::open(filename, mode, 0660); \
     if (fd < 0) \
         return fd; \
     scoped_closer sc(fd);
@@ -162,6 +163,26 @@ int IOCoordinator::truncate(const char *path, size_t newsize)
 int IOCoordinator::unlink(const char *path)
 {
     return ::unlink(path);
+}
+
+int IOCoordinator::copyFile(const char *filename1, const char *filename2)
+{
+    int err = 0, l_errno;
+    try {
+        boost::filesystem::copy_file(filename1, filename2);
+    }
+    catch (boost::filesystem::filesystem_error &e) {
+        err = -1;
+        l_errno = EIO;   // why not.
+        // eh, not going to translate all of boost's errors into our errors for this.
+        // log the error
+        cout << "IOCoordinator::copy(): got " << e.what() << endl;
+    }
+    catch (...) {
+        err = -1;
+        l_errno = EIO;
+    }
+    return err;
 }
 
 }
