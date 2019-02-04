@@ -79,13 +79,13 @@ bool ListDirectoryTask::run()
     }
     
     // be careful modifying the listdir return types...
-    uint payloadLen = sizeof(listdir_resp_entry) * listing.size();
+    uint payloadLen = sizeof(listdir_resp) + (sizeof(listdir_resp_entry) * listing.size());
     for (uint i = 0; i < listing.size(); i++)
         payloadLen += listing[i].size();
     
     sm_msg_resp *resp = (sm_msg_resp *) buf;
     resp->type = SM_MSG_START;
-    resp->payloadLen = payloadLen + sizeof(listdir_resp);
+    resp->payloadLen = payloadLen + 4;   // the +4 is for the length of the return code
     resp->returnCode = 0;
     listdir_resp *r = (listdir_resp *) resp->payload;
     r->elements = listing.size();
