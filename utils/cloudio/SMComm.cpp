@@ -227,6 +227,7 @@ int SMComm::listDirectory(const string &path, list<string> *entries)
     while (numElements > 0) {
         *response >> stmp;
         entries->push_back(stmp);
+        numElements--;
     }
     common_exit(command, response, err);
 }
