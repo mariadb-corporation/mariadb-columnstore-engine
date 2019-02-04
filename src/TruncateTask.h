@@ -13,7 +13,7 @@ class TruncateTask : public PosixTask
         TruncateTask(int sock, uint length);
         virtual ~TruncateTask();
         
-        void run();
+        bool run();
     
     private:
         TruncateTask();

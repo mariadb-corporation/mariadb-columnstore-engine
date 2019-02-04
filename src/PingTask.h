@@ -14,7 +14,7 @@ class PingTask : public PosixTask
         PingTask(int sock, uint length);
         virtual ~PingTask();
         
-        void run();
+        bool run();
     
     private:
         PingTask();

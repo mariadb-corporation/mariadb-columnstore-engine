@@ -17,7 +17,8 @@ class PosixTask
         PosixTask(int sock, uint length);
         virtual ~PosixTask();
         
-        virtual void run() = 0;
+        // this should return false if there was a network error, true otherwise including for other errors
+        virtual bool run() = 0;
         void primeBuffer();
         
     protected:
@@ -28,8 +29,6 @@ class PosixTask
         uint getLength();  // returns the total length of the msg
         uint getRemainingLength();   // returns the remaining length from the caller's perspective
         void handleError(const char *name, int errCode);
-        void returnSocket();
-        void socketError();
         
         IOCoordinator *ioc;
         
@@ -44,7 +43,6 @@ class PosixTask
         uint8_t localBuffer[bufferSize];
         uint bufferPos;
         uint bufferLen;
-        bool socketReturned;
 };
 
 }

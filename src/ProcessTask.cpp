@@ -98,7 +98,17 @@ void ProcessTask::operator()()
             throw runtime_error("ProcessTask: got an unknown opcode");
     }
     task->primeBuffer();
-    task->run();
+    bool success = task->run();
+    if (!success)
+    {
+        //SessionManager::get()->socketError(sock);
+        //returnedSock = true;
+    }
+    else
+    {
+        SessionManager::get()->returnSocket(sock);
+        returnedSock = true;
+    }
 }
 
 

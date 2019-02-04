@@ -19,7 +19,7 @@ OpenTask::~OpenTask()
 {
 }
 
-void OpenTask::run()
+bool OpenTask::run()
 {
     /*
         get the parameters
@@ -32,14 +32,14 @@ void OpenTask::run()
     if (getLength() > 1023)
     {
         handleError("OpenTask read1", ENAMETOOLONG);
-        return;
+        return true;
     }
     
     success = read(buf, getLength());
     if (!success)
     {
         handleError("OpenTask read2", errno);
-        return;
+        return false;
     }
     
     open_cmd *cmd = (open_cmd *) buf;
@@ -48,7 +48,7 @@ void OpenTask::run()
     if (err)
     {
         handleError("OpenTask open", errno);
-        return;
+        return true;
     }
     
     sm_msg_resp *resp = (sm_msg_resp *) buf;
@@ -58,6 +58,7 @@ void OpenTask::run()
     success = write(buf, sizeof(struct stat) + sizeof(sm_msg_resp));
     if (!success)
         handleError("OpenTask write", errno);
+    return success;
 }
 
 }

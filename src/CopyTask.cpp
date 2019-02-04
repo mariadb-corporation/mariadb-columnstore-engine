@@ -16,14 +16,14 @@ CopyTask::~CopyTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
 
-void CopyTask::run()
+bool CopyTask::run()
 {
     bool success;
     uint8_t buf[2048] = {0};
@@ -31,11 +31,11 @@ void CopyTask::run()
     if (getLength() > 2047) 
     {
         handleError("CopyTask read", ENAMETOOLONG);
-        return;
+        return true;
     }
     
     success = read(buf, getLength());
-    check_error("CopyTask read");
+    check_error("CopyTask read", false);
     copy_cmd *cmd = (copy_cmd *) buf;
     string filename1(cmd->file1.filename, cmd->file1.flen);   // need to copy this in case it's not null terminated
     f_name *filename2 = (f_name *) &buf[sizeof(copy_cmd) + cmd->file1.flen];
@@ -44,14 +44,15 @@ void CopyTask::run()
     if (err)
     {
         handleError("CopyTask copy", errno);
-        return;
+        return true;
     }
     
     sm_msg_resp *resp = (sm_msg_resp *) buf;
     resp->type = SM_MSG_START;
     resp->payloadLen = 4;
     resp->returnCode = 0;
-    write(buf, sizeof(sm_msg_resp));
+    success = write(buf, sizeof(sm_msg_resp));
+    return success;
 }
 
 }

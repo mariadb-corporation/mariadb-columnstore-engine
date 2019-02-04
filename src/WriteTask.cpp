@@ -17,31 +17,31 @@ WriteTask::~WriteTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
 
 #define min(x, y) (x < y ? x : y)
 
-void WriteTask::run()
+bool WriteTask::run()
 {
     bool success;
     uint8_t cmdbuf[1024] = {0};
     
     success = read(cmdbuf, sizeof(write_cmd));
-    check_error("WriteTask read");
+    check_error("WriteTask read", false);
     write_cmd *cmd = (write_cmd *) cmdbuf;
     
     if (cmd->flen > 1023 - sizeof(*cmd))
     {
         handleError("WriteTask", ENAMETOOLONG);
-        return;
+        return true;
     }
     success = read(&cmdbuf[sizeof(*cmd)], cmd->flen);
-    check_error("WriteTask read");
+    check_error("WriteTask read", false);
             
     size_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
@@ -52,12 +52,12 @@ void WriteTask::run()
     {
         uint toRead = min(cmd->count - readCount, bufsize);
         success = read(&databuf[0], toRead);
-        check_error("WriteTask read data");
+        check_error("WriteTask read data", false);
         readCount += toRead;
         uint writePos = 0;
         while (writeCount < readCount)
         {
-            int err = ioc->append(cmd->filename, &databuf[writePos], toRead - writePos);
+            int err = ioc->write(cmd->filename, &databuf[writePos], cmd->offset + writeCount, toRead - writePos);
             if (err <= 0)
                 break;
             writeCount += err;
@@ -75,14 +75,15 @@ void WriteTask::run()
         resp->payloadLen = 8;
         resp->returnCode = -1;
         *((int *) &resp[1]) = errno;
-        write((uint8_t *) respbuf, sizeof(sm_msg_resp) + 4);
+        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp) + 4);
     }
     else
     {
         resp->payloadLen = 4;
         resp->returnCode = writeCount;
-        write((uint8_t *) respbuf, sizeof(sm_msg_resp));
+        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp));
     }
+    return success;
 }
 
 }

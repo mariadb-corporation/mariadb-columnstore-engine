@@ -16,32 +16,32 @@ AppendTask::~AppendTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
     
 #define min(x, y) (x < y ? x : y)
 
-void AppendTask::run()
+bool AppendTask::run()
 {
     bool success;
     uint8_t cmdbuf[1024] = {0};
     int err;
     
     success = read(cmdbuf, sizeof(append_cmd));
-    check_error("AppendTask read");
+    check_error("AppendTask read", false);
     append_cmd *cmd = (append_cmd *) cmdbuf;
     
     if (cmd->flen > 1023 - sizeof(*cmd))
     {
         handleError("AppendTask", ENAMETOOLONG);
-        return;
+        return true;
     }
     success = read(&cmdbuf[sizeof(*cmd)], cmd->flen);
-    check_error("AppendTask read");
+    check_error("AppendTask read", false);
     
     size_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
@@ -52,7 +52,7 @@ void AppendTask::run()
     {
         uint toRead = min(cmd->count - readCount, bufsize);
         success = read(&databuf[0], toRead);
-        check_error("AppendTask read data");
+        check_error("AppendTask read data", false);
         readCount += toRead;
         uint writePos = 0;
         while (writeCount < readCount)
@@ -75,14 +75,15 @@ void AppendTask::run()
         resp->payloadLen = 8;
         resp->returnCode = -1;
         *((int *) &resp[1]) = errno;
-        write((uint8_t *) respbuf, sizeof(sm_msg_resp) + 4);
+        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp) + 4);
     }
     else
     {
         resp->payloadLen = 4;
         resp->returnCode = writeCount;
-        write((uint8_t *) respbuf, sizeof(sm_msg_resp));
+        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp));
     }
+    return success;
 }
 
 }

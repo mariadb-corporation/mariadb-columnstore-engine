@@ -14,7 +14,7 @@ class AppendTask : public PosixTask
         AppendTask(int sock, uint length);
         virtual ~AppendTask();
         
-        void run();
+        bool run();
     
     private:
         AppendTask();

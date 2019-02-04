@@ -19,8 +19,7 @@ PosixTask::PosixTask(int _sock, uint _length) :
     remainingLengthInStream(_length),
     remainingLengthForCaller(_length),
     bufferPos(0),
-    bufferLen(0),
-    socketReturned(false)
+    bufferLen(0)
 {
     ioc = IOCoordinator::get();
 }
@@ -28,8 +27,6 @@ PosixTask::PosixTask(int _sock, uint _length) :
 PosixTask::~PosixTask()
 {
     consumeMsg();
-    if (!socketReturned)
-        returnSocket();
 }
 
 void PosixTask::handleError(const char *name, int errCode)
@@ -46,17 +43,6 @@ void PosixTask::handleError(const char *name, int errCode)
     
     // TODO: construct and log a message
     cout << name << " caught an error: " << strerror_r(errCode, buf, 80) << endl;
-    socketError();
-}
-
-void PosixTask::returnSocket()
-{
-    socketReturned = true;
-}
-
-void PosixTask::socketError()
-{
-    socketReturned = true;
 }
 
 uint PosixTask::getRemainingLength()

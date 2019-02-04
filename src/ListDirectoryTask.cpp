@@ -18,18 +18,11 @@ ListDirectoryTask::~ListDirectoryTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
-    }
-    
-#define check_error_2(msg) \
-    if (!success) \
-    { \
-        handleError(msg, errno); \
-        return false; \
+        return ret; \
     }
     
 #define min(x, y) (x < y ? x : y)
@@ -40,7 +33,7 @@ bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const s
     if (size - *offset < 4)   // eh, let's not frag 4 bytes.
     {
         success = write(buf, *offset);
-        check_error_2("ListDirectoryTask::writeString()");
+        check_error("ListDirectoryTask::writeString()", false);
         *offset = 0;
     }
     uint count = 0, len = str.length();
@@ -55,14 +48,14 @@ bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const s
         if (*offset == size)
         {
             success = write(buf, *offset);
-            check_error_2("ListDirectoryTask::writeString()");
+            check_error("ListDirectoryTask::writeString()", false);
             *offset = 0;
         }
     }
     return true;
 }
     
-void ListDirectoryTask::run()
+bool ListDirectoryTask::run()
 {
     bool success;
     uint8_t buf[1024] = {0};
@@ -70,11 +63,11 @@ void ListDirectoryTask::run()
     
     if (getLength() > 1023) {
         handleError("ListDirectoryTask read", ENAMETOOLONG);
-        return;
+        return true;
     }
     
     success = read(buf, getLength());
-    check_error("ListDirectoryTask read");
+    check_error("ListDirectoryTask read", false);
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     vector<string> listing;
@@ -82,7 +75,7 @@ void ListDirectoryTask::run()
     if (err)
     {
         handleError("ListDirectory", errno);
-        return;
+        return true;
     }
     
     // be careful modifying the listdir return types...
@@ -101,14 +94,15 @@ void ListDirectoryTask::run()
     for (uint i = 0; i < listing.size(); i++)
     {
         success = writeString(buf, &offset, 1024, listing[i]);
-        check_error("ListDirectoryTask write");
+        check_error("ListDirectoryTask write", false);
     }
         
     if (offset != 0)
     {
         success = write(buf, offset);
-        check_error("ListDirectoryTask write");
+        check_error("ListDirectoryTask write", false);
     }
+    return true;
 }
     
 }

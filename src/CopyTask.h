@@ -13,7 +13,7 @@ class CopyTask : public PosixTask
         CopyTask(int sock, uint length);
         virtual ~CopyTask();
         
-        void run();
+        bool run();
     
     private:
         CopyTask();

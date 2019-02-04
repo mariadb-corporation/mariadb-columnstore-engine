@@ -13,7 +13,7 @@ class UnlinkTask : public PosixTask
         UnlinkTask(int sock, uint length);
         virtual ~UnlinkTask();
         
-        void run();
+        bool run();
     
     private:
         UnlinkTask();

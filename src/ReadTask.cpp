@@ -16,26 +16,26 @@ ReadTask::~ReadTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
 
-void ReadTask::run()
+bool ReadTask::run()
 {
     uint8_t buf[1024] = {0};
 
     // get the parameters
     if (getLength() > 1023) {
         handleError("ReadTask read", EFAULT);
-        return;
+        return true;
     }
     
     bool success;
     success = read(buf, getLength());
-    check_error("ReadTask read cmd");
+    check_error("ReadTask read cmd", false);
     cmd_overlay *cmd = (cmd_overlay *) buf;
     
     // read from IOC, write to the socket
@@ -67,7 +67,8 @@ void ReadTask::run()
         count += err;
     }
     
-    write(outbuf);
+    success = write(outbuf);
+    return success;
 }
 
 

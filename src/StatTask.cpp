@@ -20,25 +20,25 @@ StatTask::~StatTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
 
-void StatTask::run()
+bool StatTask::run()
 {
     bool success;
     uint8_t buf[1024] = {0};
     
     if (getLength() > 1023) {
         handleError("StatTask read", ENAMETOOLONG);
-        return;
+        return true;
     }
     
     success = read(buf, getLength());
-    check_error("StatTask read");
+    check_error("StatTask read", false);
     stat_cmd *cmd = (stat_cmd *) buf;
     sm_msg_resp *resp = (sm_msg_resp *) buf;
     
@@ -46,13 +46,14 @@ void StatTask::run()
     if (err)
     {
         handleError("StatTask stat", errno);
-        return;
+        return true;
     }
 
     resp->type = SM_MSG_START;
     resp->payloadLen = sizeof(struct stat) + 4;
     resp->returnCode = 0;
-    write(buf, sizeof(*resp) + sizeof(struct stat));
+    success = write(buf, sizeof(*resp) + sizeof(struct stat));
+    return success;
 }
 
 }

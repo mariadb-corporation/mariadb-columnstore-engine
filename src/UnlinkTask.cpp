@@ -16,40 +16,41 @@ UnlinkTask::~UnlinkTask()
 {
 }
 
-#define check_error(msg) \
+#define check_error(msg, ret) \
     if (!success) \
     { \
         handleError(msg, errno); \
-        return; \
+        return ret; \
     }
 
 
-void UnlinkTask::run()
+bool UnlinkTask::run()
 {
     bool success;
     uint8_t buf[1024] = {0};
     
     if (getLength() > 1023) {
         handleError("UnlinkTask read", ENAMETOOLONG);
-        return;
+        return true;
     }
     
     success = read(buf, getLength());
-    check_error("UnlinkTask read");
+    check_error("UnlinkTask read", false);
     unlink_cmd *cmd = (unlink_cmd *) buf;
     
     int err = ioc->unlink(cmd->filename);
     if (err)
     {
         handleError("UnlinkTask unlink", errno);
-        return;
+        return true;
     }
     
     sm_msg_resp *resp = (sm_msg_resp *) buf;
     resp->type = SM_MSG_START;
     resp->payloadLen = 4;
     resp->returnCode = 0;
-    write(buf, sizeof(*resp));
+    success = write(buf, sizeof(*resp));
+    return success;
 }
 
 }

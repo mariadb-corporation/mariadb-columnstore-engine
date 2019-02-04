@@ -14,7 +14,7 @@ class ListDirectoryTask : public PosixTask
         ListDirectoryTask(int sock, uint length);
         virtual ~ListDirectoryTask();
         
-        void run();
+        bool run();
     
     private:
         ListDirectoryTask();

@@ -14,7 +14,7 @@ class ReadTask : public PosixTask
         ReadTask(int sock, uint length);
         virtual ~ReadTask();
         
-        void run();
+        bool run();
     
     private:
         ReadTask();

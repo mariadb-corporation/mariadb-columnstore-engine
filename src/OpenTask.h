@@ -13,7 +13,7 @@ class OpenTask : public PosixTask
         OpenTask(int sock, uint length);
         virtual ~OpenTask();
         
-        void run();
+        bool run();
     
     private:
         OpenTask();

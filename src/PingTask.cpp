@@ -14,7 +14,7 @@ PingTask::~PingTask()
 {
 }
 
-void PingTask::run()
+bool PingTask::run()
 {
     // not much to check on for Milestone 1
     
@@ -23,14 +23,14 @@ void PingTask::run()
     if (getLength() > 1)
     {
         handleError("PingTask", E2BIG);
-        return;
+        return true;
     }
     // consume the msg
     bool success = read(&buf, getLength());
     if (!success)
     {
         handleError("PingTask", errno);
-        return;
+        return false;
     }
     
     // send generic success response
@@ -38,7 +38,8 @@ void PingTask::run()
     ret.type = SM_MSG_START;
     ret.payloadLen = 4;
     ret.returnCode = 0;
-    write((uint8_t *) &ret, sizeof(ret));
+    success = write((uint8_t *) &ret, sizeof(ret));
+    return success;
 }
 
 }

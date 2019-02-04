@@ -13,7 +13,7 @@ class StatTask : public PosixTask
         StatTask(int sock, uint length);
         virtual ~StatTask();
         
-        void run();
+        bool run();
     
     private:
         StatTask();

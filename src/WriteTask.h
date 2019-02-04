@@ -14,7 +14,7 @@ class WriteTask : public PosixTask
         WriteTask(int sock, uint length);
         virtual ~WriteTask();
         
-        void run();
+        bool run();
     
     private:
         WriteTask();
