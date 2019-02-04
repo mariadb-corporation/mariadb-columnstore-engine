@@ -12,12 +12,13 @@ namespace storagemanager
 class ClientRequestProcessor : public boost::noncopyable
 {
     public:
-        ClientRequestProcessor();
+        static ClientRequestProcessor *get();
         virtual ~ClientRequestProcessor();
-        
+
         void processRequest(int sock, uint len);
-        
+
     private:
+        ClientRequestProcessor();
         ThreadPool threadPool;
 };
 

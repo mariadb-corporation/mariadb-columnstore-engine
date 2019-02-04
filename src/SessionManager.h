@@ -3,6 +3,8 @@
 #ifndef STORAGEMANGER_H_
 #define STORAGEMANGER_H_
 
+#include "ClientRequestProcessor.h"
+
 #include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
 
@@ -15,20 +17,15 @@ enum sessionCtrl {
     REMOVEFD
 };
 
+#define MAX_SM_SOCKETS 200
+
 /**
  * @brief StorageManager class initializes process and handles incoming requests.
  */
 class SessionManager
 {
 public:
-    /**
-     * Constructor
-     */
-    SessionManager();
-
-    /**
-     * Default Destructor
-     */
+    static SessionManager *get();
     ~SessionManager();
 
     /**
@@ -40,8 +37,10 @@ public:
     void CRPTest(int socket,uint length);
 
 private:
+    SessionManager();
     //SMConfig&  config;
-    struct pollfd fds[200];
+    ClientRequestProcessor *crp;
+    struct pollfd fds[MAX_SM_SOCKETS];
     int socketCtrl[2];
 };
 

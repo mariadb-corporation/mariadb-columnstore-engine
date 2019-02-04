@@ -14,6 +14,7 @@
 #include "TruncateTask.h"
 #include "UnlinkTask.h"
 #include "WriteTask.h"
+#include "SessionManager.h"
 
 #include <sys/socket.h>
 
@@ -30,7 +31,7 @@ ProcessTask::ProcessTask(int _sock, uint _length) : sock(_sock), length(_length)
 ProcessTask::~ProcessTask()
 {
     if (!returnedSock)
-        ;   // SM->returnSocket(sock);
+        (SessionManager::get())->returnSocket(sock);
 }
 
 void ProcessTask::handleError(int saved_errno)

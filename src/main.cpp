@@ -16,9 +16,9 @@ using namespace storagemanager;
 int main(int argc, char** argv)
 {
     int ret = 0;
-    SessionManager sessionManager = SessionManager();
+    SessionManager* sm = SessionManager::get();
 
-    ret = sessionManager.start();
+    ret = sm->start();
 
     return ret;
 }
