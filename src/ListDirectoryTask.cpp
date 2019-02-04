@@ -79,6 +79,11 @@ void ListDirectoryTask::run()
     
     vector<string> listing;
     err = ioc->listDirectory(cmd->path, &listing);
+    if (err)
+    {
+        handleError("ListDirectory", errno);
+        return;
+    }
     
     // be careful modifying the listdir return types...
     uint payloadLen = sizeof(listdir_resp_entry) * listing.size();
