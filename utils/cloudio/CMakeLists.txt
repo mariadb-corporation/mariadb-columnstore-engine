@@ -8,10 +8,14 @@ add_library(cloudio SHARED ${cloudio_LIB_SRCS})
 # Once cloudio has been turned into a proper plugin for idbdatafile,
 # we should be able to reverse the dependency like so:
 <<<<<<< HEAD
+<<<<<<< HEAD
 target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp)
 =======
 # target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp)
 >>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
+=======
+target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp)
+>>>>>>> d97a570b... Made the cloud IO lib a plugin to the IDB filesystem stuff.
 
 set_target_properties(cloudio PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
@@ -31,6 +35,7 @@ add_executable(end_to_end_test end_to_end_test.cpp)
 # For now I'm going to do like the other executables, which means
 # nearly everything AFAICT.
 <<<<<<< HEAD
+<<<<<<< HEAD
 target_link_libraries(cloudio_component_test ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS} cloudio)
 target_link_libraries(end_to_end_test ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS} cloudio)
 #target_link_libraries(cloudio_component_test cloudio)
@@ -39,4 +44,8 @@ FILE(COPY testData DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 =======
 target_link_libraries(cloudio_component_test ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS})
 >>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
+=======
+target_link_libraries(cloudio_component_test ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS} cloudio)
+#target_link_libraries(cloudio_component_test cloudio)
+>>>>>>> d97a570b... Made the cloud IO lib a plugin to the IDB filesystem stuff.
 
