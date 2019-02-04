@@ -43,6 +43,7 @@ namespace idbdatafile
 {
 
 bool IDBPolicy::s_usehdfs = false;
+bool IDBPolicy::s_usecloud = false;
 bool IDBPolicy::s_bUseRdwrMemBuffer = false;
 int64_t IDBPolicy::s_hdfsRdwrBufferMaxSize = 0;
 std::string IDBPolicy::s_hdfsRdwrScratch;
@@ -98,20 +99,12 @@ bool IDBPolicy::installPlugin(const std::string& plugin)
 {
     bool ret = IDBFactory::installPlugin(plugin);
 
-    // this is a cheesy way to do this, but it seems as good as anything for
-    // now.  At some point, this policy class needs to be data driven - some
-    // type of specification to drive the logic here.
-    try
-    {
-        // see if there is an HDFS plugin
-        IDBFactory::name(IDBDataFile::HDFS);
-        s_usehdfs = true;
-    }
-    catch (std::exception& )
-    {
-        // nothing to do - this just means the plugin was not HDFS
-        ;
-    }
+    vector<IDBDataFile::Types> plugins = IDBFactory::listPlugins();
+    for (uint i = 0; i < plugins.size(); i++)
+        if (plugins[i] == IDBDataFile::HDFS)
+            s_usehdfs = true;
+        else if (plugins[i] == IDBDataFile::CLOUD)
+            s_usecloud = true;
 
     return ret;
 }
@@ -130,16 +123,27 @@ bool IDBPolicy::isLocalFile( const std::string& path )
     bool isXml = (fileExt == ".xml");
 
     bool isVb = path.find("versionbuffer") != string::npos;
-    bool isInDbroot = path.find("/Calpont/data") != string::npos;
     bool isScratch = path.find(s_hdfsRdwrScratch) == 0;
 
-    return !isInDbroot || isXml || isVb || isScratch;
+    return isXml || isVb || isScratch;
 }
 
 IDBDataFile::Types IDBPolicy::getType( const std::string& path, Contexts ctxt )
 {
     bool isLocal = isLocalFile( path );
 
+    if (isLocal)
+        if (ctxt == PRIMPROC)
+            return IDBDataFile::UNBUFFERED;
+        else
+            return IDBDataFile::BUFFERED;
+    else if (useHdfs())
+        return IDBDataFile::HDFS;
+    else if (useCloud())
+        return IDBDataFile::CLOUD;
+    throw runtime_error("IDBPolicy: No appropriate data file type");
+    
+#if 0
     if ( ctxt == PRIMPROC )
     {
         if ( isLocal || !useHdfs() )
@@ -154,6 +158,7 @@ IDBDataFile::Types IDBPolicy::getType( const std::string& path, Contexts ctxt )
         else
             return IDBDataFile::HDFS;
     }
+#endif
 }
 
 IDBFileSystem& IDBPolicy::getFs( const std::string& path )

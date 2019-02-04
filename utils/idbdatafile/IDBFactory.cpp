@@ -55,7 +55,7 @@ bool IDBFactory::installDefaultPlugins()
     
     // TODO: use the installPlugin fcn below instead of declaring this statically, then remove the dependency
     // IDBDatafile -> cloudio
-    s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
+    //s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
     
     return false;
 }
@@ -98,6 +98,14 @@ bool IDBFactory::installPlugin(const std::string& plugin)
     IDBLogger::syslog(oss.str(), logging::LOG_TYPE_DEBUG);
     return true;
 #endif
+}
+
+vector<IDBDataFile::Types> IDBFactory::listPlugins()
+{
+    vector<IDBDataFile::Types> ret;
+    for (FactoryMap::iterator it = s_plugins.begin(); it != s_plugins.end(); ++it)
+        ret.push_back(it->first);
+    return ret;
 }
 
 IDBDataFile* IDBFactory::open(IDBDataFile::Types type, const char* fname, const char* mode, unsigned opts, unsigned colWidth)
