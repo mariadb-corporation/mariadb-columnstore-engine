@@ -94,7 +94,7 @@ endif()
 
 INCLUDE (FindJeMalloc.cmake)
 if (NOT JEMALLOC_FOUND)
-    message(NOTICE "jemalloc not found! Compiling with standard malloc")
+    message(FATAL_ERROR "jemalloc not found!")
     SET(JEMALLOC_LIBRARIES "")
 endif()
 
