@@ -44,7 +44,7 @@ bool WriteTask::run()
     check_error("WriteTask read", false);
             
     #ifdef SM_TRACE
-    cout << "write filename " << cmd->filename << " offset " << cmd->offset << " count " << cmd->offset << endl;
+    cout << "write filename " << cmd->filename << " offset " << cmd->offset << " count " << cmd->count << endl;
     #endif
             
     size_t readCount = 0, writeCount = 0;
