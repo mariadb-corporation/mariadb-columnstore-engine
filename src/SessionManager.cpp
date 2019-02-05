@@ -213,7 +213,6 @@ int SessionManager::start()
                     int peakLength,len;
                     while(true)
                     {
-
                         peakLength = ::recv(fds[socketIncr].fd, &recv_buffer[remainingBytes], sizeof(recv_buffer)-remainingBytes, MSG_PEEK | MSG_DONTWAIT);
                         if (peakLength < 0)
                         {
@@ -224,7 +223,7 @@ int SessionManager::start()
                             }
                             break;
                         }
-                        cout << "recv got " << peakLength << " bytes" << endl;
+                        //cout << "recv got " << peakLength << " bytes" << endl;
                         endOfData = remainingBytes + peakLength;
                         if (endOfData < 8)
                         {
@@ -239,10 +238,10 @@ int SessionManager::start()
                         {
                             if (*((uint *) &recv_buffer[i]) == storagemanager::SM_MSG_START)
                             {
-                                printf("Received SM_MSG_START\n");
+                                //printf("Received SM_MSG_START\n");
                                 //found it set msgLength and recvMsgStart offset of SM_MSG_START
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
-                                cout << "got length = " << recvMsgLength << endl;
+                                //cout << "got length = " << recvMsgLength << endl;
                                 recvMsgStart = i+8;
                                 remainingBytes = 0;
                                 //printf("  recvMsgLength %d recvMsgStart %d endofData %d\n", recvMsgLength,recvMsgStart,endOfData);
@@ -258,11 +257,11 @@ int SessionManager::start()
                         {
                             printf("No SM_MSG_START\n");
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
-                            // we know the msg header isn't in position [0, endOfData - 7], so throw that out
-                            // and copy [endOfData - 7, endOfData) to the front of the buffer to be
+                            // we know the msg header isn't in position [0, endOfData - i), so throw that out
+                            // and copy [i, endOfData) to the front of the buffer to be
                             // checked by the next iteration.
-                            memmove(recv_buffer, &recv_buffer[endOfData - 7], 7);
-                            remainingBytes = 7;
+                            memmove(recv_buffer, &recv_buffer[i], endOfData - i);
+                            remainingBytes = endOfData - i;
                         }
                         else
                         {
@@ -272,19 +271,19 @@ int SessionManager::start()
                             {
                                 //printf("SM_MSG_START data is here\n");
                                 len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], recvMsgStart);
-                                remainingBytes = 0;
                             }
                             else
                             {
                                 //printf("SM_MSG_START data is next message\n");
                                 len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
-                                remainingBytes = 0;
                             }
                             //Disable polling on this socket
                             fds[socketIncr].events = 0;
                             //Pass the socket to CRP and the message length. next read will be start of message
                             crp->processRequest(fds[socketIncr].fd,recvMsgLength);
-
+                            recvMsgLength = 0;
+                            remainingBytes = 0;
+                            
                             /*
                             //Doing this to work with cloudio_component_test
                             len = ::read(fds[socketIncr].fd, out, recvMsgLength);
