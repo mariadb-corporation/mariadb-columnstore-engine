@@ -65,6 +65,8 @@ bool ReadTask::run()
             }
             break;
         }
+        if (err == 0)
+            break;
         resp->returnCode += err;
         resp->payloadLen += err;
     }
