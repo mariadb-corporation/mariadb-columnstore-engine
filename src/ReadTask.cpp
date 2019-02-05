@@ -23,7 +23,7 @@ ReadTask::~ReadTask()
         return ret; \
     }
 
-#define min(x, y) (x < y ? x : y)
+#define max(x, y) (x > y ? x : y)
     
 bool ReadTask::run()
 {
@@ -42,7 +42,7 @@ bool ReadTask::run()
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
-    outbuf.resize(min(cmd->count, 4) + sizeof(sm_msg_resp));
+    outbuf.resize(max(cmd->count, 4) + sizeof(sm_msg_resp));
     sm_msg_resp *resp = (sm_msg_resp *) &outbuf[0];
     
     resp->type = SM_MSG_START;
