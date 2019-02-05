@@ -40,6 +40,10 @@ bool CopyTask::run()
     string filename1(cmd->file1.filename, cmd->file1.flen);   // need to copy this in case it's not null terminated
     f_name *filename2 = (f_name *) &buf[sizeof(copy_cmd) + cmd->file1.flen];
     
+    #ifdef SM_TRACE
+    cout << "copy " << filename1 << " to " << filename2 << endl;
+    #endif
+    
     int err = ioc->copyFile(filename1.c_str(), filename2->filename);
     if (err)
     {

@@ -70,6 +70,10 @@ bool ListDirectoryTask::run()
     check_error("ListDirectoryTask read", false);
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
+    #ifdef SM_TRACE
+    cout << "list_directory " << cmd->path << endl;
+    #endif
+    
     vector<string> listing;
     err = ioc->listDirectory(cmd->path, &listing);
     if (err)

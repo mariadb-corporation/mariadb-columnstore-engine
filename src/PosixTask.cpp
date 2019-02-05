@@ -26,6 +26,8 @@ PosixTask::PosixTask(int _sock, uint _length) :
 
 PosixTask::~PosixTask()
 {
+    assert(remainingLengthForCaller == 0);
+    assert(remainingLengthInStream == 0);
     consumeMsg();
 }
 

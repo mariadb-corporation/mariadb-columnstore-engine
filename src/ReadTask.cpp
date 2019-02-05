@@ -40,6 +40,10 @@ bool ReadTask::run()
     check_error("ReadTask read cmd", false);
     read_cmd *cmd = (read_cmd *) buf;
     
+    #ifdef SM_TRACE
+    cout << "read " << cmd->filename << " count " << cmd->count << " offset " << cmd->offset << endl;
+    #endif
+    
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
     outbuf.resize(max(cmd->count, 4) + sizeof(sm_msg_resp));

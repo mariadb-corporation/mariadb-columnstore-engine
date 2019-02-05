@@ -43,6 +43,10 @@ bool AppendTask::run()
     success = read(&cmdbuf[sizeof(*cmd)], cmd->flen);
     check_error("AppendTask read", false);
     
+    #ifdef SM_TRACE
+    cout << "append " << cmd->count << " bytes to " << cmd->filename << endl;
+    #endif
+    
     size_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
     uint bufsize = min(1 << 20, cmd->count);   // 1 MB

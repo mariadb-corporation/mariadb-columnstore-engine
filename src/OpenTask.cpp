@@ -44,6 +44,10 @@ bool OpenTask::run()
     
     open_cmd *cmd = (open_cmd *) buf;
 
+    #ifdef SM_TRACE
+    cout << "open filename " << cmd->filename << " mode " << oct << cmd->openmode << dec << endl;
+    #endif
+    
     int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &buf[sizeof(sm_msg_resp)]);
     if (err)
     {

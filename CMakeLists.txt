@@ -21,6 +21,11 @@ set(storagemanager_SRCS
     src/SessionManager.cpp
 )
 
+option(TRACE "Enable some tracing output" OFF)
+if (TRACE)
+    add_definitions(-DSM_TRACE)
+endif()
+
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
 target_link_libraries(StorageManager boost_system boost_thread boost_filesystem)
 

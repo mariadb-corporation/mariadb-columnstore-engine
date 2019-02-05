@@ -160,9 +160,26 @@ int IOCoordinator::truncate(const char *path, size_t newsize)
     return ::truncate(path, newsize);
 }
 
+/* Might need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it
+deletes files, but also entire directories, like an 'rm -rf' command.  Implementing that here
+will no longer make it like the 'unlink' syscall. */
 int IOCoordinator::unlink(const char *path)
 {
-    return ::unlink(path);
+    int ret = 0;
+    boost::filesystem::path p(path);
+
+    try
+    {
+        boost::filesystem::remove_all(path);
+    }
+    catch(boost::filesystem::filesystem_error &e)
+    {
+        errno = e.code().value();
+        ret = -1;
+    }
+    return ret;
+    
+    //return ::unlink(path);
 }
 
 int IOCoordinator::copyFile(const char *filename1, const char *filename2)
@@ -173,7 +190,7 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     }
     catch (boost::filesystem::filesystem_error &e) {
         err = -1;
-        l_errno = EIO;   // why not.
+        l_errno = e.code().value();   // why not.
         // eh, not going to translate all of boost's errors into our errors for this.
         // log the error
         cout << "IOCoordinator::copy(): got " << e.what() << endl;

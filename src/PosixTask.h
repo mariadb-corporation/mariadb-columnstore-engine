@@ -6,6 +6,7 @@
 #include <vector>
 #include <sys/types.h>
 #include <stdint.h>
+#include <iostream>
 #include "IOCoordinator.h"
 
 namespace storagemanager
