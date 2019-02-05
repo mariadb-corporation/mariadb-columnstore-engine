@@ -18,13 +18,6 @@ class ReadTask : public PosixTask
     
     private:
         ReadTask();
-        
-        struct cmd_overlay {
-            size_t count;
-            off_t offset;
-            uint flen;
-            char filename[];
-        };
 };
 
 }

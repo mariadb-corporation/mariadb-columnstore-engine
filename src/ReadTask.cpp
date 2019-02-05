@@ -23,6 +23,8 @@ ReadTask::~ReadTask()
         return ret; \
     }
 
+#define min(x, y) (x < y ? x : y)
+    
 bool ReadTask::run()
 {
     uint8_t buf[1024] = {0};
@@ -36,38 +38,38 @@ bool ReadTask::run()
     bool success;
     success = read(buf, getLength());
     check_error("ReadTask read cmd", false);
-    cmd_overlay *cmd = (cmd_overlay *) buf;
+    read_cmd *cmd = (read_cmd *) buf;
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
-    outbuf.resize(cmd->count + SM_HEADER_LEN);
-    uint32_t *outbuf32 = (uint32_t *) &outbuf[0];
-    outbuf32[0] = SM_MSG_START;
-    outbuf32[1] = cmd->count;
+    outbuf.resize(min(cmd->count, 4) + sizeof(sm_msg_resp));
+    sm_msg_resp *resp = (sm_msg_resp *) &outbuf[0];
+    
+    resp->type = SM_MSG_START;
+    resp->returnCode = 0;
+    resp->payloadLen = 4;
     
     // todo: do the reading and writing in chunks
-    // todo: need to make this use O_DIRECT
+    // todo: need to make this use O_DIRECT on the IOC side
     ioc->willRead(cmd->filename, cmd->offset, cmd->count);
-    int count = 0, err;
-    while (count < cmd->count)
+    int err;
+    while (resp->returnCode < cmd->count)
     {
-        err = ioc->read(cmd->filename, &outbuf[SM_HEADER_LEN + count], cmd->offset + count, cmd->count - count);
-        if (err <= 0) {
-            if (count > 0)
-                outbuf32[1] = count;
-            else {
-                int l_errno = errno;
-                outbuf.resize(16);
-                outbuf32[1] = 8;
-                outbuf32[2] = err;
-                outbuf32[3] = l_errno;
+        err = ioc->read(cmd->filename, &resp->payload[resp->returnCode], cmd->offset + resp->returnCode, 
+          cmd->count - resp->returnCode);
+        if (err < 0) {
+            if (resp->returnCode == 0) {
+                resp->payloadLen = 8;
+                resp->returnCode = err;
+                *((int32_t *) resp->payload) = errno;
             }
             break;
         }
-        count += err;
+        resp->returnCode += err;
+        resp->payloadLen += err;
     }
     
-    success = write(outbuf);
+    success = write(&outbuf[0], resp->payloadLen + SM_HEADER_LEN);
     return success;
 }
 

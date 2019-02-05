@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string>
 #include <assert.h>
+#include <iostream>
 using namespace std;
 
 #include <exception>
@@ -223,13 +224,13 @@ int SessionManager::start()
                             }
                             break;
                         }
-
+                        cout << "recv got " << peakLength << " bytes" << endl;
                         endOfData = remainingBytes + peakLength;
                         if (endOfData < 8)
                         {
                             //read this snippet and keep going
-                            len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
                             remainingBytes = endOfData;
+                            len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
                             continue;
                         }
 
@@ -238,10 +239,12 @@ int SessionManager::start()
                         {
                             if (*((uint *) &recv_buffer[i]) == storagemanager::SM_MSG_START)
                             {
-                                //printf("Received SM_MSG_START\n");
+                                printf("Received SM_MSG_START\n");
                                 //found it set msgLength and recvMsgStart offset of SM_MSG_START
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
+                                cout << "got length = " << recvMsgLength << endl;
                                 recvMsgStart = i+8;
+                                remainingBytes = 0;
                                 //printf("  recvMsgLength %d recvMsgStart %d endofData %d\n", recvMsgLength,recvMsgStart,endOfData);
                                 // if >= endOfData then the start of the message data is the beginning of next message
                                 if (recvMsgStart >= endOfData)
@@ -253,9 +256,13 @@ int SessionManager::start()
                         // didn't find SM_MSG_START in this message consume the data and loop back through on next message
                         if (recvMsgLength == 0)
                         {
-                            //printf("No SM_MSG_START\n");
+                            printf("No SM_MSG_START\n");
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
-                            remainingBytes = endOfData;
+                            // we know the msg header isn't in position [0, endOfData - 7], so throw that out
+                            // and copy [endOfData - 7, endOfData) to the front of the buffer to be
+                            // checked by the next iteration.
+                            memmove(recv_buffer, &recv_buffer[endOfData - 7], 7);
+                            remainingBytes = 7;
                         }
                         else
                         {
@@ -264,12 +271,14 @@ int SessionManager::start()
                             if (recvMsgStart > 0)
                             {
                                 //printf("SM_MSG_START data is here\n");
-                                len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength - recvMsgStart);
+                                len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], recvMsgStart);
+                                remainingBytes = 0;
                             }
                             else
                             {
                                 //printf("SM_MSG_START data is next message\n");
                                 len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
+                                remainingBytes = 0;
                             }
                             //Disable polling on this socket
                             fds[socketIncr].events = 0;
