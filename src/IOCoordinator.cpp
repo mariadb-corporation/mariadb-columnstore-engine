@@ -124,6 +124,12 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
 {
     int fd, err;
     
+    /* create all subdirs if necessary.  We don't care if directories actually get created. */
+    if (openmode & O_CREAT)  {
+        boost::filesystem::path p(filename);
+        boost::system::error_code ec;
+        boost::filesystem::create_directories(p.parent_path(), ec);
+    }
     OPEN(filename, openmode);
     return fstat(fd, out);
 }
