@@ -167,6 +167,7 @@ void PosixTask::consumeMsg()
     
     while (remainingLengthInStream > 0)
     {
+        cout << "ERROR: eating data" << endl;
         err = ::recv(sock, buf, min(remainingLengthInStream, 1024), 0);
         if (err <= 0) {
             remainingLengthInStream = 0;

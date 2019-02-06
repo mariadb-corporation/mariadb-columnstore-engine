@@ -47,16 +47,18 @@ bool StatTask::run()
     #endif
     
     int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);
-    if (err)
-    {
-        handleError("StatTask stat", errno);
-        return true;
-    }
 
     resp->type = SM_MSG_START;
-    resp->payloadLen = sizeof(struct stat) + 4;
-    resp->returnCode = 0;
-    success = write(buf, sizeof(*resp) + sizeof(struct stat));
+    resp->returnCode = err;
+    if (!err) {
+        resp->payloadLen = sizeof(struct stat) + 4;
+        success = write(buf, sizeof(*resp) + sizeof(struct stat));
+    }
+    else {
+        resp->payloadLen = 8;
+        *((int32_t *) resp->payload) = errno;
+        success = write(buf, SM_HEADER_LEN + resp->payloadLen);
+    }
     return success;
 }
 

@@ -211,6 +211,9 @@ int SessionManager::start()
                     uint remainingBytes = 0;
                     uint endOfData, i;
                     int peakLength,len;
+                    struct timespec ts;
+                    ts.tv_sec = 0;
+                    ts.tv_nsec = 100000000;   // .1 sec
                     while(true)
                     {
                         peakLength = ::recv(fds[socketIncr].fd, &recv_buffer[remainingBytes], sizeof(recv_buffer)-remainingBytes, MSG_PEEK | MSG_DONTWAIT);
@@ -220,16 +223,20 @@ int SessionManager::start()
                             {
                                 perror("recv() failed");
                                 closeConn = true;
+                                break;
                             }
-                            break;
+                            // let's not saturate the system
+                            nanosleep(&ts, NULL);
+                            continue;
                         }
                         //cout << "recv got " << peakLength << " bytes" << endl;
                         endOfData = remainingBytes + peakLength;
                         if (endOfData < 8)
                         {
                             //read this snippet and keep going
-                            remainingBytes = endOfData;
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
+                            remainingBytes = endOfData;
+                            assert(len == peakLength);
                             continue;
                         }
 
@@ -243,7 +250,6 @@ int SessionManager::start()
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
                                 //cout << "got length = " << recvMsgLength << endl;
                                 recvMsgStart = i+8;
-                                remainingBytes = 0;
                                 //printf("  recvMsgLength %d recvMsgStart %d endofData %d\n", recvMsgLength,recvMsgStart,endOfData);
                                 // if >= endOfData then the start of the message data is the beginning of next message
                                 if (recvMsgStart >= endOfData)
@@ -257,10 +263,11 @@ int SessionManager::start()
                         {
                             printf("No SM_MSG_START\n");
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
+                            assert(len == peakLength);
                             // we know the msg header isn't in position [0, endOfData - i), so throw that out
                             // and copy [i, endOfData) to the front of the buffer to be
                             // checked by the next iteration.
-                            memmove(recv_buffer, &recv_buffer[i], endOfData - i);
+                            memcpy(recv_buffer, &recv_buffer[i], endOfData - i);
                             remainingBytes = endOfData - i;
                         }
                         else
@@ -270,7 +277,11 @@ int SessionManager::start()
                             if (recvMsgStart > 0)
                             {
                                 //printf("SM_MSG_START data is here\n");
-                                len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], recvMsgStart);
+                                // how many to consume here...
+                                // recvMsgStart is the position in the buffer
+                                // peakLength is the amount peeked this time
+                                // remainingBytes is the amount carried over from previous reads
+                                len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], recvMsgStart - remainingBytes);
                             }
                             else
                             {
@@ -281,8 +292,6 @@ int SessionManager::start()
                             fds[socketIncr].events = 0;
                             //Pass the socket to CRP and the message length. next read will be start of message
                             crp->processRequest(fds[socketIncr].fd,recvMsgLength);
-                            recvMsgLength = 0;
-                            remainingBytes = 0;
                             
                             /*
                             //Doing this to work with cloudio_component_test
@@ -292,8 +301,8 @@ int SessionManager::start()
                             uint32_t response[4] = { storagemanager::SM_MSG_START, 8, (uint32_t ) -1, EINVAL };
                             len = ::send(fds[socketIncr].fd, response, 16, 0);
                             */
+                            break;
                         }
-                        break;
                     }
 
                     if (closeConn)
