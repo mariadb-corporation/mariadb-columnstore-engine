@@ -97,6 +97,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     const uint8_t *inbuf = in.buf();
     ssize_t err = 0;
     
+<<<<<<< HEAD
 retry:
     int retries = 0;
     while (sock < 0)
@@ -130,6 +131,13 @@ retry:
         sock = -1;
         goto retry;
     }
+=======
+    /* TODO: make these writes not send SIGPIPE
+    TODO: turn at least the header bits into a single write */ 
+    err = ::write(sock, &storagemanager::SM_MSG_START, sizeof(storagemanager::SM_MSG_START));
+    sm_check_error;
+    err = ::write(sock, &length, sizeof(length));
+>>>>>>> 92f609f7... Fixed a bug in IDBPolicy that prevented using the system
     sm_check_error;
     while (count < length)
     {
@@ -201,8 +209,13 @@ retry:
         }
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         if (resp == NULL)    // didn't find the header yet
 =======
+=======
+        assert(i == 0);   // in testing there shouldn't be any garbage in the stream
+        
+>>>>>>> 92f609f7... Fixed a bug in IDBPolicy that prevented using the system
         if (length == 0)    // didn't find the header yet
 >>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
         {
@@ -228,6 +241,9 @@ retry:
             out->needAtLeast(length);
             outbuf = out->getInputPtr();
             memcpy(outbuf, &window[startOfPayload], endOfData - startOfPayload);
+            if (length < endOfData - startOfPayload)
+                cout << "SocketPool: warning!  Probably got a bad length field!  payload length = " << length <<
+                    " endOfData = " << endOfData << " startOfPayload = " << startOfPayload << endl;
             remainingBytes = length - (endOfData - startOfPayload);    // remainingBytes is now the # of bytes left to read
 >>>>>>> acb46461... Wrote a component test, which has a stand-in server thread
             out->advanceInputPtr(endOfData - startOfPayload);

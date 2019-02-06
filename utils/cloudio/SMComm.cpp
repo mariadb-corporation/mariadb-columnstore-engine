@@ -76,8 +76,11 @@ SMComm::SMComm()
 <<<<<<< HEAD
     char buf[4096];
     cwd = ::getcwd(buf, 4096);
+<<<<<<< HEAD
 =======
 >>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
+=======
+>>>>>>> 92f609f7... Fixed a bug in IDBPolicy that prevented using the system
 }
 
 SMComm::~SMComm()

@@ -132,7 +132,7 @@ IDBDataFile::Types IDBPolicy::getType( const std::string& path, Contexts ctxt )
 {
     bool isLocal = isLocalFile( path );
 
-    if (isLocal)
+    if (isLocal || (!useHdfs() && !useCloud()))
         if (ctxt == PRIMPROC)
             return IDBDataFile::UNBUFFERED;
         else
