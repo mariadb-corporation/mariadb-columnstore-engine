@@ -73,7 +73,6 @@ SMComm::SMComm()
 {
     char buf[4096];
     cwd = ::getcwd(buf, 4096);
-    cout << "got cwd = " << cwd << endl;
 }
 
 SMComm::~SMComm()

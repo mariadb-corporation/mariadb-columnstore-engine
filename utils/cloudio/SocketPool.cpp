@@ -90,7 +90,8 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     const uint8_t *inbuf = in.buf();
     int err = 0;
     
-    /* TODO: make these writes not send SIGPIPE */
+    /* TODO: make these writes not send SIGPIPE
+    TODO: turn at least the header bits into a single write */ 
     err = ::write(sock, &storagemanager::SM_MSG_START, sizeof(storagemanager::SM_MSG_START));
     sm_check_error;
     err = ::write(sock, &length, sizeof(length));
@@ -142,6 +143,8 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
             }
         }
         
+        assert(i == 0);   // in testing there shouldn't be any garbage in the stream
+        
         if (length == 0)    // didn't find the header yet
         {
             // i == endOfData - 7 here
@@ -156,6 +159,9 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
             out->needAtLeast(length);
             outbuf = out->getInputPtr();
             memcpy(outbuf, &window[startOfPayload], endOfData - startOfPayload);
+            if (length < endOfData - startOfPayload)
+                cout << "SocketPool: warning!  Probably got a bad length field!  payload length = " << length <<
+                    " endOfData = " << endOfData << " startOfPayload = " << startOfPayload << endl;
             remainingBytes = length - (endOfData - startOfPayload);    // remainingBytes is now the # of bytes left to read
             out->advanceInputPtr(endOfData - startOfPayload);
             break;   // done looking for the header, can fill the output buffer directly now.
