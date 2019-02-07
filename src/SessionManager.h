@@ -34,6 +34,7 @@ public:
     int start();
 
     void returnSocket(int socket);
+    void socketError(int socket);
     void CRPTest(int socket,uint length);
 
 private:
@@ -42,6 +43,7 @@ private:
     ClientRequestProcessor *crp;
     struct pollfd fds[MAX_SM_SOCKETS];
     int socketCtrl[2];
+    boost::mutex ctrlMutex;
 };
 
 }

@@ -36,8 +36,7 @@ ProcessTask::~ProcessTask()
 
 void ProcessTask::handleError(int saved_errno)
 {
-    // return sock to SessionManager
-    // SM->socketError(sock);
+    SessionManager::get()->socketError(sock);
     returnedSock = true;
     char buf[80];
     cout << "ProcessTask: got an error during a socket read: " << strerror_r(saved_errno, buf, 80) << endl;
@@ -101,8 +100,8 @@ void ProcessTask::operator()()
     bool success = task->run();
     if (!success)
     {
-        //SessionManager::get()->socketError(sock);
-        //returnedSock = true;
+        SessionManager::get()->socketError(sock);
+        returnedSock = true;
     }
     else
     {

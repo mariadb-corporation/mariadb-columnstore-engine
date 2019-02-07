@@ -122,6 +122,8 @@ int SessionManager::start()
     {
         try
         {
+            //if (current_size != nfds)
+                //cout << "polling " << nfds << " fds" << endl;
             rc = ::poll(fds, nfds, pollTimeout);
             if (rc < 0)
             {
@@ -134,13 +136,13 @@ int SessionManager::start()
 
                 if(fds[socketIncr].revents == 0)
                     continue;
-
+                //if (socketIncr >= 2)
+                    //cout << "got event on fd " << fds[socketIncr].fd << " index is " << socketIncr << endl;
                 if(fds[socketIncr].revents != POLLIN)
                 {
                     //printf("Error! revents = %d\n", fds[socketIncr].revents);
                     close(fds[socketIncr].fd);
                     fds[socketIncr].fd = -1;
-                    continue;
                 }
                 if (fds[socketIncr].fd == listenSockfd)
                 {
@@ -189,13 +191,32 @@ int SessionManager::start()
                             for (int i = 0; i < nfds; i++)
                             {
                                 if(fds[i].fd == socket)
+                                {
+                                    //cout << "returned socket " << fds[i].fd << " at index " << i << endl;
                                     fds[i].events = POLLIN;
+                                    break;
+                                }
+                            }
+                            break;
+                        case REMOVEFD:
+                            len = ::read(socketCtrl[0], &socket, sizeof(socket));
+                            if (len <= 0)
+                            {
+                                continue;
+                            }
+                            for (int i = 0; i < nfds; i++)
+                            {
+                                if (fds[i].fd == socket)
+                                {
+                                    close(socket);
+                                    fds[i].fd = -1;
+                                    break;
+                                }
                             }
                             break;
                         default:
                             break;
                     }
-                    break;
                 }
                 else
                 {
@@ -203,9 +224,7 @@ int SessionManager::start()
 
                     bool closeConn = false;
                     char recv_buffer[8192];
-                    char send_buffer[8192];
                     memset(recv_buffer, 0 , sizeof(recv_buffer));
-                    memset(send_buffer, 0 , sizeof(send_buffer));
                     uint recvMsgLength = 0;
                     uint recvMsgStart = 0;
                     uint remainingBytes = 0;
@@ -214,6 +233,7 @@ int SessionManager::start()
                     struct timespec ts;
                     ts.tv_sec = 0;
                     ts.tv_nsec = 100000000;   // .1 sec
+                    //cout << "reading from fd " << fds[socketIncr].fd << " index is " << socketIncr << endl;
                     while(true)
                     {
                         peakLength = ::recv(fds[socketIncr].fd, &recv_buffer[remainingBytes], sizeof(recv_buffer)-remainingBytes, MSG_PEEK | MSG_DONTWAIT);
@@ -245,6 +265,7 @@ int SessionManager::start()
                         {
                             if (*((uint *) &recv_buffer[i]) == storagemanager::SM_MSG_START)
                             {
+                                assert(i == 0);   // in testing this should be true; no junk in the buffer
                                 //printf("Received SM_MSG_START\n");
                                 //found it set msgLength and recvMsgStart offset of SM_MSG_START
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
@@ -325,12 +346,18 @@ int SessionManager::start()
         {
             if (fds[i].fd == -1)
             {
-                for (int j = i; j < nfds; j++)
+                // this should be the same
+                if (i < nfds - 1)
+                    memmove(&fds[i], &fds[i+1], sizeof(struct pollfd) * nfds);
+                /*
+                for (int j = i; j < nfds-1; j++)
                 {
+                    
                     fds[j].fd = fds[j + 1].fd;
                     fds[j].events = fds[j + 1].events;
                     fds[j].revents = fds[j + 1].revents;
                 }
+                */
                 i--;
                 nfds--;
             }
@@ -342,8 +369,27 @@ int SessionManager::start()
 
 void SessionManager::returnSocket(int socket)
 {
+    boost::mutex::scoped_lock s(ctrlMutex);
     int err;
     uint8_t ctrlCode = ADDFD;
+    err = ::write(socketCtrl[1], &ctrlCode, 1);
+    if (err <= 0)
+    {
+        return;
+    }
+    err = ::write(socketCtrl[1], &socket, sizeof(socket));
+    if (err <= 0)
+    {
+        return;
+    }
+}
+
+void SessionManager::socketError(int socket)
+{
+    boost::mutex::scoped_lock s(ctrlMutex);
+    cout << " ****** socket error!" << endl;
+    int err;
+    uint8_t ctrlCode = REMOVEFD;
     err = ::write(socketCtrl[1], &ctrlCode, 1);
     if (err <= 0)
     {
