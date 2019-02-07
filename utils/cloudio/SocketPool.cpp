@@ -90,11 +90,12 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     const uint8_t *inbuf = in.buf();
     int err = 0;
     
-    /* TODO: make these writes not send SIGPIPE
-    TODO: turn at least the header bits into a single write */ 
-    err = ::write(sock, &storagemanager::SM_MSG_START, sizeof(storagemanager::SM_MSG_START));
-    sm_check_error;
-    err = ::write(sock, &length, sizeof(length));
+    /* TODO: make these writes not send SIGPIPE */
+    storagemanager::sm_msg_header hdr;
+    hdr.type = storagemanager::SM_MSG_START;
+    hdr.payloadLen = length;
+    //cout << "SP sending msg on sock " << sock << " with length = " << length << endl;
+    err = ::write(sock, &hdr, sizeof(hdr));
     sm_check_error;
     while (count < length)
     {
@@ -103,7 +104,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
         count += err;
         in.advance(err);
     }
-    //cout << "SP sent the msg" << endl;
+    //cout << "SP sent msg with length = " << length << endl;
     
     out->restart();
     uint8_t *outbuf;
@@ -114,6 +115,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     
     while (1)
     {
+        //cout << "SP receiving msg on sock " << sock << endl;
         // here remainingBytes means the # of bytes from the previous message
         err = ::read(sock, &window[remainingBytes], 8192 - remainingBytes);
         sm_check_error;
@@ -221,6 +223,7 @@ int SocketPool::getSocket()
 void SocketPool::returnSocket(const int sock)
 {
     boost::mutex::scoped_lock lock(mutex);
+    //cout << "returning socket " << sock << endl;
     freeSockets.push_back(sock);
     socketAvailable.notify_one();
 }
@@ -228,6 +231,7 @@ void SocketPool::returnSocket(const int sock)
 void SocketPool::remoteClosed(const int sock)
 {
     boost::mutex::scoped_lock lock(mutex);
+    //cout << "closing socket " << sock << endl;
     ::close(sock);
     for (vector<int>::iterator i = allSockets.begin(); i != allSockets.end(); ++i)
         if (*i == sock)
