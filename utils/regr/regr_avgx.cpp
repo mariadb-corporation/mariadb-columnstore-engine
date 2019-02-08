@@ -40,7 +40,7 @@ static Add_regr_avgx_ToUDAFMap addToMap;
 // Use the simple data model
 struct regr_avgx_data
 {
-    double	    sum;
+    long double sum;
     uint64_t	cnt;
 };
 
@@ -61,6 +61,13 @@ mcsv1_UDAF::ReturnCode regr_avgx::init(mcsv1Context* context,
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
         context->setErrorMessage("regr_avgx() with a non-numeric x argument");
+        return mcsv1_UDAF::ERROR;
+    }
+    if (!(isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_avgx() with a non-numeric independant (second) argument");
         return mcsv1_UDAF::ERROR;
     }
 
@@ -125,7 +132,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::evaluate(mcsv1Context* context, static_any::an
 
     if (data->cnt > 0)
     {
-        valOut = data->sum / (double)data->cnt;
+        valOut = static_cast<double>(data->sum / (long double)data->cnt);
     }
 
     return mcsv1_UDAF::SUCCESS;

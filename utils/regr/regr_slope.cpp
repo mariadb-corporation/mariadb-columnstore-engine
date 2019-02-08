@@ -39,10 +39,10 @@ static Add_regr_slope_ToUDAFMap addToMap;
 struct regr_slope_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumx2;  // sum of (x squared)
-    double      sumy;
-    double      sumxy;  // sum of (x*y)
+    long double sumx;
+    long double sumx2;  // sum of (x squared)
+    long double sumy;
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -56,7 +56,13 @@ mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
         context->setErrorMessage("regr_slope() with other than 2 arguments");
         return mcsv1_UDAF::ERROR;
     }
-
+    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_slope() with non-numeric arguments");
+        return mcsv1_UDAF::ERROR;
+    }
     context->setUserDataSize(sizeof(regr_slope_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
@@ -139,19 +145,19 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
 {
     struct regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         // COVAR_POP(y, x) / VAR_POP(x)
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumx2 = data->sumx2;
-        double sumxy = data->sumxy;
-        double covar_pop = N * sumxy - sumx * sumy;
-        double var_pop = N * sumx2 - sumx * sumx;
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumx2 = data->sumx2;
+        long double sumxy = data->sumxy;
+        long double covar_pop = N * sumxy - sumx * sumy;
+        long double var_pop = N * sumx2 - sumx * sumx;
         if (var_pop != 0)
         {
-            double slope = covar_pop / var_pop;
-            valOut = slope;
+            long double slope = covar_pop / var_pop;
+            valOut = static_cast<double>(slope);
         }
     }
     return mcsv1_UDAF::SUCCESS;
