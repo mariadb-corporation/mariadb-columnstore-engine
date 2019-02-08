@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 #include "messageFormat.h"
+#include <sys/socket.h>
+#include <boost/scoped_ptr.hpp>
 
 #include "AppendTask.h"
 #include "CopyTask.h"
@@ -15,8 +17,6 @@
 #include "UnlinkTask.h"
 #include "WriteTask.h"
 #include "SessionManager.h"
-
-#include <sys/socket.h>
 
 using namespace std;
 
@@ -60,38 +60,38 @@ void ProcessTask::operator()()
         return;
     }
         
-    PosixTask *task;
+    boost::scoped_ptr<PosixTask> task;
     switch(opcode)
     {
         case OPEN:
-            task = new OpenTask(sock, length);
+            task.reset(new OpenTask(sock, length));
             break;
         case READ:
-            task = new ReadTask(sock, length);
+            task.reset(new ReadTask(sock, length));
             break;
         case WRITE:
-            task = new WriteTask(sock, length);
+            task.reset(new WriteTask(sock, length));
             break;
         case STAT:
-            task = new StatTask(sock, length);
+            task.reset(new StatTask(sock, length));
             break;
         case UNLINK:
-            task  = new UnlinkTask(sock, length);
+            task.reset(new UnlinkTask(sock, length));
             break;
         case APPEND:
-            task = new AppendTask(sock, length);
+            task.reset(new AppendTask(sock, length));
             break;
         case TRUNCATE:
-            task = new TruncateTask(sock, length);
+            task.reset(new TruncateTask(sock, length));
             break;
         case LIST_DIRECTORY:
-            task = new ListDirectoryTask(sock, length);
+            task.reset(new ListDirectoryTask(sock, length));
             break;
         case PING:
-            task = new PingTask(sock, length);
+            task.reset(new PingTask(sock, length));
             break;
         case COPY:
-            task = new CopyTask(sock, length);
+            task.reset(new CopyTask(sock, length));
             break;
         default:
             throw runtime_error("ProcessTask: got an unknown opcode");
