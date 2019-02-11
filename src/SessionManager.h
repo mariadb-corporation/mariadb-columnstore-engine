@@ -4,9 +4,11 @@
 #define STORAGEMANGER_H_
 
 #include "ClientRequestProcessor.h"
+#include "messageFormat.h"
 
 #include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
+#include <unordered_map>
 
 
 namespace storagemanager
@@ -44,6 +46,15 @@ private:
     struct pollfd fds[MAX_SM_SOCKETS];
     int socketCtrl[2];
     boost::mutex ctrlMutex;
+    
+    // These map a socket fd to its state between read iterations if a message header could not be found in the data
+    // available at the time.
+    struct SockState {
+        char remainingData[SM_HEADER_LEN];
+        uint remainingBytes;
+    };
+    std::unordered_map<int, SockState> sockState;
+    
 };
 
 }

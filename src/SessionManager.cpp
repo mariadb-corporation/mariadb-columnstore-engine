@@ -224,7 +224,6 @@ int SessionManager::start()
 
                     bool closeConn = false;
                     char recv_buffer[8192];
-                    memset(recv_buffer, 0 , sizeof(recv_buffer));
                     uint recvMsgLength = 0;
                     uint recvMsgStart = 0;
                     uint remainingBytes = 0;
@@ -234,6 +233,13 @@ int SessionManager::start()
                     ts.tv_sec = 0;
                     ts.tv_nsec = 100000000;   // .1 sec
                     //cout << "reading from fd " << fds[socketIncr].fd << " index is " << socketIncr << endl;
+                    if (sockState.find(fds[socketIncr].fd) != sockState.end())
+                    {
+                        SockState &state = sockState[fds[socketIncr].fd];
+                        remainingBytes = state.remainingBytes;
+                        memcpy(recv_buffer, state.remainingData, remainingBytes);
+                        sockState.erase(fds[socketIncr].fd);
+                    }
                     while(true)
                     {
                         peakLength = ::recv(fds[socketIncr].fd, &recv_buffer[remainingBytes], sizeof(recv_buffer)-remainingBytes, MSG_PEEK | MSG_DONTWAIT);
@@ -241,17 +247,22 @@ int SessionManager::start()
                         {
                             if (errno != EWOULDBLOCK)
                             {
-                                perror("recv() failed");
+                                //perror("recv() failed");
                                 closeConn = true;
                                 break;
                             }
-                            // let's not saturate the system
-                            nanosleep(&ts, NULL);
-                            continue;
+                            
+                            // there's no data available at this point; go back to the poll loop.
+                            assert(remainingBytes < SM_HEADER_LEN);
+                            SockState state;
+                            state.remainingBytes = remainingBytes;
+                            memcpy(state.remainingData, recv_buffer, remainingBytes);
+                            sockState[fds[socketIncr].fd] = state;
+                            break;
                         }
                         //cout << "recv got " << peakLength << " bytes" << endl;
                         endOfData = remainingBytes + peakLength;
-                        if (endOfData < 8)
+                        if (endOfData < SM_HEADER_LEN)
                         {
                             //read this snippet and keep going
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
@@ -261,11 +272,10 @@ int SessionManager::start()
                         }
 
                         //Look for SM_MSG_START
-                        for (i = 0; i <= endOfData - 8; i++)
+                        for (i = 0; i <= endOfData - SM_HEADER_LEN; i++)
                         {
-                            if (*((uint *) &recv_buffer[i]) == storagemanager::SM_MSG_START)
+                            if (*((uint *) &recv_buffer[i]) == SM_MSG_START)
                             {
-                                assert(i == 0);   // in testing this should be true; no junk in the buffer
                                 //printf("Received SM_MSG_START\n");
                                 //found it set msgLength and recvMsgStart offset of SM_MSG_START
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
