@@ -38,7 +38,7 @@ class SocketPool : public boost::noncopyable
         
         // 0 = success, -1 = failure.  Should this throw instead?
         int send_recv(messageqcpp::ByteStream &to_send, messageqcpp::ByteStream *to_recv);
-        
+
     private:
         int getSocket();
         void returnSocket(const int sock);
@@ -50,7 +50,6 @@ class SocketPool : public boost::noncopyable
         boost::condition_variable socketAvailable;
         uint maxSockets;
         static const uint defaultSockets = 20;
-        
 };
 
 }
