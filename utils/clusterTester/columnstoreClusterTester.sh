@@ -721,7 +721,7 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "jemalloc" "snappy" "net-tools" "perl-DBD-MySQL")
 
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
     if [ ! `which yum 2>/dev/null` ] ; then
@@ -796,7 +796,7 @@ checkPackages()
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "jemalloc" "libsnappy1" "net-tools" "perl-DBD-mysql")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -848,7 +848,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "jemalloc" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -913,7 +913,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "jemalloc" "libsnappy1" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "debian8" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -978,7 +978,7 @@ checkPackages()
     fi
   fi
   
-  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libaio1")
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "jemalloc" "libsnappy1V5" "net-tools" "libaio1")
 
   if [ "$OS" == "debian9" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
