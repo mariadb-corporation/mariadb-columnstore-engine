@@ -96,6 +96,7 @@ bool opentask()
     // open/create a file named 'opentest1'
     const char *filename = "opentest1";
     hdr->type = SM_MSG_START;
+    hdr->flags = 0;
     hdr->payloadLen = sizeof(*cmd) + 9;
     cmd->opcode = OPEN;
     cmd->openmode = O_WRONLY | O_CREAT;
@@ -109,10 +110,11 @@ bool opentask()
     
     // read the response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    assert(err == sizeof(struct stat) + sizeof(sm_msg_resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == sizeof(struct stat) + 4);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(struct stat) + sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == sizeof(struct stat) + 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     struct stat *_stat = (struct stat *) resp->payload;
     
@@ -159,10 +161,11 @@ bool writetask()
     
     // verify response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    sm_response *resp = (sm_response *) buf;
     assert(err == sizeof(*resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 9);
     
     //check file contents
@@ -205,10 +208,11 @@ bool appendtask()
     
     // verify response
     err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    sm_response *resp = (sm_response *) buf;
     assert(err == sizeof(*resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 9);
     
     //check file contents
@@ -245,10 +249,11 @@ bool unlinktask()
     
     // verify response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    sm_response *resp = (sm_response *) buf;
     assert(err == sizeof(*resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     
     // confirm it no longer exists
@@ -277,10 +282,11 @@ bool stattask()
     
     // read the response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    assert(err == sizeof(struct stat) + sizeof(sm_msg_resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == sizeof(struct stat) + 4);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(struct stat) + sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.flags == 0);
+    assert(resp->header.payloadLen == sizeof(struct stat) + 4);
     assert(resp->returnCode == 0);
     struct stat *_stat = (struct stat *) resp->payload;
     
@@ -316,10 +322,11 @@ bool truncatetask()
     
     // read the response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    assert(err == sizeof(sm_msg_resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.flags == 0);
+    assert(resp->header.payloadLen == 4);
     assert(resp->returnCode == 0);
     
     struct stat statbuf;
@@ -353,13 +360,14 @@ bool listdirtask()
     /* going to keep this simple. Don't run this in a big dir. */
     /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    sm_response *resp = (sm_response *) buf;
     assert(err > 0);
-    assert(resp->type == SM_MSG_START);
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     listdir_resp *r = (listdir_resp *) resp->payload;
     //cout << "resp has " << r->elements << " elements" << endl;
-    int off = sizeof(sm_msg_resp) + sizeof(listdir_resp);
+    int off = sizeof(sm_response) + sizeof(listdir_resp);
     while (off < err)
     {
         listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
@@ -391,10 +399,11 @@ bool pingtask()
     
     // read the response
     int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    assert(err == sizeof(sm_msg_resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     cout << "pingtask OK" << endl;
 }
@@ -431,10 +440,11 @@ bool copytask()
     
     // read the response
     err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    assert(err == sizeof(sm_msg_resp));
-    assert(resp->type == SM_MSG_START);
-    assert(resp->payloadLen == 4);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     
     // verify copytest2 is there

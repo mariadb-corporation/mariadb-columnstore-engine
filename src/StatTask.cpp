@@ -40,7 +40,7 @@ bool StatTask::run()
     success = read(buf, getLength());
     check_error("StatTask read", false);
     stat_cmd *cmd = (stat_cmd *) buf;
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
+    sm_response *resp = (sm_response *) buf;
     
     #ifdef SM_TRACE
     cout << "stat " << cmd->filename << endl;
@@ -48,17 +48,15 @@ bool StatTask::run()
     
     int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);
 
-    resp->type = SM_MSG_START;
     resp->returnCode = err;
-    if (!err) {
-        resp->payloadLen = sizeof(struct stat) + 4;
-        success = write(buf, sizeof(*resp) + sizeof(struct stat));
-    }
+    uint payloadLen;
+    if (!err)
+        payloadLen = sizeof(struct stat);
     else {
-        resp->payloadLen = 8;
+        payloadLen = 4;
         *((int32_t *) resp->payload) = errno;
-        success = write(buf, SM_HEADER_LEN + resp->payloadLen);
     }
+    success = write(*resp, payloadLen);
     return success;
 }
 

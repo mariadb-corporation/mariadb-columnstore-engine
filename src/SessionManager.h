@@ -8,7 +8,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
-#include <unordered_map>
+#include <tr1/unordered_map>
 
 
 namespace storagemanager
@@ -53,7 +53,7 @@ private:
         char remainingData[SM_HEADER_LEN];
         uint remainingBytes;
     };
-    std::unordered_map<int, SockState> sockState;
+    std::tr1::unordered_map<int, SockState> sockState;
     
 };
 

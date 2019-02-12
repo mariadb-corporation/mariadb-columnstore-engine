@@ -87,9 +87,10 @@ bool ListDirectoryTask::run()
     for (uint i = 0; i < listing.size(); i++)
         payloadLen += listing[i].size();
     
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    resp->type = SM_MSG_START;
-    resp->payloadLen = payloadLen + 4;   // the +4 is for the length of the return code
+    sm_response *resp = (sm_response *) buf;
+    resp->header.type = SM_MSG_START;
+    resp->header.payloadLen = payloadLen + sizeof(sm_response) - sizeof(sm_msg_header);   // the +4 is for the length of the return code
+    resp->header.flags = 0;
     resp->returnCode = 0;
     listdir_resp *r = (listdir_resp *) resp->payload;
     r->elements = listing.size();

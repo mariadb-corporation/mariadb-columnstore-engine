@@ -49,11 +49,9 @@ bool UnlinkTask::run()
         return true;
     }
     
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    resp->type = SM_MSG_START;
-    resp->payloadLen = 4;
+    sm_response *resp = (sm_response *) buf;
     resp->returnCode = 0;
-    success = write(buf, sizeof(*resp));
+    success = write(*resp, 0);
     return success;
 }
 

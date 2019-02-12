@@ -46,12 +46,11 @@ bool ReadTask::run()
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
-    outbuf.resize(max(cmd->count, 4) + sizeof(sm_msg_resp));
-    sm_msg_resp *resp = (sm_msg_resp *) &outbuf[0];
+    outbuf.resize(max(cmd->count, 4) + sizeof(sm_response));
+    sm_response *resp = (sm_response *) &outbuf[0];
     
-    resp->type = SM_MSG_START;
     resp->returnCode = 0;
-    resp->payloadLen = 4;
+    uint payloadLen = 0;
     
     // todo: do the reading and writing in chunks
     // todo: need to make this use O_DIRECT on the IOC side
@@ -63,8 +62,8 @@ bool ReadTask::run()
           cmd->count - resp->returnCode);
         if (err < 0) {
             if (resp->returnCode == 0) {
-                resp->payloadLen = 8;
                 resp->returnCode = err;
+                payloadLen = 4;
                 *((int32_t *) resp->payload) = errno;
             }
             break;
@@ -72,10 +71,10 @@ bool ReadTask::run()
         if (err == 0)
             break;
         resp->returnCode += err;
-        resp->payloadLen += err;
     }
-    
-    success = write(&outbuf[0], resp->payloadLen + SM_HEADER_LEN);
+    if (resp->returnCode >= 0)
+        payloadLen = resp->returnCode;
+    success = write(*resp, payloadLen);
     return success;
 }
 

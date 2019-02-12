@@ -47,19 +47,16 @@ bool OpenTask::run()
     #ifdef SM_TRACE
     cout << "open filename " << cmd->filename << " mode " << oct << cmd->openmode << dec << endl;
     #endif
-    
-    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &buf[sizeof(sm_msg_resp)]);
+    sm_response *resp = (sm_response *) buf;
+    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &resp->payload);
     if (err)
     {
         handleError("OpenTask open", errno);
         return true;
     }
     
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    resp->type = SM_MSG_START;
-    resp->payloadLen = sizeof(struct stat) + 4;
     resp->returnCode = 0;
-    success = write(buf, sizeof(struct stat) + sizeof(sm_msg_resp));
+    success = write(*resp, sizeof(struct stat));
     if (!success)
         handleError("OpenTask write", errno);
     return success;

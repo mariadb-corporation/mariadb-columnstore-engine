@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <iostream>
 #include "IOCoordinator.h"
+#include "messageFormat.h"
 
 namespace storagemanager
 {
@@ -25,6 +26,7 @@ class PosixTask
     protected:
         bool read(uint8_t *buf, uint length);
         bool write(const std::vector<uint8_t> &buf);
+        bool write(sm_response &resp, uint payloadLength);
         bool write(const uint8_t *buf, uint length);
         void consumeMsg();   // drains the remaining portion of the message
         uint getLength();  // returns the total length of the msg

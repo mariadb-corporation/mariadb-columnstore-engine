@@ -33,15 +33,13 @@ PosixTask::~PosixTask()
 
 void PosixTask::handleError(const char *name, int errCode)
 {
-    char buf[80];
+    char buf[sizeof(sm_response) + 4];
     
     // send an error response if possible
-    sm_msg_resp *resp = (sm_msg_resp *) buf;
-    resp->type = SM_MSG_START;
-    resp->payloadLen = 8;
+    sm_response *resp = (sm_response *) buf;
     resp->returnCode = -1;
     *((int *) resp->payload) = errCode;
-    write((uint8_t *) buf, sizeof(*resp) + 4);
+    write(*resp, 4);
     
     // TODO: construct and log a message
     cout << name << " caught an error: " << strerror_r(errCode, buf, 80) << endl;
@@ -144,6 +142,27 @@ bool PosixTask::write(const uint8_t *buf, uint len)
     while (count < len)
     {
         err = ::send(sock, &buf[count], len - count, 0);
+        if (err < 0)
+            return false;
+        count += err;
+    }
+    return true;
+}
+
+bool PosixTask::write(sm_response &resp, uint payloadLength)
+{
+    int err;
+    uint count = 0;
+    uint8_t *buf = (uint8_t *) &resp;
+    
+    resp.header.type = SM_MSG_START;
+    resp.header.flags = 0;
+    resp.header.payloadLen = payloadLength + sizeof(sm_response) - sizeof(sm_msg_header);
+    uint toSend = payloadLength + sizeof(sm_response);
+    
+    while (count < toSend)
+    {
+        err = ::send(sock, &buf[count], toSend - count, 0);
         if (err < 0)
             return false;
         count += err;

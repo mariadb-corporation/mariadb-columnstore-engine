@@ -280,7 +280,7 @@ int SessionManager::start()
                                 //found it set msgLength and recvMsgStart offset of SM_MSG_START
                                 recvMsgLength = *((uint *) &recv_buffer[i+4]);
                                 //cout << "got length = " << recvMsgLength << endl;
-                                recvMsgStart = i+8;
+                                recvMsgStart = i + SM_HEADER_LEN;
                                 //printf("  recvMsgLength %d recvMsgStart %d endofData %d\n", recvMsgLength,recvMsgStart,endOfData);
                                 // if >= endOfData then the start of the message data is the beginning of next message
                                 if (recvMsgStart >= endOfData)

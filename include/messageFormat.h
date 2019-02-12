@@ -20,14 +20,21 @@ namespace storagemanager
 
 #pragma pack(push, 1)
 struct sm_msg_header {
-    uint32_t type;   // SM_MSG_{START,CONT,END}
-    uint32_t payloadLen;
+    uint32_t type;      // SM_MSG_{START,CONT,END}
+    uint32_t payloadLen;   // refers to the length of what follows the header
+    uint8_t flags;      // see below for valid values
+};
+
+// current values for the flags field in sm_msg_header
+static const uint8_t CONT = 0x1;  // this means another message will follow as part of this request or response
+
+struct sm_request {
+    sm_msg_header header;
     uint8_t payload[];
 };
 
-struct sm_msg_resp {
-    uint32_t type;
-    uint32_t payloadLen;
+struct sm_response {
+    sm_msg_header header;
     int32_t returnCode;   // if < 0 it indicates an error, and payload contains a 4-byte errno value
     uint8_t payload[];
 };

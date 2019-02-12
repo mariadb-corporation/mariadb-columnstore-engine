@@ -34,11 +34,9 @@ bool PingTask::run()
     }
     
     // send generic success response
-    sm_msg_resp ret;
-    ret.type = SM_MSG_START;
-    ret.payloadLen = 4;
+    sm_response ret;
     ret.returnCode = 0;
-    success = write((uint8_t *) &ret, sizeof(ret));
+    success = write(ret, 0);
     return success;
 }
 

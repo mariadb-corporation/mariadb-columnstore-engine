@@ -71,22 +71,18 @@ bool AppendTask::run()
             break;
     }
     
-    uint8_t respbuf[sizeof(sm_msg_resp) + 4];
-    sm_msg_resp *resp = (sm_msg_resp *) respbuf;
-    resp->type = SM_MSG_START;
+    uint8_t respbuf[sizeof(sm_response) + 4];
+    sm_response *resp = (sm_response *) respbuf;
+    uint payloadLen = 0;
     if (cmd->count != 0 && writeCount == 0)
     {
-        resp->payloadLen = 8;
+        payloadLen = 4;
         resp->returnCode = -1;
         *((int *) &resp[1]) = errno;
-        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp) + 4);
     }
     else
-    {
-        resp->payloadLen = 4;
         resp->returnCode = writeCount;
-        success = write((uint8_t *) respbuf, sizeof(sm_msg_resp));
-    }
+    success = write(*resp, payloadLen);
     return success;
 }
 
