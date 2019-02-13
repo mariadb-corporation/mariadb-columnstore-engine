@@ -999,12 +999,12 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
             unsigned itInc = 1;               // iterator increase number
             unsigned numOfStepsAddToBps = 0;  // # steps to be added into TBPS
 
-            if ((distance(it, end) > 2 &&
+            if ((std::distance(it, end) > 2 &&
                     dynamic_cast<pDictionaryScan*>(it->get()) != NULL &&
                     (dynamic_cast<pColScanStep*>((it + 1)->get()) != NULL ||
                      dynamic_cast<pColStep*>((it + 1)->get()) != NULL) &&
                     dynamic_cast<TupleHashJoinStep*>((it + 2)->get()) != NULL) ||
-                    (distance(it, end) > 1 &&
+                    (std::distance(it, end) > 1 &&
                      dynamic_cast<pDictionaryScan*>(it->get()) != NULL &&
                      dynamic_cast<TupleHashJoinStep*>((it + 1)->get()) != NULL))
             {
@@ -1045,7 +1045,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 itInc = 1;
                 numOfStepsAddToBps = 0;
             }
-            else if (distance(begin, it) > 1 &&
+            else if (std::distance(begin, it) > 1 &&
                      (dynamic_cast<pDictionaryScan*>((it - 1)->get()) != NULL ||
                       dynamic_cast<pDictionaryScan*>((it - 2)->get()) != NULL) &&
                      dynamic_cast<TupleHashJoinStep*>(it->get()) != NULL)
@@ -1054,14 +1054,14 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 itInc = 1;
                 numOfStepsAddToBps = 0;
             }
-            else if (distance(it, end) > 2 &&
+            else if (std::distance(it, end) > 2 &&
                      dynamic_cast<pColStep*>((it + 1)->get()) != NULL &&
                      dynamic_cast<FilterStep*>((it + 2)->get()) != NULL)
             {
                 itInc = 3;
                 numOfStepsAddToBps = 3;
             }
-            else if (distance(it, end) > 3 &&
+            else if (std::distance(it, end) > 3 &&
                      dynamic_cast<pColStep*>((it + 1)->get()) != NULL &&
                      dynamic_cast<pDictionaryStep*>((it + 2)->get()) != NULL &&
                      dynamic_cast<FilterStep*>((it + 3)->get()) != NULL)
@@ -1069,7 +1069,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 itInc = 4;
                 numOfStepsAddToBps = 4;
             }
-            else if (distance(it, end) > 3 &&
+            else if (std::distance(it, end) > 3 &&
                      dynamic_cast<pDictionaryStep*>((it + 1)->get()) != NULL &&
                      dynamic_cast<pColStep*>((it + 2)->get()) != NULL &&
                      dynamic_cast<FilterStep*>((it + 3)->get()) != NULL)
@@ -1077,7 +1077,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 itInc = 4;
                 numOfStepsAddToBps = 4;
             }
-            else if (distance(it, end) > 4 &&
+            else if (std::distance(it, end) > 4 &&
                      dynamic_cast<pDictionaryStep*>((it + 1)->get()) != NULL &&
                      dynamic_cast<pColStep*>((it + 2)->get()) != NULL &&
                      dynamic_cast<pDictionaryStep*>((it + 3)->get()) != NULL &&
@@ -1086,7 +1086,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 itInc = 5;
                 numOfStepsAddToBps = 5;
             }
-            else if (distance(it, end) > 1 &&
+            else if (std::distance(it, end) > 1 &&
                      (dynamic_cast<pColStep*>(it->get()) != NULL ||
                       dynamic_cast<pColScanStep*>(it->get()) != NULL) &&
                      dynamic_cast<pDictionaryStep*>((it + 1)->get()) != NULL)
@@ -2049,7 +2049,7 @@ uint32_t getKeyIndex(uint32_t key, const RowGroup& rg)
     if (i == rg.getKeys().end())
         throw runtime_error("No key found.");
 
-    return distance(rg.getKeys().begin(), i);
+    return std::distance(rg.getKeys().begin(), i);
 }
 
 

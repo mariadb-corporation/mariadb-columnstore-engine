@@ -34,6 +34,8 @@ using namespace boost::posix_time;
 namespace BRM
 {
 
+const uint32_t AutoincrementManager::lockTime = 30;
+
 AutoincrementManager::AutoincrementManager()
 {
 }

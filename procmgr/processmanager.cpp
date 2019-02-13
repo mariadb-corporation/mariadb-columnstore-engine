@@ -23,6 +23,7 @@
 
 //#define NDEBUG
 #include <cassert>
+#include <boost/tokenizer.hpp>
 
 #include "columnstoreversion.h"
 #include "processmanager.h"

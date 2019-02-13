@@ -49,7 +49,7 @@ SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
 
 SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore")
+SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore" CACHE PATH "Location of installed engine")
 
 # use, i.e. don't skip the full RPATH for the build tree
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)

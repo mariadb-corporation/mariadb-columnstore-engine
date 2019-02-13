@@ -33,7 +33,6 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #if defined(_MSC_VER) && defined(xxxRWLOCK_DLLEXPORT)
 #define EXPORT __declspec(dllexport)

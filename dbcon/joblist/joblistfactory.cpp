@@ -1181,11 +1181,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         else
                             it = pcv.insert(pcv.end(), srcp);
 
-                        projectKeys.insert(projectKeys.begin() + distance(pcv.begin(), it), tupleKey);
+                        projectKeys.insert(projectKeys.begin() + std::distance(pcv.begin(), it), tupleKey);
                     }
                     else if (doDistinct) // @bug4250, move forward distinct column if necessary.
                     {
-                        uint32_t pos = distance(projectKeys.begin(), keyIt);
+                        uint32_t pos = std::distance(projectKeys.begin(), keyIt);
 
                         if (pos >= lastGroupByPos)
                         {
@@ -1332,11 +1332,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 else
                     it = pcv.insert(pcv.end(), srcp);
 
-                projectKeys.insert(projectKeys.begin() + distance(pcv.begin(), it), tupleKey);
+                projectKeys.insert(projectKeys.begin() + std::distance(pcv.begin(), it), tupleKey);
             }
             else if (doDistinct) // @bug4250, move forward distinct column if necessary.
             {
-                uint32_t pos = distance(projectKeys.begin(), keyIt);
+                uint32_t pos = std::distance(projectKeys.begin(), keyIt);
 
                 if (pos >= lastGroupByPos)
                 {
@@ -1464,7 +1464,7 @@ void changePcolStepToPcolScan(JobStepVector::iterator& it, JobStepVector::iterat
     {
         //If we have a pDictionaryScan-pColStep duo, then change the pColStep
         if (typeid(*(it->get())) == typeid(pDictionaryScan) &&
-                distance(it, end) > 1 &&
+                std::distance(it, end) > 1 &&
                 typeid(*((it + 1)->get())) == typeid(pColStep))
         {
             ++it;
