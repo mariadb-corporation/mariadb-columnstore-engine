@@ -182,19 +182,26 @@ long long Convertor::convertDecimalString(
 {
     long double dval = strtold(field, NULL);
     long long ret = 0;
-    
+
     // move scale digits to the left of the decimal point
     for (int i = 0; i < scale; i++)
         dval *= 10;
-        
+
     // range check against int64
-    if (dval > LLONG_MAX || dval < LLONG_MIN)
+    if (dval > LLONG_MAX)
+    {
         errno = ERANGE;
-    else
-        errno = 0;
-        
+        return LLONG_MAX;
+    }
+    if (dval < LLONG_MIN)
+    {
+        errno = ERANGE;
+        return LLONG_MIN;
+    }
+    errno = 0;
+
     ret = dval;
-    
+
     // get the fractional part of what's left & round ret up or down.
     dval -= ret;
     if (dval >= 0.5 && ret < LLONG_MAX)
