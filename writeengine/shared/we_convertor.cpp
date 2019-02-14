@@ -194,15 +194,20 @@ long long Convertor::convertDecimalString(
 
         
     // range check against int64
-    if (dval > LLONG_MAX || dval < LLONG_MIN)
+    if (dval > LLONG_MAX)
+    {
         errno = ERANGE;
+        return LLONG_MAX;
+    }
+    if (dval < LLONG_MIN)
+    {
+        errno = ERANGE;
+        return LLONG_MIN;
+    }
+    errno = 0;
 
-    else
-
-        errno = 0;
-        
     ret = dval;
-    
+
     // get the fractional part of what's left & round ret up or down.
     dval -= ret;
     if (dval >= 0.5 && ret < LLONG_MAX)
