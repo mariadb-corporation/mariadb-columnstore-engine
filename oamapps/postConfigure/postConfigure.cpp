@@ -662,9 +662,14 @@ int main(int argc, char* argv[])
         if (moduleconfig.hostConfigList.size() > 0 )
         {
             HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-            string PM1ipAdd = (*pt1).IPAddr;
+            
+            // MCOL-1607.  The 'am I pm1?' check below requires an ipaddr.
+            string PM1ipAdd = oam.getIPAddress((*pt1).IPAddr.c_str());
+            if (PM1ipAdd.empty())
+                PM1ipAdd = (*pt1).IPAddr;    // this is what it was doing before              
+                
             //cout << PM1ipAdd << endl;
-
+            
             if ( PM1ipAdd != "127.0.0.1" )
             {
                 if ( PM1ipAdd != "0.0.0.0")
@@ -2601,6 +2606,13 @@ int main(int argc, char* argv[])
                                     if (strlen(pcommand) > 0) newModuleIPAddr = pcommand;
 
                                     callFree(pcommand);
+                                }
+                                
+                                if (!doNotResolveHostNames)
+                                {
+                                    string ugh = oam.getIPAddress(newModuleIPAddr);
+                                    if (ugh.length() > 0)
+                                        newModuleIPAddr = ugh;
                                 }
 
                                 if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0" || newModuleIPAddr == "128.0.0.1")
@@ -6580,7 +6592,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
             //prompt for IP address
             while (true)
             {
-                prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " IP Address of " + moduleHostName + " (" + moduleIPAddr + ") > ";
+                prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " IP Address or hostname of " + moduleHostName + " (" + moduleIPAddr + ") > ";
                 pcommand = callReadline(prompt.c_str());
 
                 if (pcommand)
@@ -6588,6 +6600,13 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
                     if (strlen(pcommand) > 0) moduleIPAddr = pcommand;
 
                     callFree(pcommand);
+                }
+                
+                if (!doNotResolveHostNames)
+                {
+                    string ugh = oam.getIPAddress(moduleIPAddr);
+                    if (ugh.length() > 0)
+                        moduleIPAddr = ugh;
                 }
 
                 if (moduleIPAddr == "127.0.0.1" || moduleIPAddr == "0.0.0.0" || moduleIPAddr == "128.0.0.1")
