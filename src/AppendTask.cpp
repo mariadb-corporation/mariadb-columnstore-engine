@@ -44,7 +44,7 @@ bool AppendTask::run()
     check_error("AppendTask read", false);
     
     #ifdef SM_TRACE
-    cout << "append " << cmd->count << " bytes to " << cmd->filename << endl;
+    syslog(LOG_DEBUG, "append %d bytes to %s.",cmd->count,cmd->filename);
     #endif
     
     size_t readCount = 0, writeCount = 0;

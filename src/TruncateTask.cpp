@@ -38,7 +38,7 @@ bool TruncateTask::run()
     truncate_cmd *cmd = (truncate_cmd *) buf;
     
     #ifdef SM_TRACE
-    cout << "truncate " << cmd->filename << " newlength " << cmd->length << endl;
+    syslog(LOG_DEBUG, "truncate %s newlength %i.",cmd->filename,cmd->length);
     #endif
     
     int err = ioc->truncate(cmd->filename, cmd->length);

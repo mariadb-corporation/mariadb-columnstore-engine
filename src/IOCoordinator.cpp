@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <syslog.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -199,7 +200,7 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
         l_errno = e.code().value();   // why not.
         // eh, not going to translate all of boost's errors into our errors for this.
         // log the error
-        cout << "IOCoordinator::copy(): got " << e.what() << endl;
+        syslog(LOG_ERR, "IOCoordinator::copy(): got %s",e.what());
     }
     catch (...) {
         err = -1;

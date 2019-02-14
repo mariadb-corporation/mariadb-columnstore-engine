@@ -39,7 +39,7 @@ bool UnlinkTask::run()
     unlink_cmd *cmd = (unlink_cmd *) buf;
     
     #ifdef SM_TRACE
-    cout << "unlink " << cmd->filename << endl;
+    syslog(LOG_DEBUG, "unlink %s.",cmd->filename);
     #endif
     
     int err = ioc->unlink(cmd->filename);

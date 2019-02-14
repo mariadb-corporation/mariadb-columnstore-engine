@@ -1,6 +1,7 @@
 
 #include "CopyTask.h"
 #include <errno.h>
+#include "syslog.h"
 #include "messageFormat.h"
 
 using namespace std;
@@ -41,7 +42,7 @@ bool CopyTask::run()
     f_name *filename2 = (f_name *) &buf[sizeof(copy_cmd) + cmd->file1.flen];
     
     #ifdef SM_TRACE
-    cout << "copy " << filename1 << " to " << filename2 << endl;
+    syslog(LOG_DEBUG, "copy %s to %s.",filename1,filename2);
     #endif
     
     int err = ioc->copyFile(filename1.c_str(), filename2->filename);

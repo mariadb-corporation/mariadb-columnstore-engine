@@ -71,7 +71,7 @@ bool ListDirectoryTask::run()
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     #ifdef SM_TRACE
-    cout << "list_directory " << cmd->path << endl;
+    syslog(LOG_DEBUG, "list_directory %s.",cmd->path);
     #endif
     
     vector<string> listing;

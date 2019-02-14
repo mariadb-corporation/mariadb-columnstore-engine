@@ -41,7 +41,7 @@ bool ReadTask::run()
     read_cmd *cmd = (read_cmd *) buf;
     
     #ifdef SM_TRACE
-    cout << "read " << cmd->filename << " count " << cmd->count << " offset " << cmd->offset << endl;
+    syslog(LOG_DEBUG, "read %s count %i offset %i.",cmd->filename,cmd->count,cmd->offset);
     #endif
     
     // read from IOC, write to the socket

@@ -43,7 +43,7 @@ bool StatTask::run()
     sm_response *resp = (sm_response *) buf;
     
     #ifdef SM_TRACE
-    cout << "stat " << cmd->filename << endl;
+    syslog(LOG_DEBUG, "stat %s.",cmd->filename);
     #endif
     
     int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);

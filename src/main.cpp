@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <syslog.h>
+
 using namespace std;
 
 #include "SessionManager.h"
@@ -22,9 +24,19 @@ int main(int argc, char** argv)
     sigaction(SIGPIPE, &sa, NULL);
     
     int ret = 0;
+
+    //TODO: make this configurable
+    setlogmask (LOG_UPTO (LOG_DEBUG));
+
+    openlog ("StorageManager", LOG_PID | LOG_NDELAY, LOG_LOCAL2);
+
+    syslog(LOG_NOTICE, "StorageManager started.");
+
     SessionManager* sm = SessionManager::get();
 
     ret = sm->start();
+
+    closelog ();
 
     return ret;
 }

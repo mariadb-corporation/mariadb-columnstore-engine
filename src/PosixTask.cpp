@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <syslog.h>
 #include <string.h>
 
 #define min(x, y) (x < y ? x : y)
@@ -42,7 +43,7 @@ void PosixTask::handleError(const char *name, int errCode)
     write(*resp, 4);
     
     // TODO: construct and log a message
-    cout << name << " caught an error: " << strerror_r(errCode, buf, 80) << endl;
+    syslog(LOG_ERR, "%s caught an error: %s.",name,strerror_r(errCode, buf, 80));
 }
 
 uint PosixTask::getRemainingLength()
@@ -186,7 +187,7 @@ void PosixTask::consumeMsg()
     
     while (remainingLengthInStream > 0)
     {
-        cout << "ERROR: eating data" << endl;
+        syslog(LOG_ERR, "ERROR: eating data.");
         err = ::recv(sock, buf, min(remainingLengthInStream, 1024), 0);
         if (err <= 0) {
             remainingLengthInStream = 0;

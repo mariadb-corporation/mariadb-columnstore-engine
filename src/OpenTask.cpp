@@ -45,7 +45,7 @@ bool OpenTask::run()
     open_cmd *cmd = (open_cmd *) buf;
 
     #ifdef SM_TRACE
-    cout << "open filename " << cmd->filename << " mode " << oct << cmd->openmode << dec << endl;
+    syslog(LOG_DEBUG, "open filename %s mode %o.",cmd->filename,cmd->openmode);
     #endif
     sm_response *resp = (sm_response *) buf;
     int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &resp->payload);

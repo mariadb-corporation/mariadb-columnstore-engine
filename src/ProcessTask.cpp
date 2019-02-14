@@ -4,6 +4,7 @@
 #include <iostream>
 #include "messageFormat.h"
 #include <sys/socket.h>
+#include <syslog.h>
 #include <boost/scoped_ptr.hpp>
 
 #include "AppendTask.h"
@@ -39,7 +40,7 @@ void ProcessTask::handleError(int saved_errno)
     SessionManager::get()->socketError(sock);
     returnedSock = true;
     char buf[80];
-    cout << "ProcessTask: got an error during a socket read: " << strerror_r(saved_errno, buf, 80) << endl;
+    syslog(LOG_ERR, "ProcessTask: got an error during a socket read: %s.",strerror_r(saved_errno, buf, 80));
 }
 
 void ProcessTask::operator()()
