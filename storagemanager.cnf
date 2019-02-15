@@ -1,0 +1,10 @@
+[ObjectStorage]
+service=S3
+
+[S3]
+region = us-west-1
+
+# S3 credentials will come through standard AWS methods
+# ex, by setting AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY envvars.
+# see https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+
