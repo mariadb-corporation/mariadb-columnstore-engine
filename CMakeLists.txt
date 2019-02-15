@@ -1,16 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(storagemanager)
 
-
-# odd, why do some of these stick, and some don't?
-# currently, we need to specify ENABLE_UNITY_BUILD and BUILD_SHARED_LIBS
-# on the cmake command line.
-set(ENABLE_UNITY_BUILD ON)
-set(BUILD_SHARED_LIBS OFF)
-set(ENABLE_TESTING OFF)
+option(ENABLE_UNITY_BUILD "" ON)
+option(BUILD_SHARED_LIBS "" OFF)
+option(ENABLE_TESTING "" OFF)
 set(CMAKE_INSTALL_PREFIX_ORIG ${CMAKE_INSTALL_PREFIX})
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-deps)
-find_package(aws-sdk-cpp)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/aws-sdk-cpp)
 add_subdirectory(aws-sdk-cpp)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX_ORIG})
 
