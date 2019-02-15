@@ -49,7 +49,7 @@ using namespace std;
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
-#include "mcs_sysvars.h"
+#include "ha_mcs_sysvars.h"
 #include "idb_mysql.h"
 
 #include "ha_calpont_impl_if.h"

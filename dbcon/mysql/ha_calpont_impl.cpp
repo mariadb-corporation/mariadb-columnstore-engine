@@ -142,7 +142,7 @@ using namespace funcexp;
 
 #include "installdir.h"
 #include "columnstoreversion.h"
-#include "mcs_sysvars.h"
+#include "ha_mcs_sysvars.h"
 
 namespace cal_impl_if
 {
@@ -560,7 +560,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 {
                     Field_varstring* f2 = (Field_varstring*)*f;
 
-                    if (current_thd->variables.infinidb_varbin_always_hex)
+                    if (get_varbin_always_hex(current_thd))
                     {
                         uint32_t l;
                         const uint8_t* p = row.getVarBinaryField(l, s);
@@ -762,7 +762,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
         ti.moreRows = false;
         rc = logging::ERR_LOST_CONN_EXEMGR;
         sm::sm_init(tid2sid(current_thd->thread_id), &ci->cal_conn_hndl,
-                    current_thd->variables.infinidb_local_query);
+                    get_local_query(current_thd));
         idbassert(ci->cal_conn_hndl != 0);
         ci->rc = rc;
     }
@@ -2096,7 +2096,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                          CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
     }
 
-    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);
+    bool localQuery = get_local_query(thd);
 
     // table mode
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
@@ -2264,9 +2264,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 return 0;
 
             string query;
-            const char *original_query = get_original_query(current_thd);
-            query.assign(original_query,
-                         strlen(original_query));
+            query.assign(thd->infinidb_vtable.original_query.ptr(),
+                         thd->infinidb_vtable.original_query.length());
             csep->data(query);
 
             try
@@ -3121,7 +3120,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             ((thd->lex)->sql_command == SQLCOM_LOAD) ||
             (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) && !ci->singleInsert )
     {
-        ci->useCpimport = thd->variables.infinidb_use_import_for_batchinsert;
+        ci->useCpimport = get_use_import_for_batchinsert(thd);
 
         if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
             ci->useCpimport = 0;
@@ -3194,14 +3193,14 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             ci->mysqld_pid = getpid();
 
             //get delimiter
-            if (char(thd->variables.infinidb_import_for_batchinsert_delimiter) != '\007')
-                ci->delimiter = char(thd->variables.infinidb_import_for_batchinsert_delimiter);
+            if (char(get_import_for_batchinsert_delimiter(thd)) != '\007')
+                ci->delimiter = char(get_import_for_batchinsert_delimiter(thd));
             else
                 ci->delimiter = '\007';
 
             //get enclosed by
-            if (char(thd->variables.infinidb_import_for_batchinsert_enclosed_by) != 8)
-                ci->enclosed_by = char(thd->variables.infinidb_import_for_batchinsert_enclosed_by);
+            if (char(get_import_for_batchinsert_enclosed_by(thd)) != 8)
+                ci->enclosed_by = char(get_import_for_batchinsert_enclosed_by(thd));
             else
                 ci->enclosed_by = 8;
 
@@ -3217,7 +3216,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             if (ci->enclosed_by == 34)	// Double quotes
                 strcat(escapechar, "\\");
 
-            if (thd->variables.infinidb_local_query > 0  )
+            if (get_local_query(thd))
             {
                 OamCache* oamcache = OamCache::makeOamCache();
                 int localModuleId = oamcache->getLocalPMId();
@@ -4322,7 +4321,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
-    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);
+    bool localQuery = get_local_query(thd);
 
     {
         ci->stats.reset(); // reset query stats

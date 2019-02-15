@@ -28,7 +28,7 @@ using namespace std;
 
 #include "idb_mysql.h"
 #include "ha_calpont_impl_if.h"
-#include "mcs_sysvars.h"
+#include "ha_mcs_sysvars.h"
 
 #include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
@@ -903,7 +903,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     {
         ac->resultType(colType_MysqlToIDB(item_sum));
         // bug5736. Make the result type double for some window functions when
-        // infinidb_double_for_decimal_math is set.
+        // plugin variable double_for_decimal_math is set.
         ac->adjustResultType();
     }
 

@@ -19,7 +19,7 @@
 #define HA_CALPONT_H__
 #include <my_config.h>
 #include "idb_mysql.h"
-#include "mcs_sysvars.h"
+#include "ha_mcs_sysvars.h"
 
 extern handlerton* calpont_hton;
 

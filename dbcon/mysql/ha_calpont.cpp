@@ -592,9 +592,6 @@ int ha_calpont::rnd_init(bool scan)
 {
     DBUG_ENTER("ha_calpont::rnd_init");
 
-    String query_string_cpy; query_string_cpy.append(current_thd->query_string.str());
-    set_original_query(current_thd, query_string_cpy.c_ptr_safe());
-
     int rc = ha_calpont_impl_rnd_init(table);
 
     DBUG_RETURN(rc);
@@ -1241,54 +1238,6 @@ int ha_calpont_group_by_handler::end_scan()
 
     DBUG_RETURN(rc);
 }
-/*
-// compression_type
-enum mcs_compression_type_t {
-    NO_COMPRESSION = 0,
-    SNAPPY = 2
-};
-
-const char* mcs_compression_type_names[] = {
-    "NO_COMPRESSION",
-    "SNAPPY",
-    NullS
-};
-
-static TYPELIB mcs_compression_type_names_lib = {
-    array_elements(mcs_compression_type_names) - 1,
-    "mcs_compression_type_names",
-    mcs_compression_type_names,
-    NULL
-};
-
-static MYSQL_THDVAR_ENUM(
-    compression_type,
-    PLUGIN_VAR_RQCMDARG,
-    "Controls compression type for create tables. Possible values are: "
-    "NO_COMPRESSION segment files aren't compressed; "
-    "SNAPPY segment files are Snappy compressed (default);",
-    NULL,
-    NULL,
-    SNAPPY,
-    &mcs_compression_type_names_lib);
-
-// original query
-static MYSQL_THDVAR_STR(
-  original_query, 
-  PLUGIN_VAR_MEMALLOC |
-  PLUGIN_VAR_RQCMDARG,
-  "Original query text", 
-  NULL, 
-  NULL, 
-  NULL 
-);
-
-static struct st_mysql_sys_var* columnstore_system_variables[] =
-{
-  MYSQL_SYSVAR(compression_type),
-  MYSQL_SYSVAR(original_query),
-  NULL
-};*/
 
 mysql_declare_plugin(columnstore)
 {
