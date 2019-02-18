@@ -136,7 +136,34 @@ uint64_t Func_truncate::getUintVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType& op_ct)
 {
-    return parm[0]->data()->getUintVal(row, isNull);
+    uint64_t val = parm[0]->data()->getUintVal(row, isNull);
+
+    if (isNull)
+        return val;
+
+    int64_t d = parm[1]->data()->getIntVal(row, isNull);
+
+    if (isNull || d >= 0)
+        return val;
+
+    uint64_t p = 1;
+    int64_t i = (-d);
+
+    // Handle overflow since p can't have more than 19 0's
+    if (i >= 20)
+    {
+        val = 0;
+    }
+    else
+    {
+        while (i--)
+            p *= 10;
+
+        val /= p;
+        val *= p;
+    }
+
+    return val;
 }
 
 

@@ -39,9 +39,9 @@ static Add_covar_samp_ToUDAFMap addToMap;
 struct covar_samp_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumy;
-    double      sumxy;  // sum of x * y
+    long double sumx;
+    long double sumy;
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -53,6 +53,13 @@ mcsv1_UDAF::ReturnCode covar_samp::init(mcsv1Context* context,
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
         context->setErrorMessage("covar_samp() with other than 2 arguments");
+        return mcsv1_UDAF::ERROR;
+    }
+    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("covar_samp() with non-numeric arguments");
         return mcsv1_UDAF::ERROR;
     }
 
@@ -138,12 +145,12 @@ mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::a
     double N = data->cnt;
     if (N > 1)
     {
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumxy = data->sumxy;
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumxy = data->sumxy;
 
-        double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
-        valOut = covar_samp;
+        long double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
+        valOut = static_cast<double>(covar_samp);
     }
     else
     if (N == 1)

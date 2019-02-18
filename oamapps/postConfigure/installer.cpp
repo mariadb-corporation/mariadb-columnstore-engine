@@ -126,10 +126,22 @@ int main(int argc, char* argv[])
     mysqlpw = argv[10];
     installer_debug = argv[11];
 
-    if (argc >= 13)
+    string numBlocksPctParam = "";
+    string totalUmMemoryParam = "";
+    if (argc >= 13) {
         installDir = argv[12];
-    else
+        if (argc >= 15) {
+            if (string(argv[13]) != "-") {
+                numBlocksPctParam = argv[13];
+            }
+            if (string(argv[14]) != "-") {
+                totalUmMemoryParam = argv[14];
+            }
+        }
+    }
+    else {
         installDir = "/usr/local/mariadb/columnstore";
+    }
 
     ofstream file("/dev/null");
 
@@ -151,6 +163,12 @@ int main(int argc, char* argv[])
     cout << mysqlpw << endl;
     cout << installer_debug << endl;
     cout << installDir << endl;
+    if (!numBlocksPctParam.empty()) {
+        cout << numBlocksPctParam << endl;
+    }
+    if (!totalUmMemoryParam.empty()) {
+        cout << totalUmMemoryParam << endl;
+    }
 
     // restore cout stream buffer
     cout.rdbuf (strm_buffer);
@@ -255,16 +273,26 @@ int main(int argc, char* argv[])
                         return false;
                     }
 
-                    string numBlocksPct = "50";
+                    string numBlocksPct;
+                    if (numBlocksPctParam.empty()) {
+                        numBlocksPct = "50";
 
-                    if ( DBRootStorageType == "hdfs")
-                        numBlocksPct = "25";
-
+                        if (DBRootStorageType == "hdfs")
+                            numBlocksPct = "25";
+                    }
+                    else {
+                        numBlocksPct = numBlocksPctParam;
+                    }
                     try
                     {
                         sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                        if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                        }
                     }
                     catch (...)
                     {
@@ -282,15 +310,21 @@ int main(int argc, char* argv[])
 //					long long total = myinfo.totalram / 1024 / 1000;
 
                     // adjust max memory, 25% of total memory
-                    string percent = "25%";
+                    string percent;
+                    if (totalUmMemoryParam.empty()) {
+                        percent = "25%";
 
-                    if ( DBRootStorageType == "hdfs")
-                    {
-                        percent = "12%";
+                        if (DBRootStorageType == "hdfs")
+                        {
+                            percent = "12%";
+                        }
+
+                        cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory. " << endl;
                     }
-
-                    cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory. " << endl;
-
+                    else {
+                        percent = totalUmMemoryParam;
+                        cout << "      Setting 'TotalUmMemory' to " << percent << endl;
+                    }
                     try
                     {
                         sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
@@ -305,29 +339,47 @@ int main(int argc, char* argv[])
                 {
                     try
                     {
-                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
-                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        string numBlocksPct;
+                        string totalUmMemory;
 
-                        if (numBlocksPct.empty() || numBlocksPct == "" )
-                        {
-                            numBlocksPct = "50";
-
-                            try
-                            {
-                                sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
-
-                                cout << endl << "NOTE: Setting 'NumBlocksPct' to 50%" << endl;
-                            }
-                            catch (...)
-                            {
-                                cout << "ERROR: Problem setting NumBlocksPct in the MariaDB ColumnStore System Configuration file" << endl;
-                                exit(1);
-                            }
+                        if (!numBlocksPctParam.empty()) {
+                            numBlocksPct = numBlocksPctParam;
+                        }
+                        else {
+                            numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                        }
+                        if (!totalUmMemoryParam.empty()) {
+                            totalUmMemory = totalUmMemoryParam;
+                        }
+                        else {
+                            totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
                         }
 
-                        cout << endl << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
-                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
+                        if (numBlocksPct.empty() || numBlocksPct == "")
+                        {
+                            numBlocksPct = "50";
+                        }
+                        if (totalUmMemory.empty() || totalUmMemory == "") {
+                            totalUmMemory = "25%";
+                        }
+                        try
+                        {
+                            sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
+                            sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemory);
 
+                            if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                                cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                            }
+                            else {
+                                cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                            }
+                            cout << "      Setting 'TotalUmMemory' to " << totalUmMemory << endl;
+                        }
+                        catch (...)
+                        {
+                            cout << "ERROR: Problem setting NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                            exit(1);
+                        }
                     }
                     catch (...)
                     {
@@ -350,7 +402,23 @@ int main(int argc, char* argv[])
                 // are we using settings from previous config file?
                 if ( reuseConfig == "n" )
                 {
-                    cout << endl << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
+                    string numBlocksPct = "70";
+                    string totalUmMemory = "50%";
+
+                    if (!numBlocksPctParam.empty()) {
+                        numBlocksPct = numBlocksPctParam;
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Using the default setting for 'NumBlocksPct' at " << numBlocksPct << "%" << endl;
+                    }
+                    if (!totalUmMemoryParam.empty()) {
+                        totalUmMemory = totalUmMemoryParam;
+                        cout << endl << "Setting 'TotalUmMemory' to " << totalUmMemory << endl;
+                    }
+                    else {
+                        cout << endl << "Setting 'TotalUmMemory' to " << totalUmMemory << " of total memory." << endl;
+                    }
 
                     try
                     {
@@ -358,17 +426,14 @@ int main(int argc, char* argv[])
                     }
                     catch (...) {}
 
-                    // adjust max memory, 50% of total memory
-
-                    cout << endl << "Setting 'TotalUmMemory' to 50% of total memory." << endl;
-
                     try
                     {
-                        sysConfig->setConfig("HashJoin", "TotalUmMemory", "50%");
+                        sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
+                        sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemory);
                     }
                     catch (...)
                     {
-                        cout << "ERROR: Problem setting TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                        cout << "ERROR: Problem setting TotalUmMemory/NumBlocksPct in the MariaDB ColumnStore System Configuration file" << endl;
                         exit(1);
                     }
                 }
@@ -376,15 +441,47 @@ int main(int argc, char* argv[])
                 {
                     try
                     {
-                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
-                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        string numBlocksPct;
+                        string totalUmMemory;
 
-                        if (numBlocksPct.empty() || numBlocksPct == "" )
+                        if (!numBlocksPctParam.empty()) {
+                            numBlocksPct = numBlocksPctParam;
+                        }
+                        else {
+                            numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                        }
+                        if (!totalUmMemoryParam.empty()) {
+                            totalUmMemory = totalUmMemoryParam;
+                        }
+                        else {
+                            totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        }
+
+                        if (numBlocksPct.empty() || numBlocksPct == "")
+                        {
                             numBlocksPct = "70";
+                        }
+                        if (totalUmMemory.empty() || totalUmMemory == "") {
+                            totalUmMemory = "50%";
+                        }
+                        try
+                        {
+                            sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
+                            sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemory);
 
-                        cout << endl << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
-                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
-
+                            if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                                cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                            }
+                            else {
+                                cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                            }
+                            cout << "      Setting 'TotalUmMemory' to " << totalUmMemory << endl;
+                        }
+                        catch (...)
+                        {
+                            cout << "ERROR: Problem setting NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                            exit(1);
+                        }
                     }
                     catch (...)
                     {

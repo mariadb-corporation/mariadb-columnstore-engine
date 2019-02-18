@@ -1183,6 +1183,7 @@ inline bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) con
 
 inline bool Row::equals(const Row& r2, uint32_t lastCol) const
 {
+    // This check fires with empty r2 only.
     if (lastCol >= columnCount)
         return true;
 

@@ -759,8 +759,11 @@ int processCommand(string* arguments)
             vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
             vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
             set<int>::iterator dbiter;
-
-            if (arguments[1] == "start")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "start", 5) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "start", 5) == 0)
+#endif
             {
                 // Get a list of all the configured dbroots in the xml file.
                 DBRootConfigList dbRootConfigList;
@@ -772,7 +775,11 @@ int processCommand(string* arguments)
 
                 // The user may choose to redistribute in such a way as to
                 // leave certain dbroots empty, presumably for later removal.
-                if (arguments[2] == "remove")
+#if _MSC_VER
+				if (_strnicmp(arguments[1].c_str(), "remove", 6) == 0))
+#else
+				if (strncasecmp(arguments[1].c_str(), "remove", 6) == 0)
+#endif
                 {
                     int dbroot;
                     bool error = false;
@@ -891,7 +898,11 @@ int processCommand(string* arguments)
 
                 SendToWES(oam, bs);
             }
-            else if (arguments[1] == "stop")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
+#endif
             {
                 ByteStream bs;
                 // message WES ID, sequence #, action id
@@ -901,7 +912,11 @@ int processCommand(string* arguments)
                 bs.append((const ByteStream::byte*) &header, sizeof(header));
                 SendToWES(oam, bs);
             }
-            else if (arguments[1] == "status")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
+#endif
             {
                 ByteStream bs;
                 // message WES ID, sequence #, action id
@@ -5660,6 +5675,7 @@ int processCommand(string* arguments)
             DeviceNetworkList enabledevicenetworklist;
             HostConfig hostconfig;
 
+            bool storeHostnames = false;
             string moduleType;
             string moduleName;
             int moduleCount;
@@ -5670,7 +5686,7 @@ int processCommand(string* arguments)
             umStorageNames umstoragenames;
             int hostArg;
             int dbrootPerPM = 0;
-
+            
             //check if module type or module name was entered
             if ( arguments[1].size() == 2 )
             {
@@ -5685,8 +5701,47 @@ int processCommand(string* arguments)
                 //Module Type was entered
                 moduleType = arguments[1];
                 moduleCount = atoi(arguments[2].c_str());
+                hostArg = 4;
+                
+                // MCOL-1607.  Check whether we should store host names or IP addresses.
+                if (arguments[3] != "" && (arguments[3][0] == 'y' || arguments[3][0] == 'Y'))
+                    storeHostnames = true;
+
+                //check for a non-distrubuted install setup, dont need password
+                if ( DistributedInstall != "y" )
+                {
+                    if (arguments[5] != "")
+                        password = arguments[5];
+                    else
+                    {
+                        cout << endl;
+                        string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+                        password = dataPrompt(prompt);
+                    }
+                }
+
+                if (arguments[6] != "")
+                    dbrootPerPM = atoi(arguments[6].c_str());
+            }
+            else
+            {
+                //Module Name was entered
+                if (arguments[2] == "" && cloud == oam::UnassignedName)
+                {
+                    // need at least  arguments
+                    cout << endl << "**** addModule Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
+                    break;
+                }
+
+                moduleName = arguments[1];
+                moduleType = arguments[1].substr(0, MAX_MODULE_TYPE_SIZE);
+                moduleCount = 1;
                 hostArg = 3;
 
+                // MCOL-1607.  Check whether we should store host names or IP addresses.
+                if (arguments[2] != "" && (arguments[2][0] == 'y' || arguments[2][0] == 'Y'))
+                    storeHostnames = true;
+                
                 //check for a non-distrubuted install setup, dont need password
                 if ( DistributedInstall != "y" )
                 {
@@ -5702,37 +5757,6 @@ int processCommand(string* arguments)
 
                 if (arguments[5] != "")
                     dbrootPerPM = atoi(arguments[5].c_str());
-            }
-            else
-            {
-                //Module Name was entered
-                if (arguments[2] == "" && cloud == oam::UnassignedName)
-                {
-                    // need at least  arguments
-                    cout << endl << "**** addModule Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                    break;
-                }
-
-                moduleName = arguments[1];
-                moduleType = arguments[1].substr(0, MAX_MODULE_TYPE_SIZE);
-                moduleCount = 1;
-                hostArg = 2;
-
-                //check for a non-distrubuted install setup, dont need password
-                if ( DistributedInstall != "y" )
-                {
-                    if (arguments[3] != "")
-                        password = arguments[3];
-                    else
-                    {
-                        cout << endl;
-                        string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
-                        password = dataPrompt(prompt);
-                    }
-                }
-
-                if (arguments[4] != "")
-                    dbrootPerPM = atoi(arguments[4].c_str());
             }
 
 //do we needed this check????
@@ -5925,7 +5949,24 @@ int processCommand(string* arguments)
                     string hostName;
                     string IPAddress;
 
-                    if ( cloud == "amazon-ec2")
+                    // MCOL-1607.  Store hostnames in the config file if they entered one */
+                    if (storeHostnames)
+                    {
+                        // special case
+                        if (cloud == "amazon-vpc" && *listPT1 == "autoassign")
+                        {
+                            hostName = oam::UnassignedName;
+                            IPAddress = *listPT1;
+                        }
+                        else if (oam.isValidIP(*listPT1))   // they entered an IP addr
+                        {
+                            hostName = oam::UnassignedName;
+                            IPAddress = *listPT1;
+                        }
+                        else   // they entered a hostname
+                            IPAddress = hostName = *listPT1;
+                    }
+                    else if ( cloud == "amazon-ec2")
                     {
                         hostName = *listPT1;
 
@@ -5978,14 +6019,13 @@ int processCommand(string* arguments)
                             // non-amazon
                             hostName = *listPT1;
                             IPAddress = oam.getIPAddress(hostName);
-
                             if ( IPAddress.empty() )
                             {
                                 // prompt for IP Address
                                 string prompt = "IP Address of " + hostName + " not found, enter IP Address or enter 'abort'";
                                 IPAddress = dataPrompt(prompt);
-
-                                if ( IPAddress == "abort" || !oam.isValidIP(IPAddress))
+    
+                                if ( IPAddress == "abort" || !oam.isValidIP(IPAddress) )
                                     return 1;
                             }
                         }
@@ -6023,18 +6063,22 @@ int processCommand(string* arguments)
                     {
                         string prompt = "DataRedundancy is configured for dedicated network, enter a hostname";
                         DataRedundancyHostname = dataPrompt(prompt);
-                        DataRedundancyIPAddress = oam.getIPAddress(DataRedundancyHostname);
-
-                        if ( DataRedundancyIPAddress.empty() )
+                        if (storeHostnames)
+                            DataRedundancyIPAddress = DataRedundancyHostname;
+                        else 
                         {
-                            // prompt for IP Address
-                            string prompt = "IP Address of " + DataRedundancyHostname + " not found, enter IP Address";
-                            DataRedundancyIPAddress = dataPrompt(prompt);
+                            DataRedundancyIPAddress = oam.getIPAddress(DataRedundancyHostname);
 
-                            if (!oam.isValidIP(DataRedundancyIPAddress))
-                                return 1;
+                            if ( DataRedundancyIPAddress.empty() )
+                            {
+                                // prompt for IP Address
+                                string prompt = "IP Address of " + DataRedundancyHostname + " not found, enter IP Address";
+                                DataRedundancyIPAddress = dataPrompt(prompt);
+    
+                                if (!oam.isValidIP(DataRedundancyIPAddress))
+                                    return 1;
+                            }
                         }
-
                         sysConfig->setConfig("DataRedundancyConfig", dataDupHostName, DataRedundancyHostname);
                         sysConfig->setConfig("DataRedundancyConfig", dataDupIPaddr, DataRedundancyIPAddress);
                     }
@@ -6105,7 +6149,7 @@ int processCommand(string* arguments)
 
                 cout << "please wait..." << endl;
 
-                oam.addModule(devicenetworklist, password, mysqlpassword);
+                oam.addModule(devicenetworklist, password, mysqlpassword, storeHostnames);
 
                 cout << "Add Module(s) successfully completed" << endl;
 

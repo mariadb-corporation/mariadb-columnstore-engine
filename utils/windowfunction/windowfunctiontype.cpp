@@ -325,6 +325,28 @@ template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
     fRow.setStringField(t, i);
 }
 
+// MCOL-1676 Need a separate specialization for string now.
+template<>
+void WindowFunctionType::setValue<string>(int ct, int64_t b, int64_t e, int64_t c, string* v)
+{
+    if (c != WF__BOUND_ALL)
+        b = e = c;
+
+    uint64_t i = fFieldIndex[0];
+
+    if (v == NULL)
+        v = (string*) getNullValueByType(ct, i);
+
+    for (int64_t j = b; j <= e; j++)
+    {
+        if (j % 1000 == 0 && fStep->cancelled())
+            break;
+
+        fRow.setData(getPointer((*fRowData)[j]));
+        setValue(i, *v);
+    }
+}
+
 template<typename T>
 void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
 {
@@ -342,8 +364,54 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
             break;
 
         fRow.setData(getPointer((*fRowData)[j]));
-        setValue(i, *v);
-    }
+        // MCOL-1676 Set the data based on out column type (ct)
+        switch (ct)
+        {
+            case CalpontSystemCatalog::TINYINT:
+            case CalpontSystemCatalog::SMALLINT:
+            case CalpontSystemCatalog::MEDINT:
+            case CalpontSystemCatalog::INT:
+            case CalpontSystemCatalog::BIGINT:
+            case CalpontSystemCatalog::DECIMAL:
+            {
+                int64_t iv = *v;
+                setValue(i, iv);
+                break;
+            }
+
+            case CalpontSystemCatalog::UTINYINT:
+            case CalpontSystemCatalog::USMALLINT:
+            case CalpontSystemCatalog::UMEDINT:
+            case CalpontSystemCatalog::UINT:
+            case CalpontSystemCatalog::UBIGINT:
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                uint64_t uv = *v;
+                setValue(i, uv);
+                break;
+            }
+
+            case CalpontSystemCatalog::DOUBLE:
+            case CalpontSystemCatalog::UDOUBLE:
+            {
+                double dv = *v;
+                setValue(i, dv);
+                break;
+            }
+
+            case CalpontSystemCatalog::FLOAT:
+            case CalpontSystemCatalog::UFLOAT:
+            {
+                float fv = *v;
+                setValue(i, fv);
+                break;
+            }
+            default:
+            {
+                setValue(i, *v);
+            }
+        }
+	}
 }
 
 template<typename T>
@@ -476,8 +544,6 @@ template void WindowFunctionType::setValue<int64_t>(int, int64_t, int64_t, int64
 template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int64_t, uint64_t*);
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
-template void WindowFunctionType::setValue<string>(int, int64_t, int64_t, int64_t, string*);
-
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
 {
