@@ -1272,10 +1272,12 @@ void Oam::setSystemConfig(const std::string module, ModuleConfig moduleconfig)
  *
  ********************************************************************/
 
-void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw)
+void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw,
+    bool storeHostnames)
 {
     // build and send msg
-    int returnStatus = sendMsgToProcMgr2(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, password, mysqlpw);
+    int returnStatus = sendAddModuleToProcMgr(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, storeHostnames, 
+        password, mysqlpw);
 
     if (returnStatus != API_SUCCESS)
         exceptionControl("addModule", returnStatus);
@@ -10006,6 +10008,124 @@ int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetw
 
     return returnStatus;
 }
+
+/* A slightly different version of sendMsgToProcMgr2.  Add-module needs to send one add'l
+   parameter, and this was the best of a couple bad options. */
+int Oam::sendAddModuleToProcMgr(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
+                            GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, bool storeHostnames, const std::string password,
+                            const std::string mysqlpw)
+{
+    if (!checkSystemRunning())
+        return API_CONN_REFUSED;
+
+    int returnStatus = API_TIMEOUT;           //default
+    ByteStream msg;
+    ByteStream receivedMSG;
+    ByteStream::byte msgType;
+    ByteStream::byte actionType;
+    ByteStream::byte status;
+
+    // get current requesting process, an error will occur if process is a UI tool (not kept in Status Table)
+    // this will be used to determine if this is a manually or auto request down within Process-Monitor
+    bool requestManual;
+    myProcessStatus_t t;
+
+    try
+    {
+        t = getMyProcessStatus();
+        requestManual = false;	// set to auto
+    }
+    catch (...)
+    {
+        requestManual = true;	// set to manual
+    }
+
+    // setup message
+    msg << (ByteStream::byte) REQUEST;
+    msg << requestType;
+    msg << (std::string) " ";
+    msg << (ByteStream::byte) gracefulflag;
+    msg << (ByteStream::byte) ackflag;
+    msg << (ByteStream::byte) requestManual;
+    msg << (uint8_t) storeHostnames;
+    msg << (uint16_t) devicenetworklist.size();
+
+    DeviceNetworkList::iterator pt = devicenetworklist.begin();
+
+    for ( ; pt != devicenetworklist.end() ; pt++)
+    {
+        msg << (*pt).DeviceName;
+
+        if ( (*pt).UserTempDeviceName.empty() )
+            msg << " ";
+        else
+            msg << (*pt).UserTempDeviceName;
+
+        if ( (*pt).DisableState.empty() )
+            msg << " ";
+        else
+            msg << (*pt).DisableState;
+
+        msg << (uint16_t) (*pt).hostConfigList.size();
+
+        HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+
+        for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+        {
+            msg << (*pt1).IPAddr;
+            msg << (*pt1).HostName;
+            msg << (*pt1).NicID;
+        }
+    }
+
+    msg << password;
+    msg << mysqlpw;
+
+    try
+    {
+        //send the msg to Process Manager
+        MessageQueueClient procmgr("ProcMgr");
+        procmgr.write(msg);
+
+        // check for Ack msg if needed
+        if ( ackflag == ACK_YES )
+        {
+            // wait 15 minutes for ACK from Process Manager
+            struct timespec ts = { 900, 0 };
+
+            receivedMSG = procmgr.read(&ts);
+
+            if (receivedMSG.length() > 0)
+            {
+                receivedMSG >> msgType;
+                receivedMSG >> actionType;
+                receivedMSG >> status;
+
+                if ( msgType == oam::ACK &&  actionType == requestType)
+                {
+                    // ACK for this request
+                    returnStatus = status;
+                }
+            }
+            else	// timeout
+                returnStatus = API_TIMEOUT;
+        }
+        else
+            // No ACK, assume write success
+            returnStatus = API_SUCCESS;
+
+        // shutdown connection
+        procmgr.shutdown();
+    }
+    catch (...)
+    {
+        returnStatus = API_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+
 
 /***************************************************************************
  *

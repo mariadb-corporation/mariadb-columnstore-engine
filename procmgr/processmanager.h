@@ -416,7 +416,8 @@ public:
     /**
      *@brief Add Module
      */
-    int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag = true);
+    int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool storeHostnames, 
+        bool manualFlag = true);
 
     /**
      *@brief Configure Module

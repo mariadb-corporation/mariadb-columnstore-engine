@@ -5554,6 +5554,8 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                                     rowIn.copyField(distRow[j], k, multiDist->subAggregators()[j]->getGroupByCols()[k].get()->fInputColumnIndex);
                                 }
 
+                                // TBD This approach could potentiall
+                                // put all values in on bucket.
                                 bucketID = distRow[j].hash(hashLens[j] - 1) % fNumOfBuckets;
                                 rowBucketVecs[bucketID][j].push_back(rowIn.getPointer());
                                 rowIn.nextRow();
@@ -5572,6 +5574,8 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                         for (uint64_t i = 0; i < fRowGroupIns[threadID].getRowCount(); ++i)
                         {
                             // The key is the groupby columns, which are the leading columns.
+                            // TBD This approach could potentiall
+                            // put all values in on bucket.
                             int bucketID = rowIn.hash(hashLens[0] - 1) % fNumOfBuckets;
                             rowBucketVecs[bucketID][0].push_back(rowIn.getPointer());
                             rowIn.nextRow();

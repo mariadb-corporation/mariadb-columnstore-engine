@@ -39,10 +39,10 @@ static Add_regr_intercept_ToUDAFMap addToMap;
 struct regr_intercept_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumx2;  // sum of (x squared)
-    double      sumy;
-    double      sumxy;  // sum of (x*y)
+    long double sumx;
+    long double sumx2;  // sum of (x squared)
+    long double sumy;
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -54,6 +54,13 @@ mcsv1_UDAF::ReturnCode regr_intercept::init(mcsv1Context* context,
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
         context->setErrorMessage("regr_intercept() with other than 2 arguments");
+        return mcsv1_UDAF::ERROR;
+    }
+    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_intercept() with non-numeric arguments");
         return mcsv1_UDAF::ERROR;
     }
 
@@ -139,17 +146,17 @@ mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_an
 {
     struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumx2 = data->sumx2;
-        double sumxy = data->sumxy;
-        double numerator = sumy * sumx2 - sumx * sumxy;
-        double var_pop = (N * sumx2) - (sumx * sumx);
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumx2 = data->sumx2;
+        long double sumxy = data->sumxy;
+        long double numerator = sumy * sumx2 - sumx * sumxy;
+        long double var_pop = (N * sumx2) - (sumx * sumx);
         if (var_pop != 0)
         {
-            valOut = numerator / var_pop;
+            valOut = static_cast<double>(numerator / var_pop);
         }
     }
     return mcsv1_UDAF::SUCCESS;

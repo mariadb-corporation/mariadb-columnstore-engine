@@ -1488,7 +1488,8 @@ public:
      * @param DeviceNetworkConfig the Modules added
      * @param password Host Root Password
     */
-    EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw);
+    EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw,
+        bool storeHostnames);
 
     /** @brief remove Module
      *
@@ -2503,6 +2504,12 @@ private:
     int sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
                           GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string password = oam::UnassignedName, const std::string mysqlpw = oam::UnassignedName);
 
+    /** @brief a slightly different version of sendMsgToProcMgr2, which is for addmodule only.
+    */
+    int sendAddModuleToProcMgr(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
+                          GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, bool storeHostnames, const std::string password = oam::UnassignedName, 
+                          const std::string mysqlpw = oam::UnassignedName);
+                          
     /** @brief build and send request message to Process Manager
      *  Check for status messages
      */

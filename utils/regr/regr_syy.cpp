@@ -39,8 +39,8 @@ static Add_regr_syy_ToUDAFMap addToMap;
 struct regr_syy_data
 {
     uint64_t	cnt;
-    double      sumy;
-    double      sumy2;  // sum of (y squared)
+    long double sumy;
+    long double sumy2;  // sum of (y squared)
 };
 
 
@@ -52,6 +52,13 @@ mcsv1_UDAF::ReturnCode regr_syy::init(mcsv1Context* context,
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
         context->setErrorMessage("regr_syy() with other than 2 arguments");
+        return mcsv1_UDAF::ERROR;
+    }
+    if (!(isNumeric(colTypes[0].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_syy() with a non-numeric dependant (first) argument");
         return mcsv1_UDAF::ERROR;
     }
 
@@ -118,14 +125,14 @@ mcsv1_UDAF::ReturnCode regr_syy::subEvaluate(mcsv1Context* context, const UserDa
 mcsv1_UDAF::ReturnCode regr_syy::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
-    double N = data->cnt;
+    long double N = data->cnt;
     if (N > 0)
     {
-        double sumy = data->sumy;
-        double sumy2 = data->sumy2;
+        long double sumy = data->sumy;
+        long double sumy2 = data->sumy2;
 
-        double var_popy = (sumy2 - (sumy * sumy / N)) / N;
-        valOut = data->cnt * var_popy;
+        long double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+        valOut = static_cast<double>(data->cnt * var_popy);
     }
     return mcsv1_UDAF::SUCCESS;
 }

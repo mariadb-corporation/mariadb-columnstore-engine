@@ -1884,7 +1884,7 @@ int DBRM::deletePartition(const std::vector<OID_t>& oids,
             std::set<LogicalPartition>::const_iterator partIt;
 
         for (partIt = partitionNums.begin(); partIt != partitionNums.end(); ++partIt)
-            oss << (*it) << " "
+			oss << (*partIt) << " ";
                 oss << "; OIDS: ";
 
         std::vector<OID_t>::const_iterator it;

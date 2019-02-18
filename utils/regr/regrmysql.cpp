@@ -2,12 +2,30 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string.h>
 using namespace std;
 
 #include "idb_mysql.h"
 
 namespace
 {
+inline bool isNumeric(int type, const char* attr)
+{
+    if (type == INT_RESULT || type == REAL_RESULT || type == DECIMAL_RESULT)
+    {
+        return true;
+    }
+#if _MSC_VER
+    if (_strnicmp("NULL", attr, 4) == 0))
+#else
+    if (strncasecmp("NULL", attr, 4) == 0)
+#endif
+    {
+        return true;
+    }
+    return false;
+}
+
 inline double cvtArgToDouble(int t, const char* v)
 {
     double d = 0.0;
@@ -144,7 +162,12 @@ extern "C"
     		strcpy(message,"regr_avgx() requires two arguments");
     		return 1;
     	}
-
+        if (!(isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_avgx() with a non-numeric independant (second) argument");
+            return 1;
+        }
+        
     	if (!(data = (struct regr_avgx_data*) malloc(sizeof(struct regr_avgx_data))))
     	{
     		strmov(message,"Couldn't allocate memory");
@@ -228,6 +251,11 @@ extern "C"
     		strcpy(message,"regr_avgy() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0])))
+        {
+            strcpy(message,"regr_avgy() with a non-numeric dependant (first) argument");
+            return 1;
+        }
 
     	if (!(data = (struct regr_avgy_data*) malloc(sizeof(struct regr_avgy_data))))
     	{
@@ -394,6 +422,11 @@ extern "C"
     		strcpy(message,"regr_slope() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_slope() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct regr_slope_data*) malloc(sizeof(struct regr_slope_data))))
     	{
@@ -505,6 +538,11 @@ extern "C"
     		strcpy(message,"regr_intercept() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_intercept() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct regr_intercept_data*) malloc(sizeof(struct regr_intercept_data))))
     	{
@@ -619,6 +657,11 @@ extern "C"
     		strcpy(message,"regr_r2() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_r2() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct regr_r2_data*) malloc(sizeof(struct regr_r2_data))))
     	{
@@ -748,6 +791,11 @@ extern "C"
     		strcpy(message,"corr() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"corr() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct corr_data*) malloc(sizeof(struct corr_data))))
     	{
@@ -874,6 +922,11 @@ extern "C"
     		strcpy(message,"regr_sxx() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_avgx() with a non-numeric independant (second) argument");
+            return 1;
+        }
 
     	if (!(data = (struct regr_sxx_data*) malloc(sizeof(struct regr_sxx_data))))
     	{
@@ -970,6 +1023,11 @@ extern "C"
     		strcpy(message,"regr_syy() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0])))
+        {
+            strcpy(message,"regr_syy() with a non-numeric dependant (first) argument");
+            return 1;
+        }
 
     	if (!(data = (struct regr_syy_data*) malloc(sizeof(struct regr_syy_data))))
     	{
@@ -1068,6 +1126,11 @@ extern "C"
     		strcpy(message,"regr_sxy() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"regr_sxy() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct regr_sxy_data*) malloc(sizeof(struct regr_sxy_data))))
     	{
@@ -1171,6 +1234,11 @@ extern "C"
     		strcpy(message,"covar_pop() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"covar_pop() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct covar_pop_data*) malloc(sizeof(struct covar_pop_data))))
     	{
@@ -1273,6 +1341,11 @@ extern "C"
     		strcpy(message,"covar_samp() requires two arguments");
     		return 1;
     	}
+        if (!(isNumeric(args->arg_type[0], args->attributes[0]) && isNumeric(args->arg_type[1], args->attributes[1])))
+        {
+            strcpy(message,"covar_samp() with non-numeric arguments");
+            return 1;
+        }
 
     	if (!(data = (struct covar_samp_data*) malloc(sizeof(struct covar_samp_data))))
     	{
