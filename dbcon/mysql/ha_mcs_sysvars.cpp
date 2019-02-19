@@ -296,225 +296,135 @@ mcs_compression_type_t get_compression_type(THD* thd) {
 
 bool get_use_decimal_scale(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? false : thd->variables.infinidb_use_decimal_scale;
-    else
-        return ( thd == NULL ) ? false : THDVAR(thd, use_decimal_scale);
+    return ( thd == NULL ) ? false : THDVAR(thd, use_decimal_scale);
 }
 void set_use_decimal_scale(THD* thd, bool value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_use_decimal_scale = value;
-    else
-        THDVAR(thd, use_decimal_scale) = value;
+    THDVAR(thd, use_decimal_scale) = value;
 }
 
 ulong get_decimal_scale(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_decimal_scale;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, decimal_scale);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, decimal_scale);
 }
 void set_decimal_scale(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_decimal_scale = value;
-    else
-        THDVAR(thd, decimal_scale) = value;
+    THDVAR(thd, decimal_scale) = value;
 }
 
 bool get_ordered_only(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? false : thd->variables.infinidb_ordered_only;
-    else
-        return ( thd == NULL ) ? false : THDVAR(thd, ordered_only);
+    return ( thd == NULL ) ? false : THDVAR(thd, ordered_only);
 }
 void set_ordered_only(THD* thd, bool value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_ordered_only = value;
-    else
-        THDVAR(thd, ordered_only) = value;
+    THDVAR(thd, ordered_only) = value;
 }
 
 ulong get_string_scan_threshold(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_string_scan_threshold;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, string_scan_threshold);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, string_scan_threshold);
 }
 void set_string_scan_threshold(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_string_scan_threshold = value;
-    else
-        THDVAR(thd, string_scan_threshold) = value;
+    THDVAR(thd, string_scan_threshold) = value;
 }
 
 ulong get_stringtable_threshold(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_stringtable_threshold;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, stringtable_threshold);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, stringtable_threshold);
 }
 void set_stringtable_threshold(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_stringtable_threshold = value;
-    else
-        THDVAR(thd, stringtable_threshold) = value;
+    THDVAR(thd, stringtable_threshold) = value;
 }
 
 ulong get_diskjoin_smallsidelimit(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_diskjoin_smallsidelimit;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_smallsidelimit);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_smallsidelimit);
 }
 void set_diskjoin_smallsidelimit(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_diskjoin_smallsidelimit = value;
-    else
-        THDVAR(thd, diskjoin_smallsidelimit) = value;
+    THDVAR(thd, diskjoin_smallsidelimit) = value;
 }
 
 ulong get_diskjoin_largesidelimit(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_diskjoin_largesidelimit;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_largesidelimit);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_largesidelimit);
 }
 void set_diskjoin_largesidelimit(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_diskjoin_largesidelimit = value;
-    else
-        THDVAR(thd, diskjoin_largesidelimit) = value;
+    THDVAR(thd, diskjoin_largesidelimit) = value;
 }
 
 ulong get_diskjoin_bucketsize(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_diskjoin_bucketsize;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_bucketsize);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, diskjoin_bucketsize);
 }
 void set_diskjoin_bucketsize(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_diskjoin_bucketsize = value;
-    else
-        THDVAR(thd, diskjoin_bucketsize) = value;
+    THDVAR(thd, diskjoin_bucketsize) = value;
 }
 
 ulong get_um_mem_limit(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_um_mem_limit;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, um_mem_limit);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, um_mem_limit);
 }
 void set_um_mem_limit(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_um_mem_limit = value;
-    else
-        THDVAR(thd, um_mem_limit) = value;
+    THDVAR(thd, um_mem_limit) = value;
 }
 
 bool get_varbin_always_hex(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? false : thd->variables.infinidb_varbin_always_hex;
-    else
-        return ( thd == NULL ) ? false : THDVAR(thd, varbin_always_hex);
+    return ( thd == NULL ) ? false : THDVAR(thd, varbin_always_hex);
 }
 void set_varbin_always_hex(THD* thd, bool value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_varbin_always_hex = value;
-    else
-        THDVAR(thd, varbin_always_hex) = value;
+    THDVAR(thd, varbin_always_hex) = value;
 }
 
 bool get_double_for_decimal_math(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? false : thd->variables.infinidb_double_for_decimal_math;
-    else
-        return ( thd == NULL ) ? false : THDVAR(thd, double_for_decimal_math);
+    return ( thd == NULL ) ? false : THDVAR(thd, double_for_decimal_math);
 }
 void set_double_for_decimal_math(THD* thd, bool value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_double_for_decimal_math = value;
-    else
-        THDVAR(thd, double_for_decimal_math) = value;
+    THDVAR(thd, double_for_decimal_math) = value;
 }
 
 ulong get_local_query(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_local_query;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, local_query);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, local_query);
 }
 void set_local_query(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_local_query = value;
-    else
-        THDVAR(thd, local_query) = value;
+    THDVAR(thd, local_query) = value;
 }
 
 bool get_use_import_for_batchinsert(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? false : thd->variables.infinidb_use_import_for_batchinsert;
-    else
-        return ( thd == NULL ) ? false : THDVAR(thd, use_import_for_batchinsert);
+    return ( thd == NULL ) ? false : THDVAR(thd, use_import_for_batchinsert);
 }
 void set_use_import_for_batchinsert(THD* thd, bool value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_use_import_for_batchinsert = value;
-    else
-        THDVAR(thd, use_import_for_batchinsert) = value;
+    THDVAR(thd, use_import_for_batchinsert) = value;
 }
 
 ulong get_import_for_batchinsert_delimiter(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_import_for_batchinsert_delimiter;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, import_for_batchinsert_delimiter);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, import_for_batchinsert_delimiter);
 }
 void set_import_for_batchinsert_delimiter(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_import_for_batchinsert_delimiter = value;
-    else
-        THDVAR(thd, import_for_batchinsert_delimiter) = value;
+    THDVAR(thd, import_for_batchinsert_delimiter) = value;
 }
 
 ulong get_import_for_batchinsert_enclosed_by(THD* thd)
 {
-    if(get_use_legacy_sysvars(thd))
-        return ( thd == NULL ) ? 0 : thd->variables.infinidb_import_for_batchinsert_enclosed_by;
-    else
-        return ( thd == NULL ) ? 0 : THDVAR(thd, import_for_batchinsert_enclosed_by);
+    return ( thd == NULL ) ? 0 : THDVAR(thd, import_for_batchinsert_enclosed_by);
 }
 void set_import_for_batchinsert_enclosed_by(THD* thd, ulong value)
 {
-    if(get_use_legacy_sysvars(thd))
-        thd->variables.infinidb_import_for_batchinsert_enclosed_by = value;
-    else
-        THDVAR(thd, import_for_batchinsert_enclosed_by) = value;
+    THDVAR(thd, import_for_batchinsert_enclosed_by) = value;
 }

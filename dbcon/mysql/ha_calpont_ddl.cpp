@@ -2307,7 +2307,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     bool isCreate = true;
 
     // relate to bug 1793. Make sure this is not for a select statement because
-    if (db == "calpontsys" && thd->infinidb_vtable.vtable_state == THD::INFINIDB_INIT
+    if (db == "calpontsys" && MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_INIT
             && tbl != "systable"
             && tbl != "syscolumn" && tbl != "sysindex"
             && tbl != "sysconstraint" && tbl != "sysindexcol"
@@ -2337,7 +2337,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
             return 0;
         }
 
-        if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE) //check if it is select
+        if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ALTER_VTABLE) //check if it is select
         {
             return 0;
         }
