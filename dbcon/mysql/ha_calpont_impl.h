@@ -16,12 +16,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-/*
- * $Id: ha_calpont_impl.h 9413 2013-04-22 22:03:42Z zzhu $
- */
-
-/** @file */
-
 #ifndef HA_CALPONT_IMPL_H__
 #define HA_CALPONT_IMPL_H__
 

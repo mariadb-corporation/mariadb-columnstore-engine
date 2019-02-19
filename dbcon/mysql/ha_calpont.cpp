@@ -16,97 +16,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-// $Id: ha_calpont.cpp 9642 2013-06-24 14:57:42Z rdempsey $
-
-/* Copyright (C) 2003 MySQL AB
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; version 2 of the License.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
-
-/**
-  @file ha_example.cc
-
-  @brief
-  The ha_example engine is a stubbed storage engine for example purposes only;
-  it does nothing at this point. Its purpose is to provide a source
-  code illustration of how to begin writing new storage engines; see also
-  /storage/example/ha_example.h.
-
-  @details
-  ha_example will let you create/open/delete tables, but
-  nothing further (for example, indexes are not supported nor can data
-  be stored in the table). Use this example as a template for
-  implementing the same functionality in your own storage engine. You
-  can enable the example storage engine in your build by doing the
-  following during your build process:<br> ./configure
-  --with-example-storage-engine
-
-  Once this is done, MySQL will let you create tables with:<br>
-  CREATE TABLE <table name> (...) ENGINE=EXAMPLE;
-
-  The example storage engine is set up to use table locks. It
-  implements an example "SHARE" that is inserted into a hash by table
-  name. You can use this to store information of state that any
-  example handler object will be able to see when it is using that
-  table.
-
-  Please read the object definition in ha_example.h before reading the rest
-  of this file.
-
-  @note
-  When you create an EXAMPLE table, the MySQL Server creates a table .frm
-  (format) file in the database directory, using the table name as the file
-  name as is customary with MySQL. No other files are created. To get an idea
-  of what occurs, here is an example select that would do a scan of an entire
-  table:
-
-  @code
-  ha_example::store_lock
-  ha_example::external_lock
-  ha_example::info
-  ha_example::rnd_init
-  ha_example::extra
-  ENUM HA_EXTRA_CACHE        Cache record in HA_rrnd()
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::extra
-  ENUM HA_EXTRA_NO_CACHE     End caching of records (def)
-  ha_example::external_lock
-  ha_example::extra
-  ENUM HA_EXTRA_RESET        Reset database to after open
-  @endcode
-
-  Here you see that the example storage engine has 9 rows called before
-  rnd_next signals that it has reached the end of its data. Also note that
-  the table in question was already opened; had it not been open, a call to
-  ha_example::open() would also have been necessary. Calls to
-  ha_example::extra() are hints as to what will be occuring to the request.
-
-  A Longer Example can be found called the "Skeleton Engine" which can be
-  found on TangentOrg. It has both an engine and a full build environment
-  for building a pluggable storage engine.
-
-  Happy coding!<br>
-    -Brian
-*/
-
 #include "ha_calpont.h"
 #include "columnstoreversion.h"
 
@@ -1101,44 +1010,6 @@ struct st_mysql_storage_engine columnstore_storage_engine =
 struct st_mysql_storage_engine infinidb_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
-#if 0
-static ulong srv_enum_var = 0;
-static ulong srv_ulong_var = 0;
-
-const char* enum_var_names[] =
-{
-    "e1", "e2", NullS
-};
-
-TYPELIB enum_var_typelib =
-{
-    array_elements(enum_var_names) - 1, "enum_var_typelib",
-    enum_var_names, NULL
-};
-
-static MYSQL_SYSVAR_ENUM(
-    enum_var,                       // name
-    srv_enum_var,                   // varname
-    PLUGIN_VAR_RQCMDARG,            // opt
-    "Sample ENUM system variable.", // comment
-    NULL,                           // check
-    NULL,                           // update
-    0,                              // def
-    &enum_var_typelib);             // typelib
-
-static MYSQL_SYSVAR_ULONG(
-    ulong_var,
-    srv_ulong_var,
-    PLUGIN_VAR_RQCMDARG,
-    "0..1000",
-    NULL,
-    NULL,
-    8,
-    0,
-    1000,
-    0);
-#endif
-
 /*@brief  check_walk - It traverses filter conditions*/
 /************************************************************
  * DESCRIPTION:
@@ -1368,14 +1239,6 @@ int ha_calpont_group_by_handler::end_scan()
     DBUG_RETURN(rc);
 }
 
-
-static struct st_mysql_sys_var* calpont_system_variables[] =
-{
-//  MYSQL_SYSVAR(enum_var),
-//  MYSQL_SYSVAR(ulong_var),
-    NULL
-};
-
 mysql_declare_plugin(columnstore)
 {
     MYSQL_STORAGE_ENGINE_PLUGIN,
@@ -1388,7 +1251,7 @@ mysql_declare_plugin(columnstore)
     columnstore_done_func,                        /* Plugin Deinit */
     0x0100 /* 1.0 */,
     NULL,                                         /* status variables */
-    calpont_system_variables,                     /* system variables */
+    mcs_system_variables,                         /* system variables */
     NULL,                                         /* reserved */
     0                                             /* config flags */
 },
@@ -1403,7 +1266,7 @@ mysql_declare_plugin(columnstore)
     infinidb_done_func,                            /* Plugin Deinit */
     0x0100 /* 1.0 */,
     NULL,                                         /* status variables */
-    calpont_system_variables,                     /* system variables */
+    mcs_system_variables,                         /* system variables */
     NULL,                                         /* reserved */
     0                                             /* config flags */
 }
@@ -1419,9 +1282,9 @@ maria_declare_plugin(columnstore)
   columnstore_init_func,
   columnstore_done_func,
   0x0100, /* 1.0 */
-  NULL,                       /* status variables                */
-  calpont_system_variables,   /* system variables                */
-  "1.0",                      /* string version */
+  NULL,                          /* status variables                */
+  mcs_system_variables,          /* system variables                */
+  "1.0",                         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 },
 {
@@ -1434,10 +1297,10 @@ maria_declare_plugin(columnstore)
   infinidb_init_func,
   infinidb_done_func,
   0x0100, /* 1.0 */
-  NULL,                       /* status variables                */
-  calpont_system_variables,   /* system variables                */
-  "1.0",                      /* string version */
-  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+  NULL,                           /* status variables                */
+  mcs_system_variables,           /* system variables                */
+  "1.0",                          /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE  /* maturity */
 }
 maria_declare_plugin_end;
 

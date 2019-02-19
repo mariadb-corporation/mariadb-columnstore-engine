@@ -49,6 +49,7 @@ using namespace std;
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
+#include "ha_mcs_sysvars.h"
 #include "idb_mysql.h"
 
 #include "ha_calpont_impl_if.h"
@@ -679,10 +680,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     IDBCompressInterface idbCompress;
     parser.Parse(ddlStatement.c_str());
 
-    if (!thd->infinidb_vtable.cal_conn_info)
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (parser.Good())
     {
@@ -2144,7 +2145,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         return 1;
     }
 
-    int compressiontype = thd->variables.infinidb_compression_type;
+    int compressiontype = get_compression_type(thd);
 
     if (compressiontype == 1) compressiontype = 2;
 
@@ -2156,7 +2157,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     }
 
     if ( compressiontype == MAX_INT )
-        compressiontype = thd->variables.infinidb_compression_type;
+        compressiontype = get_compression_type(thd);
     else if ( compressiontype < 0 )
     {
         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE);
@@ -2489,12 +2490,12 @@ extern "C"
         if ( thd->db.length )
             db = thd->db.str;
 
-        int compressiontype = thd->variables.infinidb_compression_type;
+        int compressiontype = get_compression_type(thd);
 
         if (compressiontype == 1) compressiontype = 2;
 
         if ( compressiontype == MAX_INT )
-            compressiontype = thd->variables.infinidb_compression_type;
+            compressiontype = get_compression_type(thd);
 
         //hdfs
         if ((compressiontype == 0) && (useHdfs))
