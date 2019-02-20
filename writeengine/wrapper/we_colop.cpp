@@ -1529,7 +1529,8 @@ void ColumnOp::setColParam(Column& column,
  *    rowIdArray - the array of row id, for performance purpose, I am assuming the rowIdArray is sorted
  *    valArray - the array of row values
  *    oldValArray - the array of old value
- *    bDelete - yet. The flag must be useless.
+ *    bDelete - yet. The flag must be useless b/c writeRows
+ *                   is used for deletion.
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/

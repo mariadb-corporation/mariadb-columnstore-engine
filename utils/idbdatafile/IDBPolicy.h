@@ -129,6 +129,10 @@ public:
     static int listDirectory(const char* pathname, std::list<std::string>& contents);
     static bool isDir(const char* pathname);
     static int copyFile(const char* srcPath, const char* destPath);
+    /**
+    * This is used in WE shared components Unit Tests
+    */
+    static void setPreallocSpace(uint16_t dbRoot);
 
 private:
     /**

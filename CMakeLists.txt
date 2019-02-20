@@ -276,6 +276,16 @@ ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 
+# WriteEngine component tests
+IF( WITH_SHARED_COMP_TESTS )
+    # search for cppunit
+    INCLUDE (findcppunit.cmake)
+    if (NOT CPPUNIT_FOUND)
+        MESSAGE(FATAL_ERROR "CPPUnit not found please install cppunit-devel for CentOS/RedHat or libcppunit-dev for Ubuntu/Debian")
+    endif()
+    ADD_SUBDIRECTORY(writeengine/shared)
+ENDIF( WITH_SHARED_COMP_TESTS )
+
 INCLUDE(cpackEngineRPM.cmake)
 INCLUDE(cpackEngineDEB.cmake)
 

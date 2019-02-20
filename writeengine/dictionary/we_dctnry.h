@@ -132,6 +132,10 @@ public:
     {
         return m_curLbid;
     }
+    const unsigned char* getDctnryHeader2() const
+    {
+        return m_dctnryHeader2;
+    }
 
     /**
      * @brief Insert a signature value to a file block and return token/pointer.
@@ -222,6 +226,17 @@ public:
     {
         return NO_ERROR;
     }
+    /**
+    * @brief Use this only in Unit Tests and not in prod
+    */
+    virtual IDBDataFile* createDctnryFileUnit(const char* name,
+        int width,
+        const char* mode,
+        int ioBuffSize)
+    {
+        return createDctnryFile(name, width, mode, ioBuffSize);
+    }
+
 
 //------------------------------------------------------------------------------
 // Protected members
