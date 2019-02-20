@@ -297,4 +297,9 @@ void IDBPolicy::configIDBPolicy()
     }
 }
 
+void IDBPolicy::setPreallocSpace(uint16_t dbRoot)
+{
+   s_PreallocSpace.push_back(dbRoot); 
+}
+
 }

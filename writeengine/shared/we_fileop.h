@@ -92,6 +92,15 @@ public:
                                     execplan::CalpontSystemCatalog::ColDataType colDataType,
                                     uint64_t emptyVal = 0, int width = 1 ) ;
 
+
+    /**
+     * @brief Create a file with a fixed file size by its name.
+     * Changed to public for UT.
+     */
+    int                 createFile( const char* fileName, int fileSize,
+                                    uint64_t emptyVal, int width,
+                                    uint16_t dbRoot );
+
     /**
      * @brief Delete a file
      */
@@ -467,34 +476,6 @@ public:
     int                 compressionType() const;
 
     EXPORT virtual int  flushFile(int rc, std::map<FID, FID>& oids);
-
-protected:
-    EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);
-    EXPORT virtual int         updateDctnryExtent(IDBDataFile* pFile, int nBlocks);
-
-    int                 m_compressionType;  // compresssion type
-
-private:
-    //not copyable
-    FileOp(const FileOp& rhs);
-    FileOp& operator=(const FileOp& rhs);
-
-    int                 createFile( const char* fileName, int fileSize,
-                                    uint64_t emptyVal, int width,
-                                    uint16_t dbRoot );
-
-    int                 expandAbbrevColumnChunk( IDBDataFile* pFile,
-            uint64_t   emptyVal,
-            int   colWidth,
-            const compress::CompChunkPtr& chunkInPtr,
-            compress::CompChunkPtr& chunkOutPt);
-
-    int                 initAbbrevCompColumnExtent( IDBDataFile* pFile,
-            uint16_t dbRoot,
-            int      nBlocks,
-            uint64_t      emptyVal,
-            int      width);
-
     // Initialize an extent in a column segment file
     // pFile (in) IDBDataFile* of column segment file to be written to
     // dbRoot (in) - DBRoot of pFile
@@ -514,6 +495,29 @@ private:
                                           bool     bExpandExtent,
                                           bool     bAbbrevExtent,
                                           bool     bOptExtension=false );
+
+protected:
+    EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);
+    EXPORT virtual int         updateDctnryExtent(IDBDataFile* pFile, int nBlocks);
+
+    int                 m_compressionType;  // compresssion type
+
+private:
+    //not copyable
+    FileOp(const FileOp& rhs);
+    FileOp& operator=(const FileOp& rhs);
+
+    int                 expandAbbrevColumnChunk( IDBDataFile* pFile,
+            uint64_t   emptyVal,
+            int   colWidth,
+            const compress::CompChunkPtr& chunkInPtr,
+            compress::CompChunkPtr& chunkOutPt);
+
+    int                 initAbbrevCompColumnExtent( IDBDataFile* pFile,
+            uint16_t dbRoot,
+            int      nBlocks,
+            uint64_t      emptyVal,
+            int      width);
 
     static void         initDbRootExtentMutexes();
     static void         removeDbRootExtentMutexes();

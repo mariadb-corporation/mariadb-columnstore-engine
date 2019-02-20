@@ -985,6 +985,8 @@ int FileOp::addExtentExactFile(
         return rc;
 
     // Initialize the contents of the extent.
+    // CS doesn't optimize file operations to have a valid
+    // segment files with empty magics
     rc = initColumnExtent( pFile,
                            dbRoot,
                            allocSize,
@@ -1118,6 +1120,8 @@ int FileOp::initColumnExtent(
         int savedErrno = 0;
         // MCOL-498 fallocate the abbreviated extent,
         // fallback to sequential write if fallocate failed
+        // Couldn't use fallocate for full extents, e.g. ADD COLUMN DDL
+        // b/c CS has to fill the file with empty magics.
         if ( !bOptExtension || ( nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK
             && pFile->fallocate(0, currFileSize, writeSize) )
         )
@@ -1944,12 +1948,7 @@ int FileOp::initDctnryExtent(
                     Stats::startParseEvent(WE_STATS_CREATE_DCT_EXTENT);
 #endif
 
-                //std::ostringstream oss;
-                //oss << "initDctnryExtent: width-8(assumed)" <<
-                //"; loopCount-" << loopCount <<
-                //"; writeSize-" << writeSize;
-                //std::cout << oss.str() << std::endl;
-                if (remWriteSize > 0)
+               if (remWriteSize > 0)
                 {
                     if (pFile->write( writeBuf, remWriteSize ) != remWriteSize)
                     {
@@ -2300,6 +2299,15 @@ int FileOp::oid2FileName( FID fid,
         return NO_ERROR;
     }
 
+#endif
+
+// Need this stub to use ColumnOp::writeRow in the unit tests
+#ifdef WITH_UNIT_TESTS
+    if (fid == 42)
+    {
+        sprintf(fullFileName, "./versionbuffer");
+        return NO_ERROR;
+    }
 #endif
 
     /* If is a version buffer file, the format is different. */
