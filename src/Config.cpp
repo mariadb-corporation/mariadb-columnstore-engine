@@ -3,6 +3,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 
 #include <stdlib.h>
 #include <vector>
@@ -32,7 +33,7 @@ Config * Config::get()
 Config::Config()
 {
     /* This will search the current directory,
-       then the $COLUMNSTORE_INSTALL_DIR/etc,
+       then $COLUMNSTORE_INSTALL_DIR/etc,
        then /etc
        looking for storagemanager.cnf
        
@@ -43,7 +44,7 @@ Config::Config()
     vector<string> paths;
     
     // the paths to search in order
-    paths.push_back("./");
+    paths.push_back(".");
     if (cs_install_dir)
         paths.push_back(cs_install_dir);
     paths.push_back("/etc");
@@ -62,9 +63,20 @@ Config::Config()
     boost::property_tree::ini_parser::read_ini(filename, contents);
 }
 
+string use_envvar(boost::smatch envvar)
+{
+    char *env = getenv(envvar[1].str().c_str());
+    return (env ? env : "");
+}
+
 string Config::getValue(const string &section, const string &key) const
 {
-    return contents.get<string>(section + "." + key);
+    // if we care, move this envvar substition stuff to where the file is loaded
+    string ret = contents.get<string>(section + "." + key);
+    boost::regex re("\\$\\{(.+)\\}");
+    
+    ret = boost::regex_replace(ret, re, use_envvar);
+    return ret;
 }
 
 }

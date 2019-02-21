@@ -14,7 +14,7 @@ S3Storage::~S3Storage()
 {
 }
 
-int S3Storage::getObject(const string &courceKey, const string &destFile)
+int S3Storage::getObject(const string &sourceKey, const string &destFile)
 {
     return 0;
 }
@@ -26,6 +26,11 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
 
 void S3Storage::deleteObject(const string &key)
 {
+}
+
+int S3Storage::copyObject(const string &sourceKey, const string &destKey)
+{
+    return 0;
 }
 
 }

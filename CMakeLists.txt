@@ -23,6 +23,7 @@ set(storagemanager_SRCS
     src/Config.cpp
     src/CloudStorage.cpp
     src/S3Storage.cpp
+    src/LocalStorage.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)
@@ -31,10 +32,10 @@ if (TRACE)
 endif()
 
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
-target_link_libraries(StorageManager boost_system boost_thread boost_filesystem aws-cpp-sdk-s3)
+target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex aws-cpp-sdk-s3)
 
 add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
-target_link_libraries(unit_tests boost_system boost_thread boost_filesystem)
+target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex)
 
 # config & import the AWS SDK
 option(ENABLE_UNITY_BUILD "" ON)
