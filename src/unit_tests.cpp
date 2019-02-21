@@ -8,6 +8,10 @@
 #include "PingTask.h"
 #include "CopyTask.h"
 #include "messageFormat.h"
+#include "Config.h"
+#include "Cache.h"
+#include "LocalStorage.h"
+
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
@@ -470,5 +474,13 @@ int main()
     listdirtask();
     pingtask();
     copytask();
+    
+    Config *conf = Config::get();
+    LocalStorage ls;
+    Cache cache;
+    
+    
+    
+    
     return 0;
 }
