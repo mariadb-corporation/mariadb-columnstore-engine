@@ -63,12 +63,26 @@ Config::Config()
     boost::property_tree::ini_parser::read_ini(filename, contents);
 }
 
-string use_envvar(boost::smatch envvar)
+string use_envvar(const boost::smatch &envvar)
 {
     char *env = getenv(envvar[1].str().c_str());
     return (env ? env : "");
 }
 
+string expand_numbers(const boost::smatch &match)
+{
+    long num = stol(match[1].str());
+    char suffix = (char) ::tolower(match[2].str()[0]);
+
+    if (suffix == 'g')
+        num <<= 30;
+    else if (suffix == 'm')
+        num <<= 20;
+    else if (suffix == 'k')
+        num <<= 10;
+    return ::to_string(num);
+}
+    
 string Config::getValue(const string &section, const string &key) const
 {
     // if we care, move this envvar substition stuff to where the file is loaded
@@ -76,6 +90,13 @@ string Config::getValue(const string &section, const string &key) const
     boost::regex re("\\$\\{(.+)\\}");
     
     ret = boost::regex_replace(ret, re, use_envvar);
+    
+    // do the numeric substitutions.  ex, the suffixes m, k, g
+    // ehhhhh.  going to end up turning a string to a number, to a string, and then to a number again
+    // don't like that.  OTOH who cares.
+    boost::regex num_re("^([[:digit:]]+)([mMkKgG])$", boost::regex::extended);
+    ret = boost::regex_replace(ret, num_re, expand_numbers);
+    
     return ret;
 }
 

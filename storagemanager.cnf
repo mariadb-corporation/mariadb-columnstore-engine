@@ -12,5 +12,9 @@ region = us-west-1
 # see https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 [LocalStorage]
-path = ${HOME}/fake-cloud/
+path = ${HOME}/fake-cloud
+
+[Cache]
+cache_size = 2g
+path = ${HOME}/cache
 
