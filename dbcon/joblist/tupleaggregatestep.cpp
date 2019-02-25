@@ -3045,32 +3045,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
             groupByPm.push_back(groupby);
 
-            // PM: Except for SUM/AVG, just copy down to aggregation rowgroup
-            RowAggFunctionType aggOp = rowgroup::ROWAGG_COUNT_NO_OP;
-            for (size_t agg = 0; agg < aggColVec.size(); ++agg)
-            {
-                if (aggColVec[agg].first == key)
-                {
-                    aggOp = functionIdMap(aggColVec[agg].second);
-                    break;
-                }
-            }
+            // PM: just copy down to aggregation rowgroup
             oidsAggPm.push_back(oidsProj[colProj]);
             keysAggPm.push_back(key);
             scaleAggPm.push_back(scaleProj[colProj]);
-            if (aggOp == ROWAGG_DISTINCT_SUM ||
-                aggOp == ROWAGG_DISTINCT_AVG)
-            {
-                typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
-                precisionAggPm.push_back(-1);
-                widthAggPm.push_back(sizeof(long double));
-            }
-            else
-            {
-                typeAggPm.push_back(typeProj[colProj]);
-                widthAggPm.push_back(width[colProj]);
-                precisionAggPm.push_back(precisionProj[colProj]);
-            }
+            typeAggPm.push_back(typeProj[colProj]);
+            widthAggPm.push_back(width[colProj]);
+            precisionAggPm.push_back(precisionProj[colProj]);
 
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
             colAggPm++;
@@ -3905,37 +3886,17 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             uint64_t colProj = projColPosMap[key];
 
-//            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
-            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj));
+            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
             groupByPm.push_back(groupby);
 
-            // PM: Except for SUM/AVG, just copy down to aggregation rowgroup
-            RowAggFunctionType aggOp = rowgroup::ROWAGG_COUNT_NO_OP;
-            for (size_t agg = 0; agg < aggColVec.size(); ++agg)
-            {
-                if (aggColVec[agg].first == key)
-                {
-                    aggOp = functionIdMap(aggColVec[agg].second);
-                    break;
-                }
-            }
+            // PM: just copy down to aggregation rowgroup
             oidsAggPm.push_back(oidsProj[colProj]);
             keysAggPm.push_back(key);
             scaleAggPm.push_back(scaleProj[colProj]);
             precisionAggPm.push_back(precisionProj[colProj]);
-            if (aggOp == ROWAGG_DISTINCT_SUM ||
-                aggOp == ROWAGG_DISTINCT_AVG)
-            {
-                typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
-                precisionAggPm.push_back(-1);
-                widthAggPm.push_back(sizeof(long double));
-            }
-            else
-            {
-                typeAggPm.push_back(typeProj[colProj]);
-                widthAggPm.push_back(width[colProj]);
-                precisionAggPm.push_back(precisionProj[colProj]);
-            }
+            typeAggPm.push_back(typeProj[colProj]);
+            widthAggPm.push_back(width[colProj]);
+            precisionAggPm.push_back(precisionProj[colProj]);
 
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
             colAggPm++;
@@ -4429,10 +4390,10 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                         oidsAggDist.push_back(oidsAggUm[colUm]);
                         keysAggDist.push_back(retKey);
-                        typeAggDist.push_back(typeAggUm[colUm]);
+                        typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                        precisionAggDist.push_back(-1);
+                        widthAggDist.push_back(sizeof(long double));
                         scaleAggDist.push_back(scaleAggUm[colUm]);
-                        precisionAggDist.push_back(precisionAggUm[colUm]);
-                        widthAggDist.push_back(widthAggUm[colUm]);
                     }
                     // PM: put the count column for avg next to the sum
                     // let fall through to add a count column for average function
@@ -4452,7 +4413,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     break;
 
                     default:
-                        // cound happen if agg and agg distinct use same column.
+                        // could happen if agg and agg distinct use same column.
                         colUm = -1;
                         break;
                 } // switch
