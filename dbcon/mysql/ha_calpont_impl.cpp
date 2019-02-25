@@ -779,7 +779,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3483, reserve enough space for the longest double value
                     // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 310;
+                    (*f)->field_length = 40;
 
                     //double double_val = *(double*)(&value);
                     //f2->store(double_val);
