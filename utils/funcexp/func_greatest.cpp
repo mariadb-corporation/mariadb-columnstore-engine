@@ -121,6 +121,26 @@ double Func_greatest::getDoubleVal(rowgroup::Row& row,
     return (double) greatestStr;
 }
 
+long double Func_greatest::getLongDoubleVal(rowgroup::Row& row,
+                                   FunctionParm& fp,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    long double str = fp[0]->data()->getLongDoubleVal(row, isNull);
+
+    long double greatestStr = str;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        long double str1 = fp[i]->data()->getLongDoubleVal(row, isNull);
+
+        if ( greatestStr < str1 )
+            greatestStr = str1;
+    }
+
+    return greatestStr;
+}
+
 std::string Func_greatest::getStrVal(rowgroup::Row& row,
                                      FunctionParm& fp,
                                      bool& isNull,

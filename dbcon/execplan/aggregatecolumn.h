@@ -387,6 +387,15 @@ public:
     /**
     * F&E
     */
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getLongDoubleVal();
+    }
+
+    /**
+    * F&E
+    */
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);

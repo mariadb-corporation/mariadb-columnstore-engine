@@ -277,10 +277,6 @@ struct JobInfo
     std::multimap<execplan::ReturnedColumn*, execplan::ReturnedColumn*> cloneAggregateColMap;
     std::vector<std::pair<int, int> > aggEidIndexList;
 
-    // for AVG to support CNX_USE_DECIMAL_SCALE
-    //   map<key, column scale << 8 + avg scale>
-    std::map<uint32_t, int> scaleOfAvg;
-
     // table pairs with incompatible join which is treated as expression
     std::map<uint32_t, uint32_t> incompatibleJoinMap;
 

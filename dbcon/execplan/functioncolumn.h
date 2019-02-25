@@ -225,6 +225,10 @@ public:
     {
         return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
     }
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
+    }
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
         IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);

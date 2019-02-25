@@ -718,8 +718,7 @@ new_plan:
                         string emsg("NOERROR");
                         ByteStream emsgBs;
                         ByteStream::quadbyte tflg = 0;
-                        jl = JobListFactory::makeJobList(
-                                 &csep, fRm, true, true);
+                        jl = JobListFactory::makeJobList(&csep, fRm, true, true);
                         // assign query stats
                         jl->queryStats(fStats);
 

@@ -57,7 +57,7 @@ public:
         return strtod(getStrVal(row, fp, isNull, op_ct).c_str(), NULL);
     }
 
-    double getLongDoubleVal(rowgroup::Row& row,
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct)

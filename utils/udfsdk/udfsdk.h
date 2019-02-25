@@ -171,6 +171,14 @@ public:
                                 execplan::CalpontSystemCatalog::ColType& op_ct);
 
     /**
+     * Returns a long double result of this function.
+     */
+
+    virtual long double getLongDoubleVal(rowgroup::Row& row,
+                                funcexp::FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct);
+    /**
      * Returns a float result of this function.
      */
     virtual float getFloatVal(rowgroup::Row& row,
@@ -262,6 +270,14 @@ public:
      * Returns a double result of this function.
      */
     virtual double getDoubleVal(rowgroup::Row& row,
+                                funcexp::FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    /**
+     * Returns a double result of this function.
+     */
+    virtual long double getLongDoubleVal(rowgroup::Row& row,
                                 funcexp::FunctionParm& fp,
                                 bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct);

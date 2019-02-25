@@ -738,13 +738,13 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
     // correct the scale
     vector<uint32_t> scale = fRowGroupOut.getScale();
 
-    for (uint64_t i = 0; i < scale.size(); i++)
-    {
+//    for (uint64_t i = 0; i < scale.size(); i++)
+//    {
         // to support CNX_DECIMAL_SCALE the avg column's scale is coded with two scales:
         // fe's avg column scale << 8 + original column scale
         //if ((scale[i] & 0x0000FF00) > 0)
-        scale[i] = scale[i] &  0x000000FF;
-    }
+//        scale[i] = scale[i] &  0x000000FF;
+//    }
 
     size_t retColCount = jobInfo.nonConstDelCols.size();
 
@@ -1402,43 +1402,10 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
                 oidsAgg.push_back(oidsProj[colProj]);
                 keysAgg.push_back(key);
-
-                if (typeProj[colProj] == CalpontSystemCatalog::DOUBLE ||
-                        typeProj[colProj] == CalpontSystemCatalog::UDOUBLE ||
-                        typeProj[colProj] == CalpontSystemCatalog::FLOAT ||
-                        typeProj[colProj] == CalpontSystemCatalog::UFLOAT)
-                {
-                    typeAgg.push_back(typeProj[colProj]);
-                    scaleAgg.push_back(scaleProj[colProj]);
-                    precisionAgg.push_back(precisionProj[colProj]);
-                    widthAgg.push_back(width[colProj]);
-                }
-                else if (isUnsigned(typeProj[colProj]))
-                {
-                    typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-                    uint32_t scale = scaleProj[colProj];
-
-                    // for int average, FE expects a decimal
-                    if (aggOp == ROWAGG_AVG)
-                        scale = jobInfo.scaleOfAvg[key]; // scale += 4;
-
-                    scaleAgg.push_back(scale);
-                    precisionAgg.push_back(20);
-                    widthAgg.push_back(bigUintWidth);
-                }
-                else
-                {
-                    typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-                    uint32_t scale = scaleProj[colProj];
-
-                    // for int average, FE expects a decimal
-                    if (aggOp == ROWAGG_AVG)
-                        scale = jobInfo.scaleOfAvg[key]; // scale += 4;
-
-                    scaleAgg.push_back(scale);
-                    precisionAgg.push_back(19);
-                    widthAgg.push_back(bigIntWidth);
-                }
+                typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                precisionAgg.push_back(-1);
+                widthAgg.push_back(sizeof(long double));
+                scaleAgg.push_back(scaleProj[colProj]);
             }
             break;
 
@@ -1450,16 +1417,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
                 scaleAgg.push_back(0);
                 // work around count() in select subquery
                 precisionAgg.push_back(9999);
-
-                if (isUnsigned(typeProj[colProj]))
-                {
-                    typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-                }
-                else
-                {
-                    typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-                }
-
+                typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
                 widthAgg.push_back(bigIntWidth);
             }
             break;
@@ -1603,7 +1561,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
             keysAgg.push_back(k->first);
             scaleAgg.push_back(0);
             precisionAgg.push_back(19);
-            typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+            typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
             widthAgg.push_back(bigIntWidth);
         }
     }
@@ -1643,7 +1601,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         oidsAgg.push_back(oidsAgg[j]);
         keysAgg.push_back(keysAgg[j]);
         scaleAgg.push_back(0);
-        precisionAgg.push_back(0);
+        precisionAgg.push_back(-1);
         typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
         widthAgg.push_back(sizeof(long double));
         ++lastCol;
@@ -1652,7 +1610,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         oidsAgg.push_back(oidsAgg[j]);
         keysAgg.push_back(keysAgg[j]);
         scaleAgg.push_back(0);
-        precisionAgg.push_back(0);
+        precisionAgg.push_back(-1);
         typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
         widthAgg.push_back(sizeof(long double));
         ++lastCol;
@@ -1973,47 +1931,19 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
                     oidsAgg.push_back(oidsProj[colProj]);
                     keysAgg.push_back(aggKey);
-
-                    if (typeProj[colProj] != CalpontSystemCatalog::DOUBLE &&
-                            typeProj[colProj] != CalpontSystemCatalog::FLOAT)
-                    {
-                        if (isUnsigned(typeProj[colProj]))
-                        {
-                            typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-                            precisionAgg.push_back(20);
-                        }
-                        else
-                        {
-                            typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-                            precisionAgg.push_back(19);
-                        }
-
-                        uint32_t scale = scaleProj[colProj];
-
-                        // for int average, FE expects a decimal
-                        if (aggOp == ROWAGG_AVG)
-                            scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
-
-                        scaleAgg.push_back(scale);
-                        widthAgg.push_back(bigIntWidth);
-                    }
-                    else
-                    {
-                        typeAgg.push_back(typeProj[colProj]);
-                        scaleAgg.push_back(scaleProj[colProj]);
-                        precisionAgg.push_back(precisionProj[colProj]);
-                        widthAgg.push_back(widthProj[colProj]);
-                    }
-
+                    typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                    precisionAgg.push_back(-1);
+                    widthAgg.push_back(sizeof(long double));
+                    scaleAgg.push_back(scaleProj[colProj]);
                     colAgg++;
-                }
 
-                    // has distinct step, put the count column for avg next to the sum
-                    // let fall through to add a count column for average function
+                // has distinct step, put the count column for avg next to the sum
+                // let fall through to add a count column for average function
                 if (aggOp == ROWAGG_AVG)
                     funct->fAuxColumnIndex = colAgg;
                 else
                     break;
+                }
 
                 case ROWAGG_COUNT_ASTERISK:
                 case ROWAGG_COUNT_COL_NAME:
@@ -2070,7 +2000,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     oidsAgg.push_back(oidsProj[colProj]);
                     keysAgg.push_back(aggKey);
                     scaleAgg.push_back(0);
-                    precisionAgg.push_back(0);
+                    precisionAgg.push_back(-1);
                     typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAgg.push_back(sizeof(long double));
                     ++colAgg;
@@ -2079,7 +2009,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     oidsAgg.push_back(oidsProj[colProj]);
                     keysAgg.push_back(aggKey);
                     scaleAgg.push_back(0);
-                    precisionAgg.push_back(0);
+                    precisionAgg.push_back(-1);
                     typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAgg.push_back(sizeof(long double));
                     ++colAgg;
@@ -2321,37 +2251,10 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
                     oidsAggDist.push_back(oidsAgg[colAgg]);
                     keysAggDist.push_back(retKey);
-
-                    if (typeAgg[colAgg] != CalpontSystemCatalog::DOUBLE &&
-                            typeAgg[colAgg] != CalpontSystemCatalog::FLOAT)
-                    {
-                        if (isUnsigned(typeAgg[colAgg]))
-                        {
-                            typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
-                            precisionAggDist.push_back(20);
-                        }
-                        else
-                        {
-                            typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
-                            precisionAggDist.push_back(19);
-                        }
-
-                        uint32_t scale = scaleProj[colAgg];
-
-                        // for int average, FE expects a decimal
-                        if (aggOp == ROWAGG_DISTINCT_AVG)
-                            scale = jobInfo.scaleOfAvg[retKey]; // scale += 4;
-
-                        scaleAggDist.push_back(scale);
-                        widthAggDist.push_back(bigIntWidth);
-                    }
-                    else
-                    {
-                        typeAggDist.push_back(typeAgg[colAgg]);
-                        scaleAggDist.push_back(scaleAgg[colAgg]);
-                        precisionAggDist.push_back(precisionAgg[colAgg]);
-                        widthAggDist.push_back(widthAgg[colAgg]);
-                    }
+                    typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                    precisionAggDist.push_back(-1);
+                    widthAggDist.push_back(sizeof(long double));
+                    scaleAggDist.push_back(scaleProj[colAgg]);
                 }
                 break;
 
@@ -2362,16 +2265,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     scaleAggDist.push_back(0);
                     // work around count() in select subquery
                     precisionAggDist.push_back(9999);
-
-                    if (isUnsigned(typeAgg[colAgg]))
-                    {
-                        typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
-                    }
-                    else
-                    {
-                        typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
-                    }
-
+                    typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
                     widthAggDist.push_back(bigIntWidth);
                 }
                 break;
@@ -2659,7 +2553,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 keysAggDist.push_back(k->first);
                 scaleAggDist.push_back(0);
                 precisionAggDist.push_back(19);
-                typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
                 widthAggDist.push_back(bigIntWidth);
             }
         }
@@ -2739,7 +2633,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             oidsAggDist.push_back(oidsAggDist[j]);
             keysAggDist.push_back(keysAggDist[j]);
             scaleAggDist.push_back(0);
-            precisionAggDist.push_back(0);
+            precisionAggDist.push_back(-1);
             typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
             widthAggDist.push_back(sizeof(long double));
             ++lastCol;
@@ -3151,13 +3045,32 @@ void TupleAggregateStep::prep2PhasesAggregate(
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
             groupByPm.push_back(groupby);
 
-            // PM: just copy down to aggregation rowgroup
+            // PM: Except for SUM/AVG, just copy down to aggregation rowgroup
+            RowAggFunctionType aggOp = rowgroup::ROWAGG_COUNT_NO_OP;
+            for (size_t agg = 0; agg < aggColVec.size(); ++agg)
+            {
+                if (aggColVec[agg].first == key)
+                {
+                    aggOp = functionIdMap(aggColVec[agg].second);
+                    break;
+                }
+            }
             oidsAggPm.push_back(oidsProj[colProj]);
             keysAggPm.push_back(key);
             scaleAggPm.push_back(scaleProj[colProj]);
-            precisionAggPm.push_back(precisionProj[colProj]);
-            typeAggPm.push_back(typeProj[colProj]);
-            widthAggPm.push_back(width[colProj]);
+            if (aggOp == ROWAGG_DISTINCT_SUM ||
+                aggOp == ROWAGG_DISTINCT_AVG)
+            {
+                typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                precisionAggPm.push_back(-1);
+                widthAggPm.push_back(sizeof(long double));
+            }
+            else
+            {
+                typeAggPm.push_back(typeProj[colProj]);
+                widthAggPm.push_back(width[colProj]);
+                precisionAggPm.push_back(precisionProj[colProj]);
+            }
 
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
             colAggPm++;
@@ -3277,49 +3190,15 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
-
-                    if (typeProj[colProj] == CalpontSystemCatalog::DOUBLE ||
-                            typeProj[colProj] == CalpontSystemCatalog::UDOUBLE ||
-                            typeProj[colProj] == CalpontSystemCatalog::FLOAT ||
-                            typeProj[colProj] == CalpontSystemCatalog::UFLOAT)
-                    {
-                        typeAggPm.push_back(typeProj[colProj]);
-                        scaleAggPm.push_back(scaleProj[colProj]);
-                        precisionAggPm.push_back(precisionProj[colProj]);
-                        widthAggPm.push_back(width[colProj]);
-                    }
-                    else if (isUnsigned(typeProj[colProj]))
-                    {
-                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-                        uint32_t scale = scaleProj[colProj];
-
-                        // for int average, FE expects a decimal
-                        if (aggOp == ROWAGG_AVG)
-                            scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
-
-                        scaleAggPm.push_back(scale);
-                        precisionAggPm.push_back(20);
-                        widthAggPm.push_back(bigUintWidth);
-                    }
-                    else
-                    {
-                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-                        uint32_t scale = scaleProj[colProj];
-
-                        // for int average, FE expects a decimal
-                        if (aggOp == ROWAGG_AVG)
-                            scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
-
-                        scaleAggPm.push_back(scale);
-                        precisionAggPm.push_back(19);
-                        widthAggPm.push_back(bigIntWidth);
-                    }
-
+                    typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                    scaleAggPm.push_back(scaleProj[colProj]);
+                    precisionAggPm.push_back(-1);
+                    widthAggPm.push_back(sizeof(long double));
                     colAggPm++;
                 }
 
-                    // PM: put the count column for avg next to the sum
-                    // let fall through to add a count column for average function
+                // PM: put the count column for avg next to the sum
+                // let fall through to add a count column for average function
                 if (aggOp != ROWAGG_AVG)
                     break;
 
@@ -3331,16 +3210,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     scaleAggPm.push_back(0);
                     // work around count() in select subquery
                     precisionAggPm.push_back(9999);
-
-                    if (isUnsigned(typeProj[colProj]))
-                    {
-                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-                    }
-                    else
-                    {
-                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-                    }
-
+                    typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
                     widthAggPm.push_back(bigIntWidth);
                     colAggPm++;
                 }
@@ -3378,7 +3248,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
                     scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(0);
+                    precisionAggPm.push_back(-1);
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAggPm.push_back(sizeof(long double));
                     ++colAggPm;
@@ -3387,7 +3257,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
                     scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(0);
+                    precisionAggPm.push_back(-1);
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAggPm.push_back(sizeof(long double));
                     ++colAggPm;
@@ -3612,7 +3482,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                             keysAggUm.push_back(retKey);
                             scaleAggUm.push_back(0);
                             precisionAggUm.push_back(19);
-                            typeAggUm.push_back(CalpontSystemCatalog::BIGINT);
+                            typeAggUm.push_back(CalpontSystemCatalog::UBIGINT);
                             widthAggUm.push_back(bigIntWidth);
                         }
                     }
@@ -3779,7 +3649,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 keysAggUm.push_back(k->first);
                 scaleAggUm.push_back(0);
                 precisionAggUm.push_back(19);
-                typeAggUm.push_back(CalpontSystemCatalog::BIGINT);
+                typeAggUm.push_back(CalpontSystemCatalog::UBIGINT);
                 widthAggUm.push_back(bigIntWidth);
             }
         }
@@ -3818,7 +3688,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
             oidsAggUm.push_back(oidsAggUm[j]);
             keysAggUm.push_back(keysAggUm[j]);
             scaleAggUm.push_back(0);
-            precisionAggUm.push_back(0);
+            precisionAggUm.push_back(-1);
             typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
             widthAggUm.push_back(sizeof(long double));
             ++lastCol;
@@ -3827,7 +3697,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
             oidsAggUm.push_back(oidsAggUm[j]);
             keysAggUm.push_back(keysAggUm[j]);
             scaleAggUm.push_back(0);
-            precisionAggUm.push_back(0);
+            precisionAggUm.push_back(-1);
             typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
             widthAggUm.push_back(sizeof(long double));
             ++lastCol;
@@ -4035,16 +3905,37 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             uint64_t colProj = projColPosMap[key];
 
-            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
+//            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
+            SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj));
             groupByPm.push_back(groupby);
 
-            // PM: just copy down to aggregation rowgroup
+            // PM: Except for SUM/AVG, just copy down to aggregation rowgroup
+            RowAggFunctionType aggOp = rowgroup::ROWAGG_COUNT_NO_OP;
+            for (size_t agg = 0; agg < aggColVec.size(); ++agg)
+            {
+                if (aggColVec[agg].first == key)
+                {
+                    aggOp = functionIdMap(aggColVec[agg].second);
+                    break;
+                }
+            }
             oidsAggPm.push_back(oidsProj[colProj]);
             keysAggPm.push_back(key);
             scaleAggPm.push_back(scaleProj[colProj]);
             precisionAggPm.push_back(precisionProj[colProj]);
-            typeAggPm.push_back(typeProj[colProj]);
-            widthAggPm.push_back(width[colProj]);
+            if (aggOp == ROWAGG_DISTINCT_SUM ||
+                aggOp == ROWAGG_DISTINCT_AVG)
+            {
+                typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                precisionAggPm.push_back(-1);
+                widthAggPm.push_back(sizeof(long double));
+            }
+            else
+            {
+                typeAggPm.push_back(typeProj[colProj]);
+                widthAggPm.push_back(width[colProj]);
+                precisionAggPm.push_back(precisionProj[colProj]);
+            }
 
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
             colAggPm++;
@@ -4171,43 +4062,15 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
-
-                    if (typeProj[colProj] != CalpontSystemCatalog::DOUBLE &&
-                            typeProj[colProj] != CalpontSystemCatalog::FLOAT)
-                    {
-                        if (isUnsigned(typeProj[colProj]))
-                        {
-                            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-                            precisionAggPm.push_back(20);
-                        }
-                        else
-                        {
-                            typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-                            precisionAggPm.push_back(19);
-                        }
-
-                        uint32_t scale = scaleProj[colProj];
-
-                        // for int average, FE expects a decimal
-                        if (aggOp == ROWAGG_AVG)
-                            scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
-
-                        scaleAggPm.push_back(scale);
-                        widthAggPm.push_back(bigIntWidth);
-                    }
-                    else
-                    {
-                        typeAggPm.push_back(typeProj[colProj]);
-                        scaleAggPm.push_back(scaleProj[colProj]);
-                        precisionAggPm.push_back(precisionProj[colProj]);
-                        widthAggPm.push_back(width[colProj]);
-                    }
-
+                    typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                    precisionAggPm.push_back(-1);
+                    widthAggPm.push_back(sizeof(long double));
+                    scaleAggPm.push_back(scaleProj[colProj]);
                     colAggPm++;
                 }
 
-                    // PM: put the count column for avg next to the sum
-                    // let fall through to add a count column for average function
+                // PM: put the count column for avg next to the sum
+                // let fall through to add a count column for average function
                 if (aggOp == ROWAGG_AVG)
                     funct->fAuxColumnIndex = colAggPm;
                 else
@@ -4268,7 +4131,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
                     scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(0);
+                    precisionAggPm.push_back(-1);
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAggPm.push_back(sizeof(long double));
                     ++colAggPm;
@@ -4277,7 +4140,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
                     scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(0);
+                    precisionAggPm.push_back(-1);
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     widthAggPm.push_back(sizeof(long double));
                     ++colAggPm;
@@ -4566,41 +4429,14 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                         oidsAggDist.push_back(oidsAggUm[colUm]);
                         keysAggDist.push_back(retKey);
-
-                        if (typeAggUm[colUm] != CalpontSystemCatalog::DOUBLE &&
-                                typeAggUm[colUm] != CalpontSystemCatalog::FLOAT)
-                        {
-                            if (isUnsigned(typeAggUm[colUm]))
-                            {
-                                typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
-                                precisionAggDist.push_back(20);
-                            }
-                            else
-                            {
-                                typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
-                                precisionAggDist.push_back(19);
-                            }
-
-                            uint32_t scale = scaleAggUm[colUm];
-
-                            // for int average, FE expects a decimal
-                            if (aggOp == ROWAGG_DISTINCT_AVG)
-                                scale = jobInfo.scaleOfAvg[retKey]; // scale += 4;
-
-                            scaleAggDist.push_back(scale);
-                            widthAggDist.push_back(bigIntWidth);
-                        }
-                        else
-                        {
-                            typeAggDist.push_back(typeAggUm[colUm]);
-                            scaleAggDist.push_back(scaleAggUm[colUm]);
-                            precisionAggDist.push_back(precisionAggUm[colUm]);
-                            widthAggDist.push_back(widthAggUm[colUm]);
-                        }
+                        typeAggDist.push_back(typeAggUm[colUm]);
+                        scaleAggDist.push_back(scaleAggUm[colUm]);
+                        precisionAggDist.push_back(precisionAggUm[colUm]);
+                        widthAggDist.push_back(widthAggUm[colUm]);
                     }
-                        // PM: put the count column for avg next to the sum
-                        // let fall through to add a count column for average function
-                        //if (aggOp != ROWAGG_DISTINCT_AVG)
+                    // PM: put the count column for avg next to the sum
+                    // let fall through to add a count column for average function
+                    //if (aggOp != ROWAGG_DISTINCT_AVG)
                     break;
 
                     case ROWAGG_COUNT_DISTINCT_COL_NAME:
@@ -4610,16 +4446,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         scaleAggDist.push_back(0);
                         // work around count() in select subquery
                         precisionAggDist.push_back(9999);
-
-                        if (isUnsigned(typeAggUm[colUm]))
-                        {
-                            typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
-                        }
-                        else
-                        {
-                            typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
-                        }
-
+                        typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
                         widthAggDist.push_back(bigIntWidth);
                     }
                     break;
@@ -4847,7 +4674,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 keysAggDist.push_back(k->first);
                 scaleAggDist.push_back(0);
                 precisionAggDist.push_back(19);
-                typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
                 widthAggDist.push_back(bigIntWidth);
             }
         }
@@ -4918,7 +4745,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             oidsAggDist.push_back(oidsAggDist[j]);
             keysAggDist.push_back(keysAggDist[j]);
             scaleAggDist.push_back(0);
-            precisionAggDist.push_back(0);
+            precisionAggDist.push_back(-1);
             typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
             widthAggDist.push_back(sizeof(long double));
             ++lastCol;
@@ -4927,7 +4754,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             oidsAggDist.push_back(oidsAggDist[j]);
             keysAggDist.push_back(keysAggDist[j]);
             scaleAggDist.push_back(0);
-            precisionAggDist.push_back(0);
+            precisionAggDist.push_back(-1);
             typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
             widthAggDist.push_back(sizeof(long double));
             ++lastCol;

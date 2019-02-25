@@ -1410,7 +1410,7 @@ private:
     boost::mutex serializeJoinerMutex;
     boost::condition condvarWakeupProducer, condvar;
 
-    std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
+    std::vector<int> scanFlags; // use to keep track of which extents to eliminate from this step
     bool BPPIsAllocated;
     uint32_t uniqueID;
     ResourceManager* fRm;
@@ -1476,7 +1476,7 @@ private:
      * component and this new array as the runtime component.  The final CP decision
      * is scanFlags & runtimeCP.
      */
-    std::vector<bool> runtimeCPFlags;
+    std::vector<int> runtimeCPFlags;
 
     /* semijoin vars */
     rowgroup::RowGroup joinFERG;

@@ -89,6 +89,44 @@ double Func_pow::getDoubleVal(Row& row,
     return 0.0;
 }
 
+long double Func_pow::getLongDoubleVal(Row& row,
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
+{
+    // null value is indicated by isNull
+    long double base = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+    if (!isNull)
+    {
+        // Should this be long double? Not sure on usage.
+        double exponent = parm[1]->data()->getDoubleVal(row, isNull);
+
+        if (!isNull)
+        {
+            errno = 0;
+            long double x = powl(base, (long double)exponent);
+
+            // @bug3490, 4461, rule out domain error, pole error and overflow range error.
+            if (!isfinite(x))
+            {
+                isNull = true;
+                Message::Args args;
+                args.add("pow");
+                args.add((double)base);
+                args.add(exponent);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
+
+
+            return x;
+        }
+    }
+
+    return 0.0;
+}
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

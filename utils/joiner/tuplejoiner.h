@@ -78,14 +78,30 @@ inline bool TypelessData::operator==(const TypelessData& t) const
     return (memcmp(data, t.data, len) == 0);
 }
 
+// Comparator for long double in the hash
+class LongDoubleEq
+{
+public:
+    LongDoubleEq(){};
+    inline bool operator()(const long double& pos1, const long double& pos2) const
+    {
+        return pos1 == pos2;
+    }
+};
+
 /* This function makes the keys for string & compound joins.  The length of the
  * key is limited by keylen.  Keys that are longer are assigned a length of 0 on return,
  * signifying that it shouldn't match anything.
  */
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
                                     const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa);
+// MCOL-1822 SUM/AVG as long double: pass in RG and col so we can determine type conversion
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
-                                    const std::vector<uint32_t>&, utils::PoolAllocator* fa);
+                                    const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
+                                    const rowgroup::RowGroup&, const std::vector<uint32_t>&);
+extern TypelessData makeTypelessKey(const rowgroup::Row&,
+                                    const std::vector<uint32_t>&, utils::PoolAllocator* fa,
+                                    const rowgroup::RowGroup&, const std::vector<uint32_t>&);
 extern uint64_t getHashOfTypelessKey(const rowgroup::Row&, const std::vector<uint32_t>&,
                                      uint32_t seed = 0);
 
@@ -99,9 +115,25 @@ public:
         {
             return fHasher((char*) &val, 8);
         }
+        inline size_t operator()(uint64_t val) const
+        {
+            return fHasher((char*) &val, 8);
+        }
         inline size_t operator()(const TypelessData& e) const
         {
             return fHasher((char*) e.data, e.len);
+        }
+        inline size_t operator()(long double val) const
+        {
+            if (sizeof(long double) == 8) // Probably just MSC, but you never know.
+            {
+                return fHasher((char*) &val, sizeof(long double));
+            }
+            else
+            {
+                // For Linux x86_64, long double is stored in 128 bits, but only 80 are significant
+                return fHasher((char*) &val, 10);
+            }
         }
 
     private:
@@ -300,29 +332,24 @@ private:
             utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > > sthash_t;
     typedef std::tr1::unordered_multimap<TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
             utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > > typelesshash_t;
+    // MCOL-1822 Add support for Long Double AVG/SUM small side
+    typedef std::tr1::unordered_multimap<long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
+            utils::STLPoolAllocator<std::pair<const long double, rowgroup::Row::Pointer> > > ldhash_t;
 
     typedef hash_t::iterator iterator;
     typedef typelesshash_t::iterator thIterator;
+    typedef ldhash_t::iterator ldIterator;
 
     TupleJoiner();
     TupleJoiner(const TupleJoiner&);
     TupleJoiner& operator=(const TupleJoiner&);
-
-    iterator begin()
-    {
-        return h->begin();
-    }
-    iterator end()
-    {
-        return h->end();
-    }
-
 
     rowgroup::RGData smallNullMemory;
 
 
     boost::scoped_ptr<hash_t> h;  // used for UM joins on ints
     boost::scoped_ptr<sthash_t> sth;  // used for UM join on ints where the backing table uses a string table
+    boost::scoped_ptr<ldhash_t> ld;  // used for UM join on long double
     std::vector<rowgroup::Row::Pointer> rows;   // used for PM join
 
     /* This struct is rough.  The BPP-JL stores the parsed results for

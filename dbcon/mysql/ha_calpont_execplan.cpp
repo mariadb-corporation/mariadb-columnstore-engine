@@ -3372,7 +3372,6 @@ ReturnedColumn* buildFunctionColumn(
         return ac;
     }
 
-    // comment out for now until case function is fully tested.
     else if (funcName == "case")
     {
         fc = buildCaseFunction(ifp, gwi, nonSupport);
@@ -4500,39 +4499,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
                 ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                ct.colWidth = 16;
                 ct.scale += 4;
-//                ct.colWidth = 8;
-
-#if 0
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.scale += 4;
-                        break;
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-
-                    default:
-                        break;
-                }
-#endif
+                ct.precision = -1;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
@@ -4549,48 +4518,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
                 ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.scale += 4;
-#if 0
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                        ct.colDataType = CalpontSystemCatalog::BIGINT;
-
-                    // no break, let fall through
-
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                        ct.colWidth = 8;
-                        break;
-
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::UBIGINT;
-                        ct.colWidth = 8;
-                        break;
-
-#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-#endif
-
-                    default:
-                        break;
-                }
-#endif
+                ct.colWidth = 16;
+                ct.precision = -1;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||

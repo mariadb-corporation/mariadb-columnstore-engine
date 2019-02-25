@@ -316,7 +316,6 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
     b << (uint64_t)fResult.decimalVal.value;
     b << (uint8_t)fResult.decimalVal.scale;
     b << (uint8_t)fResult.decimalVal.precision;
-    b << fResult.longDoubleVal;
 }
 
 void ConstantColumn::unserialize(messageqcpp::ByteStream& b)

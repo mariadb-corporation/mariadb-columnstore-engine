@@ -55,6 +55,14 @@ public:
         return ((double) getIntVal(row, fp, isNull, op_ct));
     }
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return ((long double) getIntVal(row, fp, isNull, op_ct));
+    }
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,

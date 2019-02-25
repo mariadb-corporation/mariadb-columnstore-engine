@@ -3208,8 +3208,9 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UDOUBLE:
                     case CalpontSystemCatalog::LONGDOUBLE:
                         unionedType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                        unionedType.scale = 0;
+                        unionedType.scale = (types[i].scale > unionedType.scale) ? types[i].scale : unionedType.scale;
                         unionedType.colWidth = sizeof(long double);
+                        unionedType.precision = -1;
                         break;
 
                     default:

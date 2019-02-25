@@ -74,6 +74,10 @@ bool Func_isnull::getBoolVal(Row& row,
             parm[0]->data()->getStrVal(row, isNull);
             break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            parm[0]->data()->getLongDoubleVal(row, isNull);
+            break;
+
         default:
             parm[0]->data()->getIntVal(row, isNull);
     }

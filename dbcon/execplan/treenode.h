@@ -239,7 +239,7 @@ inline std::string removeTrailing0(char* val, uint32_t length)
 struct Result
 {
     Result(): intVal(0), uintVal(0), origIntVal(0), dummy(0),
-        doubleVal(0), floatVal(0), boolVal(false),
+        doubleVal(0), longDoubleVal(0), floatVal(0), boolVal(false),
         strVal(""), decimalVal(IDB_Decimal(0, 0, 0)),
         valueConverted(false) {}
     int64_t intVal;
@@ -409,6 +409,7 @@ public:
     inline uint64_t getUintVal();
     inline float getFloatVal();
     inline double getDoubleVal();
+    inline long double getLongDoubleVal();
     inline IDB_Decimal getDecimalVal();
     inline int32_t getDateIntVal();
     inline int64_t getDatetimeIntVal();
@@ -957,6 +958,9 @@ inline double TreeNode::getDoubleVal()
         case CalpontSystemCatalog::UDOUBLE:
             return fResult.doubleVal;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return (double)fResult.longDoubleVal;
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
@@ -968,6 +972,74 @@ inline double TreeNode::getDoubleVal()
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIME:
             return (double)fResult.intVal;
+
+        default:
+            throw logging::InvalidConversionExcept("TreeNode::getDoubleVal: Invalid conversion.");
+    }
+
+    return fResult.doubleVal;
+}
+inline long double TreeNode::getLongDoubleVal()
+{
+    switch (fResultType.colDataType)
+    {
+        case CalpontSystemCatalog::CHAR:
+            if (fResultType.colWidth <= 8)
+                return strtold((char*)(&fResult.origIntVal), NULL);
+
+            return strtold(fResult.strVal.c_str(), NULL);
+
+        case CalpontSystemCatalog::VARCHAR:
+            if (fResultType.colWidth <= 7)
+                return strtold((char*)(&fResult.origIntVal), NULL);
+
+            return strtold(fResult.strVal.c_str(), NULL);
+
+        //FIXME: ???
+        case CalpontSystemCatalog::VARBINARY:
+        case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
+            if (fResultType.colWidth <= 7)
+                return strtold((char*)(&fResult.origIntVal), NULL);
+
+            return strtold(fResult.strVal.c_str(), NULL);
+
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+            return (double)fResult.intVal;
+
+        case CalpontSystemCatalog::UBIGINT:
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+            return (long double)fResult.uintVal;
+
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::UFLOAT:
+            return (long double)fResult.floatVal;
+
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
+            return (long double)fResult.doubleVal;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return (long double)fResult.longDoubleVal;
+
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            // this may not be accurate. if this is problematic, change to pre-calculated power array.
+            return (long double)(fResult.decimalVal.value / pow((long double)10, fResult.decimalVal.scale));
+        }
+
+        case CalpontSystemCatalog::DATE:
+        case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
+            return (long double)fResult.intVal;
 
         default:
             throw logging::InvalidConversionExcept("TreeNode::getDoubleVal: Invalid conversion.");
@@ -993,7 +1065,7 @@ inline IDB_Decimal TreeNode::getDecimalVal()
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::SMALLINT:
         case CalpontSystemCatalog::TINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.intVal * pow((double)10, fResultType.scale));
+            fResult.decimalVal.value = (int64_t)(fResult.intVal * pow((double)10.0, fResultType.scale));
             fResult.decimalVal.scale = fResultType.scale;
             fResult.decimalVal.precision = fResultType.precision;
             break;
@@ -1003,9 +1075,26 @@ inline IDB_Decimal TreeNode::getDecimalVal()
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UTINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.uintVal * pow((double)10, fResultType.scale));
+            fResult.decimalVal.value = (int64_t)(fResult.uintVal * pow((double)10.0, fResultType.scale));
             fResult.decimalVal.scale = fResultType.scale;
             fResult.decimalVal.precision = fResultType.precision;
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double dlScaled = fResult.longDoubleVal;
+                if (fResultType.scale > 0)
+                {
+                    dlScaled= fResult.longDoubleVal * pow((double)10.0, fResultType.scale);
+                }
+                if (dlScaled > (double)MAX_BIGINT)
+                {
+                    throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: decimal overflow.");
+                }
+                fResult.decimalVal.value = (int64_t)roundl((fResult.longDoubleVal * pow((double)10.0, fResultType.scale)));
+                fResult.decimalVal.scale = fResultType.scale;
+                fResult.decimalVal.precision = fResultType.precision;
+            }
             break;
 
         case CalpontSystemCatalog::DATE:
@@ -1028,9 +1117,6 @@ inline IDB_Decimal TreeNode::getDecimalVal()
 
         case CalpontSystemCatalog::UDOUBLE:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from double unsigned");
-
-        case CalpontSystemCatalog::LONGDOUBLE:
-            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from long double");
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:

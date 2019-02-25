@@ -146,9 +146,14 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
             case CalpontSystemCatalog::UDOUBLE:
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
-            case CalpontSystemCatalog::LONGDOUBLE:
             {
                 func.reset(new WF_percentile<double>(id, name));
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                func.reset(new WF_percentile<long double>(id, name));
                 break;
             }
 

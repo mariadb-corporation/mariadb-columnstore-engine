@@ -201,6 +201,14 @@ double MCS_add::getDoubleVal(Row& row,
     return 0;
 }
 
+long double MCS_add::getLongDoubleVal(Row& row,
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType& op_ct)
+{
+    return getDoubleVal(row, parm, isNull, op_ct);
+}
+
 float MCS_add::getFloatVal(Row& row,
                            FunctionParm& parm,
                            bool& isNull,
@@ -345,6 +353,14 @@ double MCS_isnull::getDoubleVal(Row& row,
                                 FunctionParm& parm,
                                 bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
+{
+    return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
+}
+
+long double MCS_isnull::getLongDoubleVal(Row& row,
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType& op_ct)
 {
     return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }

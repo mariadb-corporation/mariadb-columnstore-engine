@@ -129,6 +129,25 @@ double Func_ifnull::getDoubleVal(Row& row,
     return r;
 }
 
+long double Func_ifnull::getLongDoubleVal(Row& row,
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 CalpontSystemCatalog::ColType&)
+{
+    if (isNull)
+        return 0.0;
+
+    long double r = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+    if (isNull)
+    {
+        isNull = false;
+        return parm[1]->data()->getLongDoubleVal(row, isNull);
+    }
+
+    return r;
+}
+
 
 int32_t Func_ifnull::getDateIntVal(Row& row,
                                    FunctionParm& parm,

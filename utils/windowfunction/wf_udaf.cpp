@@ -557,6 +557,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     uint64_t uintOut = 0;
     float floatOut = 0.0;
     double doubleOut = 0.0;
+    long double longdoubleOut = 0.0;
     ostringstream oss;
     std::string strOut;
 
@@ -630,12 +631,14 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     {
         floatOut = valOut.cast<float>();
         doubleOut = floatOut;
+        longdoubleOut = floatOut;
         intOut = uintOut = floatOut;
         oss << floatOut;
     }
     else if (valOut.compatible(doubleTypeId))
     {
         doubleOut = valOut.cast<double>();
+        longdoubleOut = doubleOut;
         floatOut = (float)doubleOut;
         uintOut = (uint64_t)doubleOut;
         intOut = (int64_t)doubleOut;
@@ -649,6 +652,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         intOut = atol(strOut.c_str());
         uintOut = strtoul(strOut.c_str(), NULL, 10);
         doubleOut = strtod(strOut.c_str(), NULL);
+        longdoubleOut = doubleOut;
         floatOut = (float)doubleOut;
     }
     else
@@ -715,6 +719,17 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
             else
             {
                 setValue(colDataType, b, e, c, &doubleOut);
+            }
+            break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+            if (valOut.empty())
+            {
+                setValue(colDataType, b, e, c, (long double*)NULL);
+            }
+            else
+            {
+                setValue(colDataType, b, e, c, &longdoubleOut);
             }
             break;
 

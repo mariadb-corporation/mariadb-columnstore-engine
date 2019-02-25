@@ -202,6 +202,12 @@ public:
         return TreeNode::getDoubleVal();
     }
 
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getLongDoubleVal();
+    }
+
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);

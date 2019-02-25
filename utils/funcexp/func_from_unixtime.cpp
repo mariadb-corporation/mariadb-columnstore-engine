@@ -209,6 +209,14 @@ double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
     return (double) atoi(getStrVal(row, parm, isNull, ct).c_str());
 }
 
+long double Func_from_unixtime::getLongDoubleVal(rowgroup::Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType& ct)
+{
+    return (long double) getDoubleVal(row, parm, isNull, ct);
+}
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

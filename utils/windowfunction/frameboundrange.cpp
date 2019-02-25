@@ -313,6 +313,20 @@ void FrameBoundExpressionRange<T>::validate()
                 break;
             }
 
+            case execplan::CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double tmp = this->fRow.getLongDoubleField(this->fIndex[1]);
+                this->fIsZero = (tmp == 0.0);
+
+                if (tmp < 0)
+                {
+                    invalid = true;
+                    oss << tmp;
+                }
+
+                break;
+            }
+
             case execplan::CalpontSystemCatalog::FLOAT:
             case execplan::CalpontSystemCatalog::UFLOAT:
             {

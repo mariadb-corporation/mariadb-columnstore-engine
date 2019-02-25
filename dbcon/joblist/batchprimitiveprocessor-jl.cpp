@@ -1411,12 +1411,19 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
                 }
             }
 
-            bs << (uint8_t) isNull;
-
             if (!isNull)
             {
                 tlData = makeTypelessKey(r, smallSideKeys[joinerNum],
-                                         tlKeyLens[joinerNum], &fa);
+                                         tlKeyLens[joinerNum], &fa,
+                                         largeSideRG, tJoiners[joinerNum]->getLargeKeyColumns());
+                if (tlData.len == 0)
+                {
+                    isNull = true;
+                }
+            }
+            bs << (uint8_t) isNull;
+            if (!isNull)
+            {
                 tlData.serialize(bs);
                 bs << i;
             }
@@ -1442,7 +1449,48 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
         {
             r.setPointer((*tSmallSide)[i]);
 
-            if (r.isUnsigned(smallKeyCol))
+            if ( r.getColType(smallKeyCol)== CalpontSystemCatalog::LONGDOUBLE)
+            {
+                // Small side is a long double. Since CS can't store larger than DOUBLE,
+                // we need to convert to whatever type large side is -- double or int64
+                long double smallkeyld = r.getLongDoubleField(smallKeyCol);
+                switch (largeSideRG.getColType(tJoiners[joinerNum]->getLargeKeyColumns()[0]))
+                {
+                    case CalpontSystemCatalog::DOUBLE:
+                    case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::FLOAT:
+                    case CalpontSystemCatalog::UFLOAT:
+                    {
+                        if (smallkeyld > MAX_DOUBLE || smallkeyld < MIN_DOUBLE)
+                        {
+                            smallkey = joblist::UBIGINTEMPTYROW;
+                        }
+                        else
+                        {
+                            double d = (double)smallkeyld;
+                            smallkey = *(int64_t*)&d;
+                        }
+                        break;
+                    }
+                    default:
+                    {   
+                        if (r.isUnsigned(smallKeyCol) && smallkeyld > MAX_UBIGINT)
+                        {
+                            smallkey = joblist::UBIGINTEMPTYROW;
+                        }
+                        else if (smallkeyld > MAX_BIGINT || smallkeyld < MIN_BIGINT)
+                        {
+                            smallkey = joblist::UBIGINTEMPTYROW;
+                        }
+                        else
+                        {
+                            smallkey = (int64_t)smallkeyld;
+                        }
+                        break;
+                    }
+                }
+            }
+            else if (r.isUnsigned(smallKeyCol))
                 smallkey = r.getUintField(smallKeyCol);
             else
                 smallkey = r.getIntField(smallKeyCol);

@@ -97,6 +97,12 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_nth_value<long double>(id, name));
+            break;
+        }
+
         default:
         {
             func.reset(new WF_nth_value<string>(id, name));

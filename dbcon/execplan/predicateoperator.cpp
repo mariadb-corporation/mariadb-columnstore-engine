@@ -317,6 +317,10 @@ void PredicateOperator::setOpType(Type& l, Type& r)
                 fOperationType.colWidth = 8;
                 break;
 
+            case execplan::CalpontSystemCatalog::LONGDOUBLE:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
+                fOperationType.colWidth = 16;
+                break;
             default:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
                 fOperationType.colWidth = 8;
@@ -369,6 +373,12 @@ void PredicateOperator::setOpType(Type& l, Type& r)
             fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
             fOperationType.colWidth = 255;
         }
+    }
+    else if (l.colDataType == execplan::CalpontSystemCatalog::LONGDOUBLE ||
+             r.colDataType == execplan::CalpontSystemCatalog::LONGDOUBLE)
+    {
+        fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
+        fOperationType.colWidth = 16;
     }
     else
     {

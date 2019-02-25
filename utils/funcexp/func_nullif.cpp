@@ -579,6 +579,109 @@ double Func_nullif::getDoubleVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            exp2 = (double)parm[1]->data()->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DATE:
+        {
+            exp2 = parm[1]->data()->getDateIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        default:
+        {
+            isNull = true;
+        }
+    }
+
+    if ( exp1 == exp2 )
+    {
+        isNull = true;
+        return 0;
+    }
+
+    return exp1;
+}
+
+
+long double Func_nullif::getLongDoubleVal(rowgroup::Row& row,
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    long double exp1 = parm[0]->data()->getLongDoubleVal(row, isNull);
+    long double exp2 = 0;
+
+    switch (parm[1]->data()->resultType().colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            exp2 = parm[1]->data()->getDoubleVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            exp2 = parm[1]->data()->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::DATE:
         {
             exp2 = parm[1]->data()->getDateIntVal(row, isNull);

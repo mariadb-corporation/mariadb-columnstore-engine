@@ -90,6 +90,11 @@ public:
                                 bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
+    virtual long double getLongDoubleVal(rowgroup::Row& row,
+                                FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+
     virtual std::string getStrVal(rowgroup::Row& row,
                                   FunctionParm& fp,
                                   bool& isNull,
@@ -152,6 +157,11 @@ public:
     {
         return fDoubleNullVal;
     }
+    const long double longDoubleNullVal() const
+    {
+        return fLongDoubleNullVal;
+    }
+
 
 protected:
     virtual uint32_t stringToDate(std::string);
@@ -164,6 +174,7 @@ protected:
 
     virtual std::string intToString(int64_t);
     virtual std::string doubleToString(double);
+    virtual std::string longDoubleToString(long double);
 
     virtual int64_t nowDatetime();
     virtual int64_t addTime(DateTime& dt1, dataconvert::Time& dt2);
@@ -180,6 +191,7 @@ private:
 
     float fFloatNullVal;
     double fDoubleNullVal;
+    long double fLongDoubleNullVal;
 };
 
 

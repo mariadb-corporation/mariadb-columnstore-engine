@@ -230,8 +230,15 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
                 ct.colDataType = row.getColTypes()[i];
                 ct.scale = row.getScale(i);
 
-                if (ct.scale != 0 && ct.precision != -1)
-                    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+                if (colDataTypeInRg != CalpontSystemCatalog::FLOAT &&
+                        colDataTypeInRg != CalpontSystemCatalog::UFLOAT &&
+                        colDataTypeInRg != CalpontSystemCatalog::DOUBLE &&
+                        colDataTypeInRg != CalpontSystemCatalog::UDOUBLE &&
+                        colDataTypeInRg != CalpontSystemCatalog::LONGDOUBLE)
+                {
+                    if (ct.scale != 0 && ct.precision != -1)
+                        ct.colDataType = CalpontSystemCatalog::DECIMAL;
+                }
 
                 ct.precision = row.getPrecision(i);
                 fVtable.columnType(ct, i);

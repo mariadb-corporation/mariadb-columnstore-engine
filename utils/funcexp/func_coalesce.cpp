@@ -188,6 +188,31 @@ double Func_coalesce::getDoubleVal(rowgroup::Row& row,
 }
 
 
+long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType& ct)
+{
+    long double d = 0.0;
+
+    for (uint32_t i = 0; i < parm.size(); i++)
+    {
+        d = parm[i]->data()->getLongDoubleVal(row, isNull);
+
+        if (isNull)
+        {
+            isNull = false;
+            continue;
+        }
+
+        return d;
+    }
+
+    isNull = true;
+    return d;
+}
+
+
 execplan::IDB_Decimal Func_coalesce::getDecimalVal(rowgroup::Row& row,
         FunctionParm& parm,
         bool& isNull,

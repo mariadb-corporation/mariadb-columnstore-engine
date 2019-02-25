@@ -61,6 +61,9 @@ bool boolVal(SPTP& parm, Row& row)
             case CalpontSystemCatalog::UDOUBLE:
                 ret = (parm->data()->getDoubleVal(row, isNull) != 0);
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+                ret = (parm->data()->getLongDoubleVal(row, isNull) != 0);
+
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
                 ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
@@ -185,6 +188,21 @@ double Func_if::getDoubleVal(Row& row,
     else
     {
         return parm[2]->data()->getDoubleVal(row, isNull);
+    }
+}
+
+long double Func_if::getLongDoubleVal(Row& row,
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType&)
+{
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getLongDoubleVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getLongDoubleVal(row, isNull);
     }
 }
 

@@ -219,6 +219,12 @@ uint64_t Func_ceil::getUintVal(Row& row,
         }
         break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            ret = (uint64_t) ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
+        }
+        break;
+
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::TEXT:
@@ -293,6 +299,52 @@ double Func_ceil::getDoubleVal(Row& row,
         if (!isNull)
             ret = ceil(strtod(str.c_str(), 0));
     }
+    else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        ret = (double)ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
+    }
+    else
+    {
+        if (isUnsigned(op_ct.colDataType))
+        {
+            ret = (double) getUintVal(row, parm, isNull, op_ct);
+        }
+        else
+        {
+            ret = (double) getIntVal(row, parm, isNull, op_ct);
+        }
+    }
+
+    return ret;
+}
+
+long double Func_ceil::getLongDoubleVal(Row& row,
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType& op_ct)
+{
+    long double ret = 0.0;
+
+    if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        ret = ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
+            op_ct.colDataType == CalpontSystemCatalog::UFLOAT)
+    {
+        ret = ceil(parm[0]->data()->getDoubleVal(row, isNull));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::TEXT)
+    {
+        const string& str = parm[0]->data()->getStrVal(row, isNull);
+
+        if (!isNull)
+            ret = ceil(strtod(str.c_str(), 0));
+    }
     else
     {
         if (isUnsigned(op_ct.colDataType))
@@ -325,6 +377,18 @@ string Func_ceil::getStrVal(Row& row,
             op_ct.colDataType == CalpontSystemCatalog::TEXT)
     {
         snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
+
+        // remove the decimals in the oss string.
+        char* d = tmp;
+
+        while ((*d != '.') && (*d != '\0'))
+            d++;
+
+        *d = '\0';
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        snprintf(tmp, 511, "%Lf", getLongDoubleVal(row, parm, isNull, op_ct));
 
         // remove the decimals in the oss string.
         char* d = tmp;

@@ -1523,6 +1523,26 @@ string Func_format::getStrVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double rawValue = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+            // roundup
+            if (scale < 0) scale = 0;
+
+            if (rawValue >= 0)
+                rawValue += 0.5 / pow(10.0, scale);
+            else
+                rawValue -= 0.5 / pow(10.0, scale);
+
+            // double's can be *really* long to print out.  Max mysql
+            // is e308 so allow for 308 + 36 decimal places minimum.
+            char buf[384];
+            snprintf(buf, 384, "%0.36Lf", rawValue);
+            value = buf;
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;

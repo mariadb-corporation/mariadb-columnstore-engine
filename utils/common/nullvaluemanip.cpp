@@ -122,9 +122,6 @@ uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
         case CalpontSystemCatalog::UBIGINT:
             return joblist::UBIGINTNULL;
 
-        case CalpontSystemCatalog::LONGDOUBLE:
-            return -1;  // no NULL value for long double yet, this is a nan.
-
         case CalpontSystemCatalog::VARBINARY:
         default:
             ostringstream os;
@@ -233,7 +230,7 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
             return (int64_t)joblist::UBIGINTNULL;
 
         case CalpontSystemCatalog::LONGDOUBLE:
-            return -1;  // no NULL value for long double yet, this is a nan.
+            return (int64_t)joblist::LONGDOUBLENULL;
 
         case CalpontSystemCatalog::VARBINARY:
         default:

@@ -125,6 +125,11 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row)
             *cc = new ConstantColumn(oss.str(), row.getDoubleField(i));
             break;
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+            oss << fixed << row.getLongDoubleField(i);
+            *cc = new ConstantColumn(oss.str(), row.getLongDoubleField(i));
+            break;
+
         case CalpontSystemCatalog::DATE:
             oss << dataconvert::DataConvert::dateToString(row.getUintField<4>(i));
             *cc = new ConstantColumn(oss.str());

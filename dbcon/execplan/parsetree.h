@@ -250,6 +250,14 @@ public:
             return fData->getDoubleVal(row, isNull);
     }
 
+    inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        if (fLeft && fRight)
+            return (reinterpret_cast<Operator*>(fData))->getLongDoubleVal(row, isNull, fLeft, fRight);
+        else
+            return fData->getLongDoubleVal(row, isNull);
+    }
+
     inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
         if (fLeft && fRight)

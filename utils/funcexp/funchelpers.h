@@ -751,6 +751,16 @@ string doubleToString(double d)
     return buf;
 }
 
+inline
+string longDoubleToString(long double ld)
+{
+    // long double's can be *really* long to print out.  Max mysql
+    // is e308 so allow for 308 + 36 decimal places minimum.
+    char buf[384];
+    snprintf(buf, 384, "%Lf", ld);
+    return buf;
+}
+
 //@bug6146, remove duplicate function with incorrect impl. Use the DataConvert::decimalToString()
 //string decimalToString( execplan::IDB_Decimal x, int p )
 

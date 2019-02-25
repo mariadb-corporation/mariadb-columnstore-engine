@@ -78,6 +78,14 @@ double Func_abs::getDoubleVal(Row& row,
     return fabs(parm[0]->data()->getDoubleVal(row, isNull));
 }
 
+long double Func_abs::getLongDoubleVal(Row& row,
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
+{
+    return fabsl(parm[0]->data()->getLongDoubleVal(row, isNull));
+}
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

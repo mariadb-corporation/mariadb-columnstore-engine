@@ -62,7 +62,7 @@ public:
     *
     */
     uint64_t estimateRows(const std::vector<ColumnCommandJL*>& cpColVec,
-                          const std::vector <bool>& scanFlags,
+                          const std::vector <int>& scanFlags,
                           BRM::DBRM& dbrm,
                           const execplan::CalpontSystemCatalog::OID oid);
 

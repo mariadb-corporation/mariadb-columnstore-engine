@@ -60,6 +60,7 @@ void Func::init()
     double* dp = reinterpret_cast<double*>(&dni);
     fDoubleNullVal = *dp;
 
+    fDoubleNullVal = joblist::LONGDOUBLENULL;
 }
 
 
@@ -339,6 +340,11 @@ string Func::intToString(int64_t i)
 string Func::doubleToString(double d)
 {
     return helpers::doubleToString(d);
+}
+
+string Func::longDoubleToString(long double ld)
+{
+    return helpers::longDoubleToString(ld);
 }
 
 

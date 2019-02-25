@@ -503,6 +503,16 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
             break;
         }
 
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            if (s == 0)
+                t = (T) fRow.getLongDoubleField(i);
+            else
+                t = (T) (fRow.getLongDoubleField(i) * IDB_pow[s]); // s is scale, [0, 18]
+
+            break;
+        }
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         default:

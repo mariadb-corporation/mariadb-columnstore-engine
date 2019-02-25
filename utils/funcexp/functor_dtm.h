@@ -57,6 +57,14 @@ public:
         return (double) getIntVal(row, fp, isNull, op_ct);
     }
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return (long double) getIntVal(row, fp, isNull, op_ct);
+    }
+
     /*
     	std::string getStrVal(rowgroup::Row& row,
     						FunctionParm& fp,
@@ -196,6 +204,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -234,6 +247,11 @@ public:
                       execplan::CalpontSystemCatalog::ColType& op_ct);
 
     double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
@@ -419,6 +437,11 @@ public:
                       execplan::CalpontSystemCatalog::ColType& op_ct);
 
     double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);

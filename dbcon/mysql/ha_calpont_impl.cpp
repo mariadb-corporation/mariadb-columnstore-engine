@@ -705,37 +705,58 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
                 case CalpontSystemCatalog::LONGDOUBLE:
                 {
-                    double dl = row.getLongDoubleField(s);
-
+                    long double dl = row.getLongDoubleField(s);
                     if (dl == std::numeric_limits<long double>::infinity())
-                        continue;
-
-                    Field_double* f2 = (Field_double*)*f;
-                    // bug 3483, reserve enough space for the longest double value
-                    // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
-                    // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 310;
-
-                    //double double_val = *(double*)(&value);
-                    //f2->store(double_val);
-                    if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                            || f2->decimals() < row.getScale(s))
                     {
-                        f2->dec = row.getScale(s);
+                        continue;
                     }
 
-                    f2->store(dl);
+                    switch((*f)->type())
+                    {
+                        case MYSQL_TYPE_NEWDECIMAL:
+                        {
+                            char buf[310];
+                            Field_new_decimal* f2 = (Field_new_decimal*)*f;
+                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
+                                    || f2->decimals() < row.getScale(s))
+                            {
+                                f2->dec = row.getScale(s);
+                            }
+//                            dl /= pow(10.0, (double)f2->dec);
+                            snprintf(buf, 310, "%.20Lg", dl);
+                            f2->store(buf, strlen(buf), f2->charset());
+                            if ((*f)->null_ptr)
+                                *(*f)->null_ptr &= ~(*f)->null_bit;
+                        }
+                        break;
+                        case MYSQL_TYPE_DOUBLE:
+                        {
+                            Field_double* f2 = (Field_double*)*f;
 
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
+                            // bug 3483, reserve enough space for the longest double value
+                            // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
+                            // 2.2250738585072014E-308 to 1.7976931348623157E+308.
+                            (*f)->field_length = 310;
+
+                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
+                                    || f2->decimals() < row.getScale(s))
+                            {
+                                f2->dec = row.getScale(s);
+                            }
+                            dl /= pow(10.0, (double)f2->dec);
+
+                            f2->store(static_cast<double>(dl));
+                            if ((*f)->null_ptr)
+                                *(*f)->null_ptr &= ~(*f)->null_bit;
+                        }
+                        break;
+                        default:
+                        {
+                            continue;  // Shouldn't happen. Functions should not return long double to other than double or decimal return type.
+                        }
+                    }
 
                     break;
-
-
-                    //int64_t* icvp = (int64_t*)&dl;
-                    //intColVal = *icvp;
-                    //storeNumericField(f, intColVal, colType);
-                    //break;
                 }
 
                 case CalpontSystemCatalog::DECIMAL:

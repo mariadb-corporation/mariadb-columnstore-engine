@@ -233,6 +233,11 @@ public:
         return fExpression->getDoubleVal(row, isNull);
     }
 
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fExpression->getLongDoubleVal(row, isNull);
+    }
+
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
         return fExpression->getDecimalVal(row, isNull);

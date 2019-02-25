@@ -203,6 +203,27 @@ inline bool getBoolForIn(rowgroup::Row& row,
             return false;
         }
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            for (uint32_t i = 1; i < pm.size(); i++)
+            {
+                isNull = false;
+
+                if ( val == pm[i]->data()->getLongDoubleVal(row, isNull) && !isNull )
+                    return true;
+
+                if (isNull && isNotIn)
+                    return true; // will be reversed to false by the caller
+            }
+
+            return false;
+        }
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {

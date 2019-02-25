@@ -256,6 +256,35 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
             return numericCompare(val1, rop->getDoubleVal(row, isNull)) && !isNull;
         }
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            if (fOp == OP_ISNULL)
+            {
+                lop->getLongDoubleVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return ret;
+            }
+
+            if (fOp == OP_ISNOTNULL)
+            {
+                lop->getLongDoubleVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return !ret;
+            }
+
+            if (isNull)
+                return false;
+
+            long double val1 = lop->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            return numericCompare(val1, rop->getLongDoubleVal(row, isNull)) && !isNull;
+        }
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
