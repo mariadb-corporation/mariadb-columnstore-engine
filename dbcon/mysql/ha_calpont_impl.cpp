@@ -752,8 +752,8 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
                     //float float_val = *(float*)(&value);
                     //f2->store(float_val);
-                    if (f2->decimals() < (uint32_t)row.getScale(s))
-                        // WIP MCOL-2178
+                    // WIP MCOL-2178
+                    //if (f2->decimals() < (uint32_t)row.getScale(s))
                         //f2->dec = (uint32_t)row.getScale(s);
 
                     f2->store(dl);
@@ -1320,7 +1320,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
 
     // @bug 1127. Re-construct update stmt using lex instead of using the original query.
-//	string dmlStmt="";
     string dmlStmt = string(idb_mysql_query_str(thd));
     string schemaName;
     string tableName("");
@@ -1338,28 +1337,16 @@ uint32_t doUpdateDelete(THD* thd)
     {
         ColumnAssignment* columnAssignmentPtr;
         Item_field* item;
-//		TABLE_LIST* table_ptr = thd->lex->thd->lex->first_select_lex()->get_table_list();
-        List_iterator_fast<Item> field_it(thd->lex->thd->lex->first_select_lex()->item_list);
+        List_iterator_fast<Item> field_it(thd->lex->first_select_lex()->item_list);
         List_iterator_fast<Item> value_it(thd->lex->value_list);
-//      dmlStmt += "update ";
         updateCP->queryType(CalpontSelectExecutionPlan::UPDATE);
         ci->stats.fQueryType = updateCP->queryType();
         uint32_t cnt = 0;
         tr1::unordered_set<string> timeStampColumnNames;
 
-//        for (; table_ptr; table_ptr= table_ptr->next_local)
-//        {
-//            dmlStmt += string(table_ptr->table_name);
-//            if (table_ptr->next_local)
-//                dmlStmt += ", ";
-//        }
-
-//		dmlStmt += " set ";
-
         while ((item = (Item_field*) field_it++))
         {
             cnt++;
-//            dmlStmt += string(item->name) + "=";
 
             string tmpTableName = bestTableName(item);
 
@@ -1411,21 +1398,41 @@ uint32_t doUpdateDelete(THD* thd)
             columnAssignmentPtr->fFuncScale = 0;
             Item* value = value_it++;
 
-            if (value->type() ==  Item::STRING_ITEM)
+            if (value->type() ==  Item::CONST_ITEM)
             {
-                //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
+                if (value->cmp_type() == STRING_RESULT)
+                {
+                    //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
+                    String val, *str;
+                    str = value->val_str(&val);
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
+                    columnAssignmentPtr->fFromCol = false;
+                }
+                else if (value->cmp_type() ==  INT_RESULT)
+                {
+                    std::ostringstream oss;
+
+                    if (value->unsigned_flag)
+                    {
+                        oss << value->val_uint();
+                    }
+                    else
+                    {
+                        oss << value->val_int();
+                    }
+
+                    columnAssignmentPtr->fScalarExpression = oss.str();
+                    columnAssignmentPtr->fFromCol = false;
+                }
+            }
+            // WIP MCOL-2178 
+            /*else if ( value->type() ==  Item::VARBIN_ITEM )
+            {
                 String val, *str;
                 str = value->val_str(&val);
                 columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                 columnAssignmentPtr->fFromCol = false;
-            }
-            else if ( value->type() ==  Item::VARBIN_ITEM )
-            {
-                String val, *str;
-                str = value->val_str(&val);
-                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
-                columnAssignmentPtr->fFromCol = false;
-            }
+            }*/
             else if ( value->type() ==  Item::FUNC_ITEM )
             {
                 //Bug 2092 handle negative values
@@ -1490,23 +1497,6 @@ uint32_t doUpdateDelete(THD* thd)
                         }
                     }
                 }
-            }
-            else if ( value->type() ==  Item::INT_ITEM )
-            {
-                std::ostringstream oss;
-
-                if (value->unsigned_flag)
-                {
-                    oss << value->val_uint();
-                }
-                else
-                {
-                    oss << value->val_int();
-                }
-
-//                dmlStmt += oss.str();
-                columnAssignmentPtr->fScalarExpression = oss.str();
-                columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() ==  Item::FIELD_ITEM)
             {
@@ -1590,8 +1580,6 @@ uint32_t doUpdateDelete(THD* thd)
             }
 
             colAssignmentListPtr->push_back ( columnAssignmentPtr );
-//            if (cnt < thd->lex->thd->lex->first_select_lex()->item_list.elements)
-//                dmlStmt += ", ";
         }
 
         // Support for on update current_timestamp() for timestamp fields
@@ -1620,7 +1608,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-//		dmlStmt = string(idb_mysql_query_str(thd));
         updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
         ci->stats.fQueryType = updateCP->queryType();
     }
@@ -1639,7 +1626,7 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-        first_table = (TABLE_LIST*) thd->lex->thd->lex->first_select_lex()->table_list.first;
+        first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         aTableName.schema = first_table->table->s->db.str;
         aTableName.table = first_table->table->s->table_name.str;
     }
@@ -1690,9 +1677,9 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else if ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) //@Bug 6121 error out on multi tables delete.
     {
-        if ( (thd->lex->thd->lex->first_select_lex()->join) != 0)
+        if ( (thd->lex->first_select_lex()->join) != 0)
         {
-            multi_delete* deleteTable = (multi_delete*)((thd->lex->thd->lex->first_select_lex()->join)->result);
+            multi_delete* deleteTable = (multi_delete*)((thd->lex->first_select_lex()->join)->result);
             first_table = (TABLE_LIST*) deleteTable->get_tables();
 
             if (deleteTable->get_num_of_tables() == 1)
@@ -1715,7 +1702,7 @@ uint32_t doUpdateDelete(THD* thd)
         }
         else
         {
-            first_table = (TABLE_LIST*) thd->lex->thd->lex->first_select_lex()->table_list.first;
+            first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
             schemaName = first_table->table->s->db.str;
             tableName = first_table->table->s->table_name.str;
             aliasName = first_table->alias.str;
@@ -1726,7 +1713,7 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-        first_table = (TABLE_LIST*) thd->lex->thd->lex->first_select_lex()->table_list.first;
+        first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         schemaName = first_table->table->s->db.str;
         tableName = first_table->table->s->table_name.str;
         aliasName = first_table->alias.str;
@@ -1759,8 +1746,8 @@ uint32_t doUpdateDelete(THD* thd)
 
     if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
     {
-        items = (thd->lex->thd->lex->first_select_lex()->item_list);
-        thd->lex->thd->lex->first_select_lex()->item_list = thd->lex->value_list;
+        items = (thd->lex->first_select_lex()->item_list);
+        thd->lex->first_select_lex()->item_list = thd->lex->value_list;
     }
 
     select_lex = *lex->first_select_lex();
@@ -1824,7 +1811,7 @@ uint32_t doUpdateDelete(THD* thd)
                 // @bug 4457. MySQL inconsistence! for some queries, some structures are only available
                 // in the derived_tables_processing phase. So by pass the phase for DML only when the
                 // execution plan can not be successfully generated. recover lex before returning;
-                thd->lex->thd->lex->first_select_lex()->item_list = items;
+                thd->lex->first_select_lex()->item_list = items;
                 MIGR::infinidb_vtable.vtable_state = origState;
                 return 0;
             }
@@ -1975,7 +1962,7 @@ uint32_t doUpdateDelete(THD* thd)
 
             //cout<< "Plan is " << endl << *updateCP << endl;
             if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
-                thd->lex->thd->lex->first_select_lex()->item_list = items;
+                thd->lex->first_select_lex()->item_list = items;
         }
 
         //cout<< "Plan is " << endl << *updateCP << endl;
@@ -3253,7 +3240,7 @@ int ha_calpont_impl_delete_table(const char* name)
     }
     else
     {
-        TABLE_LIST* first_table = (TABLE_LIST*) thd->lex->thd->lex->first_select_lex()->table_list.first;
+        TABLE_LIST* first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         dbName = const_cast<char*>(first_table->db.str);
     }
 
@@ -4280,7 +4267,6 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
 int ha_calpont_impl_rename_table(const char* from, const char* to)
 {
     IDEBUG( cout << "ha_calpont_impl_rename_table: " << from << " => " << to << endl );
-    THD* thd = current_thd;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());

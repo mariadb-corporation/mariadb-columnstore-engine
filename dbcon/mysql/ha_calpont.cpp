@@ -23,6 +23,8 @@
 #include "ha_calpont_impl.h"
 #include "ha_mcs_pushdown.h"
 
+MIGR::INFINIDB_VTABLE MIGR::infinidb_vtable;
+
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
                                        MEM_ROOT* mem_root);
@@ -115,6 +117,7 @@ static int columnstore_init_func(void* p)
 
     struct tm tm;
     time_t t;
+
 
     time(&t);
     localtime_r(&t, &tm);

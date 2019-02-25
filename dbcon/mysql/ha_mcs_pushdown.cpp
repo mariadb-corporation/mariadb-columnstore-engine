@@ -129,11 +129,11 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     SELECT_LEX *select_lex = query->from->select_lex;
 
     // Create a handler if query is valid. See comments for details.
-    if ( MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE
+    if //( MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE
         // WIP MCOL-2178
         //&& ( MIGR::infinidb_vtable_mode == 0
         //    || MIGR::infinidb_vtable_mode == 2 )
-        && ( query->group_by || select_lex->with_sum_func ) )
+        ( query->group_by || select_lex->with_sum_func ) //)
     {
         bool unsupported_feature = false;
         // revisit SELECT_LEX for all units
@@ -214,12 +214,12 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 
     SELECT_LEX_UNIT *unit= derived->derived;
 
-    if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
+   /* //if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
 // WIP MCOL-2178
 //            && MIGR::infinidb_vtable_mode != 0 )
     {
         return 0;
-    }
+    }*/
 
     for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
     {
@@ -472,13 +472,15 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     ha_columnstore_select_handler* handler = NULL;
     handlerton *ht= 0;
 
+    /*
     // Return if vtable enabled.
-    if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
+    //if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
 // WIP MCOL-2178
 //            && MIGR::infinidb_vtable_mode != 0 )
     {
         return 0;
-    }
+    }*/
+
     for (SELECT_LEX* sl = select_lex;sl; sl= sl->next_select())
     {
         if (!(sl->join))

@@ -154,7 +154,8 @@ class MIGR
             INFINIDB_VTABLE() : cal_conn_info(NULL) {init();}
             void init()
             {
-                vtable_state = INFINIDB_INIT_CONNECT;
+                //vtable_state = INFINIDB_INIT_CONNECT;
+                vtable_state = INFINIDB_DISABLE_VTABLE;
                 autoswitch = false;
                 has_order_by = false;
                 duplicate_field_name = false;
