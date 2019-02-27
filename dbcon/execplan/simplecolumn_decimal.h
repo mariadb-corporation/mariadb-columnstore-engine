@@ -76,6 +76,7 @@ public:
     virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
     virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
     virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
+    virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
     virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
 
     /** The serialize interface */
@@ -173,6 +174,15 @@ inline float SimpleColumn_Decimal<len>::getFloatVal(rowgroup::Row& row, bool& is
 
 template<int len>
 inline double SimpleColumn_Decimal<len>::getDoubleVal(rowgroup::Row& row, bool& isNull)
+{
+    if (row.equals<len>(fNullVal, fInputIndex))
+        isNull = true;
+
+    return (row.getIntField<len>(fInputIndex) / pow((double)10, fResultType.scale));
+}
+
+template<int len>
+inline long double SimpleColumn_Decimal<len>::getLongDoubleVal(rowgroup::Row& row, bool& isNull)
 {
     if (row.equals<len>(fNullVal, fInputIndex))
         isNull = true;

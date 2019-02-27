@@ -75,6 +75,7 @@ public:
     virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
     virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
     virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
+    virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
     virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
 
     /** The serialize interface */
@@ -196,6 +197,15 @@ inline double SimpleColumn_INT<len>::getDoubleVal(rowgroup::Row& row, bool& isNu
         isNull = true;
 
     return (double)row.getIntField<len>(fInputIndex);
+}
+
+template<int len>
+inline long double SimpleColumn_INT<len>::getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+{
+    if (row.equals<len>(fNullVal, fInputIndex))
+        isNull = true;
+
+    return (long double)row.getIntField<len>(fInputIndex);
 }
 
 template<int len>

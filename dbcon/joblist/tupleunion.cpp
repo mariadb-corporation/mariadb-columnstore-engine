@@ -513,16 +513,12 @@ void TupleUnion::normalize(const Row& in, Row* out)
                     case CalpontSystemCatalog::LONGDOUBLE:
                     {
                         int scale = in.getScale(i);
-
+                        long double d = in.getIntField(i);
                         if (scale != 0)
                         {
-                            long double d = in.getIntField(i);
                             d /= (uint64_t) pow(10.0, scale);
-                            out->setLongDoubleField(d, i);
                         }
-                        else
-                            out->setLongDoubleField(in.getIntField(i), i);
-
+                        out->setLongDoubleField(d, i);
                         break;
                     }
 

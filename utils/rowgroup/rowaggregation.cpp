@@ -1297,8 +1297,8 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-            long double valIn = rowIn.getDoubleField(colIn);
-            long double valOut = fRow.getDoubleField(colOut);
+            long double valIn = rowIn.getLongDoubleField(colIn);
+            long double valOut = fRow.getLongDoubleField(colOut);
             updateLongDoubleMinMax(valIn, valOut, colOut, funcType);
             break;
         }
@@ -3186,6 +3186,10 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
     {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_AVG:
+        case ROWAGG_SUM:
+        case ROWAGG_DISTINCT_AVG:
+        case ROWAGG_DISTINCT_SUM:
         case ROWAGG_STATS:
         {
             switch (colDataType)
@@ -3255,15 +3259,6 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
                 break;
 
             }
-        }
-        break;
-
-        case ROWAGG_AVG:
-        case ROWAGG_SUM:
-        case ROWAGG_DISTINCT_AVG:
-        case ROWAGG_DISTINCT_SUM:
-        {
-            fRow.setLongDoubleField(getLongDoubleNullValue(), colOut);
         }
         break;
 

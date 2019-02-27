@@ -743,7 +743,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                             {
                                 f2->dec = row.getScale(s);
                             }
-                            dl /= pow(10.0, (double)f2->dec);
 
                             f2->store(static_cast<double>(dl));
                             if ((*f)->null_ptr)
