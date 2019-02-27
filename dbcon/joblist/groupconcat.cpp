@@ -344,8 +344,6 @@ void GroupConcatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
     joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + inRow.getOffset(i)));
 
     fConcator->merge(gccAg->concator().get());
-//	don't reset
-//	gccAg->orderBy().reset();
 }
 
 
@@ -393,11 +391,10 @@ GroupConcator::~GroupConcator()
 
 void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
+    // MCOL-901 This value comes from the Server and it is
+    // too high(3MB) to allocate it for every instance.
     fGroupConcatLen = gcc->fSize;
     fCurrentLength -= strlen(gcc->fSeparator.c_str());
-
-    fOutputString.reset(new uint8_t[fGroupConcatLen + 2]);
-    memset(fOutputString.get(), 0, fGroupConcatLen + 2);
 
     fConstCols = gcc->fConstCols;
     fConstantLen = strlen(gcc->fSeparator.c_str());
@@ -477,7 +474,6 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
             case CalpontSystemCatalog::TEXT:
             {
                 oss << row.getStringField(*i).c_str();
-                //oss << row.getStringField(*i);
                 break;
             }
 
@@ -626,11 +622,6 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             {
                 int64_t colWidth = row.getStringLength(*i);
                 fieldLen += colWidth;   // getStringLength() does the same thing as below
-                //assert(!row.usesStringTable());
-                //int64_t colWidth = row.getColumnWidth(*i);
-                //uint8_t* pStr = row.getData() + row.getOffset(*i);
-                //while ((*pStr++ > 0) && (fieldLen < colWidth))
-                //	fieldLen++;
                 break;
             }
 
@@ -759,7 +750,6 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 uint64_t GroupConcatOrderBy::getKeyLength() const
 {
     // only distinct the concatenated columns
-    //return (fRow0.getOffset(fConcatColumns.size()) - 2);
     return fConcatColumns.size() - 1; // cols 0 to fConcatColumns will be conpared
 }
 
@@ -778,8 +768,6 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
     if (fCurrentLength < fGroupConcatLen)
     {
         copyRow(row, &fRow0);
-        //cout << "length < GB limit: " << fRow0.toString() << endl;
-        //memcpy(fRow0.getData(), row.getData(), row.getSize());
         // the RID is no meaning here, use it to store the estimated length.
         int16_t estLen = lengthEstimate(fRow0);
         fRow0.setRid(estLen);
@@ -869,7 +857,6 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
             if (fDistinct)
                 fDistinctMap->insert(row.fData);
 
-            //fDistinctMap->insert(make_pair((row.fData+2), row.fData));
         }
 
         else if (fOrderByCond.size() > 0 && fRule.less(row.fData, fOrderByQueue.top().fData))
@@ -883,8 +870,6 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
             {
                 fDistinctMap->erase(swapRow.fData);
                 fDistinctMap->insert(row.fData);
-                //fDistinctMap->erase(fDistinctMap->find(swapRow.fData + 2));
-                //fDistinctMap->insert(make_pair((row.fData+2), row.fData));
             }
 
             row1.setData(row.fData);
@@ -900,7 +885,6 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
 
 void GroupConcatOrderBy::getResult(uint8_t* buff, const string& sep)
 {
-#if 1
     ostringstream oss;
     bool addSep = false;
 
@@ -926,28 +910,12 @@ void GroupConcatOrderBy::getResult(uint8_t* buff, const string& sep)
         rowStack.pop();
     }
 
-    strncpy((char*) buff, oss.str().c_str(), fGroupConcatLen);
-#else
-    ostringstream oss;
-    bool addSep = false;
-    priority_queue<OrderByRow>::reverse_iterator rit;
+    size_t resultSize = oss.str().size();
+    fOutputString.reset(new uint8_t[resultSize + 2]);
+    memset(fOutputString.get(), 0, resultSize + 2);
 
-    for (rit = fOrderByQueue.rbegin(); rit != fOrderByQueue.rend(); ++rit)
-    {
-        if (addSep)
-            oss << sep;
-        else
-            addSep = true;
-
-        const OrderByRow& topRow = *rit;
-        fRow0.setData(topRow.fData);
-        outputRow(oss, fRow0);
-    }
-
-    fOrderByQueue.clear();
-
-    strncpy((char*) buff, oss.str().c_str(), fGroupConcatLen);
-#endif
+    strncpy((char*)fOutputString.get(),
+        oss.str().c_str(), resultSize);
 }
 
 uint8_t* GroupConcator::getResult(const string& sep)
@@ -1017,7 +985,6 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
         throw IDBExcept(fErrorCode);
     }
 
-    //fData.reset(new uint8_t[fRowGroup.getDataSize(fRowsPerRG)]);
     fData.reinit(fRowGroup, fRowsPerRG);
     fRowGroup.setData(&fData);
     fRowGroup.resetRowGroup(0);
@@ -1032,7 +999,6 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
     if (fCurrentLength < fGroupConcatLen && concatColIsNull(row) == false)
     {
         copyRow(row, &fRow);
-        //memcpy(fRow.getData(), row.getData(), row.getSize());
 
         // the RID is no meaning here, use it to store the estimated length.
         int16_t estLen = lengthEstimate(fRow);
@@ -1056,7 +1022,6 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
 
             fDataQueue.push(fData);
             fData.reinit(fRowGroup, fRowsPerRG);
-            //fData.reset(new uint8_t[fRowGroup.getDataSize(fRowsPerRG)]);
             fRowGroup.setData(&fData);
             fRowGroup.resetRowGroup(0);
             fRowGroup.getRow(0, &fRow);
@@ -1107,7 +1072,12 @@ void GroupConcatNoOrder::getResult(uint8_t* buff, const string& sep)
         fDataQueue.pop();
     }
 
-    strncpy((char*) buff, oss.str().c_str(), fGroupConcatLen);
+    size_t resultSize = oss.str().size();
+    fOutputString.reset(new uint8_t[resultSize + 2]);
+    memset(fOutputString.get(), 0, resultSize + 2);
+
+    strncpy((char*)fOutputString.get(),
+        oss.str().c_str(), resultSize);
 }
 
 
