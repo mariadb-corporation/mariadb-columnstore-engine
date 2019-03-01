@@ -278,11 +278,42 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return false;
 
             long double val1 = lop->getLongDoubleVal(row, isNull);
-
             if (isNull)
                 return false;
 
-            return numericCompare(val1, rop->getLongDoubleVal(row, isNull)) && !isNull;
+            long double val2 = rop->getLongDoubleVal(row, isNull);
+            if (isNull)
+                return false;
+
+            // In many case, rounding error will prevent an eq compare to work
+            // In these cases, use the largest scale of the two items.
+            if (fOp == execplan::OP_EQ)
+            {
+                // In case a val is a representation of a very large integer,
+                // we won't want to just multiply by scale, as it may move
+                // significant digits out of scope. So we break them apart
+                // and compare each separately 
+                int64_t scale = max(lop->resultType().scale, rop->resultType().scale);
+                if (scale)
+                {
+                    long double intpart1;
+                    long double fract1 = modfl(val1, &intpart1);
+                    long double intpart2;
+                    long double fract2 = modfl(val2, &intpart2);
+                    if (numericCompare(intpart1, intpart2))
+                    {
+                        double factor = pow(10.0, (double)scale);
+                        fract1 = roundl(fract1 * factor);
+                        fract2 = roundl(fract2 * factor);
+                        return numericCompare(fract1, fract2);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:

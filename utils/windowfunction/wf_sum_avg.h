@@ -47,8 +47,8 @@ public:
     static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
-    T           fAvg;
-    T           fSum;
+    long double fAvg;
+    long double fSum;
     uint64_t    fCount;
     bool        fDistinct;
     std::set<T> fSet;

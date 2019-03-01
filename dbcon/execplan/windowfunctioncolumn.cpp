@@ -378,6 +378,14 @@ void WindowFunctionColumn::adjustResultType()
             boost::iequals(fFunctionName, "NTH_VALUE")) &&
             !fFunctionParms.empty())
         fResultType = fFunctionParms[0]->resultType();
+
+    if (boost::iequals(fFunctionName, "SUM") ||
+        boost::iequals(fFunctionName, "AVG"))
+    {
+        fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+        fResultType.colWidth = sizeof(long double);
+        fResultType.precision = -1;
+    }
 }
 
 void WindowFunctionColumn::evaluate(Row& row, bool& isNull)

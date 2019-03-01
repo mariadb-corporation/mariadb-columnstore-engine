@@ -897,7 +897,13 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
         return NULL;
     }
-
+#if 0
+    if (item_sum->sum_func() != Item_sum::UDF_SUM_FUNC &&
+        item_sum->sum_func() != Item_sum::SUM_FUNC && 
+        item_sum->sum_func() != Item_sum::SUM_DISTINCT_FUNC &&
+        item_sum->sum_func() != Item_sum::AVG_FUNC &&
+        item_sum->sum_func() != Item_sum::AVG_DISTINCT_FUNC)
+#endif
     if (item_sum->sum_func() != Item_sum::UDF_SUM_FUNC)
     {
         ac->resultType(colType_MysqlToIDB(item_sum));

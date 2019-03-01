@@ -49,9 +49,9 @@ using namespace joblist;
 #include "wf_sum_avg.h"
 
 
+#if 0
 namespace
 {
-
 
 template<typename T>
 void checkSumLimit(T sum, T val)
@@ -102,13 +102,11 @@ void checkSumLimit<uint64_t>(uint64_t sum, uint64_t val)
 }
 
 
-template<typename T>
-T calculateAvg(T sum, uint64_t count, int s)
+template<>
+long double calculateAvg(long double sum, uint64_t count, int s)
 {
-    T avg = ((long double) sum) / count;
-    return avg;
+   return sum / count;
 }
-
 
 long double avgWithLimit(long double sum, uint64_t count, int scale, long double u, long double l)
 {
@@ -149,8 +147,8 @@ uint64_t calculateAvg<uint64_t>(uint64_t sum, uint64_t count, int scale)
     return t;
 }
 
-
 }
+#endif
 
 namespace windowfunction
 {
@@ -159,7 +157,6 @@ template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const string& name, int ct)
 {
     boost::shared_ptr<WindowFunctionType> func;
-#if 0
     switch (ct)
     {
         case CalpontSystemCatalog::TINYINT:
@@ -198,30 +195,6 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const 
             break;
         }
 
-        case CalpontSystemCatalog::LONGDOUBLE:
-        {
-            func.reset(new WF_sum_avg<long double>(id, name));
-            break;
-        }
-#endif
-    switch (ct)
-    {
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UTINYINT:
-        case CalpontSystemCatalog::USMALLINT:
-        case CalpontSystemCatalog::UMEDINT:
-        case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::UDOUBLE:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::UFLOAT:
         case CalpontSystemCatalog::LONGDOUBLE:
         {
             func.reset(new WF_sum_avg<long double>(id, name));
@@ -277,7 +250,7 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
             e = c;
 
         uint64_t colIn = fFieldIndex[1];
-        int scale = fRow.getScale(colOut) - fRow.getScale(colIn);
+        double scale = fRow.getScale(colIn);
 
         for (int64_t i = b; i <= e; i++)
         {
@@ -291,11 +264,16 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
 
             T valIn;
             getValue(colIn, valIn);
-            checkSumLimit(fSum, valIn);
+//            checkSumLimit(fSum, valIn);
 
             if ((!fDistinct) || (fSet.find(valIn) == fSet.end()))
             {
-                fSum += valIn;
+                long double val = valIn;
+                if (scale)
+                {
+                    val /= pow(10.0, scale);
+                }
+                fSum += val;
                 fCount++;
 
                 if (fDistinct)
@@ -304,10 +282,12 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
         }
 
         if ((fCount > 0) && (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT))
-            fAvg = (T) calculateAvg(fSum, fCount, scale);
+        {
+            fAvg = fSum / fCount;
+        }
     }
 
-    T* v = NULL;
+    long double* v = NULL;
 
     if (fCount > 0)
     {
