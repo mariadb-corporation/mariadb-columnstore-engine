@@ -28,7 +28,7 @@ set(storagemanager_SRCS
     src/SMLogging.cpp
 )
 
-option(TRACE "Enable some tracing output" ON)
+option(TRACE "Enable some tracing output" OFF)
 if (TRACE)
     add_definitions(-DSM_TRACE)
 endif()
