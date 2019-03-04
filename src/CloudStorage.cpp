@@ -3,8 +3,8 @@
 #include "Config.h"
 #include "S3Storage.h"
 #include "LocalStorage.h"
+#include "SMLogging.h"
 #include <boost/thread/mutex.hpp>
-#include <syslog.h>
 #include <string>
 #include <ctype.h>
 
@@ -29,6 +29,7 @@ namespace storagemanager
 {
 CloudStorage * CloudStorage::get()
 {
+    SMLogging* logger = SMLogging::get();
     if (inst)
         return inst;
         
@@ -42,7 +43,7 @@ CloudStorage * CloudStorage::get()
     else if (type == "local")
         inst = new LocalStorage();
     else {
-        syslog(LOG_CRIT, "CloudStorage: got unknown service provider: %s", type.c_str());
+        logger->log(LOG_CRIT,"CloudStorage: got unknown service provider: %s", type.c_str());
         return NULL;
     }
  

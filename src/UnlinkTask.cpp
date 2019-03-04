@@ -2,6 +2,7 @@
 #include "UnlinkTask.h"
 #include <errno.h>
 #include "messageFormat.h"
+#include "SMLogging.h"
 
 using namespace std;
 
@@ -26,6 +27,7 @@ UnlinkTask::~UnlinkTask()
 
 bool UnlinkTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t buf[1024] = {0};
     
@@ -39,7 +41,7 @@ bool UnlinkTask::run()
     unlink_cmd *cmd = (unlink_cmd *) buf;
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "unlink %s.",cmd->filename);
+    logger->log(LOG_DEBUG,"unlink %s.",cmd->filename);
     #endif
     
     int err = ioc->unlink(cmd->filename);

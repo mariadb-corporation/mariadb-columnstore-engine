@@ -25,9 +25,10 @@ set(storagemanager_SRCS
     src/S3Storage.cpp
     src/LocalStorage.cpp
     src/Cache.cpp
+    src/SMLogging.cpp
 )
 
-option(TRACE "Enable some tracing output" OFF)
+option(TRACE "Enable some tracing output" ON)
 if (TRACE)
     add_definitions(-DSM_TRACE)
 endif()

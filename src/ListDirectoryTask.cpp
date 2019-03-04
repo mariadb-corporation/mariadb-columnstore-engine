@@ -1,5 +1,6 @@
 
 #include "ListDirectoryTask.h"
+#include "SMLogging.h"
 #include "messageFormat.h"
 #include <errno.h>
 #include <string.h>
@@ -57,6 +58,7 @@ bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const s
     
 bool ListDirectoryTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t buf[1024] = {0};
     int err;
@@ -71,7 +73,7 @@ bool ListDirectoryTask::run()
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "list_directory %s.",cmd->path);
+    logger->log(LOG_DEBUG,"list_directory %s.",cmd->path);
     #endif
     
     vector<string> listing;

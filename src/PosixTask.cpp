@@ -1,10 +1,10 @@
 
 #include "PosixTask.h"
 #include "messageFormat.h"
+#include "SMLogging.h"
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <syslog.h>
 #include <string.h>
 
 #define min(x, y) (x < y ? x : y)
@@ -34,6 +34,7 @@ PosixTask::~PosixTask()
 
 void PosixTask::handleError(const char *name, int errCode)
 {
+    SMLogging* logger = SMLogging::get();
     char buf[sizeof(sm_response) + 4];
     
     // send an error response if possible
@@ -43,7 +44,7 @@ void PosixTask::handleError(const char *name, int errCode)
     write(*resp, 4);
     
     // TODO: construct and log a message
-    syslog(LOG_ERR, "%s caught an error: %s.",name,strerror_r(errCode, buf, 80));
+    logger->log(LOG_ERR,"%s caught an error: %s.",name,strerror_r(errCode, buf, 80));
 }
 
 uint PosixTask::getRemainingLength()
@@ -178,6 +179,8 @@ bool PosixTask::write(const vector<uint8_t> &buf)
 
 void PosixTask::consumeMsg()
 {
+    SMLogging* logger = SMLogging::get();
+
     uint8_t buf[1024];
     int err;
     
@@ -187,7 +190,7 @@ void PosixTask::consumeMsg()
     
     while (remainingLengthInStream > 0)
     {
-        syslog(LOG_ERR, "ERROR: eating data.");
+        logger->log(LOG_ERR,"ERROR: eating data.");
         err = ::recv(sock, buf, min(remainingLengthInStream, 1024), 0);
         if (err <= 0) {
             remainingLengthInStream = 0;

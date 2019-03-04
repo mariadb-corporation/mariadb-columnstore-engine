@@ -8,10 +8,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
-#include <syslog.h>
 
 using namespace std;
 
+#include "SMLogging.h"
 #include "SessionManager.h"
 
 using namespace storagemanager;
@@ -25,18 +25,14 @@ int main(int argc, char** argv)
     
     int ret = 0;
 
-    //TODO: make this configurable
-    setlogmask (LOG_UPTO (LOG_DEBUG));
+    SMLogging* logger = SMLogging::get();
 
-    openlog ("StorageManager", LOG_PID | LOG_NDELAY, LOG_LOCAL2);
-
-    syslog(LOG_NOTICE, "StorageManager started.");
+    logger->log(LOG_NOTICE,"StorageManager started.");
 
     SessionManager* sm = SessionManager::get();
 
     ret = sm->start();
 
-    closelog ();
 
     return ret;
 }
