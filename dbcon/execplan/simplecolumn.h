@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -312,14 +313,24 @@ public:
 
         // @bug5736, double type with precision -1 indicates that this type is for decimal math,
         //      the original decimal scale is stored in scale field, which is no use for double.
-        if (fResultType.colDataType == CalpontSystemCatalog::DOUBLE && fResultType.precision == -1)
+        if (fResultType.precision == -1)
         {
             IDB_Decimal rv;
-            rv.scale = fResultType.scale;
-            rv.precision = 15;
-            rv.value = (int64_t)(TreeNode::getDoubleVal() * IDB_pow[rv.scale]);
-
-            return rv;
+            if (fResultType.colDataType == CalpontSystemCatalog::DOUBLE)
+            {
+                rv.scale = fResultType.scale;
+                rv.precision = 15;
+                rv.value = (int64_t)(TreeNode::getDoubleVal() * IDB_pow[rv.scale]);
+                return rv;
+            }
+            else if (fResultType.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+            {
+                IDB_Decimal rv;
+                rv.scale = fResultType.scale;
+                rv.precision = 19;
+                rv.value = (int64_t)(TreeNode::getLongDoubleVal() * IDB_pow[rv.scale]);
+                return rv;
+            }
         }
 
         return TreeNode::getDecimalVal();
