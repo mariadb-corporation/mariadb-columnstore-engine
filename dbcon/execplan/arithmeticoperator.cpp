@@ -215,7 +215,7 @@ void ArithmeticOperator::adjustResultType(const CalpontSystemCatalog::ColType& m
         n.colDataType = CalpontSystemCatalog::LONGDOUBLE;
         n.scale = m.scale; // @bug5736, save the original decimal scale
         n.precision = -1;  // @bug5736, indicate this double is for decimal math
-        n.colWidth = 16;
+        n.colWidth = sizeof(long double);
         fResultType = n;
     }
 }

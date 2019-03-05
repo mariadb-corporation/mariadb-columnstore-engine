@@ -320,7 +320,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
 
             case execplan::CalpontSystemCatalog::LONGDOUBLE:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
-                fOperationType.colWidth = 16;
+                fOperationType.colWidth = sizeof(long double);
                 break;
             default:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
@@ -379,7 +379,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
              r.colDataType == execplan::CalpontSystemCatalog::LONGDOUBLE)
     {
         fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
-        fOperationType.colWidth = 16;
+        fOperationType.colWidth = sizeof(long double);
     }
     else
     {

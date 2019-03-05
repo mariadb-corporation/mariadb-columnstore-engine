@@ -4499,7 +4499,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
                 ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = 16;
+                ct.colWidth = sizeof(long double);
                 ct.scale += 4;
                 ct.precision = -1;
                 ac->resultType(ct);
@@ -4518,7 +4518,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
                 ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = 16;
+                ct.colWidth = sizeof(long double);
                 ct.precision = -1;
                 ac->resultType(ct);
             }
