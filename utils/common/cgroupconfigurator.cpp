@@ -20,6 +20,8 @@
 #include "logger.h"
 #include <fstream>
 #include <boost/regex.hpp>
+#include <iostream>
+
 #ifdef _MSC_VER
 #include "unistd.h"
 #include "sysinfo.h"
@@ -36,7 +38,7 @@ using namespace std;
         printedWarning = true; \
         ostringstream os; \
         os << "CGroup warning!  The group " << cGroupName << " does not exist."; \
-        cerr << os.str() << endl; \
+        std::cerr << os.str() << endl; \
         log(logging::LOG_TYPE_WARNING, os.str()); \
     } \
     return err; \
@@ -47,7 +49,7 @@ using namespace std;
         printedWarning = true; \
         ostringstream os; \
         os << "CGroup warning!  Could not read the file " << filename << "."; \
-        cerr << os.str() << endl; \
+        std::cerr << os.str() << endl; \
         log(logging::LOG_TYPE_WARNING, os.str()); \
     } \
     return err; \

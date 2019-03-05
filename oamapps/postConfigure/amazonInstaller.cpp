@@ -43,6 +43,8 @@
 #include <netdb.h>
 #include <sys/sysinfo.h>
 
+#include <boost/tokenizer.hpp>
+
 #include <readline/readline.h>
 #include <readline/history.h>
 

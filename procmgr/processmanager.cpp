@@ -24,6 +24,8 @@
 //#define NDEBUG
 #include <cassert>
 
+#include <boost/tokenizer.hpp>
+
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"

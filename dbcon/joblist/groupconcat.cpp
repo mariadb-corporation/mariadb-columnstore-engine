@@ -248,7 +248,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 			}
 			else
 			{
-				idx = distance(keys.begin(), i3);
+				idx = std::distance(keys.begin(), i3);
 			}
 
 			(*k)->fOrderCond.push_back(make_pair(idx, i2->second));

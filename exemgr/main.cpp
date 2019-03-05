@@ -203,7 +203,7 @@ const string prettyPrintMiniInfo(const string& in)
 	{
 		vector<string>::iterator iter2 = iter1->begin();
 		vector<string>::iterator end2 = iter1->end();
-		assert(distance(iter2, end2) == header_parts);
+		assert(std::distance(iter2, end2) == header_parts);
 		int i = 0;
 		while (iter2 != end2)
 		{

@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <cmath>
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -405,7 +406,7 @@ void TupleUnion::normalize(const Row &in, Row *out)
 						ostringstream os;
 						if (in.getScale(i)) {
 							double d = in.getIntField(i);
-							d /= pow10(in.getScale(i));
+							d /= std::pow(in.getScale(i), 10);
 							os.precision(15);
 							os << d;
 						}
@@ -486,7 +487,7 @@ dec1:					uint64_t val = in.getIntField(i);
                         ostringstream os;
                         if (in.getScale(i)) {
                             double d = in.getUintField(i);
-                            d /= pow10(in.getScale(i));
+                            d /= std::pow(in.getScale(i), 10);
                             os.precision(15);
                             os << d;
                         }

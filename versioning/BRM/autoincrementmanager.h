@@ -52,7 +52,7 @@ public:
 	EXPORT void deleteSequence(uint32_t OID);
 
 private:
-	static const uint32_t lockTime = 30;   // 30 seconds
+	static const uint32_t lockTime;   // 30 seconds
 	struct sequence {
 		sequence() : value(0), overflow(0) { }
 		sequence(const sequence &s) : value(s.value), overflow(s.overflow) { }
