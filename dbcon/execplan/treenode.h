@@ -1010,7 +1010,7 @@ inline long double TreeNode::getLongDoubleVal()
         case CalpontSystemCatalog::SMALLINT:
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
-            return (double)fResult.intVal;
+            return (long double)fResult.intVal;
 
         case CalpontSystemCatalog::UBIGINT:
         case CalpontSystemCatalog::UTINYINT:
