@@ -1,5 +1,4 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -456,7 +455,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
 // This function returns the estimated row count for the entire TupleBPS.  It samples the last 20 (configurable) extents to
 // calculate the estimate.
 uint64_t RowEstimator::estimateRows(const vector<ColumnCommandJL*>& cpColVec,
-                                    const std::vector<int>& scanFlags,
+                                    const std::vector<bool>& scanFlags,
                                     BRM::DBRM& dbrm,
                                     const execplan::CalpontSystemCatalog::OID oid)
 

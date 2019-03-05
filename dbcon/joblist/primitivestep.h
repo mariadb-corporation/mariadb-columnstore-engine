@@ -392,7 +392,7 @@ private:
     boost::condition condvar;
     boost::condition flushed;
     SP_LBIDList lbidList;
-    std::vector<int> scanFlags; // use to keep track of which extents to eliminate from this step
+    std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
     uint32_t uniqueID;
 
     //@bug 2634
@@ -1411,7 +1411,7 @@ private:
     boost::mutex serializeJoinerMutex;
     boost::condition condvarWakeupProducer, condvar;
 
-    std::vector<int> scanFlags; // use to keep track of which extents to eliminate from this step
+    std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
     bool BPPIsAllocated;
     uint32_t uniqueID;
     ResourceManager* fRm;
@@ -1477,7 +1477,7 @@ private:
      * component and this new array as the runtime component.  The final CP decision
      * is scanFlags & runtimeCP.
      */
-    std::vector<int> runtimeCPFlags;
+    std::vector<bool> runtimeCPFlags;
 
     /* semijoin vars */
     rowgroup::RowGroup joinFERG;

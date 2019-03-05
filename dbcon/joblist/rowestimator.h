@@ -1,5 +1,4 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -63,7 +62,7 @@ public:
     *
     */
     uint64_t estimateRows(const std::vector<ColumnCommandJL*>& cpColVec,
-                          const std::vector <int>& scanFlags,
+                          const std::vector <bool>& scanFlags,
                           BRM::DBRM& dbrm,
                           const execplan::CalpontSystemCatalog::OID oid);
 
