@@ -459,6 +459,47 @@ bool copytask()
     return true;
 }
 
+bool localstorageTest1()
+{
+    LocalStorage ls;
+    
+    /* TODO: Some stuff */
+    cout << "local storage test 1 OK" << endl;
+    return true;
+}
+
+bool cacheTest1()
+{
+    namespace bf = boost::filesystem;
+    Cache cache;
+    CloudStorage *cs = CloudStorage::get();
+    LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
+    if (ls == NULL) {
+        cout << "Cache test 1 requires using local storage" << endl;
+        return false;
+    }
+    
+    bf::path storagePath = ls->getPrefix();
+    bf::path cachePath = cache.getCachePath();
+    vector<string> v_bogus;
+    
+    // make sure nothing shows up in the cache path for files that don't exist
+    v_bogus.push_back("does-not-exist");
+    cache.read(v_bogus);
+    assert(!bf::exists(cachePath / "does-not-exist"));
+    
+    // make sure a file that does exist does show up in the cache path
+    bf::copy_file("storagemanager.cnf", storagePath / "storagemanager.cnf", bf::copy_option::overwrite_if_exists);
+    v_bogus[0] = "storagemanager.cnf";
+    cache.read(v_bogus);
+    assert(bf::exists(cachePath / "storagemanager.cnf"));
+    
+    // cleanup
+    bf::remove(cachePath / "storagemanager.cnf");
+    cout << "cache test 1 OK" << endl;
+}
+    
+
 int main()
 {
     cout << "connecting" << endl;
@@ -475,12 +516,8 @@ int main()
     pingtask();
     copytask();
     
-    Config *conf = Config::get();
-    LocalStorage ls;
-    Cache cache;
-    
-    
-    
+    localstorageTest1();
+    cacheTest1();
     
     return 0;
 }

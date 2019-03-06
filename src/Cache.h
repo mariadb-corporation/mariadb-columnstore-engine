@@ -28,11 +28,14 @@ class Cache : public boost::noncopyable
         void setCacheSize(size_t size);
         void makeSpace(size_t size);
 
+        // test helpers
+        const boost::filesystem::path &getCachePath();
     private:
         boost::filesystem::path prefix;
         size_t maxCacheSize;
 
         /* The main cache structures */
+        // lru owns the string memory for the filenames it manages.  m_lru and DNE point to those strings.
         typedef std::list<std::string> LRU_t;
         LRU_t lru;
         

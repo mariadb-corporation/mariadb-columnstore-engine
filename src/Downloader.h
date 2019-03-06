@@ -21,7 +21,9 @@ class Downloader
         Downloader();
         virtual ~Downloader();
         
-        void download(const std::vector<const std::string *> &keys);
+        // returns 0 on success.  If != 0, errnos will contains the errno associated with the failure
+        // caller owns the memory for the strings.
+        int download(const std::vector<const std::string *> &keys, std::vector<int> *errnos);
         void setDownloadPath(const std::string &path);
         const std::string & getDownloadPath() const;
         
@@ -64,7 +66,7 @@ class Downloader
         Downloads_t downloads;
         boost::mutex download_mutex;
         
-        boost::scoped_ptr<ThreadPool> downloaders;
+        boost::scoped_ptr<ThreadPool> workers;
         CloudStorage *storage;
 };
 

@@ -52,6 +52,7 @@ Cache::Cache()
     cout << "Cache got prefix " << prefix << endl;
     
     downloader.setDownloadPath(prefix.string());
+    /* todo: populate structures with existing files in the cache path */
 }
 
 Cache::~Cache()
@@ -84,23 +85,36 @@ void Cache::read(const vector<string> &keys)
     s.unlock();
     
     // start downloading the keys to fetch
+    int dl_err;
+    vector<int> dl_errnos;
     if (!keysToFetch.empty())
-        downloader.download(keysToFetch);
+        dl_err = downloader.download(keysToFetch, &dl_errnos);
     
     s.lock();
     
     // move all keys to the back of the LRU
-    for (const string &key : keys)
+    for (i = 0; i < keys.size(); i++)
     {
-        mit = m_lru.find(key);
+        mit = m_lru.find(keys[i]);
         if (mit != m_lru.end())
-            lru.splice(lru.end(), lru, mit->lit);
-        else
         {
-            lru.push_back(key);
+            lru.splice(lru.end(), lru, mit->lit);
+            removeFromDNE(lru.end());
+        }
+        else if (dl_errnos[i] == 0)   // successful download
+        {
+            lru.push_back(keys[i]);
             m_lru.insert(M_LRU_element_t(&(lru.back()), lru.end()--));
         }
-        removeFromDNE(lru.end());
+        else
+        {
+            // Downloader already logged it, anything to do here?
+            /* brainstorming options for handling it.
+             1) Should it be handled?  The caller will log a file-not-found error, and there will be a download
+                failure in the log already.  
+             2) Can't really DO anything can it?
+            */
+        }
     }
 }
 
@@ -132,7 +146,10 @@ void Cache::removeFromDNE(const LRU_t::iterator &key)
         doNotEvict.erase(it);
 }
     
-        
+const boost::filesystem::path & Cache::getCachePath()
+{
+    return prefix;
+}
 
         
 void Cache::exists(const vector<string> &keys, vector<bool> *out)

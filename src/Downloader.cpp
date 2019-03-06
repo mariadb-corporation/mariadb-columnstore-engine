@@ -7,20 +7,28 @@ using namespace std;
 namespace storagemanager
 {
 
-Downloader::Downloader()
+Downloader::Downloader() : maxDownloads(0)
 {
     storage = CloudStorage::get();
     string sMaxDownloads = Config::get()->getValue("ObjectStorage", "max_concurrent_downloads");
-    maxDownloads = stoi(sMaxDownloads);
+    try
+    {
+        maxDownloads = stoul(sMaxDownloads);
+    }
+    catch(invalid_argument)
+    {
+        // log something
+    }
     if (maxDownloads == 0)
         maxDownloads = 20;
+    workers.reset(new ThreadPool(maxDownloads));
 }
 
 Downloader::~Downloader()
 {
 }
 
-void Downloader::download(const vector<const string *> &keys)
+int Downloader::download(const vector<const string *> &keys, vector<int> *errnos)
 {
     uint counter = keys.size();
     boost::condition condvar;
@@ -33,8 +41,8 @@ void Downloader::download(const vector<const string *> &keys)
     
     uint i;
     
-    for (const string *key : keys)
-        dls[i].reset(new Download(key, this));
+    for (i = 0; i < keys.size(); i++)
+        dls[i].reset(new Download(keys[i], this));
     
     boost::unique_lock<boost::mutex> s(download_mutex);
     for (i = 0; i < keys.size(); i++)
@@ -47,10 +55,13 @@ void Downloader::download(const vector<const string *> &keys)
         if (inserted[i])
         {
             dl->listeners.push_back(&listener);
-            downloaders->addJob(dl);
+            workers->addJob(dl);
         }
         else
+        {
+            dl = *(ret.first);  // point to the existing download.  Redundant with the iterators array.  Don't care yet.
             (*iterators[i])->listeners.push_back(&listener);
+        }
     }
     s.unlock();
     
@@ -66,7 +77,16 @@ void Downloader::download(const vector<const string *> &keys)
         if (inserted[i])
             downloads.erase(iterators[i]);
 
-    // TODO: check for errors & propagate
+    // check for errors & propagate
+    int ret = 0;
+    errnos->resize(keys.size());
+    for (i = 0; i < keys.size(); i++)
+    {
+        auto &dl = dls[i];
+        (*errnos)[i] = dl->dl_errno;
+        if (dl->dl_errno != 0)
+            ret = -1;
+    }
 }
 
 void Downloader::setDownloadPath(const string &path)
@@ -87,7 +107,7 @@ Downloader::Download::Download(const string *source, Downloader *dl) : key(sourc
 void Downloader::Download::operator()()
 {
     CloudStorage *storage = CloudStorage::get();
-    int err = storage->getObject(*key, dler->getDownloadPath() + *key);
+    int err = storage->getObject(*key, dler->getDownloadPath() + "/" + *key);
     if (err != 0)
         dl_errno = errno;
         

@@ -83,6 +83,7 @@ void Config::reloadThreadFcn()
         try
         {
             reload();
+            // TODO: add a listener interface to inform upstream of config changes
             boost::this_thread::sleep(reloadInterval);
         }
         catch (boost::property_tree::ini_parser_error &e)
@@ -133,8 +134,14 @@ string expand_numbers(const boost::smatch &match)
 string Config::getValue(const string &section, const string &key) const
 {
     // if we care, move this envvar substition stuff to where the file is loaded
+    string ret;
     boost::unique_lock<boost::mutex> s(mutex);
-    string ret = contents.get<string>(section + "." + key);
+    try {
+        ret = contents.get<string>(section + "." + key);
+    }
+    catch (...) {
+        return "";   // debating whether it's necessary to tell the caller there was no entry.
+    }
     s.unlock();
     
     boost::regex re("\\$\\{(.+)\\}");

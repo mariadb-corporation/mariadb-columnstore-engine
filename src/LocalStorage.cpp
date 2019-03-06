@@ -34,6 +34,11 @@ LocalStorage::~LocalStorage()
 {
 }
 
+const boost::filesystem::path & LocalStorage::getPrefix() const 
+{
+    return prefix;
+}
+
 int LocalStorage::copy(const path &source, const path &dest)
 {
     boost::system::error_code err;
@@ -49,7 +54,7 @@ int LocalStorage::copy(const path &source, const path &dest)
 path operator+(const path &p1, const path &p2)
 {
     path ret(p1);
-    ret+=p2;
+    ret /= p2;
     return ret;
 }
 
