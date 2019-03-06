@@ -77,8 +77,6 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
         map<uint32_t, uint32_t>::iterator j = keyToIndexMap.find(i->first);
         idbassert(j != keyToIndexMap.end());
 
-        // TODO Ordering direction in CSEP differs from
-        // internal direction representation. This behavior should be fixed
         fOrderByCond.push_back(IdbSortSpec(j->second, i->second));
     }
 
@@ -86,16 +84,14 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
     fStart = jobInfo.limitStart;
     fCount = jobInfo.limitCount;
 
-//	fMemSize = (fStart + fCount) * rg.getRowSize();
-
     IdbOrderBy::initialize(rg);
 }
 
-
+// This must return a proper number of key columns and
+// not just a column count.
 uint64_t LimitedOrderBy::getKeyLength() const
 {
-    //return (fRow0.getSize() - 2);
-    return fRow0.getColumnCount();
+    return fOrderByCond.size();
 }
 
 

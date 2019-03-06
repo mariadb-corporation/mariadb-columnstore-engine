@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019 MariaDB Corporation
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -20,7 +20,6 @@
 
 
 #include <iostream>
-//#define NDEBUG
 #include <cassert>
 #include <string>
 #include <stack>
@@ -507,7 +506,6 @@ uint64_t IdbOrderBy::Hasher::operator()(const Row::Pointer& p) const
     row.setPointer(p);
     // MCOL-1829 Row::h uses colcount as an array idx down a callstack.
     uint64_t ret = row.hash();
-    //cout << "hash(): returning " << ret << " for row: " << row.toString() << endl;
     return ret;
 }
 
@@ -516,11 +514,8 @@ bool IdbOrderBy::Eq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) 
     Row& r1 = ts->row1, &r2 = ts->row2;
     r1.setPointer(d1);
     r2.setPointer(d2);
-    // MCOL-1829 Row::equals uses 2nd argument as container size boundary
-    // so it must be column count - 1.
-    bool ret = r1.equals(r2, colCount - 1);
-    //cout << "equals(): returning " << (int) ret << " for r1: " << r1.toString() << " r2: " << r2.toString()
-    //	<< endl;
+    // MCOL-1829 Row::equals uses 2nd argument as key columns container size boundary
+    bool ret = r1.equals(r2, colCount);
 
     return ret;
 }

@@ -1190,7 +1190,7 @@ void check_walk(const Item* item, void* arg)
             break;
         }
         
-        case Item::EXPR_CACHE_ITEM: // IN + correlated subquery 
+        case Item::EXPR_CACHE_ITEM: // IN + correlated subquery
         {
             const Item_cache_wrapper* icw = static_cast<const Item_cache_wrapper*>(item);
             if ( icw->get_orig_item()->type() == Item::FUNC_ITEM )
@@ -1231,11 +1231,14 @@ void check_walk(const Item* item, void* arg)
  *  logical OR in the filter predicates
  *  Impossible WHERE
  *  Impossible HAVING
- * Valid queries with the last two crashes the server if processed.
+ * and there is either GROUP BY or aggregation function
+ * exists at the top level.
+ * Valid queries with the last two crashes the server if
+ * processed.
  * Details are in server/sql/group_by_handler.h
  * PARAMETERS:
- *    thd - THD pointer.
- *    query - Query structure, that describes the pushdowned query.
+ *    thd - THD pointer
+ *    query - Query structure LFM in group_by_handler.h
  * RETURN:
  *    group_by_handler if success
  *    NULL in other case
@@ -1254,29 +1257,48 @@ create_calpont_group_by_handler(THD* thd, Query* query)
         && ( query->group_by || select_lex->with_sum_func ) )
     {
         bool unsupported_feature = false;
-        // Impossible HAVING or WHERE
-        if ( ( query->having && select_lex->having_value == Item::COND_FALSE )
-            || ( select_lex->cond_count > 0
-                && select_lex->cond_value == Item::COND_FALSE ) )
+        // revisit SELECT_LEX for all units
+        for(TABLE_LIST* tl = query->from; !unsupported_feature && tl; tl = tl->next_global)
         {
-            unsupported_feature = true;
-        }
+            select_lex = tl->select_lex;
+            // Correlation subquery. Comming soon so fail on this yet.
+            unsupported_feature = select_lex->is_correlated;
 
-        // Unsupported conditions check.
-        if ( !unsupported_feature )
-        {
-            JOIN *join = select_lex->join;
-            Item_cond *icp = 0;
-
-            if (join != 0)
-                icp = reinterpret_cast<Item_cond*>(join->conds);
-
-            if ( unsupported_feature == false
-                && icp )
+            // Impossible HAVING or WHERE
+            if ( ( !unsupported_feature && query->having && select_lex->having_value == Item::COND_FALSE )
+                || ( select_lex->cond_count > 0
+                    && select_lex->cond_value == Item::COND_FALSE ) )
             {
-                icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+                unsupported_feature = true;
             }
-        }
+
+            // Unsupported JOIN conditions
+            if ( !unsupported_feature )
+            {
+                JOIN *join = select_lex->join;
+                Item_cond *icp = 0;
+
+                if (join != 0)
+                    icp = reinterpret_cast<Item_cond*>(join->conds);
+
+                if ( unsupported_feature == false
+                    && icp )
+                {
+                    icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+                }
+
+                // Optimizer could move some join conditions into where
+                if (select_lex->where != 0)
+                    icp = reinterpret_cast<Item_cond*>(select_lex->where);
+
+                if ( unsupported_feature == false
+                    && icp )
+                {
+                    icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+                }
+
+            }
+        } // unsupported features check ends here
 
         if ( !unsupported_feature )
         {
