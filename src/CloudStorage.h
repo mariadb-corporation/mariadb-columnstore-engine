@@ -10,6 +10,7 @@ namespace storagemanager
 class CloudStorage
 {
     public:
+        /* These behave like syscalls.  return code -1 means an error, and errno is set */
         virtual int getObject(const std::string &sourceKey, const std::string &destFile) = 0;
         virtual int putObject(const std::string &sourceFile, const std::string &destKey) = 0;
         virtual void deleteObject(const std::string &key) = 0;

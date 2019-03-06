@@ -2,8 +2,8 @@
 #ifndef SM_THREADPOOL_H_
 #define SM_THREADPOOL_H_
 
-#include <list>
 #include <deque>
+#include <set>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
@@ -25,6 +25,7 @@ class ThreadPool : public boost::noncopyable
         };
         
         void addJob(const boost::shared_ptr<Job> &j);
+        void setMaxThreads(uint newMax);
 
     private:
         struct Runner {
@@ -38,10 +39,16 @@ class ThreadPool : public boost::noncopyable
         uint maxThreads;
         bool die;
         int threadsWaiting;
-        std::vector<boost::shared_ptr<boost::thread> > threads;
+        boost::thread_group threads;
+        std::set<boost::thread *> s_threads;
         boost::condition jobAvailable;
         std::deque<boost::shared_ptr<Job> > jobs;
         boost::mutex m;
+        
+        const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
+        boost::thread pruner;
+        void pruner_fcn();
+        void prune();
 };
 
 

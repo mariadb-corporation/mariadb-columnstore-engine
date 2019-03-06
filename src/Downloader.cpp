@@ -1,0 +1,119 @@
+#include "Downloader.h"
+#include "Config.h"
+#include <string>
+#include <errno.h>
+
+using namespace std;
+namespace storagemanager
+{
+
+Downloader::Downloader()
+{
+    storage = CloudStorage::get();
+    string sMaxDownloads = Config::get()->getValue("ObjectStorage", "max_concurrent_downloads");
+    maxDownloads = stoi(sMaxDownloads);
+    if (maxDownloads == 0)
+        maxDownloads = 20;
+}
+
+Downloader::~Downloader()
+{
+}
+
+void Downloader::download(const vector<const string *> &keys)
+{
+    uint counter = keys.size();
+    boost::condition condvar;
+    boost::mutex m;
+    DownloadListener listener(&counter, &condvar, &m);
+    
+    boost::shared_ptr<Download> dls[keys.size()];
+    bool inserted[keys.size()];
+    Downloads_t::iterator iterators[keys.size()];
+    
+    uint i;
+    
+    for (const string *key : keys)
+        dls[i].reset(new Download(key, this));
+    
+    boost::unique_lock<boost::mutex> s(download_mutex);
+    for (i = 0; i < keys.size(); i++)
+    {
+        auto &dl = dls[i];
+        pair<Downloads_t::iterator, bool> ret = downloads.insert(dl);
+        iterators[i] = ret.first;
+        inserted[i] = ret.second;
+        
+        if (inserted[i])
+        {
+            dl->listeners.push_back(&listener);
+            downloaders->addJob(dl);
+        }
+        else
+            (*iterators[i])->listeners.push_back(&listener);
+    }
+    s.unlock();
+    
+    // wait for the downloads to finish
+    boost::unique_lock<boost::mutex> dl_lock(m);
+    while (counter > 0)
+        condvar.wait(dl_lock);
+    dl_lock.unlock();
+    
+    // remove the entries inserted by this call
+    s.lock();
+    for (i = 0; i < keys.size(); i++)
+        if (inserted[i])
+            downloads.erase(iterators[i]);
+
+    // TODO: check for errors & propagate
+}
+
+void Downloader::setDownloadPath(const string &path)
+{
+    downloadPath = path;
+}
+
+inline const string & Downloader::getDownloadPath() const
+{
+    return downloadPath;
+}
+           
+/* The helper fcns */
+Downloader::Download::Download(const string *source, Downloader *dl) : key(source), dler(dl), dl_errno(0)
+{
+}
+
+void Downloader::Download::operator()()
+{
+    CloudStorage *storage = CloudStorage::get();
+    int err = storage->getObject(*key, dler->getDownloadPath() + *key);
+    if (err != 0)
+        dl_errno = errno;
+        
+    for (auto &listener : listeners)
+        listener->downloadFinished();
+}
+
+Downloader::DownloadListener::DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
+{
+}
+
+void Downloader::DownloadListener::downloadFinished()
+{
+    boost::unique_lock<boost::mutex> u(*mutex);
+    if (--(*count) == 0)
+        cond->notify_all();
+}
+
+inline size_t Downloader::DLHasher::operator()(const boost::shared_ptr<Download> &d) const
+{
+    return hash<string>()(*(d->key));
+}
+
+inline bool Downloader::DLEquals::operator()(const boost::shared_ptr<Download> &d1, const boost::shared_ptr<Download> &d2) const
+{
+    return (*(d1->key) == *(d2->key));
+}
+
+}

@@ -1,8 +1,5 @@
 
-
-
 #include "ThreadPool.h"
-#include <boost/thread/mutex.hpp>
 
 using namespace std;
 
@@ -18,36 +15,75 @@ ThreadPool::ThreadPool() : maxThreads(1000), die(false), threadsWaiting(0)
 
 ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), threadsWaiting(0)
 {
+    pruner = boost::thread([this] { this->pruner_fcn(); } );
 }
 
 ThreadPool::~ThreadPool()
 {
-    boost::mutex::scoped_lock s(m);
+    boost::unique_lock<boost::mutex> s(m);
     die = true;
     jobs.clear();
     jobAvailable.notify_all();
     s.unlock();
     
-    for (uint i = 0; i < threads.size(); i++)
-        threads[i]->join();
+    threads.join_all();
+    pruner.interrupt();
+    pruner.join();
 }
 
 void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
 {
-    boost::mutex::scoped_lock s(m);
+    boost::unique_lock<boost::mutex> s(m);
     jobs.push_back(j);
     // Start another thread if necessary
     if (threadsWaiting == 0 && threads.size() < maxThreads) {
-        boost::shared_ptr<boost::thread> thread(new boost::thread(Runner(this)));
-        threads.push_back(thread);
+        boost::thread *thread = threads.create_thread([this] { this->processingLoop(); });
+        s_threads.insert(thread);
     }
     else
         jobAvailable.notify_one();
 }
 
+void ThreadPool::pruner_fcn()
+{
+    while (!die)
+    {
+        prune();
+        try {
+            boost::this_thread::sleep(idleThreadTimeout);
+        }
+        catch(boost::thread_interrupted)
+        {}
+    }
+}
+
+void ThreadPool::prune()
+{
+    boost::unique_lock<boost::mutex> s(m);
+    set<boost::thread *>::iterator it, to_remove;
+    it = s_threads.begin();
+    while (it != s_threads.end())
+    {
+        if ((*it)->joinable())
+        {
+            (*it)->join();
+            threads.remove_thread(*it);
+            to_remove = it++;
+            s_threads.erase(to_remove);
+        }
+        else
+            ++it;
+    }
+}
+
+void ThreadPool::setMaxThreads(uint newMax)
+{
+    maxThreads = newMax;
+}
+
 void ThreadPool::processingLoop()
 {
-    boost::mutex::scoped_lock s(m, boost::defer_lock);
+    boost::unique_lock<boost::mutex> s(m, boost::defer_lock);
     
     while (!die)
     {
@@ -55,8 +91,10 @@ void ThreadPool::processingLoop()
         while (jobs.empty() && !die) 
         {
             threadsWaiting++;
-            jobAvailable.wait(s);
+            bool timedout = !jobAvailable.timed_wait<>(s, idleThreadTimeout);
             threadsWaiting--;
+            if (timedout)
+                return;
         }
         if (die)
             return;

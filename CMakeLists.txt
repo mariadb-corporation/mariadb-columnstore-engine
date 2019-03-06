@@ -25,6 +25,7 @@ set(storagemanager_SRCS
     src/S3Storage.cpp
     src/LocalStorage.cpp
     src/Cache.cpp
+    src/Downloader.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)

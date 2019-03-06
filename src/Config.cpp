@@ -7,6 +7,9 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -30,7 +33,7 @@ Config * Config::get()
     return inst;
 }
 
-Config::Config()
+Config::Config() : die(false)
 {
     /* This will search the current directory,
        then $COLUMNSTORE_INSTALL_DIR/etc,
@@ -59,7 +62,51 @@ Config::Config()
     }
     if (filename.empty())
         throw runtime_error("Config: Could not find the config file for StorageManager");
-        
+    
+    reloadInterval = boost::posix_time::seconds(60);
+    last_mtime = {0, 0};
+    reload();
+    reloader = boost::thread([this] { this->reloadThreadFcn(); });
+}
+
+Config::~Config()
+{
+    die = true;
+    reloader.interrupt();
+    reloader.join();
+}
+
+void Config::reloadThreadFcn()
+{
+    while (!die)
+    {
+        try
+        {
+            reload();
+            boost::this_thread::sleep(reloadInterval);
+        }
+        catch (boost::property_tree::ini_parser_error &e)
+        {
+            // log the error.  how to log things now?
+        }
+        catch (boost::thread_interrupted)
+        {}
+    }
+}
+
+void Config::reload()
+{
+    struct stat statbuf;
+    int err = stat(filename.c_str(), &statbuf);
+    if (err)
+        // log something
+        return;
+    if ((statbuf.st_mtim.tv_sec == last_mtime.tv_sec) && (statbuf.st_mtim.tv_nsec == last_mtime.tv_nsec))
+        return;
+    last_mtime = statbuf.st_mtim;
+    
+    boost::unique_lock<boost::mutex> s(mutex);
+    contents.clear();
     boost::property_tree::ini_parser::read_ini(filename, contents);
 }
 
@@ -86,7 +133,10 @@ string expand_numbers(const boost::smatch &match)
 string Config::getValue(const string &section, const string &key) const
 {
     // if we care, move this envvar substition stuff to where the file is loaded
+    boost::unique_lock<boost::mutex> s(mutex);
     string ret = contents.get<string>(section + "." + key);
+    s.unlock();
+    
     boost::regex re("\\$\\{(.+)\\}");
     
     ret = boost::regex_replace(ret, re, use_envvar);

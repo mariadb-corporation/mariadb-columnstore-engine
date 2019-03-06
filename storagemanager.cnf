@@ -2,7 +2,7 @@
 service = S3
 object_size = 5M
 metadata_path = ${HOME}/storagemanager/metadata
-
+max_concurrent_downloads = 20
 
 [S3]
 region = us-west-1
