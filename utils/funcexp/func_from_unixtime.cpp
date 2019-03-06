@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -207,6 +207,14 @@ double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
     }
 
     return (double) atoi(getStrVal(row, parm, isNull, ct).c_str());
+}
+
+long double Func_from_unixtime::getLongDoubleVal(rowgroup::Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType& ct)
+{
+    return (long double) getDoubleVal(row, parm, isNull, ct);
 }
 
 

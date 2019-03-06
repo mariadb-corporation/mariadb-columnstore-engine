@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -835,6 +835,17 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
                      dt2 != CalpontSystemCatalog::DOUBLE &&
                      dt2 != CalpontSystemCatalog::UFLOAT &&
                      dt2 != CalpontSystemCatalog::UDOUBLE) return false;
+
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            if (forJoin && (dt2 != CalpontSystemCatalog::LONGDOUBLE))
+                return false;
+            else if (dt2 != CalpontSystemCatalog::FLOAT &&
+                     dt2 != CalpontSystemCatalog::DOUBLE &&
+                     dt2 != CalpontSystemCatalog::UFLOAT &&
+                     dt2 != CalpontSystemCatalog::UDOUBLE &&
+                     dt2 != CalpontSystemCatalog::LONGDOUBLE) return false;
 
             break;
 

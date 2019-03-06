@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -276,10 +277,6 @@ struct JobInfo
     RetColsVector projectionCols;           // columns for projection
     std::multimap<execplan::ReturnedColumn*, execplan::ReturnedColumn*> cloneAggregateColMap;
     std::vector<std::pair<int, int> > aggEidIndexList;
-
-    // for AVG to support CNX_USE_DECIMAL_SCALE
-    //   map<key, column scale << 8 + avg scale>
-    std::map<uint32_t, int> scaleOfAvg;
 
     // table pairs with incompatible join which is treated as expression
     std::map<uint32_t, uint32_t> incompatibleJoinMap;

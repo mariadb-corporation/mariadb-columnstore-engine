@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2017, MariaDB
    Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -636,6 +636,18 @@ ByteStream& ByteStream::operator<<(const double d)
 
     return *this;
 }
+ByteStream& ByteStream::operator<<(const long double d)
+{
+    int sz = sizeof(long double);
+
+    if (fBuf == 0 || (fCurInPtr - fBuf + sz > fMaxLen + ISSOverhead))
+        growBuf(fMaxLen + BlockSize);
+
+    *((long double*) fCurInPtr) = d;
+    fCurInPtr += sz;
+
+    return *this;
+}
 ByteStream& ByteStream::operator>>(float& f)
 {
     peek(f);
@@ -646,6 +658,12 @@ ByteStream& ByteStream::operator>>(double& d)
 {
     peek(d);
     fCurOutPtr += sizeof(double);
+    return *this;
+}
+ByteStream& ByteStream::operator>>(long double& d)
+{
+    peek(d);
+    fCurOutPtr += sizeof(long double);
     return *this;
 }
 void ByteStream::peek(float& f) const
@@ -661,6 +679,14 @@ void ByteStream::peek(double& d) const
         throw underflow_error("ByteStream>int64_t: not enough data in stream to fill datatype");
 
     d = *((double*) fCurOutPtr);
+}
+
+void ByteStream::peek(long double& d) const
+{
+    if (length() < sizeof(long double))
+        throw underflow_error("ByteStream>int64_t: not enough data in stream to fill datatype");
+
+    d = *((long double*) fCurOutPtr);
 }
 
 

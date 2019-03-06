@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2017, MariaDB
    Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -702,6 +702,9 @@ void Row::initToNull()
                 *((uint64_t*) &data[offsets[i]]) = joblist::DOUBLENULL;
                 break;
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+                *((long double*) &data[offsets[i]]) = joblist::LONGDOUBLENULL;
+
             case CalpontSystemCatalog::DATETIME:
                 *((uint64_t*) &data[offsets[i]]) = joblist::DATETIMENULL;
                 break;
@@ -803,13 +806,6 @@ void Row::initToNull()
             case CalpontSystemCatalog::UBIGINT:
                 *((uint64_t*) &data[offsets[i]]) = joblist::UBIGINTNULL;
                 break;
-
-            case CalpontSystemCatalog::LONGDOUBLE:
-            {
-                // no NULL value for long double yet, this is a nan.
-                memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
-                break;
-            }
 
             default:
                 ostringstream os;
@@ -956,7 +952,7 @@ bool Row::isNullValue(uint32_t colIndex) const
             return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::UBIGINTNULL);
 
         case CalpontSystemCatalog::LONGDOUBLE:
-            // return false;  // no NULL value for long double yet
+            return (*((long double*) &data[offsets[colIndex]]) == joblist::LONGDOUBLENULL);
             break;
 
         default:

@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -76,6 +76,8 @@ const float MAX_FLOAT		__attribute__ ((unused)) = std::numeric_limits<float>::ma
 const float MIN_FLOAT		__attribute__ ((unused)) = -std::numeric_limits<float>::max();
 const double MAX_DOUBLE	  __attribute__ ((unused)) = std::numeric_limits<double>::max();		//1.7976931348623157e+308
 const double MIN_DOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<double>::max();
+const long double MAX_LONGDOUBLE	  __attribute__ ((unused)) = std::numeric_limits<long double>::max();		//1.7976931348623157e+308
+const long double MIN_LONGDOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<long double>::max();
 
 
 const uint64_t AUTOINCR_SATURATED __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max();

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -72,6 +73,10 @@ bool Func_isnull::getBoolVal(Row& row,
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::VARCHAR:
             parm[0]->data()->getStrVal(row, isNull);
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            parm[0]->data()->getLongDoubleVal(row, isNull);
             break;
 
         default:

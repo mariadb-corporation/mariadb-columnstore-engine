@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -194,6 +195,27 @@ inline bool getBoolForIn(rowgroup::Row& row,
                 isNull = false;
 
                 if ( val == pm[i]->data()->getDoubleVal(row, isNull) && !isNull )
+                    return true;
+
+                if (isNull && isNotIn)
+                    return true; // will be reversed to false by the caller
+            }
+
+            return false;
+        }
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            for (uint32_t i = 1; i < pm.size(); i++)
+            {
+                isNull = false;
+
+                if ( val == pm[i]->data()->getLongDoubleVal(row, isNull) && !isNull )
                     return true;
 
                 if (isNull && isNotIn)

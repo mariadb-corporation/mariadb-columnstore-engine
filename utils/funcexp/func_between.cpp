@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -194,6 +195,24 @@ inline bool getBool(rowgroup::Row& row,
             return !isNull &&
                    numericGE(val, pm[1]->data()->getDoubleVal(row, isNull)) &&
                    numericLE(val, pm[2]->data()->getDoubleVal(row, isNull));
+        }
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (notBetween)
+            {
+                if (!numericGE(val, pm[1]->data()->getLongDoubleVal(row, isNull)) && !isNull)
+                    return true;
+
+                isNull = false;
+                return (!numericLE(val, pm[2]->data()->getLongDoubleVal(row, isNull)) && !isNull);
+            }
+
+            return !isNull &&
+                   numericGE(val, pm[1]->data()->getLongDoubleVal(row, isNull)) &&
+                   numericLE(val, pm[2]->data()->getLongDoubleVal(row, isNull));
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:

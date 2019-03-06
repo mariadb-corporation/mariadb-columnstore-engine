@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -25,6 +26,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <cmath>
 
 namespace joblist
 {
@@ -51,6 +53,7 @@ const uint32_t FLOATNULL = 0xFFAAAAAA;
 const uint32_t FLOATEMPTYROW = 0xFFAAAAAB;
 const uint64_t DOUBLENULL = 0xFFFAAAAAAAAAAAAAULL;
 const uint64_t DOUBLEEMPTYROW = 0xFFFAAAAAAAAAAAABULL;
+const long double LONGDOUBLENULL = INFINITY;
 
 const uint32_t DATENULL = 0xFFFFFFFE;
 const uint32_t DATEEMPTYROW = 0xFFFFFFFF;

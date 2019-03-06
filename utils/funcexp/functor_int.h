@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -53,6 +54,14 @@ public:
                         execplan::CalpontSystemCatalog::ColType& op_ct)
     {
         return ((double) getIntVal(row, fp, isNull, op_ct));
+    }
+
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return ((long double) getIntVal(row, fp, isNull, op_ct));
     }
 
     std::string getStrVal(rowgroup::Row& row,

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -231,6 +232,11 @@ public:
     virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
     {
         return fExpression->getDoubleVal(row, isNull);
+    }
+
+    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fExpression->getLongDoubleVal(row, isNull);
     }
 
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
