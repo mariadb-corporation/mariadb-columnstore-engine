@@ -35,6 +35,10 @@ if (TRACE)
     add_definitions(-DSM_TRACE)
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_definitions(-DDEBUG)
+endif()
+
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
 target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex aws-cpp-sdk-s3)
 

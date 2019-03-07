@@ -6,6 +6,7 @@
 #include <set>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
+#include "SMLogging.h"
 
 namespace storagemanager
 {
@@ -31,8 +32,9 @@ class ThreadPool : public boost::noncopyable
         void processingLoop();   // the fcn run by each thread
         void _processingLoop();  // processingLoop() wraps _processingLoop() with thread management stuff.
     
+        SMLogging *logger;
         uint maxThreads;
-        volatile bool die;
+        bool die;
         int threadsWaiting;
         boost::thread_group threads;
         
@@ -60,7 +62,6 @@ class ThreadPool : public boost::noncopyable
         boost::thread pruner;
         boost::condition somethingToPrune;
         std::vector<boost::thread::id> pruneable;  // when a thread is about to return it puts its id here
-        void pruner_fcn();
         void prune();
 };
 

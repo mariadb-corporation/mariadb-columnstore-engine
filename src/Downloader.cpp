@@ -105,7 +105,7 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
         if (dl->dl_errno != 0)
         {
             char buf[80];
-            logger->log(LOG_ERR, "Downloader: failed to download %s, got %s", keys[i]->c_str(), strerror_r(dl->dl_errno, buf, 80));
+            logger->log(LOG_ERR, "Downloader: failed to download %s, got '%s'", keys[i]->c_str(), strerror_r(dl->dl_errno, buf, 80));
             ret = -1;
         }
     }

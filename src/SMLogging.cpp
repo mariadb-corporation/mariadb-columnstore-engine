@@ -42,7 +42,11 @@ void SMLogging::log(int priority,const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-
+    
+    #ifdef DEBUG
+    vprintf(format, args);
+    printf("\n");
+    #endif
     vsyslog(priority, format, args);
 
     va_end(args);

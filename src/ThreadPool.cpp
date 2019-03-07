@@ -12,11 +12,13 @@ ThreadPool::ThreadPool() : maxThreads(1000), die(false), threadsWaiting(0)
     // Using this ctor effectively limits the # of threads here to the natural limit of the 
     // context it's used in.  In the CRP class for example, the # of active threads would be 
     // naturally limited by the # of concurrent operations.
+    logger = SMLogging::get();
 }
 
 ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), threadsWaiting(0)
 {
-    pruner = boost::thread([this] { this->pruner_fcn(); } );
+    logger = SMLogging::get();
+    pruner = boost::thread([this] { this->prune(); } );
 }
 
 ThreadPool::~ThreadPool()
@@ -45,24 +47,11 @@ void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
         jobAvailable.notify_one();
 }
 
-void ThreadPool::pruner_fcn()
-{
-    while (!die)
-    {
-        prune();
-        try {
-            boost::this_thread::sleep(idleThreadTimeout);
-        }
-        catch(boost::thread_interrupted)
-        {}
-    }
-}
-
 void ThreadPool::prune()
 {
     set<ID_Thread>::iterator it;
- 
     boost::unique_lock<boost::mutex> s(mutex);
+    
     while (1)
     {
         while (pruneable.empty() && !die)
@@ -84,6 +73,7 @@ void ThreadPool::prune()
 
 void ThreadPool::setMaxThreads(uint newMax)
 {
+    boost::unique_lock<boost::mutex> s(mutex);
     maxThreads = newMax;
 }
 
@@ -102,11 +92,10 @@ void ThreadPool::processingLoop()
 
 void ThreadPool::_processingLoop()
 {
-    boost::unique_lock<boost::mutex> s(mutex, boost::defer_lock);
+    boost::unique_lock<boost::mutex> s(mutex);
     
-    while (1)
+    while (threads.size() - pruneable.size() < maxThreads)  // this is the scale-down mechanism when maxThreads is changed
     {
-        s.lock();
         while (jobs.empty() && !die) 
         {
             threadsWaiting++;
@@ -119,10 +108,19 @@ void ThreadPool::_processingLoop()
             return;
         boost::shared_ptr<Job> job = jobs.front();
         jobs.pop_front();
-        s.unlock();
         
-        (*job)();
+        s.unlock();
+        try
+        {
+            (*job)();
+        }
+        catch (exception &e)
+        {
+            logger->log(LOG_CRIT, "ThreadPool: caught '%s' from a job", e.what());
+        }
+        s.lock();
     }
+    cout << "threadpool thread exiting" << endl;
 }
 
 inline bool ThreadPool::id_compare::operator()(const ID_Thread &t1, const ID_Thread &t2) const
