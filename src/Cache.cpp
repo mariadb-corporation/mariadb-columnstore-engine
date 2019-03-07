@@ -32,7 +32,7 @@ Cache::Cache()
         syslog(LOG_CRIT, "Cache/cache_size is not a number");
         throw runtime_error("Please set Cache/cache_size to a number");
     }
-    cout << "Cache got cache size " << maxCacheSize << endl;
+    //cout << "Cache got cache size " << maxCacheSize << endl;
         
     prefix = conf->getValue("Cache", "path");
     if (prefix.empty())
@@ -49,7 +49,7 @@ Cache::Cache()
         syslog(LOG_CRIT, "Failed to create %s, got: %s", prefix.string().c_str(), e.what());
         throw e;
     }
-    cout << "Cache got prefix " << prefix << endl;
+    //cout << "Cache got prefix " << prefix << endl;
     
     downloader.setDownloadPath(prefix.string());
     /* todo: populate structures with existing files in the cache path */

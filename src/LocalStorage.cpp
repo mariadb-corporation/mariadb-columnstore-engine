@@ -15,7 +15,7 @@ namespace storagemanager
 LocalStorage::LocalStorage()
 {
     prefix = Config::get()->getValue("LocalStorage", "path");
-    cout << "LS: got prefix " << prefix << endl;
+    //cout << "LS: got prefix " << prefix << endl;
     if (!is_directory(prefix))
     {
         try 
