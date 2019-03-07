@@ -39,7 +39,6 @@
 #include <tr1/unordered_set>
 #endif
 #include <utility>
-//#define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -654,7 +653,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 {
     SqlParser parser;
     THD* thd = current_thd;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ProcessDDLStatement: " << schema << "." << table << ":" << ddlStatement << endl;
 #endif
 
@@ -1599,7 +1598,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                 }
                 else if (ddlpackage::AtaRenameColumn* renameColumnsPtr = dynamic_cast<AtaRenameColumn*>(actionList[i]))
                 {
-                    //cout << "Rename a column" << endl;
                     uint64_t startValue = 1;
                     bool autoIncre  = false;
                     //@Bug 3746 Handle compression type
@@ -1798,7 +1796,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         stmt.fSql = ddlStatement;
         stmt.fOwner = schema;
         stmt.fTableWithAutoi = isAnyAutoincreCol;
-        //cout << "Sending to DDLProc" << endl;
         ByteStream bytestream;
         bytestream << stmt.fSessionID;
         stmt.serialize(bytestream);
@@ -1887,30 +1884,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     return rc;
 }
 
-// Fails with `/` sign in table name
-pair<string, string> parseTableName(const string& tn)
-{
-    string db;
-    string tb;
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-#ifdef _MSC_VER
-    boost::char_separator<char> sep("\\");
-#else
-    boost::char_separator<char> sep("/");
-#endif
-    tokenizer tokens(tn, sep);
-    tokenizer::iterator tok_iter = tokens.begin();
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    db = *tok_iter;
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    tb = *tok_iter;
-    ++tok_iter;
-    idbassert(tok_iter == tokens.end());
-    return make_pair(db, tb);
-}
-
 }
 
 //
@@ -1988,7 +1961,7 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
 
 int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ha_calpont_impl_create_: " << name << endl;
 #endif
     THD* thd = current_thd;
@@ -2060,7 +2033,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
 
         if (isCreate)
         {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
             cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
 #endif
             return 0;
@@ -2091,7 +2064,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     {
         ci.isAlter = true;
         ci.alterTableState = cal_connection_info::ALTER_FIRST_RENAME;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
         cout << "ha_calpont_impl_create_: now in state ALTER_FIRST_RENAME" << endl;
 #endif
     }
@@ -2269,7 +2242,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         //Bug 1705 reset the flag if error occurs
         ci.alterTableState = cal_connection_info::NOT_ALTER;
         ci.isAlter = false;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
         cout << "ha_calpont_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
     }
@@ -2279,7 +2252,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
 
 int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connection_info& ci)
 {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ha_calpont_impl_delete_table: " << db << name << endl;
 #endif
     THD* thd = current_thd;
@@ -2295,7 +2268,6 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
 
     std::string stmt(query);
     algorithm::to_upper(stmt);
-//	cout << "ha_calpont_impl_delete_table: " << schema.c_str() << "." << tbl.c_str() << " " << stmt.c_str() << endl;
     // @bug 4158 allow table name with 'restrict' in it (but not by itself)
     std::string::size_type fpos;
     fpos = stmt.rfind(" RESTRICT");
@@ -2334,7 +2306,6 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
     stmt += ";";
     int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 
-//	cout << "ProcessDDLStatement rc=" << rc << endl;
     if (rc != 0)
     {
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
@@ -2342,6 +2313,7 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
 
     return rc;
 }
+
 
 /**
   @brief
@@ -2395,16 +2367,54 @@ void decode_table_name(char *buf, const char *path, size_t pathLen)
     }
 }
 
+/**
+  @brief
+  Parses the path to extract both database and table names.
+
+  @details
+  Parses the path to extract both database
+  and table names, e.g path ./test/d$ produces
+  a pair of strings 'test' and 'd$'. This f() looks for a '/'
+  token only twice to allow '/' symbol in table names.
+
+  Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
+*/
+pair<string, string> parseTableName(const string& tn)
+{
+    string db;
+    string tb;
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+#ifdef _MSC_VER
+    boost::char_separator<char> sep("\\");
+#else
+    boost::char_separator<char> sep("/");
+#endif
+    tokenizer tokens(tn, sep);
+    tokenizer::iterator tok_iter = tokens.begin();
+    ++tok_iter;
+    idbassert(tok_iter != tokens.end());
+    db = *tok_iter;
+    ++tok_iter;
+    idbassert(tok_iter != tokens.end());
+    tb = *tok_iter;
+    return make_pair(db, tb);
+}
+
 int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
     string emsg;
 
+    // to and from are rewritten after decode_table_name()
+    // so use a copy of pntrs
+    const char* from_cpy = from;
+    const char* to_cpy = to;
+
     pair<string, string> fromPair;
     pair<string, string> toPair;
     string stmt;
 
-    //this is replcated DDL, treat it just like SSO
+    //this is replicated DDL, treat it just like SSO
     if (thd->slave_thread)
         return 0;
 
@@ -2418,16 +2428,18 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     }
 
     // MCOL-1855 Decode the table name if it contains encoded symbols.
-    // This approach fails when `/` is used in the paths.
-    size_t pathLen = strlen(from);
-    char pathCopy[pathLen];
-    decode_table_name(pathCopy, from, pathLen);
+    size_t pathLen = strlen(from_cpy);
+    char pathCopy[FN_REFLEN];
+    decode_table_name(pathCopy, from_cpy, pathLen);
     fromPair = parseTableName(const_cast<const char*>(pathCopy));
 
-    pathLen = strlen(to);
-    decode_table_name(pathCopy, to, pathLen);
+    pathLen = strlen(to_cpy);
+    decode_table_name(pathCopy, to_cpy, pathLen);
+
     toPair = parseTableName(const_cast<const char*>(pathCopy));
 
+    // TBD The next two blocks must be removed to allow different dbnames
+    // in RENAME statement.
     if (fromPair.first != toPair.first)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
