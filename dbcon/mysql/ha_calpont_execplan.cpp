@@ -3984,10 +3984,19 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 			colTypes.push_back(make_pair(udafc->functionParms()->alias(), udafc->functionParms()->resultType().colDataType));
 
 			// Call the user supplied init()
-			if (context.getFunction()->init(&context, colTypes) == mcsv1_UDAF::ERROR)
+			try
+			{
+				if (context.getFunction()->init(&context, colTypes) == mcsv1_UDAF::ERROR)
+				{
+					gwi.fatalParseError = true;
+					gwi.parseErrorText = udafc->getContext().getErrorMessage();
+					return NULL;
+				}
+			}
+			catch (std::exception& e)
 			{
 				gwi.fatalParseError = true;
-				gwi.parseErrorText = udafc->getContext().getErrorMessage();
+				gwi.parseErrorText = e.what();
 				return NULL;
 			}
 			if (udafc->getContext().getRunFlag(UDAF_OVER_REQUIRED))
