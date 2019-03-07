@@ -14,7 +14,7 @@ class S3Storage : public CloudStorage
         S3Storage();
         virtual ~S3Storage();
 
-        int getObject(const std::string &sourceKey, const std::string &destFile);
+        int getObject(const std::string &sourceKey, const std::string &destFile, size_t *size = NULL);
         int putObject(const std::string &sourceFile, const std::string &destKey);
         void deleteObject(const std::string &key);
         int copyObject(const std::string &sourceKey, const std::string &destKey);

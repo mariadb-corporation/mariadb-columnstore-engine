@@ -36,9 +36,10 @@ inline boost::mutex & Downloader::getDownloadMutex()
     return download_mutex;
 }
 
-int Downloader::download(const vector<const string *> &keys, vector<int> *errnos)
+int Downloader::download(const vector<const string *> &keys, vector<int> *errnos, vector<size_t> *sizes)
 {
-    volatile uint counter = keys.size();
+    //volatile uint counter = keys.size();
+    uint counter = keys.size();
     boost::condition condvar;
     boost::mutex m;
     DownloadListener listener(&counter, &condvar, &m);
@@ -71,19 +72,27 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
             (*iterators[i])->listeners.push_back(&listener);
         }
     }
-    s.unlock();
     
     // wait for the downloads to finish
     boost::unique_lock<boost::mutex> dl_lock(m);
+    s.unlock();
     while (counter > 0)
         condvar.wait(dl_lock);
     dl_lock.unlock();
     
     // remove the entries inserted by this call
+    sizes->resize(keys.size());
     s.lock();
     for (i = 0; i < keys.size(); i++)
+    {
         if (inserted[i])
+        {
+            (*sizes)[i] = (*iterators[i])->size;
             downloads.erase(iterators[i]);
+        }
+        else
+            (*sizes)[i] = 0;
+    }
     s.unlock();
             
     // check for errors & propagate
@@ -113,14 +122,14 @@ inline const string & Downloader::getDownloadPath() const
 }
            
 /* The helper fcns */
-Downloader::Download::Download(const string *source, Downloader *dl) : key(source), dler(dl), dl_errno(0)
+Downloader::Download::Download(const string *source, Downloader *dl) : key(source), dler(dl), dl_errno(0), size(0)
 {
 }
 
 void Downloader::Download::operator()()
 {
     CloudStorage *storage = CloudStorage::get();
-    int err = storage->getObject(*key, dler->getDownloadPath() + "/" + *key);
+    int err = storage->getObject(*key, dler->getDownloadPath() + "/" + *key, &size);
     if (err != 0)
         dl_errno = errno;
     
@@ -129,7 +138,8 @@ void Downloader::Download::operator()()
         listener->downloadFinished();
 }
 
-Downloader::DownloadListener::DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
+//Downloader::DownloadListener::DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
+Downloader::DownloadListener::DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
 {
 }
 

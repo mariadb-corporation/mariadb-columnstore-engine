@@ -14,7 +14,7 @@ S3Storage::~S3Storage()
 {
 }
 
-int S3Storage::getObject(const string &sourceKey, const string &destFile)
+int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t *size)
 {
     return 0;
 }

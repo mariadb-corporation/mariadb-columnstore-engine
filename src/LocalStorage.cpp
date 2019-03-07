@@ -43,7 +43,7 @@ int LocalStorage::copy(const path &source, const path &dest)
 {
     boost::system::error_code err;
     copy_file(source, dest, copy_option::fail_if_exists, err);
-    if (!err)
+    if (err)
     {
         errno = err.value();
         return -1;
@@ -58,9 +58,14 @@ path operator+(const path &p1, const path &p2)
     return ret;
 }
 
-int LocalStorage::getObject(const string &source, const string &dest)
+int LocalStorage::getObject(const string &source, const string &dest, size_t *size)
 {
-    return copy(prefix + source, dest);
+    int ret = copy(prefix + source, dest);
+    if (ret)
+        return ret;
+    if (size)
+        *size = boost::filesystem::file_size(dest);
+    return ret;
 }
 
 int LocalStorage::putObject(const string &source, const string &dest)

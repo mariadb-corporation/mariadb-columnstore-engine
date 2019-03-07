@@ -24,7 +24,7 @@ class Downloader
         
         // returns 0 on success.  If != 0, errnos will contains the errno associated with the failure
         // caller owns the memory for the strings.
-        int download(const std::vector<const std::string *> &keys, std::vector<int> *errnos);
+        int download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
         void setDownloadPath(const std::string &path);
         const std::string & getDownloadPath() const;
         
@@ -35,10 +35,12 @@ class Downloader
         class DownloadListener
         {
         public:
-            DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m);
+            DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m);
+            //DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m);
             void downloadFinished();
         private:
-            volatile uint *count;
+            uint *count;
+            //volatile uint *count;
             boost::condition *cond;
             boost::mutex *mutex;
         };
@@ -50,6 +52,7 @@ class Downloader
             Downloader *dler;
             const std::string *key;
             int dl_errno;   // to propagate errors from the download job to the caller
+            size_t size;
             std::vector<DownloadListener *> listeners;
         };
     

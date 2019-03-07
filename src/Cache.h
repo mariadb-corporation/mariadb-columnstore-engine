@@ -52,7 +52,7 @@ class Cache : public boost::noncopyable
         {
             M_LRU_element_t(const std::string &);
             M_LRU_element_t(const std::string *);
-            M_LRU_element_t(const std::string *, const LRU_t::iterator &);
+            M_LRU_element_t(const LRU_t::iterator &);
             const std::string *key;
             LRU_t::iterator lit;
         };

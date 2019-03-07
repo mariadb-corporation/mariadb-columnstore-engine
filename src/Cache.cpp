@@ -103,22 +103,26 @@ void Cache::read(const vector<string> &keys)
         else
             // not in the cache, put it in the list to download
             keysToFetch.push_back(&key);
-    }
-    
-    // TODO: get the sizes of the objects to download and make space
-    // For now using an estimate
-    makeSpace(keys.size() * objectSize);
-    
+    }    
     s.unlock();
     
     // start downloading the keys to fetch
     int dl_err;
     vector<int> dl_errnos;
+    vector<size_t> sizes;
     if (!keysToFetch.empty())
-        dl_err = downloader.download(keysToFetch, &dl_errnos);
+        dl_err = downloader.download(keysToFetch, &dl_errnos, &sizes);
+    
+    size_t sum_sizes = 0;
+    for (size_t &size : sizes)
+        sum_sizes += size;
     
     s.lock();
-    
+    // do makespace() before downloading.  Problem is, until the download is finished, this fcn can't tell which
+    // downloads it was responsible for.  Need Downloader to make the call...?
+    makeSpace(sum_sizes);      
+    currentCacheSize += sum_sizes;
+
     // move all keys to the back of the LRU
     for (i = 0; i < keys.size(); i++)
     {
@@ -131,7 +135,8 @@ void Cache::read(const vector<string> &keys)
         else if (dl_errnos[i] == 0)   // successful download
         {
             lru.push_back(keys[i]);
-            m_lru.insert(M_LRU_element_t(&(lru.back()), lru.end()--));
+            LRU_t::iterator it = lru.end();
+            m_lru.insert(M_LRU_element_t(--it));
         }
         else
         {
@@ -189,14 +194,31 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out)
 
 void Cache::newObject(const string &key, size_t size)
 {
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    assert(m_lru.find(key) == m_lru.end());
+    makeSpace(size);
+    lru.push_back(key);
+    LRU_t::iterator back = lru.end();
+    m_lru.insert(--back);
+    currentCacheSize += size;
 }
 
 void Cache::deletedObject(const string &key, size_t size)
 {
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    M_LRU_t::iterator mit = m_lru.find(key);
+    assert(mit != m_lru.end());
+    assert(doNotEvict.find(mit->lit) == doNotEvict.end());
+    lru.erase(mit->lit);
+    m_lru.erase(mit);
+    currentCacheSize -= size;
 }
 
 void Cache::setMaxCacheSize(size_t size)
 {
+    if (size < maxCacheSize)
+        makeSpace(maxCacheSize - size);
+    maxCacheSize = size;
 }
 
 // call this holding lru_mutex
@@ -251,7 +273,7 @@ Cache::M_LRU_element_t::M_LRU_element_t(const string *k) : key(k)
 Cache::M_LRU_element_t::M_LRU_element_t(const string &k) : key(&k)
 {}
 
-Cache::M_LRU_element_t::M_LRU_element_t(const string *k, const LRU_t::iterator &i) : key(k), lit(i)
+Cache::M_LRU_element_t::M_LRU_element_t(const LRU_t::iterator &i) : key(&(*i)), lit(i)
 {}
 
 inline size_t Cache::KeyHasher::operator()(const M_LRU_element_t &l) const
