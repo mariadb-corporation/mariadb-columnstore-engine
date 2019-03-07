@@ -2,6 +2,7 @@
 #include "TruncateTask.h"
 #include <errno.h>
 #include "messageFormat.h"
+#include "SMLogging.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ TruncateTask::~TruncateTask()
 
 bool TruncateTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t buf[1024] = {0};
     
@@ -38,7 +40,7 @@ bool TruncateTask::run()
     truncate_cmd *cmd = (truncate_cmd *) buf;
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "truncate %s newlength %i.",cmd->filename,cmd->length);
+    logger->log(LOG_DEBUG,"truncate %s newlength %i.",cmd->filename,cmd->length);
     #endif
     
     int err = ioc->truncate(cmd->filename, cmd->length);

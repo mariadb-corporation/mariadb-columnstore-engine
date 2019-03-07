@@ -1,6 +1,7 @@
 
 #include "StatTask.h"
 #include "messageFormat.h"
+#include "SMLogging.h"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,6 +30,7 @@ StatTask::~StatTask()
 
 bool StatTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t buf[1024] = {0};
     
@@ -43,7 +45,7 @@ bool StatTask::run()
     sm_response *resp = (sm_response *) buf;
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "stat %s.",cmd->filename);
+    logger->log(LOG_DEBUG,"stat %s.",cmd->filename);
     #endif
     
     int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);

@@ -2,6 +2,7 @@
 #include "WriteTask.h"
 #include "messageFormat.h"
 #include "IOCoordinator.h"
+#include "SMLogging.h"
 #include <errno.h>
 
 using namespace std;
@@ -28,6 +29,7 @@ WriteTask::~WriteTask()
 
 bool WriteTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t cmdbuf[1024] = {0};
     
@@ -44,7 +46,7 @@ bool WriteTask::run()
     check_error("WriteTask read", false);
             
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "write filename %s offset %i count %i.",cmd->filename,cmd->offset,cmd->count);
+    logger->log(LOG_DEBUG,"write filename %s offset %i count %i.",cmd->filename,cmd->offset,cmd->count);
     #endif
             
     size_t readCount = 0, writeCount = 0;

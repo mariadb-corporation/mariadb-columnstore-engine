@@ -1,6 +1,7 @@
 
 #include "ReadTask.h"
 #include "messageFormat.h"
+#include "SMLogging.h"
 #include <errno.h>
 
 using namespace std;
@@ -27,6 +28,7 @@ ReadTask::~ReadTask()
     
 bool ReadTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     uint8_t buf[1024] = {0};
 
     // get the parameters
@@ -41,7 +43,7 @@ bool ReadTask::run()
     read_cmd *cmd = (read_cmd *) buf;
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "read %s count %i offset %i.",cmd->filename,cmd->count,cmd->offset);
+    logger->log(LOG_DEBUG,"read %s count %i offset %i.",cmd->filename,cmd->count,cmd->offset);
     #endif
     
     // read from IOC, write to the socket

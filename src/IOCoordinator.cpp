@@ -1,9 +1,8 @@
 
 #include "IOCoordinator.h"
-
+#include "SMLogging.h"
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <syslog.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -191,6 +190,7 @@ int IOCoordinator::unlink(const char *path)
 
 int IOCoordinator::copyFile(const char *filename1, const char *filename2)
 {
+    SMLogging* logger = SMLogging::get();
     int err = 0, l_errno;
     try {
         boost::filesystem::copy_file(filename1, filename2);
@@ -200,7 +200,7 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
         l_errno = e.code().value();   // why not.
         // eh, not going to translate all of boost's errors into our errors for this.
         // log the error
-        syslog(LOG_ERR, "IOCoordinator::copy(): got %s",e.what());
+        logger->log(LOG_ERR,"IOCoordinator::copy(): got %s",e.what());
     }
     catch (...) {
         err = -1;

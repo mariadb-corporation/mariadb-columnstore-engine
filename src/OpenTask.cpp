@@ -2,6 +2,7 @@
 
 #include "OpenTask.h"
 #include "messageFormat.h"
+#include "SMLogging.h"
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
@@ -26,6 +27,7 @@ bool OpenTask::run()
         call IOManager to do the work
         return the result
     */
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t buf[1024] = {0};
     
@@ -45,7 +47,7 @@ bool OpenTask::run()
     open_cmd *cmd = (open_cmd *) buf;
 
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "open filename %s mode %o.",cmd->filename,cmd->openmode);
+    logger->log(LOG_DEBUG,"open filename %s mode %o.",cmd->filename,cmd->openmode);
     #endif
     sm_response *resp = (sm_response *) buf;
     int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &resp->payload);

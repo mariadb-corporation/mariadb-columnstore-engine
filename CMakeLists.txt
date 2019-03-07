@@ -25,6 +25,7 @@ set(storagemanager_SRCS
     src/S3Storage.cpp
     src/LocalStorage.cpp
     src/Cache.cpp
+    src/SMLogging.cpp
     src/Downloader.cpp
 )
 

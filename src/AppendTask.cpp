@@ -1,6 +1,7 @@
 
 #include "AppendTask.h"
 #include "messageFormat.h"
+#include "SMLogging.h"
 #include <errno.h>
 
 using namespace std;
@@ -27,6 +28,7 @@ AppendTask::~AppendTask()
 
 bool AppendTask::run()
 {
+    SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t cmdbuf[1024] = {0};
     int err;
@@ -44,7 +46,7 @@ bool AppendTask::run()
     check_error("AppendTask read", false);
     
     #ifdef SM_TRACE
-    syslog(LOG_DEBUG, "append %d bytes to %s.",cmd->count,cmd->filename);
+    logger->log(LOG_DEBUG,"append %d bytes to %s.",cmd->count,cmd->filename);
     #endif
     
     size_t readCount = 0, writeCount = 0;
