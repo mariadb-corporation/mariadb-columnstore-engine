@@ -27,6 +27,7 @@ set(storagemanager_SRCS
     src/Cache.cpp
     src/SMLogging.cpp
     src/Downloader.cpp
+    src/Synchronizer.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)

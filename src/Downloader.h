@@ -3,6 +3,7 @@
 
 #include "ThreadPool.h"
 #include "CloudStorage.h"
+#include "SMLogging.h"
 #include <unordered_set>
 #include <vector>
 #include <string>
@@ -68,6 +69,7 @@ class Downloader
         boost::mutex &getDownloadMutex();
         boost::scoped_ptr<ThreadPool> workers;
         CloudStorage *storage;
+        SMLogging *logger;
 };
 
 }

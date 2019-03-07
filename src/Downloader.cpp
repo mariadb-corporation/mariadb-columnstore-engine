@@ -1,5 +1,6 @@
 #include "Downloader.h"
 #include "Config.h"
+#include "SMLogging.h"
 #include <string>
 #include <errno.h>
 #include <iostream>
@@ -18,11 +19,12 @@ Downloader::Downloader() : maxDownloads(0)
     }
     catch(invalid_argument)
     {
-        // log something
+        logger->log(LOG_WARNING, "Downloader: Invalid arg for ObjectStorage/max_concurrent_downloads, using default of 20");
     }
     if (maxDownloads == 0)
         maxDownloads = 20;
     workers.reset(new ThreadPool(maxDownloads));
+    logger = SMLogging::get();
 }
 
 Downloader::~Downloader()
@@ -92,7 +94,11 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
         auto &dl = dls[i];
         (*errnos)[i] = dl->dl_errno;
         if (dl->dl_errno != 0)
+        {
+            char buf[80];
+            logger->log(LOG_ERR, "Downloader: failed to download %s, got %s", keys[i]->c_str(), strerror_r(dl->dl_errno, buf, 80));
             ret = -1;
+        }
     }
 }
 

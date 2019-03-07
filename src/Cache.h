@@ -3,6 +3,8 @@
 #define CACHE_H_
 
 #include "Downloader.h"
+#include "SMLogging.h"
+#include "Synchronizer.h"
 
 #include <string>
 #include <vector>
@@ -25,14 +27,21 @@ class Cache : public boost::noncopyable
         void exists(const std::vector<std::string> &keys, std::vector<bool> *out);
         void newObject(const std::string &key, size_t size);
         void deletedObject(const std::string &key, size_t size);
-        void setCacheSize(size_t size);
-        void makeSpace(size_t size);
-
+        void setMaxCacheSize(size_t size);
+        size_t getCurrentCacheSize();
+        
         // test helpers
         const boost::filesystem::path &getCachePath();
     private:
         boost::filesystem::path prefix;
         size_t maxCacheSize;
+        size_t objectSize;
+        size_t currentCacheSize;
+        Downloader downloader;
+        Synchronizer *sync;
+        SMLogging *logger;
+        
+        void makeSpace(size_t size);
 
         /* The main cache structures */
         // lru owns the string memory for the filenames it manages.  m_lru and DNE point to those strings.
@@ -83,9 +92,6 @@ class Cache : public boost::noncopyable
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
         boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
-        
-        Downloader downloader;
-        
 };
 
 

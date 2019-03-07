@@ -6,6 +6,9 @@
 #include <syslog.h>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace boost::filesystem;
@@ -13,33 +16,52 @@ using namespace boost::filesystem;
 namespace storagemanager
 {
 
-Cache::Cache()
+Cache::Cache() : currentCacheSize(0)
 {
     Config *conf = Config::get();
-
-    string ssize = conf->getValue("Cache", "cache_size");
-    if (ssize.empty()) 
+    logger = SMLogging::get();
+    sync = Synchronizer::get();
+    
+    string stmp = conf->getValue("Cache", "cache_size");
+    if (stmp.empty()) 
     {
-        syslog(LOG_CRIT, "Cache/cache_size is not set");
+        logger->log(LOG_CRIT, "Cache/cache_size is not set");
         throw runtime_error("Please set Cache/cache_size in the storagemanager.cnf file");
     }
     try
     {
-        maxCacheSize = stol(ssize);
+        maxCacheSize = stoul(stmp);
     }
     catch (invalid_argument &)
     {
-        syslog(LOG_CRIT, "Cache/cache_size is not a number");
+        logger->log(LOG_CRIT, "Cache/cache_size is not a number");
         throw runtime_error("Please set Cache/cache_size to a number");
     }
     //cout << "Cache got cache size " << maxCacheSize << endl;
         
+    stmp = conf->getValue("ObjectStorage", "object_size");
+    if (stmp.empty()) 
+    {
+        logger->log(LOG_CRIT, "ObjectStorage/object_size is not set");
+        throw runtime_error("Please set ObjectStorage/object_size in the storagemanager.cnf file");
+    }
+    try
+    {
+        objectSize = stoul(stmp);
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "ObjectStorage/object_size is not a number");
+        throw runtime_error("Please set ObjectStorage/object_size to a number");
+    }
+    
     prefix = conf->getValue("Cache", "path");
     if (prefix.empty())
     {
-        syslog(LOG_CRIT, "Cache/path is not set");
+        logger->log(LOG_CRIT, "Cache/path is not set");
         throw runtime_error("Please set Cache/path in the storagemanager.cnf file");
     }
+    
     try 
     {
         boost::filesystem::create_directories(prefix);
@@ -82,6 +104,11 @@ void Cache::read(const vector<string> &keys)
             // not in the cache, put it in the list to download
             keysToFetch.push_back(&key);
     }
+    
+    // TODO: get the sizes of the objects to download and make space
+    // For now using an estimate
+    makeSpace(keys.size() * objectSize);
+    
     s.unlock();
     
     // start downloading the keys to fetch
@@ -154,6 +181,10 @@ const boost::filesystem::path & Cache::getCachePath()
         
 void Cache::exists(const vector<string> &keys, vector<bool> *out)
 {
+    out->resize(keys.size());
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    for (int i = 0; i < keys.size(); i++)
+        (*out)[i] = (m_lru.find(keys[i]) == m_lru.end());
 }
 
 void Cache::newObject(const string &key, size_t size)
@@ -164,12 +195,51 @@ void Cache::deletedObject(const string &key, size_t size)
 {
 }
 
-void Cache::setCacheSize(size_t size)
+void Cache::setMaxCacheSize(size_t size)
 {
 }
 
+// call this holding lru_mutex
 void Cache::makeSpace(size_t size)
 {
+    ssize_t thisMuch = currentCacheSize + size - maxCacheSize;
+    if (thisMuch <= 0)
+        return;
+
+    struct stat statbuf;
+    LRU_t::iterator it = lru.begin();
+    while (it != lru.end() && thisMuch > 0)
+    {
+        if (doNotEvict.find(it) != doNotEvict.end())
+        {
+            ++it;
+            continue;   // it's in the do-not-evict list
+        }
+        
+        boost::filesystem::path cachedFile = prefix / *it;
+        int err = stat(cachedFile.string().c_str(), &statbuf);
+        if (err)
+        {
+            logger->log(LOG_WARNING, "Downloader: There seems to be a cached file that couldn't be stat'ed: %s", cachedFile.string().c_str());
+            ++it;
+            continue;
+        }
+        
+        /* 
+            TODO: tell Synchronizer that this key will be evicted
+            delete the file
+            remove it from our structs
+            update current size
+        */
+        assert(currentCacheSize >= statbuf.st_size);
+        currentCacheSize -= statbuf.st_size;
+        thisMuch -= statbuf.st_size;
+        sync->flushObject(*it);
+        boost::filesystem::remove(cachedFile);
+        LRU_t::iterator toRemove = it++;
+        lru.erase(toRemove);
+        m_lru.erase(*toRemove);
+    }
 }
 
 

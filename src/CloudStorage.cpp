@@ -13,7 +13,7 @@ using namespace std;
 namespace
 {
     boost::mutex m;
-    storagemanager::CloudStorage *inst;
+    storagemanager::CloudStorage *inst = NULL;
     
 string tolower(const string &s)
 {
@@ -29,10 +29,10 @@ namespace storagemanager
 {
 CloudStorage * CloudStorage::get()
 {
-    SMLogging* logger = SMLogging::get();
     if (inst)
         return inst;
-        
+    
+    SMLogging* logger = SMLogging::get();
     Config *conf = Config::get();
     string type = tolower(conf->getValue("ObjectStorage", "service"));
     boost::mutex::scoped_lock s(m);

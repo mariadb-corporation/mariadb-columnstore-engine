@@ -3,12 +3,12 @@
 #define CONFIG_H_
 
 #include <boost/property_tree/ptree.hpp>
-//#include <boost/thread/mutex.hpp>
 #include <boost/thread.hpp>
 #include <sys/types.h>
 
 #include <string>
 
+/* TODO.  Need a config change listener impl. */
 
 namespace storagemanager
 {
