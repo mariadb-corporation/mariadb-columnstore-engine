@@ -28,25 +28,38 @@ class ThreadPool : public boost::noncopyable
         void setMaxThreads(uint newMax);
 
     private:
-        struct Runner {
-            Runner(ThreadPool *t) : tp(t) { }
-            void operator()() { tp->processingLoop(); }
-            ThreadPool *tp;
-        };
-        
         void processingLoop();   // the fcn run by each thread
+        void _processingLoop();  // processingLoop() wraps _processingLoop() with thread management stuff.
     
         uint maxThreads;
-        bool die;
+        volatile bool die;
         int threadsWaiting;
         boost::thread_group threads;
-        std::set<boost::thread *> s_threads;
+        
+        // the set s_threads below is intended to make pruning idle threads efficient.
+        // there should be a cleaner way to do it.
+        struct ID_Thread
+        {
+            ID_Thread(boost::thread::id &);
+            ID_Thread(boost::thread *);
+            boost::thread::id id;
+            boost::thread *thrd;
+        };
+        
+        struct id_compare
+        {
+            bool operator()(const ID_Thread &, const ID_Thread &) const;
+        };
+        std::set<ID_Thread, id_compare> s_threads;
+        
         boost::condition jobAvailable;
         std::deque<boost::shared_ptr<Job> > jobs;
-        boost::mutex m;
+        boost::mutex mutex;
         
         const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
         boost::thread pruner;
+        boost::condition somethingToPrune;
+        std::vector<boost::thread::id> pruneable;  // when a thread is about to return it puts its id here
         void pruner_fcn();
         void prune();
 };

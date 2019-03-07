@@ -496,6 +496,7 @@ bool cacheTest1()
     
     // cleanup
     bf::remove(cachePath / "storagemanager.cnf");
+    bf::remove(storagePath / "storagemanager.cnf");
     cout << "cache test 1 OK" << endl;
 }
     

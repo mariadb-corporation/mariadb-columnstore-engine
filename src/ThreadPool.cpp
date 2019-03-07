@@ -1,5 +1,6 @@
 
 #include "ThreadPool.h"
+#include <iostream>
 
 using namespace std;
 
@@ -20,7 +21,7 @@ ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), 
 
 ThreadPool::~ThreadPool()
 {
-    boost::unique_lock<boost::mutex> s(m);
+    boost::unique_lock<boost::mutex> s(mutex);
     die = true;
     jobs.clear();
     jobAvailable.notify_all();
@@ -33,7 +34,7 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
 {
-    boost::unique_lock<boost::mutex> s(m);
+    boost::unique_lock<boost::mutex> s(mutex);
     jobs.push_back(j);
     // Start another thread if necessary
     if (threadsWaiting == 0 && threads.size() < maxThreads) {
@@ -59,20 +60,25 @@ void ThreadPool::pruner_fcn()
 
 void ThreadPool::prune()
 {
-    boost::unique_lock<boost::mutex> s(m);
-    set<boost::thread *>::iterator it, to_remove;
-    it = s_threads.begin();
-    while (it != s_threads.end())
+    set<ID_Thread>::iterator it;
+ 
+    boost::unique_lock<boost::mutex> s(mutex);
+    while (1)
     {
-        if ((*it)->joinable())
+        while (pruneable.empty() && !die)
+            somethingToPrune.wait(s);
+        if (die)
+            return;
+        
+        for (auto &id : pruneable)
         {
-            (*it)->join();
-            threads.remove_thread(*it);
-            to_remove = it++;
-            s_threads.erase(to_remove);
+            it = s_threads.find(id);
+            assert(it != s_threads.end());
+            it->thrd->join();
+            threads.remove_thread(it->thrd);
+            s_threads.erase(it);
         }
-        else
-            ++it;
+        pruneable.clear();
     }
 }
 
@@ -83,9 +89,22 @@ void ThreadPool::setMaxThreads(uint newMax)
 
 void ThreadPool::processingLoop()
 {
-    boost::unique_lock<boost::mutex> s(m, boost::defer_lock);
+    try
+    {
+        _processingLoop();
+    }
+    catch (...)
+    {}
+    boost::unique_lock<boost::mutex> s(mutex);
+    pruneable.push_back(boost::this_thread::get_id());
+    somethingToPrune.notify_one();
+}
+
+void ThreadPool::_processingLoop()
+{
+    boost::unique_lock<boost::mutex> s(mutex, boost::defer_lock);
     
-    while (!die)
+    while (1)
     {
         s.lock();
         while (jobs.empty() && !die) 
@@ -104,6 +123,19 @@ void ThreadPool::processingLoop()
         
         (*job)();
     }
+}
+
+inline bool ThreadPool::id_compare::operator()(const ID_Thread &t1, const ID_Thread &t2) const
+{
+    return t1.id < t2.id;
+}
+
+ThreadPool::ID_Thread::ID_Thread(boost::thread::id &i): id(i)
+{
+}
+
+ThreadPool::ID_Thread::ID_Thread(boost::thread *t): id(t->get_id()), thrd(t)
+{
 }
 
 }

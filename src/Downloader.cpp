@@ -2,6 +2,7 @@
 #include "Config.h"
 #include <string>
 #include <errno.h>
+#include <iostream>
 
 using namespace std;
 namespace storagemanager
@@ -28,9 +29,14 @@ Downloader::~Downloader()
 {
 }
 
+inline boost::mutex & Downloader::getDownloadMutex()
+{
+    return download_mutex;
+}
+
 int Downloader::download(const vector<const string *> &keys, vector<int> *errnos)
 {
-    uint counter = keys.size();
+    volatile uint counter = keys.size();
     boost::condition condvar;
     boost::mutex m;
     DownloadListener listener(&counter, &condvar, &m);
@@ -76,7 +82,8 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
     for (i = 0; i < keys.size(); i++)
         if (inserted[i])
             downloads.erase(iterators[i]);
-
+    s.unlock();
+            
     // check for errors & propagate
     int ret = 0;
     errnos->resize(keys.size());
@@ -110,12 +117,13 @@ void Downloader::Download::operator()()
     int err = storage->getObject(*key, dler->getDownloadPath() + "/" + *key);
     if (err != 0)
         dl_errno = errno;
-        
+    
+    boost::unique_lock<boost::mutex> s(dler->getDownloadMutex());
     for (auto &listener : listeners)
         listener->downloadFinished();
 }
 
-Downloader::DownloadListener::DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
+Downloader::DownloadListener::DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m) : count(counter), cond(condvar), mutex(m)
 {
 }
 

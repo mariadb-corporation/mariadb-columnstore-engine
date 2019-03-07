@@ -34,10 +34,10 @@ class Downloader
         class DownloadListener
         {
         public:
-            DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m);
+            DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m);
             void downloadFinished();
         private:
-            uint *count;
+            volatile uint *count;
             boost::condition *cond;
             boost::mutex *mutex;
         };
@@ -65,7 +65,7 @@ class Downloader
         typedef std::unordered_set<boost::shared_ptr<Download>, DLHasher, DLEquals> Downloads_t;
         Downloads_t downloads;
         boost::mutex download_mutex;
-        
+        boost::mutex &getDownloadMutex();
         boost::scoped_ptr<ThreadPool> workers;
         CloudStorage *storage;
 };
