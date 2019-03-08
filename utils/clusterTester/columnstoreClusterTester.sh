@@ -800,8 +800,7 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "libaio" "rsync" "snappy" "net-tools" "numactl-libs")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "libaio" "rsync" "jemalloc" "snappy" "net-tools" "numactl-libs")
   declare -a CENTOS_PKG_NOT=("mariadb-libs")
 
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
@@ -920,8 +919,7 @@ checkPackages()
     fi
   fi
 
-
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "libaio1" "rsync" "libsnappy1" "net-tools" "libnuma1")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "libaio1" "rsync" "jemalloc" "libsnappy1" "net-tools" "libnuma1")
   declare -a SUSE_PKG_NOT=("mariadb" , "libmariadb18")
 
   if [ "$OS" == "suse12" ]; then
@@ -1012,7 +1010,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libnuma1" )
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "rsync" "jemalloc" "libsnappy1V5" "net-tools" "libnuma1")
   declare -a UBUNTU_PKG_NOT=("mariadb-server" "libmariadb18")
 
   if [ "$OS" == "ubuntu16" ] || [ "$OS" == "ubuntu18" ]; then
@@ -1129,8 +1127,7 @@ checkPackages()
    fi
   fi
 
-
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libnuma1")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "rsync" "jemalloc" "libsnappy1" "net-tools" "libnuma1")
   declare -a DEBIAN_PKG_NOT=("libmariadb18" "mariadb-server")
 
   if [ "$OS" == "debian8" ]; then
@@ -1247,8 +1244,7 @@ checkPackages()
     fi
   fi
   
-
-  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libaio1" "libnuma1")
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline5" "rsync" "jemalloc" "libsnappy1V5" "net-tools" "libaio1")
   declare -a DEBIAN9_PKG_NOT=("libmariadb18" "mariadb-server")
 
   if [ "$OS" == "debian9" ]; then
