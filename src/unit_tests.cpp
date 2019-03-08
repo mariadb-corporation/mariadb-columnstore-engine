@@ -482,21 +482,41 @@ bool cacheTest1()
     bf::path storagePath = ls->getPrefix();
     bf::path cachePath = cache.getCachePath();
     vector<string> v_bogus;
+    vector<bool> exists;
     
     // make sure nothing shows up in the cache path for files that don't exist
     v_bogus.push_back("does-not-exist");
     cache.read(v_bogus);
     assert(!bf::exists(cachePath / "does-not-exist"));
+    cache.exists(v_bogus, &exists);
+    assert(exists.size() == 1);
+    assert(!exists[0]);
     
     // make sure a file that does exist does show up in the cache path
-    bf::copy_file("storagemanager.cnf", storagePath / "storagemanager.cnf", bf::copy_option::overwrite_if_exists);
-    v_bogus[0] = "storagemanager.cnf";
+    string realFile("storagemanager.cnf");
+    bf::copy_file(realFile, storagePath / realFile, bf::copy_option::overwrite_if_exists);
+    v_bogus[0] = realFile;
     cache.read(v_bogus);
-    assert(bf::exists(cachePath / "storagemanager.cnf"));
+    assert(bf::exists(cachePath / realFile));
+    exists.clear();
+    cache.exists(v_bogus, &exists);
+    assert(exists.size() == 1);
+    assert(exists[0]);
+    ssize_t currentSize = cache.getCurrentCacheSize();
+    assert(currentSize == bf::file_size(cachePath / realFile));
+    
+    // lie about the file being deleted and then replaced
+    cache.deletedObject(realFile, currentSize);
+    assert(cache.getCurrentCacheSize() == 0);
+    cache.newObject(realFile, currentSize);
+    assert(cache.getCurrentCacheSize() == currentSize);
+    cache.exists(v_bogus, &exists);
+    assert(exists.size() == 1);
+    assert(exists[0]);
     
     // cleanup
-    bf::remove(cachePath / "storagemanager.cnf");
-    bf::remove(storagePath / "storagemanager.cnf");
+    bf::remove(cachePath / realFile);
+    bf::remove(storagePath / realFile);
     cout << "cache test 1 OK" << endl;
 }
     

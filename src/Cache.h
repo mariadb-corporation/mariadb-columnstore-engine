@@ -28,7 +28,7 @@ class Cache : public boost::noncopyable
         void newObject(const std::string &key, size_t size);
         void deletedObject(const std::string &key, size_t size);
         void setMaxCacheSize(size_t size);
-        size_t getCurrentCacheSize();
+        size_t getCurrentCacheSize() const;
         
         // test helpers
         const boost::filesystem::path &getCachePath();

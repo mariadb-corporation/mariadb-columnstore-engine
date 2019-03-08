@@ -189,7 +189,7 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out)
     out->resize(keys.size());
     boost::unique_lock<boost::mutex> s(lru_mutex);
     for (int i = 0; i < keys.size(); i++)
-        (*out)[i] = (m_lru.find(keys[i]) == m_lru.end());
+        (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
 void Cache::newObject(const string &key, size_t size)
@@ -248,7 +248,7 @@ void Cache::makeSpace(size_t size)
         }
         
         /* 
-            TODO: tell Synchronizer that this key will be evicted
+            tell Synchronizer that this key will be evicted
             delete the file
             remove it from our structs
             update current size
@@ -264,6 +264,10 @@ void Cache::makeSpace(size_t size)
     }
 }
 
+size_t Cache::getCurrentCacheSize() const
+{
+    return currentCacheSize;
+}
 
 /* The helper classes */
 
