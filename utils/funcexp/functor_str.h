@@ -325,6 +325,7 @@ public:
   */
 class Func_lpad : public Func_Str
 {
+    static const string fPad;
 public:
     Func_lpad() : Func_Str("lpad") {}
     virtual ~Func_lpad() {}
@@ -342,6 +343,7 @@ public:
   */
 class Func_rpad : public Func_Str
 {
+    static const string fPad;
 public:
     Func_rpad() : Func_Str("rpad") {}
     virtual ~Func_rpad() {}
