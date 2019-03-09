@@ -2373,33 +2373,36 @@ void decode_table_name(char *buf, const char *path, size_t pathLen)
 
   @details
   Parses the path to extract both database
-  and table names, e.g path ./test/d$ produces
-  a pair of strings 'test' and 'd$'. This f() looks for a '/'
-  token only twice to allow '/' symbol in table names.
+  and table names. This f() assumes the path format
+  ./test/d$
+  and f() produces a pair of strings 'test' and 'd$'.
+  This f() looks for a '/' symbols only twice to allow '/'
+  symbol in table names. The f() supports international
+  glyphs in db or table names.
 
   Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
 */
-pair<string, string> parseTableName(const string& tn)
+pair<string, string> parseTableName(const char *path)
 {
-    string db;
-    string tb;
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-#ifdef _MSC_VER
-    boost::char_separator<char> sep("\\");
-#else
-    boost::char_separator<char> sep("/");
-#endif
-    tokenizer tokens(tn, sep);
-    tokenizer::iterator tok_iter = tokens.begin();
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    db = *tok_iter;
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    tb = *tok_iter;
+    const char *db_pnt = NULL, *tbl_pnt = NULL, *path_cursor = path;
+    string db, tb;
+    while (*path_cursor != '/')
+    {
+        path_cursor++;
+    }
+    path_cursor++;
+    db_pnt = path_cursor;
+    while (*path_cursor != '/')
+    {
+        path_cursor++;
+    }
+    path_cursor++;
+    tbl_pnt = path_cursor;
+    db.assign(db_pnt, tbl_pnt - 1 - db_pnt);
+    tb.assign(tbl_pnt, path + strlen(path) - tbl_pnt);
+
     return make_pair(db, tb);
 }
-
 int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
