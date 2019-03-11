@@ -60,7 +60,7 @@ path operator+(const path &p1, const path &p2)
 
 int LocalStorage::getObject(const string &source, const string &dest, size_t *size)
 {
-    int ret = copy(prefix + source, dest);
+    int ret = copy(prefix / source, dest);
     if (ret)
         return ret;
     if (size)
@@ -70,19 +70,25 @@ int LocalStorage::getObject(const string &source, const string &dest, size_t *si
 
 int LocalStorage::putObject(const string &source, const string &dest)
 {
-    return copy(source, prefix + dest);
+    return copy(source, prefix / dest);
 }
 
 int LocalStorage::copyObject(const string &source, const string &dest)
 {
-    return copy(prefix + source, prefix + dest);
+    return copy(prefix / source, prefix / dest);
 }
 
 void LocalStorage::deleteObject(const string &key)
 {
     boost::system::error_code err;
     
-    boost::filesystem::remove(prefix + key, err);
+    boost::filesystem::remove(prefix / key, err);
+}
+
+int LocalStorage::exists(const std::string &key, bool *out)
+{
+    *out = boost::filesystem::exists(prefix / key);
+    return 0;
 }
 
 }

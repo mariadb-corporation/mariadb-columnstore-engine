@@ -70,7 +70,7 @@ class Downloader
         Downloads_t downloads;
         boost::mutex download_mutex;
         boost::mutex &getDownloadMutex();
-        boost::scoped_ptr<ThreadPool> workers;
+        ThreadPool workers;
         CloudStorage *storage;
         SMLogging *logger;
 };

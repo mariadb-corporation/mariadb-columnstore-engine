@@ -26,7 +26,9 @@ class Cache : public boost::noncopyable
         void read(const std::vector<std::string> &keys);
         void exists(const std::vector<std::string> &keys, std::vector<bool> *out);
         void newObject(const std::string &key, size_t size);
+        void newJournalEntry(size_t size);
         void deletedObject(const std::string &key, size_t size);
+        void deletedJournal(size_t size);
         void setMaxCacheSize(size_t size);
         size_t getCurrentCacheSize() const;
         

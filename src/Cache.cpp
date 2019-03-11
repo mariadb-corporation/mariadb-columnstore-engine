@@ -203,6 +203,19 @@ void Cache::newObject(const string &key, size_t size)
     currentCacheSize += size;
 }
 
+void Cache::newJournalEntry(size_t size)
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    makeSpace(size);
+    currentCacheSize += size;
+}
+
+void Cache::deletedJournal(size_t size)
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    currentCacheSize -= size;
+}
+
 void Cache::deletedObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
@@ -257,7 +270,8 @@ void Cache::makeSpace(size_t size)
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
         sync->flushObject(*it);
-        boost::filesystem::remove(cachedFile);
+        // Deleting the files will be done through Synchronizer->Replicator
+        //boost::filesystem::remove(cachedFile);
         LRU_t::iterator toRemove = it++;
         lru.erase(toRemove);
         m_lru.erase(*toRemove);

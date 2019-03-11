@@ -33,4 +33,9 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
     return 0;
 }
 
+int S3Storage::exists(const string &key, bool *out)
+{
+    return 0;
+}
+
 }

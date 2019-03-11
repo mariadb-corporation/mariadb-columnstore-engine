@@ -23,7 +23,7 @@ Downloader::Downloader() : maxDownloads(0)
     }
     if (maxDownloads == 0)
         maxDownloads = 20;
-    workers.reset(new ThreadPool(maxDownloads));
+    workers.setMaxThreads(maxDownloads);
     logger = SMLogging::get();
 }
 
@@ -64,7 +64,7 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
         if (inserted[i])
         {
             dl->listeners.push_back(&listener);
-            workers->addJob(dl);
+            workers.addJob(dl);
         }
         else
         {

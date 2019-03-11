@@ -18,6 +18,7 @@ class LocalStorage : public CloudStorage
         int putObject(const std::string &sourceFile, const std::string &destKey);
         void deleteObject(const std::string &key);
         int copyObject(const std::string &sourceKey, const std::string &destKey);
+        int exists(const std::string &key, bool *out);
         
         const boost::filesystem::path & getPrefix() const;
 
