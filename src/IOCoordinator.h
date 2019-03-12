@@ -34,6 +34,9 @@ class IOCoordinator : public boost::noncopyable
         int unlink(const char *path);
         int copyFile(const char *filename1, const char *filename2);
         
+        void getNewKeyFromOldKey(const std::string &oldKey, std::string *newKey);
+        void getNewKeyFromSourceName(const std::string &sourceName, std::string *newKey);
+        
         // The shared logic for merging a journal file with its base file.
         // The default values for offset and len mean 'process the whole file'.  Otherwise,
         // offset is relative to the object.

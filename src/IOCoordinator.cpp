@@ -359,4 +359,12 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     return ret;
 }
 
+void IOCoordinator::getNewKeyFromOldKey(const string &oldKey, string *newKey)
+{
+}
+
+void IOCoordinator::getNewKeyFromSourceName(const string &sourceName, string *newKey)
+{
+}
+
 }
