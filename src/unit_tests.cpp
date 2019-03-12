@@ -29,6 +29,7 @@
 
 using namespace storagemanager;
 using namespace std;
+namespace bf = boost::filesystem;
 
 struct scoped_closer {
     scoped_closer(int f) : fd(f) { }
@@ -470,7 +471,7 @@ bool localstorageTest1()
 
 bool cacheTest1()
 {
-    namespace bf = boost::filesystem;
+
     Cache cache;
     CloudStorage *cs = CloudStorage::get();
     LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
@@ -519,6 +520,81 @@ bool cacheTest1()
     bf::remove(storagePath / realFile);
     cout << "cache test 1 OK" << endl;
 }
+
+bool mergeJournalTest()
+{
+    /*
+        create a dummy object and a dummy journal
+        call mergeJournal to process it with various params
+        verify the expected values
+    */
+    
+    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(objFD >= 0);
+    scoped_closer s1(objFD);
+    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(journalFD >= 0);
+    scoped_closer s2(journalFD);
+    
+    int i;
+    for (i = 0; i < 2048; i++)
+        assert(write(objFD, &i, 4) == 4);
+    
+    char header[] = "{ \"version\" : 1 }";
+    write(journalFD, header, strlen(header) + 1);
+    
+    uint64_t offlen[2] = { 20, 20 };
+    write(journalFD, offlen, 16);
+    for (i = 0; i < 5; i++)
+        assert(write(journalFD, &i, 4) == 4);
+    
+    // the merged version should look like
+    // (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
+    
+    IOCoordinator *ioc = IOCoordinator::get();
+    boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal");
+    assert(data);
+    int *idata = (int *) data.get();
+    for (i = 0; i < 5; i++)
+        assert(idata[i] == i);
+    for (; i < 10; i++)
+        assert(idata[i] == i-5);
+    for (; i < 2048; i++)
+        assert(idata[i] == i);
+        
+    // try different range parameters
+    // read at the beginning of the change
+    data = ioc->mergeJournal("test-object", "test-journal", 20, 40);
+    assert(data);
+    idata = (int *) data.get();
+    for (i = 0; i < 5; i++)
+        assert(idata[i] == i);
+    for (; i < 10; i++)
+        assert(idata[i] == i+5);
+    
+    // read s.t. beginning of the change is in the middle of the range
+    data = ioc->mergeJournal("test-object", "test-journal", 8, 24);
+    assert(data);
+    idata = (int *) data.get();
+    for (i = 0; i < 3; i++)
+        assert(idata[i] == i + 2);
+    for (; i < 6; i++)
+        assert(idata[i] == i - 3);
+    
+    // read s.t. end of the change is in the middle of the range
+    data = ioc->mergeJournal("test-object", "test-journal", 28, 20);
+    assert(data);
+    idata = (int *) data.get();
+    for (i = 0; i < 3; i++)
+        assert(idata[i] == i + 2);
+    for (; i < 3; i++)
+        assert(idata[i] == i + 7);
+    
+    // cleanup
+    bf::remove("test-object");
+    bf::remove("test-journal");
+    cout << "mergeJournalTest OK" << endl;
+}
     
 
 int main()
@@ -539,6 +615,7 @@ int main()
     
     localstorageTest1();
     cacheTest1();
+    mergeJournalTest();
     
     return 0;
 }
