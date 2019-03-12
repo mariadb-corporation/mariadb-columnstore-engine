@@ -309,7 +309,6 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     assert(header.get<string>("version") == "1");
     
     // start processing the entries
-    bool eof = false;
     while (1)
     {
         uint64_t offlen[2];
@@ -359,6 +358,60 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     return ret;
 }
 
+// MergeJournalInMem is a specialized version of mergeJournal().  TODO: refactor if possible.
+int IOCoordinator::mergeJournalInMem(uint8_t *objData, const char *journalPath)
+{
+    int journalFD = ::open(journalPath, O_RDONLY);
+    if (journalFD < 0)
+        return -1;
+    scoped_closer s(journalFD);
+
+    // grab the journal header and make sure the version is 1
+    boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);
+    stringstream ss;
+    ss << headertxt.get();
+    boost::property_tree::ptree header;
+    boost::property_tree::json_parser::read_json(ss, header);
+    assert(header.get<string>("version") == "1");
+    
+    // start processing the entries
+    while (1)
+    {
+        uint64_t offlen[2];
+        int err = ::read(journalFD, &offlen, 16);
+        if (err != 16)   // got EOF
+            break;
+        
+        uint64_t startReadingAt = offlen[0];
+        uint64_t lengthOfRead = offlen[1];
+
+        ::lseek(journalFD, startReadingAt, SEEK_CUR);
+            
+        uint count = 0;
+        while (count < lengthOfRead)
+        {
+            err = ::read(journalFD, &objData[startReadingAt + count], lengthOfRead - count);
+            if (err < 0)
+            {
+                char buf[80];
+                int l_errno = errno;
+                logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(errno, buf, 80));
+                errno = l_errno;
+                return -1;
+            }
+            else if (err == 0)
+            {
+                logger->log(LOG_ERR, "mergeJournal: got early EOF");
+                errno = ENODATA;  // is there a better errno for early EOF?
+                return -1;
+            }
+            count += err;
+        }
+        ::lseek(journalFD, offlen[1] - lengthOfRead, SEEK_CUR);
+    }
+    return 0;
+}
+    
 void IOCoordinator::getNewKeyFromOldKey(const string &oldKey, string *newKey)
 {
 }

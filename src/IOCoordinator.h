@@ -41,6 +41,7 @@ class IOCoordinator : public boost::noncopyable
         // The default values for offset and len mean 'process the whole file'.  Otherwise,
         // offset is relative to the object.
         boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset = 0, size_t len = 0) const;
+        int mergeJournalInMem(uint8_t *objData, const char *journalPath);
         
     private:
         IOCoordinator();
