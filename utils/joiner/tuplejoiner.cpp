@@ -45,14 +45,17 @@ TupleJoiner::TupleJoiner(
 	threadCount(1), typelessJoin(false), bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
 	if (smallRG.usesStringTable()) {
-		STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc(64*1024*1024 + 1);
-		_pool = alloc.getPoolAllocator();
-
+		using allocator_t = STLPoolAllocator<pair<const int64_t, Row::Pointer> >;
+    allocator_t alloc(64*1024*1024 + 1);
+		auto & oStack = alloc.get_stack();
+    pool_mem_usage = [&oStack](){ return oStack.unsafe_count() * sizeof(allocator_t::stack_type::value_type); };
 		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
 	}
 	else {
-		STLPoolAllocator<pair<const int64_t, uint8_t *> > alloc(64*1024*1024 + 1);
-		_pool = alloc.getPoolAllocator();
+		using allocator_t = STLPoolAllocator<pair<const int64_t, uint8_t *> >;
+    allocator_t alloc(64*1024*1024 + 1);
+    auto & oStack = alloc.get_stack();
+    pool_mem_usage = [&oStack](){ return oStack.unsafe_count() * sizeof(allocator_t::stack_type::value_type); };
 
 		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
 	}
@@ -96,7 +99,6 @@ TupleJoiner::TupleJoiner(
 	bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
 	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
-	_pool = alloc.getPoolAllocator();
 
 	ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
 	smallRG.initRow(&smallNullRow);
@@ -527,9 +529,9 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer> *out)
 uint64_t TupleJoiner::getMemUsage() const
 {
 	if (inUM() && typelessJoin)
-		return _pool->getMemUsage() + storedKeyAlloc.getMemUsage();
+		return pool_mem_usage() + storedKeyAlloc.getMemUsage();
 	else if (inUM())
-		return _pool->getMemUsage();
+		return pool_mem_usage();
 	else
 		return (rows.size() * sizeof(Row::Pointer));
 }
@@ -800,7 +802,6 @@ void TupleJoiner::setTableName(const string &tname)
 void TupleJoiner::clearData()
 {
 	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
-	_pool = alloc.getPoolAllocator();
 
 	if (typelessJoin)
 		ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));

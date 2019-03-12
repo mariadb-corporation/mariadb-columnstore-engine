@@ -37,6 +37,7 @@
 #include "../funcexp/funcexpwrapper.h"
 #include "stlpoolallocator.h"
 #include "hasher.h"
+#include "poolallocator.h"
 
 namespace joiner
 {
@@ -240,7 +241,7 @@ private:
 	};
 	JoinAlg joinAlg;
 	joblist::JoinType joinType;
-	boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
+	std::function<size_t()> pool_mem_usage;
 	uint32_t threadCount;
 	std::string tableName;
 
