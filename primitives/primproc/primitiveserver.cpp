@@ -91,6 +91,8 @@ using namespace idbdatafile;
 
 using namespace threadpool;
 
+#include "threadnaming.h"
+
 #include "atomicops.h"
 
 #ifndef O_BINARY
@@ -925,6 +927,7 @@ struct AsynchLoader
 
     void operator()()
     {
+        utils::setThreadName("PPAsyncLoader");
         bool cached = false;
         uint32_t rCount = 0;
         char buf[BLOCK_SIZE];
@@ -1159,6 +1162,7 @@ void DictScanJob::write(const ByteStream& bs)
 
 int DictScanJob::operator()()
 {
+    utils::setThreadName("PPDictScanJob");
     uint8_t data[DATA_BLOCK_SIZE];
     uint32_t output_buf_size = MAX_BUFFER_SIZE;
     uint32_t session;
@@ -1338,6 +1342,7 @@ struct BPPHandler
         LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
         int operator()()
         {
+            utils::setThreadName("PPHandLastJoiner");
             return rt->lastJoinerMsg(*bs, dieTime);
         }
     };
@@ -1347,6 +1352,7 @@ struct BPPHandler
         Create(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
         int operator()()
         {
+            utils::setThreadName("PPHandCreate");
             rt->createBPP(*bs);
             return 0;
         }
@@ -1357,6 +1363,7 @@ struct BPPHandler
         Destroy(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
         int operator()()
         {
+            utils::setThreadName("PPHandDestroy");
             return rt->destroyBPP(*bs, dieTime);
         }
     };
@@ -1366,6 +1373,7 @@ struct BPPHandler
         AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
         int operator()()
         {
+            utils::setThreadName("PPHandAddJoiner");
             return rt->addJoinerToBPP(*bs, dieTime);
         }
     };
@@ -1375,6 +1383,7 @@ struct BPPHandler
         Abort(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
         int operator()()
         {
+            utils::setThreadName("PPHandAbort");
             return rt->doAbort(*bs, dieTime);
         }
     };
@@ -1751,6 +1760,7 @@ public:
     virtual int execute() = 0;
     int operator()()
     {
+        utils::setThreadName("PPDictOp");
         int ret;
         ret = execute();
 
@@ -1967,6 +1977,7 @@ struct ReadThread
 
     void operator()()
     {
+        utils::setThreadName("PPReadThread");
         boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
             fPrimitiveServerPtr->getProcessorThreadPool();
         SBS bs;
@@ -2376,6 +2387,7 @@ struct ServerThread
 
     void operator()()
     {
+        utils::setThreadName("PPServerThr");
         IOSocket ios;
 
         try
