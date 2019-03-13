@@ -1,0 +1,193 @@
+/* Copyright (C) 2017 MariaDB Corporaton
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
+
+#include <sstream>
+#include <cstring>
+#include <typeinfo>
+#include "covar_samp.h"
+#include "bytestream.h"
+#include "objectreader.h"
+
+using namespace mcsv1sdk;
+
+class Add_covar_samp_ToUDAFMap
+{
+public:
+    Add_covar_samp_ToUDAFMap()
+    {
+        UDAFMap::getMap()["covar_samp"] = new covar_samp();
+    }
+};
+
+static Add_covar_samp_ToUDAFMap addToMap;
+
+// Use the simple data model
+struct covar_samp_data
+{
+    uint64_t	cnt;
+    double      sumx;
+    double      sumy;
+    double      sumxy;  // sum of x * y
+};
+
+
+mcsv1_UDAF::ReturnCode covar_samp::init(mcsv1Context* context,
+                                       ColumnDatum* colTypes)
+{
+    if (context->getParameterCount() != 2)
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("covar_samp() with other than 2 arguments");
+        return mcsv1_UDAF::ERROR;
+    }
+
+    context->setUserDataSize(sizeof(covar_samp_data));
+    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setColWidth(8);
+    context->setScale(DECIMAL_NOT_SPECIFIED);
+    context->setPrecision(0);
+    context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+    return mcsv1_UDAF::SUCCESS;
+
+}
+
+mcsv1_UDAF::ReturnCode covar_samp::reset(mcsv1Context* context)
+{
+    struct  covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
+    data->cnt = 0;
+    data->sumx = 0.0;
+    data->sumy = 0.0;
+    data->sumxy = 0.0;
+    return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode covar_samp::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
+{
+    static_any::any& valIn_y = valsIn[0].columnData;
+    static_any::any& valIn_x = valsIn[1].columnData;
+    struct  covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
+    double valx = 0.0;
+    double valy = 0.0;
+
+    valx = convertAnyTo<double>(valIn_x);
+    valy = convertAnyTo<double>(valIn_y);
+
+    // For decimal types, we need to move the decimal point.
+    uint32_t scaley = valsIn[0].scale;
+
+    if (valy != 0 && scaley > 0)
+    {
+        valy /= pow(10.0, (double)scaley);
+    }
+
+    data->sumy += valy;
+
+    // For decimal types, we need to move the decimal point.
+    uint32_t scalex = valsIn[1].scale;
+
+    if (valx != 0 && scalex > 0)
+    {
+        valx /= pow(10.0, (double)scalex);
+    }
+
+    data->sumx += valx;
+
+    data->sumxy += valx*valy;
+
+    ++data->cnt;
+    
+    return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode covar_samp::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
+{
+    if (!userDataIn)
+    {
+        return mcsv1_UDAF::SUCCESS;
+    }
+
+    struct covar_samp_data* outData = (struct covar_samp_data*)context->getUserData()->data;
+    struct covar_samp_data* inData = (struct covar_samp_data*)userDataIn->data;
+
+    outData->sumx += inData->sumx;
+    outData->sumy += inData->sumy;
+    outData->sumxy += inData->sumxy;
+    outData->cnt += inData->cnt;
+
+    return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::any& valOut)
+{
+    struct covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
+    double N = data->cnt;
+    if (N > 1)
+    {
+        double sumx = data->sumx;
+        double sumy = data->sumy;
+        double sumxy = data->sumxy;
+
+        double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
+        valOut = covar_samp;
+    }
+    else
+    if (N == 1)
+    {
+        valOut = 0;
+    }
+    return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode covar_samp::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
+{
+    static_any::any& valIn_y = valsDropped[0].columnData;
+    static_any::any& valIn_x = valsDropped[1].columnData;
+    struct covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
+
+    double valx = 0.0;
+    double valy = 0.0;
+
+    valx = convertAnyTo<double>(valIn_x);
+    valy = convertAnyTo<double>(valIn_y);
+
+    // For decimal types, we need to move the decimal point.
+    uint32_t scaley = valsDropped[0].scale;
+
+    if (valy != 0 && scaley > 0)
+    {
+        valy /= pow(10.0, (double)scaley);
+    }
+
+    data->sumy -= valy;
+
+    // For decimal types, we need to move the decimal point.
+    uint32_t scalex = valsDropped[1].scale;
+
+    if (valx != 0 && scalex > 0)
+    {
+        valx /= pow(10.0, (double)scalex);
+    }
+
+    data->sumx -= valx;
+
+    data->sumxy -= valx*valy;
+    --data->cnt;
+
+    return mcsv1_UDAF::SUCCESS;
+}
+

@@ -2,17 +2,12 @@
 #
 # $Id: post-uninstall 421 2007-04-05 15:46:55Z dhill $
 #
-# Post-uninstall steps for columnstore install
+# pre-uninstall steps for columnstore install
 
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-SUDO=" "
-user=root
-if [ $USER != "root" ]; then
-        user=$USER
-        SUDO="sudo "
-fi
+user=`whoami 2>/dev/null`
 
 quiet=0
 
@@ -25,91 +20,77 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+		prefix=`dirname $prefix`
 	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
 		quiet=1
 	else
-		echo "post-uninstall: ignoring unknown argument: $arg" 1>&2
+		echo "pre-install: invalid unknown argument: $arg" 1>&2
+		echo "exiting..."
+		exit 1
 	fi
 done
-
-if [ $user = "root" ]; then
-	. /root/.bashrc
-else
-	. $HOME/.bashrc
-fi
 
 #stop services
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
-# uninstall OS scripts updated by postConfigure
-if test -f /etc/exports.columnstoreSave ; then
-	$SUDO mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
-else
-	$SUDO rm -f /etc/exports > /dev/null 2>&1
+if [ $user != "root" ]; then
+	export COLUMNSTORE_INSTALL_DIR=$installdir
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 fi
 
-if test -f /etc/rc.d/rc.local.columnstoreSave ; then	
-	$SUDO mv -f /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local > /dev/null 2>&1
-fi
-
-if test -f /etc/rc.local.columnstoreSave ; then
-	$SUDO mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
-fi
-
-export COLUMNSTORE_INSTALL_DIR=$installdir
-
-cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
+cloud=`$installdir/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
-		$SUDO sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
+	    sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
 	fi
 fi
- 
-#remove log file directories
-#rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
-#rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-$SUDO rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
-$SUDO rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
-rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
-$SUDO rm -f /etc/default/columnstore
 
-# remove Mariab Columnstore Log Rotate File abd Transaction Log File
-$SUDO rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
-$SUDO rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
+#remove profile file
+if [ $user != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+		touch $prefix/.bashrc
+	fi
+
+	if [ -f ${profileFile}_backup ] ; then
+	    mv -f ${profileFile}_backup $profileFile
+	fi
+else
+	rm -f /etc/profile.d/columnstoreAlias.sh
+fi
+
+#remove log file directories
+if [ $user == "root" ]; then
+	rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+	rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+fi
+
+rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1\
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
-# delete prat files
-$SUDO rm -f /etc/cron.d/ps > /dev/null 2>&1
-$SUDO rm -f /etc/pscollect > /dev/null 2>&1
-$SUDO /etc/init.d/crond reload  > /dev/null 2>&1
-$SUDO $SUDO systemctl reload crond.service > /dev/null 2>&1
-
-# delete tmp files
+#get temp directory
+tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
+if [[ $tmpDir = *"tmp" ]]; then
+	# delete tmp files
+	rm -rf $tmpDir/*
+fi
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
-rm -rf /tmp/bucketreuse
-rm -f /tmp/columnstore.txt
-rm -f /tmp/dbbuilder.*
-rm -f /tmp/dbrmfiles
-$SUDO rm -f /var/lock/subsys/columnstore
-rm -f /tmp/pkgcheck
-rm -f /tmp/upgrade-status.log.*
-rm -f /tmp/mount.log
-rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
-rm -rf /tmp/columnstore_tmp_files
+rm -f $installdir/data/bulk/tmp/job/* >/dev/null 2>&1
 rm -f $installdir/local/moveDbrootTransactionLog
 
-#delete any old setenv files under home directory
-if [ $user = "root" ]; then
-	rm -f /root/setenv-hdfs*
-else
-	rm -f /home/$user/setenv-hdfs*
-fi
+lockdir=`$installdir/bin/getConfig Installation LockFileDirectory`
+rm -f $lockdir/columnstore
+rm -f $lockdir/mysql-Columnstore
 
 # delete core files
 #rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
@@ -118,8 +99,6 @@ fi
 if [ -x $installdir/bin/syslogSetup.sh ]; then
 	if [ $user = "root" ]; then
 		$installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
-	else
-		$SUDO $installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
 	fi
 fi
 
@@ -157,29 +136,29 @@ if [ $quiet != 1 ]; then
 	rm -f $installdir/etc/AlarmConfig.xml.installSave
 fi
 
-#umount file systems
-if [ $user = "root" ]; then
-	rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
-else
-	$SUDO rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
-fi
+#remove OAMdbrootCheck file
+rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 
 #remove library paths
-if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
-        # remove library config file
-        $SUDO rm -f /etc/ld.so.conf.d/columnstore.conf
-        $SUDO ldconfig
-fi
-
-#cleanup .bashrc	
 if [ $user = "root" ]; then
-        if test -f /root/.bashrc.columnstoreSave ; then
-                mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
-        fi
+        rm -f /etc/ld.so.conf.d/columnstore.conf
+        ldconfig
 else
-        if test -f $HOME/.bashrc.columnstoreSave ; then
-                mv -f /home/$user/.bashrc.columnstoreSave /home/$user/.bashrc > /dev/null 2>&1
-        fi
+	rm -f /etc/default/columnstore
+
+cat <<EOD
+
+NOTE: For non-root install, you will need to run the following commands as root user to
+      uninstall the MariaDB ColumnStore System Logging. This can be skipped if
+      running this script as part of an upgrade
+
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+$installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user uninstall
+
+
+EOD
+
 fi
 
 #tell user to run post configure script

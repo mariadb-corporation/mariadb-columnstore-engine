@@ -30,8 +30,8 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-   // Size of buffer used to parse non-string node content or attribute
-   const int XML_NODE_BUF_SIZE = 256;
+// Size of buffer used to parse non-string node content or attribute
+const int XML_NODE_BUF_SIZE = 256;
 
 /** @brief Class wrapper around XML2  API.  Used by XmlGenProc to save Job XML
  *  file for input into cpimport.bin.
@@ -73,7 +73,7 @@ protected:
      * @brief Get node attribute for strings
      */
     bool getNodeAttributeStr( xmlNode* pNode, const char* pTag,
-                           std::string& strVal ) const;
+                              std::string& strVal ) const;
 
     /**
      * @brief Get node content for non-strings
@@ -90,7 +90,9 @@ protected:
      * @brief Check whether it is certain tag
      */
     bool isTag( const xmlNode* pNode, const xmlTag tag )
-    { return !xmlStrcmp( pNode->name, (const xmlChar *)xmlTagTable[tag] ); }
+    {
+        return !xmlStrcmp( pNode->name, (const xmlChar*)xmlTagTable[tag] );
+    }
 
     /**
      * @brief Parse xml document

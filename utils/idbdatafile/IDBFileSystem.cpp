@@ -21,7 +21,7 @@ namespace idbdatafile
 {
 
 IDBFileSystem::IDBFileSystem( Types type ) :
-	m_type(type)
+    m_type(type)
 {
 }
 

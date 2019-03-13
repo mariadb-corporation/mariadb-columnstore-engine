@@ -35,25 +35,28 @@ namespace joblist
 
 class FilterCommandJL : public CommandJL
 {
-	public:
-		FilterCommandJL(const FilterStep&);
-		virtual ~FilterCommandJL();
+public:
+    FilterCommandJL(const FilterStep&);
+    virtual ~FilterCommandJL();
 
-		void setLBID(uint64_t rid, uint32_t dbroot);
-		uint8_t getTableColumnType();
-		CommandType getCommandType();
-		std::string toString();
-		void createCommand(messageqcpp::ByteStream &bs) const;
-		void runCommand(messageqcpp::ByteStream &bs) const;
-		uint16_t getWidth();
-		const uint8_t getBOP() const { return fBOP; };
+    void setLBID(uint64_t rid, uint32_t dbroot);
+    uint8_t getTableColumnType();
+    CommandType getCommandType();
+    std::string toString();
+    void createCommand(messageqcpp::ByteStream& bs) const;
+    void runCommand(messageqcpp::ByteStream& bs) const;
+    uint16_t getWidth();
+    const uint8_t getBOP() const
+    {
+        return fBOP;
+    };
 
-	private:
-		FilterCommandJL();
-		FilterCommandJL(const FilterCommandJL &);
+private:
+    FilterCommandJL();
+    FilterCommandJL(const FilterCommandJL&);
 
-		uint8_t  fBOP;
-		execplan::CalpontSystemCatalog::ColType fColType;
+    uint8_t  fBOP;
+    execplan::CalpontSystemCatalog::ColType fColType;
 };
 
 };

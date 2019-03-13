@@ -37,150 +37,165 @@
 
 /**
  * @brief manages storage of Disk Block Buffers via and LRU cache using the stl classes unordered_set and list.
- * 
+ *
  **/
 
-namespace dbbc {
+namespace dbbc
+{
 
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
 
-typedef struct {
-	BRM::LBID_t lbid;
-	BRM::VER_t ver;
-	uint32_t poolIdx;	
-	} FileBufferIndex_t;
+typedef struct
+{
+    BRM::LBID_t lbid;
+    BRM::VER_t ver;
+    uint32_t poolIdx;
+} FileBufferIndex_t;
 
 typedef FileBufferIndex_t HashObject_t;
 
 class bcHasher
 {
-	public:
-		size_t operator()(const HashObject_t& rhs) const
-		{
-			return (((rhs.ver & 0xffffULL) << 48) | (rhs.lbid & 0xffffffffffffULL));
-		}
+public:
+    size_t operator()(const HashObject_t& rhs) const
+    {
+        return (((rhs.ver & 0xffffULL) << 48) | (rhs.lbid & 0xffffffffffffULL));
+    }
 };
 
 class bcEqual
 {
-	public:
-		size_t operator()(const HashObject_t& f1, const HashObject_t& f2) const
-		{
-			return ((f1.lbid == f2.lbid) && (f1.ver == f2.ver));
-		}
+public:
+    size_t operator()(const HashObject_t& f1, const HashObject_t& f2) const
+    {
+        return ((f1.lbid == f2.lbid) && (f1.ver == f2.ver));
+    }
 };
 
 inline bool operator<(const HashObject_t& f1, const HashObject_t& f2)
 {
-	//return ((f1.lbid < f2.lbid) || (f1.ver < f2.ver));
+    //return ((f1.lbid < f2.lbid) || (f1.ver < f2.ver));
 #if 1
-	if (f1.lbid < f2.lbid)
-		return true;
-	else if (f1.lbid == f2.lbid)
-		return (f1.ver < f2.ver);
+    if (f1.lbid < f2.lbid)
+        return true;
+    else if (f1.lbid == f2.lbid)
+        return (f1.ver < f2.ver);
 
-	return false;
+    return false;
 #else
-	bcHasher bh1, bh2;
-	return (bh1(f1) < bh2(f2));
+    bcHasher bh1, bh2;
+    return (bh1(f1) < bh2(f2));
 #endif
 }
 
 
-class FileBufferMgr {
+class FileBufferMgr
+{
 
 public:
 
-	typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
-	typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t; 
-	typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t; // return type for insert
+    typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
+    typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
+    typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t; // return type for insert
 
-	typedef std::vector<uint32_t> intvec_t; 
+    typedef std::vector<uint32_t> intvec_t;
 
-	/**
-	 * @brief ctor. Set max buffer size to numBlcks and block buffer size to blckSz
-	 **/
+    /**
+     * @brief ctor. Set max buffer size to numBlcks and block buffer size to blckSz
+     **/
 
-	FileBufferMgr(uint32_t numBlcks, uint32_t blckSz=BLOCK_SIZE, uint32_t deleteBlocks = 0);
+    FileBufferMgr(uint32_t numBlcks, uint32_t blckSz = BLOCK_SIZE, uint32_t deleteBlocks = 0);
 
-	/**
-	 * @brief default dtor
-	 **/
+    /**
+     * @brief default dtor
+     **/
     virtual ~FileBufferMgr();
 
-	/**
-	 * @brief return TRUE if the Disk block lbid@ver is loaded into the Disk Block Buffer cache otherwise return FALSE.
-	 **/
-	bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const;
-	
-	/**
-	 * @brief return TRUE if the Disk block referenced by fb is loaded into the Disk Block Buffer cache otherwise return FALSE.
-	 **/
-	bool exists(const HashObject_t& fb) const;
+    /**
+     * @brief return TRUE if the Disk block lbid@ver is loaded into the Disk Block Buffer cache otherwise return FALSE.
+     **/
+    bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const;
 
-	/**
-	 * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
-	 **/
-	const int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
+    /**
+     * @brief return TRUE if the Disk block referenced by fb is loaded into the Disk Block Buffer cache otherwise return FALSE.
+     **/
+    bool exists(const HashObject_t& fb) const;
 
-	/**
-	 * @brief returns the total number of Disk Blocks in the Cache
-	 **/
-	uint32_t size() const {return fbSet.size();}
+    /**
+     * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
+     **/
+    const int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
-	/**
-	 * @brief 
-	 **/
-	void flushCache();
+    /**
+     * @brief returns the total number of Disk Blocks in the Cache
+     **/
+    uint32_t size() const
+    {
+        return fbSet.size();
+    }
 
-	/**
-	 * @brief return the disk Block referenced by fb
-	 **/
+    /**
+     * @brief
+     **/
+    void flushCache();
 
-	FileBuffer* findPtr(const HashObject_t& keyFb);
+    /**
+     * @brief return the disk Block referenced by fb
+     **/
 
-	bool find(const HashObject_t& keyFb, FileBuffer& fb);
+    FileBuffer* findPtr(const HashObject_t& keyFb);
 
-	/**
-	 * @brief return the disk Block referenced by bufferPtr
-	 **/
+    bool find(const HashObject_t& keyFb, FileBuffer& fb);
 
-	bool find(const HashObject_t& keyFb, void* bufferPtr);
-	
-	uint32_t maxCacheSize() const {return fMaxNumBlocks;}
+    /**
+     * @brief return the disk Block referenced by bufferPtr
+     **/
 
-	uint32_t listSize() const {return fbList.size();}
+    bool find(const HashObject_t& keyFb, void* bufferPtr);
 
- 	const filebuffer_uset_iter_t end() const {return fbSet.end();}
+    uint32_t maxCacheSize() const
+    {
+        return fMaxNumBlocks;
+    }
 
-	void displayCounts() const;
+    uint32_t listSize() const
+    {
+        return fbList.size();
+    }
 
-	std::ostream& formatLRUList(std::ostream& os) const;
+    const filebuffer_uset_iter_t end() const
+    {
+        return fbSet.end();
+    }
+
+    void displayCounts() const;
+
+    std::ostream& formatLRUList(std::ostream& os) const;
 
 private:
 
-	uint32_t fMaxNumBlocks; 	// the max number of blockSz blocks to keep in the Cache list
-	uint32_t fBlockSz; 		// size in bytes size of a data block - probably 8
+    uint32_t fMaxNumBlocks; 	// the max number of blockSz blocks to keep in the Cache list
+    uint32_t fBlockSz; 		// size in bytes size of a data block - probably 8
 
- 	mutable boost::mutex fWLock;
-	mutable filebuffer_uset_t fbSet;
+    mutable boost::mutex fWLock;
+    mutable filebuffer_uset_t fbSet;
 
-	mutable filebuffer_list_t fbList; // rename this
-	uint32_t fCacheSize;
+    mutable filebuffer_list_t fbList; // rename this
+    uint32_t fCacheSize;
 
-	FileBufferPool_t fFBPool; // vector<FileBuffer>
-	
-	// do not implement
-	FileBufferMgr(const FileBufferMgr& fbm);
-	const FileBufferMgr& operator =(const FileBufferMgr& fbm);
-	bool aging;
+    FileBufferPool_t fFBPool; // vector<FileBuffer>
 
-	uint32_t fDeleteBlocks;
-	intvec_t fEmptyPoolSlots;	//keep track of FBPool slots that can be reused
+    // do not implement
+    FileBufferMgr(const FileBufferMgr& fbm);
+    const FileBufferMgr& operator =(const FileBufferMgr& fbm);
+    bool aging;
 
-	void depleteCache();
+    uint32_t fDeleteBlocks;
+    intvec_t fEmptyPoolSlots;	//keep track of FBPool slots that can be reused
+
+    void depleteCache();
 };
 }
 #endif

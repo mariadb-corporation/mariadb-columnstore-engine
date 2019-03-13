@@ -38,29 +38,31 @@ namespace funcexp
 class Func_Dtm : public Func
 {
 public:
-	Func_Dtm() {}
-	Func_Dtm(const std::string& funcName) : Func(funcName) {}
-	virtual ~Func_Dtm() {}
+    Func_Dtm() {}
+    Func_Dtm(const std::string& funcName) : Func(funcName) {}
+    virtual ~Func_Dtm() {}
 
-/*
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
-*/
+    /*
+    	int64_t getIntVal(rowgroup::Row& row,
+    						FunctionParm& fp,
+    						bool& isNull,
+    						execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+    */
 
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return (double) getIntVal(row, fp, isNull, op_ct); }
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return (double) getIntVal(row, fp, isNull, op_ct);
+    }
 
-/*
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
-*/
+    /*
+    	std::string getStrVal(rowgroup::Row& row,
+    						FunctionParm& fp,
+    						bool& isNull,
+    						execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+    */
 };
 
 
@@ -69,20 +71,20 @@ public:
 class Func_date : public Func_Dtm
 {
 public:
-	Func_date() : Func_Dtm("date") {}
-	virtual ~Func_date() {}
+    Func_date() : Func_Dtm("date") {}
+    virtual ~Func_date() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -91,25 +93,25 @@ public:
 class Func_time : public Func_Dtm
 {
 public:
-	Func_time() : Func_Dtm("time") {}
-	virtual ~Func_time() {}
+    Func_time() : Func_Dtm("time") {}
+    virtual ~Func_time() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
 
 };
@@ -120,30 +122,35 @@ public:
 class Func_timediff : public Func_Dtm
 {
 public:
-	Func_timediff() : Func_Dtm("timediff") {}
-	virtual ~Func_timediff() {}
+    Func_timediff() : Func_Dtm("timediff") {}
+    virtual ~Func_timediff() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -152,20 +159,20 @@ public:
 class Func_date_add : public Func_Dtm
 {
 public:
-	Func_date_add() : Func_Dtm("date_add") {}
-	virtual ~Func_date_add() {}
+    Func_date_add() : Func_Dtm("date_add") {}
+    virtual ~Func_date_add() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -174,40 +181,40 @@ public:
 class Func_cast_date : public Func_Dtm
 {
 public:
-	Func_cast_date() : Func_Dtm("cast_date") {}
-	virtual ~Func_cast_date() {}
+    Func_cast_date() : Func_Dtm("cast_date") {}
+    virtual ~Func_cast_date() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                        FunctionParm& fp,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -216,35 +223,41 @@ public:
 class Func_cast_datetime : public Func_Dtm
 {
 public:
-	Func_cast_datetime() : Func_Dtm("cast_datetime") {}
-	virtual ~Func_cast_datetime() {}
+    Func_cast_datetime() : Func_Dtm("cast_datetime") {}
+    virtual ~Func_cast_datetime() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                        FunctionParm& fp,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
 };
 
 
@@ -253,30 +266,30 @@ public:
 class Func_from_days : public Func_Dtm
 {
 public:
-	Func_from_days() : Func_Dtm("from_days") {}
-	virtual ~Func_from_days() {}
+    Func_from_days() : Func_Dtm("from_days") {}
+    virtual ~Func_from_days() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -285,30 +298,35 @@ public:
 class Func_add_time : public Func_Dtm
 {
 public:
-	Func_add_time() : Func_Dtm("add_time"){}
-	virtual ~Func_add_time() {}
+    Func_add_time() : Func_Dtm("add_time") {}
+    virtual ~Func_add_time() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -317,30 +335,35 @@ public:
 class Func_timestampdiff : public Func_Dtm
 {
 public:
-	Func_timestampdiff() : Func_Dtm("timestamp_diff"){}
-	virtual ~Func_timestampdiff() {}
+    Func_timestampdiff() : Func_Dtm("timestamp_diff") {}
+    virtual ~Func_timestampdiff() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -349,30 +372,35 @@ public:
 class Func_sysdate : public Func_Dtm
 {
 public:
-	Func_sysdate() : Func_Dtm("sysdate") {}
-	virtual ~Func_sysdate() {}
+    Func_sysdate() : Func_Dtm("sysdate") {}
+    virtual ~Func_sysdate() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -381,34 +409,39 @@ public:
 class Func_from_unixtime : public Func_Dtm
 {
 public:
-	Func_from_unixtime() : Func_Dtm("from_unixtime") {}
-	virtual ~Func_from_unixtime() {}
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    Func_from_unixtime() : Func_Dtm("from_unixtime") {}
+    virtual ~Func_from_unixtime() {}
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
-							
-	double getDoubleVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_str_to_date class
@@ -416,30 +449,34 @@ public:
 class Func_str_to_date : public Func_Dtm
 {
 public:
-	Func_str_to_date() : Func_Dtm("str_to_date") {}
-	virtual ~Func_str_to_date() {}
+    Func_str_to_date() : Func_Dtm("str_to_date") {}
+    virtual ~Func_str_to_date() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int32_t getDateIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	int64_t getDatetimeIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -448,20 +485,20 @@ public:
 class Func_makedate : public Func_Dtm
 {
 public:
-	Func_makedate() : Func_Dtm("makedate") {}
-	virtual ~Func_makedate() {}
+    Func_makedate() : Func_Dtm("makedate") {}
+    virtual ~Func_makedate() {}
 
-	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
-	int64_t getIntVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-	std::string getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct);
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 

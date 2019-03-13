@@ -39,28 +39,30 @@ namespace WriteEngine
 
 class Subject; 	// forward deceleration
 
-class Observer {
+class Observer
+{
 public:
-	virtual ~Observer();
-	virtual bool update(Subject* pSub)=0;
+    virtual ~Observer();
+    virtual bool update(Subject* pSub) = 0;
 
 protected:
-	Observer();
+    Observer();
 };
 
-class Subject {
+class Subject
+{
 public:
-	Subject();
-	virtual ~Subject();
+    Subject();
+    virtual ~Subject();
 
-	virtual void attach(Observer* Obs);
-	virtual void detach(Observer* Obs);
-	virtual void notify();
+    virtual void attach(Observer* Obs);
+    virtual void detach(Observer* Obs);
+    virtual void notify();
 
 
 private:
-	typedef std::list<Observer*> Observers;
-	Observers fObs;
+    typedef std::list<Observer*> Observers;
+    Observers fObs;
 };
 
 }

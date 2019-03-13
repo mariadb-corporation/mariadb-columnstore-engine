@@ -27,7 +27,7 @@
 1008	ERR_CREATE_DATATYPE_NOT_SUPPORT	The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 1010	ERR_AGGREGATE_TYPE_NOT_SUPPORT	'%1%' for column type '%2%' isn't supported.
 1011	ERR_DML_VIEW	%1% on VIEW is currently not supported.
-#1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of Columstore supports update of only one table at a time.
+1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of Columnstore supports update of only one table at a time.
 1014	ERR_ROLLUP_NOT_SUPPORT	Rollup is currently not supported.
 1015	ERR_OUTER_JOIN_SUBSELECT	Subquery on OUTER JOIN ON clause is currently not supported.
 1016	ERR_PARTITION_BY_RANGE	The column type %1% is currently  not supported in %2% function.
@@ -148,6 +148,7 @@
 5001	ERR_FUNC_NON_IMPLEMENT	%1%:%2% is not implemented.
 5002	ERR_PSEUDOCOL_IDB_ONLY	Pseudo column function '%1%' is only supported in Columnstore.
 5003	ERR_PSEUDOCOL_WRONG_ARG	Argument of pseudo column function '%1%' is invalid.
+5004	ERR_WINDOW_FUNC_ONLY	User defined function %1% may only be used with the OVER clause.
 
 # DBRM Errors
 6001	ERR_NETWORK DBRM encountered a network error, check the controllernode.
@@ -195,4 +196,10 @@
 9027	ERR_WF_ARG_OUT_OF_RANGE	Argument '%1%' is out of range.
 9028	ERR_WF_NOT_ALLOWED	Window functions are not allowed in %1%.
 9029	ERR_WF_IDB_ONLY	Window function are only supported for Columnstore tables.
-9030	ERR_WF_DATA_SET_TOO_BIG	Window function data set exceeds memory limit.
+9030	ERR_WF_DATA_SET_TOO_BIG	Window  function data set exceeds memory limit.
+9031	ERR_WF_UDANF_ERROR      User Defined Window function: %1%.
+9032	ERR_WF_UDANF_NOT_ALLOWED	User Defined Function %1% used with an OVER clause.
+9033	ERR_WF_UDANF_ORDER_REQUIRED	User Defined Function %1% without an ORDER BY clause in the OVER clause.
+9034	ERR_WF_UDANF_ORDER_NOT_ALLOWED	User Defined Function %1% with an ORDER BY clause in the OVER clause.
+9035	ERR_WF_UDANF_FRAME_REQUIRED	User Defined Function %1% without a FRAME clause in the OVER clause.
+9036	ERR_WF_UDANF_FRAME_NOT_ALLOWED	User Defined Function %1% with a FRAME clause in the OVER clause.

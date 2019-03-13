@@ -52,80 +52,110 @@ public:
     /** @brief ctor
       */
 
-	EXPORT DMLColumn(std::string name, std::string value, bool isFromCol = false, uint32_t funcScale=0, bool isNULL=false);
-	/** @brief new ctor
-	  * isNUll is currently not in use. It supposed to indicate whether each value is null or not.
+    EXPORT DMLColumn(std::string name, std::string value, bool isFromCol = false, uint32_t funcScale = 0, bool isNULL = false);
+    /** @brief new ctor
+      * isNUll is currently not in use. It supposed to indicate whether each value is null or not.
       */
 
-    EXPORT DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol = false, uint32_t funcScale=0, bool isNULL=false );
+    EXPORT DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol = false, uint32_t funcScale = 0, bool isNULL = false );
 
     /** @brief dtor
       */
     EXPORT ~DMLColumn();
 
     /** @brief read a DMLColumn from a ByteStream
-      * 
+      *
       * @param bytestream the ByteStream to read from
       */
     EXPORT int read(messageqcpp::ByteStream& bytestream);
 
     /** @brief write a DML column to a ByteStream
-      * 
+      *
       * @param bytestream the ByteStream to write to
       */
     EXPORT int write(messageqcpp::ByteStream& bytestream);
 
     /** @brief get the data for the column
       */
-    const std::string get_Data() const { return fData; }
-	
-	
-    const std::vector<std::string>& get_DataVector() const { return fColValuesList; }
+    const std::string get_Data() const
+    {
+        return fData;
+    }
 
-   /** @brief get the data for the column
+
+    const std::vector<std::string>& get_DataVector() const
+    {
+        return fColValuesList;
+    }
+
+    /** @brief get the data for the column
+       */
+    const bool get_isnull() const
+    {
+        return fisNULL;
+    }
+    /** @brief get the fIsFromCol data for the column
       */
-    const bool get_isnull() const { return fisNULL; }
-	/** @brief get the fIsFromCol data for the column
+    const bool get_isFromCol() const
+    {
+        return fIsFromCol;
+    }
+    /** @brief get the fFuncScale data for the column
       */
-    const bool get_isFromCol() const { return fIsFromCol; }
-	/** @brief get the fFuncScale data for the column
-      */
-    const uint32_t get_funcScale() const { return fFuncScale; }
+    const uint32_t get_funcScale() const
+    {
+        return fFuncScale;
+    }
     /** @brief get the column name
       */
-    const std::string get_Name() const { return fName; }
+    const std::string get_Name() const
+    {
+        return fName;
+    }
     /** @brief set the column name
       */
-    EXPORT void  set_Name( std::string name) 
-    { 	boost::algorithm::to_lower(name);
-    	fName = name; }
+    EXPORT void  set_Name( std::string name)
+    {
+        boost::algorithm::to_lower(name);
+        fName = name;
+    }
     /** @brief set the NULL flag
       */
-    void  set_isnull( bool isNULL) 
-    { fisNULL = isNULL; }    
-	/** @brief set the fIsFromCol flag
+    void  set_isnull( bool isNULL)
+    {
+        fisNULL = isNULL;
+    }
+    /** @brief set the fIsFromCol flag
       */
-    void  set_isFromCol( bool isFromCol) 
-    { fIsFromCol = isFromCol; }   
-	/** @brief set the fFuncScale
+    void  set_isFromCol( bool isFromCol)
+    {
+        fIsFromCol = isFromCol;
+    }
+    /** @brief set the fFuncScale
       */
-	void  set_funcScale( uint32_t funcScale) 
-    { fFuncScale = funcScale; }    
+    void  set_funcScale( uint32_t funcScale)
+    {
+        fFuncScale = funcScale;
+    }
     void set_Data ( std::string data)
-    { fData = data; }
-	
-	void set_DataVector ( std::vector<std::string>&  dataVec)
-    { fColValuesList = dataVec; }
+    {
+        fData = data;
+    }
+
+    void set_DataVector ( std::vector<std::string>&  dataVec)
+    {
+        fColValuesList = dataVec;
+    }
 
 protected:
 
 private:
     std::string fName;
     std::string fData;
-	std::vector<std::string> fColValuesList;
+    std::vector<std::string> fColValuesList;
     bool fisNULL;
-	bool fIsFromCol;
-	uint32_t fFuncScale;
+    bool fIsFromCol;
+    uint32_t fFuncScale;
 
 };
 

@@ -30,8 +30,8 @@ using namespace boost;
 namespace tpch
 {
 
-RF2::RF2(const string& sn, uint32_t sid, uint32_t tflg, int c, int p, bool d, bool v) : 
-	fSchema(sn), fSessionID(sid), fTflg(tflg), fIntvl(c), fPack(p), fDflg(d), fVflg(v)
+RF2::RF2(const string& sn, uint32_t sid, uint32_t tflg, int c, int p, bool d, bool v) :
+    fSchema(sn), fSessionID(sid), fTflg(tflg), fIntvl(c), fPack(p), fDflg(d), fVflg(v)
 {
 }
 
@@ -41,38 +41,47 @@ RF2::~RF2()
 
 int RF2::run(istream& in)
 {
-	const streamsize ilinelen = 1024;
-	scoped_array<char> iline(new char[ilinelen]);
-	int cnt = 0;
-	dmlif::DMLIF dmlif(fSessionID, fTflg, fDflg, fVflg);
-	for (;;)
-	{
-		dmlif.rf2Start(fSchema);
-		for (int i = 0; i < fPack; i++)
-		{
-			in.getline(iline.get(), ilinelen);
-			if (in.eof())
-				break;
-			typedef char_separator<char> cs;
-			typedef tokenizer<cs> tk;
-			cs sep("|");
-			tk tok(string(iline.get()), sep);
-			tk::iterator iter = tok.begin();
-			idbassert(iter != tok.end());
-			string keystr = *iter; ++iter;
-			//idbassert(iter == tok.end());
-			int64_t okey = strtol(keystr.c_str(), 0, 0);
-			dmlif.rf2Add(okey);
-		}
-		dmlif.rf2Send();
-		cnt++;
-		if ((cnt % fIntvl) == 0)
-			dmlif.sendOne("COMMIT;");
-		if (in.eof())
-			break;
-	}
-	dmlif.sendOne("COMMIT;");
-	return 0;
+    const streamsize ilinelen = 1024;
+    scoped_array<char> iline(new char[ilinelen]);
+    int cnt = 0;
+    dmlif::DMLIF dmlif(fSessionID, fTflg, fDflg, fVflg);
+
+    for (;;)
+    {
+        dmlif.rf2Start(fSchema);
+
+        for (int i = 0; i < fPack; i++)
+        {
+            in.getline(iline.get(), ilinelen);
+
+            if (in.eof())
+                break;
+
+            typedef char_separator<char> cs;
+            typedef tokenizer<cs> tk;
+            cs sep("|");
+            tk tok(string(iline.get()), sep);
+            tk::iterator iter = tok.begin();
+            idbassert(iter != tok.end());
+            string keystr = *iter;
+            ++iter;
+            //idbassert(iter == tok.end());
+            int64_t okey = strtol(keystr.c_str(), 0, 0);
+            dmlif.rf2Add(okey);
+        }
+
+        dmlif.rf2Send();
+        cnt++;
+
+        if ((cnt % fIntvl) == 0)
+            dmlif.sendOne("COMMIT;");
+
+        if (in.eof())
+            break;
+    }
+
+    dmlif.sendOne("COMMIT;");
+    return 0;
 }
 
 }

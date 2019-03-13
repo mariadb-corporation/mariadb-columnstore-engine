@@ -20,7 +20,7 @@
 * $Id: mycnfUpgrade.cpp 64 2006-10-12 22:21:51Z dhill $
 *
 *
-*		
+*
 ******************************************************************************************/
 /**
  * @file
@@ -67,6 +67,7 @@ string rtrim(const string &in) {
 }
 
 void mergeMycnfIncludeArgs() 
+<<<<<<< HEAD
 {
 	string userArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text.rpmsave";
 	string packagedArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
@@ -108,35 +109,53 @@ void mergeMycnfIncludeArgs()
 }
 
 int main(int argc, char *argv[])
+=======
+>>>>>>> 453850ee1a36bac96b99faa32c51541a631b1cc7
 {
-	Oam oam;
+	string userArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text.rpmsave";
+	string packagedArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
+	ifstream userArgs(userArgsFilename.c_str());
+	fstream packagedArgs(packagedArgsFilename.c_str(), ios::in);
 
-	//check for port argument
-	string mysqlPort;
-	if (argc > 1) {
-		mysqlPort = argv[1];
+	if (!userArgs || !packagedArgs)
+		return;
 
-		// set mysql password
-		oam.changeMyCnf( "port", mysqlPort );
-		exit (0);
+	// de-dup the args and comments in both files
+	set<string> argMerger;
+	set<string> comments;
+	string line;
+	while (getline(packagedArgs, line)) {
+		line = rtrim(line);
+		if (line[0] == '#')
+			comments.insert(line);
+		else if (line.size() > 0)
+			argMerger.insert(line);
 	}
+    while (getline(userArgs, line)) {
+        line = rtrim(line);
+        if (line[0] == '#')
+            comments.insert(line);
+        else if (line.size() > 0)
+            argMerger.insert(line);
+    }
+	userArgs.close();	
+	packagedArgs.close();
 
-	//my.cnf file
-	string mycnfFile = startup::StartUp::installDir() + "/mysql/my.cnf";
-	ifstream mycnffile (mycnfFile.c_str());
-	if (!mycnffile) {
-		cerr << "mycnfUpgrade - my.cnf file not found: " << mycnfFile << endl;
-		exit (1);
-	}
+	// write the merged version, comments first.  They'll get ordered 
+	// alphabetically but, meh.
+	packagedArgs.open(packagedArgsFilename.c_str(), ios::out | ios::trunc);
+	for (set<string>::iterator it = comments.begin(); it != comments.end(); it++)
+		packagedArgs << *it << endl;
+	for (set<string>::iterator it = argMerger.begin(); it != argMerger.end(); it++)
+		packagedArgs << *it << endl;
+	packagedArgs.close();
+}
 
-	//my.cnf.rpmsave file
-	string mycnfsaveFile = startup::StartUp::installDir() + "/mysql/my.cnf.rpmsave";
-	ifstream mycnfsavefile (mycnfsaveFile.c_str());
-	if (!mycnfsavefile) {
-		cerr << "mycnfUpgrade - my.cnf.rpmsave file not found: " << mycnfsaveFile << endl;
-		exit (1);
-	}
+int main(int argc, char* argv[])
+{
+    Oam oam;
 
+<<<<<<< HEAD
 	// MCOL-1844.  The user may have added options to their myCnf-include-args file.  Merge 
 	// myCnf-include-args.text with myCnf-include-args.text.rpmsave, save in myCnf-include-args.text
 	mergeMycnfIncludeArgs();
@@ -148,108 +167,177 @@ int main(int argc, char *argv[])
 		cerr << "mycnfUpgrade - my.cnf include argument file not found: " << includeFile << endl;
 		exit (1);
 	}
+=======
+    //check for port argument
+    string mysqlPort;
+>>>>>>> 453850ee1a36bac96b99faa32c51541a631b1cc7
 
-	//exclude arguments file
-	string excludeFile = startup::StartUp::installDir() + "/bin/myCnf-exclude-args.text";
-	ifstream excludefile (excludeFile.c_str());
-	if (!excludefile) {
-		cerr << "mycnfUpgrade - my.cnf exclude argument file not found: "<< endl;
-		exit (1);
-	}
+    if (argc > 1)
+    {
+        mysqlPort = argv[1];
 
-	//go though include list
-	char line[200];
-	string includeArg;
-	while (includefile.getline(line, 200))
-	{
-		includeArg = line;
+        // set mysql password
+        oam.changeMyCnf( "port", mysqlPort );
+        exit (0);
+    }
 
-		boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
-		//see if in my.cnf.rpmsave
-		ifstream mycnfsavefile (mycnfsaveFile.c_str());
-		char line[200];
-		string oldbuf;
-		while (mycnfsavefile.getline(line, 200))
-		{
-			oldbuf = line;
-			if ( boost::regex_search(oldbuf.begin(),oldbuf.end(),icludeArgRegEx) ) {
-				//found in my.cnf.rpmsave, check if this is commented out
-				if ( line[0] != '#' ) 
-				{
-					// no, check in my.cnf and replace if exist or add if it doesn't
+    //my.cnf file
+    string mycnfFile = startup::StartUp::installDir() + "/mysql/my.cnf";
+    ifstream mycnffile (mycnfFile.c_str());
 
-					ifstream mycnffile (mycnfFile.c_str());
-					vector <string> lines;
-					char line1[200];
-					string newbuf;
-					bool updated = false;
-					while (mycnffile.getline(line1, 200))
-					{
-						newbuf = line1;
-						if ( boost::regex_search(newbuf.begin(),newbuf.end(),icludeArgRegEx) ) {
-							newbuf = oldbuf;
-							cout << "Updated argument: " << includeArg << endl;
-							updated = true;
-						}
-						//output to temp file
-						lines.push_back(newbuf);
-					}
+    if (!mycnffile)
+    {
+        cerr << "mycnfUpgrade - my.cnf file not found: " << mycnfFile << endl;
+        exit (1);
+    }
 
-					//write out a new my.cnf
-					mycnffile.close();
-					unlink (mycnfFile.c_str());
-					ofstream newFile (mycnfFile.c_str());	
-					
-					//create new file
-					int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0666);
-					
-					copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-					newFile.close();
-					
-					close(fd);
+    //my.cnf.rpmsave file
+    string mycnfsaveFile = startup::StartUp::installDir() + "/mysql/my.cnf.rpmsave";
+    ifstream mycnfsavefile (mycnfsaveFile.c_str());
 
-					if (!updated)
-					{	//not found, so add
-						ifstream mycnffile (mycnfFile.c_str());
-						vector <string> lines;
-						char line1[200];
-						string newbuf;
-						while (mycnffile.getline(line1, 200))
-						{
-							newbuf = line1;
-							boost::regex mysqldSectionRegEx("\\[mysqld\\]");
-							if ( boost::regex_search(newbuf.begin(),newbuf.end(),mysqldSectionRegEx) ) {
-								lines.push_back(newbuf);
-								newbuf = oldbuf;
-								cout << "Added argument: " << includeArg << endl;
-							}
-							//output to temp file
-							lines.push_back(newbuf);
-						}
+    if (!mycnfsavefile)
+    {
+        cerr << "mycnfUpgrade - my.cnf.rpmsave file not found: " << mycnfsaveFile << endl;
+        exit (1);
+    }
 
-						//write out a new my.cnf
-						mycnffile.close();
-						unlink (mycnfFile.c_str());
-						ofstream newFile (mycnfFile.c_str());	
-						
-						//create new file
-						int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0666);
-						
-						copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-						newFile.close();
-						
-						close(fd);
-						break;
-					}
-				}
-			}
-		}
-	}
+	// MCOL-1844.  The user may have added options to their myCnf-include-args file.  Merge 
+	// myCnf-include-args.text with myCnf-include-args.text.rpmsave, save in myCnf-include-args.text
+	mergeMycnfIncludeArgs();
 
-	string cmd = "chown mysql:mysql " + mycnfFile;
-	system(cmd.c_str());
+    //include arguments file
+    string includeFile = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
+    ifstream includefile (includeFile.c_str());
 
-	exit (0);
+    if (!includefile)
+    {
+        cerr << "mycnfUpgrade - my.cnf include argument file not found: " << includeFile << endl;
+        exit (1);
+    }
+
+    //exclude arguments file
+    string excludeFile = startup::StartUp::installDir() + "/bin/myCnf-exclude-args.text";
+    ifstream excludefile (excludeFile.c_str());
+
+    if (!excludefile)
+    {
+        cerr << "mycnfUpgrade - my.cnf exclude argument file not found: " << endl;
+        exit (1);
+    }
+
+    //go though include list
+    char line[200];
+    string includeArg;
+
+    while (includefile.getline(line, 200))
+    {
+        includeArg = line;
+
+        boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
+        //see if in my.cnf.rpmsave
+        ifstream mycnfsavefile (mycnfsaveFile.c_str());
+        char line[200];
+        string oldbuf;
+
+        while (mycnfsavefile.getline(line, 200))
+        {
+            oldbuf = line;
+
+            if ( boost::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx) )
+            {
+                //found in my.cnf.rpmsave, check if this is commented out
+                if ( line[0] != '#' )
+                {
+                    // no, check in my.cnf and replace if exist or add if it doesn't
+
+                    ifstream mycnffile (mycnfFile.c_str());
+                    vector <string> lines;
+                    char line1[200];
+                    string newbuf;
+                    bool updated = false;
+
+                    while (mycnffile.getline(line1, 200))
+                    {
+                        newbuf = line1;
+
+                        if ( boost::regex_search(newbuf.begin(), newbuf.end(), icludeArgRegEx) )
+                        {
+                            newbuf = oldbuf;
+                            cout << "Updated argument: " << includeArg << endl;
+                            updated = true;
+                        }
+
+                        //output to temp file
+                        lines.push_back(newbuf);
+                    }
+
+                    //write out a new my.cnf
+                    mycnffile.close();
+                    unlink (mycnfFile.c_str());
+                    ofstream newFile (mycnfFile.c_str());
+
+                    //create new file
+					int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0644);
+
+                    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+                    newFile.close();
+
+                    close(fd);
+
+                    if (!updated)
+                    {
+                        //not found, so add
+                        ifstream mycnffile (mycnfFile.c_str());
+                        vector <string> lines;
+                        char line1[200];
+                        string newbuf;
+
+                        while (mycnffile.getline(line1, 200))
+                        {
+                            newbuf = line1;
+                            boost::regex mysqldSectionRegEx("\\[mysqld\\]");
+
+                            if ( boost::regex_search(newbuf.begin(), newbuf.end(), mysqldSectionRegEx) )
+                            {
+                                lines.push_back(newbuf);
+                                newbuf = oldbuf;
+                                cout << "Added argument: " << includeArg << endl;
+                            }
+
+                            //output to temp file
+                            lines.push_back(newbuf);
+                        }
+
+                        //write out a new my.cnf
+                        mycnffile.close();
+                        unlink (mycnfFile.c_str());
+                        ofstream newFile (mycnfFile.c_str());
+
+                        //create new file
+                        int fd = open(mycnfFile.c_str(), O_RDWR | O_CREAT, 0666);
+
+                        copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+                        newFile.close();
+
+                        close(fd);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+	string USER = "mysql";
+	
+    char* p = getenv("USER");
+
+    if (p && *p)
+        USER = p;
+
+    string cmd = "chown " + USER + ":" + USER + " " + mycnfFile;
+    system(cmd.c_str());
+
+    exit (0);
 }
 // vim:ts=4 sw=4:
 

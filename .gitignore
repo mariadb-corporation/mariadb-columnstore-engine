@@ -15,6 +15,7 @@
 .libs/
 config.log
 *~
+*kdev*
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
@@ -38,7 +39,6 @@ dbcon/ddlpackage/ddl-scan.h
 dbcon/dmlpackage/dml-scan.cpp
 dbcon/dmlpackage/dml-scan.h
 ddlproc/DDLProc
-decomsvr/DecomSvr
 dmlproc/DMLProc
 exemgr/ExeMgr
 oamapps/calpontDB/calpontDBWrite
@@ -105,4 +105,3 @@ install_manifest_platform.txt
 install_manifest_storage-engine.txt
 _CPack_Packages
 columnstoreversion.h
-/.idea

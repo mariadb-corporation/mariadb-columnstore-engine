@@ -18,6 +18,7 @@
 
 /* $Id: ddl.l 9341 2013-03-27 14:10:35Z chao $ */
 %{
+#include <string.h>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -31,10 +32,14 @@
 #endif
 
 using namespace ddlpackage;
+typedef enum { NOOP, STRIP_QUOTES } copy_action_t;
+#if YYDEBUG == 0
+int ddldebug = 0;
+#endif
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
-static char* scanner_copy(char *str, yyscan_t yyscanner);
+static char* scanner_copy(char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
 
 %}
 
@@ -48,20 +53,32 @@ static char* scanner_copy(char *str, yyscan_t yyscanner);
 %x check2
 %x inquote
 %x endquote
+%x c_comment
 
 space [ \t\n\r\f]
 horiz_space [ \t\f]
 newline [\n\r]
 non_newline [^\n\r]
 
+quote '
+double_quote \"
+grave_accent `
+
 comment ("--"{non_newline}*)
+extended_ident_cont [A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
 
 digit [0-9]
-ident_start [A-Za-z\200-\377_]
+ident_start [A-Za-z\200-\377_0-9]
 ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
+extended_identifier {ident_start}{extended_ident_cont}*
+/* fully qualified names regexes */
+ident_w_spaces {identifier}\x20*
+identifier_quoted {grave_accent}{extended_identifier}{grave_accent}
+identifier_double_quoted {double_quote}{extended_identifier}{double_quote}
+column_ident_quoted {grave_accent}{ident_w_spaces}+{grave_accent}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
@@ -69,10 +86,13 @@ real			({integer}|{decimal})[Ee][-+]?{digit}+
 realfail1		({integer}|{decimal})[Ee]
 realfail2		({integer}|{decimal})[Ee][-+]
 
-quote '
-grave_accent `
+
 
 %%
+
+
+{identifier_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return IDENT; }
+{identifier_double_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return DQ_IDENT; }
 
 ACTION {return ACTION;}
 ADD {return ADD;}
@@ -104,6 +124,7 @@ CREATE {return CREATE;}
 CURRENT_USER {return CURRENT_USER;}
 DATE {ddlget_lval(yyscanner)->str=strdup("date"); return DATE;}
 DATETIME {return DATETIME;}
+TIME {ddlget_lval(yyscanner)->str=strdup("time"); return TIME;}
 DECIMAL {return DECIMAL;}
 DEC {return DECIMAL;}
 DEFAULT {return DEFAULT;}
@@ -156,23 +177,39 @@ EXISTS {return EXISTS;}
 CHANGE {return CHANGE;}
 TRUNCATE {return TRUNCATE;}
 VARBINARY {return VARBINARY;}
+TINYBLOB {return TINYBLOB;}
+BLOB {return BLOB;}
+MEDIUMBLOB {return MEDIUMBLOB;}
+LONGBLOB {return LONGBLOB;}
+TINYTEXT {return TINYTEXT;}
+TEXT {return TEXT;}
+MEDIUMTEXT {return MEDIUMTEXT;}
+LONGTEXT {return LONGTEXT;}
+BOOL {return BOOL;}
+BOOLEAN {return BOOLEAN;}
 
 \n { lineno++;}
+
+{column_ident_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES); return IDENT;}
 
 {whitespace} {
     /* ignore */
 }
 
-{identifier} {ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner); return IDENT;}
+{identifier} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner); return DQ_IDENT;}
 
 {self} {
     return ddlget_text(yyscanner)[0];
 }
 
 {grave_accent} {
-    /* ignore */
+    return ddlget_text(yyscanner)[0];
 }
 
+"/*"            { BEGIN(c_comment); }
+<c_comment>"*/" { BEGIN(0); }
+<c_comment>\n   { }
+<c_comment>.    { }
 %%
 
 void ddlerror(struct pass_to_bison* x, char const *s)
@@ -190,6 +227,11 @@ using namespace ddlpackage;
  */
 void scanner_init(const char* str, yyscan_t yyscanner)
 {
+#ifdef YYDEBUG
+    extern int ddldebug;
+    ddldebug = 1;
+#endif
+
 	size_t slen = strlen(str);
    scan_data* pScanData = (scan_data*)ddlget_extra(yyscanner);
 
@@ -238,10 +280,20 @@ void scanner_finish(yyscan_t yyscanner)
    pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str, yyscan_t yyscanner)
+char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
 {
-   char* nv = strdup(str);
-   if(nv)
-      ((scan_data*)ddlget_extra(yyscanner))->valbuf.push_back(nv);
-   return nv;
+    char* result;
+    char* nv = strdup(str);
+    result = nv;
+    // free strduped memory later to prevent possible memory leak
+    if(nv)
+        ((scan_data*)ddlget_extra(yyscanner))->valbuf.push_back(nv);
+
+    if(action == STRIP_QUOTES)
+    {
+        nv[strlen(str) - 1] = '\0';
+        result = nv + 1;
+    }
+
+    return result;
 }

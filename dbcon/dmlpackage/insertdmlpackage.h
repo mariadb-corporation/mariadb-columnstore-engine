@@ -55,7 +55,7 @@ public:
       * @param sessionID the session id
       */
     EXPORT InsertDMLPackage(std::string schemaName, std::string tableName,
-                     std::string dmlStatement, int sessionID );
+                            std::string dmlStatement, int sessionID );
 
     /** @brief dtor
       */
@@ -80,13 +80,13 @@ public:
       * @param rows the number of rows in the buffer
       */
     EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
-	
-	/** @brief build a InsertDMLPackage from MySQL buffer
+
+    /** @brief build a InsertDMLPackage from MySQL buffer
       *
-	  * @param tableValuesMap  the value list for each column in the table
-	  * @param colNameList the column name for each column
-	  * @param columns number of columns in the table
-	  * @param rows  number of rows to be touched
+      * @param tableValuesMap  the value list for each column in the table
+      * @param colNameList the column name for each column
+      * @param columns number of columns in the table
+      * @param rows  number of rows to be touched
       */
     EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues);
 

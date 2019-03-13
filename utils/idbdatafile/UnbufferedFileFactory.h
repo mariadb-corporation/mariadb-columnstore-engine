@@ -28,13 +28,14 @@ namespace idbdatafile
 class UnbufferedFileFactory : public FileFactoryBase
 {
 public:
-	/* virtual */ IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+    /* virtual */
+    IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
 };
 
 inline
 IDBDataFile* UnbufferedFileFactory::open(const char* fname, const char* mode, unsigned opts, unsigned /*colWidth*/)
 {
-	return new UnbufferedFile(fname, mode, opts);
+    return new UnbufferedFile(fname, mode, opts);
 }
 
 }

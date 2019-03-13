@@ -34,9 +34,12 @@
 
 #include "calpontsystemcatalog.h"
 
+#include "dataconvert.h"
+using namespace dataconvert;
+
 namespace rowgroup
 {
-	class Row;
+class Row;
 }
 
 namespace execplan
@@ -55,89 +58,128 @@ typedef std::vector<execplan::SPTP> FunctionParm;
 class Func
 {
 public:
-	Func();
-	Func(const std::string& funcName);
-	virtual ~Func() {}
+    Func();
+    Func(const std::string& funcName);
+    virtual ~Func() {}
 
-	const std::string funcName() const { return fFuncName; }
-	void funcName(const std::string funcName) { fFuncName = funcName; }
-	virtual execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) = 0;
+    const std::string funcName() const
+    {
+        return fFuncName;
+    }
+    void funcName(const std::string funcName)
+    {
+        fFuncName = funcName;
+    }
+    virtual execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) = 0;
 
-	virtual int64_t getIntVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+    virtual int64_t getIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
     virtual uint64_t getUintVal(rowgroup::Row& row,
                                 FunctionParm& fp,
                                 bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return static_cast<uint64_t>(getIntVal(row,fp,isNull,op_ct)); }
+    {
+        return static_cast<uint64_t>(getIntVal(row, fp, isNull, op_ct));
+    }
 
     virtual double getDoubleVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+                                FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
-	virtual std::string getStrVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+    virtual std::string getStrVal(rowgroup::Row& row,
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
-	virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return execplan::IDB_Decimal(getIntVal(row, fp, isNull, op_ct),0,0); }
+    virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+            FunctionParm& fp,
+            bool& isNull,
+            execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return execplan::IDB_Decimal(getIntVal(row, fp, isNull, op_ct), 0, 0);
+    }
 
-	virtual int32_t getDateIntVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return intToDate(getIntVal(row, fp, isNull, op_ct)); }
+    virtual int32_t getDateIntVal(rowgroup::Row& row,
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return intToDate(getIntVal(row, fp, isNull, op_ct));
+    }
 
-	virtual int64_t getDatetimeIntVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return intToDatetime(getIntVal(row, fp, isNull, op_ct)); }
+    virtual int64_t getDatetimeIntVal(rowgroup::Row& row,
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return intToDatetime(getIntVal(row, fp, isNull, op_ct));
+    }
 
-	virtual bool getBoolVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ int64_t intVal = getIntVal(row, fp, isNull, op_ct); return (!isNull && intVal); }
+    virtual int64_t getTimeIntVal(rowgroup::Row& row,
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return intToTime(getIntVal(row, fp, isNull, op_ct));
+    }
 
-	virtual float getFloatVal(rowgroup::Row& row,
-								FunctionParm& fp,
-								bool& isNull,
-								execplan::CalpontSystemCatalog::ColType& op_ct)
-	{ return getDoubleVal(row, fp, isNull, op_ct); }
+    virtual bool getBoolVal(rowgroup::Row& row,
+                            FunctionParm& fp,
+                            bool& isNull,
+                            execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        int64_t intVal = getIntVal(row, fp, isNull, op_ct);
+        return (!isNull && intVal);
+    }
 
-	const float floatNullVal() const { return fFloatNullVal; }
-	const double doubleNullVal() const { return fDoubleNullVal; }
+    virtual float getFloatVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return getDoubleVal(row, fp, isNull, op_ct);
+    }
+
+    const float floatNullVal() const
+    {
+        return fFloatNullVal;
+    }
+    const double doubleNullVal() const
+    {
+        return fDoubleNullVal;
+    }
 
 protected:
-	virtual uint32_t stringToDate(std::string);
-	virtual uint64_t stringToDatetime(std::string);
+    virtual uint32_t stringToDate(std::string);
+    virtual uint64_t stringToDatetime(std::string);
+    virtual int64_t stringToTime(std::string);
 
-	virtual uint32_t intToDate(int64_t);
-	virtual uint64_t intToDatetime(int64_t);
+    virtual uint32_t intToDate(int64_t);
+    virtual uint64_t intToDatetime(int64_t);
+    virtual int64_t intToTime(int64_t);
 
-	virtual std::string intToString(int64_t);
-	virtual std::string doubleToString(double);
+    virtual std::string intToString(int64_t);
+    virtual std::string doubleToString(double);
 
-	std::string fFuncName;
+    virtual int64_t nowDatetime();
+    virtual int64_t addTime(DateTime& dt1, dataconvert::Time& dt2);
+    virtual int64_t addTime(dataconvert::Time& dt1, dataconvert::Time& dt2);
+
+    std::string fFuncName;
 
 private:
-	//defaults okay
-	//Func(const Func& rhs);
-	//Func& operator=(const Func& rhs);
+    //defaults okay
+    //Func(const Func& rhs);
+    //Func& operator=(const Func& rhs);
 
-	void init();
+    void init();
 
-	float fFloatNullVal;
-	double fDoubleNullVal;
+    float fFloatNullVal;
+    double fDoubleNullVal;
 };
 
 

@@ -44,66 +44,71 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_insert::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 string insertStr(const string& src, int pos, int len, const string& targ)
 {
-	int64_t strLen = static_cast<int64_t>(src.length());
+    int64_t strLen = static_cast<int64_t>(src.length());
 
-    if ((pos <= 0) || ((pos-1) >= strLen))
+    if ((pos <= 0) || ((pos - 1) >= strLen))
         return src;
 
     if ((len < 0) || (len > strLen))
         len = strLen;
 
     const char* srcptr = src.c_str();
-    advance(srcptr,pos-1,srcptr+strLen);
+    advance(srcptr, pos - 1, srcptr + strLen);
     // srcptr now pointing to where we need to insert targ string
 
     uint32_t srcPos = srcptr - src.c_str();
 
     uint32_t finPos = strLen;
-	const char* finptr = src.c_str();
-    if ((strLen - (pos-1+len)) >= 0)
+    const char* finptr = src.c_str();
+
+    if ((strLen - (pos - 1 + len)) >= 0)
     {
-	    advance(finptr,(pos-1+len),finptr+strLen);
-    	// finptr now pointing to the end of the string to replace
-		finPos = finptr - src.c_str();
+        advance(finptr, (pos - 1 + len), finptr + strLen);
+        // finptr now pointing to the end of the string to replace
+        finPos = finptr - src.c_str();
     }
 
     string out;
-    out.reserve(srcPos + targ.length() + strLen-finPos + 1);
+    out.reserve(srcPos + targ.length() + strLen - finPos + 1);
     out.append( src.c_str(), srcPos );
     out.append( targ.c_str(), targ.length() );
-    out.append( src.c_str() + finPos, strLen-finPos );
+    out.append( src.c_str() + finPos, strLen - finPos );
 
     return out;
 }
 
 std::string Func_insert::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
-{	
-	const string& tstr = stringValue(fp[0], row, isNull);
-	if (isNull)
-		return "";
+                                   FunctionParm& fp,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType&)
+{
+	string tstr;
+    stringValue(fp[0], row, isNull, tstr);
+    if (isNull)
+        return "";
 
-	const string& tnewstr = stringValue(fp[3], row, isNull);
-	if (isNull)
-		return "";
+	string tnewstr;
+    stringValue(fp[3], row, isNull, tnewstr);
+    if (isNull)
+        return "";
 
-	int64_t pos = fp[1]->data()->getIntVal(row, isNull);
-	if (isNull)
-		return "";
+    int64_t pos = fp[1]->data()->getIntVal(row, isNull);
 
-	int64_t len = fp[2]->data()->getIntVal(row, isNull);
-	if (isNull)
-		return "";
+    if (isNull)
+        return "";
 
-    return insertStr( tstr, pos, len, tnewstr );	
+    int64_t len = fp[2]->data()->getIntVal(row, isNull);
+
+    if (isNull)
+        return "";
+
+    return insertStr( tstr, pos, len, tnewstr );
 }
 
 

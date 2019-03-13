@@ -56,96 +56,101 @@ namespace windowfunction
 template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const string& name, int ct)
 {
-	boost::shared_ptr<WindowFunctionType> func;
-	switch (ct)
-	{
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::VARCHAR:
-		case CalpontSystemCatalog::VARBINARY:
-		{
-			func.reset(new WF_count<string>(id, name));
-			break;
-		}
-		default:
-		{
-			func.reset(new WF_count<int64_t>(id, name));
-			break;
-		}
-	}
+    boost::shared_ptr<WindowFunctionType> func;
 
-	return func;
+    switch (ct)
+    {
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::VARCHAR:
+        case CalpontSystemCatalog::VARBINARY:
+        {
+            func.reset(new WF_count<string>(id, name));
+            break;
+        }
+
+        default:
+        {
+            func.reset(new WF_count<int64_t>(id, name));
+            break;
+        }
+    }
+
+    return func;
 }
 
 
 template<typename T>
 WindowFunctionType* WF_count<T>::clone() const
 {
-	return new WF_count(*this);
+    return new WF_count(*this);
 }
 
 
 template<typename T>
 void WF_count<T>::resetData()
 {
-	fCount = 0;
-	fSet.clear();
+    fCount = 0;
+    fSet.clear();
 
-	WindowFunctionType::resetData();
+    WindowFunctionType::resetData();
 }
 
 
 template<typename T>
 void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-	if ((fFrameUnit == WF__FRAME_ROWS) ||
-		(fPrev == -1) ||
-		(!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
-	{
-		// for unbounded - current row special handling
-		if (fPrev >= b && fPrev < c)
-			b = c;
-		else if (fPrev <= e && fPrev > c)
-			e = c;
+    if ((fFrameUnit == WF__FRAME_ROWS) ||
+            (fPrev == -1) ||
+            (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
+    {
+        // for unbounded - current row special handling
+        if (fPrev >= b && fPrev < c)
+            b = c;
+        else if (fPrev <= e && fPrev > c)
+            e = c;
 
-		// for count(*), the column is optimized out, index[1] does not exist.
-		uint64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
-		for (int64_t i = b; i <= e; i++)
-		{
-			if (i % 1000 == 0 && fStep->cancelled())
-				break;
+        // for count(*), the column is optimized out, index[1] does not exist.
+        uint64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
 
-			if (fFunctionId == WF__COUNT_ASTERISK)
-			{
-				fCount++;
-				continue;
-			}
+        for (int64_t i = b; i <= e; i++)
+        {
+            if (i % 1000 == 0 && fStep->cancelled())
+                break;
 
-			fRow.setData(getPointer(fRowData->at(i)));
-			if (fRow.isNullValue(colIn) == true)
-				continue;
+            if (fFunctionId == WF__COUNT_ASTERISK)
+            {
+                fCount++;
+                continue;
+            }
 
-			if (fFunctionId != WF__COUNT_DISTINCT)
-			{
-				fCount++;
-			}
-			else
-			{
-				T valIn;
-				getValue(colIn, valIn);
-				if (fSet.find(valIn) == fSet.end())
-				{
-					fCount++;
+            fRow.setData(getPointer(fRowData->at(i)));
 
-					if (fFunctionId == WF__COUNT_DISTINCT)
-					fSet.insert(valIn);
-				}
-			}
-		}
-	}
+            if (fRow.isNullValue(colIn) == true)
+                continue;
 
-	setValue(CalpontSystemCatalog::BIGINT, b, e, c, &fCount);
+            if (fFunctionId != WF__COUNT_DISTINCT)
+            {
+                fCount++;
+            }
+            else
+            {
+                T valIn;
+                getValue(colIn, valIn);
 
-	fPrev = c;
+                if (fSet.find(valIn) == fSet.end())
+                {
+                    fCount++;
+
+                    if (fFunctionId == WF__COUNT_DISTINCT)
+                        fSet.insert(valIn);
+                }
+            }
+        }
+    }
+
+    setValue(CalpontSystemCatalog::BIGINT, b, e, c, &fCount);
+
+    fPrev = c;
 }
 
 

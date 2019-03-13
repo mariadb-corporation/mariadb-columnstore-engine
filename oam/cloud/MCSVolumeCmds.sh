@@ -10,6 +10,9 @@ fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
+#get temp directory
+tmpdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
+
 #check command
 if [ "$1" = "" ]; then
 	echo "Enter Command Name: {create|describe|detach|attach|delete|createTag}"
@@ -108,43 +111,43 @@ Region=`$COLUMNSTORE_INSTALL_DIR/bin/MCSInstanceCmds.sh getRegion`
 
 checkInfostatus() {
 	#check if attached
-	cat /tmp/volumeInfo_$volumeName | grep attached > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep attached > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="attached"
 		RETVAL=0
 		return
 	fi
 	#check if available
-	cat /tmp/volumeInfo_$volumeName | grep available > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep available > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="available"
 		RETVAL=0
 		return
 	fi
 	#check if detaching
-	cat /tmp/volumeInfo_$volumeName | grep detaching > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep detaching > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="detaching"
 		RETVAL=0
 		return
 	fi
 	#check if attaching
-	cat /tmp/volumeInfo_$volumeName | grep attaching > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep attaching > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="attaching"
 		RETVAL=0
 		return
 	fi
 	#check if doesn't exist
-	cat /tmp/volumeInfo_$volumeName | grep "does not exist" > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep "does not exist" > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="does-not-exist"
 		RETVAL=1
 		return
 	fi
 	#check if reports already attached from attach command
-	cat /tmp/volumeInfo_$volumeName | grep "already attached" > /tmp/volumeStatus_$volumeName
-	if [ `cat /tmp/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
+	cat ${tmpdir}/volumeInfo_$volumeName | grep "already attached" > ${tmpdir}/volumeStatus_$volumeName
+	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="already-attached"
 		RETVAL=1
 		return
@@ -188,7 +191,7 @@ createvolume() {
 
 describevolume() {
 	#describe volume
-	$AWSCLI describe-volumes --volume-ids  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI describe-volumes --volume-ids  $volumeName --region $Region  > ${tmpdir}/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	echo $STATUS
@@ -197,14 +200,14 @@ describevolume() {
 
 detachvolume() {
 	#detach volume
-	$AWSCLI detach-volume --volume-id  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI detach-volume --volume-id  $volumeName --region $Region  > ${tmpdir}/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
-		while [ $retries -ne 60 ]; do
+		while [ $retries -ne 10 ]; do
 			#retry until it's attached
-			$AWSCLI detach-volume --volume-id  $volumeName --region $Region > /tmp/volumeInfo_$volumeName 2>&1
+			$AWSCLI detach-volume --volume-id  $volumeName --region $Region > ${tmpdir}/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
@@ -234,12 +237,12 @@ detachvolume() {
 attachvolume() {
 
 	#detach volume
-	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName --region $Region  > ${tmpdir}/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
 		retries=1
-		while [ $retries -ne 60 ]; do
+		while [ $retries -ne 10 ]; do
 			#check status until it's attached
 			describevolume
 			if [ $STATUS == "attached" ]; then
@@ -268,13 +271,13 @@ attachvolume() {
 
 deletevolume() {
 	#delete volume
-	$AWSCLI delete-volume --volume-id  $volumeName --region $Region  > /tmp/deletevolume_$volumeName 2>&1
+	$AWSCLI delete-volume --volume-id  $volumeName --region $Region  > ${tmpdir}/deletevolume_$volumeName 2>&1
 	return
 }
 
 createTag() {
 	#create tag
-	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue --region $Region > /tmp/createTag_$volumeName 2>&1
+	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue --region $Region > ${tmpdir}/createTag_$resourceName 2>&1
 	return
 }
 

@@ -45,32 +45,38 @@ namespace logging
 class IDBExcept : public std::runtime_error
 {
 public:
-	IDBExcept(uint16_t code) :
-		std::runtime_error(IDBErrorInfo::instance()->errorMsg(code)), fErrCode(code) {}
-	IDBExcept(uint16_t code, const Message::Args& args) :
-		std::runtime_error(IDBErrorInfo::instance()->errorMsg(code, args)), fErrCode(code){}
-	IDBExcept(const std::string& msg, uint16_t code) :
-		std::runtime_error(msg), fErrCode(code){ }
-	void errorCode(uint16_t code) { fErrCode = code; }
-	uint16_t errorCode() const    { return fErrCode; }
+    IDBExcept(uint16_t code) :
+        std::runtime_error(IDBErrorInfo::instance()->errorMsg(code)), fErrCode(code) {}
+    IDBExcept(uint16_t code, const Message::Args& args) :
+        std::runtime_error(IDBErrorInfo::instance()->errorMsg(code, args)), fErrCode(code) {}
+    IDBExcept(const std::string& msg, uint16_t code) :
+        std::runtime_error(msg), fErrCode(code) { }
+    void errorCode(uint16_t code)
+    {
+        fErrCode = code;
+    }
+    uint16_t errorCode() const
+    {
+        return fErrCode;
+    }
 protected:
-	unsigned fErrCode;
+    unsigned fErrCode;
 };
 
 class DictionaryBufferOverflow : public IDBExcept
 {
 public:
-	DictionaryBufferOverflow() : IDBExcept(ERR_DICTBUFFER_OVERFLOW)
-	{ }
+    DictionaryBufferOverflow() : IDBExcept(ERR_DICTBUFFER_OVERFLOW)
+    { }
 };
 
 class LargeDataListExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	explicit LargeDataListExcept(const std::string&  msg) : std::runtime_error(msg) { }
+    /** Takes a character string describing the error.  */
+    explicit LargeDataListExcept(const std::string&  msg) : std::runtime_error(msg) { }
 
-	virtual	~LargeDataListExcept() throw() { }
+    virtual	~LargeDataListExcept() throw() { }
 };
 
 
@@ -81,15 +87,15 @@ public:
 class QueryDataExcept : public IDBExcept
 {
 public:
-	/** Takes a character string describing the error.  */
-	QueryDataExcept(const std::string& msg, uint16_t code) :
-		IDBExcept(msg, code)  { }
+    /** Takes a character string describing the error.  */
+    QueryDataExcept(const std::string& msg, uint16_t code) :
+        IDBExcept(msg, code)  { }
 
-	virtual	~QueryDataExcept() throw() { }
+    virtual	~QueryDataExcept() throw() { }
 private:
-	//defaults okay
-	//QueryDataExcept(const QueryDataExcept& rhs);
-	//QueryDataExcept& operator=(const QueryDataExcept& rhs);
+    //defaults okay
+    //QueryDataExcept(const QueryDataExcept& rhs);
+    //QueryDataExcept& operator=(const QueryDataExcept& rhs);
 };
 
 /** @brief specific error exception class for VBBM Version Buffer overflow
@@ -99,14 +105,17 @@ private:
 class VBBMBufferOverFlowExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	VBBMBufferOverFlowExcept(const std::string& msg) :
-		std::runtime_error(msg), fErrorCode(8) { }
-	//ERR_VBBM_OVERFLOW = 8 defined in brmtypes.h
-	int8_t errorCode() const { return fErrorCode; }
+    /** Takes a character string describing the error.  */
+    VBBMBufferOverFlowExcept(const std::string& msg) :
+        std::runtime_error(msg), fErrorCode(8) { }
+    //ERR_VBBM_OVERFLOW = 8 defined in brmtypes.h
+    int8_t errorCode() const
+    {
+        return fErrorCode;
+    }
 
 private:
-	int8_t fErrorCode;
+    int8_t fErrorCode;
 };
 
 /** @brief specific error exception class for VBBM Version Buffer overflow
@@ -116,9 +125,9 @@ private:
 class PrimitiveColumnProjectResultExcept : public QueryDataExcept
 {
 public:
-	/** Takes a character string describing the error.  */
-	PrimitiveColumnProjectResultExcept(const std::string& msg) :
-		QueryDataExcept(msg, projectResultErr) { }
+    /** Takes a character string describing the error.  */
+    PrimitiveColumnProjectResultExcept(const std::string& msg) :
+        QueryDataExcept(msg, projectResultErr) { }
 };
 
 /** @brief specific error exception class for PrimProc invalid HWM
@@ -128,9 +137,9 @@ public:
 class InvalidRangeHWMExcept : public QueryDataExcept
 {
 public:
-	/** Takes a character string describing the error.  */
-	InvalidRangeHWMExcept(const std::string& msg) :
-		QueryDataExcept(msg, hwmRangeSizeErr){ }
+    /** Takes a character string describing the error.  */
+    InvalidRangeHWMExcept(const std::string& msg) :
+        QueryDataExcept(msg, hwmRangeSizeErr) { }
 };
 
 
@@ -140,9 +149,9 @@ public:
 class InvalidOperationExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	InvalidOperationExcept(const std::string& msg) :
-		std::runtime_error(msg){ }
+    /** Takes a character string describing the error.  */
+    InvalidOperationExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
 };
 
 /** @brief Exception for F&E framework to throw
@@ -151,9 +160,9 @@ public:
 class InvalidConversionExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	InvalidConversionExcept(const std::string& msg) :
-		std::runtime_error(msg){ }
+    /** Takes a character string describing the error.  */
+    InvalidConversionExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
 };
 
 /** @brief Exception for F&E framework -- function evaluation to throw
@@ -162,9 +171,9 @@ public:
 class InvalidArgumentExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	InvalidArgumentExcept(const std::string& msg) :
-		std::runtime_error(msg){ }
+    /** Takes a character string describing the error.  */
+    InvalidArgumentExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
 };
 
 /** @brief Exception for F&E framework -- function evaluation to throw
@@ -173,9 +182,9 @@ public:
 class NotImplementedExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	NotImplementedExcept(const std::string& msg) :
-		std::runtime_error(msg){ }
+    /** Takes a character string describing the error.  */
+    NotImplementedExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
 };
 
 /** @brief specific error exception class for getSysData in Calpontsystemcatalog.
@@ -185,38 +194,38 @@ public:
 class NoTableExcept : public std::runtime_error
 {
 public:
-	/** Takes a character string describing the error.  */
-	NoTableExcept(const std::string& msg) :
-		std::runtime_error(msg){ }
+    /** Takes a character string describing the error.  */
+    NoTableExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
 };
 
 class MoreThan1RowExcept : public IDBExcept
 {
 public:
-	MoreThan1RowExcept() :
-		IDBExcept(ERR_MORE_THAN_1_ROW)
-	{ }
+    MoreThan1RowExcept() :
+        IDBExcept(ERR_MORE_THAN_1_ROW)
+    { }
 };
 
 class CorrelateFailExcept : public IDBExcept
 {
 public:
-	CorrelateFailExcept() :
-		IDBExcept(ERR_CORRELATE_FAIL)
-	{ }
+    CorrelateFailExcept() :
+        IDBExcept(ERR_CORRELATE_FAIL)
+    { }
 };
 
 class DBRMException : public std::runtime_error
 {
 public:
-	DBRMException(const std::string& emsg) :
-	std::runtime_error(emsg) {}
+    DBRMException(const std::string& emsg) :
+        std::runtime_error(emsg) {}
 };
 
 class ProtocolError : public std::logic_error
 {
 public:
-	ProtocolError(const std::string &emsg) : std::logic_error(emsg) { }
+    ProtocolError(const std::string& emsg) : std::logic_error(emsg) { }
 };
 
 #ifndef __STRING

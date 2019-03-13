@@ -16,25 +16,25 @@ set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
 set VERSION [lindex $argv 3]
 set INSTALLTYPE [lindex $argv 4]
-set PKGTYPE [lindex $argv 5]
-set NODEPS [lindex $argv 6]
-set MYSQLPW [lindex $argv 7]
-set MYSQLPORT [lindex $argv 8]
-set DEBUG [lindex $argv 9]
+set AMAZONINSTALL [lindex $argv 5]
+set PKGTYPE [lindex $argv 6]
+set NODEPS [lindex $argv 7]
+set DEBUG [lindex $argv 8]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 10]
+set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 11]
+set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
 
-if { $MYSQLPW == "none" } {
-	set MYSQLPW " "
-} 
+set BASH "/bin/bash "
+#if { $DEBUG == "1" } {
+#	set BASH "/bin/bash -x "
+#}
 
 set HOME "$env(HOME)"
 
@@ -59,217 +59,202 @@ if { $PKGTYPE == "rpm" } {
 	}
 }
 
-
-#check and see if remote server has ssh keys setup, set PASSWORD if so
+# check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
 send "ssh -v $USERNAME@$SERVER 'time'\n"
-set timeout 60
+set timeout 20
 expect {
-	"authenticity" { send "yes\n" 
-    exp_continue
-	}
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE"}	
-	"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
 	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+	"authenticity" { send "yes\n" 
+				expect {
+					"word: " { send "$PASSWORD\n" }
+					"passphrase" { send "$PASSWORD\n" }
+				}
+	}
+	"sys" { set PASSWORD "ssh" }
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
+	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
+	"Exit status 0" { send_user "DONE" }
 }
 send_user "\n"
 
 send_user "Stop ColumnStore service                       "
+send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
+set timeout 10
+expect {
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
+}
 set timeout 60
 # check return
 expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-#	"No such file or directory" { send_user "DONE" }
-        "Exit status 127" { send_user "DONE" }
-	 "Exit status 0" { send_user "DONE" }
+        "Exit status 0" { send_user "DONE" }
+	#"No such file" { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	timeout { send_user "DONE" }
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { }
 }
 send_user "\n"
 
-# 
-# erase package
-#
-send_user "Erase MariaDB Columnstore Packages on Module                 "
-send "ssh -v $USERNAME@$SERVER '$PKGERASE '\n"
-set timeout 60
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
+if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
+	# 
+	# erase MariaDB Columnstore packages
+	#
+	send_user "Erase MariaDB Columnstore Packages on Module           "
+	send "ssh -v $USERNAME@$SERVER '$PKGERASE'\n"
+	if { $PASSWORD != "ssh" } {
+		set timeout 30
+		expect {
+			"word: " { send "$PASSWORD\n" }
+			"passphrase" { send "$PASSWORD\n" }
+		}
 	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
+	set timeout 120
+	expect {
+		"error: --purge needs at least one package" { send_user "DONE" }
+		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
+		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+        "Exit status 0" { send_user "DONE" }
+        timeout { }
 	}
-	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
-	"Exit status 0" { send_user "DONE" }
-	"Exit status 2" { send_user "DONE" }
-	timeout { send_user "DONE" }
+	send_user "\n"
 }
-send_user "\n"
 
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
 # 
-# send the package
+# send the MariaDB ColumnStore package
 #
-set timeout 60
-send_user "Copy New MariaDB Columnstore Package to Module              "
+set timeout 30
+send_user "Copy new MariaDB Columnstore Packages to Module              "
 send "ssh -v $USERNAME@$SERVER 'rm -f /root/mariadb-columnstore-*.$PKGTYPE'\n"
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
 }
-set timeout 180
+expect {
+        "Exit status 0" { send_user "DONE" }
+        "Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+        "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+        "No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+        timeout { }
+}
+set timeout 30
+
 send "scp -v $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.\n"
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
 	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"scp :"  	{ send_user "ERROR\n" ; 
-				send_user "\n*** Installation ERROR\n" ; 
-				exit 1 }
-	"Exit status 0" { send_user "DONE" }
-	"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
-	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
 }
-send_user "\n"
-
-#
-# install package
-#
-send_user "Install MariaDB Columnstore Packages on Module               "
-
-send "ssh -v $USERNAME@$SERVER '$PKGINSTALL '\n"
-set timeout 180
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
-								send_user "\n*** Installation ERROR\n" ; 
-									exit 1 }
-	"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
-	"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n"; exp_continue }
-	"Exit status 0" { send_user "DONE" }
-	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
-}
-send_user "\n"
-
-
-#
-# copy over calpont config file
-#
-send_user "Copy MariaDB Columnstore Config file to Module              "
-send " \n"
-send date\n
-send "scp -v $INSTALLDIR/etc/* $USERNAME@$SERVER:$INSTALLDIR/etc\n"
-# check return
 set timeout 120
 expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
-}
-send_user "\n"
-#
-# copy over custom OS tmp files
-#
-send_user "Copy Custom OS files to Module                  "
-send_user " \n"
-send "scp -rv $INSTALLDIR/local/etc $USERNAME@$SERVER:$INSTALLDIR/local\n"
-set timeout 120
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-	"scp :"  	{ send_user "ERROR\n" ; 
-				send_user "\n*** Installation ERROR\n" ; 
-				exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+        "Exit status 0" { send_user "DONE" }
+        "Exit status 1" { send_user "ERROR: scp failed" ;exit 1 }
+        timeout { }
 }
 send_user "\n"
 
-#
-# copy over calpont OS files
-#
-send_user "Copy MariaDB Columnstore OS files to Module                 "
+set timeout 30
+if { $INSTALLTYPE == "initial"} {
+	#
+	# install package
+	#
+	send_user "Install MariaDB ColumnStore Packages on Module               "
+	send "ssh -v $USERNAME@$SERVER '$PKGINSTALL '\n"
+	if { $PASSWORD != "ssh" } {
+		set timeout 30
+		expect {
+			"word: " { send "$PASSWORD\n" }
+			"passphrase" { send "$PASSWORD\n" }
+		}
+	}
+	set timeout 180
+	expect {
+		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
+							send_user "\n*** Installation ERROR\n" ; 
+							exit 1 }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+		"needs"	   { send_user "ERROR: disk space issue\n" ; exit 1 }
+		"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
+        "Exit status 0" { send_user "DONE" }
+        timeout { }
+	}
+	send_user "\n"
+}
+
+send_user "\n"
+send_user "Start ColumnStore service                       "
 send " \n"
 send date\n
-send "scp -v $INSTALLDIR/local/etc/$MODULE/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
+set timeout 10
+expect {
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
+}
 set timeout 60
+# check return
 expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
+        "Exit status 0" { send_user "DONE" }
+	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	"Starting MariaDB" { send_user "DONE" }
+	timeout { }
 }
 send_user "\n"
 
-# Start module installer to setup Custom OS files
-#
-send_user "Run Module Installer                            "
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=um --port=$MYSQLPORT'\n"
-set timeout 120
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
+if { $AMAZONINSTALL == "1" } { 
+	#
+	# copy over customer OS files
+	#
+	send_user "Copy MariaDB Columnstore OS files to Module                 "
+	send " \n"
+	send date\n
+	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
+	set timeout 10
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
+	set timeout 60
+	expect {
+                "Exit status 0" { send_user "DONE" }
+		-re {[$#] } 		  		  { send_user "DONE" }
+		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+		"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+		timeout { }
 	}
-	"Exit status 0" { send_user "DONE" }
-        "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
-        timeout { send_user "ERROR: Timeout\n" ; exit 2 }
 }
-send_user "\n"
+
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0
-# vim:ts=4 sw=4:
 

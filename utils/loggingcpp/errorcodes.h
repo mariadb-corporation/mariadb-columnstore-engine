@@ -29,70 +29,70 @@
 #include <string>
 #include <stdint.h>
 
-namespace logging 
-{ 
+namespace logging
+{
 
 enum ErrorCodeValues
 {
- batchPrimitiveStepErr = 1,
- tupleBPSErr,
- batchPrimitiveStepLargeDataListFileErr,
- bucketReuseStepErr,
- bucketReuseStepLargeDataListFileErr,
- aggregateFilterStepErr,
- filterStepErr,
- functionStepErr,
- hashJoinStepErr,
- hashJoinStepLargeDataListFileErr,
- largeHashJoinErr,
- largeHashJoinLargeDataListFileErr,
- stringHashJoinStepErr,
- stringHashJoinStepLargeDataListFileErr,
- tupleHashJoinTooBigErr,
- threadResourceErr,
- pDictionaryScanErr,
- pDictionaryScanLargeDataListFileErr,
- pIdxListErr,
- pIdxWalkErr,
- pnlJoinErr,
- reduceStepErr,
- reduceStepLargeDataListFileErr,
- unionStepErr,
- unionStepLargeDataListFileErr,
- unionStepTooBigErr,
- tupleAggregateStepErr,
- tupleConstantStepErr,
- tupleHavingStepErr,
- makeJobListErr,
- aggregateFuncErr,
- aggregateDataErr,
+    batchPrimitiveStepErr = 1,
+    tupleBPSErr,
+    batchPrimitiveStepLargeDataListFileErr,
+    bucketReuseStepErr,
+    bucketReuseStepLargeDataListFileErr,
+    aggregateFilterStepErr,
+    filterStepErr,
+    functionStepErr,
+    hashJoinStepErr,
+    hashJoinStepLargeDataListFileErr,
+    largeHashJoinErr,
+    largeHashJoinLargeDataListFileErr,
+    stringHashJoinStepErr,
+    stringHashJoinStepLargeDataListFileErr,
+    tupleHashJoinTooBigErr,
+    threadResourceErr,
+    pDictionaryScanErr,
+    pDictionaryScanLargeDataListFileErr,
+    pIdxListErr,
+    pIdxWalkErr,
+    pnlJoinErr,
+    reduceStepErr,
+    reduceStepLargeDataListFileErr,
+    unionStepErr,
+    unionStepLargeDataListFileErr,
+    unionStepTooBigErr,
+    tupleAggregateStepErr,
+    tupleConstantStepErr,
+    tupleHavingStepErr,
+    makeJobListErr,
+    aggregateFuncErr,
+    aggregateDataErr,
 //don't use 100, same as SQL_NOT_FOUND
- batchPrimitiveProcessorErr = 101,
- bppSeederErr,
- primitiveServerErr,
- projectResultErr,
- hwmRangeSizeErr,
- // user input data error
- formatErr = 201,
- dataTypeErr,
- incompatJoinCols,
- incompatFilterCols,
- aggregateResourceErr
+    batchPrimitiveProcessorErr = 101,
+    bppSeederErr,
+    primitiveServerErr,
+    projectResultErr,
+    hwmRangeSizeErr,
+// user input data error
+    formatErr = 201,
+    dataTypeErr,
+    incompatJoinCols,
+    incompatFilterCols,
+    aggregateResourceErr
 };
 
 struct ErrorCodes
 {
-	ErrorCodes();
-	std::string errorString(uint16_t code) const;
+    ErrorCodes();
+    std::string errorString(uint16_t code) const;
 private:
-  	typedef std::map<ErrorCodeValues, std::string> CodeMap;
+    typedef std::map<ErrorCodeValues, std::string> CodeMap;
 
-	//defaults okay
-	//ErrorCodes(const ErrorCodes& rhs);
-	//ErrorCodes& operator=(const ErrorCodes& rhs);
+    //defaults okay
+    //ErrorCodes(const ErrorCodes& rhs);
+    //ErrorCodes& operator=(const ErrorCodes& rhs);
 
-	CodeMap fErrorCodes;
-	const std::string fPreamble;
+    CodeMap fErrorCodes;
+    const std::string fPreamble;
 };
 
 }

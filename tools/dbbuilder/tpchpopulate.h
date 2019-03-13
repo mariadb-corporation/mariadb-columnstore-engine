@@ -30,9 +30,9 @@ class TpchPopulate
 
 public:
     void populate_part();
-	void populate_customer();
-	void populate_tpch();
-	void populateFromFile(std::string tableName, std::string& fileName);
+    void populate_customer();
+    void populate_tpch();
+    void populateFromFile(std::string tableName, std::string& fileName);
 protected:
 
 

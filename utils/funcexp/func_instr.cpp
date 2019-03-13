@@ -36,41 +36,42 @@ namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_instr::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	CalpontSystemCatalog::ColType ct;
-	ct.colDataType = CalpontSystemCatalog::VARCHAR;
-	ct.colWidth = 255;
-	return ct;
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::VARCHAR;
+    ct.colWidth = 255;
+    return ct;
 }
 
 size_t Func_instr::in_str(const string& str, const string& substr, size_t start)
 {
-	// convert both inputs to wide character strings
-	std::wstring wcstr = utf8::utf8_to_wstring(str);
-	std::wstring wcsubstr = utf8::utf8_to_wstring(substr);
+    // convert both inputs to wide character strings
+    std::wstring wcstr = utf8::utf8_to_wstring(str);
+    std::wstring wcsubstr = utf8::utf8_to_wstring(substr);
 
-	if ((str.length() && !wcstr.length()) ||
-		(substr.length() && !wcsubstr.length()))
-		// this means one or both of the strings had conversion errors to wide character
-		return 0;
+    if ((str.length() && !wcstr.length()) ||
+            (substr.length() && !wcsubstr.length()))
+        // this means one or both of the strings had conversion errors to wide character
+        return 0;
 
-	size_t pos = wcstr.find(wcsubstr, start-1);
-	return (pos != string::npos ? pos+1 : 0);
+    size_t pos = wcstr.find(wcsubstr, start - 1);
+    return (pos != string::npos ? pos + 1 : 0);
 }
 
 int64_t Func_instr::getIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	uint64_t start = 1;
-	if (parm.size() == 3)
-		start = parm[2]->data()->getIntVal(row, isNull);
+    uint64_t start = 1;
 
-	if (isNull || start == 0)
-		return 0;
+    if (parm.size() == 3)
+        start = parm[2]->data()->getIntVal(row, isNull);
 
-	//Bug 5110 : to support utf8 char type, we have to convert and search  
-	return in_str(parm[0]->data()->getStrVal(row, isNull), parm[1]->data()->getStrVal(row, isNull), start);
+    if (isNull || start == 0)
+        return 0;
+
+    //Bug 5110 : to support utf8 char type, we have to convert and search
+    return in_str(parm[0]->data()->getStrVal(row, isNull), parm[1]->data()->getStrVal(row, isNull), start);
 
 }
 

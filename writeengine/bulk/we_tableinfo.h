@@ -50,7 +50,7 @@
 
 namespace WriteEngine
 {
-    
+
 /* @brief Class which maintains the information for a table.
  */
 class TableInfo
@@ -64,36 +64,36 @@ private:
     int fTableId;                       // Table id
     int fBufferSize;                    // Size of buffer used by BulkLoadBuffer
     int fFileBufSize;                   // Size of fFileBuffer passed to setvbuf
-                                        //   to read import files.  Comes from
-                                        //   writeBufferSize tag in job xml file
+    //   to read import files.  Comes from
+    //   writeBufferSize tag in job xml file
     char fColDelim;                     // Used to delimit col values in a row
     volatile Status fStatusTI;          // Status of table.  Made volatile to
-                                        //   insure BulkLoad methods can access
-                                        //   (thru getStatusTI()) correctly w/o
-                                        //   having to go through a mutex lock.
+    //   insure BulkLoad methods can access
+    //   (thru getStatusTI()) correctly w/o
+    //   having to go through a mutex lock.
     int fReadBufCount;                  // Number of read buffers
-                                        //   (size of fBuffers vector)
+    //   (size of fBuffers vector)
     unsigned fNumberOfColumns;          // Number of ColumnInfo objs in this tbl
-                                        //   (size of fColumns vector)
-    FILE * fHandle;                     // Handle to the input load file
+    //   (size of fColumns vector)
+    FILE* fHandle;                      // Handle to the input load file
     int fCurrentReadBuffer;             // Id of current buffer being popu-
-                                        //   lated by the read thread
+    //   lated by the read thread
     RID fTotalReadRows;                 // Total number of rows read
     volatile unsigned fTotalErrRows;    // Total error rows among all input
-                                        //   for this table.  Is volatile to
-                                        //   insure parser & reader threads
-                                        //   see the latest value.
+    //   for this table.  Is volatile to
+    //   insure parser & reader threads
+    //   see the latest value.
     unsigned fMaxErrorRows;             // Maximum error rows
     int fLastBufferId;                  // Id of the last buffer
     char* fFileBuffer;                  // File buffer passed to setvbuf()
     int fCurrentParseBuffer;            // Id of leading current buffer being
-                                        //   parsed.  There can be more than 1
-                                        //   buffer being parsed concurrently.
+    //   parsed.  There can be more than 1
+    //   buffer being parsed concurrently.
     unsigned fNumberOfColsParsed;       // Number of columns completed parsing
     boost::ptr_vector<ColumnInfo> fColumns; // Columns of the table
     boost::ptr_vector<BulkLoadBuffer> fBuffers; // Array of read buffers.  Used
-                                        //   to pass data from the read
-                                        //   thread to the write thread(s)
+    //   to pass data from the read
+    //   thread to the write thread(s)
 
     /* fSyncUpdatesTI is the mutex used to synchronize updates to TableInfo
      * (excluding fErrorRows and fErrDataRows)
@@ -101,7 +101,7 @@ private:
      * This mutex is also used to coordinate access to fColumnLocks and
      * fParseComplete (in BulkLoadBuffer) for the buffers within a table.
      * See bulkloadBuffer.h for more information.
-     *  
+     *
      * As the controlling class, TableInfo is the one that is always
      * getting/setting the status of the BulkLoadBuffer objects, so
      * fSyncUpdatesTI is also used to set/get the BulkLoadBuffer status.
@@ -109,7 +109,7 @@ private:
     boost::mutex fSyncUpdatesTI;
 
     boost::mutex fErrorRptInfoMutex;    // Used to synhronize access to
-                                        //   fRejectDataFile & fRejectErrFile
+    //   fRejectDataFile & fRejectErrFile
     int fLocker;                        // Read thread id reading this table
     std::vector<std::string> fLoadFileList; // Load files
     std::string fFileName;              // Current load file
@@ -121,11 +121,11 @@ private:
     timeval fStartTime; // Time when reading and processing began for this table
     const BRM::TxnID fTxnID;            // Transaction id for the build load
     RBMetaWriter fRBMetaWriter;         // Manages the writing of bulk roll-
-                                        //   back meta data for this table
+    //   back meta data for this table
     std::string fProcessName;           // Name of application process used
-                                        //   in db table locks
+    //   in db table locks
     bool fKeepRbMetaFile;               // Keep or delete bulk rollback meta
-                                        //   data file
+    //   data file
     bool fbTruncationAsError;           // Treat string truncation as error
     ImportDataMode fImportDataMode;     // Import data in text or binary mode
 
@@ -135,7 +135,7 @@ private:
     bool fNullStringMode;               // Treat "NULL" as a null value
     char fEnclosedByChar;               // Character to enclose col values
     char fEscapeChar;                   // Escape character used in conjunc-
-                                        //   tion with fEnclosedByChar
+    //   tion with fEnclosedByChar
     bool fProcessingBegun;              // Has processing begun on this tbl
     BulkModeType fBulkMode;             // Distributed bulk mode (1,2, or 3)
     std::string fBRMRptFileName;        // Name of distributed mode rpt file
@@ -143,7 +143,7 @@ private:
     uint64_t fTableLockID;              // Unique table lock ID
     std::vector<uint16_t> fOrigDbRootIds; // List of DBRoots at start of job
 
-	std::string  fErrorDir;             // Opt dir for *.err and *.bad files
+    std::string  fErrorDir;             // Opt dir for *.err and *.bad files
     std::vector<std::string> fErrFiles; // List of *.err files for this table
     std::vector<std::string> fBadFiles; // List of *.bad files for this table
     std::ofstream fRejectDataFile;      // File containing rejected rows
@@ -179,20 +179,20 @@ private:
 
     // Write the list of errors for this table
     void writeErrorList(const std::vector< std::pair<RID,
-                                           std::string> >* errorRows,
-                         const std::vector<std::string>* errorDatRows,
-                         bool bCloseFile);
+                        std::string> >* errorRows,
+                        const std::vector<std::string>* errorDatRows,
+                        bool bCloseFile);
 
     // Write out rejected rows, and corresponding error messages
     void writeBadRows( const std::vector<std::string>* errorDatRows,
                        bool bCloseFile );
     void writeErrReason( const std::vector< std::pair<RID,
-                                            std::string> >* errorRows,
+                         std::string> >* errorRows,
                          bool bCloseFile );
 
     // Disable copy constructor and assignment operator
-    TableInfo (const TableInfo &tableInfo); // 
-    TableInfo & operator =(const TableInfo & info);
+    TableInfo (const TableInfo& tableInfo); //
+    TableInfo& operator =(const TableInfo& info);
 
 public:
 
@@ -237,13 +237,13 @@ public:
      *  @param errMsg    (out) Error message
      */
     int allocateBRMColumnExtent(OID columnOID,
-            uint16_t     dbRoot,
-            uint32_t&    partition,
-            uint16_t&    segment,
-            BRM::LBID_t& startLbid,
-            int&         allocSize,
-            HWM&         hwm,
-            std::string& errMsg );
+                                uint16_t     dbRoot,
+                                uint32_t&    partition,
+                                uint16_t&    segment,
+                                BRM::LBID_t& startLbid,
+                                int&         allocSize,
+                                HWM&         hwm,
+                                std::string& errMsg );
 
     /** @brief Delete the bulk rollback metadata file.
      */
@@ -266,7 +266,7 @@ public:
      *  @param Buffer size
      */
     void setFileBufferSize(const int fileBufSize);
-        
+
     /** @brief Set the delimiter used to delimit column values within a row
      */
     void setColDelimiter(const char delim);
@@ -279,7 +279,7 @@ public:
      */
     int getCurrentParseBuffer() const;
 
-    /** @brief Get the number of columns 
+    /** @brief Get the number of columns
      */
     int getNumberOfColumns() const;
 
@@ -328,7 +328,7 @@ public:
 
     /** @brief set the table id
      */
-    void setTableId(const int & id);
+    void setTableId(const int& id);
 
     /** @brief get the file name
      */
@@ -338,18 +338,18 @@ public:
      */
     OID getTableOID( );
 
-	/** @brief Set the directory for *.err and *.bad files. May be
-	 *  	   empty string, in which case we use current dir.
+    /** @brief Set the directory for *.err and *.bad files. May be
+     *  	   empty string, in which case we use current dir.
      */
     void setErrorDir(const std::string& errorDir);
 
-	/** @brief get the bulk rollback meta data writer object for this table
+    /** @brief get the bulk rollback meta data writer object for this table
      */
     RBMetaWriter* rbMetaWriter();
 
     /** @brief Add column information to the table
      */
-    void addColumn(ColumnInfo * info);
+    void addColumn(ColumnInfo* info);
 
     /** @brief Initialize the buffer list
      *  @param noOfBuffers Number of buffers to create for this table
@@ -367,13 +367,13 @@ public:
 
     /** @brief parse method
      */
-    int parseColumn(const int &columnId, const int &bufferId,
+    int parseColumn(const int& columnId, const int& bufferId,
                     double& processingTime);
 
     /** @brief update the buffer status for column
      */
-    int setParseComplete(const int &columnId,
-                         const int & bufferId,
+    int setParseComplete(const int& columnId,
+                         const int& bufferId,
                          double processingTime);
 
     /** @brief update the status to reflect a parsing error
@@ -382,12 +382,12 @@ public:
 
     /** @brief Check if buffer ready for parsing.
      */
-    bool bufferReadyForParse(const int &bufferId, bool report) const;
+    bool bufferReadyForParse(const int& bufferId, bool report) const;
 
     /** @brief Check if a column is available for parsing in the buffer
      *  and return the column id if available
      */
-    int getColumnForParse(const int & id,const int & bufferId,bool report);
+    int getColumnForParse(const int& id, const int& bufferId, bool report);
 
     /** @brief Do we have a db lock with the session manager for this table.
      */
@@ -395,7 +395,7 @@ public:
 
     /** @brief Lock the table for reading
      */
-    bool lockForRead(const int & locker);
+    bool lockForRead(const int& locker);
 
     /** @brief Rollback changes made to "this" table by the current import job
      */
@@ -408,7 +408,7 @@ public:
 
     /** @brief set job file name under process.
      */
-    void setJobFileName(const std::string & jobFileName);
+    void setJobFileName(const std::string& jobFileName);
 
     /** @brief set job ID for this import.
      */
@@ -447,8 +447,8 @@ public:
      *  on this PM.
      */
     int saveBulkRollbackMetaData( Job& job,
-                            const std::vector<DBRootExtentInfo>& segFileInfo,
-            const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoColVec );
+                                  const std::vector<DBRootExtentInfo>& segFileInfo,
+                                  const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoColVec );
 
     /** @brief Mark table as complete
      */
@@ -466,110 +466,175 @@ public:
 //------------------------------------------------------------------------------
 // Inline functions
 //------------------------------------------------------------------------------
-inline int TableInfo::getCurrentParseBuffer() const {
-    return fCurrentParseBuffer; }    
+inline int TableInfo::getCurrentParseBuffer() const
+{
+    return fCurrentParseBuffer;
+}
 
-inline std::string TableInfo::getFileName() const {
-    return fFileName; }
+inline std::string TableInfo::getFileName() const
+{
+    return fFileName;
+}
 
-inline ImportDataMode TableInfo::getImportDataMode() const {
-    return fImportDataMode; }
+inline ImportDataMode TableInfo::getImportDataMode() const
+{
+    return fImportDataMode;
+}
 
-inline int TableInfo::getNumberOfBuffers() const {
-    return fReadBufCount; }
+inline int TableInfo::getNumberOfBuffers() const
+{
+    return fReadBufCount;
+}
 
-inline int TableInfo::getNumberOfColumns() const {
-    return fNumberOfColumns; } 
+inline int TableInfo::getNumberOfColumns() const
+{
+    return fNumberOfColumns;
+}
 
-inline Status TableInfo::getStatusTI() const {
-    return fStatusTI; }
+inline Status TableInfo::getStatusTI() const
+{
+    return fStatusTI;
+}
 
-inline unsigned TableInfo::getMaxErrorRows() const {
-    return fMaxErrorRows; }
+inline unsigned TableInfo::getMaxErrorRows() const
+{
+    return fMaxErrorRows;
+}
 
-inline uint64_t TableInfo::getTableLockID() const {
-    return fTableLockID; }
+inline uint64_t TableInfo::getTableLockID() const
+{
+    return fTableLockID;
+}
 
-inline std::string TableInfo::getTableName() const {
-    return fTableName; }
+inline std::string TableInfo::getTableName() const
+{
+    return fTableName;
+}
 
-inline OID TableInfo::getTableOID( ) {
-    return fTableOID; }
+inline OID TableInfo::getTableOID( )
+{
+    return fTableOID;
+}
 
-inline bool TableInfo::getTruncationAsError() const {
-    return fbTruncationAsError; }
+inline bool TableInfo::getTruncationAsError() const
+{
+    return fbTruncationAsError;
+}
 
-inline bool TableInfo::hasProcessingBegun() {
-    return fProcessingBegun; }
+inline bool TableInfo::hasProcessingBegun()
+{
+    return fProcessingBegun;
+}
 
-inline bool TableInfo::isTableLocked() {
-    return fTableLocked; }
+inline bool TableInfo::isTableLocked()
+{
+    return fTableLocked;
+}
 
-inline void TableInfo::markTableComplete() {
+inline void TableInfo::markTableComplete()
+{
     boost::mutex::scoped_lock lock(fSyncUpdatesTI);
-    fStatusTI = WriteEngine::PARSE_COMPLETE; }
+    fStatusTI = WriteEngine::PARSE_COMPLETE;
+}
 
-inline RBMetaWriter* TableInfo::rbMetaWriter() {
-    return &fRBMetaWriter; }
+inline RBMetaWriter* TableInfo::rbMetaWriter()
+{
+    return &fRBMetaWriter;
+}
 
-inline void TableInfo::setBufferSize(const int bufSize) {
-    fBufferSize = bufSize; }
+inline void TableInfo::setBufferSize(const int bufSize)
+{
+    fBufferSize = bufSize;
+}
 
-inline void TableInfo::setColDelimiter(const char delim) {
-    fColDelim       = delim; }
+inline void TableInfo::setColDelimiter(const char delim)
+{
+    fColDelim       = delim;
+}
 
 inline void TableInfo::setBulkLoadMode(
     BulkModeType       bulkMode,
-    const std::string& rptFileName ) {
+    const std::string& rptFileName )
+{
     fBulkMode       = bulkMode,
-    fBRMRptFileName = rptFileName; }
+    fBRMRptFileName = rptFileName;
+}
 
-inline void TableInfo::setEnclosedByChar( char enChar ) {
-    fEnclosedByChar = enChar; }
+inline void TableInfo::setEnclosedByChar( char enChar )
+{
+    fEnclosedByChar = enChar;
+}
 
-inline void TableInfo::setEscapeChar ( char esChar ) {
-    fEscapeChar     = esChar; }
+inline void TableInfo::setEscapeChar ( char esChar )
+{
+    fEscapeChar     = esChar;
+}
 
-inline void TableInfo::setFileBufferSize(const int fileBufSize) {
-    fFileBufSize    = fileBufSize; }
+inline void TableInfo::setFileBufferSize(const int fileBufSize)
+{
+    fFileBufSize    = fileBufSize;
+}
 
-inline void TableInfo::setImportDataMode( ImportDataMode importMode ) {
-    fImportDataMode = importMode; }
+inline void TableInfo::setImportDataMode( ImportDataMode importMode )
+{
+    fImportDataMode = importMode;
+}
 
-inline void TableInfo::setJobFileName(const std::string & jobFileName) {
-    fjobFileName    = jobFileName; }
+inline void TableInfo::setJobFileName(const std::string& jobFileName)
+{
+    fjobFileName    = jobFileName;
+}
 
-inline void TableInfo::setJobId(int jobId) {
-    fJobId = jobId; }
+inline void TableInfo::setJobId(int jobId)
+{
+    fJobId = jobId;
+}
 
 inline void TableInfo::setLoadFilesInput(bool  bReadFromStdin,
-    const std::vector<std::string>& files) {
+        const std::vector<std::string>& files)
+{
     fReadFromStdin  = bReadFromStdin;
-    fLoadFileList   = files; }
+    fLoadFileList   = files;
+}
 
-inline void TableInfo::setMaxErrorRows(const unsigned int maxErrorRows) {
-    fMaxErrorRows   = maxErrorRows; }
+inline void TableInfo::setMaxErrorRows(const unsigned int maxErrorRows)
+{
+    fMaxErrorRows   = maxErrorRows;
+}
 
-inline void TableInfo::setNullStringMode( bool bMode ) {
-    fNullStringMode = bMode; }
+inline void TableInfo::setNullStringMode( bool bMode )
+{
+    fNullStringMode = bMode;
+}
 
-inline void TableInfo::setTableId(const int & id) {
-    fTableId = id; }
+inline void TableInfo::setTableId(const int& id)
+{
+    fTableId = id;
+}
 
-inline void TableInfo::setTruncationAsError(bool bTruncationAsError) {
-    fbTruncationAsError = bTruncationAsError; }
+inline void TableInfo::setTruncationAsError(bool bTruncationAsError)
+{
+    fbTruncationAsError = bTruncationAsError;
+}
 
-inline void TableInfo::setJobUUID(const boost::uuids::uuid& jobUUID) {
-    fJobUUID = jobUUID; }
+inline void TableInfo::setJobUUID(const boost::uuids::uuid& jobUUID)
+{
+    fJobUUID = jobUUID;
+}
 
-inline void TableInfo::setErrorDir( const std::string& errorDir ) {
-    fErrorDir = errorDir; 
+inline void TableInfo::setErrorDir( const std::string& errorDir )
+{
+    fErrorDir = errorDir;
 #ifdef _MSC_VER
-	if (fErrorDir.length() > 0 && *(--(fErrorDir.end())) != '/' && *(--(fErrorDir.end())) != '\\')
-		fErrorDir.push_back('\\'); }
+
+    if (fErrorDir.length() > 0 && *(--(fErrorDir.end())) != '/' && *(--(fErrorDir.end())) != '\\')
+        fErrorDir.push_back('\\');
+}
 #else
+
     if (fErrorDir.length() > 0 && *(--(fErrorDir.end())) != '/')
-        fErrorDir.push_back('/'); }
+        fErrorDir.push_back('/');
+}
 #endif
 }
 #endif

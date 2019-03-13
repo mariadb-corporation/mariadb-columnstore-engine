@@ -49,17 +49,29 @@ namespace WriteEngine
 class WESplitterApp
 {
 public:
-	WESplitterApp(WECmdArgs& CmdArgs);
-	virtual ~WESplitterApp();
+    WESplitterApp(WECmdArgs& CmdArgs);
+    virtual ~WESplitterApp();
 
 
 
-	void processMessages();
-	int getMode(){ return fCmdArgs.getMode(); }
-	bool getPmStatus(int Id){ return fCmdArgs.getPmStatus(Id); }
-	std::string getLocFile() { return fCmdArgs.getLocFile(); }
-	std::string getPmFile() { return fCmdArgs.getPmFile(); }
-	void updateWithJobFile(int aIdx);
+    void processMessages();
+    int getMode()
+    {
+        return fCmdArgs.getMode();
+    }
+    bool getPmStatus(int Id)
+    {
+        return fCmdArgs.getPmStatus(Id);
+    }
+    std::string getLocFile()
+    {
+        return fCmdArgs.getLocFile();
+    }
+    std::string getPmFile()
+    {
+        return fCmdArgs.getPmFile();
+    }
+    void updateWithJobFile(int aIdx);
 
 
     // setup the signal handlers for the main app
@@ -68,14 +80,14 @@ public:
     static void onSigInterrupt(int aInt);
     static void onSigHup(int aInt);
 
-	void invokeCpimport();
-	std::string getCalpontHome();
-	std::string getPrgmPath(std::string& PrgmName);
-	void updateCmdLineWithPath(string& CmdLine);
+    void invokeCpimport();
+    std::string getCalpontHome();
+    std::string getPrgmPath(std::string& PrgmName);
+    void updateCmdLineWithPath(string& CmdLine);
 
 private:
 public:	// for multi table support
-	WECmdArgs& fCmdArgs;
+    WECmdArgs& fCmdArgs;
     WESDHandler fDh;
     static bool fContinue;
 

@@ -29,14 +29,14 @@
 
 namespace WriteEngine
 {
-    WriteEngine::WErrorCodes ec; // referenced as extern by chunkmanager
+WriteEngine::WErrorCodes ec; // referenced as extern by chunkmanager
 
 //------------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------------
 Log::Log() : m_bConsoleOutput( true ),
-             m_logFileName( "" ),
-             m_errlogFileName( "" )
+    m_logFileName( "" ),
+    m_errlogFileName( "" )
 {
     m_pid = ::getpid();
 }
@@ -76,19 +76,19 @@ void Log::formatMsg( const std::string&  msg,
     {
         oss << " (" << m_pid << ":" <<
 #ifdef _MSC_VER
-        GetCurrentThreadId()
+            GetCurrentThreadId()
 #else
-        pthread_self()
+            pthread_self()
 #endif
-        << ") " <<
-        MSG_LEVEL_STR[level] << " : " << msg ;
+            << ") " <<
+            MSG_LEVEL_STR[level] << " : " << msg ;
     }
     else
     {
         oss << " (" << m_pid << ") " << MSG_LEVEL_STR[level] << " : " << msg ;
     }
 
-    if( code > 0 )
+    if ( code > 0 )
         oss << " [" << code << "]";
 }
 
@@ -115,10 +115,11 @@ void Log::logMsg( const char* msg,
     formatMsg( msg, level, oss, code );
 
     // log error and critical msgs to syslog
-    if( level == MSGLVL_ERROR || level == MSGLVL_CRITICAL ) 
+    if ( level == MSGLVL_ERROR || level == MSGLVL_CRITICAL )
     {
-        { //log to log file and error log file within scope of mutex lock.
-          //logSyslog uses SimpleSyslog which has it's own lock.
+        {
+            //log to log file and error log file within scope of mutex lock.
+            //logSyslog uses SimpleSyslog which has it's own lock.
             boost::mutex::scoped_lock lk(m_WriteLockMutex);
 
             m_errLogFile << oss.str() << std::endl;
@@ -136,14 +137,14 @@ void Log::logMsg( const char* msg,
         // Format msg again without including the status code.
         // Only log INFO2 msgs to console if m_bConsoleOutput is TRUE;
         // All other msg levels always go to console.
-        if( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
+        if ( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
             formatMsg ( msg, level, oss2 );
 
         boost::mutex::scoped_lock lk(m_WriteLockMutex);
 
         m_logFile << oss.str() << std::endl;
 
-        if( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
+        if ( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
             std::cout << oss2.str() << std::endl;
     }
 }
@@ -159,7 +160,7 @@ void Log::logMsg( const char* msg,
 //------------------------------------------------------------------------------
 void Log::setLogFileName( const char* logfile,
                           const char* errlogfile,
-                          bool        consoleFlag ) 
+                          bool        consoleFlag )
 {
     m_logFileName = logfile;
     m_errlogFileName = errlogfile;
@@ -204,11 +205,13 @@ void Log::logSyslog( const std::string& msg,
             msgId = logging::M0076;
             break;
         }
-		case ERR_UNKNOWN:
-		{
-			msgId = logging::M0017;
+
+        case ERR_UNKNOWN:
+        {
+            msgId = logging::M0017;
             break;
-		}
+        }
+
         default:
         {
             msgId = logging::M0087;

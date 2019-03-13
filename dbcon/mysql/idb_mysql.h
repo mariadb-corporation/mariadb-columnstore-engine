@@ -63,8 +63,12 @@ template <class T> bool isnan(T);
 #endif
 #endif
 
+#include "sql_plugin.h"
 #include "sql_table.h"
 #include "sql_select.h"
+#include "mysqld_error.h"
+#include "item_windowfunc.h"
+#include "sql_cte.h"
 
 // Now clean up the pollution as best we can...
 #undef min
@@ -92,13 +96,14 @@ template <class T> bool isnan(T);
 #undef DEBUG
 #undef set_bits
 
-namespace {
+namespace
+{
 inline char* idb_mysql_query_str(THD* thd)
 {
 #if MYSQL_VERSION_ID >= 50172
-	return thd->query();
+    return thd->query();
 #else
-	return thd->query;
+    return thd->query;
 #endif
 }
 }

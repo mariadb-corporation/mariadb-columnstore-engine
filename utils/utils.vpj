@@ -233,6 +233,7 @@
                 <F N="windowfunction/wf_row_number.cpp"/>
                 <F N="windowfunction/wf_stats.cpp"/>
                 <F N="windowfunction/wf_sum_avg.cpp"/>
+                <F N="windowfunction/wf_udaf.cpp"/>
                 <F N="windowfunction/windowframe.cpp"/>
                 <F N="windowfunction/windowfunction.cpp"/>
                 <F N="windowfunction/windowfunctiontype.cpp"/>
@@ -277,6 +278,7 @@
                 <F N="windowfunction/wf_row_number.h"/>
                 <F N="windowfunction/wf_stats.h"/>
                 <F N="windowfunction/wf_sum_avg.h"/>
+                <F N="windowfunction/wf_udaf.h"/>
                 <F N="windowfunction/windowframe.h"/>
                 <F N="windowfunction/windowfunction.h"/>
                 <F N="windowfunction/windowfunctiontype.h"/>
@@ -290,6 +292,8 @@
             Filters="*.bmp"/>
         <Folder
             Name="Other Files"
-            Filters=""/>
+            Filters="">
+            <F N="CMakeLists.txt"/>
+        </Folder>
     </Files>
 </Project>

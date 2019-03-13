@@ -33,22 +33,24 @@
 #define EXPORT
 #endif
 
-namespace dmlpackageprocessor { 
+namespace dmlpackageprocessor
+{
 
 /** @brief create a DMLPackageProcessor object from a CalpontDMLPackage object
  *
  */
-class DMLPackageProcessorFactory {
+class DMLPackageProcessorFactory
+{
 
 public:
 
-/** @brief static DMLPackageProcessor constructor method
-  * 
-  * @param packageType the DML Package type
-  * @param cpackage the CalpontDMLPackage from which the DMLPackageProcessor is constructed
-  */
-  EXPORT static DMLPackageProcessor* 
-	makePackageProcessor( int packageType, dmlpackage::CalpontDMLPackage& cpackage );
+    /** @brief static DMLPackageProcessor constructor method
+      *
+      * @param packageType the DML Package type
+      * @param cpackage the CalpontDMLPackage from which the DMLPackageProcessor is constructed
+      */
+    EXPORT static DMLPackageProcessor*
+    makePackageProcessor( int packageType, dmlpackage::CalpontDMLPackage& cpackage );
 
 protected:
 
@@ -56,7 +58,7 @@ private:
 
 };
 
-} 
+}
 
 #undef EXPORT
 

@@ -40,83 +40,91 @@
 using namespace std;
 using namespace boost;
 
-namespace utils {
-
-FixedAllocator::FixedAllocator(const FixedAllocator &f)
+namespace utils
 {
-	elementCount = f.elementCount;
-	elementSize = f.elementSize;
-	tmpSpace = f.tmpSpace;
-	capacityRemaining = 0;
-	currentlyStored = 0;
+
+FixedAllocator::FixedAllocator(const FixedAllocator& f)
+{
+    elementCount = f.elementCount;
+    elementSize = f.elementSize;
+    tmpSpace = f.tmpSpace;
+    capacityRemaining = 0;
+    currentlyStored = 0;
 }
 
-FixedAllocator & FixedAllocator::operator=(const FixedAllocator &f)
+FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
 {
-	elementCount = f.elementCount;
-	elementSize = f.elementSize;
-	tmpSpace = f.tmpSpace;
-	deallocateAll();
-	return *this;
+    elementCount = f.elementCount;
+    elementSize = f.elementSize;
+    tmpSpace = f.tmpSpace;
+    deallocateAll();
+    return *this;
 }
 
 void FixedAllocator::newBlock()
 {
-	shared_array<uint8_t> next;
+    shared_array<uint8_t> next;
 
-	capacityRemaining = elementCount * elementSize;
-	if (!tmpSpace || mem.size() == 0) {
-		next.reset(new uint8_t[elementCount * elementSize]);
-		mem.push_back(next);
-		nextAlloc = next.get();
-	}
-	else {
-		currentlyStored = 0;
-		nextAlloc = mem.front().get();
-	}
+    capacityRemaining = elementCount * elementSize;
+
+    if (!tmpSpace || mem.size() == 0)
+    {
+        next.reset(new uint8_t[elementCount * elementSize]);
+        mem.push_back(next);
+        nextAlloc = next.get();
+    }
+    else
+    {
+        currentlyStored = 0;
+        nextAlloc = mem.front().get();
+    }
 }
 
-void * FixedAllocator::allocate()
+void* FixedAllocator::allocate()
 {
-	void *ret;
-	if (capacityRemaining < elementSize)
-		newBlock();
-	ret = nextAlloc;
-	nextAlloc += elementSize;
-	capacityRemaining -= elementSize;
-	currentlyStored += elementSize;
-	return ret;
+    void* ret;
+
+    if (capacityRemaining < elementSize)
+        newBlock();
+
+    ret = nextAlloc;
+    nextAlloc += elementSize;
+    capacityRemaining -= elementSize;
+    currentlyStored += elementSize;
+    return ret;
 }
 
-void * FixedAllocator::allocate(uint32_t len)
+void* FixedAllocator::allocate(uint32_t len)
 {
-	void *ret;
-	if (capacityRemaining < len)
-		newBlock();
-	ret = nextAlloc;
-	nextAlloc += len;
-	capacityRemaining -= len;
-	currentlyStored += len;
-	return ret;
+    void* ret;
+
+    if (capacityRemaining < len)
+        newBlock();
+
+    ret = nextAlloc;
+    nextAlloc += len;
+    capacityRemaining -= len;
+    currentlyStored += len;
+    return ret;
 }
 
 void FixedAllocator::truncateBy(uint32_t amt)
 {
-	nextAlloc -= amt;
-	capacityRemaining += amt;
-	currentlyStored -= amt;
+    nextAlloc -= amt;
+    capacityRemaining += amt;
+    currentlyStored -= amt;
 }
 
 void FixedAllocator::deallocateAll()
 {
-	mem.clear();
-	currentlyStored = 0;
-	capacityRemaining = 0;
+    mem.clear();
+    currentlyStored = 0;
+    capacityRemaining = 0;
 }
 
-uint64_t FixedAllocator::getMemUsage() const 
+uint64_t FixedAllocator::getMemUsage() const
 {
-	return (mem.size() * elementCount * elementSize);
+    return (mem.size() * elementCount * elementSize);
 }
 
 }

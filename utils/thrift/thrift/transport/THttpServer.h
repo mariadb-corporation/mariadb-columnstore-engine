@@ -22,43 +22,53 @@
 
 #include <thrift/transport/THttpTransport.h>
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache
+{
+namespace thrift
+{
+namespace transport
+{
 
-class THttpServer : public THttpTransport {
- public:
-  THttpServer(boost::shared_ptr<TTransport> transport);
+class THttpServer : public THttpTransport
+{
+public:
+    THttpServer(boost::shared_ptr<TTransport> transport);
 
-  virtual ~THttpServer();
+    virtual ~THttpServer();
 
-  virtual void flush();
+    virtual void flush();
 
- protected:
+protected:
 
-  void readHeaders();
-  virtual void parseHeader(char* header);
-  virtual bool parseStatusLine(char* status);
-  std::string getTimeRFC1123();
+    void readHeaders();
+    virtual void parseHeader(char* header);
+    virtual bool parseStatusLine(char* status);
+    std::string getTimeRFC1123();
 
 };
 
 /**
  * Wraps a transport into HTTP protocol
  */
-class THttpServerTransportFactory : public TTransportFactory {
- public:
-  THttpServerTransportFactory() {}
+class THttpServerTransportFactory : public TTransportFactory
+{
+public:
+    THttpServerTransportFactory() {}
 
-  virtual ~THttpServerTransportFactory() {}
+    virtual ~THttpServerTransportFactory() {}
 
-  /**
-   * Wraps the transport into a buffered one.
-   */
-  virtual boost::shared_ptr<TTransport> getTransport(boost::shared_ptr<TTransport> trans) {
-    return boost::shared_ptr<TTransport>(new THttpServer(trans));
-  }
+    /**
+     * Wraps the transport into a buffered one.
+     */
+    virtual boost::shared_ptr<TTransport> getTransport(boost::shared_ptr<TTransport> trans)
+    {
+        return boost::shared_ptr<TTransport>(new THttpServer(trans));
+    }
 
 };
 
-}}} // apache::thrift::transport
+}
+}
+} // apache::thrift::transport
 
 #endif // #ifndef _THRIFT_TRANSPORT_THTTPSERVER_H_

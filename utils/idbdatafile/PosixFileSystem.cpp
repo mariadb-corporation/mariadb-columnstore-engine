@@ -37,7 +37,7 @@ namespace idbdatafile
 {
 
 PosixFileSystem::PosixFileSystem() :
-	IDBFileSystem( IDBFileSystem::POSIX )
+    IDBFileSystem( IDBFileSystem::POSIX )
 {
 }
 
@@ -45,121 +45,125 @@ PosixFileSystem::~PosixFileSystem()
 {
 }
 
-int PosixFileSystem::mkdir(const char *pathname)
+int PosixFileSystem::mkdir(const char* pathname)
 {
-	int ret = 0;
-	boost::filesystem::path pathDir(pathname);
+    int ret = 0;
+    boost::filesystem::path pathDir(pathname);
 
     try
     {
-    	boost::filesystem::create_directories(pathDir);
+        boost::filesystem::create_directories(pathDir);
     }
     catch (std::exception& ex)
     {
-    	std::ostringstream oss;
-		oss << "Failed to create directories: " << pathDir << ", exception: " << ex.what() << endl;
-    	IDBLogger::syslog(oss.str(), logging::LOG_TYPE_ERROR);
-    	ret = -1;
+        std::ostringstream oss;
+        oss << "Failed to create directories: " << pathDir << ", exception: " << ex.what() << endl;
+        IDBLogger::syslog(oss.str(), logging::LOG_TYPE_ERROR);
+        ret = -1;
     }
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logFSop( POSIX, "mkdir", pathname, this, ret);
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logFSop( POSIX, "mkdir", pathname, this, ret);
 
-	return ret;
+    return ret;
 }
 
-int PosixFileSystem::remove(const char *pathname)
+int PosixFileSystem::remove(const char* pathname)
 {
-	int ret = 0;
-	boost::filesystem::path dirPath(pathname);
+    int ret = 0;
+    boost::filesystem::path dirPath(pathname);
 
     try
     {
         boost::filesystem::remove_all(dirPath);
     }
+
 #ifdef _MSC_VER
-    catch (std::exception& ex) 
+    catch (std::exception& ex)
     {
         // FIXME: alas, Windows cannot delete a file that is in use :-(
         std::string reason(ex.what());
         std::string ignore("The directory is not empty");
+
         if (reason.find(ignore) != std::string::npos)
             (void)0;
         else
-        	ret = -1;
+            ret = -1;
     }
+
 #endif
     catch (...)
     {
         // TODO Log this
-    	ret = -1;
+        ret = -1;
     }
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logFSop( POSIX, "remove", pathname, this, ret);
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logFSop( POSIX, "remove", pathname, this, ret);
 
-	return ret;
+    return ret;
 }
 
-int PosixFileSystem::rename(const char *oldpath, const char *newpath)
+int PosixFileSystem::rename(const char* oldpath, const char* newpath)
 {
-	// should this use Boost??
-	int ret = ::rename(oldpath, newpath);
-	int savedErrno = errno;
+    // should this use Boost??
+    int ret = ::rename(oldpath, newpath);
+    int savedErrno = errno;
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logFSop2( POSIX, "rename", oldpath, newpath, this, ret);
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logFSop2( POSIX, "rename", oldpath, newpath, this, ret);
 
-	errno = savedErrno;
-	return ret;
+    errno = savedErrno;
+    return ret;
 }
 
 off64_t PosixFileSystem::size(const char* path) const
 {
-	// should this use Boost??
+    // should this use Boost??
     struct stat statBuf;
     int rc = ::stat( path, &statBuf );
-	int savedErrno = errno;
+    int savedErrno = errno;
     off64_t ret = ((rc == 0) ? statBuf.st_size : -1);
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logFSop( POSIX, "fs:size", path, this, ret);
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logFSop( POSIX, "fs:size", path, this, ret);
 
-	errno = savedErrno;
-	return ret;
+    errno = savedErrno;
+    return ret;
 }
 
 size_t readFillBuffer(
-	idbdatafile::IDBDataFile* pFile,
-	char*   buffer,
-	size_t  bytesReq)
+    idbdatafile::IDBDataFile* pFile,
+    char*   buffer,
+    size_t  bytesReq)
 {
-	char*   pBuf = buffer;
-	ssize_t nBytes;
-	size_t  bytesToRead = bytesReq;
-	size_t  totalBytesRead = 0;
+    char*   pBuf = buffer;
+    ssize_t nBytes;
+    size_t  bytesToRead = bytesReq;
+    size_t  totalBytesRead = 0;
 
-	while (1)
-	{
-		nBytes = pFile->read(pBuf, bytesToRead);
-		if (nBytes > 0)
-			totalBytesRead += nBytes;
-		else
-			break;
+    while (1)
+    {
+        nBytes = pFile->read(pBuf, bytesToRead);
 
-		if ((size_t)nBytes == bytesToRead)
-			break;
+        if (nBytes > 0)
+            totalBytesRead += nBytes;
+        else
+            break;
 
-		pBuf        += nBytes;
-		bytesToRead  =  bytesToRead - (size_t)nBytes;
-	}
+        if ((size_t)nBytes == bytesToRead)
+            break;
 
-	return totalBytesRead;
+        pBuf        += nBytes;
+        bytesToRead  =  bytesToRead - (size_t)nBytes;
+    }
+
+    return totalBytesRead;
 }
 
-off64_t PosixFileSystem::compressedSize(const char *path) const
+off64_t PosixFileSystem::compressedSize(const char* path) const
 {
-    IDBDataFile *pFile = NULL;
+    IDBDataFile* pFile = NULL;
     size_t nBytes;
     off64_t dataSize = 0;
 
@@ -175,7 +179,8 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         compress::IDBCompressInterface decompressor;
 
         char hdr1[compress::IDBCompressInterface::HDR_BUF_LEN];
-        nBytes = readFillBuffer( pFile,hdr1,compress::IDBCompressInterface::HDR_BUF_LEN);
+        nBytes = readFillBuffer( pFile, hdr1, compress::IDBCompressInterface::HDR_BUF_LEN);
+
         if ( nBytes != compress::IDBCompressInterface::HDR_BUF_LEN )
         {
             delete pFile;
@@ -191,7 +196,8 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
 
         int64_t ptrSecSize = decompressor.getHdrSize(hdr1) - compress::IDBCompressInterface::HDR_BUF_LEN;
         char* hdr2 = new char[ptrSecSize];
-        nBytes = readFillBuffer( pFile,hdr2,ptrSecSize);
+        nBytes = readFillBuffer( pFile, hdr2, ptrSecSize);
+
         if ( (int64_t)nBytes != ptrSecSize )
         {
             delete[] hdr2;
@@ -202,6 +208,7 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         compress::CompChunkPtrList chunkPtrs;
         int rc = decompressor.getPtrList(hdr2, ptrSecSize, chunkPtrs);
         delete[] hdr2;
+
         if (rc != 0)
         {
             delete pFile;
@@ -209,13 +216,15 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         }
 
         unsigned k = chunkPtrs.size();
+
         // last header's offset + length will be the data bytes
         if (k < 1)
         {
             delete pFile;
             return -1;
         }
-        dataSize = chunkPtrs[k-1].first + chunkPtrs[k-1].second;
+
+        dataSize = chunkPtrs[k - 1].first + chunkPtrs[k - 1].second;
         delete pFile;
         return dataSize;
     }
@@ -226,74 +235,75 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
     }
 }
 
-bool PosixFileSystem::exists(const char *pathname) const
+bool PosixFileSystem::exists(const char* pathname) const
 {
-	boost::filesystem::path dirPath(pathname);
-	return boost::filesystem::exists( dirPath );
+    boost::filesystem::path dirPath(pathname);
+    return boost::filesystem::exists( dirPath );
 }
 
 int PosixFileSystem::listDirectory(const char* pathname, std::list<std::string>& contents) const
 {
-	int ret = 0;
+    int ret = 0;
 
-	// clear the return list
-	contents.erase( contents.begin(), contents.end() );
+    // clear the return list
+    contents.erase( contents.begin(), contents.end() );
 
-	try
-	{
-		boost::filesystem::path dirPath( pathname );
-		boost::filesystem::directory_iterator end_itr; // create EOD marker
+    try
+    {
+        boost::filesystem::path dirPath( pathname );
+        boost::filesystem::directory_iterator end_itr; // create EOD marker
 
-		// Loop through all the files in the specified directory
-		for ( boost::filesystem::directory_iterator itr( dirPath );
-			itr != end_itr;
-			++itr )
-		{
+        // Loop through all the files in the specified directory
+        for ( boost::filesystem::directory_iterator itr( dirPath );
+                itr != end_itr;
+                ++itr )
+        {
             contents.push_back( itr->path().filename().generic_string() );
-		}
-	}
-	catch (std::exception)
-	{
-		ret = -1;
-	}
+        }
+    }
+    catch (std::exception)
+    {
+        ret = -1;
+    }
 
-	return ret;
+    return ret;
 }
 
 bool PosixFileSystem::isDir(const char* pathname) const
 {
-	boost::filesystem::path dirPath(pathname);
-	return boost::filesystem::is_directory( dirPath );
+    boost::filesystem::path dirPath(pathname);
+    return boost::filesystem::is_directory( dirPath );
 }
 
 int PosixFileSystem::copyFile(const char* srcPath, const char* destPath) const
 {
-	int ret = 0;
+    int ret = 0;
 
-	try
-	{
-		boost::filesystem::path inPath(srcPath);
-		boost::filesystem::path outPath(destPath);
+    try
+    {
+        boost::filesystem::path inPath(srcPath);
+        boost::filesystem::path outPath(destPath);
 
-		boost::filesystem::copy_file(inPath, outPath);
-	}
+        boost::filesystem::copy_file(inPath, outPath);
+    }
+
 #if BOOST_VERSION >= 105200
-	catch(boost::filesystem::filesystem_error& ex)
+    catch (boost::filesystem::filesystem_error& ex)
 #else
-	catch(boost::filesystem::basic_filesystem_error<boost::filesystem::path>& ex)
+    catch (boost::filesystem::basic_filesystem_error<boost::filesystem::path>& ex)
 #endif
-	{
-    	std::ostringstream oss;
-		oss << "Failed to copy file: " << srcPath << " to " << destPath <<
-			", exception: " << ex.what() << endl;
-    	IDBLogger::syslog(oss.str(), logging::LOG_TYPE_ERROR);
-		ret = -1;
-	}
+    {
+        std::ostringstream oss;
+        oss << "Failed to copy file: " << srcPath << " to " << destPath <<
+            ", exception: " << ex.what() << endl;
+        IDBLogger::syslog(oss.str(), logging::LOG_TYPE_ERROR);
+        ret = -1;
+    }
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logFSop2( POSIX, "copyFile", srcPath, destPath, this, ret);
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logFSop2( POSIX, "copyFile", srcPath, destPath, this, ret);
 
-	return ret;
+    return ret;
 }
 
 }

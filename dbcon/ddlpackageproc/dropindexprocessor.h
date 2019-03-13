@@ -28,24 +28,24 @@
 
 namespace ddlpackageprocessor
 {
-    /** @brief specialization of a DDLPacakageProcessor
-     * for interaction with the Write Engine to process
-     * drop index statements.
+/** @brief specialization of a DDLPacakageProcessor
+ * for interaction with the Write Engine to process
+ * drop index statements.
+ */
+class DropIndexProcessor : public DDLPackageProcessor
+{
+public:
+    /** @brief process a drop index statement
+     *
+     * @param dropIndexStmt the drop index statement
      */
-    class DropIndexProcessor : public DDLPackageProcessor
-    {
-        public:
-            /** @brief process a drop index statement
-             *
-             * @param dropIndexStmt the drop index statement
-             */
-            DDLResult processPackage(ddlpackage::DropIndexStatement& dropIndexStmt);
+    DDLResult processPackage(ddlpackage::DropIndexStatement& dropIndexStmt);
 
-        protected:
+protected:
 
-        private:
+private:
 
-    };
+};
 
 }                                                 //namespace ddlpackageprocessor
 #endif                                            //DROPINDEXPROCESSOR_H

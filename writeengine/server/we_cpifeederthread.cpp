@@ -54,37 +54,38 @@ namespace WriteEngine
 
 void WECpiFeederRunner::operator()()
 {
-	fOwner.feedData2Cpi();
-	cout << "Finished running Feeder Thread!!" << endl;
+    fOwner.feedData2Cpi();
+    cout << "Finished running Feeder Thread!!" << endl;
 }
 
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 WECpiFeederThread::WECpiFeederThread(WEDataLoader& Ref):
-		fOwner(Ref),
-		fpThread(0),
-		fContinue(true),
-		fStopped(true)
+    fOwner(Ref),
+    fpThread(0),
+    fContinue(true),
+    fStopped(true)
 {
-	cout << "Inside WECpiFeederThread constructor"<< endl;
+    cout << "Inside WECpiFeederThread constructor" << endl;
 }
 
 //------------------------------------------------------------------------------
 
 WECpiFeederThread::~WECpiFeederThread()
 {
-	if (fpThread)
-	{
-		delete fpThread;
-	}
-	fpThread=0;
+    if (fpThread)
+    {
+        delete fpThread;
+    }
+
+    fpThread = 0;
 }
 //------------------------------------------------------------------------------
 void WECpiFeederThread::startFeederThread()
 {
-	fStopped = false;
-	cout << "Starting Feeder Thread!!" << endl;
+    fStopped = false;
+    cout << "Starting Feeder Thread!!" << endl;
     fpThread = new boost::thread(WECpiFeederRunner(*this));
 }
 //------------------------------------------------------------------------------
@@ -92,14 +93,14 @@ void WECpiFeederThread::startFeederThread()
 void WECpiFeederThread::add2MsgQueue(ByteStream& Ibs)
 {
 
-	//TODO creating copy is NOT good; later read from socket using a SBS
-	messageqcpp::SBS aSbs(new messageqcpp::ByteStream(Ibs));
-	Ibs.reset();	//forcefully clearing it
-	mutex::scoped_lock aLock(fMsgQMutex);
-	//cout << "pushing to the MsgQueue" << endl;
-	fMsgQueue.push(aSbs);
-	fFeederCond.notify_one();	// as per preference of Damon
-	aLock.unlock();
+    //TODO creating copy is NOT good; later read from socket using a SBS
+    messageqcpp::SBS aSbs(new messageqcpp::ByteStream(Ibs));
+    Ibs.reset();	//forcefully clearing it
+    mutex::scoped_lock aLock(fMsgQMutex);
+    //cout << "pushing to the MsgQueue" << endl;
+    fMsgQueue.push(aSbs);
+    fFeederCond.notify_one();	// as per preference of Damon
+    aLock.unlock();
 
 }
 
@@ -107,41 +108,53 @@ void WECpiFeederThread::add2MsgQueue(ByteStream& Ibs)
 
 void WECpiFeederThread::feedData2Cpi()
 {
-	while(isContinue())
-	{
+    while (isContinue())
+    {
 
-		mutex::scoped_lock aLock(fMsgQMutex);
-		if(fMsgQueue.empty())
-		{
-			bool aTimedOut = fFeederCond.timed_wait(aLock, boost::posix_time::milliseconds(3000));
-			if(!isContinue()) { aLock.unlock(); break; }
-			// to handle spurious wake ups and timeout wake ups
-			if((fMsgQueue.empty())||(!aTimedOut)) {	aLock.unlock();	continue; }
-		}
+        mutex::scoped_lock aLock(fMsgQMutex);
 
-		messageqcpp::SBS aSbs = fMsgQueue.front();
-		fMsgQueue.pop();
+        if (fMsgQueue.empty())
+        {
+            bool aTimedOut = fFeederCond.timed_wait(aLock, boost::posix_time::milliseconds(3000));
 
-		aLock.unlock();
+            if (!isContinue())
+            {
+                aLock.unlock();
+                break;
+            }
 
-		try
-		{
-			fOwner.pushData2Cpimport((*aSbs));
-			//cout << "Finished PUSHING data " << endl;
-		}
-		catch(runtime_error&)
-		{
-			//cout << "Caught exception : " << e.what() << endl;
-			//break;
-		}
+            // to handle spurious wake ups and timeout wake ups
+            if ((fMsgQueue.empty()) || (!aTimedOut))
+            {
+                aLock.unlock();
+                continue;
+            }
+        }
 
-		aSbs.reset();	//forcefully clearing it
-		// We start sending data request from here ONLY
-		if(getQueueSize() == WEDataLoader::MAX_QSIZE) fOwner.sendDataRequest();
-	}
+        messageqcpp::SBS aSbs = fMsgQueue.front();
+        fMsgQueue.pop();
 
-	cout << "CpiFeedThread Stopped!! " << endl;
-	fStopped = true;
+        aLock.unlock();
+
+        try
+        {
+            fOwner.pushData2Cpimport((*aSbs));
+            //cout << "Finished PUSHING data " << endl;
+        }
+        catch (runtime_error&)
+        {
+            //cout << "Caught exception : " << e.what() << endl;
+            //break;
+        }
+
+        aSbs.reset();	//forcefully clearing it
+
+        // We start sending data request from here ONLY
+        if (getQueueSize() == WEDataLoader::MAX_QSIZE) fOwner.sendDataRequest();
+    }
+
+    cout << "CpiFeedThread Stopped!! " << endl;
+    fStopped = true;
 
 }
 
@@ -149,30 +162,30 @@ void WECpiFeederThread::feedData2Cpi()
 
 bool WECpiFeederThread::isMsgQueueEmpty()
 {
-	bool aRet = false;
-	mutex::scoped_lock aLock(fMsgQMutex);
-	aRet = fMsgQueue.empty();
-	aLock.unlock();
-	return aRet;
+    bool aRet = false;
+    mutex::scoped_lock aLock(fMsgQMutex);
+    aRet = fMsgQueue.empty();
+    aLock.unlock();
+    return aRet;
 }
 
 //------------------------------------------------------------------------------
 
 void WECpiFeederThread::stopThread()
 {
-	mutex::scoped_lock aCondLock(fContMutex);
-	fContinue = false;
-	aCondLock.unlock();
-	fFeederCond.notify_all();
-	cout << "Notified all" << endl;
+    mutex::scoped_lock aCondLock(fContMutex);
+    fContinue = false;
+    aCondLock.unlock();
+    fFeederCond.notify_all();
+    cout << "Notified all" << endl;
 }
 
 //------------------------------------------------------------------------------
 
 bool WECpiFeederThread::isContinue()
 {
-	mutex::scoped_lock aCondLock(fContMutex);
-	return fContinue;
+    mutex::scoped_lock aCondLock(fContMutex);
+    return fContinue;
 }
 
 //------------------------------------------------------------------------------

@@ -42,20 +42,20 @@ typedef SqlStatementList ParseTree;
 
 /** @brief SqlParser is a class interface around the Bison parser
  * machinery for DDL.
- * 
+ *
  * Example:
  *
  * @verbatim
- 
+
      SqlParser parser;
      parser.Parse(sqlbuf);
- 
+
      or
- 
+
      SqlFileParser parser;
 	 parser.setDefaultSchema("tpch");
      parser.Parse(sqlFileName);
- 
+
      if (parser.Good()) {
        const ParseTree &ptree = parser.GetParseTree();
        cout << ptree.fList.size() << " " << "SQL statements" << endl;
@@ -64,29 +64,30 @@ typedef SqlStatementList ParseTree;
      else {
        cout << "Parser failed." << endl;
      }
- 
+
   @endverbatim
  */
 
 /*
-  Instance specific data for use by the scanner. 
+  Instance specific data for use by the scanner.
 */
 typedef std::vector<char*> valbuf_t;
 
 struct scan_data
 {
-	/* Handles to the buffer that the lexer uses internally */
-	char* scanbuf;
-	void* scanbufhandle; // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
-	valbuf_t valbuf;
+    /* Handles to the buffer that the lexer uses internally */
+    char* scanbuf;
+    void* scanbufhandle; // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
+    valbuf_t valbuf;
 };
 
-struct pass_to_bison {
+struct pass_to_bison
+{
     ParseTree* fParseTree;
     std::string fDBSchema;
-	void* scanner;
+    void* scanner;
 
-	pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL) {};
+    pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL) {};
 };
 
 class SqlParser
@@ -99,33 +100,33 @@ public:
     EXPORT int Parse(const char* sqltext);
 
     /** @brief Return the ParseTree if state is Good.  Otherwise
-      *	throw a logic_error. 
+      *	throw a logic_error.
       */
     EXPORT const ParseTree& GetParseTree(void);
 
     /** @brief Tells whether current state resulted from a good
-      * parse. 
+      * parse.
       */
     EXPORT bool Good(void);
 
-	/** @brief Control bison debugging
-	  */
-    EXPORT void SetDebug(bool debug); 
+    /** @brief Control bison debugging
+      */
+    EXPORT void SetDebug(bool debug);
 
-	 /** @brief Set the default schema to use if it is not
-       * supplied in the DDL statement
-	   *
-	   * @param schema the default schema
-       */
+    /** @brief Set the default schema to use if it is not
+      * supplied in the DDL statement
+      *
+      * @param schema the default schema
+      */
     EXPORT void setDefaultSchema(std::string schema);
 
 protected:
     ParseTree fParseTree;
-	std::string fDBSchema;
+    std::string fDBSchema;
     int fStatus; ///< return from yyparse() stored here.
     bool fDebug; ///< Turn on bison debugging.
-	scan_data scanData;
-	pass_to_bison x;
+    scan_data scanData;
+    pass_to_bison x;
 };
 
 

@@ -34,45 +34,45 @@
 
 namespace ddlpackageprocessor
 {
-    /** @brief specialization of a DDLPacakageProcessor
-     * for interacting with the Write Engine to process
-     * drop table ddl statements.
+/** @brief specialization of a DDLPacakageProcessor
+ * for interacting with the Write Engine to process
+ * drop table ddl statements.
+ */
+class DropTableProcessor : public DDLPackageProcessor
+{
+public:
+    DropTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
+    /** @brief process a drop table statement
+     *
+     *  @param dropTableStmt the drop table statement
      */
-    class DropTableProcessor : public DDLPackageProcessor
-    {
-        public:
-			DropTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm){}
-            /** @brief process a drop table statement
-             *
-             *  @param dropTableStmt the drop table statement
-             */
-            EXPORT DDLResult processPackage(ddlpackage::DropTableStatement& dropTableStmt);
+    EXPORT DDLResult processPackage(ddlpackage::DropTableStatement& dropTableStmt);
 
-        protected:
+protected:
 
-        private:
+private:
 
-    };
+};
 
-    /** @brief specialization of a DDLPacakageProcessor
-     * for interacting with the Write Engine to process
-     * truncate table ddl statements.
+/** @brief specialization of a DDLPacakageProcessor
+ * for interacting with the Write Engine to process
+ * truncate table ddl statements.
+ */
+class TruncTableProcessor : public DDLPackageProcessor
+{
+public:
+    TruncTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
+    /** @brief process a truncate table statement
+     *
+     *  @param truncTableStmt the truncate table statement
      */
-    class TruncTableProcessor : public DDLPackageProcessor
-    {
-        public:
-			TruncTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm){}
-            /** @brief process a truncate table statement
-             *
-             *  @param truncTableStmt the truncate table statement
-             */
-            EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
+    EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
 
-        protected:
+protected:
 
-        private:
+private:
 
-    };
+};
 
 }                                                 // namespace ddlpackageprocessor
 

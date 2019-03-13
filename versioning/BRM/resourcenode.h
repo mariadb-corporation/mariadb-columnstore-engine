@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * class XXX interface
  */
 
@@ -35,48 +35,52 @@
 #define EXPORT
 #endif
 
-namespace BRM {
+namespace BRM
+{
 
 class ResourceNode : public RGNode
 {
-	public:
-		EXPORT ResourceNode();
-		EXPORT ResourceNode(const ResourceNode &);
-		EXPORT ResourceNode(LBID_t);
-		EXPORT virtual ~ResourceNode();
+public:
+    EXPORT ResourceNode();
+    EXPORT ResourceNode(const ResourceNode&);
+    EXPORT ResourceNode(LBID_t);
+    EXPORT virtual ~ResourceNode();
 
-		EXPORT ResourceNode& operator=(const ResourceNode &);
-		EXPORT bool operator==(const ResourceNode &) const;
-		EXPORT bool operator==(LBID_t) const;
-		EXPORT bool operator<(const ResourceNode &) const;
+    EXPORT ResourceNode& operator=(const ResourceNode&);
+    EXPORT bool operator==(const ResourceNode&) const;
+    EXPORT bool operator==(LBID_t) const;
+    EXPORT bool operator<(const ResourceNode&) const;
 
-		EXPORT void wakeAndDetach();
+    EXPORT void wakeAndDetach();
 
-		EXPORT LBID_t lbid() const;
-	private:
-		LBID_t _lbid;
+    EXPORT LBID_t lbid() const;
+private:
+    LBID_t _lbid;
 };
 
 template<typename T>
-struct RNLess {
-	bool operator()(const T &x, const T &y) const
-	{
-		return *x < *y;
-	}
+struct RNLess
+{
+    bool operator()(const T& x, const T& y) const
+    {
+        return *x < *y;
+    }
 };
 
-struct RNHasher {
-	size_t operator()(const ResourceNode *x) const
-	{
-		return x->lbid();
-	}
+struct RNHasher
+{
+    size_t operator()(const ResourceNode* x) const
+    {
+        return x->lbid();
+    }
 };
 
-struct RNEquals {
-	bool operator()(const ResourceNode *x, const ResourceNode *y) const
-	{
-		return *x == *y;
-	}
+struct RNEquals
+{
+    bool operator()(const ResourceNode* x, const ResourceNode* y) const
+    {
+        return *x == *y;
+    }
 };
 
 }

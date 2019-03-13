@@ -33,21 +33,21 @@
  * also requires file IO.  Most functions throw an exception if a hard IO error
  * occurs more than MaxRetries times in a row.  Right now the code makes
  * no attempt to back out changes that occured before the error although it
- * may be possible to do so for certain errors.  Probably the best course of 
+ * may be possible to do so for certain errors.  Probably the best course of
  * action would be to halt the system if an exception is thrown here
- * to prevent database corruption resulting allocation of OIDs from a 
+ * to prevent database corruption resulting allocation of OIDs from a
  * possibly corrupt OID bitmap.  The OID bitmap can be rebuilt at system
  * startup if necessary (need to write a tool to do that still).
  *
- * There are a few checks to verify the safety of allocations and 
- * deallocations & the correctness of this implementation in general.  
- * Those errors will throw logic_error.  IO errors will throw 
+ * There are a few checks to verify the safety of allocations and
+ * deallocations & the correctness of this implementation in general.
+ * Those errors will throw logic_error.  IO errors will throw
  * ios_base::failure.
  *
  * There are probably oodles of optimizations possible given this implmementation.
  * For example:
  * 		- make fullScan() construct a freelist
- *		- sorting & coalescing free list entries will raise the hit rate 
+ *		- sorting & coalescing free list entries will raise the hit rate
  *		  (at what cost?)
  *		- implement a bias for high numbered OIDs in the free list to reduce
  *	 	  the number of fullScans searching far in the bitmap
@@ -91,76 +91,80 @@ namespace
 boost::mutex CtorMutex;
 }
 
-namespace execplan {
+namespace execplan
+{
 
 ObjectIDManager::ObjectIDManager()
 {
-	boost::mutex::scoped_lock lk(CtorMutex);
+    boost::mutex::scoped_lock lk(CtorMutex);
 
-	config::Config* conf;
-	string tmp;
-	
-	conf = config::Config::makeConfig();
-	try {
-		fFilename = conf->getConfig("OIDManager", "OIDBitmapFile");
-	}
-	catch(exception&) {
-		fFilename = "/mnt/OAM/dbrm/oidbitmap";
-	}
+    config::Config* conf;
+    string tmp;
 
-	if (fFilename.empty())
-		fFilename = "/mnt/OAM/dbrm/oidbitmap";
+    conf = config::Config::makeConfig();
+
+    try
+    {
+        fFilename = conf->getConfig("OIDManager", "OIDBitmapFile");
+    }
+    catch (exception&)
+    {
+        fFilename = "/mnt/OAM/dbrm/oidbitmap";
+    }
+
+    if (fFilename.empty())
+        fFilename = "/mnt/OAM/dbrm/oidbitmap";
 }
 
 ObjectIDManager::~ObjectIDManager()
 {
-}	
-			
+}
+
 int ObjectIDManager::allocOID()
 {
-	return allocOIDs(1);
+    return allocOIDs(1);
 }
 
 int ObjectIDManager::allocVBOID(uint32_t dbroot)
 {
-	return dbrm.allocVBOID(dbroot);
+    return dbrm.allocVBOID(dbroot);
 }
 
 int ObjectIDManager::getDBRootOfVBOID(uint32_t vboid)
 {
-	return dbrm.getDBRootOfVBOID(vboid);
+    return dbrm.getDBRootOfVBOID(vboid);
 }
 
 int ObjectIDManager::allocOIDs(int num)
 {
-	return dbrm.allocOIDs(num);
+    return dbrm.allocOIDs(num);
 }
 
 void ObjectIDManager::returnOID(int oid)
 {
-	returnOIDs(oid, oid);
+    returnOIDs(oid, oid);
 }
 
 void ObjectIDManager::returnOIDs(int start, int end)
 {
-	//@Bug 1412. Do not reuse oids for now.
-	return;
+    //@Bug 1412. Do not reuse oids for now.
+    return;
 }
 
 const string ObjectIDManager::getFilename() const
 {
-	return fFilename;
+    return fFilename;
 }
 
 int ObjectIDManager::size()
 {
-	return dbrm.oidm_size();
+    return dbrm.oidm_size();
 }
 
 vector<uint16_t> ObjectIDManager::getVBOIDToDBRootMap()
 {
-	return dbrm.getVBOIDToDBRootMap();
+    return dbrm.getVBOIDToDBRootMap();
 }
-	
+
 
 }  // namespace

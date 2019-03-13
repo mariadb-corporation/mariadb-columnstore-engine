@@ -7,12 +7,10 @@ install(PROGRAMS post-install
                 transactionLogArchiver.sh  
                 module_installer.sh 
                 startupTests.sh  
-                user_installer.sh 
-                performance_installer.sh  
+                package_installer.sh   
                 remote_scp_get.sh 
                 columnstoreAlias 
                 run.sh 
-                upgrade-columnstore.sh  
                 post-mysql-install 
                 post-mysqld-install 
                 binary_installer.sh  
@@ -34,7 +32,7 @@ install(PROGRAMS post-install
                 myCnf-include-args.text 
                 myCnf-exclude-args.text
                 columnstore.service
-                mariadb-command-line.sh
+                mariadb-command-line.sh 
                 DESTINATION ${ENGINE_BINDIR} COMPONENT platform)               
                 
 install(FILES  module DESTINATION ${ENGINE_LOCALDIR} COMPONENT platform)

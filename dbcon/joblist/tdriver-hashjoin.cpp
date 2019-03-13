@@ -50,669 +50,685 @@ using namespace joblist;
 using namespace execplan;
 
 
-class HashJoinTestDriver : public CppUnit::TestFixture {
+class HashJoinTestDriver : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE(HashJoinTestDriver);
+    CPPUNIT_TEST_SUITE(HashJoinTestDriver);
 
-CPPUNIT_TEST(HashJoin_1);
-CPPUNIT_TEST(HashJoin_2);
-CPPUNIT_TEST(HashJoin_3);
-CPPUNIT_TEST(HashJoin_4);
-CPPUNIT_TEST(HashJoin_5);
+    CPPUNIT_TEST(HashJoin_1);
+    CPPUNIT_TEST(HashJoin_2);
+    CPPUNIT_TEST(HashJoin_3);
+    CPPUNIT_TEST(HashJoin_4);
+    CPPUNIT_TEST(HashJoin_5);
 
-CPPUNIT_TEST(LeftOuterJoin_1);
-CPPUNIT_TEST(LeftOuterJoin_2);
-CPPUNIT_TEST(LeftOuterJoin_3);
-CPPUNIT_TEST(LeftOuterJoin_4);
-CPPUNIT_TEST(RightOuterJoin_1);
-CPPUNIT_TEST(RightOuterJoin_2);
+    CPPUNIT_TEST(LeftOuterJoin_1);
+    CPPUNIT_TEST(LeftOuterJoin_2);
+    CPPUNIT_TEST(LeftOuterJoin_3);
+    CPPUNIT_TEST(LeftOuterJoin_4);
+    CPPUNIT_TEST(RightOuterJoin_1);
+    CPPUNIT_TEST(RightOuterJoin_2);
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
 
-	uint32_t elementCount( BucketDL < ElementType>* dl ) const
-	{
-		int sz = 0;
+    uint32_t elementCount( BucketDL < ElementType>* dl ) const
+    {
+        int sz = 0;
 
-		if (dl==NULL)
-			return 0;
+        if (dl == NULL)
+            return 0;
 
-		for (uint32_t i=0;i<dl->bucketCount();i++)
-			sz+=dl->size(i);
+        for (uint32_t i = 0; i < dl->bucketCount(); i++)
+            sz += dl->size(i);
 
-		return sz;
+        return sz;
 
-	}
-  JSTimeStamp  fTs;
-  ResourceManager fRm;
+    }
+    JSTimeStamp  fTs;
+    ResourceManager fRm;
 
 public:
 
-	void HashJoin_1()
-	{
-		uint64_t maxElems=32655;
-		int maxBuckets=8;
+    void HashJoin_1()
+    {
+        uint64_t maxElems = 32655;
+        int maxBuckets = 8;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
 
-		A.insert(ElementType(1025,1));
-		A.insert(ElementType(1026,2));
-		A.insert(ElementType(1027,3));
-		A.insert(ElementType(1028,4));
+        A.insert(ElementType(1025, 1));
+        A.insert(ElementType(1026, 2));
+        A.insert(ElementType(1027, 3));
+        A.insert(ElementType(1028, 4));
 
-		B.insert(ElementType(1034,4));
-		B.insert(ElementType(1035,4));
-		B.insert(ElementType(1036,2));
-		B.insert(ElementType(1037,4));
-		B.insert(ElementType(1041,1));
-		B.insert(ElementType(1042,2));
-		B.insert(ElementType(1043,3));
-		B.insert(ElementType(1044,4));
-		B.insert(ElementType(1045,2));
-		B.insert(ElementType(1046,3));
-		B.insert(ElementType(1047,3));
-		B.insert(ElementType(1048,1));
-		B.insert(ElementType(1049,5));
+        B.insert(ElementType(1034, 4));
+        B.insert(ElementType(1035, 4));
+        B.insert(ElementType(1036, 2));
+        B.insert(ElementType(1037, 4));
+        B.insert(ElementType(1041, 1));
+        B.insert(ElementType(1042, 2));
+        B.insert(ElementType(1043, 3));
+        B.insert(ElementType(1044, 4));
+        B.insert(ElementType(1045, 2));
+        B.insert(ElementType(1046, 3));
+        B.insert(ElementType(1047, 3));
+        B.insert(ElementType(1048, 1));
+        B.insert(ElementType(1049, 5));
 
-		A.endOfInput();
-		B.endOfInput();
+        A.endOfInput();
+        B.endOfInput();
 
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
-	
-		hj->performJoin();
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		int csize = elementCount(&C);
-		int dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
 
-		//cout << "A " << setA.size()
-	//		<< " B " << setB.size()
-	//		<< " C " << csize
-	//		<< " D " << dsize
-	//		<< endl;
+        hj->performJoin();
 
-		CPPUNIT_ASSERT(csize==4);
-		CPPUNIT_ASSERT(dsize==12);
+        int csize = elementCount(&C);
+        int dsize = elementCount(&D);
 
-	} // HashJoin_1
+        //cout << "A " << setA.size()
+        //		<< " B " << setB.size()
+        //		<< " C " << csize
+        //		<< " D " << dsize
+        //		<< endl;
 
-	void HashJoin_2()
-	{
-		uint64_t maxElems=100;
-		int maxBuckets=8;
+        CPPUNIT_ASSERT(csize == 4);
+        CPPUNIT_ASSERT(dsize == 12);
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		// create A
-        for (uint64_t idx=0; idx < maxElems ; idx++)
+    } // HashJoin_1
+
+    void HashJoin_2()
+    {
+        uint64_t maxElems = 100;
+        int maxBuckets = 8;
+
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+
+        // create A
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
         {
             A.insert(ElementType(idx, idx));
-            B.insert(ElementType(idx+maxElems, idx));
+            B.insert(ElementType(idx + maxElems, idx));
         }
 
 
-		A.endOfInput();
-		B.endOfInput();
+        A.endOfInput();
+        B.endOfInput();
 
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
-	
-		hj->performJoin();
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
 
-		//cout << "T2 sz " << csize << " " << dsize << endl;
-		CPPUNIT_ASSERT(csize==maxElems);
-		CPPUNIT_ASSERT(dsize==maxElems);
-		CPPUNIT_ASSERT(dsize==csize);
+        hj->performJoin();
 
-	} // HashJoin_2
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 
-	void HashJoin_3()
-	{
-		uint64_t maxElems=100;
-		int maxBuckets=8;
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		// create A
-        for (uint64_t idx=0; idx < maxElems ; idx++)
+        //cout << "T2 sz " << csize << " " << dsize << endl;
+        CPPUNIT_ASSERT(csize == maxElems);
+        CPPUNIT_ASSERT(dsize == maxElems);
+        CPPUNIT_ASSERT(dsize == csize);
+
+    } // HashJoin_2
+
+    void HashJoin_3()
+    {
+        uint64_t maxElems = 100;
+        int maxBuckets = 8;
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+
+        // create A
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
         {
             A.insert(ElementType(idx, idx));
-            B.insert(ElementType(idx+maxElems, (-1)*idx));
+            B.insert(ElementType(idx + maxElems, (-1)*idx));
         }
 
-		A.endOfInput();
-		B.endOfInput();
+        A.endOfInput();
+        B.endOfInput();
 
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
-	
-		hj->performJoin();
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
 
-		// both sets containt zero
-		//cout << "T3 sz " << csize << " " << dsize << endl;
+        hj->performJoin();
 
-		CPPUNIT_ASSERT(csize==1);
-		CPPUNIT_ASSERT(dsize==1);
-		CPPUNIT_ASSERT(dsize==csize);
-	} // HashJoin_3
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 
-	void HashJoin_4()
-	{
-		uint64_t maxElems=32655;
-		int maxBuckets=128;
-		int setAMin=0;
-		int setAMax=10000;
-		int setARange = (setAMax-setAMin)+1;
-		int setBMin=0;
-		int setBMax=10000;
-		int setBRange = (setBMax-setBMin)+1;
+        // both sets containt zero
+        //cout << "T3 sz " << csize << " " << dsize << endl;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		setARange=0;
-		setBRange=0;
-		// create A
-  		srand(time(0)*getpid());
-		long stime = clock();
-        for (uint64_t idx=0; idx < maxElems ; idx++)
+        CPPUNIT_ASSERT(csize == 1);
+        CPPUNIT_ASSERT(dsize == 1);
+        CPPUNIT_ASSERT(dsize == csize);
+    } // HashJoin_3
+
+    void HashJoin_4()
+    {
+        uint64_t maxElems = 32655;
+        int maxBuckets = 128;
+        int setAMin = 0;
+        int setAMax = 10000;
+        int setARange = (setAMax - setAMin) + 1;
+        int setBMin = 0;
+        int setBMax = 10000;
+        int setBRange = (setBMax - setBMin) + 1;
+
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+        setARange = 0;
+        setBRange = 0;
+        // create A
+        srand(time(0)*getpid());
+        long stime = clock();
+
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
         {
-            uint64_t aVal = (rand()%setAMax)+1;
-            uint64_t bVal = (rand()%setAMax)+1;
+            uint64_t aVal = (rand() % setAMax) + 1;
+            uint64_t bVal = (rand() % setAMax) + 1;
             A.insert(ElementType(idx, aVal) );
-            B.insert(ElementType(idx+maxElems, bVal) );
+            B.insert(ElementType(idx + maxElems, bVal) );
         }
 
-		A.endOfInput();
-		B.endOfInput();
-		long etime = clock();
+        A.endOfInput();
+        B.endOfInput();
+        long etime = clock();
 
-		//cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
-	
-		stime = clock();
-		hj->performJoin();
-		etime = clock();
-		//cout << "Join time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        //cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
 
-		//cout << "T4 sz " << csize << " " << dsize << endl;
+        stime = clock();
+        hj->performJoin();
+        etime = clock();
+        //cout << "Join time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
 
-		// TODO: determine what values to test
-		CPPUNIT_ASSERT(csize>=1);
-		CPPUNIT_ASSERT(dsize>=1);
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 
-	} // HashJoin_4
+        //cout << "T4 sz " << csize << " " << dsize << endl;
 
-	void HashJoin_5()
-	{
-		uint64_t maxElems=32655;
-		int maxBuckets=128;
-		const uint64_t modValue=10;
+        // TODO: determine what values to test
+        CPPUNIT_ASSERT(csize >= 1);
+        CPPUNIT_ASSERT(dsize >= 1);
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		// create A
-        for (uint64_t idx=1; idx < maxElems ; idx++)
+    } // HashJoin_4
+
+    void HashJoin_5()
+    {
+        uint64_t maxElems = 32655;
+        int maxBuckets = 128;
+        const uint64_t modValue = 10;
+
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+
+        // create A
+        for (uint64_t idx = 1; idx < maxElems ; idx++)
         {
             uint64_t aVal = idx;
             uint64_t bVal = idx;
 
-			if (bVal%modValue!=0)
-				bVal*=(-1);	
+            if (bVal % modValue != 0)
+                bVal *= (-1);
+
             A.insert(ElementType(idx, aVal) );
-            B.insert(ElementType(idx+maxElems, bVal) );
+            B.insert(ElementType(idx + maxElems, bVal) );
         }
 
-		A.endOfInput();
-		B.endOfInput();
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
-	
-		hj->performJoin();
+        A.endOfInput();
+        B.endOfInput();
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, INNER, &fTs);
 
-		//cout << "T5 sz " << csize << " " << dsize << endl;
+        hj->performJoin();
 
-		// TODO: determine what values to test
-		CPPUNIT_ASSERT(csize==(uint64_t)(maxElems/modValue));
-		CPPUNIT_ASSERT(dsize==(uint64_t)(maxElems/modValue));
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 
-	} // HashJoin_5
+        //cout << "T5 sz " << csize << " " << dsize << endl;
 
-	void LeftOuterJoin_1()
-	{
+        // TODO: determine what values to test
+        CPPUNIT_ASSERT(csize == (uint64_t)(maxElems / modValue));
+        CPPUNIT_ASSERT(dsize == (uint64_t)(maxElems / modValue));
 
-		// Outer left join such as A (+) = B.
-		// All of Bs should be returned with matching As.
-		uint64_t maxElems=32655;
-		int maxBuckets=8;
+    } // HashJoin_5
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
+    void LeftOuterJoin_1()
+    {
 
-		A.insert(ElementType(1025,1));
-		A.insert(ElementType(1026,2));
-		A.insert(ElementType(1027,3));
-		A.insert(ElementType(1028,4));
-		A.insert(ElementType(1029,99));
+        // Outer left join such as A (+) = B.
+        // All of Bs should be returned with matching As.
+        uint64_t maxElems = 32655;
+        int maxBuckets = 8;
 
-		B.insert(ElementType(1034,4));
-		B.insert(ElementType(1035,4));
-		B.insert(ElementType(1036,2));
-		B.insert(ElementType(1037,4));
-		B.insert(ElementType(1041,1));
-		B.insert(ElementType(1042,2));
-		B.insert(ElementType(1043,3));
-		B.insert(ElementType(1044,4));
-		B.insert(ElementType(1045,2));
-		B.insert(ElementType(1046,3));
-		B.insert(ElementType(1047,3));
-		B.insert(ElementType(1048,1));
-		B.insert(ElementType(1049,5));
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
 
-		A.endOfInput();
-		B.endOfInput();
+        A.insert(ElementType(1025, 1));
+        A.insert(ElementType(1026, 2));
+        A.insert(ElementType(1027, 3));
+        A.insert(ElementType(1028, 4));
+        A.insert(ElementType(1029, 99));
 
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
-	
-		hj->performJoin();
+        B.insert(ElementType(1034, 4));
+        B.insert(ElementType(1035, 4));
+        B.insert(ElementType(1036, 2));
+        B.insert(ElementType(1037, 4));
+        B.insert(ElementType(1041, 1));
+        B.insert(ElementType(1042, 2));
+        B.insert(ElementType(1043, 3));
+        B.insert(ElementType(1044, 4));
+        B.insert(ElementType(1045, 2));
+        B.insert(ElementType(1046, 3));
+        B.insert(ElementType(1047, 3));
+        B.insert(ElementType(1048, 1));
+        B.insert(ElementType(1049, 5));
 
-		int csize = elementCount(&C);
-		int dsize = elementCount(&D);
+        A.endOfInput();
+        B.endOfInput();
 
-		//cout << "A " << setA.size()
-	//		<< " B " << setB.size()
-	//		<< " C " << csize
-	//		<< " D " << dsize
-	//		<< endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		CPPUNIT_ASSERT(csize==4);
-		CPPUNIT_ASSERT(dsize==13);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
 
-	} // HashJoin_1
+        hj->performJoin();
+
+        int csize = elementCount(&C);
+        int dsize = elementCount(&D);
+
+        //cout << "A " << setA.size()
+        //		<< " B " << setB.size()
+        //		<< " C " << csize
+        //		<< " D " << dsize
+        //		<< endl;
+
+        CPPUNIT_ASSERT(csize == 4);
+        CPPUNIT_ASSERT(dsize == 13);
+
+    } // HashJoin_1
 
 
-	// Inserts 1,000,000 values in A.
-	// Inserts 666,668 values in B half of which match A.
-	// Peforms left outer join A (+) = B.
-	// Asserts that we returned 333,334 A values and all 666,668 B values.
-	void LeftOuterJoin_2()
-	{
-		uint64_t maxElems=1000 * 1000;
-		int maxBuckets=128;
-		int setAMin=0;
-		int setAMax=10000;
-		int setARange = (setAMax-setAMin)+1;
-		int setBMin=0;
-		int setBMax=10000;
-		int setBRange = (setBMax-setBMin)+1;
+    // Inserts 1,000,000 values in A.
+    // Inserts 666,668 values in B half of which match A.
+    // Peforms left outer join A (+) = B.
+    // Asserts that we returned 333,334 A values and all 666,668 B values.
+    void LeftOuterJoin_2()
+    {
+        uint64_t maxElems = 1000 * 1000;
+        int maxBuckets = 128;
+        int setAMin = 0;
+        int setAMax = 10000;
+        int setARange = (setAMax - setAMin) + 1;
+        int setBMin = 0;
+        int setBMax = 10000;
+        int setBRange = (setBMax - setBMin) + 1;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		setARange=0;
-		setBRange=0;
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+        setARange = 0;
+        setBRange = 0;
 
-		ElementType el;
-		ElementType el2;
-		for (uint64_t idx=0; idx < maxElems ; idx++)
-		{
-			el.first = idx;
-			el.second = idx;
-			el2.first = idx + maxElems;
-			el2.second = idx;
-			A.insert(el);
-			if(idx%3 == 0) {
-				B.insert(el2);
-				el2.second = el2.first;
-				B.insert(el2);
-			}
-		}
+        ElementType el;
+        ElementType el2;
 
-		A.endOfInput();
-		B.endOfInput();
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
+        {
+            el.first = idx;
+            el.second = idx;
+            el2.first = idx + maxElems;
+            el2.second = idx;
+            A.insert(el);
 
-		//cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
-	
-		hj->performJoin();
+            if (idx % 3 == 0)
+            {
+                B.insert(el2);
+                el2.second = el2.first;
+                B.insert(el2);
+            }
+        }
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        A.endOfInput();
+        B.endOfInput();
+
+        //cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
+
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
+
+        hj->performJoin();
+
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 // cout << "csize=" << csize << "; dsize=" << dsize << endl;
-		CPPUNIT_ASSERT(csize == 333334);
-		CPPUNIT_ASSERT(dsize == 666668);
+        CPPUNIT_ASSERT(csize == 333334);
+        CPPUNIT_ASSERT(dsize == 666668);
 
-	} 
+    }
 
-	// Inserts 0 values in A.
-	// Inserts 666,668 values in B half of which match A.
-	// Peforms left outer join A (+) = B.
-	// Asserts that we returned 0 A values and all 666,668 B values.
-	void LeftOuterJoin_3()
-	{
-		uint64_t maxElems=1000 * 1000;
-		int maxBuckets=128;
-		int setAMin=0;
-		int setAMax=10000;
-		int setARange = (setAMax-setAMin)+1;
-		int setBMin=0;
-		int setBMax=10000;
-		int setBRange = (setBMax-setBMin)+1;
+    // Inserts 0 values in A.
+    // Inserts 666,668 values in B half of which match A.
+    // Peforms left outer join A (+) = B.
+    // Asserts that we returned 0 A values and all 666,668 B values.
+    void LeftOuterJoin_3()
+    {
+        uint64_t maxElems = 1000 * 1000;
+        int maxBuckets = 128;
+        int setAMin = 0;
+        int setAMax = 10000;
+        int setARange = (setAMax - setAMin) + 1;
+        int setBMin = 0;
+        int setBMax = 10000;
+        int setBRange = (setBMax - setBMin) + 1;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		setARange=0;
-		setBRange=0;
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+        setARange = 0;
+        setBRange = 0;
 
-		ElementType el;
-		ElementType el2;
-		for (uint64_t idx=0; idx < maxElems ; idx++)
-		{
-			el.first = idx;
-			el.second = idx;
-			el2.first = idx + maxElems;
-			el2.second = idx;
-			// A.insert(el);
-			if(idx%3 == 0) {
-				B.insert(el2);
-				el2.second = el2.first;
-				B.insert(el2);
-			}
-		}
+        ElementType el;
+        ElementType el2;
 
-		A.endOfInput();
-		B.endOfInput();
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
+        {
+            el.first = idx;
+            el.second = idx;
+            el2.first = idx + maxElems;
+            el2.second = idx;
 
-		//cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
-	
-		hj->performJoin();
+            // A.insert(el);
+            if (idx % 3 == 0)
+            {
+                B.insert(el2);
+                el2.second = el2.first;
+                B.insert(el2);
+            }
+        }
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        A.endOfInput();
+        B.endOfInput();
+
+        //cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
+
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
+
+        hj->performJoin();
+
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 // cout << "csize=" << csize << "; dsize=" << dsize << endl;
-		CPPUNIT_ASSERT(csize == 0);
-		CPPUNIT_ASSERT(dsize == 666668);
+        CPPUNIT_ASSERT(csize == 0);
+        CPPUNIT_ASSERT(dsize == 666668);
 
-	} 
+    }
 
-	// Inserts 1,000,000 values in A.
-	// Inserts 0 values in B half of which match A.
-	// Peforms left outer join A (+) = B.
-	// Asserts that we returned 0 A values and all 0 B values.
-	void LeftOuterJoin_4()
-	{
-		uint64_t maxElems=1000 * 1000;
-		int maxBuckets=128;
-		int setAMin=0;
-		int setAMax=10000;
-		int setARange = (setAMax-setAMin)+1;
-		int setBMin=0;
-		int setBMax=10000;
-		int setBRange = (setBMax-setBMin)+1;
+    // Inserts 1,000,000 values in A.
+    // Inserts 0 values in B half of which match A.
+    // Peforms left outer join A (+) = B.
+    // Asserts that we returned 0 A values and all 0 B values.
+    void LeftOuterJoin_4()
+    {
+        uint64_t maxElems = 1000 * 1000;
+        int maxBuckets = 128;
+        int setAMin = 0;
+        int setAMax = 10000;
+        int setARange = (setAMax - setAMin) + 1;
+        int setBMin = 0;
+        int setBMax = 10000;
+        int setBRange = (setBMax - setBMin) + 1;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		setARange=0;
-		setBRange=0;
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+        setARange = 0;
+        setBRange = 0;
 
-		ElementType el;
-		ElementType el2;
-		for (uint64_t idx=0; idx < maxElems ; idx++)
-		{
-			el.first = idx;
-			el.second = idx;
-			el2.first = idx + maxElems;
-			el2.second = idx;
-			A.insert(el);
-			/*
-			if(idx%3 == 0) {
-				B.insert(el2);
-				el2.second = el2.first;
-				B.insert(el2);
-			}
-			*/
-		}
+        ElementType el;
+        ElementType el2;
 
-		A.endOfInput();
-		B.endOfInput();
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
+        {
+            el.first = idx;
+            el.second = idx;
+            el2.first = idx + maxElems;
+            el2.second = idx;
+            A.insert(el);
+            /*
+            if(idx%3 == 0) {
+            	B.insert(el2);
+            	el2.second = el2.first;
+            	B.insert(el2);
+            }
+            */
+        }
 
-		//cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
-	
-		hj->performJoin();
+        A.endOfInput();
+        B.endOfInput();
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        //cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
+
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, LEFTOUTER, &fTs);
+
+        hj->performJoin();
+
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 // cout << "csize=" << csize << "; dsize=" << dsize << endl;
-		CPPUNIT_ASSERT(csize == 0);
-		CPPUNIT_ASSERT(dsize == 0);
+        CPPUNIT_ASSERT(csize == 0);
+        CPPUNIT_ASSERT(dsize == 0);
 
-	} 
+    }
 
-	void RightOuterJoin_1()
-	{
+    void RightOuterJoin_1()
+    {
 
-		// Outer left join such as A (+) = B.
-		// All of Bs should be returned with matching As.
-		uint64_t maxElems=32655;
-		int maxBuckets=8;
+        // Outer left join such as A (+) = B.
+        // All of Bs should be returned with matching As.
+        uint64_t maxElems = 32655;
+        int maxBuckets = 8;
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
 
-		A.insert(ElementType(1025,1));
-		A.insert(ElementType(1026,2));
-		A.insert(ElementType(1027,3));
-		A.insert(ElementType(1028,4));
-		A.insert(ElementType(1029,99));
+        A.insert(ElementType(1025, 1));
+        A.insert(ElementType(1026, 2));
+        A.insert(ElementType(1027, 3));
+        A.insert(ElementType(1028, 4));
+        A.insert(ElementType(1029, 99));
 
-		B.insert(ElementType(1034,4));
-		B.insert(ElementType(1035,4));
-		B.insert(ElementType(1036,2));
-		B.insert(ElementType(1037,4));
-		B.insert(ElementType(1041,1));
-		B.insert(ElementType(1042,2));
-		B.insert(ElementType(1043,3));
-		B.insert(ElementType(1044,4));
-		B.insert(ElementType(1045,2));
-		B.insert(ElementType(1046,3));
-		B.insert(ElementType(1047,3));
-		B.insert(ElementType(1048,1));
-		B.insert(ElementType(1049,5));
+        B.insert(ElementType(1034, 4));
+        B.insert(ElementType(1035, 4));
+        B.insert(ElementType(1036, 2));
+        B.insert(ElementType(1037, 4));
+        B.insert(ElementType(1041, 1));
+        B.insert(ElementType(1042, 2));
+        B.insert(ElementType(1043, 3));
+        B.insert(ElementType(1044, 4));
+        B.insert(ElementType(1045, 2));
+        B.insert(ElementType(1046, 3));
+        B.insert(ElementType(1047, 3));
+        B.insert(ElementType(1048, 1));
+        B.insert(ElementType(1049, 5));
 
-		A.endOfInput();
-		B.endOfInput();
+        A.endOfInput();
+        B.endOfInput();
 
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, RIGHTOUTER, &fTs);
-	
-		hj->performJoin();
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
 
-		int csize = elementCount(&C);
-		int dsize = elementCount(&D);
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, RIGHTOUTER, &fTs);
 
-		//cout << "A " << setA.size()
-	//		<< " B " << setB.size()
-	//		<< " C " << csize
-	//		<< " D " << dsize
-	//		<< endl;
+        hj->performJoin();
 
-		CPPUNIT_ASSERT(csize==5);
-		CPPUNIT_ASSERT(dsize==12);
+        int csize = elementCount(&C);
+        int dsize = elementCount(&D);
 
-	} 
+        //cout << "A " << setA.size()
+        //		<< " B " << setB.size()
+        //		<< " C " << csize
+        //		<< " D " << dsize
+        //		<< endl;
 
-	// Inserts 1,000,000 values in A.
-	// Inserts 666,668 values in B half of which match A.
-	// Peforms right outer join A = B.(+)
-	// Asserts that we returned 1,000,000 A values and all 333,334 B values.
-	void RightOuterJoin_2()
-	{
-		uint64_t maxElems=1000 * 1000;
-		int maxBuckets=128;
-		int setAMin=0;
-		int setAMax=10000;
-		int setARange = (setAMax-setAMin)+1;
-		int setBMin=0;
-		int setBMax=10000;
-		int setBRange = (setBMax-setBMin)+1;
+        CPPUNIT_ASSERT(csize == 5);
+        CPPUNIT_ASSERT(dsize == 12);
 
-		BucketDL< ElementType > A(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > B(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > C(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		BucketDL< ElementType > D(maxBuckets, 1, maxElems/maxBuckets, fRm);
-		A.setHashMode(1);
-		B.setHashMode(1);
-		setARange=0;
-		setBRange=0;
+    }
 
-		ElementType el;
-		ElementType el2;
-		for (uint64_t idx=0; idx < maxElems ; idx++)
-		{
-			el.first = idx;
-			el.second = idx;
-			el2.first = idx + maxElems;
-			el2.second = idx;
-			A.insert(el);
-			if(idx%3 == 0) {
-				B.insert(el2);
-				el2.second = el2.first;
-				B.insert(el2);
-			}
-		}
+    // Inserts 1,000,000 values in A.
+    // Inserts 666,668 values in B half of which match A.
+    // Peforms right outer join A = B.(+)
+    // Asserts that we returned 1,000,000 A values and all 333,334 B values.
+    void RightOuterJoin_2()
+    {
+        uint64_t maxElems = 1000 * 1000;
+        int maxBuckets = 128;
+        int setAMin = 0;
+        int setAMax = 10000;
+        int setARange = (setAMax - setAMin) + 1;
+        int setBMin = 0;
+        int setBMax = 10000;
+        int setBRange = (setBMax - setBMin) + 1;
 
-		A.endOfInput();
-		B.endOfInput();
+        BucketDL< ElementType > A(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > B(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > C(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        BucketDL< ElementType > D(maxBuckets, 1, maxElems / maxBuckets, fRm);
+        A.setHashMode(1);
+        B.setHashMode(1);
+        setARange = 0;
+        setBRange = 0;
 
-		//cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
-		BDLWrapper< ElementType > setA(&A);
-		BDLWrapper< ElementType > setB(&B);
-		DataList< ElementType >* resultA(&C);
-		DataList< ElementType >* resultB(&D);
-	
-		HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, RIGHTOUTER, &fTs);
-	
-		hj->performJoin();
+        ElementType el;
+        ElementType el2;
 
-		uint64_t csize = elementCount(&C);
-		uint64_t dsize = elementCount(&D);
+        for (uint64_t idx = 0; idx < maxElems ; idx++)
+        {
+            el.first = idx;
+            el.second = idx;
+            el2.first = idx + maxElems;
+            el2.second = idx;
+            A.insert(el);
+
+            if (idx % 3 == 0)
+            {
+                B.insert(el2);
+                el2.second = el2.first;
+                B.insert(el2);
+            }
+        }
+
+        A.endOfInput();
+        B.endOfInput();
+
+        //cout << "Build time " << (float)(etime - stime)/(float)CLOCKS_PER_SEC << endl;
+        BDLWrapper< ElementType > setA(&A);
+        BDLWrapper< ElementType > setB(&B);
+        DataList< ElementType >* resultA(&C);
+        DataList< ElementType >* resultB(&D);
+
+        HashJoin<ElementType>* hj = new HashJoin<ElementType>(setA, setB, resultA, resultB, RIGHTOUTER, &fTs);
+
+        hj->performJoin();
+
+        uint64_t csize = elementCount(&C);
+        uint64_t dsize = elementCount(&D);
 // cout << "csize=" << csize << "; dsize=" << dsize << endl;
-		CPPUNIT_ASSERT(csize == 1000000);
-		CPPUNIT_ASSERT(dsize == 333334);
+        CPPUNIT_ASSERT(csize == 1000000);
+        CPPUNIT_ASSERT(dsize == 333334);
 
-	} 
+    }
 
 
 }; //
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashJoinTestDriver);
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
 
-  runner.addTest( registry.makeTest() );
+    runner.addTest( registry.makeTest() );
 
-  bool wasSuccessful = runner.run( "", false );
+    bool wasSuccessful = runner.run( "", false );
 
-  return (wasSuccessful ? 0 : 1);
+    return (wasSuccessful ? 0 : 1);
 }

@@ -32,121 +32,145 @@
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ByteStream;
 }
 
 /**
  * Namespace
  */
-namespace execplan { 
+namespace execplan
+{
 
 class ParseTree;
 /**
  * @brief A class to represent a simple returned column
- * 
+ *
  * This class is a specialization of class ReturnedColumn that handles
  * a group of columns. Mostly used in subquery context. This class is
- * internal to the connector. No serialization interface is provided. 
+ * internal to the connector. No serialization interface is provided.
  * The joblist factory will not recognize this class.
  */
-class RowColumn : public ReturnedColumn {
+class RowColumn : public ReturnedColumn
+{
 
 public:
- 
-	/**
-	 * Constructors
-	 */ 
-	RowColumn(const uint32_t sessionID = 0);
-	RowColumn(const RowColumn& rhs, const uint32_t sessionID = 0);
-	
-	/**
-	 * Destructor
-	 */
-	virtual ~RowColumn();
-	
-	/**
-	 * Accessor Methods
-	 */
-	const std::vector<SRCP>& columnVec() const { return fColumnVec; }
-	void columnVec( const std::vector<SRCP>& columnVec ) { fColumnVec = columnVec; }
-	 
-	/** return a copy of this pointer
-	 *
-	 * deep copy of this pointer and return the copy
-	 */	
-	inline virtual RowColumn* clone() const
-	{
-	    return new RowColumn (*this);
-	}	
-	/**
-	 * Overloaded assignment operator
-	 */
-	RowColumn& operator=(const RowColumn& rhs);
-	
-	/**
-	 * The serialize interface
-	 */
-	//virtual void serialize(messageqcpp::ByteStream&) const;
-	//virtual void unserialize(messageqcpp::ByteStream&);
 
-	virtual const std::string toString() const;
+    /**
+     * Constructors
+     */
+    RowColumn(const uint32_t sessionID = 0);
+    RowColumn(const RowColumn& rhs, const uint32_t sessionID = 0);
 
-	/**
-	 * Serialization interface
-	 */
-	virtual void serialize(messageqcpp::ByteStream&) const;
-	virtual void unserialize(messageqcpp::ByteStream&);
+    /**
+     * Destructor
+     */
+    virtual ~RowColumn();
 
-	
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	 */
-	virtual bool operator==(const TreeNode* t) const;
-	
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	 */
-	bool operator==(const RowColumn& t) const;
-	
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	 */
-	virtual bool operator!=(const TreeNode* t) const;
-	 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	 */
-	bool operator!=(const RowColumn& t) const;
-	virtual bool hasAggregate() {return false;}
-	virtual bool hasWindowFunc() {return false;}
+    /**
+     * Accessor Methods
+     */
+    const std::vector<SRCP>& columnVec() const
+    {
+        return fColumnVec;
+    }
+    void columnVec( const std::vector<SRCP>& columnVec )
+    {
+        fColumnVec = columnVec;
+    }
+
+    /** return a copy of this pointer
+     *
+     * deep copy of this pointer and return the copy
+     */
+    inline virtual RowColumn* clone() const
+    {
+        return new RowColumn (*this);
+    }
+    /**
+     * Overloaded assignment operator
+     */
+    RowColumn& operator=(const RowColumn& rhs);
+
+    /**
+     * The serialize interface
+     */
+    //virtual void serialize(messageqcpp::ByteStream&) const;
+    //virtual void unserialize(messageqcpp::ByteStream&);
+
+    virtual const std::string toString() const;
+
+    /**
+     * Serialization interface
+     */
+    virtual void serialize(messageqcpp::ByteStream&) const;
+    virtual void unserialize(messageqcpp::ByteStream&);
+
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    virtual bool operator==(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    bool operator==(const RowColumn& t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    virtual bool operator!=(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    bool operator!=(const RowColumn& t) const;
+    virtual bool hasAggregate()
+    {
+        return false;
+    }
+    virtual bool hasWindowFunc()
+    {
+        return false;
+    }
 
 private:
-	/**
-	 * Fields
-	 */
-	std::vector<SRCP> fColumnVec;
-			
+    /**
+     * Fields
+     */
+    std::vector<SRCP> fColumnVec;
+
 };
 
 /** dummy class. For the connector to use in gp_walk*/
 class SubSelect : public ReturnedColumn
 {
 public:
-	SubSelect(): ReturnedColumn() {}
-	~SubSelect() {}
-	SubSelect* clone() const { return new SubSelect(); }
-	virtual bool hasAggregate() {return false;}
-	virtual bool hasWindowFunc() {return false;}
-	virtual const std::string toString() const;
+    SubSelect(): ReturnedColumn() {}
+    ~SubSelect() {}
+    SubSelect* clone() const
+    {
+        return new SubSelect();
+    }
+    virtual bool hasAggregate()
+    {
+        return false;
+    }
+    virtual bool hasWindowFunc()
+    {
+        return false;
+    }
+    virtual const std::string toString() const;
 };
 
 

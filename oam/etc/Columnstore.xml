@@ -19,6 +19,10 @@
 		<IPAddr>0.0.0.0</IPAddr>
 		<Port>8603</Port>
 	</ProcMgr>
+	<ProcMgr_Alarm>
+		<IPAddr>127.0.0.1</IPAddr>
+		<Port>8606</Port>
+	</ProcMgr_Alarm>
 	<ProcStatusControl>
 		<IPAddr>0.0.0.0</IPAddr>
 		<Port>8604</Port>
@@ -231,7 +235,7 @@
 		<PrimaryUMModuleName>unassigned</PrimaryUMModuleName>
 		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
-		<ModuleProcMonWaitCount>6</ModuleProcMonWaitCount>	// 2.5 minutes
+		<ModuleProcMonWaitCount>12</ModuleProcMonWaitCount>	// 2.5 minutes
 		<!-- Disabled
 		<ProcessHeartbeatPeriod>-1</ProcessHeartbeatPeriod>
 		-->
@@ -245,13 +249,14 @@
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>
 		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<TempDiskPath>/tmp</TempDiskPath>
+		<!-- <TempDiskPath>/tmp</TempDiskPath>
 		<WorkingDir>/tmp</WorkingDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
+		-->
 		<TransactionArchivePeriod>10</TransactionArchivePeriod>
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ProcessRestartCount>10</ProcessRestartCount>
 		<ProcessRestartPeriod>120</ProcessRestartPeriod>
@@ -262,7 +267,9 @@
 		<!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
- 		<hdfsRdwrScratch>/tmp/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<TempFileDir>/columnstore_tmp_files</TempFileDir>
+ 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -420,6 +427,8 @@
 	</DBRM_Worker10>
 	<DBBC>
 		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
+        <!-- Alternatively, this can be specified in absolute terms using
+             the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
 		<!-- <NumBlocksPct>70</NumBlocksPct> -->
 		<!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
@@ -434,14 +443,13 @@
 		<SystemStartupOffline>n</SystemStartupOffline>
 		<InitialInstallFlag>n</InitialInstallFlag>
 		<SingleServerInstall>n</SingleServerInstall>
-		<ServerTypeInstall>2</ServerTypeInstall>
+		<ServerTypeInstall>1</ServerTypeInstall>
 		<PMwithUM>n</PMwithUM>
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
 		<UMInstanceType>unassigned</UMInstanceType>
@@ -458,12 +466,15 @@
 		<AmazonElasticIPCount>0</AmazonElasticIPCount>
 		<AmazonElasticIPAddr1>unassigned</AmazonElasticIPAddr1>
 		<AmazonElasticModule1>unassigned</AmazonElasticModule1>
-		<GlusterConfig>n</GlusterConfig>
-		<GlusterCopies>0</GlusterCopies>
-		<GlusterStorageType>unassigned</GlusterStorageType>
+		<DataRedundancyConfig>n</DataRedundancyConfig>
+		<DataRedundancyCopies>0</DataRedundancyCopies>
+		<DataRedundancyStorageType>unassigned</DataRedundancyStorageType>
 		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
+		<DistributedInstall>n</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
+		<ProfileFile>unassigned</ProfileFile>
 	</Installation>
 	<ExtentMap>
 		<!--
@@ -485,8 +496,8 @@
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
-			files are left behind.  -->
-		<TempFilePath>$INSTALLDIR/tmp</TempFilePath>
+			files are left behind.
+		<TempFilePath>/tmp</TempFilePath>  -->
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>
@@ -502,6 +513,7 @@
 			  as many threads are available across all PMs.  -->
 		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> --> 
 		<MaxOutstandingRequests>20</MaxOutstandingRequests> 
+		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
 	<TupleWSDL>
 		<MaxSize>1M</MaxSize>                   <!-- Max size in bytes per bucket -->
@@ -514,10 +526,13 @@
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 	</RowAggregation>
 	<CrossEngineSupport>
-		<Host>unassigned</Host>
+		<Host>127.0.0.1</Host>
 		<Port>3306</Port>
-		<User>unassigned</User>
+		<User>root</User>
 		<Password></Password>
+		<TLSCA></TLSCA>
+		<TLSClientCert></TLSClientCert>
+		<TLSClientKey></TLSClientKey>
 	</CrossEngineSupport>
 	<QueryStats>
 		<Enabled>N</Enabled>

@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * This is a unified BRM header file to prevent HFM.
  */
 

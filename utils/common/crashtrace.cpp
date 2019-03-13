@@ -35,7 +35,7 @@ void fatalHandler(int sig)
     time_t now;
     now = time(NULL);
     tim = *(localtime(&now));
-    strftime(s,30,"%F %T",&tim);
+    strftime(s, 30, "%F %T", &tim);
     fprintf(logfile, "Date/time: %s\n", s);
     fprintf(logfile, "Signal: %d\n\n", sig);
     fflush(logfile);

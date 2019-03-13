@@ -28,13 +28,13 @@ namespace dmlprocessor
 {
 
 DMLResultBuffer::DMLResultBuffer()
-:fBufferSize(1), fFull(0)
+    : fBufferSize(1), fFull(0)
 {
-    
+
 }
 
 DMLResultBuffer::DMLResultBuffer(int bufferSize)
-:fBufferSize(bufferSize), fFull(0)
+    : fBufferSize(bufferSize), fFull(0)
 {
 
 }
@@ -47,11 +47,13 @@ DMLResultBuffer::~DMLResultBuffer()
 void DMLResultBuffer::put(dmlpackageprocessor::DMLPackageProcessor::DMLResult result, int sessionID)
 {
     scoped_lock lock(fMutex);
+
     if (fFull == fBufferSize)
     {
         while (fFull == fBufferSize)
             fCond.wait(lock);
     }
+
     ResultPair rp;
     rp.result = result;
     rp.sessionID = sessionID;
@@ -64,11 +66,13 @@ void DMLResultBuffer::put(dmlpackageprocessor::DMLPackageProcessor::DMLResult re
 DMLResultBuffer::ResultPair DMLResultBuffer::get()
 {
     scoped_lock lk(fMutex);
+
     if (fFull == 0)
     {
         while (fFull == 0)
             fCond.wait(lk);
     }
+
     ResultPair rp = fResultBuffer[0];
     fResultBuffer.pop_front();
     --fFull;

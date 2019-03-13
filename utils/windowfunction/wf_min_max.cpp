@@ -53,105 +53,114 @@ namespace windowfunction
 template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_min_max<T>::makeFunction(int id, const string& name, int ct)
 {
-	boost::shared_ptr<WindowFunctionType> func;
-	switch (ct)
-	{
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::DECIMAL:
-		{
-			func.reset(new WF_min_max<int64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::UTINYINT:
-		case CalpontSystemCatalog::USMALLINT:
-		case CalpontSystemCatalog::UMEDINT:
-		case CalpontSystemCatalog::UINT:
-		case CalpontSystemCatalog::UBIGINT:
-		case CalpontSystemCatalog::UDECIMAL:
-		case CalpontSystemCatalog::DATE:
-		case CalpontSystemCatalog::DATETIME:
-		{
-			func.reset(new WF_min_max<uint64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::DOUBLE:
-		case CalpontSystemCatalog::UDOUBLE:
-		{
-			func.reset(new WF_min_max<double>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::FLOAT:
-		case CalpontSystemCatalog::UFLOAT:
-		{
-			func.reset(new WF_min_max<float>(id, name));
-			break;
-		}
-		default:
-		{
-			func.reset(new WF_min_max<string>(id, name));
-			break;
-		}
-	}
+    boost::shared_ptr<WindowFunctionType> func;
 
-	return func;
+    switch (ct)
+    {
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            func.reset(new WF_min_max<int64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UBIGINT:
+        case CalpontSystemCatalog::UDECIMAL:
+        case CalpontSystemCatalog::DATE:
+        case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
+        {
+            func.reset(new WF_min_max<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
+        {
+            func.reset(new WF_min_max<double>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::UFLOAT:
+        {
+            func.reset(new WF_min_max<float>(id, name));
+            break;
+        }
+
+        default:
+        {
+            func.reset(new WF_min_max<string>(id, name));
+            break;
+        }
+    }
+
+    return func;
 }
 
 
 template<typename T>
 WindowFunctionType* WF_min_max<T>::clone() const
 {
-	return new WF_min_max<T>(*this);
+    return new WF_min_max<T>(*this);
 }
 
 
 template<typename T>
 void WF_min_max<T>::resetData()
 {
-	fCount = 0;
+    fCount = 0;
 
-	WindowFunctionType::resetData();
+    WindowFunctionType::resetData();
 }
 
 
 template<typename T>
 void WF_min_max<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-	// for unbounded - current row special handling
-	if (fPrev >= b && fPrev < c)
-		b = c;
-	else if (fPrev <= e && fPrev > c)
-		e = c;
+    // for unbounded - current row special handling
+    if (fPrev >= b && fPrev < c)
+        b = c;
+    else if (fPrev <= e && fPrev > c)
+        e = c;
 
-	uint64_t colIn = fFieldIndex[1];
-	for (int64_t i = b; i <= e; i++)
-	{
-		if (i % 1000 == 0 && fStep->cancelled())
-			break;
+    uint64_t colIn = fFieldIndex[1];
 
-		fRow.setData(getPointer(fRowData->at(i)));
-		if (fRow.isNullValue(colIn) == true)
-			continue;
+    for (int64_t i = b; i <= e; i++)
+    {
+        if (i % 1000 == 0 && fStep->cancelled())
+            break;
 
-		T valIn;
-		getValue(colIn, valIn);
-		if ((fCount == 0) ||
-			(valIn < fValue && fFunctionId == WF__MIN) ||
-			(valIn > fValue && fFunctionId == WF__MAX))
-		{
-			fValue = valIn;
-		}
+        fRow.setData(getPointer(fRowData->at(i)));
 
-		fCount++;
-	}
+        if (fRow.isNullValue(colIn) == true)
+            continue;
 
-	T* v = ((fCount > 0) ? &fValue : NULL);
-	setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+        T valIn;
+        getValue(colIn, valIn);
 
-	fPrev = c;
+        if ((fCount == 0) ||
+                (valIn < fValue && fFunctionId == WF__MIN) ||
+                (valIn > fValue && fFunctionId == WF__MAX))
+        {
+            fValue = valIn;
+        }
+
+        fCount++;
+    }
+
+    T* v = ((fCount > 0) ? &fValue : NULL);
+    setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+
+    fPrev = c;
 }
 
 

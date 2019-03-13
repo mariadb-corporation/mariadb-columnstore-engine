@@ -27,14 +27,16 @@
 #include <string>
 #include "simplecolumn.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ByteStream;
 }
 
 /**
  * Namespace
  */
-namespace execplan {
+namespace execplan
+{
 
 const uint32_t PSEUDO_UNKNOWN = 0;
 const uint32_t PSEUDO_EXTENTRELATIVERID = 1;
@@ -55,109 +57,110 @@ const uint32_t PSEUDO_LOCALPM = 11;
  * This class is a specialization of class SimpleColumn that handles
  * a pseudocolumn.
  */
-class PseudoColumn : public SimpleColumn {
+class PseudoColumn : public SimpleColumn
+{
 
 public:
 
-	/**
-	 * Constructors
-	 */
-	PseudoColumn();
-	PseudoColumn(const uint32_t pseudoType);
-	PseudoColumn(const std::string& token,
-	             const uint32_t pseudoType,
-	             const uint32_t sessionID = 0);
-	PseudoColumn(const std::string& schema,
-	             const std::string& table,
-	             const std::string& col,
-	             const uint32_t pseudoType,
-	             const uint32_t sessionID = 0);
-	PseudoColumn(const std::string& schema,
-	             const std::string& table,
-	             const std::string& col,
-	             const bool isInfiniDB,
-	             const uint32_t pseudoType,
-	             const uint32_t sessionID = 0);
-	PseudoColumn(const SimpleColumn& rhs, const uint32_t pseudoType, const uint32_t sessionID = 0);
-	PseudoColumn(const PseudoColumn& rhs, const uint32_t sessionID = 0);
+    /**
+     * Constructors
+     */
+    PseudoColumn();
+    PseudoColumn(const uint32_t pseudoType);
+    PseudoColumn(const std::string& token,
+                 const uint32_t pseudoType,
+                 const uint32_t sessionID = 0);
+    PseudoColumn(const std::string& schema,
+                 const std::string& table,
+                 const std::string& col,
+                 const uint32_t pseudoType,
+                 const uint32_t sessionID = 0);
+    PseudoColumn(const std::string& schema,
+                 const std::string& table,
+                 const std::string& col,
+                 const bool isInfiniDB,
+                 const uint32_t pseudoType,
+                 const uint32_t sessionID = 0);
+    PseudoColumn(const SimpleColumn& rhs, const uint32_t pseudoType, const uint32_t sessionID = 0);
+    PseudoColumn(const PseudoColumn& rhs, const uint32_t sessionID = 0);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~PseudoColumn();
+    /**
+     * Destructor
+     */
+    virtual ~PseudoColumn();
 
-	/** return a copy of this pointer
-	 *
-	 * deep copy of this pointer and return the copy
-	 */
-	inline virtual PseudoColumn* clone() const
-	{
-		return new PseudoColumn (*this);
-	}
-	
-	/**
-	 * Overloaded assignment operator
-	 */
-	PseudoColumn& operator=(const PseudoColumn& rhs);
-	
-	/**
-	 * Accessor and mutator
-	 */
-	const uint32_t pseudoType() const
-	{
-		return fPseudoType;
-	}
-	
-	void pseudoType (const uint32_t pseudoType)
-	{
-		fPseudoType = pseudoType;
-	}
-	
-	/**
-	 * The serialize interface
-	 */
-	virtual void serialize(messageqcpp::ByteStream&) const;
-	virtual void unserialize(messageqcpp::ByteStream&);
+    /** return a copy of this pointer
+     *
+     * deep copy of this pointer and return the copy
+     */
+    inline virtual PseudoColumn* clone() const
+    {
+        return new PseudoColumn (*this);
+    }
 
-	virtual const std::string toString() const;
+    /**
+     * Overloaded assignment operator
+     */
+    PseudoColumn& operator=(const PseudoColumn& rhs);
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	 */
-	virtual bool operator==(const TreeNode* t) const;
+    /**
+     * Accessor and mutator
+     */
+    const uint32_t pseudoType() const
+    {
+        return fPseudoType;
+    }
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	 */
-	bool operator==(const PseudoColumn& t) const;
+    void pseudoType (const uint32_t pseudoType)
+    {
+        fPseudoType = pseudoType;
+    }
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	 */
-	virtual bool operator!=(const TreeNode* t) const;
+    /**
+     * The serialize interface
+     */
+    virtual void serialize(messageqcpp::ByteStream&) const;
+    virtual void unserialize(messageqcpp::ByteStream&);
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	 */
-	bool operator!=(const PseudoColumn& t) const;
-	
-	static uint32_t pseudoNameToType(std::string& name);
+    virtual const std::string toString() const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    virtual bool operator==(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    bool operator==(const PseudoColumn& t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    virtual bool operator!=(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    bool operator!=(const PseudoColumn& t) const;
+
+    static uint32_t pseudoNameToType(std::string& name);
 
 
 private:
-	/**
-	 * Fields
-	 */
-	uint32_t fPseudoType;
-	void adjustResultType();
+    /**
+     * Fields
+     */
+    uint32_t fPseudoType;
+    void adjustResultType();
 };
 
 } // namespace execplan

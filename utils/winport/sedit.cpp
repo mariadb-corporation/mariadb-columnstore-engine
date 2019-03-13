@@ -25,21 +25,25 @@ namespace winport
 
 bool sedit(string& line, const string& find, const string& replace)
 {
-	string::size_type idx;
-	idx = line.find(find);
-	if (idx == string::npos) return false;
-	line.replace(idx, find.length(), replace);
-	return true;
+    string::size_type idx;
+    idx = line.find(find);
+
+    if (idx == string::npos) return false;
+
+    line.replace(idx, find.length(), replace);
+    return true;
 }
 
 const string sedit2(const string& line, const string& find, const string& replace)
 {
-	string::size_type idx;
-	idx = line.find(find);
-	if (idx == string::npos) return line;
-	string nline(line);
-	nline.replace(idx, find.length(), replace);
-	return nline;
+    string::size_type idx;
+    idx = line.find(find);
+
+    if (idx == string::npos) return line;
+
+    string nline(line);
+    nline.replace(idx, find.length(), replace);
+    return nline;
 }
 
 }

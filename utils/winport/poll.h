@@ -91,7 +91,7 @@ extern "C"
 #endif
 
 #if (__STDC__ > 0) || defined(__cplusplus)
-extern int poll (struct pollfd *pArray, nfds_t n_fds, int timeout);
+extern int poll (struct pollfd* pArray, nfds_t n_fds, int timeout);
 #else
 extern int poll();
 #endif

@@ -40,20 +40,20 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_rtrim::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 std::string Func_rtrim::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType&)
 {
     // The number of characters (not bytes) in our input tstr.
-    // Not all of these are necessarily significant. We need to search for the 
+    // Not all of these are necessarily significant. We need to search for the
     // NULL terminator to be sure.
-    size_t strwclen; 
+    size_t strwclen;
     // this holds the number of characters (not bytes) in ourtrim tstr.
     size_t trimwclen;
 
@@ -65,65 +65,71 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
 
     if (isNull)
         return "";
+
     if (tstr.empty() || tstr.length() == 0)
         return tstr;
 
-    // Rather than calling the wideconvert functions with a null buffer to 
+    // Rather than calling the wideconvert functions with a null buffer to
     // determine the size of buffer to allocate, we can be sure the wide
     // char string won't be longer than:
     strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
-    int bufsize = (strwclen+1) * sizeof(wchar_t);
+    int bufsize = (strwclen + 1) * sizeof(wchar_t);
 
     // Convert the string to wide characters. Do all further work in wide characters
     wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen+1);
-	// utf8::idb_mbstowcs could return -1 if there is bad chars
-	if(strwclen == static_cast<size_t>(-1))
-		strwclen = 0;
+    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
+
+    // utf8::idb_mbstowcs could return -1 if there is bad chars
+    if (strwclen == static_cast<size_t>(-1))
+        strwclen = 0;
 
     // Convert the trim string to wide
     trimwclen = trim.length();  // A guess to start.
-    int trimbufsize = (trimwclen+1) * sizeof(wchar_t);
+    int trimbufsize = (trimwclen + 1) * sizeof(wchar_t);
     wchar_t* wctrim = (wchar_t*)alloca(trimbufsize);
-    size_t trimlen = utf8::idb_mbstowcs(wctrim,trim.c_str(), trimwclen+1);
-	// idb_mbstowcs could return -1 if there is bad chars
-	if(trimlen == static_cast<size_t>(-1))
-		trimlen = 0;
+    size_t trimlen = utf8::idb_mbstowcs(wctrim, trim.c_str(), trimwclen + 1);
+
+    // idb_mbstowcs could return -1 if there is bad chars
+    if (trimlen == static_cast<size_t>(-1))
+        trimlen = 0;
+
     size_t trimCmpLen = trimlen * sizeof(wchar_t);
 
     const wchar_t* oPtr = wcbuf;      // To remember the start of the string
     const wchar_t* aPtr = oPtr;
-    const wchar_t* aEnd = wcbuf+strwclen-1;
+    const wchar_t* aEnd = wcbuf + strwclen - 1;
     size_t trimCnt = 0;
 
-	if(trimlen > 0)
-	{
-		if (trimlen == 1)
-		{
-			// If trim is a single char, then don't spend the overhead for memcmp.
-			wchar_t chr=wctrim[0];
-			while (aEnd >= aPtr && *aEnd == chr)
-			{
-				--aEnd;
-				++trimCnt;
-			}
-		}
-		else
-		{
-			aEnd-=(trimlen-1);    // So we don't compare past the end of the string.
-			while (aPtr <= aEnd && !memcmp(aEnd, wctrim, trimCmpLen))
-			{
-				aEnd-=trimCmpLen;
-				trimCnt+=trimlen;
-			}
-		}
-	}
+    if (trimlen > 0)
+    {
+        if (trimlen == 1)
+        {
+            // If trim is a single char, then don't spend the overhead for memcmp.
+            wchar_t chr = wctrim[0];
 
-	size_t aLen = strwclen-trimCnt;
-	wstring trimmed = wstring(aPtr, aLen);
-	// Turn back to a string
-	return utf8::wstring_to_utf8(trimmed.c_str());
-}							
+            while (aEnd >= aPtr && *aEnd == chr)
+            {
+                --aEnd;
+                ++trimCnt;
+            }
+        }
+        else
+        {
+            aEnd -= (trimlen - 1); // So we don't compare past the end of the string.
+
+            while (aPtr <= aEnd && !memcmp(aEnd, wctrim, trimCmpLen))
+            {
+                aEnd -= trimCmpLen;
+                trimCnt += trimlen;
+            }
+        }
+    }
+
+    size_t aLen = strwclen - trimCnt;
+    wstring trimmed = wstring(aPtr, aLen);
+    // Turn back to a string
+    return utf8::wstring_to_utf8(trimmed.c_str());
+}
 
 
 } // namespace funcexp

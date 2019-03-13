@@ -35,17 +35,20 @@ namespace startup
 class StartUp
 {
 public:
-	StartUp() {}
-	~StartUp() {}
+    StartUp() {}
+    ~StartUp() {}
 
-	static const std::string installDir();
+    static const std::string installDir();
+    static const std::string tmpDir();
 
 private:
-	StartUp(const StartUp& rhs);
-	StartUp& operator=(const StartUp& rhs);
+    StartUp(const StartUp& rhs);
+    StartUp& operator=(const StartUp& rhs);
 
-	static boost::mutex fInstallDirLock;
-	static std::string* fInstallDirp;
+    static boost::mutex fInstallDirLock;
+    static std::string* fInstallDirp;
+    static boost::mutex fTmpDirLock;
+    static std::string* fTmpDirp;
 };
 
 }

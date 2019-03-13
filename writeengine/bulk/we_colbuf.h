@@ -31,7 +31,8 @@
 
 #include "we_type.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 class Log;
 struct ColumnInfo;
 
@@ -41,9 +42,10 @@ struct ColumnInfo;
  * writing it out to the intended destination(currently a file stream). The
  * file stream should be initialized by the client of this class
  */
-class ColumnBuffer {
+class ColumnBuffer
+{
 
-  public:
+public:
 
     /** @brief default Constructor
      */
@@ -62,7 +64,10 @@ class ColumnBuffer {
 
     /** @brief Returns size of the buffer
      */
-    int getSize() const { return fBufSize; }
+    int getSize() const
+    {
+        return fBufSize;
+    }
 
     /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
      *  next extent.  This is a no-op for uncompressed columns.
@@ -71,12 +76,12 @@ class ColumnBuffer {
     virtual int resetToBeCompressedColBuf( long long& startFileOffset );
 
     /** @brief Set the IDBDataFile* destination for the applicable col segment file.
-     * 
+     *
      * @param The destination IDBDataFile stream to which buffer data will be written
      * @param Starting HWM for cFile
      * @param Headers with ptr information (only applies to compressed files)
      */
-    virtual int setDbFile(IDBDataFile * const cFile, HWM startHwm, const char* hdrs);
+    virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
 
     /** @brief Resize the buffer, also copying the section denoted by the
      * offsets to the new buffer.  If offsets are -1, then the buffer is
@@ -96,7 +101,7 @@ class ColumnBuffer {
      * @param startOffset
      * @param bytes
      */
-    void write(const void * const data, int startOffset, int bytes) const;
+    void write(const void* const data, int startOffset, int bytes) const;
 
     /** @brief Write data to FILE
      *
@@ -105,7 +110,7 @@ class ColumnBuffer {
      */
     virtual int writeToFile(int startOffset, int writeSize);
 
-  protected:
+protected:
 
     // Disable copy constructor and assignment operator by declaring and
     // not defining.

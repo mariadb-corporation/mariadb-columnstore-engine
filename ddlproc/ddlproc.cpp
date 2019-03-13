@@ -62,41 +62,43 @@ using namespace execplan;
 #include "utils_utf8.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
+
 
 namespace fs = boost::filesystem;
 
 namespace
 {
-	DistributedEngineComm *Dec;
+DistributedEngineComm* Dec;
 
-    void setupCwd()
-    {
-        string workdir = config::Config::makeConfig()->getConfig("SystemConfig", "WorkingDir");
-        if (workdir.length() == 0)
-            workdir = ".";
-        (void)chdir(workdir.c_str());
-        if (access(".", W_OK) != 0)
-            (void)chdir("/tmp");
-    }
+void setupCwd()
+{
+    string workdir = startup::StartUp::tmpDir();
 
-	void added_a_pm(int)
-	{
-        LoggingID logid(23, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(1);
-        args1.add("DDLProc caught SIGHUP. Resetting connections");
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
-		Dec->Setup();
-	}
+    if (workdir.length() == 0)
+        workdir = ".";
+
+    (void)chdir(workdir.c_str());
+}
+
+void added_a_pm(int)
+{
+    LoggingID logid(23, 0, 0);
+    logging::Message::Args args1;
+    logging::Message msg(1);
+    args1.add("DDLProc caught SIGHUP. Resetting connections");
+    msg.format( args1 );
+    logging::Logger logger(logid.fSubsysID);
+    logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+    Dec->Setup();
+}
 }
 
 int main(int argc, char* argv[])
 {
     // get and set locale language
-	string systemLang = "C";
-	systemLang = funcexp::utf8::idb_setlocale();
+    string systemLang = "C";
+    systemLang = funcexp::utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DDLProc");
@@ -110,16 +112,16 @@ int main(int argc, char* argv[])
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
 
-	ResourceManager rm;
-	Dec = DistributedEngineComm::instance(rm);
+    ResourceManager* rm = ResourceManager::instance();
+    Dec = DistributedEngineComm::instance(rm);
 #ifndef _MSC_VER
-	/* set up some signal handlers */
+    /* set up some signal handlers */
     struct sigaction ign;
     memset(&ign, 0, sizeof(ign));
     ign.sa_handler = added_a_pm;
-	sigaction(SIGHUP, &ign, 0);
-	ign.sa_handler = SIG_IGN;
-	sigaction(SIGPIPE, &ign, 0);
+    sigaction(SIGHUP, &ign, 0);
+    ign.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &ign, 0);
     memset(&ign, 0, sizeof(ign));
     ign.sa_handler = fatalHandler;
     sigaction(SIGSEGV, &ign, 0);
@@ -131,12 +133,35 @@ int main(int argc, char* argv[])
 
     {
         Oam oam;
+
         try
         {
             oam.processInitComplete("DDLProc", ACTIVE);
         }
+        catch (std::exception& ex)
+        {
+            cerr << ex.what() << endl;
+            LoggingID logid(23, 0, 0);
+            logging::Message::Args args1;
+            logging::Message msg(1);
+            args1.add("DDLProc init caught exception: ");
+            args1.add(ex.what());
+            msg.format( args1 );
+            logging::Logger logger(logid.fSubsysID);
+            logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+            return 1;
+        }
         catch (...)
         {
+            cerr << "Caught unknown exception in init!" << endl;
+            LoggingID logid(23, 0, 0);
+            logging::Message::Args args1;
+            logging::Message msg(1);
+            args1.add("DDLProc init caught unknown exception");
+            msg.format( args1 );
+            logging::Logger logger(logid.fSubsysID);
+            logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+            return 1;
         }
     }
 
@@ -147,22 +172,30 @@ int main(int argc, char* argv[])
     catch (std::exception& ex)
     {
         cerr << ex.what() << endl;
+        LoggingID logid(23, 0, 0);
         Message::Args args;
         Message message(8);
         args.add("DDLProc failed on: ");
         args.add(ex.what());
         message.format( args );
-
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, message, logid);
+        return 1;
     }
     catch (...)
     {
         cerr << "Caught unknown exception!" << endl;
+        LoggingID logid(23, 0, 0);
         Message::Args args;
         Message message(8);
         args.add("DDLProc failed on: ");
-        args.add("receiving DDLPackage");
+        args.add("receiving DDLPackage (unknown exception)");
         message.format( args );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, message, logid);
+        return 1;
     }
+
     return 0;
 }
 // vim:ts=4 sw=4:

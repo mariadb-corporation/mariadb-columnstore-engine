@@ -22,8 +22,8 @@
 
 namespace winport
 {
-	extern bool sedit(std::string& line, const std::string& find, const std::string& replace);
-	extern const string sedit2(const std::string& line, const std::string& find, const std::string& replace);
+extern bool sedit(std::string& line, const std::string& find, const std::string& replace);
+extern const string sedit2(const std::string& line, const std::string& find, const std::string& replace);
 }
 
 #endif

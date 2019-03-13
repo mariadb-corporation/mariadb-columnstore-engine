@@ -33,22 +33,25 @@ template<typename T>
 class WF_sum_avg : public WindowFunctionType
 {
 public:
-	WF_sum_avg(int id, const std::string& name) :
-		WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG) {resetData();}
+    WF_sum_avg(int id, const std::string& name) :
+        WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG)
+    {
+        resetData();
+    }
 
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
 
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
-	T           fAvg;
-	T           fSum;
-	uint64_t    fCount;
-	bool        fDistinct;
-	std::set<T> fSet;
+    T           fAvg;
+    T           fSum;
+    uint64_t    fCount;
+    bool        fDistinct;
+    std::set<T> fSet;
 };
 
 

@@ -36,6 +36,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include "../winport/winport.h"
+#include "primitives/primproc/umsocketselector.h"
 
 namespace threadpool
 {
@@ -44,30 +45,36 @@ class PriorityThreadPool
 {
 public:
 
-	class Functor {
-	public:
-		virtual ~Functor() { };
-		// as of 12/3/13, all implementors return 0 and -1.  -1 will cause
+    class Functor
+    {
+    public:
+        virtual ~Functor() { };
+        // as of 12/3/13, all implementors return 0 and -1.  -1 will cause
         // this thread pool to reschedule the job, 0 will throw it away on return.
-		virtual int operator()() = 0;
-	};
+        virtual int operator()() = 0;
+    };
 
     //typedef boost::function0<int> Functor;
 
-	struct Job {
-		Job() : weight(1), priority(0), id(0) { }
-		boost::shared_ptr<Functor> functor;
-		uint32_t weight;
-		uint32_t priority;
-		uint32_t id;
-	};
+    struct Job
+    {
+        Job() : weight(1), priority(0), id(0) { }
+        boost::shared_ptr<Functor> functor;
+        uint32_t weight;
+        uint32_t priority;
+        uint32_t id;
+        uint32_t uniqueID;
+        uint32_t stepID;
+        primitiveprocessor::SP_UM_IOSOCK sock;
+    };
 
-	enum Priority {
-		LOW,
-		MEDIUM,
-		HIGH,
-		_COUNT
-	};
+    enum Priority
+    {
+        LOW,
+        MEDIUM,
+        HIGH,
+        _COUNT
+    };
 
     /*********************************************
      *  ctor/dtor
@@ -78,11 +85,11 @@ public:
       */
 
     PriorityThreadPool(uint targetWeightPerRun, uint highThreads, uint midThreads,
-    		uint lowThreads, uint id = 0);
+                       uint lowThreads, uint id = 0);
     virtual ~PriorityThreadPool();
 
     void removeJobs(uint32_t id);
-    void addJob(const Job &job, bool useLock = true);
+    void addJob(const Job& job, bool useLock = true);
     void stop();
 
     /** @brief for use in debugging
@@ -92,22 +99,28 @@ public:
 protected:
 
 private:
-    struct ThreadHelper {
-        ThreadHelper(PriorityThreadPool *impl, Priority queue) : ptp(impl), preferredQueue(queue) { }
-        void operator()() { ptp->threadFcn(preferredQueue); }
-        PriorityThreadPool *ptp;
+    struct ThreadHelper
+    {
+        ThreadHelper(PriorityThreadPool* impl, Priority queue) : ptp(impl), preferredQueue(queue) { }
+        void operator()()
+        {
+            ptp->threadFcn(preferredQueue);
+        }
+        PriorityThreadPool* ptp;
         Priority preferredQueue;
     };
 
     explicit PriorityThreadPool();
-    explicit PriorityThreadPool(const PriorityThreadPool &);
-    PriorityThreadPool & operator=(const PriorityThreadPool &);
+    explicit PriorityThreadPool(const PriorityThreadPool&);
+    PriorityThreadPool& operator=(const PriorityThreadPool&);
 
     Priority pickAQueue(Priority preference);
     void threadFcn(const Priority preferredQueue) throw();
+    void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
     std::list<Job> jobQueues[3];  // higher indexes = higher priority
     uint32_t threadCounts[3];
+    uint32_t defaultThreadCounts[3];
     boost::mutex mutex;
     boost::condition newJob;
     boost::thread_group threads;

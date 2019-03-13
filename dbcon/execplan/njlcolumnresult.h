@@ -26,7 +26,8 @@
 
 #include "columnresult.h"
 
-namespace execplan {
+namespace execplan
+{
 
 typedef ColumnResult NJLColumnResult;
 

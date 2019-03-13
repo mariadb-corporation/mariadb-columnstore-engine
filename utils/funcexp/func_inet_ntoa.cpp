@@ -54,13 +54,13 @@ namespace funcexp
 
 //------------------------------------------------------------------------------
 // Return input argument type.
-// See IDB_add in udfsdk.h for explanation of this function.
+// See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
-	FunctionParm& fp,
-	execplan::CalpontSystemCatalog::ColType& resultType)
+    FunctionParm& fp,
+    execplan::CalpontSystemCatalog::ColType& resultType)
 {
-	return fp[0]->data()->resultType(); // input type
+    return fp[0]->data()->resultType(); // input type
 }
 
 //------------------------------------------------------------------------------
@@ -69,30 +69,33 @@ execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
 // to be safe.  (See getDoubleVal() description)
 //------------------------------------------------------------------------------
 int64_t Func_inet_ntoa::getIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getIntVal" << std::endl;
 
-	std::string sValue = getStrVal( row, fp, isNull, op_ct );
-	int64_t iValue = joblist::NULL_INT64;
-	if ( !isNull )
-	{
-		unsigned int newLength      = sValue.length();
-		std::string::size_type dot1 = sValue.find('.');
-		if (dot1 != std::string::npos)
-		{
-			newLength = dot1;
-		}
+    std::string sValue = getStrVal( row, fp, isNull, op_ct );
+    int64_t iValue = joblist::NULL_INT64;
 
-		if (newLength != sValue.length())
-			sValue.resize(newLength);
-		std::istringstream iss( sValue );
-		iss >> iValue;
-	}
+    if ( !isNull )
+    {
+        unsigned int newLength      = sValue.length();
+        std::string::size_type dot1 = sValue.find('.');
 
-	return iValue;
+        if (dot1 != std::string::npos)
+        {
+            newLength = dot1;
+        }
+
+        if (newLength != sValue.length())
+            sValue.resize(newLength);
+
+        std::istringstream iss( sValue );
+        iss >> iValue;
+    }
+
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -101,34 +104,38 @@ int64_t Func_inet_ntoa::getIntVal(rowgroup::Row& row,
 // SELECT ... WHERE inet_ntoa(ipstring) = 1   will also call getDoubleVal()
 //------------------------------------------------------------------------------
 double Func_inet_ntoa::getDoubleVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& fp,
+                                    bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getDoubleVal" << std::endl;
 
-	std::string sValue = getStrVal( row, fp, isNull, op_ct );
-	double dValue = doubleNullVal();
-	if ( !isNull )
-	{
-		unsigned int newLength      = sValue.length();
-		std::string::size_type dot1 = sValue.find('.');
-		if ((dot1 != std::string::npos) && (sValue.length() > dot1+1))
-		{
-			std::string::size_type dot2 = sValue.find('.', dot1+1);
-			if (dot2 != std::string::npos)
-			{
-				newLength = dot2;
-			}
-		}
+    std::string sValue = getStrVal( row, fp, isNull, op_ct );
+    double dValue = doubleNullVal();
 
-		if (newLength != sValue.length())
-			sValue.resize(newLength);
-		std::istringstream iss( sValue );
-		iss >> dValue;
-	}
+    if ( !isNull )
+    {
+        unsigned int newLength      = sValue.length();
+        std::string::size_type dot1 = sValue.find('.');
 
-	return dValue;
+        if ((dot1 != std::string::npos) && (sValue.length() > dot1 + 1))
+        {
+            std::string::size_type dot2 = sValue.find('.', dot1 + 1);
+
+            if (dot2 != std::string::npos)
+            {
+                newLength = dot2;
+            }
+        }
+
+        if (newLength != sValue.length())
+            sValue.resize(newLength);
+
+        std::istringstream iss( sValue );
+        iss >> dValue;
+    }
+
+    return dValue;
 }
 
 //------------------------------------------------------------------------------
@@ -136,46 +143,47 @@ double Func_inet_ntoa::getDoubleVal(rowgroup::Row& row,
 // This is the get function that makes sense to use.
 //------------------------------------------------------------------------------
 std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getStrVal" << std::endl;
 
-	std::string sValue;
+    std::string sValue;
 
-	int64_t iValue = 0;
+    int64_t iValue = 0;
 
-	// @bug 3628 reopened: get double and round up, if necessary;
-	//      else just get integer value
-	if ((fp[0]->data()->resultType().colDataType ==
-		execplan::CalpontSystemCatalog::DECIMAL) ||
-		(fp[0]->data()->resultType().colDataType ==
-		execplan::CalpontSystemCatalog::FLOAT)   ||
-		(fp[0]->data()->resultType().colDataType ==
-		execplan::CalpontSystemCatalog::DOUBLE))
-	{
-		double d = fp[0]->data()->getDoubleVal(row, isNull);
-		if (d >= 0.0)
-			iValue = (int64_t)(d + 0.5);
-		else
-			iValue = (int64_t)(d - 0.5);
-	}
-	else
-	{
-		iValue = fp[0]->data()->getIntVal(row, isNull);
-	}
+    // @bug 3628 reopened: get double and round up, if necessary;
+    //      else just get integer value
+    if ((fp[0]->data()->resultType().colDataType ==
+            execplan::CalpontSystemCatalog::DECIMAL) ||
+            (fp[0]->data()->resultType().colDataType ==
+             execplan::CalpontSystemCatalog::FLOAT)   ||
+            (fp[0]->data()->resultType().colDataType ==
+             execplan::CalpontSystemCatalog::DOUBLE))
+    {
+        double d = fp[0]->data()->getDoubleVal(row, isNull);
 
-	if (!isNull)
-	{
-		// @bug 3628 reopened: add check for out of range values
-		if ((iValue < 0) || (iValue > UINT_MAX))
-			isNull = true;
-		else
-			convertNtoa( iValue, sValue );
-	}
+        if (d >= 0.0)
+            iValue = (int64_t)(d + 0.5);
+        else
+            iValue = (int64_t)(d - 0.5);
+    }
+    else
+    {
+        iValue = fp[0]->data()->getIntVal(row, isNull);
+    }
 
-	return sValue;
+    if (!isNull)
+    {
+        // @bug 3628 reopened: add check for out of range values
+        if ((iValue < 0) || (iValue > UINT_MAX))
+            isNull = true;
+        else
+            convertNtoa( iValue, sValue );
+    }
+
+    return sValue;
 }
 
 //------------------------------------------------------------------------------
@@ -183,15 +191,15 @@ std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row,
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
 bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getBoolVal" << std::endl;
-	bool bValue = false;
-	isNull = true;
+    bool bValue = false;
+    isNull = true;
 
-	return bValue;
+    return bValue;
 }
 
 //------------------------------------------------------------------------------
@@ -199,17 +207,17 @@ bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row,
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
 execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getDecimalVal" << std::endl;
 
 //	IDB_Decimal dValue = fp[0]->data()->getDecimalVal(row, isNull);
-	execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
-	isNull = true;
+    execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
+    isNull = true;
 
-	return dValue;
+    return dValue;
 }
 
 //------------------------------------------------------------------------------
@@ -217,17 +225,17 @@ execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row,
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
 int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getDateIntVal" << std::endl;
 
 //	int32_t iValue = fp[0]->data()->getDateIntVal(row, isNull);
-	int32_t iValue = joblist::DATENULL;
-	isNull = true;
+    int32_t iValue = joblist::DATENULL;
+    isNull = true;
 
-	return iValue;
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -235,17 +243,31 @@ int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row,
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
 int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getDatetimeVal" << std::endl;
 
 //	int64t iValue = fp[0]->data()->getDatetimeIntVal(row, isNull);
-	int64_t iValue = joblist::DATETIMENULL;
-	isNull = true;
+    int64_t iValue = joblist::DATETIMENULL;
+    isNull = true;
 
-	return iValue;
+    return iValue;
+}
+
+int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row,
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+//	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
+
+//	int64t iValue = fp[0]->data()->getTimeIntVal(row, isNull);
+    int64_t iValue = joblist::TIMENULL;
+    isNull = true;
+
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -253,8 +275,8 @@ int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
 // Source code based on MySQL source (Item_func_inet_ntoa() in item_strfunc.cc).
 //------------------------------------------------------------------------------
 void Func_inet_ntoa::convertNtoa(
-	int64_t      ipNum,
-	std::string& ipString )
+    int64_t      ipNum,
+    std::string& ipString )
 {
     struct sockaddr_in sa;
     sa.sin_addr.s_addr = htonl(ipNum);

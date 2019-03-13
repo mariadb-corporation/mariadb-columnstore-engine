@@ -33,26 +33,27 @@ namespace redistribute
 
 void Redistribute::handleRedistributeMessage(ByteStream& bs, IOSocket& ios)
 {
-	// consume the WES message id
-	ByteStream::byte wesMsgId;
-	bs >> wesMsgId;
+    // consume the WES message id
+    ByteStream::byte wesMsgId;
+    bs >> wesMsgId;
 
-	// peek at the message header
-	const RedistributeMsgHeader* h = (const RedistributeMsgHeader*) bs.buf();
-	switch (h->messageId)
-	{
-		case RED_CNTL_START:
-		case RED_CNTL_STATUS:
-		case RED_CNTL_STOP:
-		case RED_CNTL_CLEAR:
-		case RED_CNTL_RESP:
-			RedistributeControl::instance()->handleUIMsg(bs, ios);
-			break;
+    // peek at the message header
+    const RedistributeMsgHeader* h = (const RedistributeMsgHeader*) bs.buf();
 
-		default:
-			RedistributeControl::instance()->handleJobMsg(bs, ios);
-			break;
-	}
+    switch (h->messageId)
+    {
+        case RED_CNTL_START:
+        case RED_CNTL_STATUS:
+        case RED_CNTL_STOP:
+        case RED_CNTL_CLEAR:
+        case RED_CNTL_RESP:
+            RedistributeControl::instance()->handleUIMsg(bs, ios);
+            break;
+
+        default:
+            RedistributeControl::instance()->handleJobMsg(bs, ios);
+            break;
+    }
 }
 
 

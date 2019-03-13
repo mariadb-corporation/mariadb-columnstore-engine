@@ -51,7 +51,7 @@ public:
 
     /*********************************************
      *  ctor/dtor
-     * 
+     *
      *********************************************/
 
     /** @brief ctor
@@ -74,7 +74,7 @@ public:
 
     /*********************************************
      *  accessors/mutators
-     * 
+     *
      *********************************************/
     /** @brief set the work queue size
       *
@@ -84,7 +84,10 @@ public:
 
     /** @brief fet the work queue size
       */
-    inline size_t getQueueSize() const { return fQueueSize; }
+    inline size_t getQueueSize() const
+    {
+        return fQueueSize;
+    }
 
     /** @brief set the maximum number of threads to be used to process
       * the work queue
@@ -95,11 +98,14 @@ public:
 
     /** @brief get the maximum number of threads
       */
-    inline size_t getMaxThreads() const { return fMaxThreads; }
+    inline size_t getMaxThreads() const
+    {
+        return fMaxThreads;
+    }
 
     /** @brief set the maximum processing weight of a thread to be
       * submitted for execution from the existing jobs
-	  * scheduled in the work queue
+      * scheduled in the work queue
       *
       * @param maxWeight for execution
       */
@@ -107,25 +113,34 @@ public:
 
     /** @brief get the maximum number of threads
       */
-    inline uint32_t getMaxThreadWeight() const { return fMaxThreadWeight; }
+    inline uint32_t getMaxThreadWeight() const
+    {
+        return fMaxThreadWeight;
+    }
 
     /** @brief register a functor to be called when a new thread
       *  is created
       */
-    void setThreadCreatedListener(const Functor_T &f) ;
+    void setThreadCreatedListener(const Functor_T& f) ;
 
     /** @brief queue size accessor
       *
       */
-    inline uint32_t getWaiting() const { return fWaitingFunctorsSize; }
+    inline uint32_t getWaiting() const
+    {
+        return fWaitingFunctorsSize;
+    }
 
-    inline uint32_t getWeight() const { return fWaitingFunctorsWeight; }
+    inline uint32_t getWeight() const
+    {
+        return fWaitingFunctorsWeight;
+    }
 
     void removeJobs(uint32_t id);
 
     /*********************************************
      *  operations
-     * 
+     *
      *********************************************/
 
     /** @brief invoke a functor in a separate thread managed by the pool
@@ -135,7 +150,7 @@ public:
       * queueSize tasks already waiting, invoke() will block until a slot in the
       * queue comes free.
       */
-    void invoke(const Functor_T &threadfunc, uint32_t functor_weight, uint32_t id);
+    void invoke(const Functor_T& threadfunc, uint32_t functor_weight, uint32_t id);
 
     /** @brief stop the threads
       */
@@ -158,7 +173,7 @@ private:
 
     /** @brief add a functor to the list
       */
-    void addFunctor(const Functor_T &func, uint32_t functor_weight, uint32_t id);
+    void addFunctor(const Functor_T& func, uint32_t functor_weight, uint32_t id);
 
     /** @brief thread entry point
       */
@@ -173,7 +188,7 @@ private:
     struct beginThreadFunc
     {
         beginThreadFunc(WeightedThreadPool& impl)
-                : fImpl(impl)
+            : fImpl(impl)
         {}
 
         void operator() ()
@@ -181,14 +196,14 @@ private:
             fImpl.beginThread();
         }
 
-        WeightedThreadPool &fImpl;
+        WeightedThreadPool& fImpl;
     };
 
     struct NoOp
     {
         void operator () () const
         {}
-	};
+    };
 
     size_t fThreadCount;
     size_t fMaxThreadWeight;
@@ -196,18 +211,19 @@ private:
     size_t fQueueSize;
 
     //typedef std::list<Functor_T> Container_T;
-	struct FunctorListItemStruct {
-		Functor_T functor;
-		uint32_t functorWeight;
-		uint32_t id;
-	};
+    struct FunctorListItemStruct
+    {
+        Functor_T functor;
+        uint32_t functorWeight;
+        uint32_t id;
+    };
 
-	typedef FunctorListItemStruct FunctorListItem;
+    typedef FunctorListItemStruct FunctorListItem;
     typedef std::list<FunctorListItem> Container_T;
     Container_T fWaitingFunctors;
     Container_T::iterator fNextFunctor;
 
-	uint32_t issued;
+    uint32_t issued;
     boost::mutex fMutex;
     boost::condition fThreadAvailable; // triggered when a thread is available
     boost::condition fNeedThread;      // triggered when a thread is needed
@@ -216,8 +232,8 @@ private:
     bool 	fStop;
     long 	fGeneralErrors;
     long	fFunctorErrors;
-	uint16_t 	fWaitingFunctorsSize;
-	uint16_t 	fWaitingFunctorsWeight;
+    uint16_t 	fWaitingFunctorsSize;
+    uint16_t 	fWaitingFunctorsWeight;
 
 };
 

@@ -33,7 +33,7 @@ public:
     void buildTpchTables(std::string schema);
     void buildTable();
     void buildMultiColumnIndex();
-	void buildIndex(); 
+    void buildIndex();
 protected:
 
 

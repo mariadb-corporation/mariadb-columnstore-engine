@@ -23,7 +23,8 @@
 
 #include "dmlobject.h"
 
-namespace dmlpackage {
+namespace dmlpackage
+{
 
 DMLObject::DMLObject()
 {

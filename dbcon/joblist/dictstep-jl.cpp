@@ -33,28 +33,32 @@
 using namespace std;
 using namespace messageqcpp;
 
-namespace joblist {
+namespace joblist
+{
 
 DictStepJL::DictStepJL()
 {
 }
 
-DictStepJL::DictStepJL(const pDictionaryStep &dict)
+DictStepJL::DictStepJL(const pDictionaryStep& dict)
 {
-	BOP = dict.fBOP;
-	OID = dict.oid();
-	colName = dict.name();
-	compressionType = dict.colType().compressionType;
+    BOP = dict.fBOP;
+    OID = dict.oid();
+    colName = dict.name();
+    compressionType = dict.colType().compressionType;
 
-	hasEqFilter = dict.hasEqualityFilter;
-	if (hasEqFilter) {
-		//cout << "saw eqfilter\n";
-		eqOp = dict.tmpCOP;
-		eqFilter = dict.eqFilter;
-	}
-	else
-		filterString = dict.fFilterString;
-	filterCount = dict.fFilterCount;
+    hasEqFilter = dict.hasEqualityFilter;
+
+    if (hasEqFilter)
+    {
+        //cout << "saw eqfilter\n";
+        eqOp = dict.tmpCOP;
+        eqFilter = dict.eqFilter;
+    }
+    else
+        filterString = dict.fFilterString;
+
+    filterCount = dict.fFilterCount;
 }
 
 DictStepJL::~DictStepJL()
@@ -66,50 +70,53 @@ void DictStepJL::setLBID(uint64_t token, uint32_t dbroot)
 // 	lbid = token >> 10;  // the lbid is calculated on the PM
 }
 
-void DictStepJL::createCommand(ByteStream &bs) const
+void DictStepJL::createCommand(ByteStream& bs) const
 {
-	bs << (uint8_t) DICT_STEP;
-	bs << BOP;
-	bs << (uint8_t)compressionType;
-	bs << filterCount;
-	bs << (uint8_t) hasEqFilter;
+    bs << (uint8_t) DICT_STEP;
+    bs << BOP;
+    bs << (uint8_t)compressionType;
+    bs << filterCount;
+    bs << (uint8_t) hasEqFilter;
 
-	if (hasEqFilter) {
-		idbassert(filterCount == eqFilter.size());
-		bs << eqOp;
-		for (uint32_t i = 0; i < filterCount; i++)
-			bs << eqFilter[i];
-	}
-	else
-		bs << filterString;
-	CommandJL::createCommand(bs);
+    if (hasEqFilter)
+    {
+        idbassert(filterCount == eqFilter.size());
+        bs << eqOp;
+
+        for (uint32_t i = 0; i < filterCount; i++)
+            bs << eqFilter[i];
+    }
+    else
+        bs << filterString;
+
+    CommandJL::createCommand(bs);
 }
 
-void DictStepJL::runCommand(ByteStream &bs) const
+void DictStepJL::runCommand(ByteStream& bs) const
 { }
 
 uint8_t DictStepJL::getTableColumnType()
 {
-	throw logic_error("Don't call DictStepJL::getTableColumn(); it's not a projection step");
+    throw logic_error("Don't call DictStepJL::getTableColumn(); it's not a projection step");
 }
 
 string DictStepJL::toString()
 {
-	ostringstream os;
+    ostringstream os;
 
-	os << "DictStepJL: " << filterCount << " filters, BOP=" << (int) BOP
-		<< ", oid=" << OID << " name=" << colName << endl;
-	return os.str();
+    os << "DictStepJL: " << filterCount << " filters, BOP=" << (int) BOP
+       << ", oid=" << OID << " name=" << colName << endl;
+    return os.str();
 }
 
 uint16_t DictStepJL::getWidth()
 {
-	return colWidth;
+    return colWidth;
 }
 
 void DictStepJL::setWidth(uint16_t w)
 {
-	colWidth = w;
+    colWidth = w;
 }
 
 }; // namespace

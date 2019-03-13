@@ -84,34 +84,36 @@
 #ifdef LOSSTEST
 int loseSendPacket(void);
 void loseRecvPacket(int s);
-void setWriteLoss(char *l);
-void setReadLoss(char *l);
-void setReadSwap(char *l);
+void setWriteLoss(char* l);
+void setReadLoss(char* l);
+void setReadSwap(char* l);
 void srandomTime(int printSeed);
-int RecvMsg(int s, struct msghdr *msg, int flags);
+int RecvMsg(int s, struct msghdr* msg, int flags);
 #endif
 
-struct net_if {
+struct net_if
+{
     struct in_addr addr;
     struct in_addr bcast;
-    const char *name;
+    const char* name;
 #ifdef SIOCGIFINDEX
     int index;
 #endif
 };
 typedef struct net_if net_if_t;
 
-typedef enum addr_type_t {
-  ADDR_TYPE_UCAST,
-  ADDR_TYPE_MCAST,
-  ADDR_TYPE_BCAST
+typedef enum addr_type_t
+{
+    ADDR_TYPE_UCAST,
+    ADDR_TYPE_MCAST,
+    ADDR_TYPE_BCAST
 } addr_type_t;
 
 void doAutoRateLimit(int sock, int dir, int qsize, int size);
 
-int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr);
+int makeSockAddr(char* hostname, short port, struct sockaddr_in* addr);
 
-void printMyIp(net_if_t *net_if);
+void printMyIp(net_if_t* net_if);
 
 int getSendBuf(int sock);
 
@@ -124,34 +126,37 @@ int getSendBuf(int sock);
 #define BCAST_CONTROL(s, msg) \
 	doSend(s, &msg, sizeof(msg), &net_config->controlMcastAddr)
 
-void setIpFromString(struct sockaddr_in *addr, char *ip);
+void setIpFromString(struct sockaddr_in* addr, char* ip);
 
-unsigned long parseSize(char *sizeString);
+unsigned long parseSize(char* sizeString);
 
 int udpc_socklibFatal(int code);
 
 #ifdef __MINGW32__ /* __MINGW32__ */
 
-struct iovec {
-    void *iov_base;
+struct iovec
+{
+    void* iov_base;
     int iov_len;
 };
-struct msghdr {
-    void *msg_name;
+struct msghdr
+{
+    void* msg_name;
     int msg_namelen;
-    struct iovec *msg_iov;
+    struct iovec* msg_iov;
     int msg_iovlen;
 
 };
 
-ssize_t sendmsg(int s, const struct msghdr *msg, int flags);
-ssize_t recvmsg (int fd, struct msghdr *msg, int flags);
+ssize_t sendmsg(int s, const struct msghdr* msg, int flags);
+ssize_t recvmsg (int fd, struct msghdr* msg, int flags);
 
 #define usleep(x) Sleep((x)/1000)
 #define sleep(x) Sleep(1000L*(x))
 #endif /* __MINGW32__ */
 
-static inline void initMsgHdr(struct msghdr *hdr) {
+static inline void initMsgHdr(struct msghdr* hdr)
+{
 #ifndef WINDOWS
     hdr->msg_control = 0;
     hdr->msg_controllen = 0;

@@ -68,11 +68,11 @@ public:
      *  @param view
      */
     SubQueryTransformer(
-		JobInfo*, SErrorInfo&, const std::string&, const std::string&);
+        JobInfo*, SErrorInfo&, const std::string&, const std::string&);
 
     /** @brief SubQueryTransformer destructor
      */
-   virtual ~SubQueryTransformer();
+    virtual ~SubQueryTransformer();
 
     /** @brief virtual make a subquery step
      *  @param csep the execution plan
@@ -94,59 +94,83 @@ public:
     /** @brief virtual outer query jobinfo
      *  @returns JobInfo*
      */
-    virtual JobInfo* outJobInfo() const { return fOutJobInfo; }
+    virtual JobInfo* outJobInfo() const
+    {
+        return fOutJobInfo;
+    }
 
     /** @brief virtual subquery jobinfo
      *  @returns JobInfo*
      */
-    virtual JobInfo* subJobInfo() const { return fSubJobInfo; }
+    virtual JobInfo* subJobInfo() const
+    {
+        return fSubJobInfo;
+    }
 
     /** @brief virtual error info pointer
      *  @returns SErrorInfo&
      */
-    virtual SErrorInfo& errorInfo() const { return fErrorInfo; }
+    virtual SErrorInfo& errorInfo() const
+    {
+        return fErrorInfo;
+    }
 
     /** @brief virtual joblist
      *  @returns STJLP&
      */
-    virtual const STJLP& subJobList() const { return fSubJobList; }
+    virtual const STJLP& subJobList() const
+    {
+        return fSubJobList;
+    }
 
     /** @brief virtual subquery step
      *  @returns SJSTEP&
      */
-    virtual const SJSTEP& subQueryStep() const { return fSubQueryStep; }
+    virtual const SJSTEP& subQueryStep() const
+    {
+        return fSubQueryStep;
+    }
 
     /** @brief virtual get correlated steps
      *  @returns const JobStepVector&
      */
-    virtual JobStepVector& correlatedSteps() { return fCorrelatedSteps; }
+    virtual JobStepVector& correlatedSteps()
+    {
+        return fCorrelatedSteps;
+    }
 
     /** @brief get virtual table
      *  @returns const VirtualTable&
      */
-    const VirtualTable& virtualTable() const { return fVtable; }
+    const VirtualTable& virtualTable() const
+    {
+        return fVtable;
+    }
 
     /** @brief set varbinary support flag
      */
-    void setVarbinaryOK() { fVtable.varbinaryOK(true); }
+    void setVarbinaryOK()
+    {
+        fVtable.varbinaryOK(true);
+    }
 
 
 protected:
 
-	void checkCorrelateInfo(TupleHashJoinStep*, const JobInfo&);
+    void checkCorrelateInfo(TupleHashJoinStep*, const JobInfo&);
 
     JobInfo*      fOutJobInfo;
     JobInfo*      fSubJobInfo;
     SErrorInfo&   fErrorInfo;
     JobStepVector fCorrelatedSteps;
-	RetColsVector fSubReturnedCols;
-	STJLP         fSubJobList;
-	SJSTEP        fSubQueryStep;
-	VirtualTable  fVtable;
+    RetColsVector fSubReturnedCols;
+    STJLP         fSubJobList;
+    SJSTEP        fSubQueryStep;
+    VirtualTable  fVtable;
 
-	// disable copy constructor and assignment operator
-	SubQueryTransformer(const SubQueryTransformer&);
-	SubQueryTransformer& operator=(const SubQueryTransformer&);
+    // disable copy constructor and assignment operator
+    SubQueryTransformer(const SubQueryTransformer&);
+    SubQueryTransformer& operator=(const SubQueryTransformer&);
 
 };
 
@@ -183,26 +207,32 @@ public:
     /** @brief check if result set is empty
      *  @returns bool
      */
-    bool emptyResultSet() const { return fEmptyResultSet; }
+    bool emptyResultSet() const
+    {
+        return fEmptyResultSet;
+    }
 
     /** @brief retrieve result row
      *  @returns Row
      */
-    const rowgroup::Row& resultRow() const { return fRow; }
+    const rowgroup::Row& resultRow() const
+    {
+        return fRow;
+    }
 
 
 protected:
     RowGroupDL*                  fInputDl;
     int                          fDlIterator;
-	rowgroup::RowGroup           fRowGroup;
-	rowgroup::Row                fRow;
-	boost::scoped_array<uint8_t> fRowData;
+    rowgroup::RowGroup           fRowGroup;
+    rowgroup::Row                fRow;
+    boost::scoped_array<uint8_t> fRowData;
     bool                         fEmptyResultSet;
     bool                         fExistFilter;
 
-	// disable copy constructor and assignment operator
-	SimpleScalarTransformer(const SimpleScalarTransformer&);
-	SimpleScalarTransformer& operator=(const SimpleScalarTransformer&);
+    // disable copy constructor and assignment operator
+    SimpleScalarTransformer(const SimpleScalarTransformer&);
+    SimpleScalarTransformer& operator=(const SimpleScalarTransformer&);
 
 };
 

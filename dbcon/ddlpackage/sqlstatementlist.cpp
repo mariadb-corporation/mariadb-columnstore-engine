@@ -25,34 +25,39 @@
 #include "ddlpkg.h"
 #undef DDLPKG_DLLEXPORT
 
-namespace ddlpackage {
-	using namespace std;
-
-	
-	ostream &operator<<(ostream& os, const SqlStatementList &ssl)
-	{
-		vector<SqlStatement*>::const_iterator itr;
-		
- 		for(itr = ssl.fList.begin(); itr != ssl.fList.end(); ++itr) {
-			SqlStatement &stmt = **itr;
-			os << stmt;
-		}
-		return os;
-	}
+namespace ddlpackage
+{
+using namespace std;
 
 
-	void SqlStatementList::push_back(SqlStatement* v)
-	{
-		fList.push_back(v);
-	}
+ostream& operator<<(ostream& os, const SqlStatementList& ssl)
+{
+    vector<SqlStatement*>::const_iterator itr;
+
+    for (itr = ssl.fList.begin(); itr != ssl.fList.end(); ++itr)
+    {
+        SqlStatement& stmt = **itr;
+        os << stmt;
+    }
+
+    return os;
+}
 
 
-	SqlStatementList::~SqlStatementList()
-	{
-		vector<SqlStatement*>::iterator itr;
-		for(itr = fList.begin(); itr != fList.end(); ++itr) {
-			delete *itr;
-		}
-	}
-	
+void SqlStatementList::push_back(SqlStatement* v)
+{
+    fList.push_back(v);
+}
+
+
+SqlStatementList::~SqlStatementList()
+{
+    vector<SqlStatement*>::iterator itr;
+
+    for (itr = fList.begin(); itr != fList.end(); ++itr)
+    {
+        delete *itr;
+    }
+}
+
 }

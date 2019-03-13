@@ -23,10 +23,10 @@ ENDIF()
 SET(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
 SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_RPM_PACKAGE_VERSION}-${CPACK_RPM_PACKAGE_RELEASE}-${ENGINE_ARCH}-${RPM}")
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB Columnstore: a very fast and robust SQL database server")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_URL "http://mariadb.org")
 
-SET(CPACK_PACKAGE_SUMMARY "MariaDB-Columnstore software")
+SET(CPACK_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_VENDOR "MariaDB Corporation Ab")
 SET(CPACK_PACKAGE_LICENSE "Copyright (c) 2016 MariaDB Corporation Ab., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.")
 
@@ -51,14 +51,14 @@ MariaDB bug reports should be submitted through https://jira.mariadb.org
 ")
 
 SET(CPACK_RPM_platform_PACKAGE_DESCRIPTION "MariaDB-Columnstore binary files")
-SET(CPACK_RPM_platform_PACKAGE_SUMMARY "MariaDB-Columnstore software binaries")
+SET(CPACK_RPM_platform_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_RPM_platform_PACKAGE_GROUP "Applications")
 
 SET(CPACK_RPM_libs_PACKAGE_DESCRIPTION "MariaDB-Columnstore libraries")
-SET(CPACK_RPM_libs_PACKAGE_SUMMARY "MariaDB-Columnstore software libraries")
+SET(CPACK_RPM_libs_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
 SET(CPACK_RPM_storage-engine_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
-SET(CPACK_RPM_storage-engine_PACKAGE_SUMMARY "MariaDB-Columnstore software MariaDB connector")
+SET(CPACK_RPM_storage-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_RPM_storage-engine_PACKAGE_GROUP "Applications")
 
 # "set/append array" - append a set of strings, separated by a space
@@ -72,7 +72,8 @@ SETA(CPACK_RPM_libs_PACKAGE_PROVIDES "mariadb-columnstore-libs")
 SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "mariadb-columnstore-platform")
 SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
 
-# Boost is a source build in CentOS 6 so don't require it as a package
+
+#boost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
 SET(SUSE_VERSION_NUMBER OFF)
 IF (EXISTS "/etc/redhat-release")
@@ -86,13 +87,13 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "mariadb-columnstore-shared" "snappy")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
-   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "mariadb-columnstore-libs" "jemalloc")
+   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "mariadb-columnstore-libs" "libsnappy1")
 else ()
-   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "jemalloc")
+   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "snappy")
 endif()
 
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
@@ -131,8 +132,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/post-mysqld-install"
 "/usr/local/mariadb/columnstore/bin/pre-uninstall"
 "/usr/local/mariadb/columnstore/bin/PrimProc"
-"/usr/local/mariadb/columnstore/bin/DecomSvr"
-"/usr/local/mariadb/columnstore/bin/upgrade-columnstore.sh"
 "/usr/local/mariadb/columnstore/bin/run.sh"
 "/usr/local/mariadb/columnstore/bin/columnstore"
 "/usr/local/mariadb/columnstore/bin/columnstoreSyslog"
@@ -162,8 +161,7 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/transactionLogArchiver.sh"
 "/usr/local/mariadb/columnstore/bin/installer"
 "/usr/local/mariadb/columnstore/bin/module_installer.sh"
-"/usr/local/mariadb/columnstore/bin/user_installer.sh"
-"/usr/local/mariadb/columnstore/bin/performance_installer.sh"
+"/usr/local/mariadb/columnstore/bin/package_installer.sh"
 "/usr/local/mariadb/columnstore/bin/startupTests.sh"
 "/usr/local/mariadb/columnstore/bin/os_check.sh"
 "/usr/local/mariadb/columnstore/bin/remote_scp_put.sh"
@@ -181,7 +179,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/resourceReport.sh"
 "/usr/local/mariadb/columnstore/bin/hadoopReport.sh"
 "/usr/local/mariadb/columnstore/bin/alarmReport.sh"
-"/usr/local/mariadb/columnstore/bin/amazonInstaller"
 "/usr/local/mariadb/columnstore/bin/remote_command_verify.sh"
 "/usr/local/mariadb/columnstore/bin/disable-rep-columnstore.sh"
 "/usr/local/mariadb/columnstore/bin/columnstore.service"
@@ -217,6 +214,9 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/os_detect.sh"
 "/usr/local/mariadb/columnstore/bin/columnstoreClusterTester.sh"
 "/usr/local/mariadb/columnstore/bin/mariadb-command-line.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_single_server.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_multi_server.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_amazon.sh"
 ${ignored})
 
 SET(CPACK_RPM_libs_USER_FILELIST 
@@ -241,7 +241,7 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so.1"
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so"
-"/usr/local/mariadb/columnstore/lib/libudfsdk.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/libudfsdk.so.1.1.0"
 "/usr/local/mariadb/columnstore/lib/libudfsdk.so.1"
 "/usr/local/mariadb/columnstore/lib/libudfsdk.so"
 "/usr/local/mariadb/columnstore/lib/libjoblist.so.1.0.0"
@@ -301,9 +301,6 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so"
@@ -344,7 +341,6 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh"
 "/usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql"
 "/usr/local/mariadb/columnstore/mysql/dumpcat_mysql.sql"
-"/usr/local/mariadb/columnstore/mysql/dumpcat.pl"
 "/usr/local/mariadb/columnstore/mysql/calsetuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calremoveuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql"

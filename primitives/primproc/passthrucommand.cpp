@@ -49,10 +49,11 @@ PassThruCommand::~PassThruCommand()
 
 void PassThruCommand::prep(int8_t outputType, bool makeAbsRids)
 {
-	if (bpp->ot == ROW_GROUP) {
-		bpp->outputRG.initRow(&r);
-		rowSize = r.getSize();
-	}
+    if (bpp->ot == ROW_GROUP)
+    {
+        bpp->outputRG.initRow(&r);
+        rowSize = r.getSize();
+    }
 }
 
 void PassThruCommand::execute()
@@ -62,118 +63,142 @@ void PassThruCommand::execute()
 
 void PassThruCommand::project()
 {
-	uint32_t i;
+    uint32_t i;
 
-	*bpp->serialized << (uint32_t) (bpp->ridCount * colWidth);
+    *bpp->serialized << (uint32_t) (bpp->ridCount * colWidth);
 #if 0
- 	cout << "pass thru serializing " << (uint32_t) (bpp->ridCount * colWidth) << " bytes:\n";
- 	cout << "at relative position " << bpp->serialized->length() - sizeof(ISMPacketHeader) - sizeof(PrimitiveHeader) - 4 << endl;
- 	for (i = 0; i < bpp->ridCount; i++)
- 		cout << "   " << i << ": " << bpp->values[i] << endl;
+    cout << "pass thru serializing " << (uint32_t) (bpp->ridCount * colWidth) << " bytes:\n";
+    cout << "at relative position " << bpp->serialized->length() - sizeof(ISMPacketHeader) - sizeof(PrimitiveHeader) - 4 << endl;
+
+    for (i = 0; i < bpp->ridCount; i++)
+        cout << "   " << i << ": " << bpp->values[i] << endl;
+
 #endif
-	switch (colWidth) {
-		case 8:
-			bpp->serialized->append((uint8_t *) bpp->values, bpp->ridCount << 3);
-			break;
-		case 4:
-			for (i = 0; i < bpp->ridCount; i++)
-				*bpp->serialized << (uint32_t) bpp->values[i];
-			break;
-		case 2:
-			for (i = 0; i < bpp->ridCount; i++)
-				*bpp->serialized << (uint16_t) bpp->values[i];
-			break;
-		case 1:
-			for (i = 0; i < bpp->ridCount; i++)
-				*bpp->serialized << (uint8_t) bpp->values[i];
-			break;
-		default:
-			throw logic_error("PassThruCommand has a bad column width");
-	}
+
+    switch (colWidth)
+    {
+        case 8:
+            bpp->serialized->append((uint8_t*) bpp->values, bpp->ridCount << 3);
+            break;
+
+        case 4:
+            for (i = 0; i < bpp->ridCount; i++)
+                *bpp->serialized << (uint32_t) bpp->values[i];
+
+            break;
+
+        case 2:
+            for (i = 0; i < bpp->ridCount; i++)
+                *bpp->serialized << (uint16_t) bpp->values[i];
+
+            break;
+
+        case 1:
+            for (i = 0; i < bpp->ridCount; i++)
+                *bpp->serialized << (uint8_t) bpp->values[i];
+
+            break;
+
+        default:
+            throw logic_error("PassThruCommand has a bad column width");
+    }
 }
 
-void PassThruCommand::projectIntoRowGroup(RowGroup &rg, uint32_t col)
+void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
 {
-	uint32_t i;
+    uint32_t i;
 
-	rg.initRow(&r);
-	rg.getRow(0, &r);
-	uint32_t offset = r.getOffset(col);
-	rowSize = r.getSize();
+    rg.initRow(&r);
+    rg.getRow(0, &r);
+    uint32_t offset = r.getOffset(col);
+    rowSize = r.getSize();
 
-	switch (colWidth) {
-		case 1:
-			for (i = 0; i < bpp->ridCount; i++) {
+    switch (colWidth)
+    {
+        case 1:
+            for (i = 0; i < bpp->ridCount; i++)
+            {
 //				cout << "PTC: " << bpp->values[i] << endl;
-				r.setUintField_offset<1>(bpp->values[i], offset);
-				r.nextRow(rowSize);
-			}
-			break;
-		case 2:
-			for (i = 0; i < bpp->ridCount; i++) {
+                r.setUintField_offset<1>(bpp->values[i], offset);
+                r.nextRow(rowSize);
+            }
+
+            break;
+
+        case 2:
+            for (i = 0; i < bpp->ridCount; i++)
+            {
 //				cout << "PTC: " << bpp->values[i] << endl;
-				r.setUintField_offset<2>(bpp->values[i], offset);
-				r.nextRow(rowSize);
-			}
-			break;
-		case 4:
-			for (i = 0; i < bpp->ridCount; i++) {
-				r.setUintField_offset<4>(bpp->values[i], offset);
-				r.nextRow(rowSize);
-			}
-			break;
-		case 8:
-			for (i = 0; i < bpp->ridCount; i++) {
+                r.setUintField_offset<2>(bpp->values[i], offset);
+                r.nextRow(rowSize);
+            }
+
+            break;
+
+        case 4:
+            for (i = 0; i < bpp->ridCount; i++)
+            {
+                r.setUintField_offset<4>(bpp->values[i], offset);
+                r.nextRow(rowSize);
+            }
+
+            break;
+
+        case 8:
+            for (i = 0; i < bpp->ridCount; i++)
+            {
 // 				cout << "PTC: " << bpp->values[i] << endl;
-				r.setUintField_offset<8>(bpp->values[i], offset);
-				r.nextRow(rowSize);
-			}
-			break;
-	}
+                r.setUintField_offset<8>(bpp->values[i], offset);
+                r.nextRow(rowSize);
+            }
+
+            break;
+    }
 }
 
 uint64_t PassThruCommand::getLBID()
 {
-	return 0;
+    return 0;
 }
 
 void PassThruCommand::nextLBID()
 {
 }
 
-void PassThruCommand::createCommand(ByteStream &bs)
+void PassThruCommand::createCommand(ByteStream& bs)
 {
     bs.advance(1);
-	bs >> colWidth;
-	Command::createCommand(bs);
+    bs >> colWidth;
+    Command::createCommand(bs);
 }
 
-void PassThruCommand::resetCommand(ByteStream &bs)
+void PassThruCommand::resetCommand(ByteStream& bs)
 {
 }
 
 SCommand PassThruCommand::duplicate()
 {
-	SCommand ret;
-	PassThruCommand *p;
+    SCommand ret;
+    PassThruCommand* p;
 
-	ret.reset(new PassThruCommand());
-	p = (PassThruCommand *) ret.get();
-	p->colWidth = colWidth;
-	p->Command::duplicate(this);
-	return ret;
+    ret.reset(new PassThruCommand());
+    p = (PassThruCommand*) ret.get();
+    p->colWidth = colWidth;
+    p->Command::duplicate(this);
+    return ret;
 }
 
-bool PassThruCommand::operator==(const PassThruCommand &p) const
+bool PassThruCommand::operator==(const PassThruCommand& p) const
 {
-	if (colWidth != p.colWidth)
-		return false;
-	return true;
+    if (colWidth != p.colWidth)
+        return false;
+
+    return true;
 }
 
-bool PassThruCommand::operator!=(const PassThruCommand &p) const
+bool PassThruCommand::operator!=(const PassThruCommand& p) const
 {
-	return !(*this == p);
+    return !(*this == p);
 }
 
 };

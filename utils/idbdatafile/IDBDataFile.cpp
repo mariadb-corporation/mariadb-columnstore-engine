@@ -34,24 +34,26 @@ namespace idbdatafile
 
 IDBDataFile* IDBDataFile::open(Types type, const char* fname, const char* mode, unsigned opts, unsigned colWidth)
 {
-	IDBDataFile* ret = 0;
+    IDBDataFile* ret = 0;
 
-	try
-	{
-		ret = IDBFactory::open(type, fname, mode, opts, colWidth);
-	}
-	catch (std::exception& e)
-	{
-    	std::ostringstream oss;
-		oss << "Failed to open file: " << fname << ", exception: " << e.what();
-	    	IDBLogger::syslog(oss.str(), logging::LOG_TYPE_DEBUG);
-		if( IDBLogger::isEnabled() )
-			IDBLogger::logNoArg( fname, 0, e.what(), 0 );
-	}
+    try
+    {
+        ret = IDBFactory::open(type, fname, mode, opts, colWidth);
+    }
+    catch (std::exception& e)
+    {
+        std::ostringstream oss;
+        oss << "Failed to open file: " << fname << ", exception: " << e.what();
+        IDBLogger::syslog(oss.str(), logging::LOG_TYPE_DEBUG);
 
-	if( IDBLogger::isEnabled() )
-		IDBLogger::logOpen( type, fname, mode, opts, ret );
-	return ret;
+        if ( IDBLogger::isEnabled() )
+            IDBLogger::logNoArg( fname, 0, e.what(), 0 );
+    }
+
+    if ( IDBLogger::isEnabled() )
+        IDBLogger::logOpen( type, fname, mode, opts, ret );
+
+    return ret;
 }
 
 }

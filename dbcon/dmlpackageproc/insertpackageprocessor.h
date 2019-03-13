@@ -48,8 +48,9 @@ class InsertPackageProcessor : public DMLPackageProcessor
 {
 
 public:
-	InsertPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid) {
-	}
+    InsertPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
+    {
+    }
     /** @brief process an InsertDMLPackage
       *
       * @param cpackage the InsertDMLPackage to process

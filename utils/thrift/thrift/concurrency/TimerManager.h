@@ -28,7 +28,12 @@
 #include <map>
 #include <time.h>
 
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache
+{
+namespace thrift
+{
+namespace concurrency
+{
 
 /**
  * Timer Manager
@@ -37,94 +42,98 @@ namespace apache { namespace thrift { namespace concurrency {
  *
  * @version $Id:$
  */
-class TimerManager {
+class TimerManager
+{
 
- public:
+public:
 
-  TimerManager();
+    TimerManager();
 
-  virtual ~TimerManager();
+    virtual ~TimerManager();
 
-  virtual boost::shared_ptr<const ThreadFactory> threadFactory() const;
+    virtual boost::shared_ptr<const ThreadFactory> threadFactory() const;
 
-  virtual void threadFactory(boost::shared_ptr<const ThreadFactory> value);
+    virtual void threadFactory(boost::shared_ptr<const ThreadFactory> value);
 
-  /**
-   * Starts the timer manager service
-   *
-   * @throws IllegalArgumentException Missing thread factory attribute
-   */
-  virtual void start();
+    /**
+     * Starts the timer manager service
+     *
+     * @throws IllegalArgumentException Missing thread factory attribute
+     */
+    virtual void start();
 
-  /**
-   * Stops the timer manager service
-   */
-  virtual void stop();
+    /**
+     * Stops the timer manager service
+     */
+    virtual void stop();
 
-  virtual size_t taskCount() const ;
+    virtual size_t taskCount() const ;
 
-  /**
-   * Adds a task to be executed at some time in the future by a worker thread.
-   *
-   * @param task The task to execute
-   * @param timeout Time in milliseconds to delay before executing task
-   */
-  virtual void add(boost::shared_ptr<Runnable> task, int64_t timeout);
+    /**
+     * Adds a task to be executed at some time in the future by a worker thread.
+     *
+     * @param task The task to execute
+     * @param timeout Time in milliseconds to delay before executing task
+     */
+    virtual void add(boost::shared_ptr<Runnable> task, int64_t timeout);
 
-  /**
-   * Adds a task to be executed at some time in the future by a worker thread.
-   *
-   * @param task The task to execute
-   * @param timeout Absolute time in the future to execute task.
-   */
-  virtual void add(boost::shared_ptr<Runnable> task, const struct THRIFT_TIMESPEC& timeout);
+    /**
+     * Adds a task to be executed at some time in the future by a worker thread.
+     *
+     * @param task The task to execute
+     * @param timeout Absolute time in the future to execute task.
+     */
+    virtual void add(boost::shared_ptr<Runnable> task, const struct THRIFT_TIMESPEC& timeout);
 
-  /**
-   * Adds a task to be executed at some time in the future by a worker thread.
-   *
-   * @param task The task to execute
-   * @param timeout Absolute time in the future to execute task.
-   */
-  virtual void add(boost::shared_ptr<Runnable> task, const struct timeval& timeout);
+    /**
+     * Adds a task to be executed at some time in the future by a worker thread.
+     *
+     * @param task The task to execute
+     * @param timeout Absolute time in the future to execute task.
+     */
+    virtual void add(boost::shared_ptr<Runnable> task, const struct timeval& timeout);
 
-  /**
-   * Removes a pending task
-   *
-   * @throws NoSuchTaskException Specified task doesn't exist. It was either
-   *                             processed already or this call was made for a
-   *                             task that was never added to this timer
-   *
-   * @throws UncancellableTaskException Specified task is already being
-   *                                    executed or has completed execution.
-   */
-  virtual void remove(boost::shared_ptr<Runnable> task);
+    /**
+     * Removes a pending task
+     *
+     * @throws NoSuchTaskException Specified task doesn't exist. It was either
+     *                             processed already or this call was made for a
+     *                             task that was never added to this timer
+     *
+     * @throws UncancellableTaskException Specified task is already being
+     *                                    executed or has completed execution.
+     */
+    virtual void remove(boost::shared_ptr<Runnable> task);
 
-  enum STATE {
-    UNINITIALIZED,
-    STARTING,
-    STARTED,
-    STOPPING,
-    STOPPED
-  };
+    enum STATE
+    {
+        UNINITIALIZED,
+        STARTING,
+        STARTED,
+        STOPPING,
+        STOPPED
+    };
 
-  virtual STATE state() const;
+    virtual STATE state() const;
 
- private:
-  boost::shared_ptr<const ThreadFactory> threadFactory_;
-  class Task;
-  friend class Task;
-  std::multimap<int64_t, boost::shared_ptr<Task> > taskMap_;
-  size_t taskCount_;
-  Monitor monitor_;
-  STATE state_;
-  class Dispatcher;
-  friend class Dispatcher;
-  boost::shared_ptr<Dispatcher> dispatcher_;
-  boost::shared_ptr<Thread> dispatcherThread_;
-  typedef std::multimap<int64_t, boost::shared_ptr<TimerManager::Task> >::iterator task_iterator;
-  typedef std::pair<task_iterator, task_iterator> task_range;
+private:
+    boost::shared_ptr<const ThreadFactory> threadFactory_;
+    class Task;
+    friend class Task;
+    std::multimap<int64_t, boost::shared_ptr<Task> > taskMap_;
+    size_t taskCount_;
+    Monitor monitor_;
+    STATE state_;
+    class Dispatcher;
+    friend class Dispatcher;
+    boost::shared_ptr<Dispatcher> dispatcher_;
+    boost::shared_ptr<Thread> dispatcherThread_;
+    typedef std::multimap<int64_t, boost::shared_ptr<TimerManager::Task> >::iterator task_iterator;
+    typedef std::pair<task_iterator, task_iterator> task_range;
 };
 
-}}} // apache::thrift::concurrency
+}
+}
+} // apache::thrift::concurrency
 
 #endif // #ifndef _THRIFT_CONCURRENCY_TIMERMANAGER_H_

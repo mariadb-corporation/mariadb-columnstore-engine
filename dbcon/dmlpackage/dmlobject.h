@@ -49,13 +49,13 @@ public:
     virtual ~DMLObject();
 
     /** @brief read a DMLObject from a ByteStream
-      * 
+      *
       *  @param bytestream the ByteStream to read from
       */
     virtual int read(messageqcpp::ByteStream& bytestream) = 0;
 
     /** @brief write a DMLObject to a ByteStream
-      * 
+      *
       * @param bytestream the ByteStream to write to
       */
     virtual int write(messageqcpp::ByteStream& bytestream) = 0;

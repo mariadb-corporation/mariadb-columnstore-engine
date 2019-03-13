@@ -34,8 +34,8 @@ namespace WriteEngine
 // TempXMLGenData constructor
 //------------------------------------------------------------------------------
 TempXMLGenData::TempXMLGenData(const std::string& jobId,
-                         const std::string& schema,
-                         const std::string& table)
+                               const std::string& schema,
+                               const std::string& table)
 {
     fParms[ JOBID] = jobId;                     // add or override default value
     fSchema = schema;
@@ -57,6 +57,7 @@ TempXMLGenData::~TempXMLGenData( )
 void TempXMLGenData::print(std::ostream& os) const
 {
     os << "Generating runtime job xml file for: schema-" << fSchema;
+
     if (fTables.size() > 0)
         os << ": table-" << fTables[0];
 }

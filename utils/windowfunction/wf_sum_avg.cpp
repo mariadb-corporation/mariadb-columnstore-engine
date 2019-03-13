@@ -62,88 +62,91 @@ void checkSumLimit(T sum, T val)
 template<>
 void checkSumLimit<int64_t>(int64_t sum, int64_t val)
 {
-	if (((sum >= 0) && ((numeric_limits<int64_t>::max() - sum) < val)) ||
-		((sum <  0) && ((numeric_limits<int64_t>::min() - sum) > val)))
-	{
-		string errStr = "SUM(int):";
+    if (((sum >= 0) && ((numeric_limits<int64_t>::max() - sum) < val)) ||
+            ((sum <  0) && ((numeric_limits<int64_t>::min() - sum) > val)))
+    {
+        string errStr = "SUM(int):";
 
-		ostringstream oss;
-		oss << sum << "+" << val;
-		if (sum > 0)
-			oss << " > " << numeric_limits<uint64_t>::max();
-		else
-			oss << " < " << numeric_limits<uint64_t>::min();
-		errStr += oss.str();
+        ostringstream oss;
+        oss << sum << "+" << val;
 
-		errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-		cerr << errStr << endl;
-		throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-	}
+        if (sum > 0)
+            oss << " > " << numeric_limits<uint64_t>::max();
+        else
+            oss << " < " << numeric_limits<uint64_t>::min();
+
+        errStr += oss.str();
+
+        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
+        cerr << errStr << endl;
+        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
+    }
 }
 
 
 template<>
 void checkSumLimit<uint64_t>(uint64_t sum, uint64_t val)
 {
-	if ((sum >= 0) && ((numeric_limits<uint64_t>::max() - sum) < val))
-	{
-		string errStr = "SUM(unsigned):";
+    if ((sum >= 0) && ((numeric_limits<uint64_t>::max() - sum) < val))
+    {
+        string errStr = "SUM(unsigned):";
 
-		ostringstream oss;
-		oss << sum << "+" << val << " > " << numeric_limits<uint64_t>::max();
-		errStr += oss.str();
+        ostringstream oss;
+        oss << sum << "+" << val << " > " << numeric_limits<uint64_t>::max();
+        errStr += oss.str();
 
-		errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-		cerr << errStr << endl;
-		throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-	}
+        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
+        cerr << errStr << endl;
+        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
+    }
 }
 
 
 template<typename T>
 T calculateAvg(T sum, uint64_t count, int s)
 {
-	T avg = ((long double) sum) / count;
-	return avg;
+    T avg = ((long double) sum) / count;
+    return avg;
 }
 
 
 long double avgWithLimit(long double sum, uint64_t count, int scale, long double u, long double l)
 {
-	long double factor = pow(10.0, scale);
-	long double avg = sum / count;
-	avg *= factor;
-	avg += (avg < 0) ? (-0.5) : (0.5);
-	if (avg > u || avg < l)
-	{
-		string errStr = string("AVG") + (l < 0 ? "(int):" : "(unsign)");
-		ostringstream oss;
-		oss << avg;
-		errStr += oss.str();
+    long double factor = pow(10.0, scale);
+    long double avg = sum / count;
+    avg *= factor;
+    avg += (avg < 0) ? (-0.5) : (0.5);
 
-		errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-		cerr << errStr << endl;
-		throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-	}
+    if (avg > u || avg < l)
+    {
+        string errStr = string("AVG") + (l < 0 ? "(int):" : "(unsign)");
+        ostringstream oss;
+        oss << avg;
+        errStr += oss.str();
 
-	return avg;
+        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
+        cerr << errStr << endl;
+        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
+    }
+
+    return avg;
 }
 
 
 template<>
 int64_t calculateAvg<int64_t>(int64_t sum, uint64_t count, int scale)
 {
-	int64_t t = (int64_t) avgWithLimit(sum, count, scale,
-				numeric_limits<int64_t>::max(), numeric_limits<int64_t>::min());
-	return t;
+    int64_t t = (int64_t) avgWithLimit(sum, count, scale,
+                                       numeric_limits<int64_t>::max(), numeric_limits<int64_t>::min());
+    return t;
 }
 
 
 template<>
 uint64_t calculateAvg<uint64_t>(uint64_t sum, uint64_t count, int scale)
 {
-	uint64_t t = (uint64_t) avgWithLimit(sum, count, scale, numeric_limits<uint64_t>::max(), 0);
-	return t;
+    uint64_t t = (uint64_t) avgWithLimit(sum, count, scale, numeric_limits<uint64_t>::max(), 0);
+    return t;
 }
 
 
@@ -155,130 +158,139 @@ namespace windowfunction
 template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const string& name, int ct)
 {
-	boost::shared_ptr<WindowFunctionType> func;
-	switch (ct)
-	{
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::DECIMAL:
-		{
-			func.reset(new WF_sum_avg<int64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::UTINYINT:
-		case CalpontSystemCatalog::USMALLINT:
-		case CalpontSystemCatalog::UMEDINT:
-		case CalpontSystemCatalog::UINT:
-		case CalpontSystemCatalog::UBIGINT:
-		case CalpontSystemCatalog::UDECIMAL:
-		{
-			func.reset(new WF_sum_avg<uint64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::DOUBLE:
-		case CalpontSystemCatalog::UDOUBLE:
-		{
-			func.reset(new WF_sum_avg<double>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::FLOAT:
-		case CalpontSystemCatalog::UFLOAT:
-		{
-			func.reset(new WF_sum_avg<float>(id, name));
-			break;
-		}
-		default:
-		{
-			string errStr = name + "(" + colType2String[ct] + ")";
-			errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
-			cerr << errStr << endl;
-			throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);
+    boost::shared_ptr<WindowFunctionType> func;
 
-			break;
-		}
-	}
+    switch (ct)
+    {
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            func.reset(new WF_sum_avg<int64_t>(id, name));
+            break;
+        }
 
-	return func;
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UBIGINT:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            func.reset(new WF_sum_avg<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
+        {
+            func.reset(new WF_sum_avg<double>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::UFLOAT:
+        {
+            func.reset(new WF_sum_avg<float>(id, name));
+            break;
+        }
+
+        default:
+        {
+            string errStr = name + "(" + colType2String[ct] + ")";
+            errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
+            cerr << errStr << endl;
+            throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);
+
+            break;
+        }
+    }
+
+    return func;
 }
 
 
 template<typename T>
 WindowFunctionType* WF_sum_avg<T>::clone() const
 {
-	return new WF_sum_avg<T>(*this);
+    return new WF_sum_avg<T>(*this);
 }
 
 
 template<typename T>
 void WF_sum_avg<T>::resetData()
 {
-	fAvg = 0;
-	fSum = 0;
-	fCount = 0;
-	fSet.clear();
+    fAvg = 0;
+    fSum = 0;
+    fCount = 0;
+    fSet.clear();
 
-	WindowFunctionType::resetData();
+    WindowFunctionType::resetData();
 }
 
 
 template<typename T>
 void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-	uint64_t colOut = fFieldIndex[0];
+    uint64_t colOut = fFieldIndex[0];
 
-	if ((fFrameUnit == WF__FRAME_ROWS) ||
-		(fPrev == -1) ||
-		(!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
-	{
-		// for unbounded - current row special handling
-		if (fPrev >= b && fPrev < c)
-			b = c;
-		else if (fPrev <= e && fPrev > c)
-			e = c;
+    if ((fFrameUnit == WF__FRAME_ROWS) ||
+            (fPrev == -1) ||
+            (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
+    {
+        // for unbounded - current row special handling
+        if (fPrev >= b && fPrev < c)
+            b = c;
+        else if (fPrev <= e && fPrev > c)
+            e = c;
 
-		uint64_t colIn = fFieldIndex[1];
-		int scale = fRow.getScale(colOut) - fRow.getScale(colIn);
-		for (int64_t i = b; i <= e; i++)
-		{
-			if (i % 1000 == 0 && fStep->cancelled())
-				break;
+        uint64_t colIn = fFieldIndex[1];
+        int scale = fRow.getScale(colOut) - fRow.getScale(colIn);
 
-			fRow.setData(getPointer(fRowData->at(i)));
-			if (fRow.isNullValue(colIn) == true)
-				continue;
+        for (int64_t i = b; i <= e; i++)
+        {
+            if (i % 1000 == 0 && fStep->cancelled())
+                break;
 
-			T valIn;
-			getValue(colIn, valIn);
-			checkSumLimit(fSum, valIn);
+            fRow.setData(getPointer(fRowData->at(i)));
 
-			if ((!fDistinct) || (fSet.find(valIn) == fSet.end()))
-			{
-				fSum += valIn;
-				fCount++;
+            if (fRow.isNullValue(colIn) == true)
+                continue;
 
-				if (fDistinct)
-					fSet.insert(valIn);
-			}
-		}
+            T valIn;
+            getValue(colIn, valIn);
+            checkSumLimit(fSum, valIn);
 
-		if ((fCount > 0) && (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT))
-			 fAvg = (T) calculateAvg(fSum, fCount, scale);
-	}
+            if ((!fDistinct) || (fSet.find(valIn) == fSet.end()))
+            {
+                fSum += valIn;
+                fCount++;
 
-	T* v = NULL;
-	if (fCount > 0)
-	{
-		if (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT)
-			v = &fAvg;
-		else
-			v = &fSum;
-	}
-	setValue(fRow.getColType(colOut), b, e, c, v);
+                if (fDistinct)
+                    fSet.insert(valIn);
+            }
+        }
 
-	fPrev = c;
+        if ((fCount > 0) && (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT))
+            fAvg = (T) calculateAvg(fSum, fCount, scale);
+    }
+
+    T* v = NULL;
+
+    if (fCount > 0)
+    {
+        if (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT)
+            v = &fAvg;
+        else
+            v = &fSum;
+    }
+
+    setValue(fRow.getColType(colOut), b, e, c, v);
+
+    fPrev = c;
 }
 
 

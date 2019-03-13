@@ -24,7 +24,7 @@
 #include <unistd.h>
 
 #ifdef _MSC_VER
-typedef void *HANDLE;
+typedef void* HANDLE;
 #endif
 
 namespace idbdatafile
@@ -38,27 +38,28 @@ namespace idbdatafile
 class BufferedFile : public IDBDataFile, boost::noncopyable
 {
 public:
-	BufferedFile(const char* fname, const char* mode, unsigned opts);
-	/* virtual */ ~BufferedFile();
+    BufferedFile(const char* fname, const char* mode, unsigned opts);
+    /* virtual */ ~BufferedFile();
 
-	/* virtual */ ssize_t pread(void *ptr, off64_t offset, size_t count);
-	/* virtual */ ssize_t read(void *ptr, size_t count);
-	/* virtual */ ssize_t write(const void *ptr, size_t count);
-	/* virtual */ int seek(off64_t offset, int whence);
-	/* virtual */ int truncate(off64_t length);
-	/* virtual */ off64_t size();
-	/* virtual */ off64_t tell();
-	/* virtual */ int flush();
-	/* virtual */ time_t mtime();
+    /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
+    /* virtual */ ssize_t read(void* ptr, size_t count);
+    /* virtual */ ssize_t write(const void* ptr, size_t count);
+    /* virtual */ int seek(off64_t offset, int whence);
+    /* virtual */ int truncate(off64_t length);
+    /* virtual */ off64_t size();
+    /* virtual */ off64_t tell();
+    /* virtual */ int flush();
+    /* virtual */ time_t mtime();
 
 protected:
-	/* virtual */ int close();
+    /* virtual */
+    int close();
 
 private:
-	void	applyOptions( unsigned opts );
+    void	applyOptions( unsigned opts );
 
-	FILE*	m_fp;
-	char*   m_buffer;
+    FILE*	m_fp;
+    char*   m_buffer;
 };
 
 }

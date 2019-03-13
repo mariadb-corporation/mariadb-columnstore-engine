@@ -28,33 +28,36 @@ using namespace boost;
 
 void ActiveStatementCounter::incr(bool& counted)
 {
-	if (counted)
-		return;
+    if (counted)
+        return;
 
-	counted = true;
-	mutex::scoped_lock lk(fMutex);
-	if (upperLimit > 0)
-		while (fStatementCount >= upperLimit)
-		{
-			fStatementsWaiting++;
-			condvar.wait(lk);
-			--fStatementsWaiting;
-		}
-	fStatementCount++;
+    counted = true;
+    mutex::scoped_lock lk(fMutex);
+
+    if (upperLimit > 0)
+        while (fStatementCount >= upperLimit)
+        {
+            fStatementsWaiting++;
+            condvar.wait(lk);
+            --fStatementsWaiting;
+        }
+
+    fStatementCount++;
 }
 
 void ActiveStatementCounter::decr(bool& counted)
 {
-	if (!counted)
-		return;
+    if (!counted)
+        return;
 
-	counted = false;
-	mutex::scoped_lock lk(fMutex);
-	if (fStatementCount == 0)
-		return;
+    counted = false;
+    mutex::scoped_lock lk(fMutex);
 
-	--fStatementCount;
-	condvar.notify_one();
+    if (fStatementCount == 0)
+        return;
+
+    --fStatementCount;
+    condvar.notify_one();
 }
 // vim:ts=4 sw=4:
 

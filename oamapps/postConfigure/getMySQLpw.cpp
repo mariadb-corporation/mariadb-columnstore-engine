@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-
+   Copyright (C) 2017 MariaDB
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -19,7 +19,7 @@
 * $Id: getMySQLpw.cpp 64 2006-10-12 22:21:51Z dhill $
 *
 *
-*		
+*
 ******************************************************************************************/
 /**
  * @file
@@ -53,63 +53,74 @@
 using namespace std;
 using namespace oam;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	Oam oam;
+    Oam oam;
 
-	string USER = "root";
-	char* p= getenv("USER");
-	if (p && *p)
-		USER = p;
+    cout << oam::UnassignedName << endl;
 
-	string HOME = "/root";
-	p= getenv("HOME");
-	if (p && *p)
-		HOME = p;
+    exit (0);
 
-	string fileName = HOME + "/.my.cnf";
-	
-	ifstream file (fileName.c_str());
+    string USER = "root";
+    char* p = getenv("USER");
 
-	if (!file)
-	{
-	    cout << oam::UnassignedName << endl;
-	    exit (1);
-	}
+    if (p && *p)
+        USER = p;
 
-	char line[400];
-	string buf;
+    string HOME = "/root";
+    p = getenv("HOME");
 
-	while (file.getline(line, 400))
-	{
-		buf = line;
+    if (p && *p)
+        HOME = p;
 
-		string::size_type pos = buf.find("root",0);
-		if (pos != string::npos)
-		{
-			file.getline(line, 400);
-			buf = line;
+    string fileName = HOME + "/.my.cnf";
 
-			pos = buf.find("password",0);
-			if (pos != string::npos)
-			{
-				string::size_type pos1 = buf.find("=",pos);
-				if (pos1 != string::npos) {
-					//password found
+    ifstream file (fileName.c_str());
 
-					string password = buf.substr(pos1+2, 80);
+    if (!file)
+    {
+        cout << oam::UnassignedName << endl;
+        exit (1);
+    }
 
-					cout << password << endl;
-					exit (0);
-				}
-			}
-		}
-	}
-	file.close();
-	
-	cout << oam::UnassignedName << endl;
+    char line[400];
+    string buf;
 
-	exit (1);
+    while (file.getline(line, 400))
+    {
+        buf = line;
+
+        string::size_type pos = buf.find("root", 0);
+
+        if (pos != string::npos)
+        {
+            file.getline(line, 400);
+            buf = line;
+
+            pos = buf.find("password", 0);
+
+            if (pos != string::npos)
+            {
+                string::size_type pos1 = buf.find("=", pos);
+
+                if (pos1 != string::npos)
+                {
+                    //password found
+
+                    string password = buf.substr(pos1 + 2, 80);
+
+                    cout << password << endl;
+                    exit (0);
+                }
+            }
+        }
+    }
+
+    file.close();
+
+    cout << oam::UnassignedName << endl;
+
+    exit (1);
 
 }
 // vim:ts=4 sw=4:

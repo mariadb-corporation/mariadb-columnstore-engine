@@ -29,70 +29,72 @@
 /**
  * Namespace
  */
-namespace execplan { 
+namespace execplan
+{
 /**
  * Class Range
- * 
+ *
  */
-class Range {
-/**
- * Public stuff
- */
+class Range
+{
+    /**
+     * Public stuff
+     */
 public:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
-/**
- * Protected stuff
- */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
+    /**
+     * Protected stuff
+     */
 protected:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
-/**
- * Private stuff
- */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
+    /**
+     * Private stuff
+     */
 private:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
 };
-} 
+}
 #endif //RANGE_H
 

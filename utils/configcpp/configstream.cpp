@@ -36,34 +36,35 @@ namespace config
 {
 
 ConfigStream::ConfigStream(const ByteStream& bs, const string& installDir) :
-	fParser(installDir)
+    fParser(installDir)
 {
-	init(reinterpret_cast<const xmlChar*>(bs.buf()));
+    init(reinterpret_cast<const xmlChar*>(bs.buf()));
 }
 
 ConfigStream::ConfigStream(const string& str, const string& installDir) :
-	fParser(installDir)
+    fParser(installDir)
 {
-	init(reinterpret_cast<const xmlChar*>(str.c_str()));
+    init(reinterpret_cast<const xmlChar*>(str.c_str()));
 }
 
 ConfigStream::ConfigStream(const char* cptr, const string& installDir) :
-	fParser(installDir)
+    fParser(installDir)
 {
-	init(reinterpret_cast<const xmlChar*>(cptr));
+    init(reinterpret_cast<const xmlChar*>(cptr));
 }
 
 ConfigStream::~ConfigStream()
 {
-	if (fDoc != NULL)
-		xmlFreeDoc(fDoc);
+    if (fDoc != NULL)
+        xmlFreeDoc(fDoc);
 }
 
 void ConfigStream::init(const xmlChar* xp)
 {
-	fDoc = xmlParseDoc(xp);
-	if (fDoc == NULL)
-		throw runtime_error("ConfigStream::ConfigStream: bad XML stream");
+    fDoc = xmlParseDoc(xp);
+
+    if (fDoc == NULL)
+        throw runtime_error("ConfigStream::ConfigStream: bad XML stream");
 }
 
 } //namespace

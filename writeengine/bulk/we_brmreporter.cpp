@@ -35,7 +35,8 @@
 #include "cacheutils.h"
 #include "IDBPolicy.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 //------------------------------------------------------------------------------
 // Constructor
@@ -98,14 +99,16 @@ void BRMReporter::addToErrMsgEntry(const std::string& errCritMsg)
 //------------------------------------------------------------------------------
 void BRMReporter::sendErrMsgToFile(const std::string& rptFileName)
 {
-    if((!rptFileName.empty())&&(fRptFileName.empty()))
-        fRptFileName=rptFileName;
-    if ((!fRptFileName.empty())&&(fCritErrMsgs.size()))
+    if ((!rptFileName.empty()) && (fRptFileName.empty()))
+        fRptFileName = rptFileName;
+
+    if ((!fRptFileName.empty()) && (fCritErrMsgs.size()))
     {
         fRptFile.open( fRptFileName.c_str(), std::ios_base::app);
+
         if ( fRptFile.good() )
         {
-            for (unsigned int i=0; i<fCritErrMsgs.size(); i++)
+            for (unsigned int i = 0; i < fCritErrMsgs.size(); i++)
             {
                 fRptFile << "MERR: " << fCritErrMsgs[i] << std::endl;
                 //std::cout <<"**********" << fCritErrMsgs[i] << std::endl;
@@ -125,8 +128,8 @@ void BRMReporter::sendErrMsgToFile(const std::string& rptFileName)
 // sendBRMInfo().  Once PrimProc cache is flushed, we can send the BRM updates.
 //------------------------------------------------------------------------------
 int BRMReporter::sendBRMInfo(const std::string& rptFileName,
-    const std::vector<std::string>& errFiles,
-    const std::vector<std::string>& badFiles)
+                             const std::vector<std::string>& errFiles,
+                             const std::vector<std::string>& badFiles)
 {
     int rc = NO_ERROR;
 
@@ -138,7 +141,7 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
 
         if ( fFileInfo.size() > 0 )
         {
-            for (unsigned k=0; k<fFileInfo.size(); k++)
+            for (unsigned k = 0; k < fFileInfo.size(); k++)
             {
                 allFileInfo.push_back( fFileInfo[k] );
             }
@@ -146,9 +149,10 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
 
         std::vector<BRM::OID_t> oidsToFlush;
         std::set<BRM::OID_t>    oidSet;
+
         if (fDctnryFileInfo.size() > 0)
         {
-            for (unsigned k=0; k<fDctnryFileInfo.size(); k++)
+            for (unsigned k = 0; k < fDctnryFileInfo.size(); k++)
             {
                 allFileInfo.push_back( fDctnryFileInfo[k] );
                 oidSet.insert( fDctnryFileInfo[k].oid );
@@ -157,9 +161,9 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
             // Store dictionary oids in std::set first, to eliminate duplicates
             if (oidSet.size() > 0)
             {
-                for (std::set<BRM::OID_t>::const_iterator iter=oidSet.begin();
-                    iter != oidSet.end();
-                    ++iter)
+                for (std::set<BRM::OID_t>::const_iterator iter = oidSet.begin();
+                        iter != oidSet.end();
+                        ++iter)
                 {
                     oidsToFlush.push_back( *iter );
                 }
@@ -170,7 +174,7 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
         if (allFileInfo.size() > 0)
         {
             cacheutils::purgePrimProcFdCache(allFileInfo,
-                Config::getLocalModuleID());
+                                             Config::getLocalModuleID());
         }
 
         // Flush PrimProc block cache
@@ -199,6 +203,7 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
         fRptFileName = rptFileName;
 
         rc = openRptFile( );
+
         if (rc != NO_ERROR)
         {
             return rc;
@@ -208,12 +213,12 @@ int BRMReporter::sendBRMInfo(const std::string& rptFileName,
         sendHWMToFile( );
 
         // Log the list of *.err and *.bad files
-        for (unsigned k=0; k<errFiles.size(); k++)
+        for (unsigned k = 0; k < errFiles.size(); k++)
         {
             fRptFile << "ERR: " << errFiles[k] << std::endl;
         }
 
-        for (unsigned k=0; k<badFiles.size(); k++)
+        for (unsigned k = 0; k < badFiles.size(); k++)
         {
             fRptFile << "BAD: " << badFiles[k] << std::endl;
         }
@@ -233,7 +238,7 @@ int BRMReporter::sendHWMandCPToBRM( )
     if (fHWMInfo.size() > 0)
     {
         std::ostringstream oss;
-        oss << "Committing " << fHWMInfo.size() << " HWM update(s) for table "<<
+        oss << "Committing " << fHWMInfo.size() << " HWM update(s) for table " <<
             fTableName << " to BRM";
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
     }
@@ -276,12 +281,12 @@ void BRMReporter::sendHWMToFile( )
             fTableName << " to report file " << fRptFileName;
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
 
-        for (unsigned int i=0; i<fHWMInfo.size(); i++)
+        for (unsigned int i = 0; i < fHWMInfo.size(); i++)
         {
             fRptFile << "HWM: " << fHWMInfo[i].oid     << ' ' <<
-                                   fHWMInfo[i].partNum << ' ' <<
-                                   fHWMInfo[i].segNum  << ' ' <<
-                                   fHWMInfo[i].hwm     << std::endl;
+                     fHWMInfo[i].partNum << ' ' <<
+                     fHWMInfo[i].segNum  << ' ' <<
+                     fHWMInfo[i].hwm     << std::endl;
         }
     }
 }
@@ -298,14 +303,14 @@ void BRMReporter::sendCPToFile( )
             fTableName << " to report file " << fRptFileName;
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
 
-        for (unsigned int i=0; i<fCPInfo.size(); i++)
+        for (unsigned int i = 0; i < fCPInfo.size(); i++)
         {
             fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
-                                  fCPInfo[i].max       << ' ' <<
-                                  fCPInfo[i].min       << ' ' <<
-                                  fCPInfo[i].seqNum    << ' ' <<
-                                  fCPInfo[i].type      << ' ' <<
-                                  fCPInfo[i].newExtent << std::endl;
+                     fCPInfo[i].max       << ' ' <<
+                     fCPInfo[i].min       << ' ' <<
+                     fCPInfo[i].seqNum    << ' ' <<
+                     fCPInfo[i].type      << ' ' <<
+                     fCPInfo[i].newExtent << std::endl;
         }
     }
 }
@@ -321,12 +326,13 @@ void BRMReporter::reportTotals(
     if (fRptFile.is_open())
     {
         fRptFile << "ROWS: " << totalReadRows << ' ' <<
-                                totalInsertedRows << std::endl;
-        for (unsigned k=0; k<satCounts.size(); k++)
+                 totalInsertedRows << std::endl;
+
+        for (unsigned k = 0; k < satCounts.size(); k++)
         {
             if (boost::get<0>(satCounts[k]) > 0)
                 fRptFile << "DATA: " << k << ' ' << boost::get<0>(satCounts[k]) << ' ' <<
-                    boost::get<1>(satCounts[k]) << ' ' << boost::get<2>(satCounts[k]) << std::endl;
+                         boost::get<1>(satCounts[k]) << ' ' << boost::get<2>(satCounts[k]) << std::endl;
         }
 
         closeRptFile();
@@ -338,8 +344,8 @@ void BRMReporter::reportTotals(
 // limit.
 //------------------------------------------------------------------------------
 void BRMReporter::rptMaxErrJob(const std::string& rptFileName,
-    const std::vector<std::string>& errFiles,
-    const std::vector<std::string>& badFiles )
+                               const std::vector<std::string>& errFiles,
+                               const std::vector<std::string>& badFiles )
 {
     // We only write out information if we are generating a report file.
     if (!rptFileName.empty())
@@ -356,12 +362,12 @@ void BRMReporter::rptMaxErrJob(const std::string& rptFileName,
         }
 
         // Log the list of *.err and *.bad files
-        for (unsigned k=0; k<errFiles.size(); k++)
+        for (unsigned k = 0; k < errFiles.size(); k++)
         {
             fRptFile << "ERR: " << errFiles[k] << std::endl;
         }
 
-        for (unsigned k=0; k<badFiles.size(); k++)
+        for (unsigned k = 0; k < badFiles.size(); k++)
         {
             fRptFile << "BAD: " << badFiles[k] << std::endl;
         }
@@ -376,6 +382,7 @@ void BRMReporter::rptMaxErrJob(const std::string& rptFileName,
 int BRMReporter::openRptFile( )
 {
     fRptFile.open( fRptFileName.c_str() );
+
     if ( fRptFile.fail() )
     {
         int errRc = errno;

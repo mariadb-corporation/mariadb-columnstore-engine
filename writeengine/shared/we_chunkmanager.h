@@ -68,10 +68,10 @@ const int UNCOMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::UNCOMPRESSED
 const int COMPRESSED_FILE_HEADER_UNIT = compress::IDBCompressInterface::HDR_BUF_LEN;
 
 // assume UNCOMPRESSED_CHUNK_SIZE > 0xBFFF (49151), 8 * 1024 bytes padding
-const int COMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::maxCompressedSize(UNCOMPRESSED_CHUNK_SIZE) + 64+3 + 8*1024;
+const int COMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::maxCompressedSize(UNCOMPRESSED_CHUNK_SIZE) + 64 + 3 + 8 * 1024;
 
 const int BLOCKS_IN_CHUNK = UNCOMPRESSED_CHUNK_SIZE / BYTE_PER_BLOCK;
-const int MAXOFFSET_PER_CHUNK = 511*BYTE_PER_BLOCK;
+const int MAXOFFSET_PER_CHUNK = 511 * BYTE_PER_BLOCK;
 
 // chunk information
 typedef int64_t ChunkId;
@@ -83,19 +83,22 @@ struct ChunkData
     bool            fWriteToFile;
 
     ChunkData(ChunkId id = 0) : fChunkId(id), fLenUnCompressed(0), fWriteToFile(false) {}
-    bool operator < (const ChunkData& rhs) const { return fChunkId < rhs.fChunkId; }
+    bool operator < (const ChunkData& rhs) const
+    {
+        return fChunkId < rhs.fChunkId;
+    }
 };
 
 // compressed DB file header information
 struct CompFileHeader
 {
     char fHeaderData[COMPRESSED_FILE_HEADER_UNIT * 2];
-    char *fControlData;
-    char *fPtrSection;
+    char* fControlData;
+    char* fPtrSection;
     boost::scoped_array<char> fLongPtrSectData;
 
     CompFileHeader() :
-        fControlData(fHeaderData), fPtrSection(fHeaderData+COMPRESSED_FILE_HEADER_UNIT) {}
+        fControlData(fHeaderData), fPtrSection(fHeaderData + COMPRESSED_FILE_HEADER_UNIT) {}
 };
 
 
@@ -111,15 +114,19 @@ struct FileID
         fFid(f), fDbRoot(r), fPartition(p), fSegment(s) {}
 
     bool operator < (const FileID& rhs) const
-    { return (
-        (fFid < rhs.fFid) ||
-        (fFid == rhs.fFid && fDbRoot < rhs.fDbRoot) ||
-        (fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition < rhs.fPartition) ||
-        (fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition == rhs.fPartition && fSegment < rhs.fSegment)); }
+    {
+        return (
+                   (fFid < rhs.fFid) ||
+                   (fFid == rhs.fFid && fDbRoot < rhs.fDbRoot) ||
+                   (fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition < rhs.fPartition) ||
+                   (fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition == rhs.fPartition && fSegment < rhs.fSegment));
+    }
 
     bool operator == (const FileID& rhs) const
-    { return (
-        fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition == rhs.fPartition && fSegment == rhs.fSegment); }
+    {
+        return (
+                   fFid == rhs.fFid && fDbRoot == rhs.fDbRoot && fPartition == rhs.fPartition && fSegment == rhs.fSegment);
+    }
 
 };
 
@@ -129,8 +136,8 @@ class CompFileData
 {
 public:
     CompFileData(const FileID& id, const FID& fid, const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth) :
-       fFileID(id), fFid(fid), fColDataType(colDataType), fColWidth(colWidth), fDctnryCol(false),
-       fFilePtr(NULL), fIoBSize(0) {}
+        fFileID(id), fFid(fid), fColDataType(colDataType), fColWidth(colWidth), fDctnryCol(false),
+        fFilePtr(NULL), fIoBSize(0) {}
 
     ChunkData* findChunk(int64_t cid) const;
 
@@ -164,34 +171,34 @@ public:
     // @brief Retrieve a file pointer in the chunk manager.
     //        for column file
     IDBDataFile* getFilePtr(const Column& column,
-                    uint16_t root,
-                    uint32_t partition,
-                    uint16_t segment,
-                    std::string& filename,
-                    const char* mode,
-                    int size,
-                    bool useTmpSuffix) const;
+                            uint16_t root,
+                            uint32_t partition,
+                            uint16_t segment,
+                            std::string& filename,
+                            const char* mode,
+                            int size,
+                            bool useTmpSuffix) const;
 
     // @brief Retrieve a file pointer in the chunk manager.
     //        for dictionary file
     IDBDataFile* getFilePtr(const FID& fid,
-                    uint16_t root,
-                    uint32_t partition,
-                    uint16_t segment,
-                    std::string& filename,
-                    const char* mode,
-                    int size,
-                    bool useTmpSuffix) const;
+                            uint16_t root,
+                            uint32_t partition,
+                            uint16_t segment,
+                            std::string& filename,
+                            const char* mode,
+                            int size,
+                            bool useTmpSuffix) const;
 
     // @brief Create a compressed dictionary file with an appropriate header.
     IDBDataFile* createDctnryFile(const FID& fid,
-                    int64_t  width,
-                    uint16_t root,
-                    uint32_t partition,
-                    uint16_t segment,
-                    const char* filename,
-                    const char* mode,
-                    int size);
+                                  int64_t  width,
+                                  uint16_t root,
+                                  uint32_t partition,
+                                  uint16_t segment,
+                                  const char* filename,
+                                  const char* mode,
+                                  int size);
 
     // @brief Read a block from pFile at offset fbo.
     //        The data may copied from memory if the chunk it belongs to is already available.
@@ -202,10 +209,10 @@ public:
     int  saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, uint64_t fbo);
 
     // @brief Write all active chunks to disk, and reset all repository.
-    EXPORT int  flushChunks(int rc, const std::map<FID, FID> & columOids);
+    EXPORT int  flushChunks(int rc, const std::map<FID, FID>& columOids);
 
     // @brief Reset all repository without writing anything to disk.
-    void cleanUp(const std::map<FID, FID> & columOids);
+    void cleanUp(const std::map<FID, FID>& columOids);
 
     // @brief Expand an initial column, not dictionary, extent to a full extent.
     int expandAbbrevColumnExtent(IDBDataFile* pFile, uint64_t emptyVal, int width);
@@ -232,44 +239,59 @@ public:
 
     // @brief Control the number of active chunks being stored in memory
     void setMaxActiveChunkNum(unsigned int maxActiveChunkNum)
-    { fMaxActiveChunkNum = maxActiveChunkNum; }
+    {
+        fMaxActiveChunkNum = maxActiveChunkNum;
+    }
 
     // @brief Use this flag to avoid logging and backing up chunks, tmp files.
     void setBulkFlag(bool isBulkLoad)
-    { fIsBulkLoad = isBulkLoad; }
+    {
+        fIsBulkLoad = isBulkLoad;
+    }
 
     // @brief Use this flag to flush chunk when is full.
-    void setIsInsert(bool isInsert) { fIsInsert = isInsert; }
-    bool getIsInsert() { return fIsInsert; }
+    void setIsInsert(bool isInsert)
+    {
+        fIsInsert = isInsert;
+    }
+    bool getIsInsert()
+    {
+        return fIsInsert;
+    }
 
-    void setTransId(const TxnID& transId) { fTransId = transId; }
+    void setTransId(const TxnID& transId)
+    {
+        fTransId = transId;
+    }
 
     // @brief bug5504, Use non transactional DML for InfiniDB with HDFS
     EXPORT int startTransaction(const TxnID& transId) const;
     EXPORT int confirmTransaction(const TxnID& transId) const;
     EXPORT int endTransaction(const TxnID& transId, bool success) const;
-	// @brief Use this flag to fix bad chunk.
+    // @brief Use this flag to fix bad chunk.
     void setFixFlag(bool isFix)
-    { fIsFix = isFix; }
+    {
+        fIsFix = isFix;
+    }
 
-	EXPORT int checkFixLastDictChunk(const FID& fid,
-                    uint16_t root,
-                    uint32_t partition,
-                    uint16_t segment);
+    EXPORT int checkFixLastDictChunk(const FID& fid,
+                                     uint16_t root,
+                                     uint32_t partition,
+                                     uint16_t segment);
 
 protected:
     // @brief Retrieve pointer to a compressed DB file.
     CompFileData* getFileData(const FID& fid,
-                    uint16_t root,
-                    uint32_t partition,
-                    uint16_t segment,
-                    std::string& filename,
-                    const char* mode,
-                    int size,
-                    const execplan::CalpontSystemCatalog::ColDataType colDataType,
-                    int colWidth,
-                    bool useTmpSuffix,
-                    bool dictnry = false) const;
+                              uint16_t root,
+                              uint32_t partition,
+                              uint16_t segment,
+                              std::string& filename,
+                              const char* mode,
+                              int size,
+                              const execplan::CalpontSystemCatalog::ColDataType colDataType,
+                              int colWidth,
+                              bool useTmpSuffix,
+                              bool dictnry = false) const;
 
     // @brief Retrieve a chunk of pFile from disk.
     int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData);
@@ -288,7 +310,7 @@ protected:
 
     // @brief open a compressed DB file.
     int openFile(CompFileData* fileData, const char* mode, int colWidth,
-        bool useTmpSuffix, int ln) const;
+                 bool useTmpSuffix, int ln) const;
 
     // @brief set offset in a compressed DB file from beginning.
     int setFileOffset(IDBDataFile* pFile, const std::string& fileName, off64_t offset, int ln) const;
@@ -316,12 +338,12 @@ protected:
     int verifyChunksAfterRealloc(CompFileData* fileData);
 
     // @brief log a message to the syslog
-    void logMessage(int code, int level, int lineNum, int fromLine=-1) const;
+    void logMessage(int code, int level, int lineNum, int fromLine = -1) const;
     void logMessage(const std::string& msg, int level) const;
 
     // @brief Write a DML recovery log
     int writeLog(TxnID txnId, std::string backUpFileType, std::string filename,
-                 std::string &aDMLLogFileName, int64_t size=0, int64_t offset=0) const;
+                 std::string& aDMLLogFileName, int64_t size = 0, int64_t offset = 0) const;
 
     // @brief remove DML recovery logs
     int removeBackups(TxnID txnId);
@@ -350,8 +372,8 @@ protected:
     TxnID                                       fTransId;
     int                                         fLocalModuleId;
     idbdatafile::IDBFileSystem&                 fFs;
-	bool 										fIsFix;
-	
+    bool 										fIsFix;
+
 private:
 };
 

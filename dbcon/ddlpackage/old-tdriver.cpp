@@ -16,7 +16,7 @@
    MA 02110-1301, USA. */
 
 /***************************************************************************
- *   dhill@srvengcm1.calpont.com 
+ *   dhill@srvengcm1.calpont.com
  *
  *   Purpose: dll package tester
  *
@@ -50,643 +50,654 @@ std::string itoa(const int i);
 
 // READ & WRITE STATEMENT TESTS
 
-class DDLWriteReadTest : public CppUnit::TestFixture {
+class DDLWriteReadTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( DDLWriteReadTest );
+    CPPUNIT_TEST_SUITE( DDLWriteReadTest );
 
-CPPUNIT_TEST( test_write_read_create_table_object );
-CPPUNIT_TEST( test_write_read_create_index_object );
-CPPUNIT_TEST( test_write_read_alter_table_object );
-CPPUNIT_TEST( test_write_read_drop_table_object );
-CPPUNIT_TEST( test_write_read_drop_index_object );
+    CPPUNIT_TEST( test_write_read_create_table_object );
+    CPPUNIT_TEST( test_write_read_create_index_object );
+    CPPUNIT_TEST( test_write_read_alter_table_object );
+    CPPUNIT_TEST( test_write_read_drop_table_object );
+    CPPUNIT_TEST( test_write_read_drop_index_object );
 
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	
-	
+
+
 public:
-	void setUp()
-	{
-	
-	}
+    void setUp()
+    {
 
-	void tearDown()
-	{
+    }
 
-	}
-	// CREATE TABLE
-	void test_write_read_create_table_object()
-	{
-		ByteStream  bytestream;
-		
-		std::string ddl_statement = "CREATE TABLE calpont.PART(p_partkey int not null, p_a varchar(55), p_b decimal(8,2) unique, p_c int default 1, p_d varchar(25) default 'unknown' check (varchar = 'a' ), foreign key (p_partkey) references Customers(p_partkey)) engine=infinidb;";
+    void tearDown()
+    {
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-  		
-		CPPUNIT_ASSERT( 0 != pDDLStatement );
-		
-		pDDLStatement->populateFromDDLStatement( ddl_statement );
+    }
+    // CREATE TABLE
+    void test_write_read_create_table_object()
+    {
+        ByteStream  bytestream;
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-		
-		CPPUNIT_ASSERT( 0 != pDDLPackage );
+        std::string ddl_statement = "CREATE TABLE calpont.PART(p_partkey int not null, p_a varchar(55), p_b decimal(8,2) unique, p_c int default 1, p_d varchar(25) default 'unknown' check (varchar = 'a' ), foreign key (p_partkey) references Customers(p_partkey)) engine=infinidb;";
 
-		// parse the data
-  		pDDLPackage->Parse();
+        MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		write_create_table_object( bytestream, pDDLPackage );
+        CPPUNIT_ASSERT( 0 != pDDLStatement );
 
-		delete pDDLStatement;
+        pDDLStatement->populateFromDDLStatement( ddl_statement );
 
-		delete pDDLPackage;
+        CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		read_create_table_object( bytestream );
+        CPPUNIT_ASSERT( 0 != pDDLPackage );
 
-	}
-	void write_create_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
-	{
-			
-		pDDLPackage->Write( bs );
-	}
+        // parse the data
+        pDDLPackage->Parse();
 
-	void read_create_table_object( ByteStream& bs )
-	{
-		
-		ByteStream::byte package_type;
-		bs >> package_type;
+        write_create_table_object( bytestream, pDDLPackage );
 
-		CPPUNIT_ASSERT( DDL_CREATE == package_type );
+        delete pDDLStatement;
 
-		CreateObjectDDLPackage *pObject = new CreateObjectDDLPackage();
+        delete pDDLPackage;
 
-		pObject->Read( bs );
+        read_create_table_object( bytestream );
 
-		delete pObject;
+    }
+    void write_create_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
+    {
 
-	}
+        pDDLPackage->Write( bs );
+    }
 
-	// CREATE INDEX
-	void test_write_read_create_index_object()
-	{
-		ByteStream  bytestream;
-		
-		std::string ddl_statement = "CREATE INDEX calpont.index1 ON calpont.PART(p_partkey,p_a) engine=infinidb;";
+    void read_create_table_object( ByteStream& bs )
+    {
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-  		
-		CPPUNIT_ASSERT( 0 != pDDLStatement );
-		
-		pDDLStatement->populateFromDDLStatement( ddl_statement );
+        ByteStream::byte package_type;
+        bs >> package_type;
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-		
-		CPPUNIT_ASSERT( 0 != pDDLPackage );
+        CPPUNIT_ASSERT( DDL_CREATE == package_type );
 
-		// parse the data
-  		pDDLPackage->Parse();
+        CreateObjectDDLPackage* pObject = new CreateObjectDDLPackage();
 
-		write_create_index_object( bytestream, pDDLPackage );
+        pObject->Read( bs );
 
-		delete pDDLStatement;
+        delete pObject;
 
-		delete pDDLPackage;
+    }
 
-		read_create_index_object( bytestream );
+    // CREATE INDEX
+    void test_write_read_create_index_object()
+    {
+        ByteStream  bytestream;
 
-	}
-	void write_create_index_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
-	{
-			
-		pDDLPackage->Write( bs );
-	}
+        std::string ddl_statement = "CREATE INDEX calpont.index1 ON calpont.PART(p_partkey,p_a) engine=infinidb;";
 
-	void read_create_index_object( ByteStream& bs )
-	{
-		
-		ByteStream::byte package_type;
-		bs >> package_type;
+        MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		CPPUNIT_ASSERT( DDL_CREATE == package_type );
+        CPPUNIT_ASSERT( 0 != pDDLStatement );
 
-		CreateObjectDDLPackage *pObject = new CreateObjectDDLPackage();
+        pDDLStatement->populateFromDDLStatement( ddl_statement );
 
-		pObject->Read( bs );
+        CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		delete pObject;
+        CPPUNIT_ASSERT( 0 != pDDLPackage );
 
-	}
+        // parse the data
+        pDDLPackage->Parse();
 
-	// ALTER TABLE
-	void test_write_read_alter_table_object()
-	{
-		ByteStream  bytestream;
-		
-		std::string ddl_statement = "ALTER TABLE calpont.PART_a ADD id int engine=infinidb;";
+        write_create_index_object( bytestream, pDDLPackage );
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-  		
-		CPPUNIT_ASSERT( 0 != pDDLStatement );
-		
-		pDDLStatement->populateFromDDLStatement( ddl_statement );
+        delete pDDLStatement;
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-		
-		CPPUNIT_ASSERT( 0 != pDDLPackage );
+        delete pDDLPackage;
 
-		// parse the data
-  		pDDLPackage->Parse();
+        read_create_index_object( bytestream );
 
-		write_alter_table_object( bytestream, pDDLPackage );
+    }
+    void write_create_index_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
+    {
 
-		delete pDDLStatement;
+        pDDLPackage->Write( bs );
+    }
 
-		delete pDDLPackage;
+    void read_create_index_object( ByteStream& bs )
+    {
 
-		read_alter_table_object( bytestream );
+        ByteStream::byte package_type;
+        bs >> package_type;
 
-	}
-	void write_alter_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
-	{
-			
-		pDDLPackage->Write( bs );
-	}
+        CPPUNIT_ASSERT( DDL_CREATE == package_type );
 
-	void read_alter_table_object( ByteStream& bs )
-	{
-		
-		ByteStream::byte package_type;
-		bs >> package_type;
+        CreateObjectDDLPackage* pObject = new CreateObjectDDLPackage();
 
-		CPPUNIT_ASSERT( DDL_ALTER == package_type );
+        pObject->Read( bs );
 
-		AlterObjectDDLPackage *pObject = new AlterObjectDDLPackage();
+        delete pObject;
 
-		pObject->Read( bs );
+    }
 
-		delete pObject;
+    // ALTER TABLE
+    void test_write_read_alter_table_object()
+    {
+        ByteStream  bytestream;
 
-	}
+        std::string ddl_statement = "ALTER TABLE calpont.PART_a ADD id int engine=infinidb;";
 
-	// DROP TABLE
-	void test_write_read_drop_table_object()
-	{
-		ByteStream  bytestream;
-		
-		std::string ddl_statement = "DROP TABLE calpont.PART_a CASCADE CONSTRAINTS engine=infinidb;";
+        MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-  		
-		CPPUNIT_ASSERT( 0 != pDDLStatement );
-		
-		pDDLStatement->populateFromDDLStatement( ddl_statement );
+        CPPUNIT_ASSERT( 0 != pDDLStatement );
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-		
-		CPPUNIT_ASSERT( 0 != pDDLPackage );
+        pDDLStatement->populateFromDDLStatement( ddl_statement );
 
-		// parse the data
-  		pDDLPackage->Parse();
+        CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		write_drop_table_object( bytestream, pDDLPackage );
+        CPPUNIT_ASSERT( 0 != pDDLPackage );
 
-		delete pDDLStatement;
+        // parse the data
+        pDDLPackage->Parse();
 
-		delete pDDLPackage;
+        write_alter_table_object( bytestream, pDDLPackage );
 
-		read_drop_table_object( bytestream );
+        delete pDDLStatement;
 
-	}
-	void write_drop_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
-	{
-			
-		pDDLPackage->Write( bs );
-	}
+        delete pDDLPackage;
 
-	void read_drop_table_object( ByteStream& bs )
-	{
-		
-		ByteStream::byte package_type;
-		bs >> package_type;
+        read_alter_table_object( bytestream );
 
-		CPPUNIT_ASSERT( DDL_DROP == package_type );
+    }
+    void write_alter_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
+    {
 
-		DropObjectDDLPackage *pObject = new DropObjectDDLPackage();
+        pDDLPackage->Write( bs );
+    }
 
-		pObject->Read( bs );
+    void read_alter_table_object( ByteStream& bs )
+    {
 
-		delete pObject;
+        ByteStream::byte package_type;
+        bs >> package_type;
 
-	}
+        CPPUNIT_ASSERT( DDL_ALTER == package_type );
 
-	// DROP INDEX
-	void test_write_read_drop_index_object()
-	{
-		ByteStream  bytestream;
-		
-		std::string ddl_statement = "DROP INDEX calpont.INDEX_1 on calpont.PART engine=infinidb;";
+        AlterObjectDDLPackage* pObject = new AlterObjectDDLPackage();
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-  		
-		CPPUNIT_ASSERT( 0 != pDDLStatement );
-		
-		pDDLStatement->populateFromDDLStatement( ddl_statement );
+        pObject->Read( bs );
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-		
-		CPPUNIT_ASSERT( 0 != pDDLPackage );
+        delete pObject;
 
-		// parse the data
-  		pDDLPackage->Parse();
+    }
 
-		write_drop_index_object( bytestream, pDDLPackage );
+    // DROP TABLE
+    void test_write_read_drop_table_object()
+    {
+        ByteStream  bytestream;
 
-		delete pDDLStatement;
+        std::string ddl_statement = "DROP TABLE calpont.PART_a CASCADE CONSTRAINTS engine=infinidb;";
 
-		delete pDDLPackage;
+        MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		read_drop_index_object( bytestream );
+        CPPUNIT_ASSERT( 0 != pDDLStatement );
 
-	}
-	void write_drop_index_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
-	{
-			
-		pDDLPackage->Write( bs );
-	}
+        pDDLStatement->populateFromDDLStatement( ddl_statement );
 
-	void read_drop_index_object( ByteStream& bs )
-	{
-		
-		ByteStream::byte package_type;
-		bs >> package_type;
+        CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		CPPUNIT_ASSERT( DDL_DROP == package_type );
+        CPPUNIT_ASSERT( 0 != pDDLPackage );
 
-		DropObjectDDLPackage *pObject = new DropObjectDDLPackage();
+        // parse the data
+        pDDLPackage->Parse();
 
-		pObject->Read( bs );
+        write_drop_table_object( bytestream, pDDLPackage );
 
-		delete pObject;
+        delete pDDLStatement;
 
-	}
+        delete pDDLPackage;
+
+        read_drop_table_object( bytestream );
+
+    }
+    void write_drop_table_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
+    {
+
+        pDDLPackage->Write( bs );
+    }
+
+    void read_drop_table_object( ByteStream& bs )
+    {
+
+        ByteStream::byte package_type;
+        bs >> package_type;
+
+        CPPUNIT_ASSERT( DDL_DROP == package_type );
+
+        DropObjectDDLPackage* pObject = new DropObjectDDLPackage();
+
+        pObject->Read( bs );
+
+        delete pObject;
+
+    }
+
+    // DROP INDEX
+    void test_write_read_drop_index_object()
+    {
+        ByteStream  bytestream;
+
+        std::string ddl_statement = "DROP INDEX calpont.INDEX_1 on calpont.PART engine=infinidb;";
+
+        MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
+
+        CPPUNIT_ASSERT( 0 != pDDLStatement );
+
+        pDDLStatement->populateFromDDLStatement( ddl_statement );
+
+        CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
+
+        CPPUNIT_ASSERT( 0 != pDDLPackage );
+
+        // parse the data
+        pDDLPackage->Parse();
+
+        write_drop_index_object( bytestream, pDDLPackage );
+
+        delete pDDLStatement;
+
+        delete pDDLPackage;
+
+        read_drop_index_object( bytestream );
+
+    }
+    void write_drop_index_object( ByteStream& bs, CalpontDDLPackage* pDDLPackage )
+    {
+
+        pDDLPackage->Write( bs );
+    }
+
+    void read_drop_index_object( ByteStream& bs )
+    {
+
+        ByteStream::byte package_type;
+        bs >> package_type;
+
+        CPPUNIT_ASSERT( DDL_DROP == package_type );
+
+        DropObjectDDLPackage* pObject = new DropObjectDDLPackage();
+
+        pObject->Read( bs );
+
+        delete pObject;
+
+    }
 
 };
 
 // PARSE STATEMENT TESTS
 
 
-class DDLCreateTableParserTest : public CppUnit::TestFixture {
+class DDLCreateTableParserTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( DDLCreateTableParserTest );
+    CPPUNIT_TEST_SUITE( DDLCreateTableParserTest );
 
-CPPUNIT_TEST( create_t1 );
+    CPPUNIT_TEST( create_t1 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	
+
 public:
-	void setUp() 
+    void setUp()
     {
-	}
+    }
 
-	void tearDown() 
+    void tearDown()
     {
-	}
+    }
 
-	void create_t1() 
+    void create_t1()
     {
-	ifstream fin("sql/examples/create-table.sql");
+        ifstream fin("sql/examples/create-table.sql");
 
-	CPPUNIT_ASSERT( fin != NULL );
+        CPPUNIT_ASSERT( fin != NULL );
 
-	// read CREATE TABLE statements from buffer and parse
-	for (;;)
-	{
-		string fileBuffer;
-		char Buffer[64000];
-		string::size_type pos_begin;
+        // read CREATE TABLE statements from buffer and parse
+        for (;;)
+        {
+            string fileBuffer;
+            char Buffer[64000];
+            string::size_type pos_begin;
 
-		fin.getline (Buffer, 64000, ';');
+            fin.getline (Buffer, 64000, ';');
 
-		fileBuffer = Buffer;
+            fileBuffer = Buffer;
 
-		string::size_type pos = fileBuffer.find ("create ",0);
-		string::size_type pos1 = fileBuffer.find ("CREATE ",0);
+            string::size_type pos = fileBuffer.find ("create ", 0);
+            string::size_type pos1 = fileBuffer.find ("CREATE ", 0);
 
-		if (pos == string::npos && pos1 == string::npos )
-			// end of file
-			break;
+            if (pos == string::npos && pos1 == string::npos )
+                // end of file
+                break;
 
-		if (pos < pos1)
-			pos_begin = pos;
-		else
-			pos_begin = pos1;
+            if (pos < pos1)
+                pos_begin = pos;
+            else
+                pos_begin = pos1;
 
-		std::string DDLStatement = fileBuffer.substr (pos_begin,64000);
+            std::string DDLStatement = fileBuffer.substr (pos_begin, 64000);
 
-		fileBuffer.append(";");
+            fileBuffer.append(";");
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-			
-		pDDLStatement->populateFromDDLStatement( DDLStatement );
+            MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-				
-			// parse the data
-		pDDLPackage->Parse();
+            pDDLStatement->populateFromDDLStatement( DDLStatement );
 
-		delete pDDLStatement;
+            CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		delete pDDLPackage;
-	}
-	fin.close();
-	}
+            // parse the data
+            pDDLPackage->Parse();
+
+            delete pDDLStatement;
+
+            delete pDDLPackage;
+        }
+
+        fin.close();
+    }
 };
 
-class DDLCreateIndexParserTest : public CppUnit::TestFixture {
+class DDLCreateIndexParserTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( DDLCreateIndexParserTest );
+    CPPUNIT_TEST_SUITE( DDLCreateIndexParserTest );
 
-CPPUNIT_TEST( createIndex_t1 );
+    CPPUNIT_TEST( createIndex_t1 );
 
-CPPUNIT_TEST_SUITE_END();
-
-private:
-	
-public:
-	void setUp() 
-    {
-	}
-
-	void tearDown() 
-    {
-	}
-
-	void createIndex_t1() 
-    {
-	ifstream fin("sql/examples/create-index.sql");
-
-	CPPUNIT_ASSERT( fin != NULL );
-
-	// read CREATE INDEX statements from buffer and parse
-	for (;;)
-	{
-		string fileBuffer;
-		char Buffer[64000];
-		string::size_type pos_begin;
-
-		fin.getline (Buffer, 64000, ';');
-
-		fileBuffer = Buffer;
-
-		string::size_type pos = fileBuffer.find ("create ",0);
-		string::size_type pos1 = fileBuffer.find ("CREATE ",0);
-
-		if (pos == string::npos && pos1 == string::npos )
-			// end of file
-			break;
-
-		if (pos < pos1)
-			pos_begin = pos;
-		else
-			pos_begin = pos1;
-
-		std::string DDLStatement = fileBuffer.substr (pos_begin,64000);
-
-		fileBuffer.append(";");
-
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-			
-		pDDLStatement->populateFromDDLStatement( DDLStatement );
-
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-				
-			// parse the data
-		pDDLPackage->Parse();
-
-		delete pDDLStatement;
-
-		delete pDDLPackage;
-	}
-	fin.close();
-	}
-
-}; 
-
-
-class DDLAlterTableParserTest : public CppUnit::TestFixture {
-
-CPPUNIT_TEST_SUITE( DDLAlterTableParserTest );
-
-CPPUNIT_TEST( alter_t1 );
-
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	
+
 public:
-	void setUp() 
+    void setUp()
     {
-	}
+    }
 
-	void tearDown() 
+    void tearDown()
     {
-	}
+    }
 
-	void alter_t1()
-	{
- 	ifstream fin("sql/examples/alter-table.sql");
+    void createIndex_t1()
+    {
+        ifstream fin("sql/examples/create-index.sql");
 
-	CPPUNIT_ASSERT( fin != NULL );
+        CPPUNIT_ASSERT( fin != NULL );
 
-	// read ALTER TABLE statements from buffer and parse
-	for (;;)
-	{
-		string fileBuffer;
-		char Buffer[64000];
-		string::size_type pos_begin;
+        // read CREATE INDEX statements from buffer and parse
+        for (;;)
+        {
+            string fileBuffer;
+            char Buffer[64000];
+            string::size_type pos_begin;
 
-		fin.getline (Buffer, 64000, ';');
+            fin.getline (Buffer, 64000, ';');
 
-		fileBuffer = Buffer;
+            fileBuffer = Buffer;
 
-		string::size_type pos = fileBuffer.find ("alter ",0);
-		string::size_type pos1 = fileBuffer.find ("ALTER ",0);
+            string::size_type pos = fileBuffer.find ("create ", 0);
+            string::size_type pos1 = fileBuffer.find ("CREATE ", 0);
 
-		if (pos == string::npos && pos1 == string::npos )
-			// end of file
-			break;
+            if (pos == string::npos && pos1 == string::npos )
+                // end of file
+                break;
 
-		if (pos < pos1)
-			pos_begin = pos;
-		else
-			pos_begin = pos1;
+            if (pos < pos1)
+                pos_begin = pos;
+            else
+                pos_begin = pos1;
 
-		std::string DDLStatement = fileBuffer.substr (pos_begin,64000);
+            std::string DDLStatement = fileBuffer.substr (pos_begin, 64000);
 
-		fileBuffer.append(";");
+            fileBuffer.append(";");
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-			
-		pDDLStatement->populateFromDDLStatement( DDLStatement );
+            MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-				
-			// parse the data
-		pDDLPackage->Parse();
+            pDDLStatement->populateFromDDLStatement( DDLStatement );
 
-		delete pDDLStatement;
+            CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		delete pDDLPackage;
-	}
-	fin.close();
-	}
-}; 
+            // parse the data
+            pDDLPackage->Parse();
+
+            delete pDDLStatement;
+
+            delete pDDLPackage;
+        }
+
+        fin.close();
+    }
+
+};
 
 
-class DDLDropTableParserTest : public CppUnit::TestFixture {
+class DDLAlterTableParserTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( DDLDropTableParserTest );
+    CPPUNIT_TEST_SUITE( DDLAlterTableParserTest );
 
-CPPUNIT_TEST( drop_t1 );
+    CPPUNIT_TEST( alter_t1 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	
+
 public:
-	void setUp() 
+    void setUp()
     {
+    }
 
-	}
-
-	void tearDown() 
+    void tearDown()
     {
-	}
+    }
 
-	void drop_t1() 
-	{
- 	ifstream fin("sql/examples/drop-table.sql");
+    void alter_t1()
+    {
+        ifstream fin("sql/examples/alter-table.sql");
 
-	CPPUNIT_ASSERT( fin != NULL );
+        CPPUNIT_ASSERT( fin != NULL );
 
-	// read DROP TABLE statements from buffer and parse
-	for (;;)
-	{
-		string fileBuffer;
-		char Buffer[64000];
-		string::size_type pos_begin;
+        // read ALTER TABLE statements from buffer and parse
+        for (;;)
+        {
+            string fileBuffer;
+            char Buffer[64000];
+            string::size_type pos_begin;
 
-		fin.getline (Buffer, 64000, ';');
+            fin.getline (Buffer, 64000, ';');
 
-		fileBuffer = Buffer;
+            fileBuffer = Buffer;
 
-		string::size_type pos = fileBuffer.find ("drop ",0);
-		string::size_type pos1 = fileBuffer.find ("DROP ",0);
+            string::size_type pos = fileBuffer.find ("alter ", 0);
+            string::size_type pos1 = fileBuffer.find ("ALTER ", 0);
 
-		if (pos == string::npos && pos1 == string::npos )
-			// end of file
-			break;
+            if (pos == string::npos && pos1 == string::npos )
+                // end of file
+                break;
 
-		if (pos < pos1)
-			pos_begin = pos;
-		else
-			pos_begin = pos1;
+            if (pos < pos1)
+                pos_begin = pos;
+            else
+                pos_begin = pos1;
 
-		std::string DDLStatement = fileBuffer.substr (pos_begin,64000);
+            std::string DDLStatement = fileBuffer.substr (pos_begin, 64000);
 
-		fileBuffer.append(";");
+            fileBuffer.append(";");
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-			
-		pDDLStatement->populateFromDDLStatement( DDLStatement );
+            MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-				
-			// parse the data
-		pDDLPackage->Parse();
+            pDDLStatement->populateFromDDLStatement( DDLStatement );
 
-		delete pDDLStatement;
+            CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		delete pDDLPackage;
-	}
-	fin.close();
-	}
+            // parse the data
+            pDDLPackage->Parse();
 
-}; 
+            delete pDDLStatement;
 
-class DDLDropIndexParserTest : public CppUnit::TestFixture {
+            delete pDDLPackage;
+        }
 
-CPPUNIT_TEST_SUITE( DDLDropIndexParserTest );
+        fin.close();
+    }
+};
 
-CPPUNIT_TEST( dropIndex_t1 );
 
-CPPUNIT_TEST_SUITE_END();
+class DDLDropTableParserTest : public CppUnit::TestFixture
+{
+
+    CPPUNIT_TEST_SUITE( DDLDropTableParserTest );
+
+    CPPUNIT_TEST( drop_t1 );
+
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	std::string fDDLStatement;
-	
+
 public:
-	void setUp() 
+    void setUp()
     {
-	}
 
-	void tearDown() 
+    }
+
+    void tearDown()
     {
-	}
+    }
 
-	void dropIndex_t1() 
+    void drop_t1()
     {
- 	ifstream fin("sql/examples/drop-index.sql");
+        ifstream fin("sql/examples/drop-table.sql");
 
-	CPPUNIT_ASSERT( fin != NULL );
+        CPPUNIT_ASSERT( fin != NULL );
 
-	// read DROP INDEX statements from buffer and parse
-	for (;;)
-	{
-		string fileBuffer;
-		char Buffer[64000];
-		string::size_type pos_begin;
+        // read DROP TABLE statements from buffer and parse
+        for (;;)
+        {
+            string fileBuffer;
+            char Buffer[64000];
+            string::size_type pos_begin;
 
-		fin.getline (Buffer, 64000, ';');
+            fin.getline (Buffer, 64000, ';');
 
-		fileBuffer = Buffer;
+            fileBuffer = Buffer;
 
-		string::size_type pos = fileBuffer.find ("drop ",0);
-		string::size_type pos1 = fileBuffer.find ("DROP ",0);
+            string::size_type pos = fileBuffer.find ("drop ", 0);
+            string::size_type pos1 = fileBuffer.find ("DROP ", 0);
 
-		if (pos == string::npos && pos1 == string::npos )
-			// end of file
-			break;
+            if (pos == string::npos && pos1 == string::npos )
+                // end of file
+                break;
 
-		if (pos < pos1)
-			pos_begin = pos;
-		else
-			pos_begin = pos1;
+            if (pos < pos1)
+                pos_begin = pos;
+            else
+                pos_begin = pos1;
 
-		std::string DDLStatement = fileBuffer.substr (pos_begin,64000);
+            std::string DDLStatement = fileBuffer.substr (pos_begin, 64000);
 
-		fileBuffer.append(";");
+            fileBuffer.append(";");
 
-		MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
-			
-		pDDLStatement->populateFromDDLStatement( DDLStatement );
+            MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
 
-		CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
-				
-			// parse the data
-		pDDLPackage->Parse();
+            pDDLStatement->populateFromDDLStatement( DDLStatement );
 
-		delete pDDLStatement;
+            CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
 
-		delete pDDLPackage;
-	}
-	fin.close();
-	}
+            // parse the data
+            pDDLPackage->Parse();
 
-}; 
+            delete pDDLStatement;
+
+            delete pDDLPackage;
+        }
+
+        fin.close();
+    }
+
+};
+
+class DDLDropIndexParserTest : public CppUnit::TestFixture
+{
+
+    CPPUNIT_TEST_SUITE( DDLDropIndexParserTest );
+
+    CPPUNIT_TEST( dropIndex_t1 );
+
+    CPPUNIT_TEST_SUITE_END();
+
+private:
+    std::string fDDLStatement;
+
+public:
+    void setUp()
+    {
+    }
+
+    void tearDown()
+    {
+    }
+
+    void dropIndex_t1()
+    {
+        ifstream fin("sql/examples/drop-index.sql");
+
+        CPPUNIT_ASSERT( fin != NULL );
+
+        // read DROP INDEX statements from buffer and parse
+        for (;;)
+        {
+            string fileBuffer;
+            char Buffer[64000];
+            string::size_type pos_begin;
+
+            fin.getline (Buffer, 64000, ';');
+
+            fileBuffer = Buffer;
+
+            string::size_type pos = fileBuffer.find ("drop ", 0);
+            string::size_type pos1 = fileBuffer.find ("DROP ", 0);
+
+            if (pos == string::npos && pos1 == string::npos )
+                // end of file
+                break;
+
+            if (pos < pos1)
+                pos_begin = pos;
+            else
+                pos_begin = pos1;
+
+            std::string DDLStatement = fileBuffer.substr (pos_begin, 64000);
+
+            fileBuffer.append(";");
+
+            MySQLDDLStatement* pDDLStatement = new MySQLDDLStatement();
+
+            pDDLStatement->populateFromDDLStatement( DDLStatement );
+
+            CalpontDDLPackage* pDDLPackage = CalpontDDLFactory::makeCalpontDDLPackage(*pDDLStatement);
+
+            // parse the data
+            pDDLPackage->Parse();
+
+            delete pDDLStatement;
+
+            delete pDDLPackage;
+        }
+
+        fin.close();
+    }
+
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( DDLDropIndexParserTest );
 CPPUNIT_TEST_SUITE_REGISTRATION( DDLDropTableParserTest );
@@ -698,22 +709,22 @@ CPPUNIT_TEST_SUITE_REGISTRATION( DDLWriteReadTest );
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
 
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+
+    return (wasSuccessful ? 0 : 1);
 
 }
 
 string itoa(const int i)
 {
-	stringstream ss;
-	ss << i;
-	return ss.str();
+    stringstream ss;
+    ss << i;
+    return ss.str();
 }
 

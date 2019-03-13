@@ -28,11 +28,13 @@
 /**
  * Namespace
  */
-namespace execplan { 
+namespace execplan
+{
 /**
  * Class
  */
-class VendorExecutionPlan {
+class VendorExecutionPlan
+{
 
 public:
 
@@ -40,7 +42,7 @@ private:
 
 };
 
-} 
+}
 
 #endif //VENDOREXECUTIONPLAN_H
 

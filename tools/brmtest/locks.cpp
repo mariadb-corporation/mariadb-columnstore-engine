@@ -17,64 +17,66 @@ using namespace BRM;
 
 int query_locks()
 {
-	ShmKeys keys;
-	RWLock *rwlock[MasterSegmentTable::nTables];
-	int RWLockKeys[MasterSegmentTable::nTables];
-	int i;
+    ShmKeys keys;
+    RWLock* rwlock[MasterSegmentTable::nTables];
+    int RWLockKeys[MasterSegmentTable::nTables];
+    int i;
 
-	RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
-	RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
-	RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
-	RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
-	RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
+    RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
+    RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
+    RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
+    RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
+    RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		rwlock[i] = new RWLock(RWLockKeys[i]);
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        rwlock[i] = new RWLock(RWLockKeys[i]);
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++) 
-		if (rwlock[i]->getWriting() > 0 ||
-		    //rwlock[i]->getReading() > 0 ||
-		    rwlock[i]->getWritersWaiting() > 0 ||
-		    rwlock[i]->getReadersWaiting() > 0)
-			return 1;
-	
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		delete rwlock[i];
-	
-	return 0;
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        if (rwlock[i]->getWriting() > 0 ||
+                //rwlock[i]->getReading() > 0 ||
+                rwlock[i]->getWritersWaiting() > 0 ||
+                rwlock[i]->getReadersWaiting() > 0)
+            return 1;
+
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        delete rwlock[i];
+
+    return 0;
 }
 
 int reset_locks()
 {
-	ShmKeys keys;
-	RWLock *rwlock[MasterSegmentTable::nTables];
-	int RWLockKeys[MasterSegmentTable::nTables];
-	int i;
-	SessionManager sm(true);
+    ShmKeys keys;
+    RWLock* rwlock[MasterSegmentTable::nTables];
+    int RWLockKeys[MasterSegmentTable::nTables];
+    int i;
+    SessionManager sm(true);
 
-	RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
-	RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
-	RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
-	RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
-	RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
+    RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
+    RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
+    RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
+    RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
+    RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		rwlock[i] = new RWLock(RWLockKeys[i]);
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        rwlock[i] = new RWLock(RWLockKeys[i]);
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++) 
-		rwlock[i]->reset();
-	
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		delete rwlock[i];
-	
-	try {
-		sm.reset();
-	}
-	catch (exception &e) {
-		cout << e.what() << endl;
-		return -1;
-	}
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        rwlock[i]->reset();
 
-	return 0;
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        delete rwlock[i];
+
+    try
+    {
+        sm.reset();
+    }
+    catch (exception& e)
+    {
+        cout << e.what() << endl;
+        return -1;
+    }
+
+    return 0;
 }
 

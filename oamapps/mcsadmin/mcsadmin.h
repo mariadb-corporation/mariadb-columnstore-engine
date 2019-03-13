@@ -58,7 +58,7 @@ const int ArgNum = 10;
 const int DescNumMax = 10;
 const int cmdNum = 68;
 
-const std::string  DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/uiCommands.log";
+const std::string  DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/mcsadmin.log";
 std::ofstream   logFile;
 
 /**
@@ -68,7 +68,7 @@ void    writeLog(std::string command);
 
 /** @brief location of the Process Configuration file
  */
-const std::string ConsoleCmdsFile= "ConsoleCmds.xml";
+const std::string ConsoleCmdsFile = "ConsoleCmds.xml";
 
 void getFlags(const std::string* arguments, oam::GRACEFUL_FLAG& gracefulTemp, oam::ACK_FLAG& ackTemp, oam::CC_SUSPEND_ANSWER& suspendAnswer, bool& bNeedsConfirm, std::string* password = NULL);
 int confirmPrompt(std::string warningCommand);
@@ -95,42 +95,42 @@ oam::CC_SUSPEND_ANSWER AskSuspendQuestion(int CmdID);
 
 class to_lower
 {
-    public:
-        char operator() (char c) const            // notice the return type
-        {
-            return tolower(c);
-        }
+public:
+    char operator() (char c) const            // notice the return type
+    {
+        return tolower(c);
+    }
 };
 
 /** @brief Hidden Support commands in lower-case
 */
 const std::string supportCmds[] = {	"helpsupport",
-									"stopprocess",
-									"startprocess",
-									"restartprocess",
-									"killpid",
-									"rebootsystem",
-									"rebootnode",
-									"stopdbrmprocess",
-									"startdbrmprocess",
-									"restartdbrmprocess",
-									"setsystemstartupstate",
-									"stopprimprocs",
-									"startprimprocs",
-									"restartprimprocs",
-									"stopexemgrs",
-									"startexemgrs",
-									"restartexemgrs",
-									"getprocessstatusstandby",
-									"distributeconfigfile",
-									"getpmdbrootconfig",
-									"getdbrootpmconfig",
-									"getsystemdbrootconfig",
-									"checkdbfunctional",
-									"getsystemreadflags",
-									"setsystemqueryready",
-									""
-};
+                                    "stopprocess",
+                                    "startprocess",
+                                    "restartprocess",
+                                    "killpid",
+                                    "rebootsystem",
+                                    "rebootnode",
+                                    "stopdbrmprocess",
+                                    "startdbrmprocess",
+                                    "restartdbrmprocess",
+                                    "setsystemstartupstate",
+                                    "stopprimprocs",
+                                    "startprimprocs",
+                                    "restartprimprocs",
+                                    "stopexemgrs",
+                                    "startexemgrs",
+                                    "restartexemgrs",
+                                    "getprocessstatusstandby",
+                                    "distributeconfigfile",
+                                    "getpmdbrootconfig",
+                                    "getdbrootpmconfig",
+                                    "getsystemdbrootconfig",
+                                    "checkdbfunctional",
+                                    "getsystemreadflags",
+                                    "setsystemqueryready",
+                                    ""
+                                  };
 
 
 #endif

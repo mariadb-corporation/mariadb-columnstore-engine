@@ -57,19 +57,22 @@ class WEFileReadThread;
 class WEPmList
 {
 public:
-	WEPmList():fPmList(),fListMutex(){}
-	virtual ~WEPmList(){ fPmList.clear(); }
+    WEPmList(): fPmList(), fListMutex() {}
+    virtual ~WEPmList()
+    {
+        fPmList.clear();
+    }
 
-	void addPm2List(int PmId);
-	void addPriorityPm2List(int PmId);
-	int getNextPm();
-	void clearPmList();
-	bool check4Pm(int PmId);
+    void addPm2List(int PmId);
+    void addPriorityPm2List(int PmId);
+    int getNextPm();
+    void clearPmList();
+    bool check4Pm(int PmId);
 
 private:
-	typedef std::list<int> WePmList;	// List to add in front
-	WePmList fPmList;
-	boost::mutex fListMutex;	//mutex controls add/remove
+    typedef std::list<int> WePmList;	// List to add in front
+    WePmList fPmList;
+    boost::mutex fListMutex;	//mutex controls add/remove
 
 };
 
@@ -79,19 +82,19 @@ class WESDHandler
 {
 
 public:
-	WESDHandler(WESplitterApp& Ref);
-	WESDHandler(const WESDHandler& rhs);
-	virtual ~WESDHandler();
+    WESDHandler(WESplitterApp& Ref);
+    WESDHandler(const WESDHandler& rhs);
+    virtual ~WESDHandler();
 
     void setup();
     void shutdown();
     void reset();
-    void send2Pm(messageqcpp::SBS& Sbs, unsigned int PmId=0);
-    void send2Pm(messageqcpp::ByteStream & Bs, unsigned int PmId=0);
+    void send2Pm(messageqcpp::SBS& Sbs, unsigned int PmId = 0);
+    void send2Pm(messageqcpp::ByteStream& Bs, unsigned int PmId = 0);
     void sendEODMsg();
     void checkForRespMsgs();
-    void add2RespQueue(const messageqcpp::SBS & Sbs);
-    void exportJobFile(std::string &JobId, std::string &JobFileName);
+    void add2RespQueue(const messageqcpp::SBS& Sbs);
+    void exportJobFile(std::string& JobId, std::string& JobFileName);
     int  leastDataSendPm();
     bool check4AllBrmReports();
     bool updateCPAndHWMInBRM();
@@ -116,20 +119,20 @@ public:
     void onAckResponse(int PmId);
     void onNakResponse(int PmId);
     void onEodResponse(int Pmid);
-	void onPmErrorResponse(int PmId);
-	void onKeepAliveMessage(int PmId);
-	void onCpimportPass(int PmId);
-	void onCpimportFail(int PmId, bool SigHandle=false);
-	void onImpFileError(int PmId);
-	void onBrmReport(int PmId, messageqcpp::SBS& Sbs);
-	void onErrorFile(int PmId, messageqcpp::SBS& Sbs);
-	void onBadFile(int PmId, messageqcpp::SBS& Sbs);
-	void onRollbackResult(int PmId, messageqcpp::SBS& Sbs);
-	void onCleanupResult(int PmId, messageqcpp::SBS& Sbs);
-	void onDBRootCount(int PmId, messageqcpp::SBS& Sbs);
-	void onHandlingSignal();
-	void onHandlingSigHup();
-	void onDisconnectFailure();
+    void onPmErrorResponse(int PmId);
+    void onKeepAliveMessage(int PmId);
+    void onCpimportPass(int PmId);
+    void onCpimportFail(int PmId, bool SigHandle = false);
+    void onImpFileError(int PmId);
+    void onBrmReport(int PmId, messageqcpp::SBS& Sbs);
+    void onErrorFile(int PmId, messageqcpp::SBS& Sbs);
+    void onBadFile(int PmId, messageqcpp::SBS& Sbs);
+    void onRollbackResult(int PmId, messageqcpp::SBS& Sbs);
+    void onCleanupResult(int PmId, messageqcpp::SBS& Sbs);
+    void onDBRootCount(int PmId, messageqcpp::SBS& Sbs);
+    void onHandlingSignal();
+    void onHandlingSigHup();
+    void onDisconnectFailure();
 
     int getNextPm2Feed();
     int getNextDbrPm2Send();
@@ -148,44 +151,107 @@ public:
     char getEnclChar();
     char getEscChar();
     char getDelimChar();
-	bool getConsoleLog();
+    bool getConsoleLog();
+    int getReadBufSize();
     ImportDataMode getImportDataMode() const;
     void sysLog(const logging::Message::Args& msgArgs,
-    		logging::LOG_TYPE logType, logging::Message::MessageID msgId);
+                logging::LOG_TYPE logType, logging::Message::MessageID msgId);
 
 
-    boost::thread* getFpRespThread() const { return fpRespThread;  }
-    unsigned int getQId() const { return fQId; }
-    void setFpRespThread(boost::thread *pRespThread)
-    {	fpRespThread = pRespThread; }
-    void setQId(unsigned int QId) { fQId = QId; }
-    bool isContinue() const { return fContinue; }
-    void setContinue(bool Continue) { 	fContinue = Continue; }
-    int getPmCount() const { return fPmCount; }
-    void setPmCount(int PmCount) {	fPmCount = PmCount; }
-    int getNextPm2Send() {	return fDataFeedList.getNextPm(); }
-    bool check4Ack(unsigned int PmId) {	return fDataFeedList.check4Pm(PmId); }
-    int getTableOID()   { return fTableOId; }
-    void setDebugLvl(int DebugLvl) { fDebugLvl = DebugLvl; }
-    int getDebugLvl() {	return fDebugLvl; }
-    unsigned int getTableRecLen() const { return fFixedBinaryRecLen; }
+    boost::thread* getFpRespThread() const
+    {
+        return fpRespThread;
+    }
+    unsigned int getQId() const
+    {
+        return fQId;
+    }
+    void setFpRespThread(boost::thread* pRespThread)
+    {
+        fpRespThread = pRespThread;
+    }
+    void setQId(unsigned int QId)
+    {
+        fQId = QId;
+    }
+    bool isContinue() const
+    {
+        return fContinue;
+    }
+    void setContinue(bool Continue)
+    {
+        fContinue = Continue;
+    }
+    int getPmCount() const
+    {
+        return fPmCount;
+    }
+    void setPmCount(int PmCount)
+    {
+        fPmCount = PmCount;
+    }
+    int getNextPm2Send()
+    {
+        return fDataFeedList.getNextPm();
+    }
+    bool check4Ack(unsigned int PmId)
+    {
+        return fDataFeedList.check4Pm(PmId);
+    }
+    int getTableOID()
+    {
+        return fTableOId;
+    }
+    void setDebugLvl(int DebugLvl)
+    {
+        fDebugLvl = DebugLvl;
+    }
+    int getDebugLvl()
+    {
+        return fDebugLvl;
+    }
+    unsigned int getTableRecLen() const
+    {
+        return fFixedBinaryRecLen;
+    }
     void updateRowTx(unsigned int RowCnt, int CIdx)
-    {   fWeSplClients[CIdx]->updateRowTx(RowCnt);    }
-    void resetRowTx(){ for (int aCnt = 1; aCnt <= fPmCount; aCnt++)
-    	{if (fWeSplClients[aCnt] != 0) {fWeSplClients[aCnt]->resetRowTx(); } } }
+    {
+        fWeSplClients[CIdx]->updateRowTx(RowCnt);
+    }
+    void resetRowTx()
+    {
+        for (int aCnt = 1; aCnt <= fPmCount; aCnt++)
+        {
+            if (fWeSplClients[aCnt] != 0)
+            {
+                fWeSplClients[aCnt]->resetRowTx();
+            }
+        }
+    }
     void setRowsUploadInfo(int PmId, int64_t RowsRead, int64_t RowsInserted)
-    { fWeSplClients[PmId]->setRowsUploadInfo(RowsRead, RowsInserted); }
-    void add2ColOutOfRangeInfo(int PmId, int ColNum, 
+    {
+        fWeSplClients[PmId]->setRowsUploadInfo(RowsRead, RowsInserted);
+    }
+    void add2ColOutOfRangeInfo(int PmId, int ColNum,
                                CalpontSystemCatalog::ColDataType ColType,
                                std::string&  ColName, int NoOfOors)
-    { fWeSplClients[PmId]->add2ColOutOfRangeInfo(ColNum, ColType, ColName, NoOfOors); }
+    {
+        fWeSplClients[PmId]->add2ColOutOfRangeInfo(ColNum, ColType, ColName, NoOfOors);
+    }
     void setErrorFileName(int PmId, const std::string& ErrFileName)
-    { fWeSplClients[PmId]->setErrInfoFile(ErrFileName); }
+    {
+        fWeSplClients[PmId]->setErrInfoFile(ErrFileName);
+    }
     void setBadFileName(int PmId, const std::string& BadFileName)
-    {  	fWeSplClients[PmId]->setBadDataFile(BadFileName);    }
+    {
+        fWeSplClients[PmId]->setBadDataFile(BadFileName);
+    }
 
-	void setDisconnectFailure(bool Flag);
-	bool getDisconnectFailure(){ return fDisconnectFailure; }
+    void setDisconnectFailure(bool Flag);
+    bool getDisconnectFailure()
+    {
+        return fDisconnectFailure;
+    }
 
 public:	// for multi-table support
     WESplitterApp& fRef;
@@ -193,7 +259,7 @@ public:	// for multi-table support
 
 private:
     unsigned int fQId;
-    joblist::ResourceManager fRm;
+    joblist::ResourceManager* fRm;
     oam::Oam fOam;
     oam::ModuleTypeConfig fModuleTypeConfig;
     int fDebugLvl;
@@ -212,12 +278,12 @@ private:
     typedef std::list<messageqcpp::SBS> WESRespList;
     WESRespList fRespList;
     // Other member variables
-    boost::thread *fpRespThread;
+    boost::thread* fpRespThread;
 
     WEPmList fDataFeedList;
     WEFileReadThread fFileReadThread;
 
-	bool fDisconnectFailure;	//Failure due to disconnect from PM
+    bool fDisconnectFailure;	//Failure due to disconnect from PM
     bool fForcedFailure;
     bool fAllCpiStarted;
     bool fFirstDataSent;
@@ -227,7 +293,7 @@ private:
     // set of PM specific vector entries
     typedef std::vector<WESplClient*> WESplClients;
     WESplClients fWeSplClients;
-    enum { MAX_PMS = 512, MAX_QSIZE=10, MAX_WES_QSIZE=100};
+    enum { MAX_PMS = 512, MAX_QSIZE = 10, MAX_WES_QSIZE = 100};
 
     typedef std::vector<std::string> StrVec;
     StrVec fBrmRptVec;
@@ -242,69 +308,93 @@ private:
     class WEImportRslt
     {
     public:
-    	WEImportRslt():fRowsPro(0),fRowsIns(0),fStartTime(),fEndTime(),fTotTime(0){}
-    	~WEImportRslt(){}
+        WEImportRslt(): fRowsPro(0), fRowsIns(0), fStartTime(), fEndTime(), fTotTime(0) {}
+        ~WEImportRslt() {}
     public:
-    	void reset(){fRowsPro=0; fRowsIns=0; fTotTime=0; fColOorVec.clear();}
-    	void updateRowsProcessed(int64_t Rows){ fRowsPro+=Rows; }
-    	void updateRowsInserted(int64_t Rows){ fRowsIns+=Rows; }
-		void updateColOutOfRangeInfo(int aColNum, CalpontSystemCatalog::ColDataType aColType, 
+        void reset()
+        {
+            fRowsPro = 0;
+            fRowsIns = 0;
+            fTotTime = 0;
+            fColOorVec.clear();
+        }
+        void updateRowsProcessed(int64_t Rows)
+        {
+            fRowsPro += Rows;
+        }
+        void updateRowsInserted(int64_t Rows)
+        {
+            fRowsIns += Rows;
+        }
+        void updateColOutOfRangeInfo(int aColNum, CalpontSystemCatalog::ColDataType aColType,
                                      std::string aColName, int aNoOfOors)
-		{
-			WEColOorVec::iterator aIt = fColOorVec.begin();
-			while(aIt != fColOorVec.end())
-			{
-				if ((*aIt).fColNum == aColNum)
-				{
-					(*aIt).fNoOfOORs += aNoOfOors;
-					break;
-				}
-				aIt++;
-			}
-			if (aIt == fColOorVec.end())
-			{
-				// First time for aColNum to have out of range count
-				WEColOORInfo aColOorInfo;
-				aColOorInfo.fColNum = aColNum;
-				aColOorInfo.fColType = aColType;
-				aColOorInfo.fColName = aColName;
-				aColOorInfo.fNoOfOORs = aNoOfOors;
-				fColOorVec.push_back(aColOorInfo);
-			}
+        {
+            WEColOorVec::iterator aIt = fColOorVec.begin();
+
+            while (aIt != fColOorVec.end())
+            {
+                if ((*aIt).fColNum == aColNum)
+                {
+                    (*aIt).fNoOfOORs += aNoOfOors;
+                    break;
+                }
+
+                aIt++;
+            }
+
+            if (aIt == fColOorVec.end())
+            {
+                // First time for aColNum to have out of range count
+                WEColOORInfo aColOorInfo;
+                aColOorInfo.fColNum = aColNum;
+                aColOorInfo.fColType = aColType;
+                aColOorInfo.fColName = aColName;
+                aColOorInfo.fNoOfOORs = aNoOfOors;
+                fColOorVec.push_back(aColOorInfo);
+            }
+
 #if 0
-			try
-			{
-				fColOorVec.at(aColNum).fNoOfOORs += aNoOfOors;
-			}
-			catch (out_of_range& e)
-			{
-				// First time for aColNum to have out of range count
-				WEColOORInfo aColOorInfo;
-				aColOorInfo.fColNum = aColNum;
-				aColOorInfo.fColName = aColName;
-				aColOorInfo.fNoOfOORs = aNoOfOors;
-				fColOorVec[aColNum] = aColOorInfo;
-			}
+
+            try
+            {
+                fColOorVec.at(aColNum).fNoOfOORs += aNoOfOors;
+            }
+            catch (out_of_range& e)
+            {
+                // First time for aColNum to have out of range count
+                WEColOORInfo aColOorInfo;
+                aColOorInfo.fColNum = aColNum;
+                aColOorInfo.fColName = aColName;
+                aColOorInfo.fNoOfOORs = aNoOfOors;
+                fColOorVec[aColNum] = aColOorInfo;
+            }
+
 #endif
-		}
-    	void startTimer(){ gettimeofday( &fStartTime, 0 ); }
-    	void stopTimer(){ gettimeofday( &fEndTime, 0 ); }
-    	float getTotalRunTime()
-    	{
-    		//fTotTime = (fEndTime>0)?(fEndTime-fStartTime):0;
-    		fTotTime = (fEndTime.tv_sec   + (fEndTime.tv_usec   / 1000000.0)) -
-    		             (fStartTime.tv_sec + (fStartTime.tv_usec / 1000000.0));
-    		return fTotTime;
-    	}
+        }
+        void startTimer()
+        {
+            gettimeofday( &fStartTime, 0 );
+        }
+        void stopTimer()
+        {
+            gettimeofday( &fEndTime, 0 );
+        }
+        float getTotalRunTime()
+        {
+            //fTotTime = (fEndTime>0)?(fEndTime-fStartTime):0;
+            fTotTime = (fEndTime.tv_sec   + (fEndTime.tv_usec   / 1000000.0)) -
+                       (fStartTime.tv_sec + (fStartTime.tv_usec / 1000000.0));
+            return fTotTime;
+        }
 
     public:
-    	int64_t fRowsPro;	//Rows processed
-    	int64_t fRowsIns;	//Rows inserted
-    	timeval fStartTime;	//StartTime
-    	timeval fEndTime;	//EndTime
-    	float fTotTime;	//TotalTime
-		// A vector containing a list of rows and counts of Out of Range values
-		WEColOorVec fColOorVec;	
+        int64_t fRowsPro;	//Rows processed
+        int64_t fRowsIns;	//Rows inserted
+        timeval fStartTime;	//StartTime
+        timeval fEndTime;	//EndTime
+        float fTotTime;	//TotalTime
+        // A vector containing a list of rows and counts of Out of Range values
+        WEColOorVec fColOorVec;
     };
     WEImportRslt fImportRslt;
 
@@ -312,7 +402,7 @@ private:
     friend class WEBrmUpdater;
     friend class WESplitterApp;
     friend class WEFileReadThread;
-	friend class WETableLockGrabber;
+    friend class WETableLockGrabber;
 
 };
 //------------------------------------------------------------------------------

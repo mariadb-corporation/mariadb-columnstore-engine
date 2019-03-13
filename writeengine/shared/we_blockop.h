@@ -40,83 +40,87 @@ namespace WriteEngine
 class BlockOp : public WEObj
 {
 public:
-   /**
-    * @brief Constructor
-    */
+    /**
+     * @brief Constructor
+     */
     EXPORT BlockOp();
 
-   /**
-    * @brief Default Destructor
-    */
+    /**
+     * @brief Default Destructor
+     */
     EXPORT ~BlockOp();
- 
 
-   /**
-    * @brief Calculate the location of Row ID
-    */
+
+    /**
+     * @brief Calculate the location of Row ID
+     */
     EXPORT bool     calculateRowId( RID rowId,
                                     const int epb,
                                     const int width,
                                     int&  fbo,
                                     int&  bio ) const;
 
-   /**
-    * @brief Calculate the location of Row ID
-    */
+    /**
+     * @brief Calculate the location of Row ID
+     */
     void            clearBlock(     DataBlock* block )
-                    { memset(block->data, 0, sizeof(block->data));
-                      block->no = -1;
-                      block->dirty = false; }
+    {
+        memset(block->data, 0, sizeof(block->data));
+        block->no = -1;
+        block->dirty = false;
+    }
 
-   /**
-    * @brief Get bit value after shift
-    */
+    /**
+     * @brief Get bit value after shift
+     */
     uint64_t        getBitValue(    uint64_t val,
                                     int shiftBit,
                                     uint64_t mask ) const
-                    { return ( val >> shiftBit ) & mask ; }
+    {
+        return ( val >> shiftBit ) & mask ;
+    }
 
-   /**
-    * @brief Get correct row width
-    */
+    /**
+     * @brief Get correct row width
+     */
     EXPORT int      getCorrectRowWidth( const execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                    const int width ) const;
+                                        const int width ) const;
 
-   /**
-    * @brief Get an empty row value
-    */
+    /**
+     * @brief Get an empty row value
+     */
     EXPORT uint64_t getEmptyRowValue(const execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                    const int width ) const;
+                                     const int width ) const;
 
-   /**
-    * @brief Calculate row id
-    */
+    /**
+     * @brief Calculate row id
+     */
     EXPORT RID      getRowId(       const long fbo,
                                     const int width,
                                     const int rowPos ) const;
 
-   /**
-    * @brief Get buffer value
-    */
+    /**
+     * @brief Get buffer value
+     */
     EXPORT void     readBufValue(   const unsigned char* buf,
                                     void* val, const short width ) const;
 
-   /**
-    * @brief Reset a buffer
-    */
+    /**
+     * @brief Reset a buffer
+     */
     EXPORT void     resetBuf(       unsigned char* buf,
                                     const int bufSize ) const;
 
-   /**
-    * @brief Fill buffer with empty values
-    */
+    /**
+     * @brief Fill buffer with empty values
+     */
     EXPORT void static setEmptyBuf( unsigned char* buf,
                                     const int bufSize,
                                     uint64_t emptyVal, const int width );
 
-   /**
-    * @brief Set a value in a buffer
-    */
+    /**
+     * @brief Set a value in a buffer
+     */
     EXPORT void     writeBufValue(  unsigned char* buf,
                                     void* val,
                                     const size_t width,

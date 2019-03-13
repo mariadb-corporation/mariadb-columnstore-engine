@@ -36,14 +36,14 @@ namespace WriteEngine
 class WERespReadThread
 {
 public:
-	WERespReadThread(WESDHandler& aSdh);
-	WERespReadThread(const WERespReadThread& rhs);
-	virtual ~WERespReadThread();
+    WERespReadThread(WESDHandler& aSdh);
+    WERespReadThread(const WERespReadThread& rhs);
+    virtual ~WERespReadThread();
 
-	void operator()();
+    void operator()();
 
 private:
-	WESDHandler& fSdh;
+    WESDHandler& fSdh;
 
 };
 

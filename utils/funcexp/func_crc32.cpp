@@ -41,17 +41,17 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_crc32::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 
 int64_t Func_crc32::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& ct)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType& ct)
 {
-	const string& val = parm[0]->data()->getStrVal(row, isNull);
-	return (int64_t) crc32(0L, (unsigned char*)val.c_str(), strlen(val.c_str()));
+    const string& val = parm[0]->data()->getStrVal(row, isNull);
+    return (int64_t) crc32(0L, (unsigned char*)val.c_str(), strlen(val.c_str()));
 }
 
 

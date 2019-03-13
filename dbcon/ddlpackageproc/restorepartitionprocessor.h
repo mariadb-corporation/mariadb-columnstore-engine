@@ -34,25 +34,25 @@
 
 namespace ddlpackageprocessor
 {
-    /** @brief specialization of a DDLPacakageProcessor
-     * for interacting with the Write Engine to process
-     * drop table ddl statements.
+/** @brief specialization of a DDLPacakageProcessor
+ * for interacting with the Write Engine to process
+ * drop table ddl statements.
+ */
+class RestorePartitionProcessor : public DDLPackageProcessor
+{
+public:
+    RestorePartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
+    /** @brief process a drop table statement
+     *
+     *  @param dropTableStmt the drop table statement
      */
-    class RestorePartitionProcessor : public DDLPackageProcessor
-    {
-        public:
-			RestorePartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm){}
-            /** @brief process a drop table statement
-             *
-             *  @param dropTableStmt the drop table statement
-             */
-            EXPORT DDLResult processPackage(ddlpackage::RestorePartitionStatement& RestorePartitionStmt);
+    EXPORT DDLResult processPackage(ddlpackage::RestorePartitionStatement& RestorePartitionStmt);
 
-        protected:
+protected:
 
-        private:
+private:
 
-    };
+};
 }                                                 // namespace ddlpackageprocessor
 
 #undef EXPORT

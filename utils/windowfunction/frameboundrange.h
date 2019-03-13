@@ -35,52 +35,73 @@ namespace windowfunction
 class FrameBoundRange : public FrameBound
 {
 public:
-	/** @brief FrameBoundRange constructor
-	 *  @param  t, frame type
-	 *  @param  a, order by sort spec: asc | desc
-	 *  @param  n, order by sort spec: null first | null last
-	 *  @param  v, order by column data type
-	 */
-	FrameBoundRange(int t = 0, bool a = true, bool n = true)
-		: FrameBound(t), fAsc(a), fNullFirst(n), fIsZero(false) {};
+    /** @brief FrameBoundRange constructor
+     *  @param  t, frame type
+     *  @param  a, order by sort spec: asc | desc
+     *  @param  n, order by sort spec: null first | null last
+     *  @param  v, order by column data type
+     */
+    FrameBoundRange(int t = 0, bool a = true, bool n = true)
+        : FrameBound(t), fAsc(a), fNullFirst(n), fIsZero(false) {};
 
-	/** @brief FrameBoundRange destructor
-	 */
-	virtual ~FrameBoundRange() {};
+    /** @brief FrameBoundRange destructor
+     */
+    virtual ~FrameBoundRange() {};
 
-	/** @brief clone
-	 */
-	virtual FrameBound* clone() { return NULL; }  // abstract class
+    /** @brief clone
+     */
+    virtual FrameBound* clone()
+    {
+        return NULL;    // abstract class
+    }
 
-	/** @brief virtual void getBound
-	 */
-	int64_t getBound(int64_t, int64_t, int64_t);
+    /** @brief virtual void getBound
+     */
+    int64_t getBound(int64_t, int64_t, int64_t);
 
-	const std::string toString() const;
+    const std::string toString() const;
 
-	void setTupleId(std::vector<uint64_t> ids)  { fTupleId = ids;   }
-	std::vector<uint64_t> getTupleId() const    { return fTupleId;  }
+    void setTupleId(std::vector<uint64_t> ids)
+    {
+        fTupleId = ids;
+    }
+    std::vector<uint64_t> getTupleId() const
+    {
+        return fTupleId;
+    }
 
-	void setIndex(vector<int> idx)              { fIndex = idx;     }
-	const std::vector<int>& getIndex() const    { return fIndex;    }
+    void setIndex(vector<int> idx)
+    {
+        fIndex = idx;
+    }
+    const std::vector<int>& getIndex() const
+    {
+        return fIndex;
+    }
 
-	void isZero(bool z) { fIsZero = z;    }
-	bool isZero() const { return fIsZero; }
+    void isZero(bool z)
+    {
+        fIsZero = z;
+    }
+    bool isZero() const
+    {
+        return fIsZero;
+    }
 
 protected:
 
-	// for range calculation
-	// data, row meta data, order by column index, ascending | descending
-	// [0]: order by; [1]: interval; [2]: [0] +/- [1]
-	std::vector<uint64_t>                       fTupleId;
-	std::vector<int>                            fIndex;
+    // for range calculation
+    // data, row meta data, order by column index, ascending | descending
+    // [0]: order by; [1]: interval; [2]: [0] +/- [1]
+    std::vector<uint64_t>                       fTupleId;
+    std::vector<int>                            fIndex;
 
-	// order by sort specification
-	bool                                        fAsc;
-	bool                                        fNullFirst;
+    // order by sort specification
+    bool                                        fAsc;
+    bool                                        fNullFirst;
 
-	// in case expr evaluates to 0
-	bool                                        fIsZero;
+    // in case expr evaluates to 0
+    bool                                        fIsZero;
 
 };
 
@@ -91,11 +112,11 @@ protected:
 template<typename T>
 struct ValueType
 {
-	T                                       fValue;
-	bool                                    fIsNull;
+    T                                       fValue;
+    bool                                    fIsNull;
 
-	// constructor
-	ValueType() : fValue(0), fIsNull(false) {}
+    // constructor
+    ValueType() : fValue(0), fIsNull(false) {}
 };
 
 
@@ -106,53 +127,56 @@ template<typename T>
 class FrameBoundConstantRange : public FrameBoundRange
 {
 public:
-	/** @brief FrameBoundConstant constructor
-	 *  @param  t, frame type
-	 *  @param  a, order by sort spec: asc | desc
-	 *  @param  n, order by sort spec: null first | null last
-	 *  @param  c, constant value.  !! caller need to check NULL or negative value !!
-	 */
-	FrameBoundConstantRange(int t = 0, bool a = true, bool n = true, void* c = NULL)
-		: FrameBoundRange(t, a, n)
-	{
-		fValue.fIsNull = (c == NULL);
-		if (!fValue.fIsNull)
-			fValue.fValue = *((T*) c);
-	};
+    /** @brief FrameBoundConstant constructor
+     *  @param  t, frame type
+     *  @param  a, order by sort spec: asc | desc
+     *  @param  n, order by sort spec: null first | null last
+     *  @param  c, constant value.  !! caller need to check NULL or negative value !!
+     */
+    FrameBoundConstantRange(int t = 0, bool a = true, bool n = true, void* c = NULL)
+        : FrameBoundRange(t, a, n)
+    {
+        fValue.fIsNull = (c == NULL);
 
-	/** @brief FrameBoundConstantRange destructor
-	 */
-	virtual ~FrameBoundConstantRange() {};
+        if (!fValue.fIsNull)
+            fValue.fValue = *((T*) c);
+    };
 
-	/** @brief clone
-	 */
-	virtual FrameBound* clone()
-	{ return new FrameBoundConstantRange(*this); }
+    /** @brief FrameBoundConstantRange destructor
+     */
+    virtual ~FrameBoundConstantRange() {};
 
-	/** @brief virtual void getBound
-	 */
-	int64_t getBound(int64_t, int64_t, int64_t);
+    /** @brief clone
+     */
+    virtual FrameBound* clone()
+    {
+        return new FrameBoundConstantRange(*this);
+    }
 
-	const std::string toString() const;
+    /** @brief virtual void getBound
+     */
+    int64_t getBound(int64_t, int64_t, int64_t);
+
+    const std::string toString() const;
 
 protected:
 
-	// find the range offset
-	// i: partition upper bound
+    // find the range offset
+    // i: partition upper bound
     // j: current row
-	// k: partition lower bound
-	virtual int64_t getPrecedingOffset(int64_t j, int64_t i);
-	virtual int64_t getFollowingOffset(int64_t j, int64_t k);
+    // k: partition lower bound
+    virtual int64_t getPrecedingOffset(int64_t j, int64_t i);
+    virtual int64_t getFollowingOffset(int64_t j, int64_t k);
 
-	// validate value is not negative
-	virtual void validate() {}
+    // validate value is not negative
+    virtual void validate() {}
 
-	// get value at fIndex[x]
-	void getValue(ValueType<T>&, int64_t);
-	T getValueByType(int64_t);
+    // get value at fIndex[x]
+    void getValue(ValueType<T>&, int64_t);
+    T getValueByType(int64_t);
 
-	// order by column value type
-	ValueType<T> fValue;
+    // order by column value type
+    ValueType<T> fValue;
 
 };
 
@@ -164,39 +188,41 @@ template<typename T>
 class FrameBoundExpressionRange : public FrameBoundConstantRange<T>
 {
 public:
-	/** @brief FrameBoundExpressionRange constructor
-	 *  @param  t, frame type
-	 *  @param  a, order by sort spec: asc | desc
-	 *  @param  n, order by sort spec: null first | null last
-	 */
-	FrameBoundExpressionRange(int t = 0, bool a = true, bool n = true) :
-		FrameBoundConstantRange<T>(t, a, n) {};
+    /** @brief FrameBoundExpressionRange constructor
+     *  @param  t, frame type
+     *  @param  a, order by sort spec: asc | desc
+     *  @param  n, order by sort spec: null first | null last
+     */
+    FrameBoundExpressionRange(int t = 0, bool a = true, bool n = true) :
+        FrameBoundConstantRange<T>(t, a, n) {};
 
-	/** @brief FrameBoundExpressionRange destructor
-	 */
-	virtual ~FrameBoundExpressionRange() {};
+    /** @brief FrameBoundExpressionRange destructor
+     */
+    virtual ~FrameBoundExpressionRange() {};
 
-	/** @brief clone
-	 */
-	virtual FrameBound* clone()
-	{ return new FrameBoundExpressionRange(*this); }
+    /** @brief clone
+     */
+    virtual FrameBound* clone()
+    {
+        return new FrameBoundExpressionRange(*this);
+    }
 
-	/** @brief virtual void getBound
-	 */
-	// int64_t getBound(int64_t, int64_t, int64_t);
+    /** @brief virtual void getBound
+     */
+    // int64_t getBound(int64_t, int64_t, int64_t);
 
-	const std::string toString() const;
+    const std::string toString() const;
 
 
 protected:
 
 
-	// virtual in FrameBoundRange
-	int64_t getPrecedingOffset(int64_t j, int64_t i);
-	int64_t getFollowingOffset(int64_t j, int64_t k);
+    // virtual in FrameBoundRange
+    int64_t getPrecedingOffset(int64_t j, int64_t i);
+    int64_t getFollowingOffset(int64_t j, int64_t k);
 
-	// validate the expression is not negative
-	void validate();
+    // validate the expression is not negative
+    void validate();
 
 };
 

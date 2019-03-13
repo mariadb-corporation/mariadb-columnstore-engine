@@ -23,10 +23,11 @@
 
 #include "socketparms.h"
 
-namespace messageqcpp { 
+namespace messageqcpp
+{
 
 SocketParms::SocketParms(int domain, int type, int protocol) :
-	fSd(-1), fDomain(domain), fType(type), fProtocol(protocol)
+    fSd(-1), fDomain(domain), fType(type), fProtocol(protocol)
 {
 }
 
@@ -36,25 +37,25 @@ SocketParms::~SocketParms()
 
 void SocketParms::doCopy(const SocketParms& rhs)
 {
-	fSd = rhs.fSd;
-	fDomain = rhs.fDomain;
-	fType = rhs.fType;
-	fProtocol = rhs.fProtocol;
+    fSd = rhs.fSd;
+    fDomain = rhs.fDomain;
+    fType = rhs.fType;
+    fProtocol = rhs.fProtocol;
 }
 
 SocketParms::SocketParms(const SocketParms& rhs)
 {
-	doCopy(rhs);
+    doCopy(rhs);
 }
 
 SocketParms& SocketParms::operator=(const SocketParms& rhs)
 {
-	if (this != &rhs)
-	{
-		doCopy(rhs);
-	}
+    if (this != &rhs)
+    {
+        doCopy(rhs);
+    }
 
-	return *this;
+    return *this;
 }
 
 }

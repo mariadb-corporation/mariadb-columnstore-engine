@@ -25,22 +25,25 @@ using namespace std;
 
 namespace
 {
-	const int lineLen = 1024;
+const int lineLen = 1024;
 }
 
 namespace winport
 {
-	bool grepit(istream& is, const string& pattern)
-	{
-		boost::regex pat(pattern);
-		string cInput;
-		getline(is, cInput);
-		while (is.good())
-		{
-			if (boost::regex_match(cInput, pat))
-				return true;
-			getline(is, cInput);
-		}
-		return false;
-	}
+bool grepit(istream& is, const string& pattern)
+{
+    boost::regex pat(pattern);
+    string cInput;
+    getline(is, cInput);
+
+    while (is.good())
+    {
+        if (boost::regex_match(cInput, pat))
+            return true;
+
+        getline(is, cInput);
+    }
+
+    return false;
+}
 }

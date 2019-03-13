@@ -7,8 +7,7 @@
 # Argument 2 - Remote Server Host Name or IP address
 # Argument 3 - User Password of remote server
 # Argument 4 - Package name being installed
-# Argument 5 - Module type?
-# Argument 6 - Install Type, "initial" or "upgrade"
+# Argument 6 - Install Type, "initial", "upgrade", "uninstall"
 # Argument 7 - Server type?
 # Argument 8 - Debug flag 1 for on, 0 for off
 # Argument 9 - install dir (optional)
@@ -18,14 +17,12 @@ set MODULE [lindex $argv 0]
 set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
 set CALPONTPKG [lindex $argv 3]
-set MODULETYPE [lindex $argv 4]
-set INSTALLTYPE [lindex $argv 5]
+set INSTALLTYPE [lindex $argv 4]
+set AMAZONINSTALL [lindex $argv 5]
 set PKGTYPE "binary"
-set SERVERTYPE [lindex $argv 6]
-set MYSQLPORT [lindex $argv 7]
-set DEBUG [lindex $argv 8]
+set DEBUG [lindex $argv 6]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 9]
+set IDIR [lindex $argv 7]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
@@ -33,7 +30,7 @@ set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
 set PREFIX [file dirname $PREFIX]
 set USERNAME $env(USER)
-set UNM [lindex $argv 10]
+set UNM [lindex $argv 8]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -70,7 +67,7 @@ send_user "\n"
 
 
 send_user "Stop ColumnStore service                       "
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
+send "ssh -v $USERNAME@$SERVER 'export COLUMNSTORE_INSTALL_DIR=$INSTALLDIR; $INSTALLDIR/bin/columnstore stop'\n"
 set timeout 60
 # check return
 expect {
@@ -136,7 +133,7 @@ send_user "\n"
 #
 send_user "Install MariaDB Columnstore Package on Module               "
 send_user " \n"
-send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxvf $CALPONTPKG'\n"
+send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
 set timeout 360
 expect {
 	"word: " { send "$PASSWORD\n"
@@ -148,6 +145,51 @@ expect {
 	"Exit status 0" { send_user "DONE" }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
+}
+send_user "\n"
+
+#
+# copy over custom OS tmp files
+#
+send_user "Copy Custom OS files to Module                  "
+send_user " \n"
+send "scp -rv $INSTALLDIR/local/etc $USERNAME@$SERVER:$INSTALLDIR/local\n"
+set timeout 120
+expect {
+	"word: " { send "$PASSWORD\n"
+    exp_continue
+	}
+	"passphrase" { send "$PASSWORD\n" 
+    exp_continue
+	}
+	"Exit status 0" { send_user "DONE" }
+	"scp :"  	{ send_user "ERROR\n" ; 
+				send_user "\n*** Installation ERROR\n" ; 
+				exit 1 }
+	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
+}
+send_user "\n"
+
+#
+# copy over MariaDB Columnstore Module file
+#
+send_user "Copy MariaDB Columnstore Module file to Module                 "
+send "scp -v $INSTALLDIR/local/etc/$MODULE/*  $USERNAME@$SERVER:$INSTALLDIR/local/.\n"
+set timeout 120
+expect {
+	"word: " { send "$PASSWORD\n"
+    exp_continue
+	}
+	"passphrase" { send "$PASSWORD\n" 
+    exp_continue
+	}
+	"Exit status 0" { send_user "DONE" }
+	"scp :"  	{ send_user "ERROR\n" ; 
+				send_user "\n*** Installation ERROR\n" ; 
+				exit 1 }	"Exit status 0" { send_user "DONE" }
+	"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
 }
 send_user "\n"
 
@@ -170,15 +212,11 @@ expect {
 }
 send_user "\n"
 
-#
-# copy over calpont config file
-#
-send_user "Copy MariaDB Columnstore Config file to Module              "
-send " \n"
-send date\n
-send "scp -v $INSTALLDIR/etc/* $USERNAME@$SERVER:$INSTALLDIR/etc\n"
-# check return
+send_user "Start ColumnStore service                       "
+send_user " \n"
+send "ssh -v $USERNAME@$SERVER 'export COLUMNSTORE_INSTALL_DIR=$INSTALLDIR; $INSTALLDIR/bin/columnstore restart'\n"
 set timeout 120
+# check return
 expect {
 	"word: " { send "$PASSWORD\n"
     exp_continue
@@ -186,77 +224,9 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
+	"Exit status 127" { send_user "ERROR: $INSTALLDIR/bin/post-install Not Found\n" ; exit 1 }
 	"Exit status 0" { send_user "DONE" }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 2 }
-}
-send_user "\n"
-
-#
-# copy over custom OS tmp files
-#
-send_user "Copy Custom OS files to Module                  "
-send_user " \n"
-send "scp -rv $INSTALLDIR/local/etc $USERNAME@$SERVER:$INSTALLDIR/local\n"
-set timeout 60
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-	"scp :"  	{ send_user "ERROR\n" ; 
-				send_user "\n*** Installation ERROR\n" ; 
-				exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
-}
-send_user "\n"
-
-#
-# copy over calpont OS files
-#
-send_user "Copy MariaDB Columnstore OS files to Module                 "
-send " \n"
-send date\n
-send "scp -v $INSTALLDIR/local/etc/$MODULE/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"
-set timeout 60
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	timeout { send_user "ERROR: Timeout\n" ; exit 2 }
-}
-send_user "\n"
-
-#
-# Start module installer to setup Customer OS files
-#
-if { $SERVERTYPE == "2" || $SERVERTYPE == "pmwithum" } { 
-    set MODULETYPE "um"
-}
-
-send_user "Run Module Installer                            "
-send " \n"
-send date\n
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=$MODULETYPE --port=$MYSQLPORT --installdir=$INSTALLDIR'\n"
-set timeout 120
-expect {
-	"word: " { send "$PASSWORD\n"
-    exp_continue
-	}
-	"passphrase" { send "$PASSWORD\n" 
-    exp_continue
-	}
-	"Exit status 0" { send_user "DONE" }
-        "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
-        timeout { send_user "ERROR: Timeout\n" ; exit 2 }
 }
 send_user "\n"
 

@@ -33,13 +33,19 @@ namespace joblist
  *
  * struct ErrorInfo stores the error code and message
  */
-struct ErrorInfo {
+struct ErrorInfo
+{
     ErrorInfo() : errCode(0) { }
     uint32_t errCode;
     std::string errMsg;
     // for backward compat
     ErrorInfo(uint16_t v) : errCode(v) { }
-    ErrorInfo & operator=(uint16_t v) { errCode = v; errMsg.clear(); return *this; }
+    ErrorInfo& operator=(uint16_t v)
+    {
+        errCode = v;
+        errMsg.clear();
+        return *this;
+    }
 };
 typedef boost::shared_ptr<ErrorInfo> SErrorInfo;
 

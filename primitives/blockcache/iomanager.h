@@ -21,7 +21,7 @@
 //
 // C++ Interface: iomanager
 //
-// Description: 
+// Description:
 //
 //
 // Author: Jason Rodriguez <jrodriguez@calpont.com>
@@ -45,25 +45,36 @@
 
 //#define SHARED_NOTHING_DEMO_2
 
-namespace dbbc {
+namespace dbbc
+{
 
-class ioManager {
-	
+class ioManager
+{
+
 public:
-	
-    ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount, 
-		int bsPerRead);
-	//ioManager(FileBufferMgr& fbm, int thrCount);
-	~ioManager();
-	int readerCount() const {return fThreadCount;}
-	fileRequest* getNextRequest();
-	void go(void);
-	void stop();
-	FileBufferMgr& fileBufferManager() {return fIOMfbMgr;}
-	config::Config* configPtr() {return fConfig;}
+
+    ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount,
+              int bsPerRead);
+    //ioManager(FileBufferMgr& fbm, int thrCount);
+    ~ioManager();
+    int readerCount() const
+    {
+        return fThreadCount;
+    }
+    fileRequest* getNextRequest();
+    void go(void);
+    void stop();
+    FileBufferMgr& fileBufferManager()
+    {
+        return fIOMfbMgr;
+    }
+    config::Config* configPtr()
+    {
+        return fConfig;
+    }
 
     const int localLbidLookup(BRM::LBID_t lbid,
-                              BRM::VER_t verid, 
+                              BRM::VER_t verid,
                               bool vbFlag,
                               BRM::OID_t& oid,
                               uint16_t& dbRoot,
@@ -72,55 +83,76 @@ public:
                               uint32_t& fileBlockOffset);
 
     void buildOidFileName(const BRM::OID_t oid,
-                        const uint16_t dbRoot,
-                        const uint16_t partNum,
-                        const uint32_t segNum,
-                        char* file_name);
+                          const uint16_t dbRoot,
+                          const uint16_t partNum,
+                          const uint32_t segNum,
+                          char* file_name);
 
-	const uint32_t getExtentRows() { return fdbrm.getExtentRows(); }
+    const uint32_t getExtentRows()
+    {
+        return fdbrm.getExtentRows();
+    }
 
-	uint32_t blocksPerRead;
+    uint32_t blocksPerRead;
 
-	bool IOTrace() const { return fIOTrace;}
+    bool IOTrace() const
+    {
+        return fIOTrace;
+    }
 
-	uint32_t MaxOpenFiles() const { return fMaxOpenFiles;}
+    uint32_t MaxOpenFiles() const
+    {
+        return fMaxOpenFiles;
+    }
 
-	uint32_t DecreaseOpenFilesCount() const { return fDecreaseOpenFilesCount;}
+    uint32_t DecreaseOpenFilesCount() const
+    {
+        return fDecreaseOpenFilesCount;
+    }
 
-	bool FDCacheTrace() const { return fFDCacheTrace;}
+    bool FDCacheTrace() const
+    {
+        return fFDCacheTrace;
+    }
 
-	void handleBlockReadError ( fileRequest* fr,
-		const std::string& errMsg, bool *copyLocked, int errorCode=fileRequest::FAILED );
+    void handleBlockReadError ( fileRequest* fr,
+                                const std::string& errMsg, bool* copyLocked, int errorCode = fileRequest::FAILED );
 
-	std::ofstream& FDTraceFile() {return fFDTraceFile;}
+    std::ofstream& FDTraceFile()
+    {
+        return fFDTraceFile;
+    }
 
-	BRM::DBRM* dbrm() { return &fdbrm;}
-	
-	
+    BRM::DBRM* dbrm()
+    {
+        return &fdbrm;
+    }
+
+
 #ifdef SHARED_NOTHING_DEMO_2
-	uint32_t pmCount;
+    uint32_t pmCount;
 #endif
 
 private:
 
-	FileBufferMgr& fIOMfbMgr;
-	fileBlockRequestQueue& fIOMRequestQueue;
-	int fThreadCount;
-	boost::thread_group fThreadArr;
-	void createReaders();
-	config::Config* fConfig;
-	BRM::DBRM fdbrm;
-	WriteEngine::FileOp fFileOp;
-	
-	// do not implement
-	ioManager();
-	ioManager(const ioManager& iom);
-	const ioManager& operator=(const ioManager& iom);
-	bool fIOTrace;
-	uint32_t fMaxOpenFiles;
-	uint32_t fDecreaseOpenFilesCount;
-	bool fFDCacheTrace;
-	std::ofstream fFDTraceFile;
+    FileBufferMgr& fIOMfbMgr;
+    fileBlockRequestQueue& fIOMRequestQueue;
+    int fThreadCount;
+    boost::thread_group fThreadArr;
+    void createReaders();
+    config::Config* fConfig;
+    BRM::DBRM fdbrm;
+    WriteEngine::FileOp fFileOp;
+
+    // do not implement
+    ioManager();
+    ioManager(const ioManager& iom);
+    const ioManager& operator=(const ioManager& iom);
+    bool fIOTrace;
+    uint32_t fMaxOpenFiles;
+    uint32_t fDecreaseOpenFilesCount;
+    bool fFDCacheTrace;
+    std::ofstream fFDTraceFile;
 
 };
 

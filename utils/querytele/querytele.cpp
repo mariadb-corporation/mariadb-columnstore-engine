@@ -39,20 +39,20 @@ namespace querytele
 /*static*/
 uuids::uuid QueryTeleClient::genUUID()
 {
-	mutex::scoped_lock lk(uuidgenMtx);
-	return uuidgen();
+    mutex::scoped_lock lk(uuidgenMtx);
+    return uuidgen();
 }
 
 /*static*/
 int64_t QueryTeleClient::timeNowms()
 {
-	int64_t nowms=-1;
-	struct timeval tv;
+    int64_t nowms = -1;
+    struct timeval tv;
 
-	if (gettimeofday(&tv, 0) == 0)
-		nowms = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    if (gettimeofday(&tv, 0) == 0)
+        nowms = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 
-	return nowms;
+    return nowms;
 }
 
 }

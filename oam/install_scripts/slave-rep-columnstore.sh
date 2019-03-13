@@ -8,13 +8,13 @@
 
 # check log for error
 checkForError() {
-	grep ERROR /tmp/slave-rep-status.log > /tmp/error.check
-	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		echo "ERROR: check log file: /tmp/slave-rep-status.log"
-		rm -f /tmp/error.check
+	grep ERROR ${tmpdir}/slave-rep-status.log > ${tmpdir}/error.check
+	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
+		echo "ERROR: check log file: ${tmpdir}/slave-rep-status.log"
+		rm -f ${tmpdir}/error.check
 		exit 1
 	fi
-	rm -f /tmp/error.check
+	rm -f ${tmpdir}/error.check
 }
 
 prefix=/usr/local
@@ -24,9 +24,6 @@ for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
 		installdir=$prefix/mariadb/columnstore
-	elif [ `expr -- "$arg" : '--password='` -eq 11 ]; then
-		password="`echo $arg | awk -F= '{print $2}'`"
-		pwprompt="--password=$password"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
@@ -38,6 +35,8 @@ for arg in "$@"; do
 		masterlogpos="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--port='` -eq 7 ]; then
 		port="`echo $arg | awk -F= '{print $2}'`"
+	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
+		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	fi
 done
 
@@ -46,29 +45,29 @@ test -f $installdir/post/functions && . $installdir/post/functions
 repUser="idbrep"
 password="Calpont1"
 
->/tmp/slave-rep-status.log
+>${tmpdir}/slave-rep-status.log
 
 #
 # Run stop slave command
 #
-echo "Run stop slave command" >>/tmp/slave-rep-status.log
-cat >/tmp/idb_slave-rep.sql <<EOD
+echo "Run stop slave command" >>${tmpdir}/slave-rep-status.log
+cat >${tmpdir}/idb_slave-rep.sql <<EOD
 stop slave;
 EOD
 
-cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+	--defaults-extra-file=$installdir/mysql/my.cnf \
+	--user=root \
+	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
 checkForError
 
 #
 # Run Change Master Command
 #
-echo "Run Change Master Command" >>/tmp/slave-rep-status.log
-cat >/tmp/idb_slave-rep.sql <<EOD
+echo "Run Change Master Command" >>${tmpdir}/slave-rep-status.log
+cat >${tmpdir}/idb_slave-rep.sql <<EOD
 CHANGE MASTER TO
     	MASTER_HOST='$masteripaddr',
     	MASTER_USER='$repUser',
@@ -79,43 +78,43 @@ CHANGE MASTER TO
 
 EOD
 
-cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+	--defaults-extra-file=$installdir/mysql/my.cnf \
+	--user=root \
+	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
 checkForError
 
 #
 # Run start slave command
 #
-echo "Run start slave command" >>/tmp/slave-rep-status.log
-cat >/tmp/idb_slave-rep.sql <<EOD
+echo "Run start slave command" >>${tmpdir}/slave-rep-status.log
+cat >${tmpdir}/idb_slave-rep.sql <<EOD
 start slave;
 EOD
 
-cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+	--defaults-extra-file=$installdir/mysql/my.cnf \
+	--user=root \
+	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
 checkForError
 
 #
 # Run SHOW SLAVE STATUS
 #
-echo "Run SHOW SLAVE STATUS to node log" >>/tmp/slave-rep-status.log
-cat >/tmp/idb_slave-rep.sql <<EOD
+echo "Run SHOW SLAVE STATUS to node log" >>${tmpdir}/slave-rep-status.log
+cat >${tmpdir}/idb_slave-rep.sql <<EOD
 SHOW SLAVE STATUS\G
 EOD
 
-cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+	--defaults-extra-file=$installdir/mysql/my.cnf \
+	--user=root \
+	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
 checkForError
 

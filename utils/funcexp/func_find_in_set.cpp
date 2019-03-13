@@ -47,70 +47,75 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_find_in_set::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_find_in_set::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& op_ct)
 {
-	const string& searchStr = parm[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return 0;
-	const string& setString = parm[1]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return 0;
-	
-	if (searchStr.find(",") != string::npos)
-		return 0;
-		
-	string newSearchStr(searchStr.substr(0, strlen(searchStr.c_str())));
-	string newSetString(setString.substr(0, strlen(setString.c_str())));
-	//tokenize the setStr with comma as seprator.
-	typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-	boost::char_separator<char> sep( ",");
-	tokenizer tokens(newSetString, sep);
-	
-	unsigned i = 0;
-	size_t pos = 0;
-	for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
-	{
-		pos = (*tok_iter).find(newSearchStr);
-		i++;
-		if (( pos != string::npos) && (newSearchStr.length() == (*tok_iter).length()))
-			return i;
-	}
-	
-	return 0;
+    const string& searchStr = parm[0]->data()->getStrVal(row, isNull);
+
+    if (isNull)
+        return 0;
+
+    const string& setString = parm[1]->data()->getStrVal(row, isNull);
+
+    if (isNull)
+        return 0;
+
+    if (searchStr.find(",") != string::npos)
+        return 0;
+
+    string newSearchStr(searchStr.substr(0, strlen(searchStr.c_str())));
+    string newSetString(setString.substr(0, strlen(setString.c_str())));
+    //tokenize the setStr with comma as seprator.
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    boost::char_separator<char> sep( ",");
+    tokenizer tokens(newSetString, sep);
+
+    unsigned i = 0;
+    size_t pos = 0;
+
+    for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+    {
+        pos = (*tok_iter).find(newSearchStr);
+        i++;
+
+        if (( pos != string::npos) && (newSearchStr.length() == (*tok_iter).length()))
+            return i;
+    }
+
+    return 0;
 }
 
 double Func_find_in_set::getDoubleVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& ct)
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& ct)
 {
-	return (double)getIntVal(row, parm, isNull, ct);
+    return (double)getIntVal(row, parm, isNull, ct);
 }
 
 
 string Func_find_in_set::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType& ct)
 {
-	return intToString(getIntVal(row, parm, isNull, ct));
+    return intToString(getIntVal(row, parm, isNull, ct));
 }
 
 execplan::IDB_Decimal Func_find_in_set::getDecimalVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	IDB_Decimal decimal;
-	decimal.value = getIntVal(row, fp, isNull, op_ct);
-	decimal.scale = op_ct.scale;
-	return decimal;
+    IDB_Decimal decimal;
+    decimal.value = getIntVal(row, fp, isNull, op_ct);
+    decimal.scale = op_ct.scale;
+    return decimal;
 }
 
 } // namespace funcexp

@@ -25,16 +25,18 @@ set_source_files_properties(ha_calpont.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti -
 
 add_library(calmysql SHARED ${libcalmysql_SRCS})
 
-target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool)
+target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
+SET_TARGET_PROPERTIES(calmysql PROPERTIES LINK_FLAGS "${calmysql_link_flags} -Wl,-E")
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 SET ( is_columnstore_tables_SRCS
     is_columnstore_tables.cpp
+    sm.cpp
     )
 add_library(is_columnstore_tables SHARED ${is_columnstore_tables_SRCS})
 
-target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_tables PROPERTIES PREFIX "")
@@ -42,10 +44,11 @@ set_target_properties(is_columnstore_tables PROPERTIES VERSION 1.0.0 SOVERSION 1
 
 SET ( is_columnstore_columns_SRCS
     is_columnstore_columns.cpp
+    sm.cpp
     )
 add_library(is_columnstore_columns SHARED ${is_columnstore_columns_SRCS})
 
-target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_columns PROPERTIES PREFIX "")
@@ -53,10 +56,11 @@ set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 
 
 SET ( is_columnstore_extents_SRCS
     is_columnstore_extents.cpp
+    sm.cpp
     )
 add_library(is_columnstore_extents SHARED ${is_columnstore_extents_SRCS})
 
-target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
@@ -64,10 +68,11 @@ set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 
 
 SET ( is_columnstore_files_SRCS
     is_columnstore_files.cpp
+    sm.cpp
     )
 add_library(is_columnstore_files SHARED ${is_columnstore_files_SRCS})
 
-target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_files PROPERTIES PREFIX "")
@@ -83,7 +88,7 @@ install(FILES syscatalog_mysql.sql
               columnstore_info.sql
               my.cnf
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
-install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
+install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 
 

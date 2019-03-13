@@ -79,12 +79,12 @@ void BulkRollbackFileCompressedHdfs::truncateSegmentFile(
 {
     std::ostringstream msgText;
     msgText << "Truncating compressed HDFS column file"
-        ": dbRoot-"          << dbRoot         << 
-        "; part#-"           << partNum        <<
-        "; seg#-"            << segNum         <<
-        "; rawTotBlks-"      << fileSizeBlocks;
+            ": dbRoot-"          << dbRoot         <<
+            "; part#-"           << partNum        <<
+            "; seg#-"            << segNum         <<
+            "; rawTotBlks-"      << fileSizeBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, columnOID, msgText.str() );
+                       logging::M0075, columnOID, msgText.str() );
 
     restoreFromBackup( "column", columnOID, dbRoot, partNum, segNum );
 }
@@ -93,7 +93,7 @@ void BulkRollbackFileCompressedHdfs::truncateSegmentFile(
 // Reinitialize a column segment extent (in the db file) to empty values,
 // following the HWM.  Remaining extents in the file are truncated.
 // Also updates the header(s) as well.
-//  
+//
 // columnOID      - OID of segment file to be reinitialized
 // dbRoot         - DBRoot of segment file to be reinitialized
 // partNum        - Partition number of segment file to be reinitialized
@@ -120,13 +120,13 @@ void BulkRollbackFileCompressedHdfs::reInitTruncColumnExtent(
 
     std::ostringstream msgText;
     msgText << "Reinit HWM compressed column extent in HDFS db file" <<
-        ": dbRoot-"          << dbRoot      << 
-        "; part#-"           << partNum     <<
-        "; seg#-"            << segNum      <<
-        "; rawOffset(bytes)-"<< startOffset <<
-        "; rawFreeBlks-"     << nBlocks;
+            ": dbRoot-"          << dbRoot      <<
+            "; part#-"           << partNum     <<
+            "; seg#-"            << segNum      <<
+            "; rawOffset(bytes)-" << startOffset <<
+            "; rawFreeBlks-"     << nBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, columnOID, msgText.str() );
+                       logging::M0075, columnOID, msgText.str() );
 
     restoreFromBackup( "column", columnOID, dbRoot, partNum, segNum );
 }
@@ -135,7 +135,7 @@ void BulkRollbackFileCompressedHdfs::reInitTruncColumnExtent(
 // Reinitialize a dictionary segment extent (in the db file) to empty blocks,
 // following the HWM.  Remaining extents in the file are truncated.
 // Also updates the header(s) as well.
-//  
+//
 // dStoreOID      - OID of segment store file to be reinitialized
 // dbRoot         - DBRoot of segment file to be reinitialized
 // partNum        - Partition number of segment file to be reinitialized
@@ -156,13 +156,13 @@ void BulkRollbackFileCompressedHdfs::reInitTruncDctnryExtent(
 
     std::ostringstream msgText;
     msgText << "Reinit HWM compressed dictionary store extent in HDFS db file"
-        ": dbRoot-"           << dbRoot      <<
-        "; part#-"            << partNum     <<
-        "; seg#-"             << segNum      <<
-        "; rawOffset(bytes)-" << startOffset <<
-        "; rawFreeBlks-"      << nBlocks;
+            ": dbRoot-"           << dbRoot      <<
+            "; part#-"            << partNum     <<
+            "; seg#-"             << segNum      <<
+            "; rawOffset(bytes)-" << startOffset <<
+            "; rawFreeBlks-"      << nBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, dStoreOID, msgText.str() );
+                       logging::M0075, dStoreOID, msgText.str() );
 
     restoreFromBackup( "dictionary store", dStoreOID, dbRoot, partNum, segNum );
 }
@@ -173,9 +173,9 @@ void BulkRollbackFileCompressedHdfs::reInitTruncDctnryExtent(
 // existing backup file.
 //------------------------------------------------------------------------------
 bool BulkRollbackFileCompressedHdfs::doWeReInitExtent( OID columnOID,
-    uint32_t dbRoot,
-    uint32_t partNum,
-    uint32_t segNum) const
+        uint32_t dbRoot,
+        uint32_t partNum,
+        uint32_t segNum) const
 {
     return true;
 }
@@ -194,15 +194,16 @@ bool BulkRollbackFileCompressedHdfs::doWeReInitExtent( OID columnOID,
 // old leftover backup file.
 //------------------------------------------------------------------------------
 void BulkRollbackFileCompressedHdfs::restoreFromBackup(const char* colType,
-    OID       columnOID,
-    uint32_t dbRoot,
-    uint32_t partNum,
-    uint32_t segNum)
+        OID       columnOID,
+        uint32_t dbRoot,
+        uint32_t partNum,
+        uint32_t segNum)
 {
     // Construct file name for db file to be restored
     char dbFileName[FILE_NAME_SIZE];
     int rc = fDbFile.getFileName( columnOID, dbFileName,
-        dbRoot, partNum, segNum );
+                                  dbRoot, partNum, segNum );
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
@@ -232,6 +233,7 @@ void BulkRollbackFileCompressedHdfs::restoreFromBackup(const char* colType,
     {
         // Rename current db file to make room for restored file
         rc = IDBPolicy::rename( dbFileName, dbFileNameTmp.c_str() );
+
         if (rc != 0)
         {
             std::ostringstream oss;
@@ -245,6 +247,7 @@ void BulkRollbackFileCompressedHdfs::restoreFromBackup(const char* colType,
 
         // Rename backup file to replace current db file
         rc = IDBPolicy::rename( backupFileName.c_str(), dbFileName );
+
         if (rc != 0)
         {
             std::ostringstream oss;
@@ -264,9 +267,10 @@ void BulkRollbackFileCompressedHdfs::restoreFromBackup(const char* colType,
         std::string errMsg;
         ConfirmHdfsDbFile confirmHdfs;
         rc = confirmHdfs.endDbFileChange( std::string("tmp"),
-            dbFileName,
-            false,
-            errMsg);
+                                          dbFileName,
+                                          false,
+                                          errMsg);
+
         if (rc != 0)
         {
             std::ostringstream oss;

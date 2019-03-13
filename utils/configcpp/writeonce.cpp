@@ -50,68 +50,79 @@ namespace config
 
 void WriteOnceConfig::initializeDefaults()
 {
-	fLBID_Shift =           make_pair("13", false);
-	fDBRootCount =          make_pair("1", false);
-	fDBRMRoot =             make_pair("/mnt/OAM/dbrm/BRM_saves", false);
-	fSharedMemoryTmpFile1 = make_pair("/tmp/CalpontShm,", false);
-	fTxnIDFile =            make_pair("/mnt/OAM/dbrm/SMTxnID", false);
-	fSharedMemoryTmpFile2 = make_pair("/tmp/CalpontSessionMonitorShm", false);
+	string tmpDir = startup::StartUp::tmpDir();
+
+    fLBID_Shift =           make_pair("13", false);
+    fDBRootCount =          make_pair("1", false);
+    fDBRMRoot =             make_pair("/mnt/OAM/dbrm/BRM_saves", false);
+    string file = tmpDir + "/ColumnstoreShm";
+    fSharedMemoryTmpFile1 = make_pair(file, false);
+    fTxnIDFile =            make_pair("/mnt/OAM/dbrm/SMTxnID", false);
+    file = tmpDir + "/CalpontSessionMonitorShm";
+    fSharedMemoryTmpFile2 = make_pair(file, false);
 }
 
 void WriteOnceConfig::setup()
 {
-	typedef EntryMap_t::value_type VT;
+    typedef EntryMap_t::value_type VT;
 
-	fEntryMap.insert(VT("PrimitiveServers.LBID_Shift",        &fLBID_Shift));
-	fEntryMap.insert(VT("SystemConfig.DBRootCount",           &fDBRootCount));
-	fEntryMap.insert(VT("SystemConfig.DBRMRoot",              &fDBRMRoot));
-	fEntryMap.insert(VT("SessionManager.SharedMemoryTmpFile", &fSharedMemoryTmpFile1));
-	fEntryMap.insert(VT("SessionManager.TxnIDFile",           &fTxnIDFile));
-	fEntryMap.insert(VT("SessionMonitor.SharedMemoryTmpFile", &fSharedMemoryTmpFile2));
+    fEntryMap.insert(VT("PrimitiveServers.LBID_Shift",        &fLBID_Shift));
+    fEntryMap.insert(VT("SystemConfig.DBRootCount",           &fDBRootCount));
+    fEntryMap.insert(VT("SystemConfig.DBRMRoot",              &fDBRMRoot));
+    fEntryMap.insert(VT("SessionManager.SharedMemoryTmpFile", &fSharedMemoryTmpFile1));
+    fEntryMap.insert(VT("SessionManager.TxnIDFile",           &fTxnIDFile));
+    fEntryMap.insert(VT("SessionMonitor.SharedMemoryTmpFile", &fSharedMemoryTmpFile2));
 
-	ByteStream ibs = load();
-	if (ibs.length() > 0)
-		unserialize(ibs);
-	else
-		initializeDefaults();
+    ByteStream ibs = load();
+
+    if (ibs.length() > 0)
+        unserialize(ibs);
+    else
+        initializeDefaults();
 }
 
 void WriteOnceConfig::serialize(ByteStream& obs) const
 {
-	obs << WriteOnceConfigVersion;
+    obs << WriteOnceConfigVersion;
 
-	obs << fLBID_Shift.first;
-	obs << fDBRootCount.first;
-	obs << fDBRMRoot.first;
-	obs << fSharedMemoryTmpFile1.first;
-	obs << fTxnIDFile.first;
-	obs << fSharedMemoryTmpFile2.first;
+    obs << fLBID_Shift.first;
+    obs << fDBRootCount.first;
+    obs << fDBRMRoot.first;
+    obs << fSharedMemoryTmpFile1.first;
+    obs << fTxnIDFile.first;
+    obs << fSharedMemoryTmpFile2.first;
 }
 
 void WriteOnceConfig::unserialize(ByteStream& ibs)
 {
-	uint32_t version;
-	ibs >> version;
+    uint32_t version;
+    ibs >> version;
 
-	if (version < WriteOnceConfigVersion)
-	{
-		ostringstream oss;
-		oss << "Invalid version found in WriteOnceConfig file: " << version;
-		throw runtime_error(oss.str().c_str());
-	}
-	else if (version > WriteOnceConfigVersion)
-	{
-		ostringstream oss;
-		oss << "Invalid version found in WriteOnceConfig file: " << version;
-		throw runtime_error(oss.str().c_str());
-	}
+    if (version < WriteOnceConfigVersion)
+    {
+        ostringstream oss;
+        oss << "Invalid version found in WriteOnceConfig file: " << version;
+        throw runtime_error(oss.str().c_str());
+    }
+    else if (version > WriteOnceConfigVersion)
+    {
+        ostringstream oss;
+        oss << "Invalid version found in WriteOnceConfig file: " << version;
+        throw runtime_error(oss.str().c_str());
+    }
 
-	ibs >> fLBID_Shift.first; fLBID_Shift.second = true;
-	ibs >> fDBRootCount.first; fDBRootCount.second = true;
-	ibs >> fDBRMRoot.first; fDBRMRoot.second = true;
-	ibs >> fSharedMemoryTmpFile1.first; fSharedMemoryTmpFile1.second = true;
-	ibs >> fTxnIDFile.first; fTxnIDFile.second = true;
-	ibs >> fSharedMemoryTmpFile2.first; fSharedMemoryTmpFile2.second = true;
+    ibs >> fLBID_Shift.first;
+    fLBID_Shift.second = true;
+    ibs >> fDBRootCount.first;
+    fDBRootCount.second = true;
+    ibs >> fDBRMRoot.first;
+    fDBRMRoot.second = true;
+    ibs >> fSharedMemoryTmpFile1.first;
+    fSharedMemoryTmpFile1.second = true;
+    ibs >> fTxnIDFile.first;
+    fTxnIDFile.second = true;
+    ibs >> fSharedMemoryTmpFile2.first;
+    fSharedMemoryTmpFile2.second = true;
 }
 
 
@@ -119,95 +130,102 @@ void WriteOnceConfig::unserialize(ByteStream& ibs)
 
 ByteStream WriteOnceConfig::load()
 {
-	ByteStream bs;
-	if (access(fConfigFileName.c_str(), F_OK) != 0)
-	{
-		initializeDefaults();
-		return bs;
-	}
+    ByteStream bs;
 
-	idbassert(access(fConfigFileName.c_str(), F_OK) == 0);
+    if (access(fConfigFileName.c_str(), F_OK) != 0)
+    {
+        initializeDefaults();
+        return bs;
+    }
 
-	ifstream ifs(fConfigFileName.c_str());
-	int e = errno;
-	if (!ifs.good())
-	{
-		ostringstream oss;
-		oss << "Error opening WriteOnceConfig file " << fConfigFileName << ": " << strerror(e);
-		throw runtime_error(oss.str().c_str());
-	}
-	ifs >> bs;
-	return bs;
+    idbassert(access(fConfigFileName.c_str(), F_OK) == 0);
+
+    ifstream ifs(fConfigFileName.c_str());
+    int e = errno;
+
+    if (!ifs.good())
+    {
+        ostringstream oss;
+        oss << "Error opening WriteOnceConfig file " << fConfigFileName << ": " << strerror(e);
+        throw runtime_error(oss.str().c_str());
+    }
+
+    ifs >> bs;
+    return bs;
 }
 
 void WriteOnceConfig::save(ByteStream& ibs) const
 {
-	ofstream ofs(fConfigFileName.c_str());
-	int e = errno;
-	if (!ofs.good())
-	{
-		ostringstream oss;
-		oss << "Error opening WriteOnceConfig file " << fConfigFileName << ": " << strerror(e);
-		throw runtime_error(oss.str().c_str());
-	}
-	ofs << ibs;
+    ofstream ofs(fConfigFileName.c_str());
+    int e = errno;
+
+    if (!ofs.good())
+    {
+        ostringstream oss;
+        oss << "Error opening WriteOnceConfig file " << fConfigFileName << ": " << strerror(e);
+        throw runtime_error(oss.str().c_str());
+    }
+
+    ofs << ibs;
 }
 
 WriteOnceConfig::WriteOnceConfig(const char* cf)
 {
-	string cfs;
+    string cfs;
 
-	if (cf != 0)
-		cfs = cf;
-	else
-		cfs = startup::StartUp::installDir() + "/etc/" + DefaultWriteOnceConfigFilename;
+    if (cf != 0)
+        cfs = cf;
+    else
+        cfs = startup::StartUp::installDir() + "/etc/" + DefaultWriteOnceConfigFilename;
 
-	fConfigFileName = cfs;
+    fConfigFileName = cfs;
 
-	setup();
+    setup();
 }
 
 void WriteOnceConfig::setConfig(const string& section, const string& name, const string& value, bool force)
 {
-	EntryMap_t::iterator iter;
-	iter = fEntryMap.find(string(section + "." + name));
-	if (iter == fEntryMap.end())
-	{
-		ostringstream oss;
-		oss << "Invalid request for " << section << '.' << name;
-		throw runtime_error(oss.str().c_str());
-	}
+    EntryMap_t::iterator iter;
+    iter = fEntryMap.find(string(section + "." + name));
 
-	if ((*iter->second).second && !force)
-	{
-		ostringstream oss;
-		oss << "Invalid attempt to write read-only " << section << '.' << name;
-		throw runtime_error(oss.str().c_str());
-	}
+    if (iter == fEntryMap.end())
+    {
+        ostringstream oss;
+        oss << "Invalid request for " << section << '.' << name;
+        throw runtime_error(oss.str().c_str());
+    }
 
-	(*iter->second).first = value;
-	(*iter->second).second = true;
+    if ((*iter->second).second && !force)
+    {
+        ostringstream oss;
+        oss << "Invalid attempt to write read-only " << section << '.' << name;
+        throw runtime_error(oss.str().c_str());
+    }
 
-	ByteStream obs;
-	serialize(obs);
-	save(obs);
+    (*iter->second).first = value;
+    (*iter->second).second = true;
+
+    ByteStream obs;
+    serialize(obs);
+    save(obs);
 }
 
 const string WriteOnceConfig::getConfig(const string& section, const string& name) const
 {
-	string val;
-	EntryMap_t::const_iterator iter;
-	iter = fEntryMap.find(string(section + "." + name));
-	if (iter == fEntryMap.end())
-	{
-		ostringstream oss;
-		oss << "Invalid request for " << section << '.' << name;
-		throw runtime_error(oss.str().c_str());
-	}
+    string val;
+    EntryMap_t::const_iterator iter;
+    iter = fEntryMap.find(string(section + "." + name));
 
-	val = (*iter->second).first;
+    if (iter == fEntryMap.end())
+    {
+        ostringstream oss;
+        oss << "Invalid request for " << section << '.' << name;
+        throw runtime_error(oss.str().c_str());
+    }
 
-	return val;
+    val = (*iter->second).first;
+
+    return val;
 }
 
 }

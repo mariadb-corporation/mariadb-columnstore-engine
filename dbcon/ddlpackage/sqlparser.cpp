@@ -36,102 +36,108 @@
 #endif
 
 void scanner_finish(void* yyscanner);
-void scanner_init(const char *str, void* yyscanner);
-int ddllex_init_extra(void* user_defined,void** yyscanner);
+void scanner_init(const char* str, void* yyscanner);
+int ddllex_init_extra(void* user_defined, void** yyscanner);
 int ddllex_destroy(void* yyscanner);
 int ddlparse(ddlpackage::pass_to_bison* x);
 void set_schema(std::string schema);
-namespace ddlpackage {
-	using namespace std;
+namespace ddlpackage
+{
+using namespace std;
 
-	SqlParser::SqlParser() :
-		fStatus(-1),
-		fDebug(false),
-		x(&fParseTree)
-	{
-	}
+SqlParser::SqlParser() :
+    fStatus(-1),
+    fDebug(false),
+    x(&fParseTree)
+{
+}
 
 
-	void SqlParser::SetDebug(bool debug)
-	{
-		fDebug = debug;
-	}
+void SqlParser::SetDebug(bool debug)
+{
+    fDebug = debug;
+}
 
-	void SqlParser::setDefaultSchema(std::string schema)
+void SqlParser::setDefaultSchema(std::string schema)
+{
+    x.fDBSchema = schema;
+}
+
+int SqlParser::Parse(const char* sqltext)
+{
+    ddllex_init_extra(&scanData, &x.scanner);
+    scanner_init(sqltext, x.scanner);
+    fStatus = ddlparse(&x);
+    return fStatus;
+}
+
+
+const ParseTree& SqlParser::GetParseTree(void)
+{
+    if (!Good())
     {
-		x.fDBSchema=schema;
-	}
+        throw logic_error("The ParseTree is invalid");
+    }
 
-	int SqlParser::Parse(const char* sqltext)
-	{
-		ddllex_init_extra(&scanData, &x.scanner);
-		scanner_init(sqltext, x.scanner);
-		fStatus = ddlparse(&x);
-		return fStatus;
-	}
-	
-
-	const ParseTree& SqlParser::GetParseTree(void)
-	{
-		if(!Good()) {
-			throw logic_error("The ParseTree is invalid");
-		}
-		return fParseTree;
-	}
+    return fParseTree;
+}
 
 
-	bool SqlParser::Good()
-	{
-		return fStatus == 0;
-	}
+bool SqlParser::Good()
+{
+    return fStatus == 0;
+}
 
 
-	SqlParser::~SqlParser()
-	{
-		scanner_finish(x.scanner); // free scanner allocated memory
-		ddllex_destroy(x.scanner);
-	}
+SqlParser::~SqlParser()
+{
+    scanner_finish(x.scanner); // free scanner allocated memory
+    ddllex_destroy(x.scanner);
+}
 
 
-	SqlFileParser::SqlFileParser() :
-		SqlParser()
-	{
-	}
-	
+SqlFileParser::SqlFileParser() :
+    SqlParser()
+{
+}
 
-	int SqlFileParser::Parse(const string& sqlfile)
-	{
-		fStatus = -1;
-		
-		ifstream ifsql;
-		ifsql.open(sqlfile.c_str());
-		if(!ifsql.is_open()) {
-			perror(sqlfile.c_str());
-			return fStatus;
-		}
 
-		char sqlbuf[1024*1024];
-		unsigned length;
-		ifsql.seekg (0, ios::end);
-		length = ifsql.tellg();
-		ifsql.seekg (0, ios::beg);
+int SqlFileParser::Parse(const string& sqlfile)
+{
+    fStatus = -1;
 
-		if(length > sizeof(sqlbuf) - 1) {
-			throw length_error("SqlFileParser has file size hard limit of 16K.");
-		}
+    ifstream ifsql;
+    ifsql.open(sqlfile.c_str());
 
-		unsigned rcount;
-		rcount = ifsql.readsome(sqlbuf, sizeof(sqlbuf) - 1);
+    if (!ifsql.is_open())
+    {
+        perror(sqlfile.c_str());
+        return fStatus;
+    }
 
-		if(rcount < 0)
-			return fStatus;
+    char sqlbuf[1024 * 1024];
+    unsigned length;
+    ifsql.seekg (0, ios::end);
+    length = ifsql.tellg();
+    ifsql.seekg (0, ios::beg);
 
-		sqlbuf[rcount] = 0;
+    if (length > sizeof(sqlbuf) - 1)
+    {
+        throw length_error("SqlFileParser has file size hard limit of 16K.");
+    }
 
-		//cout << endl << sqlfile << "(" << rcount << ")" << endl;
-		//cout << "----------------------" << endl;
-		//cout << sqlbuf << endl;
+    unsigned rcount;
+    rcount = ifsql.readsome(sqlbuf, sizeof(sqlbuf) - 1);
 
-		return SqlParser::Parse(sqlbuf);
-	}
+    if (rcount < 0)
+        return fStatus;
+
+    sqlbuf[rcount] = 0;
+
+    //cout << endl << sqlfile << "(" << rcount << ")" << endl;
+    //cout << "----------------------" << endl;
+    //cout << sqlbuf << endl;
+
+    return SqlParser::Parse(sqlbuf);
+}
 }

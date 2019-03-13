@@ -26,7 +26,8 @@
 #include <stdint.h>
 #include <string>
 
-namespace joblist {
+namespace joblist
+{
 
 const uint64_t BIGINTNULL = 0x8000000000000000ULL;
 const uint64_t BIGINTEMPTYROW = 0x8000000000000001ULL;
@@ -55,6 +56,8 @@ const uint32_t DATENULL = 0xFFFFFFFE;
 const uint32_t DATEEMPTYROW = 0xFFFFFFFF;
 const uint64_t DATETIMENULL = 0xFFFFFFFFFFFFFFFEULL;
 const uint64_t DATETIMEEMPTYROW = 0xFFFFFFFFFFFFFFFFULL;
+const uint64_t TIMENULL = 0xFFFFFFFFFFFFFFFEULL;
+const uint64_t TIMEEMPTYROW = 0xFFFFFFFFFFFFFFFFULL;
 
 const uint8_t  CHAR1NULL = 0xFE;
 const uint8_t  CHAR1EMPTYROW = 0xFF;
@@ -82,17 +85,17 @@ const std::string CPSTRNOTFOUND("_CpNoTf_");
  */
 typedef uint32_t JoinType;
 const JoinType INIT = 0,
-	INNER = 0x1,
-	LARGEOUTER = 0x2,
-	SMALLOUTER = 0x4,
-	LEFTOUTER = 0x3,    // deprecated, using impossible values for backward compat
-	RIGHTOUTER = 0x5,	// deprecated..
-	SEMI = 0x8,
-	ANTI = 0x10,
-	SCALAR = 0x20,
-	MATCHNULLS = 0x40,
-	WITHFCNEXP = 0x80,
-	CORRELATED = 0x100;
+               INNER = 0x1,
+               LARGEOUTER = 0x2,
+               SMALLOUTER = 0x4,
+               LEFTOUTER = 0x3,    // deprecated, using impossible values for backward compat
+               RIGHTOUTER = 0x5,	// deprecated..
+               SEMI = 0x8,
+               ANTI = 0x10,
+               SCALAR = 0x20,
+               MATCHNULLS = 0x40,
+               WITHFCNEXP = 0x80,
+               CORRELATED = 0x100;
 }
 
 #endif

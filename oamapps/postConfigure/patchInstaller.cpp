@@ -21,7 +21,7 @@
 *
 *
 * Installs Calpont Software Patches on Calpont System
-*		
+*
 ******************************************************************************************/
 /**
  * @file
@@ -58,98 +58,105 @@ typedef std::vector<string> Devices;
 
 typedef struct Child_Module_struct
 {
-	std::string     moduleName;
-	std::string     moduleIP;
-	std::string     hostName;
+    std::string     moduleName;
+    std::string     moduleIP;
+    std::string     hostName;
 } ChildModule;
 
 typedef std::vector<ChildModule> ChildModuleList;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     Oam oam;
-	string parentOAMModuleIPAddr;
-	ChildModuleList childmodulelist;
-	ChildModule childmodule;
-	string prompt;
-	string installer_debug = "0";
+    string parentOAMModuleIPAddr;
+    ChildModuleList childmodulelist;
+    ChildModule childmodule;
+    string prompt;
+    string installer_debug = "0";
 
-	Config* sysConfig = Config::makeConfig();
-	string SystemSection = "SystemConfig";
+    Config* sysConfig = Config::makeConfig();
+    string SystemSection = "SystemConfig";
 
-	string patchLocation = argv[1];
-	string installLocation = argv[2];
-	string softwareFile = argv[3];
-	string password = argv[4];
-	installer_debug = argv[5];
+    string patchLocation = argv[1];
+    string installLocation = argv[2];
+    string softwareFile = argv[3];
+    string password = argv[4];
+    installer_debug = argv[5];
 
-	//get Parent OAM Module Name
-	string parentOAMModuleName;
-	try{
-		parentOAMModuleName = sysConfig->getConfig(SystemSection, "ParentOAMModuleName");
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem getting Parent OAM Module Name" << endl;
-		exit(-1);
-	}
+    //get Parent OAM Module Name
+    string parentOAMModuleName;
 
-	//install patch on Parent OAM Module
-	cout << endl << "----- Performing Patch installation on Controller OAM Module -----" << endl;
-	if ( !installParentOAM( patchLocation, installLocation, softwareFile ) )
-		cout << "Install Patch on Parent OAM Module error" << endl;
-	else
-		cout << "!!!Patch Installation on Controller OAM Module Successfully Completed" << endl;
+    try
+    {
+        parentOAMModuleName = sysConfig->getConfig(SystemSection, "ParentOAMModuleName");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem getting Parent OAM Module Name" << endl;
+        exit(-1);
+    }
 
-	//Get list of configured system modules
-	SystemModuleTypeConfig sysModuleTypeConfig;
+    //install patch on Parent OAM Module
+    cout << endl << "----- Performing Patch installation on Controller OAM Module -----" << endl;
 
-	try{
-		oam.getSystemConfig(sysModuleTypeConfig);
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem reading the Calpont System Configuration file" << endl;
-		exit(-1);
-	}
+    if ( !installParentOAM( patchLocation, installLocation, softwareFile ) )
+        cout << "Install Patch on Parent OAM Module error" << endl;
+    else
+        cout << "!!!Patch Installation on Controller OAM Module Successfully Completed" << endl;
 
-	string ModuleSection = "SystemModuleConfig";
+    //Get list of configured system modules
+    SystemModuleTypeConfig sysModuleTypeConfig;
 
-	for ( unsigned int i = 0 ; i < sysModuleTypeConfig.moduletypeconfig.size(); i++)
-	{
-		int moduleCount = sysModuleTypeConfig.moduletypeconfig[i].ModuleCount;
+    try
+    {
+        oam.getSystemConfig(sysModuleTypeConfig);
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem reading the Calpont System Configuration file" << endl;
+        exit(-1);
+    }
 
-		if ( moduleCount == 0 )
-			//no modules equipped for this Module Type, skip
-			continue;
+    string ModuleSection = "SystemModuleConfig";
 
-		//get IP addresses and Host Names
-		for( int k=0 ; k < moduleCount ; k++ )
-		{
-			DeviceNetworkList::iterator listPT = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
-			{
-				string moduleName = (*listPT).DeviceName;
-				HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-				string moduleIPAddr = (*pt1).IPAddr;
+    for ( unsigned int i = 0 ; i < sysModuleTypeConfig.moduletypeconfig.size(); i++)
+    {
+        int moduleCount = sysModuleTypeConfig.moduletypeconfig[i].ModuleCount;
 
-				if ( (*pt1).IPAddr == oam::UnassignedIpAddr)
-					// skip, unassigned server
-					continue;
-	
-				//Install Software Patch on non Parent OAM Modules
-				if ( moduleName != parentOAMModuleName ) {
-					//run remote patch installer script
-					cout << endl << "----- Performing Patch installation of Module '" + moduleName + "' -----" << endl << endl;
-					string cmd = "/usr/local/mariadb/columnstore/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
+        if ( moduleCount == 0 )
+            //no modules equipped for this Module Type, skip
+            continue;
 
-					int rtnCode = system(cmd.c_str());
-					if (rtnCode != 0)
-						cout << "Error with running patch_installer.sh" << endl;
-				}
-			}
-		} // end of k loop
-	} //end of i for loop
+        //get IP addresses and Host Names
+        for ( int k = 0 ; k < moduleCount ; k++ )
+        {
+            DeviceNetworkList::iterator listPT = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
+            {
+                string moduleName = (*listPT).DeviceName;
+                HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+                string moduleIPAddr = (*pt1).IPAddr;
+
+                if ( (*pt1).IPAddr == oam::UnassignedIpAddr)
+                    // skip, unassigned server
+                    continue;
+
+                //Install Software Patch on non Parent OAM Modules
+                if ( moduleName != parentOAMModuleName )
+                {
+                    //run remote patch installer script
+                    cout << endl << "----- Performing Patch installation of Module '" + moduleName + "' -----" << endl << endl;
+                    string cmd = "/usr/local/mariadb/columnstore/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
+
+                    int rtnCode = system(cmd.c_str());
+
+                    if (rtnCode != 0)
+                        cout << "Error with running patch_installer.sh" << endl;
+                }
+            }
+        } // end of k loop
+    } //end of i for loop
 
 }
 
@@ -159,21 +166,25 @@ int main(int argc, char *argv[])
 
 bool installParentOAM( string patchLocation, string installLocation, string softwareFile )
 {
-	// Rename current file
-	string cmd = "mv " + installLocation + softwareFile + " " + installLocation + softwareFile + ".patchSave";
-	int rtnCode = system(cmd.c_str());
-	if (rtnCode != 0) {
-		cout << "Error save current file" << endl;
-		return false;
-	}
+    // Rename current file
+    string cmd = "mv " + installLocation + softwareFile + " " + installLocation + softwareFile + ".patchSave";
+    int rtnCode = system(cmd.c_str());
 
-	// Install patch file
-	cmd = "cp " + patchLocation + softwareFile + " " + installLocation + softwareFile;
-	rtnCode = system(cmd.c_str());
-	if (rtnCode != 0) {
-		cout << "Error copying patch file" << endl;
-		return false;
-	}
+    if (rtnCode != 0)
+    {
+        cout << "Error save current file" << endl;
+        return false;
+    }
 
-	return true;
+    // Install patch file
+    cmd = "cp " + patchLocation + softwareFile + " " + installLocation + softwareFile;
+    rtnCode = system(cmd.c_str());
+
+    if (rtnCode != 0)
+    {
+        cout << "Error copying patch file" << endl;
+        return false;
+    }
+
+    return true;
 }

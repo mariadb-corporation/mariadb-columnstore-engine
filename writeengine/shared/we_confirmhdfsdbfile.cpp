@@ -35,7 +35,7 @@
 
 namespace
 {
-    const int BUF_SIZE = 1024;  // size of buffer used to read meta data records
+const int BUF_SIZE = 1024;  // size of buffer used to read meta data records
 }
 
 namespace WriteEngine
@@ -50,8 +50,8 @@ namespace WriteEngine
 //------------------------------------------------------------------------------
 ConfirmHdfsDbFile::ConfirmHdfsDbFile() :
     fFs( (idbdatafile::IDBPolicy::useHdfs()) ?
-        idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::HDFS) :
-        idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::BUFFERED))
+         idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::HDFS) :
+         idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::BUFFERED))
 {
 }
 
@@ -92,6 +92,7 @@ int ConfirmHdfsDbFile::confirmDbFileChange(
 
     // add safety checks, just in case
     std::string tmp(filename + ".tmp");
+
     if (!fFs.exists(tmp.c_str()))  // file already swapped
         return rc;
 
@@ -108,8 +109,9 @@ int ConfirmHdfsDbFile::confirmDbFileChange(
     // remove the old orig if exists
     std::string orig(filename + ".orig");
     errno = 0;
+
     if ((fFs.exists(orig.c_str())) &&
-        (fFs.remove(orig.c_str())) != 0)
+            (fFs.remove(orig.c_str())) != 0)
     {
         int errNum = errno;
         std::ostringstream oss;
@@ -122,6 +124,7 @@ int ConfirmHdfsDbFile::confirmDbFileChange(
 
     // backup the original
     errno = 0;
+
     if (fFs.rename(filename.c_str(), orig.c_str()) != 0)
     {
         int errNum = errno;
@@ -136,6 +139,7 @@ int ConfirmHdfsDbFile::confirmDbFileChange(
 
     // rename the new file
     errno = 0;
+
     if (fFs.rename(tmp.c_str(), filename.c_str()) != 0)
     {
         int errNum = errno;
@@ -169,6 +173,7 @@ int ConfirmHdfsDbFile::endDbFileChange(
     if (backUpFileType.compare("rlc") == 0)
     {
         std::string rlc(filename + ".rlc");
+
         if (fFs.exists(rlc.c_str()))
             fFs.remove(rlc.c_str()); // TBD-okay to ignore failed removal?
 
@@ -187,12 +192,14 @@ int ConfirmHdfsDbFile::endDbFileChange(
     }
 
     std::string orig(filename + ".orig");
+
     if (success)
     {
         // remove the orig file
         errno = 0;
+
         if ((fFs.exists(orig.c_str())) &&
-            (fFs.remove(orig.c_str())) != 0)
+                (fFs.remove(orig.c_str())) != 0)
         {
             int errNum = errno;
             std::ostringstream oss;
@@ -209,9 +216,10 @@ int ConfirmHdfsDbFile::endDbFileChange(
         if (fFs.exists(orig.c_str()))
         {
             errno = 0;
+
             // Try to remove file only if it exists
             if ((fFs.exists(filename.c_str())) &&
-                (fFs.remove(filename.c_str()) != 0))
+                    (fFs.remove(filename.c_str()) != 0))
             {
                 int errNum = errno;
                 std::ostringstream oss;
@@ -224,6 +232,7 @@ int ConfirmHdfsDbFile::endDbFileChange(
             }
 
             errno = 0;
+
             if (fFs.rename(orig.c_str(), filename.c_str()) != 0)
             {
                 int errNum = errno;
@@ -240,8 +249,9 @@ int ConfirmHdfsDbFile::endDbFileChange(
         // remove the tmp file
         std::string tmp(filename + ".tmp");
         errno = 0;
+
         if ((fFs.exists(tmp.c_str())) &&
-            (fFs.remove(tmp.c_str())) != 0)
+                (fFs.remove(tmp.c_str())) != 0)
         {
             int errNum = errno;
             std::ostringstream oss;
@@ -256,8 +266,9 @@ int ConfirmHdfsDbFile::endDbFileChange(
         // remove the chunk shifting helper
         std::string rlc(filename + ".rlc");
         errno = 0;
+
         if ((fFs.exists(rlc.c_str())) &&
-            (fFs.remove(rlc.c_str())) != 0)
+                (fFs.remove(rlc.c_str())) != 0)
         {
             int errNum = errno;
             std::ostringstream oss;
@@ -288,11 +299,11 @@ int ConfirmHdfsDbFile::confirmDbFileListFromMetaFile(
         std::vector<uint16_t> dbRoots;
         Config::getRootIdList( dbRoots );
 
-        for (unsigned m=0; m<dbRoots.size(); m++)
+        for (unsigned m = 0; m < dbRoots.size(); m++)
         {
             std::istringstream metaDataStream;
             openMetaDataFile ( tableOID,
-                dbRoots[m], metaDataStream );
+                               dbRoots[m], metaDataStream );
 
             confirmDbFiles( metaDataStream );
         }
@@ -311,7 +322,7 @@ int ConfirmHdfsDbFile::confirmDbFileListFromMetaFile(
         oss << "Error confirming changes to table " << tableOID <<
             "; " << ex.what();
         errMsg = oss.str();
-        rc = ERR_UNKNOWN;   
+        rc = ERR_UNKNOWN;
     }
 
     return rc;
@@ -359,9 +370,10 @@ void ConfirmHdfsDbFile::confirmColumnDbFile(const char* inBuf) const
 
     // Read meta-data record
     int numFields = sscanf(inBuf, "%s %u %u %u %u %u %d %s %u %d",
-        recType, &columnOID,
-        &dbRootHwm, &partNumHwm, &segNumHwm, &lastLocalHwm,
-        &colTypeInt, colTypeName, &colWidth, &compressionType );
+                           recType, &columnOID,
+                           &dbRootHwm, &partNumHwm, &segNumHwm, &lastLocalHwm,
+                           &colTypeInt, colTypeName, &colWidth, &compressionType );
+
     if (numFields < 9) // compressionType is optional
     {
         std::ostringstream oss;
@@ -375,10 +387,11 @@ void ConfirmHdfsDbFile::confirmColumnDbFile(const char* inBuf) const
     char dbFileName[FILE_NAME_SIZE];
     FileOp dbFile(false);
     int rc = dbFile.getFileName( columnOID,
-        dbFileName,
-        dbRootHwm,
-        partNumHwm,
-        segNumHwm );
+                                 dbFileName,
+                                 dbRootHwm,
+                                 partNumHwm,
+                                 segNumHwm );
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -396,8 +409,9 @@ void ConfirmHdfsDbFile::confirmColumnDbFile(const char* inBuf) const
     // Confirm the changes to the DB file name
     std::string errMsg;
     rc = confirmDbFileChange( std::string("tmp"),
-        dbFileName,
-        errMsg );
+                              dbFileName,
+                              errMsg );
+
     if (rc != NO_ERROR)
     {
         throw WeException( errMsg, rc );
@@ -421,8 +435,9 @@ void ConfirmHdfsDbFile::confirmDctnryStoreDbFile(const char* inBuf) const
 
     // Read meta-data record
     int numFields = sscanf(inBuf, "%s %u %u %u %u %u %u %d",
-        recType, &dColumnOID, &dStoreOID,
-        &dbRootHwm, &partNumHwm, &segNumHwm, &localHwm, &compressionType );
+                           recType, &dColumnOID, &dStoreOID,
+                           &dbRootHwm, &partNumHwm, &segNumHwm, &localHwm, &compressionType );
+
     if (numFields < 7) // compressionType optional
     {
         std::ostringstream oss;
@@ -436,15 +451,16 @@ void ConfirmHdfsDbFile::confirmDctnryStoreDbFile(const char* inBuf) const
     char dbFileName[FILE_NAME_SIZE];
     FileOp dbFile(false);
     int rc = dbFile.getFileName( dStoreOID,
-        dbFileName,
-        dbRootHwm,
-        partNumHwm,
-        segNumHwm );
+                                 dbFileName,
+                                 dbRootHwm,
+                                 partNumHwm,
+                                 segNumHwm );
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
         std::ostringstream oss;
-        oss<<"Error constructing dictionary store filename to confirm changes"<<
+        oss << "Error constructing dictionary store filename to confirm changes" <<
             "; columnOID-" << dStoreOID  <<
             "; dbRoot-"    << dbRootHwm  <<
             "; partNum-"   << partNumHwm <<
@@ -457,8 +473,9 @@ void ConfirmHdfsDbFile::confirmDctnryStoreDbFile(const char* inBuf) const
     // Confirm the changes to the DB file name
     std::string errMsg;
     rc = confirmDbFileChange( std::string("tmp"),
-        dbFileName,
-        errMsg );
+                              dbFileName,
+                              errMsg );
+
     if (rc != NO_ERROR)
     {
         throw WeException( errMsg, rc );
@@ -480,14 +497,15 @@ int ConfirmHdfsDbFile::endDbFileListFromMetaFile(
     std::vector<uint16_t> dbRoots;
     Config::getRootIdList( dbRoots );
 
-    for (unsigned m=0; m<dbRoots.size(); m++)
+    for (unsigned m = 0; m < dbRoots.size(); m++)
     {
         std::istringstream metaDataStream;
+
         try
         {
             std::istringstream metaDataStream;
             openMetaDataFile ( tableOID,
-                dbRoots[m], metaDataStream );
+                               dbRoots[m], metaDataStream );
 
             endDbFiles( metaDataStream, success );
         }
@@ -519,7 +537,7 @@ int ConfirmHdfsDbFile::endDbFileListFromMetaFile(
                 oss << "Error deleting temp files for table " << tableOID <<
                     "; " << ex.what();
                 errMsg = oss.str();
-                rc = ERR_UNKNOWN;   
+                rc = ERR_UNKNOWN;
             }
             else
             {
@@ -573,18 +591,20 @@ void ConfirmHdfsDbFile::endDbFiles(
             {
                 errMsg += "; ";
             }
+
             errMsg += ex.what();
         }
         catch (std::exception& ex)
         {
             if (errMsg.size() == 0)
             {
-                rc = ERR_UNKNOWN;   
+                rc = ERR_UNKNOWN;
             }
             else
             {
                 errMsg += "; ";
             }
+
             errMsg += ex.what();
         }
     }
@@ -617,9 +637,10 @@ void ConfirmHdfsDbFile::endColumnDbFile(
 
     // Read meta-data record
     int numFields = sscanf(inBuf, "%s %u %u %u %u %u %d %s %u %d",
-        recType, &columnOID,
-        &dbRootHwm, &partNumHwm, &segNumHwm, &lastLocalHwm,
-        &colTypeInt, colTypeName, &colWidth, &compressionType );
+                           recType, &columnOID,
+                           &dbRootHwm, &partNumHwm, &segNumHwm, &lastLocalHwm,
+                           &colTypeInt, colTypeName, &colWidth, &compressionType );
+
     if (numFields < 9) // compressionType is optional
     {
         std::ostringstream oss;
@@ -633,10 +654,11 @@ void ConfirmHdfsDbFile::endColumnDbFile(
     char dbFileName[FILE_NAME_SIZE];
     FileOp dbFile(false);
     int rc = dbFile.getFileName( columnOID,
-        dbFileName,
-        dbRootHwm,
-        partNumHwm,
-        segNumHwm );
+                                 dbFileName,
+                                 dbRootHwm,
+                                 partNumHwm,
+                                 segNumHwm );
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -654,9 +676,10 @@ void ConfirmHdfsDbFile::endColumnDbFile(
     // Confirm the changes to the DB file name
     std::string errMsg;
     rc = endDbFileChange( std::string("tmp"),
-        dbFileName,
-        success,
-        errMsg );
+                          dbFileName,
+                          success,
+                          errMsg );
+
     if (rc != NO_ERROR)
     {
         throw WeException( errMsg, rc );
@@ -682,8 +705,9 @@ void ConfirmHdfsDbFile::endDctnryStoreDbFile(
 
     // Read meta-data record
     int numFields = sscanf(inBuf, "%s %u %u %u %u %u %u %d",
-        recType, &dColumnOID, &dStoreOID,
-        &dbRootHwm, &partNumHwm, &segNumHwm, &localHwm, &compressionType );
+                           recType, &dColumnOID, &dStoreOID,
+                           &dbRootHwm, &partNumHwm, &segNumHwm, &localHwm, &compressionType );
+
     if (numFields < 7) // compressionType optional
     {
         std::ostringstream oss;
@@ -697,15 +721,16 @@ void ConfirmHdfsDbFile::endDctnryStoreDbFile(
     char dbFileName[FILE_NAME_SIZE];
     FileOp dbFile(false);
     int rc = dbFile.getFileName( dStoreOID,
-        dbFileName,
-        dbRootHwm,
-        partNumHwm,
-        segNumHwm );
+                                 dbFileName,
+                                 dbRootHwm,
+                                 partNumHwm,
+                                 segNumHwm );
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
         std::ostringstream oss;
-        oss<<"Error constructing dictionary store filename to end changes"<<
+        oss << "Error constructing dictionary store filename to end changes" <<
             "; columnOID-" << dStoreOID  <<
             "; dbRoot-"    << dbRootHwm  <<
             "; partNum-"   << partNumHwm <<
@@ -718,9 +743,10 @@ void ConfirmHdfsDbFile::endDctnryStoreDbFile(
     // Confirm the changes to the DB file name
     std::string errMsg;
     rc = endDbFileChange( std::string("tmp"),
-        dbFileName,
-        success,
-        errMsg );
+                          dbFileName,
+                          success,
+                          errMsg );
+
     if (rc != NO_ERROR)
     {
         throw WeException( errMsg, rc );
@@ -733,8 +759,8 @@ void ConfirmHdfsDbFile::endDctnryStoreDbFile(
 // DataStream argument.
 //------------------------------------------------------------------------------
 void ConfirmHdfsDbFile::openMetaDataFile(OID tableOID,
-    uint16_t dbRoot,
-    std::istringstream& metaDataStream)
+        uint16_t dbRoot,
+        std::istringstream& metaDataStream)
 {
     std::string bulkRollbackPath( Config::getDBRootByNum( dbRoot ) );
 
@@ -758,9 +784,9 @@ void ConfirmHdfsDbFile::openMetaDataFile(OID tableOID,
     boost::scoped_ptr<IDBDataFile> metaFile;
     errno = 0;
     metaFile.reset(idbdatafile::IDBDataFile::open(
-        idbdatafile::IDBPolicy::getType(fMetaFileName.c_str(),
-            idbdatafile::IDBPolicy::WRITEENG),
-        fMetaFileName.c_str(), "rb", 0) );
+                       idbdatafile::IDBPolicy::getType(fMetaFileName.c_str(),
+                               idbdatafile::IDBPolicy::WRITEENG),
+                       fMetaFileName.c_str(), "rb", 0) );
 
     if ( !metaFile )
     {
@@ -781,17 +807,20 @@ void ConfirmHdfsDbFile::openMetaDataFile(OID tableOID,
     ssize_t readSofar = 0; // bytes read so far
     ssize_t bytes = 0;    // bytes read by one pread
     char* p = buf.get();
+
     for (int i = 0; i < 10 && readSofar < metaFileSize; i++)
     {
-         errno = 0;
-         bytes = metaFile->pread( p+readSofar,
-             readSofar,
-             metaFileSize-readSofar);
-         if (bytes < 0)
-             break;
+        errno = 0;
+        bytes = metaFile->pread( p + readSofar,
+                                 readSofar,
+                                 metaFileSize - readSofar);
 
-         readSofar += bytes;
+        if (bytes < 0)
+            break;
+
+        readSofar += bytes;
     }
+
     if ( readSofar != metaFileSize )
     {
         int errRc = errno;
@@ -810,6 +839,7 @@ void ConfirmHdfsDbFile::openMetaDataFile(OID tableOID,
 
     // read data
     metaDataStream.getline( inBuf, BUF_SIZE );
+
     if (!RBMetaWriter::verifyVersion4(inBuf))
     {
         std::ostringstream oss;

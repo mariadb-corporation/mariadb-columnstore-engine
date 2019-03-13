@@ -10,15 +10,15 @@
 # Argument 5 - Remote user name (optional)
 # Argument 6 - Force a tty to be allocated (optional)
 set stty_init {cols 512 -opost};
-set timeout 10
+set timeout 30
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
 set COMMAND [lindex $argv 2]
 set DEBUG [lindex $argv 3]
 
-exec whoami >/tmp/whoami.tmp
-set USERNAME [exec cat /tmp/whoami.tmp]
-exec rm -f /tmp/whoami.tmp
+exec whoami >whoami.tmp
+set USERNAME [exec cat whoami.tmp]
+exec rm -f whoami.tmp
 
 set UNM [lindex $argv 4]
 if { $UNM != "" && $UNM != "-" } {

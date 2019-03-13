@@ -42,32 +42,32 @@ namespace dbbc
 class Stats
 {
 public:
-	Stats();
-	Stats(const char *name);
-	virtual ~Stats();
+    Stats();
+    Stats(const char* name);
+    virtual ~Stats();
 
-	void touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session=0);
-	void markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event);
+    void touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session = 0);
+    void markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event);
 
-	inline BRM::OID_t lbid2oid(uint64_t lbid)
-	{
-		BRM::OID_t oid;
-		uint16_t dbroot;
-		uint32_t partNum;
-		uint16_t segNum;
-		uint32_t fbo;
-		brm.lookupLocal(lbid, 0, false, oid, dbroot, partNum, segNum, fbo);
-		return oid;
-	}
+    inline BRM::OID_t lbid2oid(uint64_t lbid)
+    {
+        BRM::OID_t oid;
+        uint16_t dbroot;
+        uint32_t partNum;
+        uint16_t segNum;
+        uint32_t fbo;
+        brm.lookupLocal(lbid, 0, false, oid, dbroot, partNum, segNum, fbo);
+        return oid;
+    }
 
 private:
-	Stats(const Stats& rhs);
-	Stats& operator=(const Stats& rhs);
+    Stats(const Stats& rhs);
+    Stats& operator=(const Stats& rhs);
 
-	boost::thread* fMonitorp;
-	BRM::DBRM brm;
-	//ostringstream fName;
-	const char* fName;
+    boost::thread* fMonitorp;
+    BRM::DBRM brm;
+    //ostringstream fName;
+    const char* fName;
 
 };
 

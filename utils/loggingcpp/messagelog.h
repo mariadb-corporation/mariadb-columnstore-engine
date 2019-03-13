@@ -31,18 +31,19 @@
 
 class MessageLoggingTest;
 
-namespace logging {
+namespace logging
+{
 
-	/** @brief Log Types
-  	*/
-    enum LOG_TYPE
-    {
-        LOG_TYPE_DEBUG,		// 0 = debug
-        LOG_TYPE_INFO,		// 1 = info
-        LOG_TYPE_WARNING,	// 2 = warning
-        LOG_TYPE_ERROR,		// 3 = error
-        LOG_TYPE_CRITICAL	// 4 = critical
-	};
+/** @brief Log Types
+*/
+enum LOG_TYPE
+{
+    LOG_TYPE_DEBUG,		// 0 = debug
+    LOG_TYPE_INFO,		// 1 = info
+    LOG_TYPE_WARNING,	// 2 = warning
+    LOG_TYPE_ERROR,		// 3 = error
+    LOG_TYPE_CRITICAL	// 4 = critical
+};
 
 
 class Message;
@@ -53,80 +54,86 @@ class Message;
 class MessageLog
 {
 public:
-	/** @brief ctor
-	*   @param initData the LogginID object.
-	*   @param facility openLog will be called using this as the third parm.
-	*/
-	MessageLog(const LoggingID& initData, int facility=LOG_LOCAL1);
+    /** @brief ctor
+    *   @param initData the LogginID object.
+    *   @param facility openLog will be called using this as the third parm.
+    */
+    MessageLog(const LoggingID& initData, int facility = LOG_LOCAL1);
 
-	/** @brief dtor
-	 *
-	 */
-	~MessageLog();
+    /** @brief dtor
+     *
+     */
+    ~MessageLog();
 
-	/** @brief log a debug message
-	*
-	* @param msg the message to log
-	*/
-	void logDebugMessage(const Message& msg);
+    /** @brief log a debug message
+    *
+    * @param msg the message to log
+    */
+    void logDebugMessage(const Message& msg);
 
-	/** @brief log an info message
-	*
-	* @param msg the message to log
-	*/
-	void logInfoMessage(const Message& msg);
+    /** @brief log an info message
+    *
+    * @param msg the message to log
+    */
+    void logInfoMessage(const Message& msg);
 
-	/** @brief log a warning message
-	*
-	* @param msg the message to log
-	*/
-	void logWarningMessage(const Message& msg);
+    /** @brief log a warning message
+    *
+    * @param msg the message to log
+    */
+    void logWarningMessage(const Message& msg);
 
-	/** @brief log an error message
-	*
-	* @param msg the message to log
-	*/
-	void logErrorMessage(const Message& msg);
+    /** @brief log an error message
+    *
+    * @param msg the message to log
+    */
+    void logErrorMessage(const Message& msg);
 
-	/** @brief log a serious message
-	*
-	* @param msg the message to log
-	* @note this is the same as calling logErrorMessage()
-	* @bug 24 add logErrorMessage() and make logSeriousMessage() call it
-	*/
-	void logSeriousMessage(const Message& msg) { logErrorMessage(msg); }
+    /** @brief log a serious message
+    *
+    * @param msg the message to log
+    * @note this is the same as calling logErrorMessage()
+    * @bug 24 add logErrorMessage() and make logSeriousMessage() call it
+    */
+    void logSeriousMessage(const Message& msg)
+    {
+        logErrorMessage(msg);
+    }
 
-	/** @brief log a critial message
-	*
-	* @param msg the message to log
-	*/
-	void logCriticalMessage(const Message& msg);
+    /** @brief log a critial message
+    *
+    * @param msg the message to log
+    */
+    void logCriticalMessage(const Message& msg);
 
-	/** @brief LoggingID mutator
-	*
-	* @param logData the new LoggingID. If the subsystem id is changed, the syslog connection will be closed
-	*  and reopened.
-	*/
-	void logData(const LoggingID& logData);
+    /** @brief LoggingID mutator
+    *
+    * @param logData the new LoggingID. If the subsystem id is changed, the syslog connection will be closed
+    *  and reopened.
+    */
+    void logData(const LoggingID& logData);
 
-	/** @brief LoggingID accessor
-	*
-	*/
-	const LoggingID& logData() const { return fLogData; }
+    /** @brief LoggingID accessor
+    *
+    */
+    const LoggingID& logData() const
+    {
+        return fLogData;
+    }
 
-	friend class ::MessageLoggingTest;
+    friend class ::MessageLoggingTest;
 
 protected:
 
-	const std::string format(const Message& msg, const char prefix='U');
+    const std::string format(const Message& msg, const char prefix = 'U');
 
 private:
-	//defaults okay
-	//MessageLog(const MessageLog& rhs);
-	//MessageLog& operator=(const MessageLog& rhs);
+    //defaults okay
+    //MessageLog(const MessageLog& rhs);
+    //MessageLog& operator=(const MessageLog& rhs);
 
-	LoggingID fLogData; /// the logging context data
-	int fFacility; /// the syslog facility number
+    LoggingID fLogData; /// the logging context data
+    int fFacility; /// the syslog facility number
 };
 
 /** @brief logs the DML statement using a Syslog critical message to LOG_LOCAL2.

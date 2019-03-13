@@ -14,14 +14,17 @@ export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 if [ $COLUMNSTORE_INSTALL_DIR != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:$COLUMNSTORE_INSTALL_DIR/mysql/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
+	export LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
 fi
 
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysql --defaults-file=$COLUMNSTORE_INSTALL_DIR/mysql/my.cnf -u root"
+        MYSQLCMD="$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysql --defaults-extra-file=$COLUMNSTORE_INSTALL_DIR/mysql/my.cnf -u root"
         export MYSQLCMD
 fi
+
+#get temp directory
+tmpDir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
 
 main()
 {
@@ -111,7 +114,7 @@ create ()
 	        prevSession=$3;
 	}
 	print $0 "|" val "|"
-	}' | sort -t '|' -n -k 1 > /tmp/idbtmp.tbl
+	}' | sort -t '|' -n -k 1 > ${tmpDir}/idbtmp.tbl
 
 	echo "Step 2 of 4.  Populating $DB.start table with Start SQL log entries."
 	sql="
@@ -126,7 +129,7 @@ create ()
 	  sessionStatementId int
 	) ENGINE=MyISAM ;
 	create index start_idx on start (sessionid, sessionStatementId);
-	load data infile '/tmp/idbtmp.tbl' into table start fields terminated by '|';
+	load data infile '${tmpDir}/idbtmp.tbl' into table start fields terminated by '|';
 	"
 	$MYSQLCMD -e "$sql"
 
@@ -148,7 +151,7 @@ create ()
 	        prevSession=$3;
 	}
 	print $0 "|" val "|"
-	}' | sort -t '|' -n -k 1 > /tmp/idbtmp.tbl
+	}' | sort -t '|' -n -k 1 > ${tmpDir}/idbtmp.tbl
 	 
 	echo "Step 4 of 4.  Populating $DB.stop table with End SQL log entries."
 	sql="
@@ -160,7 +163,7 @@ create ()
 	  sessionStatementId int
 	) ENGINE=MyISAM ;
 	create index stop_idx on stop (sessionid, sessionStatementId);
-	load data infile '/tmp/idbtmp.tbl' into table stop fields terminated by '|';
+	load data infile '${tmpDir}/idbtmp.tbl' into table stop fields terminated by '|';
 	"
 	$MYSQLCMD $DB -e "$sql;"
 

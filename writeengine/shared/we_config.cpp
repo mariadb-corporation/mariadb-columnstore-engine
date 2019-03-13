@@ -41,42 +41,42 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-    const int      DEFAULT_WAIT_PERIOD                = 10;
-    const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION =  4;
-    const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE   =  2;
-    const int      DEFAULT_BULK_PROCESS_PRIORITY      = -1;
-    const unsigned DEFAULT_MAX_FILESYSTEM_DISK_USAGE  = 98; // allow 98% full
-    const unsigned DEFAULT_COMPRESSED_PADDING_BLKS    =  1;
-    const int      DEFAULT_LOCAL_MODULE_ID            = 1;
-    const bool     DEFAULT_PARENT_OAM                 = true;
-    const char*    DEFAULT_LOCAL_MODULE_TYPE          = "pm";
+const int      DEFAULT_WAIT_PERIOD                = 10;
+const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION =  4;
+const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE   =  2;
+const int      DEFAULT_BULK_PROCESS_PRIORITY      = -1;
+const unsigned DEFAULT_MAX_FILESYSTEM_DISK_USAGE  = 98; // allow 98% full
+const unsigned DEFAULT_COMPRESSED_PADDING_BLKS    =  1;
+const int      DEFAULT_LOCAL_MODULE_ID            = 1;
+const bool     DEFAULT_PARENT_OAM                 = true;
+const char*    DEFAULT_LOCAL_MODULE_TYPE          = "pm";
 
-    int              Config::m_dbRootCount = 0;
-    Config::strvec_t Config::m_dbRootPath;
-    Config::intstrmap_t Config::m_dbRootPathMap;
-    Config::uint16vec_t Config::m_dbRootId;
-    string           Config::m_bulkRoot;
+int              Config::m_dbRootCount = 0;
+Config::strvec_t Config::m_dbRootPath;
+Config::intstrmap_t Config::m_dbRootPathMap;
+Config::uint16vec_t Config::m_dbRootId;
+string           Config::m_bulkRoot;
 
-    unsigned long    Config::fDBRootChangeCount = 0;
-    time_t           Config::fCacheTime = 0;
-    boost::mutex     Config::fCacheLock;
+unsigned long    Config::fDBRootChangeCount = 0;
+time_t           Config::fCacheTime = 0;
+boost::mutex     Config::fCacheLock;
 #ifdef SHARED_NOTHING_DEMO_2
-    boost::mutex     Config::m_bulkRoot_lk;
+boost::mutex     Config::m_bulkRoot_lk;
 #endif
-    int      Config::m_WaitPeriod              = DEFAULT_WAIT_PERIOD;
-    unsigned Config::m_FilesPerColumnPartition =
-        DEFAULT_FILES_PER_COLUMN_PARTITION;
-    unsigned Config::m_ExtentsPerSegmentFile   =
-        DEFAULT_EXTENTS_PER_SEGMENT_FILE;
-    int      Config::m_BulkProcessPriority     = DEFAULT_BULK_PROCESS_PRIORITY;
-    string   Config::m_BulkRollbackDir;
-    unsigned Config::m_MaxFileSystemDiskUsage  =
-        DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
-    unsigned Config::m_NumCompressedPadBlks    =DEFAULT_COMPRESSED_PADDING_BLKS;
-    bool     Config::m_ParentOAMModuleFlag     = DEFAULT_PARENT_OAM;
-    string   Config::m_LocalModuleType;
-    int      Config::m_LocalModuleID           = DEFAULT_LOCAL_MODULE_ID;
-    string   Config::m_VersionBufferDir;
+int      Config::m_WaitPeriod              = DEFAULT_WAIT_PERIOD;
+unsigned Config::m_FilesPerColumnPartition =
+    DEFAULT_FILES_PER_COLUMN_PARTITION;
+unsigned Config::m_ExtentsPerSegmentFile   =
+    DEFAULT_EXTENTS_PER_SEGMENT_FILE;
+int      Config::m_BulkProcessPriority     = DEFAULT_BULK_PROCESS_PRIORITY;
+string   Config::m_BulkRollbackDir;
+unsigned Config::m_MaxFileSystemDiskUsage  =
+    DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
+unsigned Config::m_NumCompressedPadBlks    = DEFAULT_COMPRESSED_PADDING_BLKS;
+bool     Config::m_ParentOAMModuleFlag     = DEFAULT_PARENT_OAM;
+string   Config::m_LocalModuleType;
+int      Config::m_LocalModuleID           = DEFAULT_LOCAL_MODULE_ID;
+string   Config::m_VersionBufferDir;
 
 /*******************************************************************************
  * DESCRIPTION:
@@ -117,13 +117,14 @@ void Config::checkReload( )
     // Initialize bulk root directory
     //--------------------------------------------------------------------------
     m_bulkRoot = cf->getConfig("WriteEngine", "BulkRoot");
+
     if ( m_bulkRoot.length() == 0 )
     {
         m_bulkRoot = startup::StartUp::installDir();
 #ifndef _MSC_VER
-		m_bulkRoot += "/data";
+        m_bulkRoot += "/data";
 #endif
-		m_bulkRoot += "/bulk";
+        m_bulkRoot += "/bulk";
     }
 
     // Get latest Columnstore.xml timestamp after first access forced a reload
@@ -134,15 +135,17 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     m_WaitPeriod = DEFAULT_WAIT_PERIOD;
     string waitPeriodStr = cf->getConfig("SystemConfig", "WaitPeriod");
+
     if ( waitPeriodStr.length() != 0 )
         m_WaitPeriod = static_cast<int>(config::Config::fromText(
-            waitPeriodStr));
+                                            waitPeriodStr));
 
     //--------------------------------------------------------------------------
     // Initialize files per column partition
     //--------------------------------------------------------------------------
     m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
     string fpc = cf->getConfig("ExtentMap", "FilesPerColumnPartition");
+
     if ( fpc.length() != 0 )
         m_FilesPerColumnPartition = cf->uFromText(fpc);
 
@@ -151,6 +154,7 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     m_ExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
     string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
+
     if ( epsf.length() != 0 )
         m_ExtentsPerSegmentFile = cf->uFromText(epsf);
 
@@ -159,11 +163,12 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     m_BulkProcessPriority = DEFAULT_BULK_PROCESS_PRIORITY;
     string prior = cf->getConfig("WriteEngine", "Priority");
+
     if ( prior.length() != 0 )
     {
         int initialBPP = cf->fromText(prior);
 
-        // config file priority is 40..1 (highest..lowest) 
+        // config file priority is 40..1 (highest..lowest)
         // convert config file value to setpriority(2) value(-20..19, -1 is the
         // default)
         if (initialBPP > 0)
@@ -181,6 +186,7 @@ void Config::checkReload( )
     // that sets m_bulkRoot.
     //--------------------------------------------------------------------------
     m_BulkRollbackDir = cf->getConfig("WriteEngine", "BulkRollbackDir");
+
     if (m_BulkRollbackDir.length() == 0)
     {
         m_BulkRollbackDir.assign( m_bulkRoot );
@@ -192,8 +198,10 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
     string usg = cf->getConfig("WriteEngine", "MaxFileSystemDiskUsagePct");
+
     if ( usg.length() != 0 )
         m_MaxFileSystemDiskUsage = cf->uFromText(usg);
+
     if (m_MaxFileSystemDiskUsage > 100)
         m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
 
@@ -202,6 +210,7 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     m_NumCompressedPadBlks = DEFAULT_COMPRESSED_PADDING_BLKS;
     string ncpb = cf->getConfig("WriteEngine", "CompressedPaddingBlocks");
+
     if ( ncpb.length() != 0 )
         m_NumCompressedPadBlks = cf->uFromText(ncpb);
 
@@ -211,10 +220,11 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     bool idblog = false;
     string idblogstr = cf->getConfig("SystemConfig", "DataFileLog");
+
     if ( idblogstr.length() != 0 )
     {
-    	boost::to_upper(idblogstr);
-    	idblog = ( idblogstr == "ON" );
+        boost::to_upper(idblogstr);
+        idblog = ( idblogstr == "ON" );
     }
 
     //--------------------------------------------------------------------------
@@ -222,6 +232,7 @@ void Config::checkReload( )
     // then the system will use HDFS for all IDB data files
     //--------------------------------------------------------------------------
     string fsplugin = cf->getConfig("SystemConfig", "DataFilePlugin");
+
     if ( fsplugin.length() != 0 )
     {
         IDBPolicy::installPlugin(fsplugin);
@@ -234,6 +245,7 @@ void Config::checkReload( )
     bool bUseRdwrMemBuffer = true;  // If true, use in-memory buffering, else use file buffering
     int64_t hdfsRdwrBufferMaxSize = 0;
     string strBufferMaxSize = cf->getConfig("SystemConfig", "hdfsRdwrBufferMaxSize");
+
     if (strBufferMaxSize.length() == 0)
     {
         // Default is use membuf with no maximum size.
@@ -242,6 +254,7 @@ void Config::checkReload( )
     else
     {
         hdfsRdwrBufferMaxSize = static_cast<int64_t>(cf->uFromText(strBufferMaxSize));
+
         if ( hdfsRdwrBufferMaxSize == 0 )
         {
             // If we're given a size of 0, turn off membuffering.
@@ -250,16 +263,20 @@ void Config::checkReload( )
     }
 
     // Directory in which to place file buffer temporary files.
+    string TmpFileDir = startup::StartUp::tmpDir();
+
     string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
+    hdfsRdwrScratch = TmpFileDir + hdfsRdwrScratch;
+
     if ( hdfsRdwrScratch.length() == 0 )
     {
-        hdfsRdwrScratch = "/tmp/hdfsscratch";
+        hdfsRdwrScratch = TmpFileDir + "/hdfsscratch";
     }
 
-	IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
+    IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
 #endif
 
-	IDBPolicy::configIDBPolicy();
+    IDBPolicy::configIDBPolicy();
 
     //--------------------------------------------------------------------------
     // Initialize Parent OAM Module flag
@@ -268,13 +285,16 @@ void Config::checkReload( )
     //--------------------------------------------------------------------------
     oam::Oam oam;
     oam::oamModuleInfo_t t;
-    try {
+
+    try
+    {
         t = oam.getModuleInfo();
         m_ParentOAMModuleFlag = boost::get<4>(t);
         m_LocalModuleType     = boost::get<1>(t);
         m_LocalModuleID       = boost::get<2>(t);
     }
-    catch (exception&) {
+    catch (exception&)
+    {
         m_ParentOAMModuleFlag = DEFAULT_PARENT_OAM;
         m_LocalModuleType.assign( DEFAULT_LOCAL_MODULE_TYPE );
         m_LocalModuleID       = DEFAULT_LOCAL_MODULE_ID;
@@ -284,6 +304,7 @@ void Config::checkReload( )
     // Initialize Version Buffer
     //--------------------------------------------------------------------------
     m_VersionBufferDir = cf->getConfig("SystemConfig", "DBRMRoot");
+
     if ( m_VersionBufferDir.length() == 0 )
     {
 #ifdef _MSC_VER
@@ -310,25 +331,28 @@ void Config::checkReload( )
     if (m_LocalModuleType == "pm")
     {
         oam::DBRootConfigList oamRootList;
-        try {
+
+        try
+        {
             oam.getPmDbrootConfig( m_LocalModuleID, oamRootList );
 
             std::sort( oamRootList.begin(), oamRootList.end() );
 
             m_dbRootCount = oamRootList.size();
 
-            for (unsigned int idx=0; idx<oamRootList.size(); idx++)
+            for (unsigned int idx = 0; idx < oamRootList.size(); idx++)
             {
                 ostringstream oss;
                 oss << "DBRoot" << oamRootList[idx];
-                std::string DbRootPath = 
+                std::string DbRootPath =
                     cf->getConfig("SystemConfig", oss.str());
                 m_dbRootPath.push_back( DbRootPath );
                 m_dbRootPathMap[ oamRootList[idx] ] = DbRootPath;
                 m_dbRootId.push_back( oamRootList[idx] );
             }
         }
-        catch (exception&) {
+        catch (exception&)
+        {
             m_dbRootCount = 0;
         }
     }
@@ -341,7 +365,7 @@ void Config::checkReload( )
     if (!bFirstLoad)
     {
         if ((dbRootIdPrevious   != m_dbRootId) ||
-            (dbRootPathPrevious != m_dbRootPath))
+                (dbRootPathPrevious != m_dbRootPath))
         {
             fDBRootChangeCount++;
         }
@@ -380,7 +404,7 @@ size_t Config::DBRootCount()
 
 /*******************************************************************************
  * DESCRIPTION:
- *    Get db root 
+ *    Get db root
  * PARAMETERS:
  *    idx - Index of the DBRootn entry to fetch (0 fetches DBRoot[0],etc.)
  * RETURN:
@@ -419,7 +443,7 @@ void Config::getDBRootPathList( std::vector<std::string>& dbRootPathList )
 
 /*******************************************************************************
  * DESCRIPTION:
- *    Get db root 
+ *    Get db root
  * PARAMETERS:
  *    num - DBRootN entry to fetch (1 fetches DBRoot1, etc.)
  * RETURN:
@@ -431,13 +455,14 @@ std::string Config::getDBRootByNum(unsigned num)
     checkReload( );
 
     Config::intstrmap_t::const_iterator iter = m_dbRootPathMap.find( num );
+
     if (iter == m_dbRootPathMap.end())
     {
         std::string emptyResult;
         return emptyResult;
     }
 
-    return iter->second; 
+    return iter->second;
 }
 
 /*******************************************************************************
@@ -458,13 +483,13 @@ void Config::getRootIdList( std::vector<uint16_t>& rootIds )
 
 /*******************************************************************************
  * DESCRIPTION:
- *    Get bulk root 
+ *    Get bulk root
  * PARAMETERS:
- *    none 
+ *    none
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ******************************************************************************/
-std::string Config::getBulkRoot() 
+std::string Config::getBulkRoot()
 {
     boost::mutex::scoped_lock lk(fCacheLock);
     checkReload( );
@@ -473,13 +498,13 @@ std::string Config::getBulkRoot()
 }
 
 #ifdef SHARED_NOTHING_DEMO_2
-void Config::getSharedNothingRoot(char *ret)
+void Config::getSharedNothingRoot(char* ret)
 {
     string root;
     boost::mutex::scoped_lock lk(m_bulkRoot_lk);
 
     root = config::Config::makeConfig()->getConfig(
-        "WriteEngine", "SharedNothingRoot");
+               "WriteEngine", "SharedNothingRoot");
     strncpy(ret, root.c_str(), FILE_NAME_SIZE);
 }
 #endif
@@ -530,7 +555,7 @@ unsigned Config::getExtentsPerSegmentFile()
     checkReload( );
 
     return m_ExtentsPerSegmentFile;
-}  
+}
 
 /*******************************************************************************
  * DESCRIPTION:
@@ -559,7 +584,7 @@ int Config::getBulkProcessPriority()
  * DESCRIPTION:
  *    Get bulk rollback directory path.
  * PARAMETERS:
- *    none 
+ *    none
  ******************************************************************************/
 std::string Config::getBulkRollbackDir()
 {
@@ -573,7 +598,7 @@ std::string Config::getBulkRollbackDir()
  * DESCRIPTION:
  *    Get Max percentage of allowable file system disk usage for each DBRoot
  * PARAMETERS:
- *    none 
+ *    none
  ******************************************************************************/
 unsigned Config::getMaxFileSystemDiskUsage()
 {
@@ -588,7 +613,7 @@ unsigned Config::getMaxFileSystemDiskUsage()
  *    Get number of blocks to use in padding each compressed chunk (only
  *    applies to compressed columns).
  * PARAMETERS:
- *    none 
+ *    none
  ******************************************************************************/
 unsigned Config::getNumCompressedPadBlks()
 {
@@ -642,13 +667,13 @@ uint16_t Config::getLocalModuleID()
 
 /*******************************************************************************
  * DESCRIPTION:
- *    Get version buffer root 
+ *    Get version buffer root
  * PARAMETERS:
- *    none 
+ *    none
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ******************************************************************************/
-std::string Config::getVBRoot() 
+std::string Config::getVBRoot()
 {
     boost::mutex::scoped_lock lk(fCacheLock);
     checkReload( );
@@ -668,6 +693,7 @@ std::string Config::getVBRoot()
 bool Config::hasLocalDBRootListChanged()
 {
     boost::mutex::scoped_lock lk(fCacheLock);
+
     if (fDBRootChangeCount > 0)
     {
         fDBRootChangeCount = 0;

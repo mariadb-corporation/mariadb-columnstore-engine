@@ -3,19 +3,22 @@
 # $Id$
 #
 
-usage="usage: run.sh [-vh] [-s sleep] [-t tries] executable"
+usage="usage: run.sh [-vh] [-s sleep] [-t tries] [-l logDir] executable"
 
 vflg=0
 sopt="5"
 topt="0"
+lopt="/tmp/columnstore_tmp_files"
 
-while getopts "vs:t:h" flag; do
+while getopts "vs:t:l:h" flag; do
 	case $flag in
 	v) vflg=1
 		;;
 	s) sopt=$OPTARG
 		;;
 	t) topt=$OPTARG
+		;;
+	l) lopt=$OPTARG
 		;;
 	h) echo $usage
 		exit 0
@@ -26,9 +29,9 @@ while getopts "vs:t:h" flag; do
 	esac
 done
 
-shift $((OPTIND - 1))
+shift $((OPTIND-1))
 
-exename="$1"
+exename="$@"
 
 if [ -z "$exename" ]; then
 	echo $usage 1>&2
@@ -47,7 +50,7 @@ fi
 
 while [ $keep_going -ne 0 ]; do
 	$exename $args
-	if [ -e /tmp/StopColumnstore ]; then
+	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi
 	if [ $topt -gt 0 -a $retries -ge $topt ]; then

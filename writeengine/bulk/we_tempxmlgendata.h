@@ -37,16 +37,16 @@ namespace WriteEngine
  */
 class TempXMLGenData : public XMLGenData
 {
-  public:
+public:
     TempXMLGenData(const std::string& jobId,
-                const std::string& schema,
-                const std::string& table );
+                   const std::string& schema,
+                   const std::string& table );
 
     virtual ~TempXMLGenData( );
 
     virtual void print(std::ostream& os) const;
 
-  private:
+private:
     TempXMLGenData(const TempXMLGenData&);           //disable default copy ctor
     TempXMLGenData& operator=(const TempXMLGenData&);//disable def assignment
 };

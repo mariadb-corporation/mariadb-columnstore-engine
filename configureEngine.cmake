@@ -716,7 +716,9 @@ IF (NOT INLINE)
 SET (inline "")
 ENDIF()
 
-
+IF($ENV{SKIP_OAM_INIT})
+    SET(SKIP_OAM_INIT 1)
+ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym

@@ -45,7 +45,7 @@ public:
 
     /** @brief TupleHavingStep destructor
      */
-   ~TupleHavingStep();
+    ~TupleHavingStep();
 
     /** @brief virtual void Run method
      */
@@ -54,55 +54,61 @@ public:
 
     const std::string toString() const;
 
-	/** @brief TupleJobStep's pure virtual methods
-	 */
-	const rowgroup::RowGroup& getOutputRowGroup() const;
-	void  setOutputRowGroup(const rowgroup::RowGroup&);
+    /** @brief TupleJobStep's pure virtual methods
+     */
+    const rowgroup::RowGroup& getOutputRowGroup() const;
+    void  setOutputRowGroup(const rowgroup::RowGroup&);
 
-	/** @brief TupleDeliveryStep's pure virtual methods
-	 */
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
+    /** @brief TupleDeliveryStep's pure virtual methods
+     */
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
 
-	void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
-	void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
-	
-	virtual bool stringTableFriendly() { return true; }
+    void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
+    void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
+
+    virtual bool stringTableFriendly()
+    {
+        return true;
+    }
 
 protected:
-	void execute();
-	void doHavingFilters();
-	void formatMiniStats();
-	void printCalTrace();
+    void execute();
+    void doHavingFilters();
+    void formatMiniStats();
+    void printCalTrace();
 
-	// input/output rowgroup and row
-	rowgroup::RowGroup fRowGroupIn;
-	rowgroup::RowGroup fRowGroupOut;
-	rowgroup::Row fRowIn;
-	rowgroup::Row fRowOut;
+    // input/output rowgroup and row
+    rowgroup::RowGroup fRowGroupIn;
+    rowgroup::RowGroup fRowGroupOut;
+    rowgroup::Row fRowIn;
+    rowgroup::Row fRowOut;
 
-	// for datalist
-	RowGroupDL* fInputDL;
-	RowGroupDL* fOutputDL;
-	uint64_t fInputIterator;
+    // for datalist
+    RowGroupDL* fInputDL;
+    RowGroupDL* fOutputDL;
+    uint64_t fInputIterator;
 
-	class Runner
-	{
-	public:
-		Runner(TupleHavingStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(TupleHavingStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		TupleHavingStep* fStep;
-	};
+        TupleHavingStep* fStep;
+    };
 
-	boost::scoped_ptr<boost::thread> fRunner;
+    uint64_t fRunner;  // thread pool handle
 
-	uint64_t fRowsReturned;
-	bool     fEndOfResult;
+    uint64_t fRowsReturned;
+    bool     fEndOfResult;
 
-	funcexp::FuncExp* fFeInstance;
+    funcexp::FuncExp* fFeInstance;
 };
 
 

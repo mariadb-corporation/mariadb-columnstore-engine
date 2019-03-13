@@ -24,12 +24,14 @@
 
 #include "configcpp.h"
 
-namespace utils {
+namespace utils
+{
 
 /* This class wraps a few methods for getting configuration variables that potentially
    come from a cgroup.  Might move it to utils/configcpp, and/or change the name. */
 
-class CGroupConfigurator {
+class CGroupConfigurator
+{
 public:
     CGroupConfigurator();
     virtual ~CGroupConfigurator();
@@ -40,7 +42,10 @@ public:
     uint64_t getTotalSwapSpace();
     uint64_t getSwapInUse();
 
-    bool usingCGroup() { return cGroupDefined; }
+    bool usingCGroup()
+    {
+        return cGroupDefined;
+    }
 
 private:
     uint32_t getNumCoresFromProc();
@@ -59,7 +64,7 @@ private:
 
     std::string cGroupName;
     bool cGroupDefined;
-    config::Config *config;
+    config::Config* config;
     uint64_t totalMemory;
     uint64_t totalSwap;
     bool printedWarning;

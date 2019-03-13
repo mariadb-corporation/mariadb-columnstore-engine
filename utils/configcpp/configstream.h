@@ -41,22 +41,24 @@ namespace config
 class ConfigStream
 {
 public:
-	ConfigStream(const messageqcpp::ByteStream& bs, const std::string& installDir);
-	ConfigStream(const std::string& str, const std::string& installDir);
-	ConfigStream(const char* cptr, const std::string& installDir);
-	~ConfigStream();
+    ConfigStream(const messageqcpp::ByteStream& bs, const std::string& installDir);
+    ConfigStream(const std::string& str, const std::string& installDir);
+    ConfigStream(const char* cptr, const std::string& installDir);
+    ~ConfigStream();
 
-	const std::string getConfig(const std::string& section, const std::string& name) const
-		{ return fParser.getConfig(fDoc, section, name); }
+    const std::string getConfig(const std::string& section, const std::string& name) const
+    {
+        return fParser.getConfig(fDoc, section, name);
+    }
 
 private:
-	ConfigStream(const ConfigStream& rhs);
-	ConfigStream& operator=(const ConfigStream& rhs);
+    ConfigStream(const ConfigStream& rhs);
+    ConfigStream& operator=(const ConfigStream& rhs);
 
-	void init(const xmlChar* xp);
+    void init(const xmlChar* xp);
 
-	XMLParser fParser;
-	xmlDocPtr fDoc;
+    XMLParser fParser;
+    xmlDocPtr fDoc;
 };
 
 } //namespace

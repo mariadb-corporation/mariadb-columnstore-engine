@@ -41,74 +41,88 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_substring_index::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 std::string Func_substring_index::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType&)
 {
-	const string& str = fp[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    const string& str = fp[0]->data()->getStrVal(row, isNull);
 
-	const string& delim = fp[1]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    if (isNull)
+        return "";
 
-	int64_t count = fp[2]->data()->getIntVal(row,isNull);
-	if (isNull)
-		return "";
+    const string& delim = fp[1]->data()->getStrVal(row, isNull);
 
-	if ( count == 0 )
-		return "";
+    if (isNull)
+        return "";
 
-	size_t end = strlen(str.c_str());
+    int64_t count = fp[2]->data()->getIntVal(row, isNull);
 
-	if ( count > (int64_t) end )
-		return str;
+    if (isNull)
+        return "";
 
-	string value = str;
+    if ( count == 0 )
+        return "";
 
-	if ( count > 0 ) {
-		int pointer = 0;
+    size_t end = strlen(str.c_str());
 
-		for ( int i = 0 ; i < count ; i ++ )
-		{
-			string::size_type pos = str.find(delim,pointer);
-			if (pos != string::npos)
-				pointer = pos+1;
-				end = pos;
-		}
-		value = str.substr(0,end);
-	}
-	else
-	{
-		count = count *-1;
-		size_t end = strlen(str.c_str());
-		int pointer = end;
-		int start = 0;
+    if ( count > (int64_t) end )
+        return str;
 
-		for ( int i = 0 ; i < count ; i ++ )
-		{
-			string::size_type pos = str.rfind(delim,pointer);
-			if (pos != string::npos) {
-				if ( count > (int64_t) end )
-					return "";
-				pointer = pos-1;
-				start = pos+1;
-			}
-			else
-				start = 0;
-		}
-		value = str.substr(start,end);
-	}
+    if (( count < 0 ) && ((count * -1) > end))
+        return str;
 
-	return value;
-}							
+    string value = str;
+
+    if ( count > 0 )
+    {
+        int pointer = 0;
+
+        for ( int i = 0 ; i < count ; i ++ )
+        {
+            string::size_type pos = str.find(delim, pointer);
+
+            if (pos != string::npos)
+                pointer = pos + 1;
+
+            end = pos;
+        }
+
+        value = str.substr(0, end);
+    }
+    else
+    {
+        count = count * -1;
+        size_t end = strlen(str.c_str());
+        int pointer = end;
+        int start = 0;
+
+        for ( int i = 0 ; i < count ; i ++ )
+        {
+            string::size_type pos = str.rfind(delim, pointer);
+
+            if (pos != string::npos)
+            {
+                if ( count > (int64_t) end )
+                    return "";
+
+                pointer = pos - 1;
+                start = pos + 1;
+            }
+            else
+                start = 0;
+        }
+
+        value = str.substr(start, end);
+    }
+
+    return value;
+}
 
 
 } // namespace funcexp

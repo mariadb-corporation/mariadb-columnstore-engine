@@ -71,6 +71,7 @@ void SimpleSysLog::logMsg( const logging::Message::Args& msgArgs,
     m.format(msgArgs);
 
     boost::mutex::scoped_lock lk(fWriteLockMutex);
+
     switch (logType)
     {
         case logging::LOG_TYPE_DEBUG:
@@ -78,22 +79,26 @@ void SimpleSysLog::logMsg( const logging::Message::Args& msgArgs,
             ml.logDebugMessage(m);
             break;
         }
+
         case logging::LOG_TYPE_INFO:
         default:
         {
             ml.logInfoMessage(m);
             break;
         }
+
         case logging::LOG_TYPE_WARNING:
         {
             ml.logWarningMessage(m);
             break;
         }
+
         case logging::LOG_TYPE_ERROR:
         {
             ml.logErrorMessage(m);
             break;
         }
+
         case logging::LOG_TYPE_CRITICAL:
         {
             ml.logCriticalMessage(m);

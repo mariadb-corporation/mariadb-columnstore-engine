@@ -69,7 +69,7 @@ namespace funcexp
  *
  */
 
-/*  
+/*
  *  SHA1
  *
  *  Description:
@@ -89,7 +89,7 @@ SHA1::SHA1()
     Reset();
 }
 
-/*  
+/*
  *  ~SHA1
  *
  *  Description:
@@ -106,10 +106,10 @@ SHA1::SHA1()
  */
 SHA1::~SHA1()
 {
-	// The destructor does nothing
+    // The destructor does nothing
 }
 
-/*  
+/*
  *  Reset
  *
  *  Description:
@@ -127,21 +127,21 @@ SHA1::~SHA1()
  */
 void SHA1::Reset()
 {
-	Length_Low          = 0;
-	Length_High         = 0;
-	Message_Block_Index = 0;
-	
-	H[0]        = 0x67452301;
-	H[1]        = 0xEFCDAB89;
-	H[2]        = 0x98BADCFE;
-	H[3]        = 0x10325476;
-	H[4]        = 0xC3D2E1F0;
-	
-	Computed    = false;
-	Corrupted   = false;
+    Length_Low          = 0;
+    Length_High         = 0;
+    Message_Block_Index = 0;
+
+    H[0]        = 0x67452301;
+    H[1]        = 0xEFCDAB89;
+    H[2]        = 0x98BADCFE;
+    H[3]        = 0x10325476;
+    H[4]        = 0xC3D2E1F0;
+
+    Computed    = false;
+    Corrupted   = false;
 }
 
-/*  
+/*
  *  Result
  *
  *  Description:
@@ -159,30 +159,30 @@ void SHA1::Reset()
  *  Comments:
  *
  */
-bool SHA1::Result(unsigned *message_digest_array)
+bool SHA1::Result(unsigned* message_digest_array)
 {
-	int i;                                  // Counter
-	
-	if (Corrupted)
-	{
-		return false;
-	}
-	
-	if (!Computed)
-	{
-		PadMessage();
-		Computed = true;
-	}
-	
-	for(i = 0; i < 5; i++)
-	{
-		message_digest_array[i] = H[i];
-	}
-	
-	return true;
+    int i;                                  // Counter
+
+    if (Corrupted)
+    {
+        return false;
+    }
+
+    if (!Computed)
+    {
+        PadMessage();
+        Computed = true;
+    }
+
+    for (i = 0; i < 5; i++)
+    {
+        message_digest_array[i] = H[i];
+    }
+
+    return true;
 }
 
-/*  
+/*
  *  Input
  *
  *  Description:
@@ -200,46 +200,48 @@ bool SHA1::Result(unsigned *message_digest_array)
  *  Comments:
  *
  */
-void SHA1::Input(   const unsigned char *message_array,
+void SHA1::Input(   const unsigned char* message_array,
                     unsigned            length)
 {
-	if (!length)
-	{
-		return;
-	}
-	
-	if (Computed || Corrupted)
-	{
-		Corrupted = true;
-		return;
-	}
-	
-	while(length-- && !Corrupted)
-	{
-		Message_Block[Message_Block_Index++] = (*message_array & 0xFF);
-		
-		Length_Low += 8;
-		Length_Low &= 0xFFFFFFFF;               // Force it to 32 bits
-		if (Length_Low == 0)
-		{
-			Length_High++;
-			Length_High &= 0xFFFFFFFF;          // Force it to 32 bits
-			if (Length_High == 0)
-			{
-				Corrupted = true;               // Message is too long
-			}
-		}
-	
-		if (Message_Block_Index == 64)
-		{
-			ProcessMessageBlock();
-		}
-	
-		message_array++;
-	}
+    if (!length)
+    {
+        return;
+    }
+
+    if (Computed || Corrupted)
+    {
+        Corrupted = true;
+        return;
+    }
+
+    while (length-- && !Corrupted)
+    {
+        Message_Block[Message_Block_Index++] = (*message_array & 0xFF);
+
+        Length_Low += 8;
+        Length_Low &= 0xFFFFFFFF;               // Force it to 32 bits
+
+        if (Length_Low == 0)
+        {
+            Length_High++;
+            Length_High &= 0xFFFFFFFF;          // Force it to 32 bits
+
+            if (Length_High == 0)
+            {
+                Corrupted = true;               // Message is too long
+            }
+        }
+
+        if (Message_Block_Index == 64)
+        {
+            ProcessMessageBlock();
+        }
+
+        message_array++;
+    }
 }
 
-/*  
+/*
  *  Input
  *
  *  Description:
@@ -259,13 +261,13 @@ void SHA1::Input(   const unsigned char *message_array,
  *  Comments:
  *
  */
-void SHA1::Input(   const char  *message_array,
+void SHA1::Input(   const char*  message_array,
                     unsigned    length)
 {
-	Input((unsigned char *) message_array, length);
+    Input((unsigned char*) message_array, length);
 }
 
-/*  
+/*
  *  Input
  *
  *  Description:
@@ -283,10 +285,10 @@ void SHA1::Input(   const char  *message_array,
  */
 void SHA1::Input(unsigned char message_element)
 {
-	Input(&message_element, 1);
+    Input(&message_element, 1);
 }
 
-/*  
+/*
  *  Input
  *
  *  Description:
@@ -304,10 +306,10 @@ void SHA1::Input(unsigned char message_element)
  */
 void SHA1::Input(char message_element)
 {
-	Input((unsigned char *) &message_element, 1);
+    Input((unsigned char*) &message_element, 1);
 }
 
-/*  
+/*
  *  operator<<
  *
  *  Description:
@@ -325,51 +327,51 @@ void SHA1::Input(char message_element)
  *      Each character is assumed to hold 8 bits of information.
  *
  */
-SHA1& SHA1::operator<<(const char *message_array)
+SHA1& SHA1::operator<<(const char* message_array)
 {
-	const char *p = message_array;
+    const char* p = message_array;
 
-	while(*p)
-	{
-		Input(*p);
-		p++;
-	}
-
-	return *this;
-}
-
-/*  
- *  operator<<
- *
- *  Description:
- *      This operator makes it convenient to provide character strings to
- *      the SHA1 object for processing.
- *
- *  Parameters:
- *      message_array: [in]
- *          The character array to take as input.
- *
- *  Returns:
- *      A reference to the SHA1 object.
- *
- *  Comments:
- *      Each character is assumed to hold 8 bits of information.
- *
- */
-SHA1& SHA1::operator<<(const unsigned char *message_array)
-{
-	const unsigned char *p = message_array;
-
-	while(*p)
-	{
-		Input(*p);
-		p++;
-	}
+    while (*p)
+    {
+        Input(*p);
+        p++;
+    }
 
     return *this;
 }
 
-/*  
+/*
+ *  operator<<
+ *
+ *  Description:
+ *      This operator makes it convenient to provide character strings to
+ *      the SHA1 object for processing.
+ *
+ *  Parameters:
+ *      message_array: [in]
+ *          The character array to take as input.
+ *
+ *  Returns:
+ *      A reference to the SHA1 object.
+ *
+ *  Comments:
+ *      Each character is assumed to hold 8 bits of information.
+ *
+ */
+SHA1& SHA1::operator<<(const unsigned char* message_array)
+{
+    const unsigned char* p = message_array;
+
+    while (*p)
+    {
+        Input(*p);
+        p++;
+    }
+
+    return *this;
+}
+
+/*
  *  operator<<
  *
  *  Description:
@@ -388,12 +390,12 @@ SHA1& SHA1::operator<<(const unsigned char *message_array)
  */
 SHA1& SHA1::operator<<(const char message_element)
 {
-	Input((unsigned char *) &message_element, 1);
+    Input((unsigned char*) &message_element, 1);
 
-	return *this;
+    return *this;
 }
 
-/*  
+/*
  *  operator<<
  *
  *  Description:
@@ -412,12 +414,12 @@ SHA1& SHA1::operator<<(const char message_element)
  */
 SHA1& SHA1::operator<<(const unsigned char message_element)
 {
-	Input(&message_element, 1);
+    Input(&message_element, 1);
 
-	return *this;
+    return *this;
 }
 
-/*  
+/*
  *  ProcessMessageBlock
  *
  *  Description:
@@ -438,94 +440,95 @@ SHA1& SHA1::operator<<(const unsigned char message_element)
  */
 void SHA1::ProcessMessageBlock()
 {
-	const unsigned K[] =    {               // Constants defined for SHA-1
-                                0x5A827999,
-                                0x6ED9EBA1,
-                                0x8F1BBCDC,
-                                0xCA62C1D6
-	                        };
-	int         t;                          // Loop counter
-	unsigned    temp;                       // Temporary word value
-	unsigned    W[80];                      // Word sequence
-	unsigned    A, B, C, D, E;              // Word buffers
+    const unsigned K[] =                    // Constants defined for SHA-1
+    {
+        0x5A827999,
+        0x6ED9EBA1,
+        0x8F1BBCDC,
+        0xCA62C1D6
+    };
+    int         t;                          // Loop counter
+    unsigned    temp;                       // Temporary word value
+    unsigned    W[80];                      // Word sequence
+    unsigned    A, B, C, D, E;              // Word buffers
 
-	/*
-	 *  Initialize the first 16 words in the array W
-	 */
-	for(t = 0; t < 16; t++)
-	{
-		W[t] = ((unsigned) Message_Block[t * 4]) << 24;
-		W[t] |= ((unsigned) Message_Block[t * 4 + 1]) << 16;
-		W[t] |= ((unsigned) Message_Block[t * 4 + 2]) << 8;
-		W[t] |= ((unsigned) Message_Block[t * 4 + 3]);
-	}
+    /*
+     *  Initialize the first 16 words in the array W
+     */
+    for (t = 0; t < 16; t++)
+    {
+        W[t] = ((unsigned) Message_Block[t * 4]) << 24;
+        W[t] |= ((unsigned) Message_Block[t * 4 + 1]) << 16;
+        W[t] |= ((unsigned) Message_Block[t * 4 + 2]) << 8;
+        W[t] |= ((unsigned) Message_Block[t * 4 + 3]);
+    }
 
-	for(t = 16; t < 80; t++)
-	{
-		W[t] = CircularShift(1,W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16]);
-	}
+    for (t = 16; t < 80; t++)
+    {
+        W[t] = CircularShift(1, W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]);
+    }
 
-	A = H[0];
-	B = H[1];
-	C = H[2];
-	D = H[3];
-	E = H[4];
+    A = H[0];
+    B = H[1];
+    C = H[2];
+    D = H[3];
+    E = H[4];
 
-	for(t = 0; t < 20; t++)
-	{
-		temp = CircularShift(5,A) + ((B & C) | ((~B) & D)) + E + W[t] + K[0];
-		temp &= 0xFFFFFFFF;
-		E = D;
-		D = C;
-		C = CircularShift(30,B);
-		B = A;
-		A = temp;
-	}
+    for (t = 0; t < 20; t++)
+    {
+        temp = CircularShift(5, A) + ((B & C) | ((~B) & D)) + E + W[t] + K[0];
+        temp &= 0xFFFFFFFF;
+        E = D;
+        D = C;
+        C = CircularShift(30, B);
+        B = A;
+        A = temp;
+    }
 
-	for(t = 20; t < 40; t++)
-	{
-		temp = CircularShift(5,A) + (B ^ C ^ D) + E + W[t] + K[1];
-		temp &= 0xFFFFFFFF;
-		E = D;
-		D = C;
-		C = CircularShift(30,B);
-		B = A;
-		A = temp;
-	}
+    for (t = 20; t < 40; t++)
+    {
+        temp = CircularShift(5, A) + (B ^ C ^ D) + E + W[t] + K[1];
+        temp &= 0xFFFFFFFF;
+        E = D;
+        D = C;
+        C = CircularShift(30, B);
+        B = A;
+        A = temp;
+    }
 
-	for(t = 40; t < 60; t++)
-	{
-		temp = CircularShift(5,A) +
-		       ((B & C) | (B & D) | (C & D)) + E + W[t] + K[2];
-		temp &= 0xFFFFFFFF;
-		E = D;
-		D = C;
-		C = CircularShift(30,B);
-		B = A;
-		A = temp;
-	}
+    for (t = 40; t < 60; t++)
+    {
+        temp = CircularShift(5, A) +
+               ((B & C) | (B & D) | (C & D)) + E + W[t] + K[2];
+        temp &= 0xFFFFFFFF;
+        E = D;
+        D = C;
+        C = CircularShift(30, B);
+        B = A;
+        A = temp;
+    }
 
-	for(t = 60; t < 80; t++)
-	{
-		temp = CircularShift(5,A) + (B ^ C ^ D) + E + W[t] + K[3];
-		temp &= 0xFFFFFFFF;
-		E = D;
-		D = C;
-		C = CircularShift(30,B);
-		B = A;
-		A = temp;
-	}
+    for (t = 60; t < 80; t++)
+    {
+        temp = CircularShift(5, A) + (B ^ C ^ D) + E + W[t] + K[3];
+        temp &= 0xFFFFFFFF;
+        E = D;
+        D = C;
+        C = CircularShift(30, B);
+        B = A;
+        A = temp;
+    }
 
-	H[0] = (H[0] + A) & 0xFFFFFFFF;
-	H[1] = (H[1] + B) & 0xFFFFFFFF;
-	H[2] = (H[2] + C) & 0xFFFFFFFF;
-	H[3] = (H[3] + D) & 0xFFFFFFFF;
-	H[4] = (H[4] + E) & 0xFFFFFFFF;
+    H[0] = (H[0] + A) & 0xFFFFFFFF;
+    H[1] = (H[1] + B) & 0xFFFFFFFF;
+    H[2] = (H[2] + C) & 0xFFFFFFFF;
+    H[3] = (H[3] + D) & 0xFFFFFFFF;
+    H[4] = (H[4] + E) & 0xFFFFFFFF;
 
-	Message_Block_Index = 0;
+    Message_Block_Index = 0;
 }
 
-/*  
+/*
  *  PadMessage
  *
  *  Description:
@@ -548,53 +551,55 @@ void SHA1::ProcessMessageBlock()
  */
 void SHA1::PadMessage()
 {
-	/*
-	 *  Check to see if the current message block is too small to hold
-	 *  the initial padding bits and length.  If so, we will pad the
-	 *  block, process it, and then continue padding into a second block.
-	 */
-	if (Message_Block_Index > 55)
-	{
-		Message_Block[Message_Block_Index++] = 0x80;
-		while(Message_Block_Index < 64)
-		{
-			Message_Block[Message_Block_Index++] = 0;
-		}
+    /*
+     *  Check to see if the current message block is too small to hold
+     *  the initial padding bits and length.  If so, we will pad the
+     *  block, process it, and then continue padding into a second block.
+     */
+    if (Message_Block_Index > 55)
+    {
+        Message_Block[Message_Block_Index++] = 0x80;
 
-		ProcessMessageBlock();
+        while (Message_Block_Index < 64)
+        {
+            Message_Block[Message_Block_Index++] = 0;
+        }
 
-		while(Message_Block_Index < 56)
-		{
-		    Message_Block[Message_Block_Index++] = 0;
-		}
-	}
-	else
-	{
-		Message_Block[Message_Block_Index++] = 0x80;
-		while(Message_Block_Index < 56)
-		{
-			Message_Block[Message_Block_Index++] = 0;
-		}
-	
-	}
+        ProcessMessageBlock();
 
-	/*
-	 *  Store the message length as the last 8 octets
-	 */
-	Message_Block[56] = (Length_High >> 24) & 0xFF;
-	Message_Block[57] = (Length_High >> 16) & 0xFF;
-	Message_Block[58] = (Length_High >> 8) & 0xFF;
-	Message_Block[59] = (Length_High) & 0xFF;
-	Message_Block[60] = (Length_Low >> 24) & 0xFF;
-	Message_Block[61] = (Length_Low >> 16) & 0xFF;
-	Message_Block[62] = (Length_Low >> 8) & 0xFF;
-	Message_Block[63] = (Length_Low) & 0xFF;
+        while (Message_Block_Index < 56)
+        {
+            Message_Block[Message_Block_Index++] = 0;
+        }
+    }
+    else
+    {
+        Message_Block[Message_Block_Index++] = 0x80;
 
-	ProcessMessageBlock();
+        while (Message_Block_Index < 56)
+        {
+            Message_Block[Message_Block_Index++] = 0;
+        }
+
+    }
+
+    /*
+     *  Store the message length as the last 8 octets
+     */
+    Message_Block[56] = (Length_High >> 24) & 0xFF;
+    Message_Block[57] = (Length_High >> 16) & 0xFF;
+    Message_Block[58] = (Length_High >> 8) & 0xFF;
+    Message_Block[59] = (Length_High) & 0xFF;
+    Message_Block[60] = (Length_Low >> 24) & 0xFF;
+    Message_Block[61] = (Length_Low >> 16) & 0xFF;
+    Message_Block[62] = (Length_Low >> 8) & 0xFF;
+    Message_Block[63] = (Length_Low) & 0xFF;
+
+    ProcessMessageBlock();
 }
 
 
-/*  
+/*
  *  CircularShift
  *
  *  Description:
@@ -614,49 +619,50 @@ void SHA1::PadMessage()
  */
 unsigned SHA1::CircularShift(int bits, unsigned word)
 {
-    return ((word << bits) & 0xFFFFFFFF) | ((word & 0xFFFFFFFF) >> (32-bits));
+    return ((word << bits) & 0xFFFFFFFF) | ((word & 0xFFFFFFFF) >> (32 - bits));
 }
 
 /** Definition of class Func_sha */
 
 CalpontSystemCatalog::ColType Func_sha::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 string Func_sha::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType&)
 {
-	SHA1 sha;
-	uint32_t message_digest[5];
+    SHA1 sha;
+    uint32_t message_digest[5];
 
-	// Input is always treated as sring
-	sha.Reset();
-	sha << parm[0]->data()->getStrVal(row, isNull).c_str();
-	
-	// can not compute
+    // Input is always treated as sring
+    sha.Reset();
+    sha << parm[0]->data()->getStrVal(row, isNull).c_str();
+
+    // can not compute
 #ifdef _MSC_VER
-	// This cast is probably portable, but we'll leave it for Windows only for now...
-	if (!sha.Result(reinterpret_cast<unsigned int *>(message_digest)))
-#else
-	if (!sha.Result(message_digest))
-#endif
-	{
-		isNull = true;
-		return "";
-	}
 
-	// result length is always 40+1
-	char result[41];
-	snprintf(result, 41, "%08x", message_digest[0]);
-	snprintf(result+8, 41-8, "%08x", message_digest[1]);
-	snprintf(result+16, 41-16, "%08x", message_digest[2]);
-	snprintf(result+24, 41-24, "%08x", message_digest[3]);
-	snprintf(result+32, 41-32, "%08x", message_digest[4]);
-	result[40] = 0;
-	return result;
+    // This cast is probably portable, but we'll leave it for Windows only for now...
+    if (!sha.Result(reinterpret_cast<unsigned int*>(message_digest)))
+#else
+    if (!sha.Result(message_digest))
+#endif
+    {
+        isNull = true;
+        return "";
+    }
+
+    // result length is always 40+1
+    char result[41];
+    snprintf(result, 41, "%08x", message_digest[0]);
+    snprintf(result + 8, 41 - 8, "%08x", message_digest[1]);
+    snprintf(result + 16, 41 - 16, "%08x", message_digest[2]);
+    snprintf(result + 24, 41 - 24, "%08x", message_digest[3]);
+    snprintf(result + 32, 41 - 32, "%08x", message_digest[4]);
+    result[40] = 0;
+    return result;
 }
 
 

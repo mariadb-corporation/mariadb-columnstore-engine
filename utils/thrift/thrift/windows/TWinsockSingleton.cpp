@@ -23,7 +23,12 @@
 #include <boost/assert.hpp>
 #include <stdexcept>
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache
+{
+namespace thrift
+{
+namespace transport
+{
 
 TWinsockSingleton::instance_ptr TWinsockSingleton::instance_ptr_(NULL);
 #if USE_BOOST_THREAD
@@ -41,6 +46,7 @@ TWinsockSingleton::TWinsockSingleton(void)
     WSAData data = {0};
 
     int error(WSAStartup(version, &data));
+
     if (error != 0)
     {
         BOOST_ASSERT(false);
@@ -70,4 +76,6 @@ void TWinsockSingleton::init(void)
     instance_ptr_.reset(new TWinsockSingleton);
 }
 
-}}} // apache::thrift::transport
+}
+}
+} // apache::thrift::transport

@@ -45,69 +45,77 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_char_length::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_char_length::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& op_ct)
 {
-	CalpontSystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
+    CalpontSystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
 
-	switch (type)
-	{
-		case execplan::CalpontSystemCatalog::BIGINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
+    switch (type)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
         case execplan::CalpontSystemCatalog::UBIGINT:
         case execplan::CalpontSystemCatalog::UINT:
         case execplan::CalpontSystemCatalog::UMEDINT:
         case execplan::CalpontSystemCatalog::UTINYINT:
         case execplan::CalpontSystemCatalog::USMALLINT:
-		case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
-		case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
-		case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR
-		case execplan::CalpontSystemCatalog::CHAR:
-		case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-		{
-			const string& tstr = parm[0]->data()->getStrVal(row, isNull);
-			if (isNull)
-				return 0;
+        {
+            const string& tstr = parm[0]->data()->getStrVal(row, isNull);
 
-			size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-			wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
-			strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
+            if (isNull)
+                return 0;
 
-			return (int64_t)strwclen;
-		}
+            size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
+            wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+            strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
 
-		case execplan::CalpontSystemCatalog::DATE:
-		{
-			string date = dataconvert::DataConvert::dateToString(parm[0]->data()->getDateIntVal(row, isNull));
-			return (int64_t)date.size();
-		}	
+            return (int64_t)strwclen;
+        }
 
-		case execplan::CalpontSystemCatalog::DATETIME:
-		{
-			string date = dataconvert::DataConvert::datetimeToString(parm[0]->data()->getDatetimeIntVal(row, isNull));
-			return (int64_t)date.size();
-		}
+        case execplan::CalpontSystemCatalog::DATE:
+        {
+            string date = dataconvert::DataConvert::dateToString(parm[0]->data()->getDateIntVal(row, isNull));
+            return (int64_t)date.size();
+        }
 
-		default:
-		{
-			std::ostringstream oss;
-			oss << "char_length: datatype of " << execplan::colDataTypeToString(type);
-			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-		}
-	}
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            string date = dataconvert::DataConvert::datetimeToString(parm[0]->data()->getDatetimeIntVal(row, isNull));
+            return (int64_t)date.size();
+        }
 
-	return 0;
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            string date = dataconvert::DataConvert::timeToString(parm[0]->data()->getTimeIntVal(row, isNull));
+            return (int64_t)date.size();
+        }
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "char_length: datatype of " << execplan::colDataTypeToString(type);
+            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+        }
+    }
+
+    return 0;
 }
 
 

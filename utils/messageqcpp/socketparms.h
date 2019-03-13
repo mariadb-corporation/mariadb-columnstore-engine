@@ -26,7 +26,8 @@
 
 class MessageQTestSuite;
 
-namespace messageqcpp { 
+namespace messageqcpp
+{
 
 /** a simple socket parameters class
  *
@@ -34,94 +35,121 @@ namespace messageqcpp {
 class SocketParms
 {
 public:
-	/** ctor
-	 *
-	 */
-	explicit SocketParms(int domain=-1, int type=-1, int protocol=-1);
+    /** ctor
+     *
+     */
+    explicit SocketParms(int domain = -1, int type = -1, int protocol = -1);
 
-	/** dtor
-	 *
-	 */
-	virtual ~SocketParms();
+    /** dtor
+     *
+     */
+    virtual ~SocketParms();
 
-	/** copy ctor
-	 *
-	 */
-	SocketParms(const SocketParms& rhs);
+    /** copy ctor
+     *
+     */
+    SocketParms(const SocketParms& rhs);
 
-	/** assign op
-	 *
-	 */
-	SocketParms& operator=(const SocketParms& rhs);
+    /** assign op
+     *
+     */
+    SocketParms& operator=(const SocketParms& rhs);
 
-	/** accessor
-	 *
-	 */
-	inline int sd() const;
+    /** accessor
+     *
+     */
+    inline int sd() const;
 
-	/** accessor
-	 *
-	 */
-	inline int domain() const;
+    /** accessor
+     *
+     */
+    inline int domain() const;
 
-	/** accessor
-	 *
-	 */
-	inline int type() const;
+    /** accessor
+     *
+     */
+    inline int type() const;
 
-	/** accessor
-	 *
-	 */
-	inline int protocol() const;
+    /** accessor
+     *
+     */
+    inline int protocol() const;
 
-	/** mutator
-	 *
-	 */
-	inline void sd(int sd);
+    /** mutator
+     *
+     */
+    inline void sd(int sd);
 
-	/** mutator
-	 *
-	 */
-	inline void domain(int domain);
+    /** mutator
+     *
+     */
+    inline void domain(int domain);
 
-	/** mutator
-	 *
-	 */
-	inline void type(int type);
+    /** mutator
+     *
+     */
+    inline void type(int type);
 
-	/** mutator
-	 *
-	 */
-	inline void protocol(int protocol);
+    /** mutator
+     *
+     */
+    inline void protocol(int protocol);
 
-	/** isOpen test
-	 *
-	 */
-	inline bool isOpen() const;
+    /** isOpen test
+     *
+     */
+    inline bool isOpen() const;
 
-	/*
-	 * allow test suite access to private data for OOB test
-	 */
-	friend class ::MessageQTestSuite;
+    /*
+     * allow test suite access to private data for OOB test
+     */
+    friend class ::MessageQTestSuite;
 
 private:
-	void doCopy(const SocketParms& rhs);
+    void doCopy(const SocketParms& rhs);
 
-	int fSd;			/// the socket descriptor
-	int fDomain;	/// the socket domain
-	int fType;		/// the socket type
-	int fProtocol;	/// the socket protocol
+    int fSd;			/// the socket descriptor
+    int fDomain;	/// the socket domain
+    int fType;		/// the socket type
+    int fProtocol;	/// the socket protocol
 };
 
-inline int SocketParms::sd() const { return fSd; }
-inline int SocketParms::domain() const { return fDomain; }
-inline int SocketParms::type() const { return fType; }
-inline int SocketParms::protocol() const { return fProtocol; }
-inline bool SocketParms::isOpen() const { return (fSd >= 0); }
-inline void SocketParms::sd(int sd) { fSd = sd; }
-inline void SocketParms::domain(int domain) { fDomain = domain; }
-inline void SocketParms::type(int type) { fType = type; }
-inline void SocketParms::protocol(int protocol) { fProtocol = protocol; }
+inline int SocketParms::sd() const
+{
+    return fSd;
+}
+inline int SocketParms::domain() const
+{
+    return fDomain;
+}
+inline int SocketParms::type() const
+{
+    return fType;
+}
+inline int SocketParms::protocol() const
+{
+    return fProtocol;
+}
+inline bool SocketParms::isOpen() const
+{
+    return (fSd >= 0);
+}
+inline void SocketParms::sd(int sd)
+{
+    fSd = sd;
+}
+inline void SocketParms::domain(int domain)
+{
+    fDomain = domain;
+}
+inline void SocketParms::type(int type)
+{
+    fType = type;
+}
+inline void SocketParms::protocol(int protocol)
+{
+    fProtocol = protocol;
+}
 
 } //namespace messageqcpp
 

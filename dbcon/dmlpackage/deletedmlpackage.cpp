@@ -38,7 +38,7 @@ DeleteDMLPackage::DeleteDMLPackage()
 
 DeleteDMLPackage::DeleteDMLPackage(std::string schemaName, std::string tableName,
                                    std::string dmlStatement, int sessionID)
-        :CalpontDMLPackage( schemaName, tableName, dmlStatement, sessionID )
+    : CalpontDMLPackage( schemaName, tableName, dmlStatement, sessionID )
 {}
 
 DeleteDMLPackage::~DeleteDMLPackage()
@@ -54,11 +54,11 @@ int DeleteDMLPackage::write(messageqcpp::ByteStream& bytestream)
     messageqcpp::ByteStream::quadbyte session_id = fSessionID;
     bytestream << session_id;
 
- /*   if(fPlan != 0)
-        fHasFilter = true;
-    else
-        fHasFilter = false;
-*/
+    /*   if(fPlan != 0)
+           fHasFilter = true;
+       else
+           fHasFilter = false;
+    */
     messageqcpp::ByteStream::quadbyte hasFilter = fHasFilter;
     bytestream << hasFilter;
 
@@ -67,11 +67,13 @@ int DeleteDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << fDMLStatement;
     bytestream << fSQLStatement;
     bytestream << fSchemaName;
+
     if (fTable != 0)
     {
         retval = fTable->write(bytestream);
     }
-    if(fHasFilter)
+
+    if (fHasFilter)
     {
         bytestream += *(fPlan.get());
     }
@@ -103,9 +105,10 @@ int DeleteDMLPackage::read(messageqcpp::ByteStream& bytestream)
 
     fTable = new DMLTable();
     retval = fTable->read(bytestream);
-    if(fHasFilter)
+
+    if (fHasFilter)
     {
-         fPlan.reset(new messageqcpp::ByteStream(bytestream));
+        fPlan.reset(new messageqcpp::ByteStream(bytestream));
     }
 
     return retval;
@@ -124,6 +127,7 @@ int DeleteDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
         fHasFilter = true;
         fQueryString = deleteStmt.getQueryString();
     }
+
     // else all rows are deleted
 
     return retval;
@@ -146,6 +150,7 @@ int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":");
     tokenizer tokens(buffer, sep);
+
     for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
     {
         dataList.push_back(StripLeadingWhitespace(*tok_iter));
@@ -153,7 +158,8 @@ int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
     }
 
     int n = 0;
-    for (int i=0; i < rows; i++)
+
+    for (int i = 0; i < rows; i++)
     {
         //get a new row
         Row aRow;
@@ -195,21 +201,21 @@ int DeleteDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
 
     initializeTable();
     //The row already built from MySql parser.
-/*  Row *aRowPtr = new Row();
-    std::string colName;
-    std::vector<std::string> colValList;
-    for (int j = 0; j < columns; j++)
-    {
-      //Build a column list
-      colName = colNameList[j];
+    /*  Row *aRowPtr = new Row();
+        std::string colName;
+        std::vector<std::string> colValList;
+        for (int j = 0; j < columns; j++)
+        {
+          //Build a column list
+          colName = colNameList[j];
 
-      colValList = tableValuesMap[j];
+          colValList = tableValuesMap[j];
 
-      DMLColumn* aColumn = new DMLColumn(colName, colValList, false);
-      (aRowPtr->get_ColumnList()).push_back(aColumn);
-    }
-    //build a row list for a table
-    fTable->get_RowList().push_back(aRowPtr); */
+          DMLColumn* aColumn = new DMLColumn(colName, colValList, false);
+          (aRowPtr->get_ColumnList()).push_back(aColumn);
+        }
+        //build a row list for a table
+        fTable->get_RowList().push_back(aRowPtr); */
     return retval;
 }
 

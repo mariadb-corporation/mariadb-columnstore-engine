@@ -48,21 +48,23 @@ using namespace idbdatafile;
 using namespace logging;
 using namespace std;
 
-namespace BRM {
+namespace BRM
+{
 
 BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
 {
- 	if (ronly) {
-		em.setReadOnly();
-		vss.setReadOnly();
-		vbbm.setReadOnly();
-		copylocks.setReadOnly();
- 	}
+    if (ronly)
+    {
+        em.setReadOnly();
+        vss.setReadOnly();
+        vbbm.setReadOnly();
+        copylocks.setReadOnly();
+    }
 }
 
 BlockResolutionManager::BlockResolutionManager(const BlockResolutionManager& brm)
 {
-	throw logic_error("BRM: Don't use the copy constructor.");
+    throw logic_error("BRM: Don't use the copy constructor.");
 }
 
 BlockResolutionManager::~BlockResolutionManager() throw()
@@ -71,118 +73,133 @@ BlockResolutionManager::~BlockResolutionManager() throw()
 
 BlockResolutionManager& BlockResolutionManager::operator=(const BlockResolutionManager& brm)
 {
-	throw logic_error("BRM: Don't use the = operator.");
+    throw logic_error("BRM: Don't use the = operator.");
 }
 
-int BlockResolutionManager::loadExtentMap(const string &filename, bool fixFL)
+int BlockResolutionManager::loadExtentMap(const string& filename, bool fixFL)
 {
-	em.load(filename, fixFL);
-	return 0;
+    em.load(filename, fixFL);
+    return 0;
 }
 
-int BlockResolutionManager::saveExtentMap(const string &filename)
+int BlockResolutionManager::saveExtentMap(const string& filename)
 {
-	em.save(filename);
-	return 0;
+    em.save(filename);
+    return 0;
 }
 
 int BlockResolutionManager::saveState(string filename) throw()
 {
-	string emFilename = filename + "_em";
-	string vssFilename = filename + "_vss";
-	string vbbmFilename = filename + "_vbbm";
-	string journalFilename = filename + "_journal";
+    string emFilename = filename + "_em";
+    string vssFilename = filename + "_vss";
+    string vbbmFilename = filename + "_vbbm";
+    string journalFilename = filename + "_journal";
 
-	bool locked[2] = { false, false };
+    bool locked[2] = { false, false };
 
-	try {
-		vbbm.lock(VBBM::READ);
-		locked[0] = true;
-		vss.lock(VSS::READ);
-		locked[1] = true;
+    try
+    {
+        vbbm.lock(VBBM::READ);
+        locked[0] = true;
+        vss.lock(VSS::READ);
+        locked[1] = true;
 
-		saveExtentMap(emFilename);
+        saveExtentMap(emFilename);
 
-		// truncate teh file if already exists since no truncate in HDFS.
-		const char* filename = journalFilename.c_str();
-		if (IDBPolicy::useHdfs()) {
-			IDBDataFile* journal = IDBDataFile::open(
-					IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
-			delete journal;
-		}
-		else {
-			ofstream journal;
-			uint32_t utmp = ::umask(0);
-			journal.open(filename, ios_base::out | ios_base::trunc | ios_base::binary);
-			journal.close();
-			::umask(utmp);
-		}
+        // truncate teh file if already exists since no truncate in HDFS.
+        const char* filename = journalFilename.c_str();
 
-		vbbm.save(vbbmFilename);
-		vss.save(vssFilename);
+        if (IDBPolicy::useHdfs())
+        {
+            IDBDataFile* journal = IDBDataFile::open(
+                                       IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
+            delete journal;
+        }
+        else
+        {
+            ofstream journal;
+            uint32_t utmp = ::umask(0);
+            journal.open(filename, ios_base::out | ios_base::trunc | ios_base::binary);
+            journal.close();
+            ::umask(utmp);
+        }
 
-		vss.release(VSS::READ);
-		locked[1] = false;
-		vbbm.release(VBBM::READ);
-		locked[0] = false;
-	}
-	catch (exception &e) {
-		if (locked[1])
-			vss.release(VSS::READ);
-		if (locked[0])
-			vbbm.release(VBBM::READ);
-		cout << e.what() << endl;
-		return -1;
-	}
+        vbbm.save(vbbmFilename);
+        vss.save(vssFilename);
 
-	return 0;
+        vss.release(VSS::READ);
+        locked[1] = false;
+        vbbm.release(VBBM::READ);
+        locked[0] = false;
+    }
+    catch (exception& e)
+    {
+        if (locked[1])
+            vss.release(VSS::READ);
+
+        if (locked[0])
+            vbbm.release(VBBM::READ);
+
+        cout << e.what() << endl;
+        return -1;
+    }
+
+    return 0;
 }
 
 int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
 {
-	string emFilename = filename + "_em";
-	string vssFilename = filename + "_vss";
-	string vbbmFilename = filename + "_vbbm";
-	bool locked[2] = { false, false};
+    string emFilename = filename + "_em";
+    string vssFilename = filename + "_vss";
+    string vbbmFilename = filename + "_vbbm";
+    bool locked[2] = { false, false};
 
-	try {
-		vbbm.lock(VBBM::WRITE);
-		locked[0] = true;
-		vss.lock(VSS::WRITE);
-		locked[1] = true;
+    try
+    {
+        vbbm.lock(VBBM::WRITE);
+        locked[0] = true;
+        vss.lock(VSS::WRITE);
+        locked[1] = true;
 
-		loadExtentMap(emFilename, fixFL);
-		vbbm.load(vbbmFilename);
-		vss.load(vssFilename);
+        loadExtentMap(emFilename, fixFL);
+        vbbm.load(vbbmFilename);
+        vss.load(vssFilename);
 
-		vss.release(VSS::WRITE);
-		locked[1] = false;
-		vbbm.release(VBBM::WRITE);
-		locked[0] = false;
-	}
-	catch (exception &e) {
-		if (locked[1])
-			vss.release(VSS::WRITE);
-		if (locked[0])
-			vbbm.release(VBBM::WRITE);
-		cout << e.what() << endl;
-		return -1;
-	}
-	return 0;
+        vss.release(VSS::WRITE);
+        locked[1] = false;
+        vbbm.release(VBBM::WRITE);
+        locked[0] = false;
+    }
+    catch (exception& e)
+    {
+        if (locked[1])
+            vss.release(VSS::WRITE);
+
+        if (locked[0])
+            vbbm.release(VBBM::WRITE);
+
+        cout << e.what() << endl;
+        return -1;
+    }
+
+    return 0;
 }
 
 int BlockResolutionManager::replayJournal(string prefix) throw()
 {
-	SlaveComm sc;
-	int err = -1;
+    SlaveComm sc;
+    int err = -1;
 
-	try {
-		err = sc.replayJournal(prefix);
-	}
-	catch(exception &e) {
-		cout << e.what();
-	}
-	return err;
+    try
+    {
+        err = sc.replayJournal(prefix);
+    }
+    catch (exception& e)
+    {
+        cout << e.what();
+    }
+
+    return err;
 }
 
 

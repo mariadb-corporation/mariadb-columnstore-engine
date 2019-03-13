@@ -49,7 +49,7 @@
 
 namespace WriteEngine
 {
-    class Log;
+class Log;
 
 //
 // PARTIAL_EXTENT - Extent is partially filled
@@ -121,10 +121,10 @@ public:
      * @param logger Logger to be used for logging messages.
      */
     EXPORT DBRootExtentTracker ( OID oid,
-        const std::vector<int>& colWidths,
-        const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoColVec,
-        unsigned int columnIdx,
-        Log* logger );
+                                 const std::vector<int>& colWidths,
+                                 const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoColVec,
+                                 unsigned int columnIdx,
+                                 Log* logger );
 
     /** @brief Select the first DBRoot/segment file to add rows to, for this PM.
      * @param dbRootExtent Dbroot/segment file selected for first set of rows.
@@ -136,9 +136,9 @@ public:
      * @return Returns NO_ERROR if success, else returns error code.
      */
     EXPORT int selectFirstSegFile ( DBRootExtentInfo& dbRootExtent,
-                             bool& bNoStartExtentOnThisPM,
-                             bool& bEmptyPM,
-                             std::string& errMsg );
+                                    bool& bNoStartExtentOnThisPM,
+                                    bool& bEmptyPM,
+                                    std::string& errMsg );
 
     /** @brief Set up this Tracker to select the same first DBRoot/segment file
      * as the reference DBRootExtentTracker that is specified from a ref column.
@@ -149,7 +149,7 @@ public:
      * @param dbRootExtent Dbroot/segment file selected for first set of rows.
      */
     EXPORT void assignFirstSegFile( const DBRootExtentTracker& refTracker,
-                             DBRootExtentInfo& dbRootExtent );
+                                    DBRootExtentInfo& dbRootExtent );
 
     /** @brief Iterate/return next DBRoot to be used for the next extent.
      *
@@ -167,7 +167,7 @@ public:
      * filled in extent instead of adding a new extent.  Case 2 is intended to
      * cover this use case.
      * In this case, in the middle of an import, if the next extent to receive
-     * rows is a partially filled in extent, then the DBRoot, partition, and 
+     * rows is a partially filled in extent, then the DBRoot, partition, and
      * segment number for the partial extent are returned.  In addition, the
      * current HWM and starting LBID for the relevant extent are returned.
      *
@@ -189,10 +189,10 @@ public:
      *         if extent is partially full, and has room for more rows.
      */
     EXPORT bool nextSegFile( uint16_t&  dbRoot,
-                    uint32_t&    partition,
-                    uint16_t&    segment,
-                    HWM&         localHwm,
-                    BRM::LBID_t& startLbid );
+                             uint32_t&    partition,
+                             uint16_t&    segment,
+                             HWM&         localHwm,
+                             BRM::LBID_t& startLbid );
 
     /** @brief get the DBRootExtentInfo list
      */
@@ -208,9 +208,9 @@ public:
 
 private:
     DBRootExtentInfoState determineState(int colWidth,
-        HWM      localHwm,
-        uint64_t dbRootTotalBlocks,
-        int16_t  status);
+                                         HWM      localHwm,
+                                         uint64_t dbRootTotalBlocks,
+                                         int16_t  status);
     // Select First DBRoot/segment file on a PM having no extents for fOID
     int  selectFirstSegFileForEmptyPM ( std::string& errMsg );
     void initEmptyDBRoots();                // init ExtentList for empty DBRoots
@@ -221,16 +221,16 @@ private:
     Log*            fLog;                   // logger
     boost::mutex    fDBRootExtTrkMutex;     // mutex to access fDBRootExtentList
     int             fCurrentDBRootIdx;      // Index into fDBRootExtentList,
-                                            //   DBRoot where current extent is
-                                            //   being added
+    //   DBRoot where current extent is
+    //   being added
     std::vector<DBRootExtentInfo> fDBRootExtentList; // List of current pending
-                                            //   DBRoot/extents for each DBRoot
-                                            //   assigned to the local PM.
+    //   DBRoot/extents for each DBRoot
+    //   assigned to the local PM.
     bool            fEmptyOrDisabledPM;     // true if PM has no extents or all
-                                            //   extents are disabled
+    //   extents are disabled
     bool            fEmptyPM;               // true if PM has no available or
-                                            //   disabled extents
-    bool            fDisabledHWM;           // Did job start with disabled HWM 
+    //   disabled extents
+    bool            fDisabledHWM;           // Did job start with disabled HWM
 };
 
 } //end of namespace

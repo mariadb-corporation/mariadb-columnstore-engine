@@ -40,21 +40,21 @@ class WESDHandler;					// forward deceleration
 class WETableLockGrabber
 {
 public:
-	WETableLockGrabber(WESDHandler& Ref): fRef(Ref) { }
-	virtual ~WETableLockGrabber() { }
+    WETableLockGrabber(WESDHandler& Ref): fRef(Ref) { }
+    virtual ~WETableLockGrabber() { }
 
 public:
 
-	uint64_t grabTableLock(std::vector<unsigned int> &PmList,
-												uint32_t tableOID);
+    uint64_t grabTableLock(std::vector<unsigned int>& PmList,
+                           uint32_t tableOID);
 
-	bool releaseTableLock(uint64_t LockId);
+    bool releaseTableLock(uint64_t LockId);
 
-	bool changeTableLockState(uint64_t LockId);
+    bool changeTableLockState(uint64_t LockId);
 
 
 private:
-	WESDHandler& fRef;
+    WESDHandler& fRef;
 
 };
 

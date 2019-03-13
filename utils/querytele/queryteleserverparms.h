@@ -26,12 +26,12 @@ namespace querytele
 class QueryTeleServerParms
 {
 public:
-	QueryTeleServerParms() : port(0) { }
-	QueryTeleServerParms(const std::string h, int p) : host(h), port(p) { }
-	~QueryTeleServerParms() { }
+    QueryTeleServerParms() : port(0) { }
+    QueryTeleServerParms(const std::string h, int p) : host(h), port(p) { }
+    ~QueryTeleServerParms() { }
 
-	std::string host;
-	int port;
+    std::string host;
+    int port;
 
 protected:
 

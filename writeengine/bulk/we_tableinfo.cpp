@@ -37,9 +37,9 @@
 // @bug 2099+
 #include <iostream>
 #ifdef _MSC_VER
-	#include <stdlib.h>
+#include <stdlib.h>
 #else
-    #include <string.h>
+#include <string.h>
 #endif
 using namespace std;
 
@@ -60,10 +60,10 @@ using namespace querytele;
 
 namespace
 {
-    const std::string  BAD_FILE_SUFFIX = ".bad"; // Reject data file suffix
-    const std::string  ERR_FILE_SUFFIX = ".err"; // Job error file suffix
-    const std::string  BOLD_START      = "\033[0;1m";
-    const std::string  BOLD_STOP       = "\033[0;39m";
+const std::string  BAD_FILE_SUFFIX = ".bad"; // Reject data file suffix
+const std::string  ERR_FILE_SUFFIX = ".err"; // Job error file suffix
+const std::string  BOLD_START      = "\033[0;1m";
+const std::string  BOLD_STOP       = "\033[0;39m";
 }
 
 namespace WriteEngine
@@ -76,18 +76,20 @@ void TableInfo::sleepMS(long ms)
 {
     struct timespec rm_ts;
 
-    rm_ts.tv_sec = ms/1000; 
-    rm_ts.tv_nsec = ms%1000 *1000000;
+    rm_ts.tv_sec = ms / 1000;
+    rm_ts.tv_nsec = ms % 1000 * 1000000;
 #ifdef _MSC_VER
     Sleep(ms);
 #else
     struct timespec abs_ts;
+
     do
     {
-        abs_ts.tv_sec = rm_ts.tv_sec; 
+        abs_ts.tv_sec = rm_ts.tv_sec;
         abs_ts.tv_nsec = rm_ts.tv_nsec;
-    } 
-    while(nanosleep(&abs_ts,&rm_ts) < 0);
+    }
+    while (nanosleep(&abs_ts, &rm_ts) < 0);
+
 #endif
 }
 
@@ -104,7 +106,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID,
     fReadBufCount(0), fNumberOfColumns(0),
     fHandle(NULL), fCurrentReadBuffer(0), fTotalReadRows(0),
     fTotalErrRows(0), fMaxErrorRows(5),
-    fLastBufferId(-1), fFileBuffer(NULL), fCurrentParseBuffer(0), 
+    fLastBufferId(-1), fFileBuffer(NULL), fCurrentParseBuffer(0),
     fNumberOfColsParsed(0), fLocker(-1), fTableName(tableName),
     fTableOID(tableOID), fJobId(0), fLog(logger), fTxnID(txnID),
     fRBMetaWriter(processName, logger),
@@ -131,12 +133,14 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID,
     fStartTime.tv_sec  = 0;
     fStartTime.tv_usec = 0;
     string teleServerHost(config::Config::makeConfig()->getConfig("QueryTele", "Host"));
+
     if (!teleServerHost.empty())
     {
         int teleServerPort = config::Config::fromText(config::Config::makeConfig()->getConfig("QueryTele", "Port"));
+
         if (teleServerPort > 0)
         {
-		fQtc.serverParms(QueryTeleServerParms(teleServerHost, teleServerPort));
+            fQtc.serverParms(QueryTeleServerParms(teleServerHost, teleServerPort));
         }
     }
 }
@@ -146,7 +150,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID,
 //------------------------------------------------------------------------------
 TableInfo::~TableInfo()
 {
-	fBRMReporter.sendErrMsgToFile(fBRMRptFileName);
+    fBRMReporter.sendErrMsgToFile(fBRMRptFileName);
     freeProcessingBuffers();
 }
 
@@ -186,25 +190,25 @@ void TableInfo::freeProcessingBuffers()
 void TableInfo::closeOpenDbFiles()
 {
     ostringstream oss;
-    oss << "Closing DB files for table " << fTableName << 
+    oss << "Closing DB files for table " << fTableName <<
         ", left open by abnormal termination.";
     fLog->logMsg( oss.str(), MSGLVL_INFO2 );
 
-    for (unsigned int k=0; k<fColumns.size(); k++)
+    for (unsigned int k = 0; k < fColumns.size(); k++)
     {
         stringstream oss1;
         oss1 << "Closing DB column file for: " <<
-            fColumns[k].column.colName <<
-            " (OID-" << fColumns[k].column.mapOid << ")";
+             fColumns[k].column.colName <<
+             " (OID-" << fColumns[k].column.mapOid << ")";
         fLog->logMsg( oss1.str(), MSGLVL_INFO2 );
-        fColumns[k].closeColumnFile(false,true);
+        fColumns[k].closeColumnFile(false, true);
 
         if (fColumns[k].column.colType == COL_TYPE_DICT)
         {
             stringstream oss2;
             oss2 << "Closing DB store  file for: "  <<
-                fColumns[k].column.colName <<
-                " (OID-" << fColumns[k].column.dctnry.dctnryOid << ")";
+                 fColumns[k].column.colName <<
+                 " (OID-" << fColumns[k].column.dctnry.dctnryOid << ")";
             fLog->logMsg( oss2.str(), MSGLVL_INFO2 );
             fColumns[k].closeDctnryStore(true);
         }
@@ -215,17 +219,19 @@ void TableInfo::closeOpenDbFiles()
 // Locks this table for reading to the specified thread (locker) "if" the table
 // has not yet been assigned to a read thread.
 //------------------------------------------------------------------------------
-bool TableInfo::lockForRead(const int & locker)
+bool TableInfo::lockForRead(const int& locker)
 {
     boost::mutex::scoped_lock lock(fSyncUpdatesTI);
-    if(fLocker == -1)
+
+    if (fLocker == -1)
     {
-        if(fStatusTI == WriteEngine::NEW )
+        if (fStatusTI == WriteEngine::NEW )
         {
             fLocker = locker;
             return true;
         }
     }
+
     return false;
 }
 
@@ -240,20 +246,23 @@ int  TableInfo::readTableData( )
     int fileCounter = 0;
     unsigned long long qtSentAt = 0;
 
-    if(fHandle == NULL) {
+    if (fHandle == NULL)
+    {
 
-        fFileName = fLoadFileList[fileCounter]; 
+        fFileName = fLoadFileList[fileCounter];
         int rc = openTableFile();
-        if(rc != NO_ERROR)
+
+        if (rc != NO_ERROR)
         {
             // Mark the table status as error and exit.
             boost::mutex::scoped_lock lock(fSyncUpdatesTI);
             fStatusTI = WriteEngine::ERR;
             return rc;
         }
+
         fileCounter++;
     }
-        
+
     timeval readStart;
     gettimeofday(&readStart, NULL);
     ostringstream ossStartMsg;
@@ -277,7 +286,7 @@ int  TableInfo::readTableData( )
     //
     // LOOP to read all the import data for this table
     //
-    while(true)
+    while (true)
     {
         // See if JobStatus has been set to terminate by another thread
         if (BulkStatus::getJobStatus() == EXIT_FAILURE)
@@ -290,7 +299,7 @@ int  TableInfo::readTableData( )
             its.rows_so_far.push_back(0);
             fQtc.postImportTele(its);
             throw SecondaryShutdownException( "TableInfo::"
-                "readTableData(1) responding to job termination");
+                                              "readTableData(1) responding to job termination");
         }
 
 // @bug 3271: Conditionally compile the thread deadlock debug logging
@@ -308,10 +317,11 @@ int  TableInfo::readTableData( )
 #ifdef PROFILE
         Stats::startReadEvent(WE_STATS_WAIT_FOR_READ_BUF);
 #endif
+
         //
         // LOOP to wait for, and read, the next avail BulkLoadBuffer object
         //
-        while(!isBufferAvailable(report))
+        while (!isBufferAvailable(report))
         {
             // See if JobStatus has been set to terminate by another thread
             if (BulkStatus::getJobStatus() == EXIT_FAILURE)
@@ -324,24 +334,27 @@ int  TableInfo::readTableData( )
                 its.rows_so_far.push_back(0);
                 fQtc.postImportTele(its);
                 throw SecondaryShutdownException( "TableInfo::"
-                    "readTableData(2) responding to job termination");
+                                                  "readTableData(2) responding to job termination");
             }
 
             // Sleep and check the condition again.
             sleepMS(1);
 #ifdef DEADLOCK_DEBUG
+
             // @bug2099+
-            if(report) report = false; // report one time.
-            if(!reported)
+            if (report) report = false; // report one time.
+
+            if (!reported)
             {
                 struct timeval tvNow;
                 gettimeofday(&tvNow, 0);
-                if((tvNow.tv_sec - tvStart.tv_sec) > 100)
+
+                if ((tvNow.tv_sec - tvStart.tv_sec) > 100)
                 {
                     time_t t = time(0);
                     char timeString[50];
                     ctime_r(&t, timeString);
-                    timeString[ strlen(timeString)-1 ] = '\0';
+                    timeString[ strlen(timeString) - 1 ] = '\0';
                     ostringstream oss;
                     oss << endl << timeString << ": " <<
                         "TableInfo::readTableData: " << fTableName <<
@@ -353,9 +366,11 @@ int  TableInfo::readTableData( )
                     reported = true;
                 }
             }
+
             // @bug2099-
 #endif
         }
+
 #ifdef PROFILE
         Stats::stopReadEvent(WE_STATS_WAIT_FOR_READ_BUF);
         Stats::startReadEvent(WE_STATS_READ_INTO_BUF);
@@ -364,15 +379,15 @@ int  TableInfo::readTableData( )
         int readBufNo   = fCurrentReadBuffer;
         int prevReadBuf = (fCurrentReadBuffer - 1);
 
-        if(prevReadBuf < 0) 
+        if (prevReadBuf < 0)
             prevReadBuf = fReadBufCount + prevReadBuf;
 
         // We keep a running total of read errors;  fMaxErrorRows specifies
         // the error limit.  Here's where we see how many more errors we
         // still have below the limit, and we pass this to fillFromFile().
         unsigned allowedErrCntThisCall =
-          ( (fMaxErrorRows > fTotalErrRows) ?
-            (fMaxErrorRows-fTotalErrRows) : 0 );
+            ( (fMaxErrorRows > fTotalErrRows) ?
+              (fMaxErrorRows - fTotalErrRows) : 0 );
 
         // Fill in the specified buffer.
         // fTotalReadRowsPerInputFile is ongoing total number of rows read,
@@ -380,9 +395,10 @@ int  TableInfo::readTableData( )
         // validTotalRows is ongoing total of valid rows read for all files
         //   pertaining to this DB table.
         int readRc = fBuffers[readBufNo].fillFromFile(
-            fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
-            validTotalRows, fColumns, allowedErrCntThisCall);
-        if (readRc != NO_ERROR) 
+                         fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
+                         validTotalRows, fColumns, allowedErrCntThisCall);
+
+        if (readRc != NO_ERROR)
         {
             // error occurred.
             // need to exit.
@@ -400,7 +416,7 @@ int  TableInfo::readTableData( )
             WErrorCodes ec;
             ostringstream oss;
             oss << "Error reading import file " << fFileName <<
-                "; near line " << totalRowsPerInputFile+1 << "; " <<
+                "; near line " << totalRowsPerInputFile + 1 << "; " <<
                 ec.errorString(readRc);
             fLog->logMsg( oss.str(), readRc, MSGLVL_ERROR);
 
@@ -411,19 +427,21 @@ int  TableInfo::readTableData( )
 
             return readRc;
         }
+
 #ifdef PROFILE
         Stats::stopReadEvent(WE_STATS_READ_INTO_BUF);
 #endif
         its.msg_type = ImportTeleStats::IT_PROGRESS;
         its.rows_so_far.pop_back();
         its.rows_so_far.push_back(totalRowsPerInputFile);
-	unsigned long long thisRows = static_cast<unsigned long long>(totalRowsPerInputFile);
-	thisRows /= 1000000;
-	if (thisRows > qtSentAt)
-	{
-		fQtc.postImportTele(its);
-		qtSentAt = thisRows;
-	}
+        unsigned long long thisRows = static_cast<unsigned long long>(totalRowsPerInputFile);
+        thisRows /= 1000000;
+
+        if (thisRows > qtSentAt)
+        {
+            fQtc.postImportTele(its);
+            qtSentAt = thisRows;
+        }
 
         // Check if there were any errors in the read data.
         // if yes, copy it to the error list.
@@ -434,7 +452,7 @@ int  TableInfo::readTableData( )
                         &fBuffers[readBufNo].getExactErrorRows(), false );
         fBuffers[readBufNo].clearErrRows();
 
-        if(fTotalErrRows > fMaxErrorRows)
+        if (fTotalErrRows > fMaxErrorRows)
         {
             // flush the reject data file and output the rejected rows
             // flush err file and output the rejected row id and the reason.
@@ -450,8 +468,8 @@ int  TableInfo::readTableData( )
             closeTableFile();
             ostringstream oss5;
             oss5 << "Actual error row count("   << fTotalErrRows <<
-                ") exceeds the max error rows(" << fMaxErrorRows <<
-                ") allowed for table " << fTableName;
+                 ") exceeds the max error rows(" << fMaxErrorRows <<
+                 ") allowed for table " << fTableName;
             fLog->logMsg(oss5.str(), ERR_BULK_MAX_ERR_NUM, MSGLVL_ERROR);
 
             // List Err and Bad files to report file (if applicable)
@@ -468,77 +486,80 @@ int  TableInfo::readTableData( )
         // mark the buffer status as read complete.
         {
 #ifdef PROFILE
-        Stats::startReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
+            Stats::startReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
 #endif
-        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+            boost::mutex::scoped_lock lock(fSyncUpdatesTI);
 #ifdef PROFILE
-        Stats::stopReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
-        Stats::startReadEvent(WE_STATS_COMPLETING_READ);
+            Stats::stopReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
+            Stats::startReadEvent(WE_STATS_COMPLETING_READ);
 #endif
 
-        fStartTime = readStart;
-        fBuffers[readBufNo].setStatusBLB(WriteEngine::READ_COMPLETE);
-            
-        fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
+            fStartTime = readStart;
+            fBuffers[readBufNo].setStatusBLB(WriteEngine::READ_COMPLETE);
 
-        // bufferCount++;
-        if( feof(fHandle) )
-        {
-            timeval readFinished;
-            gettimeofday(&readFinished, NULL);
-                
-            closeTableFile();
+            fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
-            if (fReadFromStdin)
+            // bufferCount++;
+            if ( feof(fHandle) )
             {
-                fLog->logMsg( "Finished loading " + fTableName + " from STDIN" +
-                    ", Time taken = " + Convertor::int2Str((int)
-                    (readFinished.tv_sec - readStart.tv_sec)) +
-                    " seconds",
-                    //" seconds; bufferCount-"+Convertor::int2Str(bufferCount),
-                    MSGLVL_INFO2 );
-            }
-            else
-            {
-                fLog->logMsg( "Finished reading file " + fFileName +
-                    ", Time taken = " + Convertor::int2Str((int)
-                    (readFinished.tv_sec - readStart.tv_sec)) +
-                    " seconds",
-                    //" seconds; bufferCount-"+Convertor::int2Str(bufferCount),
-                    MSGLVL_INFO2 );
-            }
-             
-            // flush the reject data file and output the rejected rows
-            // flush err file and output the rejected row id and the reason.
-            writeErrorList( 0, 0, true );
+                timeval readFinished;
+                gettimeofday(&readFinished, NULL);
 
-            // If > 1 file for this table, then open next file in the list
-            if ( fileCounter < filesTBProcessed ) 
-            {
-                fFileName = fLoadFileList[fileCounter];
-                int rc = openTableFile();
-                if(rc != NO_ERROR) 
+                closeTableFile();
+
+                if (fReadFromStdin)
                 {
-                    // Mark the table status as error and exit.
-                    fStatusTI   = WriteEngine::ERR;
-                    return rc;
+                    fLog->logMsg( "Finished loading " + fTableName + " from STDIN" +
+                                  ", Time taken = " + Convertor::int2Str((int)
+                                          (readFinished.tv_sec - readStart.tv_sec)) +
+                                  " seconds",
+                                  //" seconds; bufferCount-"+Convertor::int2Str(bufferCount),
+                                  MSGLVL_INFO2 );
                 }
-                fileCounter++;
-                fTotalReadRows += totalRowsPerInputFile;
-                totalRowsPerInputFile = 0;
-            }
-            else  // All files read for this table; break out of read loop
-            {
-                fStatusTI     = WriteEngine::READ_COMPLETE;
-                fLastBufferId = readBufNo;
-                fTotalReadRows += totalRowsPerInputFile;
-                break;
-            }
+                else
+                {
+                    fLog->logMsg( "Finished reading file " + fFileName +
+                                  ", Time taken = " + Convertor::int2Str((int)
+                                          (readFinished.tv_sec - readStart.tv_sec)) +
+                                  " seconds",
+                                  //" seconds; bufferCount-"+Convertor::int2Str(bufferCount),
+                                  MSGLVL_INFO2 );
+                }
 
-            gettimeofday(&readStart, NULL);
-        } // reached EOF
+                // flush the reject data file and output the rejected rows
+                // flush err file and output the rejected row id and the reason.
+                writeErrorList( 0, 0, true );
+
+                // If > 1 file for this table, then open next file in the list
+                if ( fileCounter < filesTBProcessed )
+                {
+                    fFileName = fLoadFileList[fileCounter];
+                    int rc = openTableFile();
+
+                    if (rc != NO_ERROR)
+                    {
+                        // Mark the table status as error and exit.
+                        fStatusTI   = WriteEngine::ERR;
+                        return rc;
+                    }
+
+                    fileCounter++;
+                    fTotalReadRows += totalRowsPerInputFile;
+                    totalRowsPerInputFile = 0;
+                }
+                else  // All files read for this table; break out of read loop
+                {
+                    fStatusTI     = WriteEngine::READ_COMPLETE;
+                    fLastBufferId = readBufNo;
+                    fTotalReadRows += totalRowsPerInputFile;
+                    break;
+                }
+
+                gettimeofday(&readStart, NULL);
+            } // reached EOF
+
 #ifdef PROFILE
-        Stats::stopReadEvent(WE_STATS_COMPLETING_READ);
+            Stats::stopReadEvent(WE_STATS_COMPLETING_READ);
 #endif
         } // mark buffer status as read-complete within scope of a mutex
     }     // loop to read all data for this table
@@ -550,7 +571,7 @@ int  TableInfo::readTableData( )
     fQtc.postImportTele(its);
     fQtc.waitForQueues();
 
-    return NO_ERROR;    
+    return NO_ERROR;
 }
 
 //------------------------------------------------------------------------------
@@ -562,7 +583,7 @@ int  TableInfo::readTableData( )
 // errors to be reported to the user.
 //------------------------------------------------------------------------------
 void TableInfo::writeErrorList(const std::vector< std::pair<RID,
-                                                  std::string> >* errorRows,
+                               std::string> >* errorRows,
                                const std::vector<std::string>* errorDatRows,
                                bool bCloseFile)
 {
@@ -571,17 +592,18 @@ void TableInfo::writeErrorList(const std::vector< std::pair<RID,
 
     if (errorRows)
         errorRowsCount = errorRows->size();
+
     if (errorDatRows)
         errorDatRowsCount = errorDatRows->size();
 
     if ((errorRowsCount    > 0) ||
-        (errorDatRowsCount > 0) ||
-        (bCloseFile))
+            (errorDatRowsCount > 0) ||
+            (bCloseFile))
     {
         boost::mutex::scoped_lock lock(fErrorRptInfoMutex);
 
         if ((errorRowsCount > 0)    || (bCloseFile))
-            writeErrReason(errorRows   , bCloseFile);
+            writeErrReason(errorRows, bCloseFile);
 
         if ((errorDatRowsCount > 0) || (bCloseFile))
             writeBadRows  (errorDatRows, bCloseFile);
@@ -593,7 +615,7 @@ void TableInfo::writeErrorList(const std::vector< std::pair<RID,
 //------------------------------------------------------------------------------
 // Parse the specified column (columnId) in the specified buffer (bufferId).
 //------------------------------------------------------------------------------
-int  TableInfo::parseColumn(const int &columnId, const int & bufferId,
+int  TableInfo::parseColumn(const int& columnId, const int& bufferId,
                             double& processingTime)
 {
     // parse the column
@@ -606,9 +628,9 @@ int  TableInfo::parseColumn(const int &columnId, const int & bufferId,
     int rc = fBuffers[bufferId].parse(fColumns[columnId]);
     gettimeofday(&parseEnd, NULL);
 
-    processingTime = (parseEnd.tv_usec / 1000 + parseEnd.tv_sec * 1000) - 
+    processingTime = (parseEnd.tv_usec / 1000 + parseEnd.tv_sec * 1000) -
                      (parseStart.tv_usec / 1000 + parseStart.tv_sec * 1000);
-        
+
     return rc;
 }
 
@@ -616,14 +638,14 @@ int  TableInfo::parseColumn(const int &columnId, const int & bufferId,
 // Mark the specified column (columnId) in the specified buffer (bufferId) as
 // PARSE_COMPLETE.  If this is the last column to be parsed for this buffer,
 // then mark the buffer as PARSE_COMPLETE.
-// If the last buffer for this table has been read (fLastBufferId != -1), then 
+// If the last buffer for this table has been read (fLastBufferId != -1), then
 // see if all the data for columnId has been parsed for all the buffers, in
 // which case we are finished parsing columnId.
 // If this is the last column to finish parsing for this table, then mark the
 // table status as PARSE_COMPLETE.
 //------------------------------------------------------------------------------
-int TableInfo::setParseComplete(const int &columnId,
-                                const int & bufferId,
+int TableInfo::setParseComplete(const int& columnId,
+                                const int& bufferId,
                                 double processingTime)
 {
     boost::mutex::scoped_lock lock(fSyncUpdatesTI);
@@ -637,28 +659,31 @@ int TableInfo::setParseComplete(const int &columnId,
 #ifdef PROFILE
     fColumns[columnId].totalProcessingTime += processingTime;
 #endif
+
     // Set buffer status to complete if setColumnStatus indicates that
     // all the columns are complete
     if (fBuffers[bufferId].setColumnStatus(
-        columnId,WriteEngine::PARSE_COMPLETE))
+                columnId, WriteEngine::PARSE_COMPLETE))
         fBuffers[bufferId].setStatusBLB( WriteEngine::PARSE_COMPLETE );
 
     // fLastBufferId != -1 means the Read thread has read the last
     // buffer for this table
-    if(fLastBufferId != -1)
+    if (fLastBufferId != -1)
     {
         // check if the status of the column in all the fBuffers is parse
         // complete then update the column status as parse complete.
         bool allBuffersDoneForAColumn = true;
-        for(int i=0; i<fReadBufCount; ++i)
+
+        for (int i = 0; i < fReadBufCount; ++i)
         {
             // check the status of the column in this buffer.
             Status bufferStatus = fBuffers[i].getStatusBLB();
+
             if ( (bufferStatus == WriteEngine::READ_COMPLETE) ||
-                 (bufferStatus == WriteEngine::PARSE_COMPLETE) )
+                    (bufferStatus == WriteEngine::PARSE_COMPLETE) )
             {
-                if(fBuffers[i].getColumnStatus(columnId) !=
-                   WriteEngine::PARSE_COMPLETE)
+                if (fBuffers[i].getColumnStatus(columnId) !=
+                        WriteEngine::PARSE_COMPLETE)
                 {
                     allBuffersDoneForAColumn = false;
                     break;
@@ -667,17 +692,19 @@ int TableInfo::setParseComplete(const int &columnId,
         }
 
         // allBuffersDoneForAColumn==TRUE means we are finished parsing columnId
-        if(allBuffersDoneForAColumn)
+        if (allBuffersDoneForAColumn)
         {
             // Accumulate list of HWM dictionary blocks to be flushed from cache
             std::vector<BRM::LBID_t> dictBlksToFlush;
             fColumns[columnId].getDictFlushBlks( dictBlksToFlush );
-            for (unsigned kk=0; kk<dictBlksToFlush.size(); kk++)
+
+            for (unsigned kk = 0; kk < dictBlksToFlush.size(); kk++)
             {
                 fDictFlushBlks.push_back( dictBlksToFlush[kk] );
             }
 
             int rc = fColumns[columnId].finishParsing( );
+
             if (rc != NO_ERROR)
             {
                 WErrorCodes ec;
@@ -695,7 +722,7 @@ int TableInfo::setParseComplete(const int &columnId,
             //
             // If all columns have been parsed, then finished with this tbl
             //
-            if(fNumberOfColsParsed >= fNumberOfColumns)
+            if (fNumberOfColsParsed >= fNumberOfColumns)
             {
                 // After closing the column and dictionary store files,
                 // flush any updated dictionary blocks in PrimProc.
@@ -709,6 +736,17 @@ int TableInfo::setParseComplete(const int &columnId,
 #ifdef PROFILE
                         Stats::startParseEvent(WE_STATS_FLUSH_PRIMPROC_BLOCKS);
 #endif
+                        if (fLog->isDebug(DEBUG_2))
+                        {
+                            ostringstream oss;
+                            oss << "Dictionary cache flush: ";
+                            for (uint32_t i = 0; i < fDictFlushBlks.size(); i++)
+                            {
+                                oss << fDictFlushBlks[i] << ", ";
+                            }
+                            oss << endl;
+                            fLog->logMsg( oss.str(), MSGLVL_INFO1 );
+                        }
                         cacheutils::flushPrimProcAllverBlocks(fDictFlushBlks);
 #ifdef PROFILE
                         Stats::stopParseEvent(WE_STATS_FLUSH_PRIMPROC_BLOCKS);
@@ -719,6 +757,7 @@ int TableInfo::setParseComplete(const int &columnId,
 
                 // Update auto-increment next value if applicable.
                 rc = synchronizeAutoInc( );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -733,13 +772,16 @@ int TableInfo::setParseComplete(const int &columnId,
 
                 //..Validate that all the HWM's are consistent and in-sync
                 std::vector<DBRootExtentInfo> segFileInfo;
-                for(unsigned i=0; i < fColumns.size(); ++i)
+
+                for (unsigned i = 0; i < fColumns.size(); ++i)
                 {
                     DBRootExtentInfo extentInfo;
                     fColumns[i].getSegFileInfo( extentInfo );
                     segFileInfo.push_back( extentInfo );
                 }
+
                 rc = validateColumnHWMs( 0, segFileInfo, "Ending" );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -752,16 +794,18 @@ int TableInfo::setParseComplete(const int &columnId,
 
                     ostringstream oss2;
                     oss2 << "Ending HWMs for table " << fTableName << ": ";
-                    for (unsigned int n=0; n<fColumns.size(); n++)
+
+                    for (unsigned int n = 0; n < fColumns.size(); n++)
                     {
                         oss2 << std::endl;
                         oss2 << "  " << fColumns[n].column.colName <<
-                            "; DBRoot/part/seg/hwm: "        <<
-                            segFileInfo[n].fDbRoot           <<
-                            "/" << segFileInfo[n].fPartition <<
-                            "/" << segFileInfo[n].fSegment   <<
-                            "/" << segFileInfo[n].fLocalHwm;
+                             "; DBRoot/part/seg/hwm: "        <<
+                             segFileInfo[n].fDbRoot           <<
+                             "/" << segFileInfo[n].fPartition <<
+                             "/" << segFileInfo[n].fSegment   <<
+                             "/" << segFileInfo[n].fLocalHwm;
                     }
+
                     fLog->logMsg(oss2.str(), MSGLVL_INFO1);
 
                     return rc;
@@ -769,6 +813,7 @@ int TableInfo::setParseComplete(const int &columnId,
 
                 //..Confirm changes to DB files (necessary for HDFS)
                 rc = confirmDBFileChanges( );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -783,6 +828,7 @@ int TableInfo::setParseComplete(const int &columnId,
 
                 //..Update BRM with HWM and Casual Partition info, etc.
                 rc = finishBRM( );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -797,6 +843,7 @@ int TableInfo::setParseComplete(const int &columnId,
 
                 // Change table lock state to CLEANUP
                 rc = changeTableLockState( );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -815,6 +862,7 @@ int TableInfo::setParseComplete(const int &columnId,
                 deleteMetaDataRollbackFile();
 
                 rc = releaseTableLock( );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -828,22 +876,24 @@ int TableInfo::setParseComplete(const int &columnId,
                 }
 
 #ifdef PROFILE
+
                 // Loop through columns again to print out the elapsed
                 // parse times
-                for(unsigned i=0; i < fColumns.size(); ++i)
+                for (unsigned i = 0; i < fColumns.size(); ++i)
                 {
                     ostringstream ossColTime;
                     ossColTime << "Column " << i << "; OID-" <<
-                        fColumns[i].column.mapOid << "; parseTime-" <<
-                        (fColumns[i].totalProcessingTime/1000.0) <<
-                        " seconds";
+                               fColumns[i].column.mapOid << "; parseTime-" <<
+                               (fColumns[i].totalProcessingTime / 1000.0) <<
+                               " seconds";
                     fLog->logMsg(ossColTime.str(), MSGLVL_INFO1);
                 }
+
 #endif
-                    
+
                 timeval endTime;
                 gettimeofday(&endTime, 0);
-                double elapsedTime = 
+                double elapsedTime =
                     (endTime.tv_sec    + (endTime.tv_usec    / 1000000.0)) -
                     (fStartTime.tv_sec + (fStartTime.tv_usec / 1000000.0));
 
@@ -856,26 +906,28 @@ int TableInfo::setParseComplete(const int &columnId,
             } // end of if (fNumberOfColsParsed >= fNumberOfColumns)
         }     // end of if (allBuffersDoneForAColumn)
     }         // end of if (fLastBufferId != -1)
-     
+
     // If we finished parsing the buffer associated with currentParseBuffer,
     // but have not finshed the entire table, then advance currentParseBuffer.
-    if((fStatusTI != WriteEngine::PARSE_COMPLETE) &&
-       (fBuffers[bufferId].getStatusBLB() == WriteEngine::PARSE_COMPLETE))
+    if ((fStatusTI != WriteEngine::PARSE_COMPLETE) &&
+            (fBuffers[bufferId].getStatusBLB() == WriteEngine::PARSE_COMPLETE))
     {
         // Find the BulkLoadBuffer object that is next in line to be parsed
         // and assign fCurrentParseBuffer accordingly.  Break out of the
         // loop if we wrap all the way around and catch up with the current-
         // Read buffer.
-        if(bufferId == fCurrentParseBuffer)
+        if (bufferId == fCurrentParseBuffer)
         {
             int currentParseBuffer = fCurrentParseBuffer;
+
             while (fBuffers[currentParseBuffer].getStatusBLB() ==
-                   WriteEngine::PARSE_COMPLETE )
+                    WriteEngine::PARSE_COMPLETE )
             {
                 currentParseBuffer     = (currentParseBuffer + 1) %
-                                          fReadBufCount;
+                                         fReadBufCount;
                 fCurrentParseBuffer    = currentParseBuffer;
-                if(fCurrentParseBuffer == fCurrentReadBuffer) break;
+
+                if (fCurrentParseBuffer == fCurrentReadBuffer) break;
             }
         }
     }
@@ -892,58 +944,67 @@ void TableInfo::reportTotals(double elapsedTime)
 {
     ostringstream oss1;
     oss1 << "For table " << fTableName <<
-        ": " << fTotalReadRows << " rows processed and " <<
-        (fTotalReadRows - fTotalErrRows) << " rows inserted.";
+         ": " << fTotalReadRows << " rows processed and " <<
+         (fTotalReadRows - fTotalErrRows) << " rows inserted.";
 
     fLog->logMsg(oss1.str(), MSGLVL_INFO1);
 
     ostringstream oss2;
-    oss2 << "For table " << fTableName << ": " << 
-        "Elapsed time to load this table: " <<
-        elapsedTime << " secs";
+    oss2 << "For table " << fTableName << ": " <<
+         "Elapsed time to load this table: " <<
+         elapsedTime << " secs";
 
     fLog->logMsg(oss2.str(), MSGLVL_INFO2);
 
     // @bug 3504: Loop through columns to print saturation counts
-    std::vector<boost::tuple<CalpontSystemCatalog::ColDataType,uint64_t,uint64_t> > satCounts;
-    for (unsigned i=0; i < fColumns.size(); ++i)
+    std::vector<boost::tuple<CalpontSystemCatalog::ColDataType, uint64_t, uint64_t> > satCounts;
+
+    for (unsigned i = 0; i < fColumns.size(); ++i)
     {
         //std::string colName(fTableName);
-       // colName += '.';
-       // colName += fColumns[i].column.colName;
+        // colName += '.';
+        // colName += fColumns[i].column.colName;
         long long satCount = fColumns[i].saturatedCnt();
 
-        satCounts.push_back(boost::make_tuple(fColumns[i].column.dataType, 
-                                              fColumns[i].column.mapOid, 
+        satCounts.push_back(boost::make_tuple(fColumns[i].column.dataType,
+                                              fColumns[i].column.mapOid,
                                               satCount));
 
         if (satCount > 0)
-        {   // @bug 3375: report invalid dates/times set to null
+        {
+            // @bug 3375: report invalid dates/times set to null
             ostringstream ossSatCnt;
             ossSatCnt << "Column " << fTableName << '.' <<
-                fColumns[i].column.colName << "; Number of ";
+                      fColumns[i].column.colName << "; Number of ";
+
             if (fColumns[i].column.dataType == CalpontSystemCatalog::DATE)
-			{
-				ossSatCnt <<
-					"invalid dates replaced with zero value : ";
-			}
+            {
+                ossSatCnt <<
+                          "invalid dates replaced with zero value : ";
+            }
             else if (fColumns[i].column.dataType ==
                      CalpontSystemCatalog::DATETIME)
-			{
-				//bug5383
-				ossSatCnt <<
-					"invalid date/times replaced with zero value : ";
-			}
+            {
+                //bug5383
+                ossSatCnt <<
+                          "invalid date/times replaced with zero value : ";
+            }
+            else if (fColumns[i].column.dataType == CalpontSystemCatalog::TIME)
+            {
+                ossSatCnt <<
+                          "invalid times replaced with zero value : ";
+            }
             else if (fColumns[i].column.dataType == CalpontSystemCatalog::CHAR)
                 ossSatCnt <<
-                    "character strings truncated: ";
+                          "character strings truncated: ";
             else if (fColumns[i].column.dataType ==
                      CalpontSystemCatalog::VARCHAR)
                 ossSatCnt <<
-                    "character strings truncated: ";
+                          "character strings truncated: ";
             else
                 ossSatCnt <<
-                    "rows inserted with saturated values: ";
+                          "rows inserted with saturated values: ";
+
             ossSatCnt << satCount;
             fLog->logMsg(ossSatCnt.str(), MSGLVL_WARNING);
         }
@@ -959,14 +1020,14 @@ void TableInfo::reportTotals(double elapsedTime)
         logging::M0083);
 
     //Bug1375 - cpimport.bin did not add entries to the transaction
-    //          log file: data_mods.log  
+    //          log file: data_mods.log
     if ((fTotalReadRows - fTotalErrRows) > 0 )
         logToDataMods(fjobFileName, oss1.str());
 
     // Log totals in report file if applicable
     fBRMReporter.reportTotals( fTotalReadRows,
-        (fTotalReadRows - fTotalErrRows),
-        satCounts );
+                               (fTotalReadRows - fTotalErrRows),
+                               satCounts );
 }
 
 //------------------------------------------------------------------------------
@@ -975,7 +1036,7 @@ void TableInfo::reportTotals(double elapsedTime)
 int TableInfo::finishBRM( )
 {
     // Collect the CP and HWM information for all the columns
-    for(unsigned i=0; i < fColumns.size(); ++i)
+    for (unsigned i = 0; i < fColumns.size(); ++i)
     {
         fColumns[i].getBRMUpdateInfo( fBRMReporter );
     }
@@ -1018,40 +1079,42 @@ void TableInfo::setParseError( )
 //------------------------------------------------------------------------------
 // @bug2099. Temporary hack to diagnose deadlock.
 // Added report parm and couts below.
-int  TableInfo::getColumnForParse(const int & id,
-                                  const int & bufferId,
+int  TableInfo::getColumnForParse(const int& id,
+                                  const int& bufferId,
                                   bool report)
 {
     boost::mutex::scoped_lock lock(fSyncUpdatesTI);
     double maxTime = 0;
     int columnId = -1;
 
-    while(true)
+    while (true)
     {
         // See if JobStatus has been set to terminate by another thread
         if (BulkStatus::getJobStatus() == EXIT_FAILURE)
         {
             fStatusTI = WriteEngine::ERR;
             throw SecondaryShutdownException( "TableInfo::"
-                "getColumnForParse() responding to job termination");
+                                              "getColumnForParse() responding to job termination");
         }
 
-        if ( !bufferReadyForParse(bufferId,report) ) return -1;
+        if ( !bufferReadyForParse(bufferId, report) ) return -1;
 
         // @bug2099+
         ostringstream oss;
+
         if (report)
         {
 #ifdef _MSC_VER
             oss << " ----- " << GetCurrentThreadId() << ":fBuffers[" << bufferId <<
 #else
-            oss<< " ----- " << pthread_self() << ":fBuffers[" << bufferId <<
+            oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId <<
 #endif
                 "]: (colLocker,status,lasttime)- ";
         }
+
         // @bug2099-
 
-        for(unsigned k=0; k < fNumberOfColumns; ++k)
+        for (unsigned k = 0; k < fNumberOfColumns; ++k)
         {
             // @bug2099+
             if (report)
@@ -1065,19 +1128,20 @@ int  TableInfo::getColumnForParse(const int & id,
                 oss << '(' << colLocker << ',' << colStatusStr << ',' <<
                     fColumns[k].lastProcessingTime << ") ";
             }
+
             // @bug2099-
 
-            if(fBuffers[bufferId].getColumnLocker(k) == -1)
+            if (fBuffers[bufferId].getColumnLocker(k) == -1)
             {
-                if(columnId == -1)
+                if (columnId == -1)
                     columnId = k;
-                else if(fColumns[k].lastProcessingTime == 0)
+                else if (fColumns[k].lastProcessingTime == 0)
                 {
-                    if(fColumns[k].column.width >=
-                       fColumns[columnId].column.width)
+                    if (fColumns[k].column.width >=
+                            fColumns[columnId].column.width)
                         columnId = k;
                 }
-                else if(fColumns[k].lastProcessingTime > maxTime)
+                else if (fColumns[k].lastProcessingTime > maxTime)
                 {
                     maxTime = fColumns[k].lastProcessingTime;
                     columnId = k;
@@ -1089,20 +1153,24 @@ int  TableInfo::getColumnForParse(const int & id,
         if (report)
         {
             oss << "; selected colId: " << columnId;
+
             if (columnId != -1)
                 oss << "; maxTime: " << maxTime;
-            oss << endl;
-			if (!BulkLoad::disableConsoleOutput())
-			{
-	            cout << oss.str();
-		        cout.flush();
-			}
-        }
-        // @bug2099-
-        
-        if(columnId == -1) return -1;
 
-        if(fBuffers[bufferId].tryAndLockColumn(columnId, id))
+            oss << endl;
+
+            if (!BulkLoad::disableConsoleOutput())
+            {
+                cout << oss.str();
+                cout.flush();
+            }
+        }
+
+        // @bug2099-
+
+        if (columnId == -1) return -1;
+
+        if (fBuffers[bufferId].tryAndLockColumn(columnId, id))
         {
             return columnId;
         }
@@ -1114,13 +1182,15 @@ int  TableInfo::getColumnForParse(const int & id,
 // @bug 2099.  Temporary hack to diagnose deadlock.  Added report parm
 //             and couts below.
 //------------------------------------------------------------------------------
-bool TableInfo::bufferReadyForParse(const int &bufferId, bool report) const
+bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
 {
     if (fBuffers.size() == 0)
         return false;
 
     Status stat = fBuffers[bufferId].getStatusBLB();
-    if(report) {
+
+    if (report)
+    {
         ostringstream oss;
         string bufStatusStr;
         ColumnInfo::convertStatusToString( stat,
@@ -1149,6 +1219,7 @@ void TableInfo::initializeBuffers(int   noOfBuffers,
                                   unsigned int fixedBinaryRecLen)
 {
 #ifdef _MSC_VER
+
     //@bug 3751
     //When reading from STDIN, Windows doesn't like the huge default buffer of
     //  1M, so turn it down.
@@ -1156,16 +1227,18 @@ void TableInfo::initializeBuffers(int   noOfBuffers,
     {
         fBufferSize = std::min(10240, fBufferSize);
     }
+
 #endif
 
     fReadBufCount = noOfBuffers;
+
     // initialize and populate the buffer vector.
-    for(int i=0; i<fReadBufCount; ++i)
+    for (int i = 0; i < fReadBufCount; ++i)
     {
-        BulkLoadBuffer *buffer = new BulkLoadBuffer(fNumberOfColumns,
-                                                    fBufferSize, fLog,
-                                                    i, fTableName,
-                                                    jobFieldRefList);
+        BulkLoadBuffer* buffer = new BulkLoadBuffer(fNumberOfColumns,
+                fBufferSize, fLog,
+                i, fTableName,
+                jobFieldRefList);
         buffer->setColDelimiter  (fColDelim);
         buffer->setNullStringMode(fNullStringMode);
         buffer->setEnclosedByChar(fEnclosedByChar);
@@ -1180,7 +1253,7 @@ void TableInfo::initializeBuffers(int   noOfBuffers,
 //------------------------------------------------------------------------------
 // Add the specified ColumnInfo object (info) into this table's fColumns vector.
 //------------------------------------------------------------------------------
-void TableInfo::addColumn(ColumnInfo * info)
+void TableInfo::addColumn(ColumnInfo* info)
 {
     fColumns.push_back(info);
     fNumberOfColumns = fColumns.size();
@@ -1196,7 +1269,7 @@ void TableInfo::addColumn(ColumnInfo * info)
 //------------------------------------------------------------------------------
 int TableInfo::openTableFile()
 {
-    if(fHandle != NULL)
+    if (fHandle != NULL)
         return NO_ERROR;
 
     if (fReadFromStdin)
@@ -1204,9 +1277,10 @@ int TableInfo::openTableFile()
         fHandle = stdin;
 
 #ifdef _MSC_VER
-		// If this is a binary import from STDIN, then set stdin to binary
-		if (fImportDataMode != IMPORT_DATA_TEXT)
-			_setmode(_fileno(stdin), _O_BINARY);
+
+        // If this is a binary import from STDIN, then set stdin to binary
+        if (fImportDataMode != IMPORT_DATA_TEXT)
+            _setmode(_fileno(stdin), _O_BINARY);
 
         fFileBuffer = 0;
 #else
@@ -1223,10 +1297,11 @@ int TableInfo::openTableFile()
     else
     {
         if (fImportDataMode == IMPORT_DATA_TEXT)
-            fHandle = fopen( fFileName.c_str() , "r" );
+            fHandle = fopen( fFileName.c_str(), "r" );
         else
-            fHandle = fopen( fFileName.c_str() , "rb" );
-        if(fHandle == NULL)
+            fHandle = fopen( fFileName.c_str(), "rb" );
+
+        if (fHandle == NULL)
         {
             int errnum = errno;
             ostringstream oss;
@@ -1244,7 +1319,7 @@ int TableInfo::openTableFile()
         setvbuf(fHandle, fFileBuffer, _IOFBF, fFileBufSize);
 
         ostringstream oss;
-        oss << "Opening " << fFileName << " to import into table " <<fTableName;
+        oss << "Opening " << fFileName << " to import into table " << fTableName;
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
     }
 
@@ -1283,17 +1358,19 @@ bool TableInfo::isBufferAvailable(bool report)
 {
     boost::mutex::scoped_lock lock(fSyncUpdatesTI);
     Status bufferStatus = fBuffers[fCurrentReadBuffer].getStatusBLB();
-    if( (bufferStatus == WriteEngine::PARSE_COMPLETE) ||
-        (bufferStatus == WriteEngine::NEW) )
+
+    if ( (bufferStatus == WriteEngine::PARSE_COMPLETE) ||
+            (bufferStatus == WriteEngine::NEW) )
     {
         // reset buffer status and column locks while we have
         // an fSyncUpdatesTI lock
         fBuffers[fCurrentReadBuffer].setStatusBLB(
-                 WriteEngine::READ_PROGRESS);
+            WriteEngine::READ_PROGRESS);
         fBuffers[fCurrentReadBuffer].resetColumnLocks();
         return true;
     }
-    if(report)
+
+    if (report)
     {
         ostringstream oss;
         string bufferStatusStr;
@@ -1315,36 +1392,40 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
                               bool bCloseFile )
 {
     size_t errorDatRowsCount = 0;
+
     if (errorDatRows)
         errorDatRowsCount = errorDatRows->size();
 
-    if(errorDatRowsCount > 0)
+    if (errorDatRowsCount > 0)
     {
         if (!fRejectDataFile.is_open())
         {
             ostringstream rejectFileName;
-			if (fErrorDir.size() > 0)
-			{
+
+            if (fErrorDir.size() > 0)
+            {
 #ifdef _MSC_VER
                 char filename[_MAX_FNAME];
                 char ext[_MAX_EXT];
-				_splitpath(const_cast<char*>(getFileName().c_str()), 
-						   NULL, NULL, filename, ext);
-				rejectFileName << fErrorDir << "\\" << filename << ext;
+                _splitpath(const_cast<char*>(getFileName().c_str()),
+                           NULL, NULL, filename, ext);
+                rejectFileName << fErrorDir << "\\" << filename << ext;
 #else
-				rejectFileName << fErrorDir << basename(getFileName().c_str()); 
+                rejectFileName << fErrorDir << basename(getFileName().c_str());
 #endif
-			}
-			else
-			{
-				rejectFileName << getFileName();
-			}
+            }
+            else
+            {
+                rejectFileName << getFileName();
+            }
+
             rejectFileName << ".Job_" << fJobId <<
-                '_' << ::getpid() << BAD_FILE_SUFFIX;
+                           '_' << ::getpid() << BAD_FILE_SUFFIX;
             fRejectDataFileName = rejectFileName.str();
             fRejectDataFile.open( rejectFileName.str().c_str(),
                                   ofstream::out );
-            if( !fRejectDataFile )
+
+            if ( !fRejectDataFile )
             {
                 ostringstream oss;
                 oss << "Unable to create file: " << rejectFileName.str() <<
@@ -1355,8 +1436,8 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
             }
         }
 
-        for(std::vector<string>::const_iterator iter = errorDatRows->begin();
-            iter != errorDatRows->end(); ++iter)
+        for (std::vector<string>::const_iterator iter = errorDatRows->begin();
+                iter != errorDatRows->end(); ++iter)
         {
             fRejectDataFile << *iter;
         }
@@ -1368,6 +1449,7 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
     {
         if (fRejectDataFile.is_open())
             fRejectDataFile.close();
+
         fRejectDataFile.clear();
 
         if (fRejectDataCnt > 0)
@@ -1377,6 +1459,7 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
 
             // Construct/report complete file name and save in list of files
             boost::filesystem::path p(fRejectDataFileName);
+
             if (!p.has_root_path())
             {
                 char cwdPath[4096];
@@ -1409,10 +1492,11 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
 // and error reasons into the error file.
 //------------------------------------------------------------------------------
 void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
-                                                    string> >* errorRows,
+                                 string> >* errorRows,
                                  bool bCloseFile )
 {
     size_t errorRowsCount = 0;
+
     if (errorRows)
         errorRowsCount = errorRows->size();
 
@@ -1421,28 +1505,31 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
         if (!fRejectErrFile.is_open())
         {
             ostringstream errFileName;
-			if (fErrorDir.size() > 0)
-			{
+
+            if (fErrorDir.size() > 0)
+            {
 #ifdef _MSC_VER
-				char filename[_MAX_FNAME];
-				char ext[_MAX_EXT];
-				_splitpath(const_cast<char*>(getFileName().c_str()), 
-						   NULL, NULL, filename, ext);
-				errFileName << fErrorDir << "\\" << filename << ext;
+                char filename[_MAX_FNAME];
+                char ext[_MAX_EXT];
+                _splitpath(const_cast<char*>(getFileName().c_str()),
+                           NULL, NULL, filename, ext);
+                errFileName << fErrorDir << "\\" << filename << ext;
 #else
-				errFileName << fErrorDir << basename(getFileName().c_str()); 
+                errFileName << fErrorDir << basename(getFileName().c_str());
 #endif
-			}
-			else
-			{
-				errFileName << getFileName();
-			}
+            }
+            else
+            {
+                errFileName << getFileName();
+            }
+
             errFileName << ".Job_" << fJobId <<
-                '_' << ::getpid() << ERR_FILE_SUFFIX;
+                        '_' << ::getpid() << ERR_FILE_SUFFIX;
             fRejectErrFileName = errFileName.str();
             fRejectErrFile.open( errFileName.str().c_str(),
                                  ofstream::out );
-            if( !fRejectErrFile )
+
+            if ( !fRejectErrFile )
             {
                 ostringstream oss;
                 oss << "Unable to create file: " << errFileName.str() <<
@@ -1453,12 +1540,12 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
             }
         }
 
-        for(std::vector< std::pair<RID,std::string> >::const_iterator iter =
-            errorRows->begin();
-            iter != errorRows->end(); ++iter)
+        for (std::vector< std::pair<RID, std::string> >::const_iterator iter =
+                    errorRows->begin();
+                iter != errorRows->end(); ++iter)
         {
             fRejectErrFile << "Line number " << iter->first <<
-                ";  Error: " << iter->second<< endl;
+                           ";  Error: " << iter->second << endl;
         }
 
         fRejectErrCnt += errorRowsCount;
@@ -1468,6 +1555,7 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
     {
         if (fRejectErrFile.is_open())
             fRejectErrFile.close();
+
         fRejectErrFile.clear();
 
         if (fRejectErrCnt > 0)
@@ -1477,6 +1565,7 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
 
             // Construct/report complete file name and save in list of files
             boost::filesystem::path p(fRejectErrFileName);
+
             if (!p.has_root_path())
             {
                 char cwdPath[4096];
@@ -1510,18 +1599,18 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
 //------------------------------------------------------------------------------
 void TableInfo::logToDataMods(const string& jobFile, const string&  messageText)
 {
-        logging::Message::Args args;
+    logging::Message::Args args;
 
-        unsigned subsystemId = 19; // writeengine
+    unsigned subsystemId = 19; // writeengine
 
-        logging::LoggingID loggingId(subsystemId, 0, fTxnID.id, 0);
-        logging::MessageLog messageLog(loggingId, LOG_LOCAL1);
+    logging::LoggingID loggingId(subsystemId, 0, fTxnID.id, 0);
+    logging::MessageLog messageLog(loggingId, LOG_LOCAL1);
 
-        logging::Message m(8);
-        args.add("Bulkload |Job: " + jobFile);
-        args.add("|" + messageText);
-        m.format(args);
-        messageLog.logInfoMessage(m);
+    logging::Message m(8);
+    args.add("Bulkload |Job: " + jobFile);
+    args.add("|" + messageText);
+    m.format(args);
+    messageLog.logInfoMessage(m);
 }
 
 //------------------------------------------------------------------------------
@@ -1536,7 +1625,7 @@ int TableInfo::acquireTableLock( bool disableTimeOut )
     // If executing distributed (mode1) or central command (mode2) then
     // don't worry about table locks.  The client front-end will manage locks.
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) ||
-        (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
+            (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
     {
         if (fLog->isDebug( DEBUG_1 ))
         {
@@ -1545,6 +1634,7 @@ int TableInfo::acquireTableLock( bool disableTimeOut )
                 "for table" << fTableName << "; OID-" << fTableOID;
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
+
         return NO_ERROR;
     }
 
@@ -1565,21 +1655,22 @@ int TableInfo::acquireTableLock( bool disableTimeOut )
     bool timeout = false;
     //for (int i=0; i<NUM_TRIES; i++)
     int try_count = 0;
+
     while (!timeout)
     {
         processName = fProcessName;
-        processName+= pmModOss.str();
+        processName += pmModOss.str();
         processId   = ::getpid();
         sessionId   = -1;
         transId     = -1;
         int rc = BRMWrapper::getInstance()->getTableLock (
-            fTableOID,
-            processName,
-            processId,
-            sessionId,
-            transId,
-            fTableLockID,
-            tblLockErrMsg);
+                     fTableOID,
+                     processName,
+                     processId,
+                     sessionId,
+                     transId,
+                     fTableLockID,
+                     tblLockErrMsg);
 
         if ((rc == NO_ERROR) && (fTableLockID > 0))
         {
@@ -1603,7 +1694,7 @@ int TableInfo::acquireTableLock( bool disableTimeOut )
             if (fLog->isDebug( DEBUG_1 ))
             {
                 ostringstream oss;
-                oss << "Retrying to acquire table lock for table " << 
+                oss << "Retrying to acquire table lock for table " <<
                     fTableName << "; OID-" << fTableOID;
                 fLog->logMsg( oss.str(), MSGLVL_INFO2 );
             }
@@ -1617,7 +1708,7 @@ int TableInfo::acquireTableLock( bool disableTimeOut )
 
             return rc;
         }
-        
+
         // if disableTimeOut is set then no timeout for table lock. Forever wait....
         timeout = (disableTimeOut ? false : (++try_count >= NUM_TRIES));
     }
@@ -1641,7 +1732,7 @@ int TableInfo::changeTableLockState( )
     // If executing distributed (mode1) or central command (mode2) then
     // don't worry about table locks.  The client front-end will manage locks.
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) ||
-        (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
+            (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
     {
         return NO_ERROR;
     }
@@ -1650,16 +1741,17 @@ int TableInfo::changeTableLockState( )
     bool bChanged = false;
 
     int rc = BRMWrapper::getInstance()->changeTableLockState (
-        fTableLockID,
-        BRM::CLEANUP,
-        bChanged,
-        tblLockErrMsg );   
+                 fTableLockID,
+                 BRM::CLEANUP,
+                 bChanged,
+                 tblLockErrMsg );
 
     if (rc == NO_ERROR)
     {
         if (fLog->isDebug( DEBUG_1 ))
         {
             ostringstream oss;
+
             if (bChanged)
             {
                 oss << "Table lock state changed to CLEANUP for table " <<
@@ -1675,7 +1767,7 @@ int TableInfo::changeTableLockState( )
                     "; lockID-" << fTableLockID <<
                     ".  Table lot locked.";
             }
-            
+
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
     }
@@ -1684,7 +1776,7 @@ int TableInfo::changeTableLockState( )
         ostringstream oss;
         oss << "Error in changing table state for table " << fTableName <<
             "; OID-"    << fTableOID    <<
-            "; lockID-" << fTableLockID << "; " <<tblLockErrMsg;
+            "; lockID-" << fTableLockID << "; " << tblLockErrMsg;
         fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
         return rc;
     }
@@ -1700,7 +1792,7 @@ int TableInfo::releaseTableLock( )
     // If executing distributed (mode1) or central command (mode2) then
     // don't worry about table locks.  The client front-end will manage locks.
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) ||
-        (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
+            (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
     {
         if (fLog->isDebug( DEBUG_1 ))
         {
@@ -1709,6 +1801,7 @@ int TableInfo::releaseTableLock( )
                 "for table " << fTableName << "; OID-" << fTableOID;
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
+
         return NO_ERROR;
     }
 
@@ -1717,9 +1810,9 @@ int TableInfo::releaseTableLock( )
 
     // Unlock the database table
     int rc = BRMWrapper::getInstance()->releaseTableLock (
-        fTableLockID,
-        bReleased,
-        tblLockErrMsg );   
+                 fTableLockID,
+                 bReleased,
+                 tblLockErrMsg );
 
     if (rc == NO_ERROR)
     {
@@ -1728,6 +1821,7 @@ int TableInfo::releaseTableLock( )
         if (fLog->isDebug( DEBUG_1 ))
         {
             ostringstream oss;
+
             if (bReleased)
             {
                 oss << "Table lock released for table " << fTableName <<
@@ -1741,7 +1835,7 @@ int TableInfo::releaseTableLock( )
                     "; lockID-" << fTableLockID <<
                     ".  Table not locked.";
             }
-            
+
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
     }
@@ -1750,7 +1844,7 @@ int TableInfo::releaseTableLock( )
         ostringstream oss;
         oss << "Error in releasing table lock for table " << fTableName <<
             "; OID-"    << fTableOID <<
-            "; lockID-" << fTableLockID << "; " <<tblLockErrMsg;
+            "; lockID-" << fTableLockID << "; " << tblLockErrMsg;
         fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
         return rc;
     }
@@ -1767,7 +1861,7 @@ void TableInfo::deleteMetaDataRollbackFile( )
     // don't worry about table locks, or deleting meta data files.  The
     // client front-end will manage these tasks after all imports are finished.
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) ||
-        (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
+            (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
     {
         return;
     }
@@ -1775,10 +1869,12 @@ void TableInfo::deleteMetaDataRollbackFile( )
     if (!fKeepRbMetaFile)
     {
         // Treat any error as non-fatal, though we log it.
-        try {
+        try
+        {
             fRBMetaWriter.deleteFile();
         }
-        catch (WeException& ex) {
+        catch (WeException& ex)
+        {
             ostringstream oss;
             oss << "Error deleting meta file; " << ex.what();
             fLog->logMsg(oss.str(), ex.errorCode(), MSGLVL_ERROR);
@@ -1805,11 +1901,12 @@ int TableInfo::confirmDBFileChanges( )
         std::string errMsg;
         ConfirmHdfsDbFile confirmHdfs;
         int rc = confirmHdfs.confirmDbFileListFromMetaFile( fTableOID, errMsg );
+
         if (rc != NO_ERROR)
         {
             ostringstream ossErrMsg;
             ossErrMsg << "Unable to confirm changes to table " << fTableName <<
-                "; " << errMsg;
+                      "; " << errMsg;
             fLog->logMsg( ossErrMsg.str(), rc, MSGLVL_ERROR );
 
             return rc;
@@ -1831,7 +1928,7 @@ void TableInfo::deleteTempDBFileChanges( )
     // of the temp files, only after all the distributed imports have
     // successfully completed.
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) ||
-        (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
+            (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
     {
         return;
     }
@@ -1851,7 +1948,7 @@ void TableInfo::deleteTempDBFileChanges( )
         {
             ostringstream ossErrMsg;
             ossErrMsg << "Unable to delete temp swap files for table " <<
-                fTableName << "; " << errMsg;
+                      fTableName << "; " << errMsg;
             fLog->logMsg( ossErrMsg.str(), rc, MSGLVL_ERROR );
         }
     }
@@ -1887,7 +1984,7 @@ int TableInfo::validateColumnHWMs(
 
     // Make sure the HWMs for all 1-byte columns match; same for all 2-byte,
     // 4-byte, and 8-byte columns as well.
-    for (unsigned k=0; k<segFileInfo.size(); k++)
+    for (unsigned k = 0; k < segFileInfo.size(); k++)
     {
         int k1 = 0;
 
@@ -1903,28 +2000,35 @@ int TableInfo::validateColumnHWMs(
             {
                 if (byte1First == -1)
                     byte1First = k;
+
                 k1 = byte1First;
                 break;
             }
+
             case 2:
             {
                 if (byte2First == -1)
                     byte2First = k;
+
                 k1 = byte2First;
                 break;
             }
+
             case 4:
             {
                 if (byte4First == -1)
                     byte4First = k;
+
                 k1 = byte4First;
                 break;
             }
+
             case 8:
             default:
             {
                 if (byte8First == -1)
                     byte8First = k;
+
                 k1 = byte8First;
                 break;
             }
@@ -1942,9 +2046,9 @@ int TableInfo::validateColumnHWMs(
         // Validate that the HWM for this column (k) matches that of the
         // corresponding reference column with the same width.
         if ((segFileInfo[k1].fDbRoot    != segFileInfo[k].fDbRoot)    ||
-            (segFileInfo[k1].fPartition != segFileInfo[k].fPartition) ||
-            (segFileInfo[k1].fSegment   != segFileInfo[k].fSegment)   ||
-            (segFileInfo[k1].fLocalHwm  != segFileInfo[k].fLocalHwm))
+                (segFileInfo[k1].fPartition != segFileInfo[k].fPartition) ||
+                (segFileInfo[k1].fSegment   != segFileInfo[k].fSegment)   ||
+                (segFileInfo[k1].fLocalHwm  != segFileInfo[k].fLocalHwm))
         {
             ostringstream oss;
             oss << stage << " HWMs do not match for"
@@ -1954,7 +2058,7 @@ int TableInfo::validateColumnHWMs(
                 "; partition-" << segFileInfo[k1].fPartition   <<
                 "; segment-"   << segFileInfo[k1].fSegment     <<
                 "; hwm-"       << segFileInfo[k1].fLocalHwm    <<
-                "; width-"     << jobColK1.width << ':'<<std::endl<<
+                "; width-"     << jobColK1.width << ':' << std::endl <<
                 " and OID2-"   << jobColK.mapOid               <<
                 "; column-"    << jobColK.colName              <<
                 "; DBRoot-"    << segFileInfo[k].fDbRoot       <<
@@ -1969,11 +2073,11 @@ int TableInfo::validateColumnHWMs(
         // HWM DBRoot, partition, and segment number should match for all
         // columns; so compare DBRoot, part#, and seg# with first column.
         if ((segFileInfo[0].fDbRoot    != segFileInfo[k].fDbRoot)    ||
-            (segFileInfo[0].fPartition != segFileInfo[k].fPartition) ||
-            (segFileInfo[0].fSegment   != segFileInfo[k].fSegment))
+                (segFileInfo[0].fPartition != segFileInfo[k].fPartition) ||
+                (segFileInfo[0].fSegment   != segFileInfo[k].fSegment))
         {
             const JobColumn& jobCol0 =
-            ( (jobTable != 0) ? jobTable->colList[0] : fColumns[0].column );
+                ( (jobTable != 0) ? jobTable->colList[0] : fColumns[0].column );
 
             ostringstream oss;
             oss << stage << " HWM DBRoot,Part#, or Seg# do not match for"
@@ -1983,7 +2087,7 @@ int TableInfo::validateColumnHWMs(
                 "; partition-" << segFileInfo[0].fPartition    <<
                 "; segment-"   << segFileInfo[0].fSegment      <<
                 "; hwm-"       << segFileInfo[0].fLocalHwm     <<
-                "; width-"     << jobCol0.width << ':'<<std::endl<<
+                "; width-"     << jobCol0.width << ':' << std::endl <<
                 " and OID2-"   << jobColK.mapOid               <<
                 "; column-"    << jobColK.colName              <<
                 "; DBRoot-"    << segFileInfo[k].fDbRoot       <<
@@ -2018,7 +2122,7 @@ int TableInfo::validateColumnHWMs(
 //  std::cout << "dbg: cross compare4 " << stage << " col-" << byte4First <<
 //  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte4First].width :
 //                                  fColumns[byte4First].column.width ) <<
-//  "; hwm-" << segFileInfo[byte4First].fLocalHwm << std::endl; 
+//  "; hwm-" << segFileInfo[byte4First].fLocalHwm << std::endl;
 
 //if (byte8First >= 0)
 //  std::cout << "dbg: cross compare8 " << stage << " col-" << byte8First <<
@@ -2035,32 +2139,37 @@ int TableInfo::validateColumnHWMs(
         {
             HWM hwmLo = segFileInfo[byte1First].fLocalHwm * 2;
             HWM hwmHi = hwmLo + 1;
+
             if ((segFileInfo[byte2First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte2First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte2First].fLocalHwm > hwmHi))
             {
                 colIdx = byte2First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
                 goto errorCheck;
             }
         }
+
         if (byte4First >= 0)
         {
             HWM hwmLo = segFileInfo[byte1First].fLocalHwm * 4;
             HWM hwmHi = hwmLo + 3;
+
             if ((segFileInfo[byte4First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte4First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte4First].fLocalHwm > hwmHi))
             {
                 colIdx = byte4First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
                 goto errorCheck;
             }
         }
+
         if (byte8First >= 0)
         {
             HWM hwmLo = segFileInfo[byte1First].fLocalHwm * 8;
             HWM hwmHi = hwmLo + 7;
+
             if ((segFileInfo[byte8First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte8First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte8First].fLocalHwm > hwmHi))
             {
                 colIdx = byte8First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
@@ -2078,20 +2187,23 @@ int TableInfo::validateColumnHWMs(
         {
             HWM hwmLo = segFileInfo[byte2First].fLocalHwm * 2;
             HWM hwmHi = hwmLo + 1;
+
             if ((segFileInfo[byte4First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte4First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte4First].fLocalHwm > hwmHi))
             {
                 colIdx = byte4First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
                 goto errorCheck;
             }
         }
+
         if (byte8First >= 0)
         {
             HWM hwmLo = segFileInfo[byte2First].fLocalHwm * 4;
             HWM hwmHi = hwmLo + 3;
+
             if ((segFileInfo[byte8First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte8First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte8First].fLocalHwm > hwmHi))
             {
                 colIdx = byte8First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
@@ -2109,8 +2221,9 @@ int TableInfo::validateColumnHWMs(
         {
             HWM hwmLo = segFileInfo[byte4First].fLocalHwm * 2;
             HWM hwmHi = hwmLo + 1;
+
             if ((segFileInfo[byte8First].fLocalHwm < hwmLo) ||
-                (segFileInfo[byte8First].fLocalHwm > hwmHi))
+                    (segFileInfo[byte8First].fLocalHwm > hwmHi))
             {
                 colIdx = byte8First;
                 rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
@@ -2122,12 +2235,13 @@ int TableInfo::validateColumnHWMs(
 // To avoid repeating this message 6 times in the preceding source code, we
 // use the "dreaded" goto to branch to this single place for error handling.
 errorCheck:
+
     if (rc != NO_ERROR)
     {
         const JobColumn& jobColRef = ( (jobTable != 0) ?
-            jobTable->colList[refCol] : fColumns[refCol].column );
+                                       jobTable->colList[refCol] : fColumns[refCol].column );
         const JobColumn& jobColIdx = ( (jobTable != 0) ?
-            jobTable->colList[colIdx] : fColumns[colIdx].column );
+                                       jobTable->colList[colIdx] : fColumns[colIdx].column );
 
         ostringstream oss;
         oss << stage << " HWMs are not in sync for"
@@ -2137,7 +2251,7 @@ errorCheck:
             "; partition-" << segFileInfo[refCol].fPartition   <<
             "; segment-"   << segFileInfo[refCol].fSegment     <<
             "; hwm-"       << segFileInfo[refCol].fLocalHwm    <<
-            "; width-"     << jobColRef.width << ':'<<std::endl<<
+            "; width-"     << jobColRef.width << ':' << std::endl <<
             " and OID2-"   << jobColIdx.mapOid                 <<
             "; column-"    << jobColIdx.colName                <<
             "; DBRoot-"    << segFileInfo[colIdx].fDbRoot      <<
@@ -2194,8 +2308,8 @@ int TableInfo::initBulkRollbackMetaData( )
 //    other if fail
 //------------------------------------------------------------------------------
 int TableInfo::saveBulkRollbackMetaData( Job& job,
-    const std::vector<DBRootExtentInfo>& segFileInfo,
-    const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoVecCol )
+        const std::vector<DBRootExtentInfo>& segFileInfo,
+        const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoVecCol )
 {
     int rc = NO_ERROR;
 
@@ -2203,7 +2317,7 @@ int TableInfo::saveBulkRollbackMetaData( Job& job,
     std::vector<OID>    dctnryOids;
 
     // Loop through the columns in the specified table
-    for ( size_t i = 0; i < job.jobTableList[fTableId].colList.size(); i++ ) 
+    for ( size_t i = 0; i < job.jobTableList[fTableId].colList.size(); i++ )
     {
         JobColumn& jobCol = job.jobTableList[fTableId].colList[i];
 
@@ -2223,8 +2337,10 @@ int TableInfo::saveBulkRollbackMetaData( Job& job,
         cols.push_back( col );
 
         OID dctnryOid = 0;
+
         if (jobCol.colType == COL_TYPE_DICT)
             dctnryOid = jobCol.dctnry.dctnryOid;
+
         dctnryOids.push_back( dctnryOid );
 
     }   // end of loop through columns
@@ -2253,7 +2369,7 @@ int TableInfo::saveBulkRollbackMetaData( Job& job,
 //------------------------------------------------------------------------------
 int TableInfo::synchronizeAutoInc( )
 {
-    for(unsigned i=0; i < fColumns.size(); ++i)
+    for (unsigned i = 0; i < fColumns.size(); ++i)
     {
         if (fColumns[i].column.autoIncFlag)
         {
@@ -2262,10 +2378,12 @@ int TableInfo::synchronizeAutoInc( )
             // ERR_BLKCACHE_FLUSH_LIST error, but we currently
             // rollback for "any" updateNextValue() error
             int rc = fColumns[i].finishAutoInc( );
+
             if (rc != NO_ERROR)
             {
                 return rc;
             }
+
             break; // okay to break; only 1 autoinc column per table
         }
     }
@@ -2290,10 +2408,12 @@ int TableInfo::rollbackWork( )
     // this PM "and" the PM where the DBRoot was moved to.
     std::vector<uint16_t> dbRootIds;
     Config::getRootIdList( dbRootIds );
-    for (unsigned int j=0; j<fOrigDbRootIds.size(); j++)
+
+    for (unsigned int j = 0; j < fOrigDbRootIds.size(); j++)
     {
         bool bFound = false;
-        for (unsigned int k=0; k<dbRootIds.size(); k++)
+
+        for (unsigned int k = 0; k < dbRootIds.size(); k++)
         {
             if (fOrigDbRootIds[j] == dbRootIds[k])
             {
@@ -2319,14 +2439,16 @@ int TableInfo::rollbackWork( )
     // Restore/rollback the DB files if we got far enough to begin processing
     // this table.
     int rc = NO_ERROR;
+
     if (hasProcessingBegun())
     {
         BulkRollbackMgr rbMgr( fTableOID,
-            fTableLockID,
-            fTableName,
-            fProcessName, fLog );
+                               fTableLockID,
+                               fTableName,
+                               fProcessName, fLog );
 
         rc = rbMgr.rollback( fKeepRbMetaFile );
+
         if (rc != NO_ERROR)
         {
             ostringstream oss;
@@ -2336,12 +2458,13 @@ int TableInfo::rollbackWork( )
             return rc;
         }
     }
-    
+
     // Delete the meta data files after rollback is complete
     deleteMetaDataRollbackFile( );
 
     // Release the table lock
     rc = releaseTableLock( );
+
     if (rc != NO_ERROR)
     {
         ostringstream oss;
@@ -2357,22 +2480,22 @@ int TableInfo::rollbackWork( )
 // Allocate extent from BRM (through the stripe allocator).
 //------------------------------------------------------------------------------
 int TableInfo::allocateBRMColumnExtent(OID columnOID,
-    uint16_t     dbRoot,
-    uint32_t&    partition,
-    uint16_t&    segment,
-    BRM::LBID_t& startLbid,
-    int&         allocSize,
-    HWM&         hwm,
-    std::string& errMsg )
+                                       uint16_t     dbRoot,
+                                       uint32_t&    partition,
+                                       uint16_t&    segment,
+                                       BRM::LBID_t& startLbid,
+                                       int&         allocSize,
+                                       HWM&         hwm,
+                                       std::string& errMsg )
 {
     int rc = fExtentStrAlloc.allocateExtent( columnOID,
-        dbRoot,
-        partition,
-        segment,
-        startLbid,
-        allocSize,
-        hwm,
-        errMsg );
+             dbRoot,
+             partition,
+             segment,
+             startLbid,
+             allocSize,
+             hwm,
+             errMsg );
     //fExtentStrAlloc.print();
 
     return rc;

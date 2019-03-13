@@ -55,65 +55,96 @@ const int WF__BOUND_ROLLING = -2;   // unbounded - current row
 class FrameBound
 {
 public:
-	/** @brief FrameBound constructor
-	 *  @param  t, frame type
-	 */
-	FrameBound(int t = 0) : fBoundType(t), fStart(true) {};
+    /** @brief FrameBound constructor
+     *  @param  t, frame type
+     */
+    FrameBound(int t = 0) : fBoundType(t), fStart(true) {};
 
-	/** @brief FrameBound destructor
-	 */
-	virtual ~FrameBound() {};
+    /** @brief FrameBound destructor
+     */
+    virtual ~FrameBound() {};
 
-	/** @brief clone
-	 */
-	virtual FrameBound* clone()
-	{ return new FrameBound(*this); }
+    /** @brief clone
+     */
+    virtual FrameBound* clone()
+    {
+        return new FrameBound(*this);
+    }
 
-	/** @brief virtual void getBound
-	 *  @param  b: partition start position
-	 *  @param  e: partition end   position
-	 *  @param  c: current position
-	 *  @return  : frame position
-	 */
-	virtual int64_t getBound(int64_t b, int64_t e, int64_t c);
+    /** @brief virtual void getBound
+     *  @param  b: partition start position
+     *  @param  e: partition end   position
+     *  @param  c: current position
+     *  @return  : frame position
+     */
+    virtual int64_t getBound(int64_t b, int64_t e, int64_t c);
 
-	virtual const std::string toString() const;
+    virtual const std::string toString() const;
 
-	void setRowData(const boost::shared_ptr<std::vector<joblist::RowPosition> >& d) {fRowData = d;}
-	void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
-	{ fRowGroup = g; fRow = r; }
+    void setRowData(const boost::shared_ptr<std::vector<joblist::RowPosition> >& d)
+    {
+        fRowData = d;
+    }
+    void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
+    {
+        fRowGroup = g;
+        fRow = r;
+    }
 
-	int64_t boundType() const  { return fBoundType; }
-	void boundType(int64_t t)  { fBoundType = t;    }
+    int64_t boundType() const
+    {
+        return fBoundType;
+    }
+    void boundType(int64_t t)
+    {
+        fBoundType = t;
+    }
 
-	bool start() const  { return fStart; }
-	void start(bool s)  { fStart = s;    }
+    bool start() const
+    {
+        return fStart;
+    }
+    void start(bool s)
+    {
+        fStart = s;
+    }
 
-	const boost::shared_ptr<ordering::EqualCompData>& peer() const  { return fPeer; }
-	void peer(const boost::shared_ptr<ordering::EqualCompData>& p)  { fPeer = p; }
+    const boost::shared_ptr<ordering::EqualCompData>& peer() const
+    {
+        return fPeer;
+    }
+    void peer(const boost::shared_ptr<ordering::EqualCompData>& p)
+    {
+        fPeer = p;
+    }
 
-	// for string table
-	void setCallback(joblist::WindowFunctionStep* step) { fStep = step; }
-	rowgroup::Row::Pointer getPointer(joblist::RowPosition& r)
-	{ return fStep->getPointer(r, fRowGroup, fRow); }
+    // for string table
+    void setCallback(joblist::WindowFunctionStep* step)
+    {
+        fStep = step;
+    }
+    rowgroup::Row::Pointer getPointer(joblist::RowPosition& r)
+    {
+        return fStep->getPointer(r, fRowGroup, fRow);
+    }
 
 protected:
-	// boundary type
-	int64_t                                     fBoundType;
-	bool                                        fStart;
+    // boundary type
+    int64_t                                     fBoundType;
+    bool                                        fStart;
 
-	// data
-	boost::shared_ptr<std::vector<joblist::RowPosition> > fRowData;
+    // data
+    boost::shared_ptr<std::vector<joblist::RowPosition> > fRowData;
 
-	// row meta data
-	rowgroup::RowGroup                          fRowGroup;
-	rowgroup::Row                               fRow;
+    // row meta data
+    rowgroup::RowGroup                          fRowGroup;
+    rowgroup::Row                               fRow;
 
-	// functor for peer checking
-	boost::shared_ptr<ordering::EqualCompData>  fPeer;
+    // functor for peer checking
+    boost::shared_ptr<ordering::EqualCompData>  fPeer;
 
-	// pointer back to step
-	joblist::WindowFunctionStep*                fStep;
+    // pointer back to step
+    joblist::WindowFunctionStep*                fStep;
 };
 
 

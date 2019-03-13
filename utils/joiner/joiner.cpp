@@ -22,62 +22,67 @@ using namespace std;
 using namespace joblist;
 using namespace utils;
 
-namespace joiner {
+namespace joiner
+{
 
 Joiner::Joiner(bool ia) : _includeAll(ia), _inPM(false), _pool(new SimplePool)
 {
-	SimpleAllocator<pair<uint64_t const, uint64_t> > alloc(_pool);
-	h.reset(new hash_t(10, hash_t::hasher(), hash_t::key_equal(), alloc));
+    SimpleAllocator<pair<uint64_t const, uint64_t> > alloc(_pool);
+    h.reset(new hash_t(10, hash_t::hasher(), hash_t::key_equal(), alloc));
 // 	cout << "Joiner()\n";
 }
 
 Joiner::Joiner()
 { }
 
-Joiner::Joiner(const Joiner &j)
+Joiner::Joiner(const Joiner& j)
 { }
 
-Joiner & Joiner::operator=(const Joiner &j) 
+Joiner& Joiner::operator=(const Joiner& j)
 {
-	return *this;
+    return *this;
 }
 
-Joiner::~Joiner() 
+Joiner::~Joiner()
 {
 // 	cout << "~Joiner()\n";
-	// get rid of the hash table first
-	h.reset();
+    // get rid of the hash table first
+    h.reset();
 // 	delete _pool;
 // 	_pool = NULL;
 }
 
 boost::shared_ptr<vector<ElementType> > Joiner::getSortedMatches()
 {
-	boost::shared_ptr<vector<ElementType> > ret;
-	iterator it;
+    boost::shared_ptr<vector<ElementType> > ret;
+    iterator it;
 
-	ret.reset(new vector<ElementType>());
-	for (it = begin(); it != end(); ++it)
-		if (it->second & MSB)
-			ret->push_back(ElementType(it->second & ~MSB, it->first));
-	sort<vector<ElementType>::iterator>(ret->begin(), ret->end());
-	return ret;
+    ret.reset(new vector<ElementType>());
+
+    for (it = begin(); it != end(); ++it)
+        if (it->second & MSB)
+            ret->push_back(ElementType(it->second & ~MSB, it->first));
+
+    sort<vector<ElementType>::iterator>(ret->begin(), ret->end());
+    return ret;
 }
 
 boost::shared_ptr<std::vector<joblist::ElementType> > Joiner::getSmallSide()
 {
-	boost::shared_ptr<vector<ElementType> > ret;
-	iterator it;
+    boost::shared_ptr<vector<ElementType> > ret;
+    iterator it;
 
-	ret.reset(new vector<ElementType>());
-	for (it = begin(); it != end(); ++it)
-		ret->push_back(ElementType(it->second & ~MSB, it->first));
-	return ret;
+    ret.reset(new vector<ElementType>());
+
+    for (it = begin(); it != end(); ++it)
+        ret->push_back(ElementType(it->second & ~MSB, it->first));
+
+    return ret;
 }
 
 void Joiner::doneInserting()
 {
-	//sort here if the data structure is a vector
+    //sort here if the data structure is a vector
 }
 
 }

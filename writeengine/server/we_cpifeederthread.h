@@ -41,45 +41,51 @@ class WECpiFeederThread;
 class WECpiFeederRunner
 {
 public:
-	WECpiFeederRunner(WECpiFeederThread& Ref): fOwner(Ref){ /* ctor */ }
-	virtual ~WECpiFeederRunner(){/* dtor */}
-	void operator()();
+    WECpiFeederRunner(WECpiFeederThread& Ref): fOwner(Ref) { /* ctor */ }
+    virtual ~WECpiFeederRunner() {/* dtor */}
+    void operator()();
 
 public:
-	WECpiFeederThread& fOwner;
+    WECpiFeederThread& fOwner;
 };
 
 
 class WECpiFeederThread
 {
 public:
-	WECpiFeederThread(WEDataLoader& Ref);
-	virtual ~WECpiFeederThread();
+    WECpiFeederThread(WEDataLoader& Ref);
+    virtual ~WECpiFeederThread();
 
 public:
-	void startFeederThread();
-	void add2MsgQueue(messageqcpp::ByteStream& Ibs);
-	void feedData2Cpi();
-	void stopThread();
-	bool isMsgQueueEmpty();
-	//bool isPushing() { return fPushing; }
-	bool isStopped() { return fStopped; }
-	int getQueueSize() { return fMsgQueue.size(); }
-	bool isContinue();
+    void startFeederThread();
+    void add2MsgQueue(messageqcpp::ByteStream& Ibs);
+    void feedData2Cpi();
+    void stopThread();
+    bool isMsgQueueEmpty();
+    //bool isPushing() { return fPushing; }
+    bool isStopped()
+    {
+        return fStopped;
+    }
+    int getQueueSize()
+    {
+        return fMsgQueue.size();
+    }
+    bool isContinue();
 private:
 
     WEDataLoader& fOwner;
 
-	boost::condition fFeederCond;
-	boost::mutex fMsgQMutex;
+    boost::condition fFeederCond;
+    boost::mutex fMsgQMutex;
     typedef std::queue<messageqcpp::SBS> WEMsgQueue;
     WEMsgQueue fMsgQueue;
 
-    boost::thread *fpThread;
-	bool fContinue;
-	boost::mutex fContMutex;
-	//bool fPushing;
-	bool fStopped;
+    boost::thread* fpThread;
+    bool fContinue;
+    boost::mutex fContMutex;
+    //bool fPushing;
+    bool fStopped;
 
 
     friend class WEDataLoader;

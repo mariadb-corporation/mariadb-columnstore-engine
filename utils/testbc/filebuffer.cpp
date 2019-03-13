@@ -30,56 +30,62 @@
 
 using namespace std;
 
-namespace dbbc {
+namespace dbbc
+{
 
-FileBuffer::FileBuffer(const FileBuffer& rhs) {
+FileBuffer::FileBuffer(const FileBuffer& rhs)
+{
 
-	if (this==NULL || this==&rhs)
-		return;
-	
-	fLbid = rhs.fLbid;
-	fVerid = rhs.fVerid;
-	setData(rhs.fByteData, rhs.fDataLen);
-	fListLoc=rhs.listLoc();
-	fDataLen=rhs.fDataLen;
+    if (this == NULL || this == &rhs)
+        return;
+
+    fLbid = rhs.fLbid;
+    fVerid = rhs.fVerid;
+    setData(rhs.fByteData, rhs.fDataLen);
+    fListLoc = rhs.listLoc();
+    fDataLen = rhs.fDataLen;
 }
 
 
-FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data, const uint32_t len) {
-	fLbid = lbid;
-	fVerid = ver;
-	fDataLen=len;
-	setData(data, fDataLen);
+FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data, const uint32_t len)
+{
+    fLbid = lbid;
+    fVerid = ver;
+    fDataLen = len;
+    setData(data, fDataLen);
 }
 
 
-FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver) {
-	fLbid=lbid;
-	fVerid=ver;
-	fDataLen=0;
+FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver)
+{
+    fLbid = lbid;
+    fVerid = ver;
+    fDataLen = 0;
 }
 
 
-FileBuffer& FileBuffer::operator= (const FileBuffer& rhs) {
-	fLbid = rhs.fLbid;
-	fVerid = rhs.fVerid;
-	fDataLen=rhs.fDataLen;
-	setData(rhs.fByteData, fDataLen);
-	fListLoc=rhs.listLoc();
-	return *this;
+FileBuffer& FileBuffer::operator= (const FileBuffer& rhs)
+{
+    fLbid = rhs.fLbid;
+    fVerid = rhs.fVerid;
+    fDataLen = rhs.fDataLen;
+    setData(rhs.fByteData, fDataLen);
+    fListLoc = rhs.listLoc();
+    return *this;
 }
 
 void FileBuffer::setData(const uint8_t* d, const int len)
 {
-	if (d==NULL || len <=0)
-		return;
-	
-	fDataLen=len;
-	memcpy(fByteData, d, len);
+    if (d == NULL || len <= 0)
+        return;
+
+    fDataLen = len;
+    memcpy(fByteData, d, len);
 }
 
 
-FileBuffer::~FileBuffer() {
+FileBuffer::~FileBuffer()
+{
 }
 
 }

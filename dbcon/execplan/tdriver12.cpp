@@ -46,92 +46,104 @@ extern "C" void init_demangler(int, int, int);
 
 using namespace execplan;
 
-class ExecPlanTest : public CppUnit::TestFixture {
+class ExecPlanTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( ExecPlanTest );
+    CPPUNIT_TEST_SUITE( ExecPlanTest );
 
-CPPUNIT_TEST( selectExecutionPlan_12 );
+    CPPUNIT_TEST( selectExecutionPlan_12 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
 public:
 
-	static void walkfnString(const ParseTree* n)
-	{
-		char *r;
-		static bool is_init = false;
-		const char* mname = typeid(*(n->data())).name();
-		if (!is_init)
-		{
-			::init_demangler(0, 0, 0);
-			is_init = true;
-		}
-		r = ::cplus_demangle_with_style(mname, 7, 27);
-		if (r != 0)
-		{
-			//cout << "mangle: " << mname << " demangle: " << r << endl;
-			::free(r);
-		}
-		if (typeid(*(n->data())) == typeid(SimpleFilter))
-		{
-			cout << "SimpleFilter: " << endl;
-			const SimpleFilter* sf = dynamic_cast<SimpleFilter*>(n->data());
-			const ReturnedColumn* lhs = sf->lhs();
-			const ReturnedColumn* rhs = sf->rhs();
-			const Operator* op = sf->op();
-			cout << '\t' << lhs->data() << ' ' << op->data() << ' ' << rhs->data();
-			cout << endl << "\t\t";
-			if (typeid(*lhs) == typeid(SimpleColumn))
-			{
-				cout << "SimpleColumn: " << lhs->data() << " / ";
-			}
-			else if (typeid(*lhs) == typeid(ConstantColumn))
-			{
-				cout << "ConstantColumn: " << lhs->data() << " / ";
-			}
-			else
-			{
-				cout << "UNK: " << lhs->data() << " / ";
-			}
-			cout << "Operator: " << op->data() << " / ";
-			if (typeid(*rhs) == typeid(SimpleColumn))
-			{
-				cout << "SimpleColumn: " << rhs->data();
-			}
-			else if (typeid(*rhs) == typeid(ConstantColumn))
-			{
-				cout << "ConstantColumn: " << rhs->data();
-			}
-			else
-			{
-				cout << "UNK: " << rhs->data();
-			}
-		}
-		else if (typeid(*(n->data())) == typeid(Operator))
-		{
-			cout << "Operator: ";
-			const Operator* op = dynamic_cast<Operator*>(n->data());
-			cout << '\t' << op->data();
-		}
-		else
-		{
-			cout << mname << " -x-: ";
-		}
-		cout << endl;
-	}
+    static void walkfnString(const ParseTree* n)
+    {
+        char* r;
+        static bool is_init = false;
+        const char* mname = typeid(*(n->data())).name();
 
-    void setUp() {
+        if (!is_init)
+        {
+            ::init_demangler(0, 0, 0);
+            is_init = true;
+        }
+
+        r = ::cplus_demangle_with_style(mname, 7, 27);
+
+        if (r != 0)
+        {
+            //cout << "mangle: " << mname << " demangle: " << r << endl;
+            ::free(r);
+        }
+
+        if (typeid(*(n->data())) == typeid(SimpleFilter))
+        {
+            cout << "SimpleFilter: " << endl;
+            const SimpleFilter* sf = dynamic_cast<SimpleFilter*>(n->data());
+            const ReturnedColumn* lhs = sf->lhs();
+            const ReturnedColumn* rhs = sf->rhs();
+            const Operator* op = sf->op();
+            cout << '\t' << lhs->data() << ' ' << op->data() << ' ' << rhs->data();
+            cout << endl << "\t\t";
+
+            if (typeid(*lhs) == typeid(SimpleColumn))
+            {
+                cout << "SimpleColumn: " << lhs->data() << " / ";
+            }
+            else if (typeid(*lhs) == typeid(ConstantColumn))
+            {
+                cout << "ConstantColumn: " << lhs->data() << " / ";
+            }
+            else
+            {
+                cout << "UNK: " << lhs->data() << " / ";
+            }
+
+            cout << "Operator: " << op->data() << " / ";
+
+            if (typeid(*rhs) == typeid(SimpleColumn))
+            {
+                cout << "SimpleColumn: " << rhs->data();
+            }
+            else if (typeid(*rhs) == typeid(ConstantColumn))
+            {
+                cout << "ConstantColumn: " << rhs->data();
+            }
+            else
+            {
+                cout << "UNK: " << rhs->data();
+            }
+        }
+        else if (typeid(*(n->data())) == typeid(Operator))
+        {
+            cout << "Operator: ";
+            const Operator* op = dynamic_cast<Operator*>(n->data());
+            cout << '\t' << op->data();
+        }
+        else
+        {
+            cout << mname << " -x-: ";
+        }
+
+        cout << endl;
     }
-    
-    void tearDown() {
+
+    void setUp()
+    {
     }
-    
-    void selectExecutionPlan_12() {
+
+    void tearDown()
+    {
+    }
+
+    void selectExecutionPlan_12()
+    {
 
 //        cout << "SQL: select r_regionkey from region, nation where n_regionkey = r_regionkey and n_regionkey = 2;" << endl;
-cout << 
-"SQL: select \
+        cout <<
+             "SQL: select \
  l_shipmode, \
  sum(case \
    when o_orderpriority = '1-URGENT' \
@@ -158,27 +170,27 @@ where \
 group by \
   l_shipmode \
 order by \
-  l_shipmode;" << endl; 
+  l_shipmode;" << endl;
 
- 
+
         CalpontSelectExecutionPlan csep;
         CalpontSelectExecutionPlan::ReturnedColumnList colList;
         CalpontSelectExecutionPlan::GroupByColumnList groupbyList;
         CalpontSelectExecutionPlan::OrderByColumnList orderbyList;
         ParseTree* filterList;
-        
+
         // returned columns
         SimpleColumn l_shipmode("tpch.lineitem.l_shipmode");
-        AggregateColumn *high_line_count = new AggregateColumn(); 
+        AggregateColumn* high_line_count = new AggregateColumn();
         high_line_count->functionName("sum");
-        ArithmeticColumn *a1 = new ArithmeticColumn ("( CASE WHEN o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' THEN 1 ELSE 0  END )"); 
+        ArithmeticColumn* a1 = new ArithmeticColumn ("( CASE WHEN o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' THEN 1 ELSE 0  END )");
         high_line_count->functionParms(a1);
-  
-        AggregateColumn *low_line_count = new AggregateColumn(); 
+
+        AggregateColumn* low_line_count = new AggregateColumn();
         low_line_count->functionName("sum");
-        ArithmeticColumn *a2 = new ArithmeticColumn ("( CASE WHEN o_orderpriority <> '1-URGENT' and o_orderpriority <> '2-HIGH' THEN 1 ELSE 0  END )"); 
+        ArithmeticColumn* a2 = new ArithmeticColumn ("( CASE WHEN o_orderpriority <> '1-URGENT' and o_orderpriority <> '2-HIGH' THEN 1 ELSE 0  END )");
         low_line_count->functionParms(a2);
-  
+
 
         // Create the Projection
         colList.push_back(high_line_count);
@@ -192,87 +204,87 @@ order by \
         SimpleColumn l_receiptdate1("tpch.lineitem.l_receiptdate");
         SimpleColumn l_shipdate("tpch.lineitem.l_shipdate");
 
-               
+
         // filters
         CalpontSelectExecutionPlan::Parser parser;
         std::vector<Token> tokens;
-        
+
         //tokens.push_back(Token(new Operator("(")));
         //tokens.push_back(Token(new Operator(")")));
-        
+
         tokens.push_back(Token(new SimpleFilter(new Operator("="),
-				new SimpleColumn(l_shipmode),
-				new ConstantColumn("1"))));
-        
+                                                new SimpleColumn(l_shipmode),
+                                                new ConstantColumn("1"))));
+
         tokens.push_back(Token(new Operator("and")));
 
         tokens.push_back(Token(new SimpleFilter(new Operator("="),
-				new SimpleColumn(l_shipmode),
-				new ConstantColumn("2"))));
-        
+                                                new SimpleColumn(l_shipmode),
+                                                new ConstantColumn("2"))));
+
         tokens.push_back(Token(new Operator("and")));
 
         tokens.push_back(Token(new SimpleFilter(new Operator("<"),
-				new SimpleColumn(l_commitdate),
-				new SimpleColumn(l_receiptdate))));
-        
+                                                new SimpleColumn(l_commitdate),
+                                                new SimpleColumn(l_receiptdate))));
+
         tokens.push_back(Token(new Operator("and")));
 
         tokens.push_back(Token(new SimpleFilter(new Operator("<"),
-				new SimpleColumn(l_shipdate),
-				new SimpleColumn(l_commitdate))));
-        
+                                                new SimpleColumn(l_shipdate),
+                                                new SimpleColumn(l_commitdate))));
+
         tokens.push_back(Token(new Operator("and")));
 
-	tokens.push_back(Token(new SimpleFilter(new Operator(">="),
-				new SimpleColumn(l_receiptdate),
-				new ConstantColumn("06/01/2005"))));
-        
+        tokens.push_back(Token(new SimpleFilter(new Operator(">="),
+                                                new SimpleColumn(l_receiptdate),
+                                                new ConstantColumn("06/01/2005"))));
+
         tokens.push_back(Token(new Operator("and")));
 
-	tokens.push_back(Token(new SimpleFilter(new Operator("<"),
-				new SimpleColumn(l_receiptdate),
-				new ConstantColumn("06/01/2006"))));
-        
-       // old below
+        tokens.push_back(Token(new SimpleFilter(new Operator("<"),
+                                                new SimpleColumn(l_receiptdate),
+                                                new ConstantColumn("06/01/2006"))));
+
+        // old below
         filterList = parser.parse(tokens.begin(), tokens.end());
-        
+
         // draw filterList tree
         filterList->drawTree("selectExecutionPlan_12.dot");
-                     
-	// Build Group By List
-        SimpleColumn *l_shipmode2 = new SimpleColumn("tpch.lineitem.l_shipmode");
-        groupbyList.push_back(l_shipmode2); 
-    
-	// Build Order By List
+
+        // Build Group By List
+        SimpleColumn* l_shipmode2 = new SimpleColumn("tpch.lineitem.l_shipmode");
+        groupbyList.push_back(l_shipmode2);
+
+        // Build Order By List
         // SimpleColumn *l_shipmode2 = new SimpleColumn("tpch.lineitem.l_shipmode");
-        orderbyList.push_back(l_shipmode2); 
-    
-        // calpont execution plan        
+        orderbyList.push_back(l_shipmode2);
+
+        // calpont execution plan
         csep.returnedCols (colList);
         csep.filters (filterList);
         cout << "\nCalpont Execution Plan:" << endl;
         cout << csep << endl;
         cout << " --- end of test 12 ---" << endl;
 
-			filterList->walk(walkfnString);
+        filterList->walk(walkfnString);
 
     }
 
-}; 
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest );
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+    return (wasSuccessful ? 0 : 1);
 }
 
 

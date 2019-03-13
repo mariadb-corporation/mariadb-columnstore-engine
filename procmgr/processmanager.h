@@ -72,62 +72,64 @@
 
 void pingDeviceThread();
 
-namespace processmanager{
+namespace processmanager
+{
 
-	void startSystemThread(oam::DeviceNetworkList devicenetworklist);
-	void stopSystemThread(oam::DeviceNetworkList devicenetworklist);
-	void startModuleThread(std::string moduleName);
-	void stopModuleThread(std::string moduleName);
-	void processMSG(messageqcpp::IOSocket* fIos);
-	void sendUpgradeRequest();
+void startSystemThread(oam::DeviceNetworkList devicenetworklist);
+void stopSystemThread(oam::DeviceNetworkList devicenetworklist);
+void startModuleThread(std::string moduleName);
+void stopModuleThread(std::string moduleName);
+void processMSG(messageqcpp::IOSocket* fIos);
 
-	/** @brief Timeset for Milleseconds
-	*/
-	#define TS_MS(x) ((x) * 1000000)
+void sendUpgradeRequest();
 
-    struct HeartBeatProc
-    {
-        std::string ModuleName;                 //!< Module Name
-        std::string ProcessName;                //!< Process Name
-		int ID;									//!< Heartbeat ID
-		bool receiveFlag;						//!< Heartbeat indication flag
-	};
+/** @brief Timeset for Milleseconds
+*/
+#define TS_MS(x) ((x) * 1000000)
 
-	typedef   std::list<HeartBeatProc> HeartBeatProcList;
+struct HeartBeatProc
+{
+    std::string ModuleName;                 //!< Module Name
+    std::string ProcessName;                //!< Process Name
+    int ID;									//!< Heartbeat ID
+    bool receiveFlag;						//!< Heartbeat indication flag
+};
 
-	typedef   std::map<std::string, std::string>	srvStateList;
+typedef   std::list<HeartBeatProc> HeartBeatProcList;
 
-	const int MAX_ARGUMENTS = 10;
-	const std::string DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/ProcessManager.log";
+typedef   std::map<std::string, std::string>	srvStateList;
+
+const int MAX_ARGUMENTS = 10;
+const std::string DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/ProcessManager.log";
 
 
-   /**
-     * parentFlag accessor
-     */
+/**
+  * parentFlag accessor
+  */
 
 class Configuration
 {
 public:
-  /**
-   * @brief Constructor
-   */
-  Configuration();
-  /**
-   * Destructor
-   */
-  ~Configuration();
+    /**
+     * @brief Constructor
+     */
+    Configuration();
+    /**
+     * Destructor
+     */
+    ~Configuration();
 
     /**
      * @brief Return the module opstate tag
      */
-   std::string	getstateInfo(std::string moduleName);
+    std::string	getstateInfo(std::string moduleName);
 
     /**
      * moduleName accessor
      */
     const std::string&	moduleName() const
     {
-	return flocalModuleName;
+        return flocalModuleName;
     }
 
     /**
@@ -135,110 +137,111 @@ public:
      */
     const std::string&	moduleType() const
     {
-	return flocalModuleType;
+        return flocalModuleType;
     }
 
-     /**
-     * moduleName accessor
-     */
+    /**
+    * moduleName accessor
+    */
     const uint16_t&	moduleID() const
     {
-	return flocalModuleID;
+        return flocalModuleID;
     }
 
-     /**
-     * parentName accessor
-     */
+    /**
+    * parentName accessor
+    */
     const std::string&	OAMParentName() const
     {
-	return fOAMParentModuleName;
+        return fOAMParentModuleName;
     }
 
-   /**
-     * parentFlag accessor
-     */
+    /**
+      * parentFlag accessor
+      */
     const bool&	OAMParentFlag() const
     {
-	return fOAMParentModuleFlag;
+        return fOAMParentModuleFlag;
     }
 
-   /**
-     * ServerInstallType accessor
-     */
+    /**
+      * ServerInstallType accessor
+      */
     const uint16_t&	ServerInstallType() const
     {
-	return fserverInstallType;
+        return fserverInstallType;
     }
 
-   /**
-     * standbyName accessor
-     */
+    /**
+      * standbyName accessor
+      */
     const std::string&	OAMStandbyName() const
     {
-	return fOAMStandbyModuleName;
+        return fOAMStandbyModuleName;
     }
 
-   /**
-     * standbyParentFlag accessor
-     */
+    /**
+      * standbyParentFlag accessor
+      */
     const bool&	OAMStandbyParentFlag() const
     {
-	return fOAMStandbyModuleFlag;
+        return fOAMStandbyModuleFlag;
     }
 
-   /**
-     * parentFlag accessor
-     */
+    /**
+      * parentFlag accessor
+      */
 
 private:
     srvStateList	stateInfoList;
     std::string 	flocalModuleName;
     std::string 	flocalModuleType;
-	uint16_t		flocalModuleID;
+    uint16_t		flocalModuleID;
     std::string 	fOAMParentModuleName;
     bool 			fOAMParentModuleFlag;
-	uint16_t		fserverInstallType;
+    uint16_t		fserverInstallType;
     std::string 	fOAMStandbyModuleName;
-	bool			fOAMStandbyModuleFlag;
+    bool			fOAMStandbyModuleFlag;
 };
 
-class ProcessLog{
+class ProcessLog
+{
 public:
-  /**
-   * @brief Constructor
-   */
+    /**
+     * @brief Constructor
+     */
 
     ProcessLog();
 
-  /**
-   * @brief Destructor
-   */
+    /**
+     * @brief Destructor
+     */
 
     ~ProcessLog();
 
-  /**
-   * @brief Write the message to the log
-   */
+    /**
+     * @brief Write the message to the log
+     */
     void writeLog(const int lineNumber, const std::string logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
-  /**
-   * @brief Write the message to the log
-   */
+    /**
+     * @brief Write the message to the log
+     */
     void writeLog(const int lineNumber, const int logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
-  /**
-   * @brief Compose a log data in the required format
-   */
+    /**
+     * @brief Compose a log data in the required format
+     */
     void setSysLogData();
 
-  /**
-   * @brief return the sysLogData
-   */ 
+    /**
+     * @brief return the sysLogData
+     */
     std::string getSysLogData();
 
-  /**
-   * @brief log process status change into system log
-   */
+    /**
+     * @brief log process status change into system log
+     */
 
     void writeSystemLog();
 
@@ -254,91 +257,91 @@ public:
     /**
      * @brief Constructor
      */
-    ProcessManager(Configuration &config, ProcessLog &log);
+    ProcessManager(Configuration& config, ProcessLog& log);
 
     /**
      * @brief Default Destructor
      */
     ~ProcessManager();
 
-     /**
-     * @brief Process the received message
-     */
+    /**
+    * @brief Process the received message
+    */
 
 //    void	processMSG(messageqcpp::IOSocket fIos, messageqcpp::ByteStream msg);
 
-     /**
-     *@brief send a request to the associated Process Monitor
-     */
-   // void		sendRequestToMonitor(ByteStream::byte target, ByteStream request);
+    /**
+    *@brief send a request to the associated Process Monitor
+    */
+    // void		sendRequestToMonitor(ByteStream::byte target, ByteStream request);
 
-     /**
-     *@brief Build a request message
-     */
+    /**
+    *@brief Build a request message
+    */
     messageqcpp::ByteStream  buildRequestMessage(messageqcpp::ByteStream::byte requestID, messageqcpp::ByteStream::byte actionIndicator, std::string processName, bool manualFlag = true);
 
-     /**
-     *@brief Start all processes on the specified module
-     */
+    /**
+    *@brief Start all processes on the specified module
+    */
 
     int startModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, uint16_t startType, bool systemStart = false);
 
-     /**
-     *@brief Stop all processes on the specified module
-     */
-    int stopModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 240 );
+    /**
+    *@brief Stop all processes on the specified module
+    */
+    int stopModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 60 );
 
     /**
      *@brief power off the specified module
      */
     int shutdownModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 10 );
 
-     /**
-     *@brief Disable a specified module
-     */
+    /**
+    *@brief Disable a specified module
+    */
     int disableModule(std::string target, bool manualFlag);
 
-     /**
-     *@brief recycle Processes
-     */
-	void recycleProcess(std::string module);
+    /**
+    *@brief recycle Processes
+    */
+    void recycleProcess(std::string module, bool enableModule = false);
 
-     /**
-     *@brief Enable a specified module
-     */
-    int enableModule(std::string target, int state);
+    /**
+    *@brief Enable a specified module
+    */
+    int enableModule(std::string target, int state, bool failover = false);
 
-     /**
-     *@brief Enable a specified module
-     */
+    /**
+    *@brief Enable a specified module
+    */
     int enableModuleStatus(std::string target);
 
-	void dbrmctl(std::string command);
+    void dbrmctl(std::string command);
 
     /**
      *@brief start all Mgr Controlled processes for a module
      */
-	void startMgrProcesses(std::string moduleName);
+    void startMgrProcesses(std::string moduleName);
 
     /**
      *@brief stop process on a specific module
      */
-	int stopProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 10);
+    int stopProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 10);
 
     /**
      *@brief start process on a specific module
      */
-	int startProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator);
+    int startProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator);
 
     /**
      *@brief restart process on a specific module
      */
-	int restartProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag);
+    int restartProcess(std::string moduleName, std::string processName, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag);
 
     /**
      *@brief reinit process on a specific module
      */
-	int reinitProcess(std::string moduleName, std::string processName);
+    int reinitProcess(std::string moduleName, std::string processName);
 
     /**
      *@brief set the state of the specified module
@@ -368,221 +371,226 @@ public:
     /**
      *@brief set the state of the specified process
      */
-	int setProcessState (std::string moduleName, std::string processName, uint16_t state, pid_t PID);
+    int setProcessState (std::string moduleName, std::string processName, uint16_t state, pid_t PID);
 
     /**
      *@brief updatelog on a specific module
      */
-	int updateLog (std::string action, std::string moduleName, std::string level);
+    int updateLog (std::string action, std::string moduleName, std::string level);
 
     /**
      *@brief get log configuration on a specific module
      */
-	int getConfigLog (std::string moduleName);
+    int getConfigLog (std::string moduleName);
 
     /**
      *@brief update process configuration
      */
-	int updateConfig (std::string moduleName);
+    int updateConfig (std::string moduleName);
 
     /**
      *@brief Build System Tables request
      */
-	int buildSystemTables(std::string moduleName);
+    int buildSystemTables(std::string moduleName);
 
     /**
      *@brief Stop a Process Type
      */
-	int stopProcessType(std::string processName, bool manualFlag = true );
+    int stopProcessType(std::string processName, bool manualFlag = true );
 
     /**
      *@brief Start a Process Type
      */
-	int startProcessType(std::string processName);
+    int startProcessType(std::string processName);
 
     /**
      *@brief Restart a Process Type
      */
-	int restartProcessType(std::string processName, std::string skipModule = "none", bool manualFlag = true);
+    int restartProcessType(std::string processName, std::string skipModule = "none", bool manualFlag = true);
 
     /**
      *@brief ReInit a Process Type
      */
-	int reinitProcessType(std::string processName);
+    int reinitProcessType(std::string processName);
 
     /**
      *@brief Add Module
      */
-	int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag = true);
+    int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag = true);
+
+    /**
+     *@brief Configure Module
+     */
+    int configureModule(std::string moduleName);
 
     /**
      *@brief Reconfigure Module
      */
-	int reconfigureModule(oam::DeviceNetworkList devicenetworklist);
+    int reconfigureModule(oam::DeviceNetworkList devicenetworklist);
 
     /**
      *@brief Remove Module
      */
-	int removeModule(oam::DeviceNetworkList devicenetworklist, bool manualFlag = true);
+    int removeModule(oam::DeviceNetworkList devicenetworklist, bool manualFlag = true);
 
     /**
      *@brief Check for simplex module run-type and start mate processes if needed
      */
-	void checkSimplexModule(std::string moduleName);
+    void checkSimplexModule(std::string moduleName);
 
     /**
      *@brief update core on a specific module
      */
-	int updateCore (std::string action, std::string moduleName);
+    int updateCore (std::string action, std::string moduleName);
 
     /**
      *@brief update PMS Configuration
      */
-	int updatePMSconfig(bool check = false);
+    int updatePMSconfig(bool check = false);
 
     /**
      *@brief update WorkerNode Configuration
      */
-	int updateWorkerNodeconfig();
+    int updateWorkerNodeconfig();
 
-	/**
+    /**
      *@brief Clears all alarms related to a module
      */
-	void clearModuleAlarms(std::string moduleName);
+    void clearModuleAlarms(std::string moduleName);
 
     /**
      *@brief Clears all alarms related to a NIC hostName
      */
-	void clearNICAlarms(std::string hostName);
+    void clearNICAlarms(std::string hostName);
 
     /**
      *@brief Send Msg to Process Monitor
      */
-	std::string sendMsgProcMon1( std::string module, messageqcpp::ByteStream msg, int requestID );
+    std::string sendMsgProcMon1( std::string module, messageqcpp::ByteStream msg, int requestID );
 
-	/*
-	* Updates the Columnstore.xml file for DDL/DMLProc IPs during PM switchover
-	*/
-	int setPMProcIPs( std::string moduleName, std::string processName = oam::UnassignedName);
+    /*
+    * Updates the Columnstore.xml file for DDL/DMLProc IPs during PM switchover
+    */
+    int setPMProcIPs( std::string moduleName, std::string processName = oam::UnassignedName);
 
-	/*
-	* OAM Parent Module change-over
-	*/
-	int OAMParentModuleChange();
+    /*
+    * OAM Parent Module change-over
+    */
+    int OAMParentModuleChange();
 
-	/** @brief find a new hot-standby module based on Process-Manager status, if one exist
-		*/
-	std::string getStandbyModule();
+    /** @brief find a new hot-standby module based on Process-Manager status, if one exist
+    	*/
+    std::string getStandbyModule();
 
-	/** @brief set Standby Module info in Columnstore.xml
-		*/
-	bool setStandbyModule(std::string newStandbyModule, bool send = true);
+    /** @brief set Standby Module info in Columnstore.xml
+    	*/
+    bool setStandbyModule(std::string newStandbyModule, bool send = true);
 
-	/** @brief clear Standby Module info in Columnstore.xml
-		*/
-	bool clearStandbyModule();
+    /** @brief clear Standby Module info in Columnstore.xml
+    	*/
+    bool clearStandbyModule();
 
-	int setEnableState(std::string target, std::string state);
+    int setEnableState(std::string target, std::string state);
 
-	/** @brief Distribute Calpont Config File to system modules
-		*/
-	int distributeConfigFile(std::string name, std::string file = "Columnstore.xml");
+    /** @brief Distribute Calpont Config File to system modules
+    	*/
+    int distributeConfigFile(std::string name, std::string file = "Columnstore.xml");
 
-	/** @brief Switch OAM Parent Module
-		*/
-	int switchParentOAMModule(std::string moduleName);
+    /** @brief Switch OAM Parent Module
+    	*/
+    int switchParentOAMModule(std::string moduleName);
 
-	/** @brief get DBRM Data and send to requester
-		*/
-	int getDBRMData(messageqcpp::IOSocket fIos, std::string moduleName);
+    /** @brief get DBRM Data and send to requester
+    	*/
+    int getDBRMData(messageqcpp::IOSocket fIos, std::string moduleName);
 
-	/** @brief remount the dbroot disk
-		*/
+    /** @brief remount the dbroot disk
+    	*/
 //	int remountDbroots(std::string option);
 
-	/**
-	*@brief Send Msg to Process Monitor
-	*/
-	int sendMsgProcMon( std::string module, messageqcpp::ByteStream msg, int requestID, int timeout = 240 );
+    /**
+    *@brief Send Msg to Process Monitor
+    */
+    int sendMsgProcMon( std::string module, messageqcpp::ByteStream msg, int requestID, int timeout = 240 );
 
-	/** @brief get Alarm Data and send to requester
-		*/	
-	int getAlarmData(messageqcpp::IOSocket fIos, int type, std::string date);
+    /** @brief get Alarm Data and send to requester
+    	*/
+    int getAlarmData(messageqcpp::IOSocket fIos, int type, std::string date);
 
-	/**
-	*@brief Save BRM database
-	*/
+    /**
+    *@brief Save BRM database
+    */
 
-	void saveBRM(bool skipSession = false, bool clearshm = true);
+    void saveBRM(bool skipSession = false, bool clearshm = true);
 
-	/**
-	*@brief set query system state not ready
-	*/
+    /**
+    *@brief set query system state not ready
+    */
 
-	void setQuerySystemState(bool set);
+    void setQuerySystemState(bool set);
 
-	/** @brief stop by process type
-		*/
-	void stopProcessTypes(bool manualFlag = true);
+    /** @brief stop by process type
+    	*/
+    void stopProcessTypes(bool manualFlag = true);
 
-	/** @brief unmount a dbroot
-		*/
-	int unmountDBRoot(std::string dbrootID);
+    /** @brief unmount a dbroot
+    	*/
+    int unmountDBRoot(std::string dbrootID);
 
-	/** @brief mount a dbroot
-		*/
-	int mountDBRoot(std::string dbrootID);
+    /** @brief mount a dbroot
+    	*/
+    int mountDBRoot(std::string dbrootID);
 
-	/** @brief distribute fstab update message
-		*/
-	int updateFstab(std::string moduleName, std::string entry);
+    /** @brief distribute fstab update message
+    	*/
+    int updateFstab(std::string moduleName, std::string entry);
 
-	/** @brief Set MySQL Replication
-		*/
-	int setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule = oam::UnassignedName, bool failover = false, bool distributeDB = false, std::string password = oam::UnassignedName, bool enable = true);
+    /** @brief Set MySQL Replication
+    	*/
+    int setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule = oam::UnassignedName, bool distributeDB = false, std::string password = oam::UnassignedName, bool enable = true, bool addModule = false);
 
-	/** @brief Gluster Assign dbroot to a module
-		*/
-	int glusterAssign(std::string moduleName, std::string dbroot);
+    /** @brief Gluster Assign dbroot to a module
+    	*/
+    int glusterAssign(std::string moduleName, std::string dbroot);
 
-	/** @brief Gluster Unassign dbroot to a module
-		*/
-	int glusterUnassign(std::string moduleName, std::string dbroot);
+    /** @brief Gluster Unassign dbroot to a module
+    	*/
+    int glusterUnassign(std::string moduleName, std::string dbroot);
 
 
 private:
 
-    Configuration	&config;
-    ProcessLog		&log;
+    Configuration&	config;
+    ProcessLog&		log;
 
     /**
      *@brief Create a /ect/module file for remote server
      */
 
-	bool createModuleFile(std::string remoteModuleName);
+    bool createModuleFile(std::string remoteModuleName);
 
     /**
      *@brief pdate Extent Map section in Columnstore.xml
      */
-	bool updateExtentMap();
+    bool updateExtentMap();
 
-	/*
-	* Make inittab to auto-launch ProcMon
-	*/
-	bool makeXMInittab(std::string moduleName, std::string systemID, std::string parentOAMModuleHostName);
+    /*
+    * Make inittab to auto-launch ProcMon
+    */
+    bool makeXMInittab(std::string moduleName, std::string systemID, std::string parentOAMModuleHostName);
 
-	/*
-	* setup External Module mount file
-	*/
-	bool setXMmount(std::string moduleName, std::string parentOAMModuleHostName, std::string parentOAMModuleIPAddr);
+    /*
+    * setup External Module mount file
+    */
+    bool setXMmount(std::string moduleName, std::string parentOAMModuleHostName, std::string parentOAMModuleIPAddr);
 
-	/** @brief send status updates to process monitor
-		*/
-	void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
+    /** @brief send status updates to process monitor
+    	*/
+    void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
 
-	/** @brief flush inode cache
-		*/
-	void flushInodeCache();
+    /** @brief flush inode cache
+    	*/
+    void flushInodeCache();
 
 };
 

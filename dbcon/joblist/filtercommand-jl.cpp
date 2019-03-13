@@ -30,10 +30,10 @@ namespace joblist
 {
 
 FilterCommandJL::FilterCommandJL(const FilterStep& step) :
-	fBOP(step.BOP()), fColType(step.colType())
+    fBOP(step.BOP()), fColType(step.colType())
 {
-	OID = 0;
-	colName = step.name();
+    OID = 0;
+    colName = step.name();
 }
 
 
@@ -49,41 +49,41 @@ void FilterCommandJL::setLBID(uint64_t rid, uint32_t dbroot)
 
 uint8_t FilterCommandJL::getTableColumnType()
 {
-	throw logic_error("Don't call FilterCommandJL::getTableColumn(); it's not a projection step");
+    throw logic_error("Don't call FilterCommandJL::getTableColumn(); it's not a projection step");
 }
 
 
 CommandJL::CommandType FilterCommandJL::getCommandType()
 {
-	return FILTER_COMMAND;
+    return FILTER_COMMAND;
 }
 
 
 string FilterCommandJL::toString()
 {
-	ostringstream ret;
+    ostringstream ret;
 
-	ret << "FilterCommandJL: " << colName << " BOP=" << (uint32_t) fBOP;
-	return ret.str();
+    ret << "FilterCommandJL: " << colName << " BOP=" << (uint32_t) fBOP;
+    return ret.str();
 }
 
 
-void FilterCommandJL::createCommand(ByteStream &bs) const
+void FilterCommandJL::createCommand(ByteStream& bs) const
 {
-	bs << (uint8_t) FILTER_COMMAND;
-	bs << fBOP;
-	CommandJL::createCommand(bs);
+    bs << (uint8_t) FILTER_COMMAND;
+    bs << fBOP;
+    CommandJL::createCommand(bs);
 }
 
 
-void FilterCommandJL::runCommand(ByteStream &bs) const
+void FilterCommandJL::runCommand(ByteStream& bs) const
 {
 }
 
 
 uint16_t FilterCommandJL::getWidth()
 {
-	return fColType.colWidth;
+    return fColType.colWidth;
 }
 
 

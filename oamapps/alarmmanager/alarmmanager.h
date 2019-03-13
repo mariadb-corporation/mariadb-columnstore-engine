@@ -34,7 +34,8 @@
 #define EXPORT
 #endif
 
-namespace alarmmanager {
+namespace alarmmanager
+{
 
 /** @brief type define
  *
@@ -52,66 +53,68 @@ typedef std::multimap<int, Alarm> AlarmList;
 class ALARMManager
 {
 public:
-	/** @brief default ctor
-	 *
-	 */
-	EXPORT ALARMManager();
+    /** @brief default ctor
+     *
+     */
+    EXPORT ALARMManager();
 
-	/** @brief dtor
-	 *
-	 */
-	EXPORT virtual ~ALARMManager();
-	
-	/** @brief send an alarm
-	 *
-	 * @param componentID the component, hardware or software ID
-	 * @param alarmID the alarm ID
-	 * @param state set or clear
-	 * @param repModuleName reported Module Name (used by non-realtime process)
-	 * @param repProcessName reporting Process Name (used by non-realtime process)
-	 */
-	EXPORT void sendAlarmReport (const char* componentID, 
-						 const int alarmID, 
-						 const int state,
-						 std::string repModuleName = "",
-						 std::string repProcessName = "");
+    /** @brief dtor
+     *
+     */
+    EXPORT virtual ~ALARMManager();
+
+    /** @brief send an alarm
+     *
+     * @param componentID the component, hardware or software ID
+     * @param alarmID the alarm ID
+     * @param state set or clear
+     * @param repModuleName reported Module Name (used by non-realtime process)
+     * @param repProcessName reporting Process Name (used by non-realtime process)
+     */
+    EXPORT void sendAlarmReport (const char* componentID,
+                                 const int alarmID,
+                                 const int state,
+                                 std::string repModuleName = "",
+                                 std::string repProcessName = "");
 
 
-	/** @brief return active alarm list
-	 *
-	 * @param AlarmList the alarm map reference to store alarms
-	 */
-	EXPORT void getActiveAlarm (AlarmList& ) const;
-	
-	/** @brief return alarm list
-	 *
-	 * @param date date of alarms, "today" or date in YYYYMMDD
-	 * @param AlarmList the alarm map reference to store alarms
-	 */
-	EXPORT void getAlarm (std::string date, AlarmList& ) const;
-	
-	/** @brief get NMS address for trapd
-	 *
-	 * @param addr the reference to store addr
-	 */
+    EXPORT void processAlarmReport (Alarm& calAlarm);
+
+    /** @brief return active alarm list
+     *
+     * @param AlarmList the alarm map reference to store alarms
+     */
+    EXPORT void getActiveAlarm (AlarmList& ) const;
+
+    /** @brief return alarm list
+     *
+     * @param date date of alarms, "today" or date in YYYYMMDD
+     * @param AlarmList the alarm map reference to store alarms
+     */
+    EXPORT void getAlarm (std::string date, AlarmList& ) const;
+
+    /** @brief get NMS address for trapd
+     *
+     * @param addr the reference to store addr
+     */
 
 private:
-	/** @brief copy ctor. keep private for now
-	 *
-	 */
-	ALARMManager(const ALARMManager& rhs);
-	
-	/** @brief assign op. keep private for now
-	 *
-	 */
-	ALARMManager& operator=(const ALARMManager& rhs);
-	
-	/**
-	 * this is to avoid running create_trap_session more than once.
-	 */
-	static bool initFlag;	
-	
-	std::string parentOAMModuleName;
+    /** @brief copy ctor. keep private for now
+     *
+     */
+    ALARMManager(const ALARMManager& rhs);
+
+    /** @brief assign op. keep private for now
+     *
+     */
+    ALARMManager& operator=(const ALARMManager& rhs);
+
+    /**
+     * this is to avoid running create_trap_session more than once.
+     */
+    static bool initFlag;
+
+    std::string parentOAMModuleName;
 
 };
 

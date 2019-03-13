@@ -66,11 +66,11 @@ private:
         }
 
         foo(int i):
-                fData(i)
-    {}
+            fData(i)
+        {}
 
         foo(const foo& copy)
-                : fData(copy.fData)
+            : fData(copy.fData)
         {}
 
         int fData;
@@ -116,10 +116,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION( ThreadPoolTestSuite );
 #include <cppunit/ui/text/TestRunner.h>
 
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
     CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
     runner.addTest( registry.makeTest() );
     bool wasSuccessful = runner.run( "", false );
     return (wasSuccessful ? 0 : 1);

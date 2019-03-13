@@ -45,21 +45,22 @@ class UpdatePackageProcessor : public DMLPackageProcessor
 {
 
 public:
-	UpdatePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid) {
-	}
+    UpdatePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
+    {
+    }
     /** @brief process an UpdateDMLPackage
      *
      * @param cpackage the UpdateDMLPackage to process
      */
     EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
-	
+
 protected:
 
 private:
     /** @brief send execution plan to ExeMgr and fetch rows
      *
-	 * @param cpackage the UpdateDMLPackage to process
-	 * @param result the result of the operation
+     * @param cpackage the UpdateDMLPackage to process
+     * @param result the result of the operation
      * @return rows processed
      */
     uint64_t fixUpRows(dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result, const uint64_t uniqueId, const uint32_t tableOid);
@@ -67,13 +68,13 @@ private:
 
     /** @brief send row group to the PM to process
      *
-	 * @param aRowGroup the row group to be sent
-	 * @param result the result of the operation
+     * @param aRowGroup the row group to be sent
+     * @param result the result of the operation
      * @return the error code
      */
-    bool processRowgroup(messageqcpp::ByteStream & aRowGroup, DMLResult& result, const uint64_t uniqueId, dmlpackage::CalpontDMLPackage& cpackage, std::map<unsigned, bool>& pmState, bool isMeta = false, uint32_t dbroot=1);
-	bool receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs, std::map<unsigned, bool>& pmState, const uint32_t tableOid);
-	};
+    bool processRowgroup(messageqcpp::ByteStream& aRowGroup, DMLResult& result, const uint64_t uniqueId, dmlpackage::CalpontDMLPackage& cpackage, std::map<unsigned, bool>& pmState, bool isMeta = false, uint32_t dbroot = 1);
+    bool receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs, std::map<unsigned, bool>& pmState, const uint32_t tableOid);
+};
 
 }
 

@@ -16,7 +16,7 @@
    MA 02110-1301, USA. */
 
 /***************************************************************************
- *   dhill@srvengcm1.calpont.com 
+ *   dhill@srvengcm1.calpont.com
  *
  *   Purpose: OAM C++ API tester
  *
@@ -43,49 +43,53 @@ using namespace oam;
 
 using namespace alarmmanager;
 
-class getModuleInfoTest : public CppUnit::TestFixture {
+class getModuleInfoTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( getModuleInfoTest );
+    CPPUNIT_TEST_SUITE( getModuleInfoTest );
 
-CPPUNIT_TEST( test1 );
+    CPPUNIT_TEST( test1 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-		string Svalue;
-		int Ivalue;
-		bool Bvalue;
+    string Svalue;
+    int Ivalue;
+    bool Bvalue;
 
 public:
-	void setUp() {
-		setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
+    void setUp()
+    {
+        setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
 //		setenv("CALPONT_HOME", "/home/dhill/genii/export/etc/", 1);
-	}
+    }
 
-	void tearDown() {
-	}
+    void tearDown()
+    {
+    }
 
-	void test1() {
+    void test1()
+    {
 
-		Oam oamapi;
-		Svalue = oamapi.getCurrentTime();
-		cout << "Current time is " << Svalue;
-		CPPUNIT_ASSERT(!Svalue.empty());
+        Oam oamapi;
+        Svalue = oamapi.getCurrentTime();
+        cout << "Current time is " << Svalue;
+        CPPUNIT_ASSERT(!Svalue.empty());
 
-		Bvalue = oamapi.isValidIP("111.222.333.444");
-		CPPUNIT_ASSERT(Bvalue == true);
+        Bvalue = oamapi.isValidIP("111.222.333.444");
+        CPPUNIT_ASSERT(Bvalue == true);
 
-		Bvalue = oamapi.isValidIP("111.222.333");
-		CPPUNIT_ASSERT(Bvalue == false);
+        Bvalue = oamapi.isValidIP("111.222.333");
+        CPPUNIT_ASSERT(Bvalue == false);
 
-		Bvalue = oamapi.isValidIP("1.2.3.4");
-		CPPUNIT_ASSERT(Bvalue == true);
+        Bvalue = oamapi.isValidIP("1.2.3.4");
+        CPPUNIT_ASSERT(Bvalue == true);
 
-		Bvalue = oamapi.isValidIP("1.2.3.4444");
-		CPPUNIT_ASSERT(Bvalue == false);
+        Bvalue = oamapi.isValidIP("1.2.3.4444");
+        CPPUNIT_ASSERT(Bvalue == false);
 
-		Bvalue = oamapi.isValidIP("1111.222.333.444");
-		CPPUNIT_ASSERT(Bvalue == false);
+        Bvalue = oamapi.isValidIP("1111.222.333.444");
+        CPPUNIT_ASSERT(Bvalue == false);
 
 
 // can test on deve machine
@@ -101,160 +105,172 @@ public:
 
 //		Ivalue = get<2>(t);
 //		CPPUNIT_ASSERT(Ivalue == MASTER_YES);
-	};
-}; 
+    };
+};
 
-class getSystemConfigTest : public CppUnit::TestFixture {
+class getSystemConfigTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( getSystemConfigTest );
+    CPPUNIT_TEST_SUITE( getSystemConfigTest );
 
-CPPUNIT_TEST( test1 );
-CPPUNIT_TEST( test2 );
+    CPPUNIT_TEST( test1 );
+    CPPUNIT_TEST( test2 );
 //CPPUNIT_TEST( test3 );
 //CPPUNIT_TEST( test4 );
 //CPPUNIT_TEST( test5 );
-CPPUNIT_TEST_EXCEPTION( test6, std::runtime_error );
+    CPPUNIT_TEST_EXCEPTION( test6, std::runtime_error );
 //CPPUNIT_TEST_EXCEPTION( test7, std::runtime_error );
-CPPUNIT_TEST( test8 );
-CPPUNIT_TEST_EXCEPTION( test9, std::runtime_error );
-CPPUNIT_TEST( test10 );
+    CPPUNIT_TEST( test8 );
+    CPPUNIT_TEST_EXCEPTION( test9, std::runtime_error );
+    CPPUNIT_TEST( test10 );
 
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	string Svalue;
-	int Ivalue;
+    string Svalue;
+    int Ivalue;
 
 public:
-	void setUp() {
-		setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
+    void setUp()
+    {
+        setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
 //		setenv("CALPONT_HOME", "/home/dhill/genii/export/etc/", 1);
-	}
+    }
 
-	void tearDown() {
-	}
+    void tearDown()
+    {
+    }
 
-	void test1() {
-		SystemConfig systemconfig;
+    void test1()
+    {
+        SystemConfig systemconfig;
 
-		Oam oamapi;
-		oamapi.getSystemConfig(systemconfig);
+        Oam oamapi;
+        oamapi.getSystemConfig(systemconfig);
 
-		Ivalue = systemconfig.ModuleHeartbeatPeriod;
-		CPPUNIT_ASSERT(Ivalue != -1);
+        Ivalue = systemconfig.ModuleHeartbeatPeriod;
+        CPPUNIT_ASSERT(Ivalue != -1);
 
-		Ivalue = systemconfig.ModuleHeartbeatCount;
-		CPPUNIT_ASSERT(Ivalue != -1);
+        Ivalue = systemconfig.ModuleHeartbeatCount;
+        CPPUNIT_ASSERT(Ivalue != -1);
 
 //		Ivalue = systemconfig.ProcessHeartbeatPeriod;
 //		CPPUNIT_ASSERT(Ivalue != -2);
 
-		Svalue = systemconfig.NMSIPAddr;
-		CPPUNIT_ASSERT(!Svalue.empty());
-	};
+        Svalue = systemconfig.NMSIPAddr;
+        CPPUNIT_ASSERT(!Svalue.empty());
+    };
 
-	void test2() {
-		SystemModuleTypeConfig systemmoduletypeconfig;
+    void test2()
+    {
+        SystemModuleTypeConfig systemmoduletypeconfig;
 
-		Oam oamapi;
-		oamapi.getSystemConfig(systemmoduletypeconfig);
+        Oam oamapi;
+        oamapi.getSystemConfig(systemmoduletypeconfig);
 
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			if( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
-				// end of list
-				break;
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
+                // end of list
+                break;
 
-			Svalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
-			CPPUNIT_ASSERT(!Svalue.empty());
+            Svalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-			Svalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleDesc;
-			CPPUNIT_ASSERT(!Svalue.empty());
+            Svalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleDesc;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-			Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			CPPUNIT_ASSERT(Ivalue != -1);
+            Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-			Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUCriticalThreshold;
-			CPPUNIT_ASSERT(Ivalue != -1);
+            Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUCriticalThreshold;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-			Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMajorThreshold;
-			CPPUNIT_ASSERT(Ivalue != -1);
+            Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMajorThreshold;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-			Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMinorThreshold;
-			CPPUNIT_ASSERT(Ivalue != -1);
+            Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMinorThreshold;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-			Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMinorClearThreshold;
-			CPPUNIT_ASSERT(Ivalue != -1);
-		}
-	};
+            Ivalue = systemmoduletypeconfig.moduletypeconfig[i].ModuleCPUMinorClearThreshold;
+            CPPUNIT_ASSERT(Ivalue != -1);
+        }
+    };
 
-/*	void test3() {
-		ModuleConfig moduleconfig;
-		const string Modulename = "dm1";
+    /*	void test3() {
+    		ModuleConfig moduleconfig;
+    		const string Modulename = "dm1";
 
-		Oam oamapi;
-		oamapi.getSystemConfig(Modulename, moduleconfig);
+    		Oam oamapi;
+    		oamapi.getSystemConfig(Modulename, moduleconfig);
 
-		Svalue = moduleconfig.ModuleName;
-		CPPUNIT_ASSERT(!Svalue.empty());
+    		Svalue = moduleconfig.ModuleName;
+    		CPPUNIT_ASSERT(!Svalue.empty());
 
-	};
-*/
-	void test4() {
-		ModuleConfig moduleconfig;
+    	};
+    */
+    void test4()
+    {
+        ModuleConfig moduleconfig;
 
-		Oam oamapi;
-		oamapi.getSystemConfig(moduleconfig);
+        Oam oamapi;
+        oamapi.getSystemConfig(moduleconfig);
 
-		Svalue = moduleconfig.ModuleName;
-		CPPUNIT_ASSERT(!Svalue.empty());
+        Svalue = moduleconfig.ModuleName;
+        CPPUNIT_ASSERT(!Svalue.empty());
 
-	};
+    };
 
-	void test5() {
-		Oam oamapi;
-		oamapi.setSystemConfig("SystemVersion", "V2.0.2.3");
+    void test5()
+    {
+        Oam oamapi;
+        oamapi.setSystemConfig("SystemVersion", "V2.0.2.3");
 
-		oamapi.getSystemConfig("SystemVersion", Svalue);
+        oamapi.getSystemConfig("SystemVersion", Svalue);
 
-		CPPUNIT_ASSERT(Svalue == "V2.0.2.3");
-	};
+        CPPUNIT_ASSERT(Svalue == "V2.0.2.3");
+    };
 
-	void test6() {
-		Oam oamapi;
-		oamapi.getSystemConfig("SystemVersionBad", Svalue);
-		CPPUNIT_ASSERT(Svalue.size() == 0);
-	};
+    void test6()
+    {
+        Oam oamapi;
+        oamapi.getSystemConfig("SystemVersionBad", Svalue);
+        CPPUNIT_ASSERT(Svalue.size() == 0);
+    };
 
-	void test7() {
-		Oam oamapi;
-		oamapi.setSystemConfig("SystemVersionBad", "V2.0.2.3");
-	};
+    void test7()
+    {
+        Oam oamapi;
+        oamapi.setSystemConfig("SystemVersionBad", "V2.0.2.3");
+    };
 
-	void test8() {
-		Oam oamapi;
-		oamapi.setSystemConfig("ModuleHeartbeatPeriod", 5);
+    void test8()
+    {
+        Oam oamapi;
+        oamapi.setSystemConfig("ModuleHeartbeatPeriod", 5);
 
-		oamapi.getSystemConfig("ModuleHeartbeatPeriod", Ivalue);
+        oamapi.getSystemConfig("ModuleHeartbeatPeriod", Ivalue);
 
-		CPPUNIT_ASSERT(Ivalue == 5);
-	};
+        CPPUNIT_ASSERT(Ivalue == 5);
+    };
 
-	void test9() {
-		Oam oamapi;
-		oamapi.getSystemConfig("ModuleHeartbeatPeriodBad", Ivalue);
-		CPPUNIT_ASSERT(Ivalue == 0);
-	};
+    void test9()
+    {
+        Oam oamapi;
+        oamapi.getSystemConfig("ModuleHeartbeatPeriodBad", Ivalue);
+        CPPUNIT_ASSERT(Ivalue == 0);
+    };
 
-	void test10() {
-		Oam oamapi;
-		oamapi.setSystemConfig("ModuleCPUMajorThreshold1", 7500);
+    void test10()
+    {
+        Oam oamapi;
+        oamapi.setSystemConfig("ModuleCPUMajorThreshold1", 7500);
 
-		oamapi.getSystemConfig("ModuleCPUMajorThreshold1", Ivalue);
+        oamapi.getSystemConfig("ModuleCPUMajorThreshold1", Ivalue);
 
-		CPPUNIT_ASSERT(Ivalue == 7500);
-	};
+        CPPUNIT_ASSERT(Ivalue == 7500);
+    };
 
 
 };
@@ -336,132 +352,148 @@ public:
 
 };
 */
-class getProcessConfigTest : public CppUnit::TestFixture {
+class getProcessConfigTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( getProcessConfigTest );
+    CPPUNIT_TEST_SUITE( getProcessConfigTest );
 
-CPPUNIT_TEST( test1 );
-CPPUNIT_TEST( test2 );
-CPPUNIT_TEST_EXCEPTION( test3, std::runtime_error );
-CPPUNIT_TEST( test4 );
-CPPUNIT_TEST_EXCEPTION( test5, std::runtime_error );
+    CPPUNIT_TEST( test1 );
+    CPPUNIT_TEST( test2 );
+    CPPUNIT_TEST_EXCEPTION( test3, std::runtime_error );
+    CPPUNIT_TEST( test4 );
+    CPPUNIT_TEST_EXCEPTION( test5, std::runtime_error );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	string Svalue;
-	int Ivalue;
+    string Svalue;
+    int Ivalue;
 
 public:
-	void setUp() {
-		setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
+    void setUp()
+    {
+        setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
 //		setenv("CALPONT_HOME", "/home/dhill/genii/export/etc/", 1);
-	}
+    }
 
-	void tearDown() {
-	}
+    void tearDown()
+    {
+    }
 
-	void test1() {
-		SystemProcessConfig systemprocessconfig;
+    void test1()
+    {
+        SystemProcessConfig systemprocessconfig;
 
-		Oam oamapi;
-		oamapi.getProcessConfig(systemprocessconfig);
+        Oam oamapi;
+        oamapi.getProcessConfig(systemprocessconfig);
 
-		for( unsigned int i = 0 ; i < systemprocessconfig.processconfig.size(); i++)
-		{
-			Svalue = systemprocessconfig.processconfig[i].ProcessName;
-			CPPUNIT_ASSERT(!Svalue.empty());
-	
-			Svalue = systemprocessconfig.processconfig[i].ModuleType;
-			CPPUNIT_ASSERT(!Svalue.empty());
-	
-			Svalue = systemprocessconfig.processconfig[i].ProcessLocation;
-			CPPUNIT_ASSERT(!Svalue.empty());
+        for ( unsigned int i = 0 ; i < systemprocessconfig.processconfig.size(); i++)
+        {
+            Svalue = systemprocessconfig.processconfig[i].ProcessName;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-			for( int j = 0 ; j < oam::MAX_ARGUMENTS; j++) {
-				if (systemprocessconfig.processconfig[i].ProcessArgs[j].empty())
-					break;
-				Svalue = systemprocessconfig.processconfig[i].ProcessArgs[j];
-				CPPUNIT_ASSERT(!Svalue.empty());
-			}
+            Svalue = systemprocessconfig.processconfig[i].ModuleType;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-			Ivalue = systemprocessconfig.processconfig[i].BootLaunch;
-			CPPUNIT_ASSERT(Ivalue != -1);
-	
-			Ivalue = systemprocessconfig.processconfig[i].LaunchID;
-			CPPUNIT_ASSERT(Ivalue != -1);
-	
-			for( int j = 0 ; j < MAX_DEPENDANCY; j++) {
-				if (systemprocessconfig.processconfig[i].DepProcessName[j].empty())
-					break;
-				Svalue = systemprocessconfig.processconfig[i].DepProcessName[j];
-				CPPUNIT_ASSERT(!Svalue.empty());
-				Svalue = systemprocessconfig.processconfig[i].DepModuleName[j];
-				CPPUNIT_ASSERT(!Svalue.empty());
-			}
-		}
-	};
+            Svalue = systemprocessconfig.processconfig[i].ProcessLocation;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-	void test2() {
-		ProcessConfig processconfig;
+            for ( int j = 0 ; j < oam::MAX_ARGUMENTS; j++)
+            {
+                if (systemprocessconfig.processconfig[i].ProcessArgs[j].empty())
+                    break;
 
-		Oam oamapi;
-		oamapi.getProcessConfig("ProcessManager", "dm1", processconfig);
-		
-		Svalue = processconfig.ProcessName;
-		CPPUNIT_ASSERT(!Svalue.empty());
+                Svalue = systemprocessconfig.processconfig[i].ProcessArgs[j];
+                CPPUNIT_ASSERT(!Svalue.empty());
+            }
 
-		Svalue = processconfig.ModuleType;
-		CPPUNIT_ASSERT(!Svalue.empty());
+            Ivalue = systemprocessconfig.processconfig[i].BootLaunch;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-		Svalue = processconfig.ProcessLocation;
-		CPPUNIT_ASSERT(!Svalue.empty());
+            Ivalue = systemprocessconfig.processconfig[i].LaunchID;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-		for( int j = 0 ; j < oam::MAX_ARGUMENTS; j++) {
-			if (processconfig.ProcessArgs[j].empty())
-				break;
-			Svalue = processconfig.ProcessArgs[j];
-			CPPUNIT_ASSERT(!Svalue.empty());
-		}
+            for ( int j = 0 ; j < MAX_DEPENDANCY; j++)
+            {
+                if (systemprocessconfig.processconfig[i].DepProcessName[j].empty())
+                    break;
 
-		Ivalue = processconfig.BootLaunch;
-		CPPUNIT_ASSERT(Ivalue != -1);
+                Svalue = systemprocessconfig.processconfig[i].DepProcessName[j];
+                CPPUNIT_ASSERT(!Svalue.empty());
+                Svalue = systemprocessconfig.processconfig[i].DepModuleName[j];
+                CPPUNIT_ASSERT(!Svalue.empty());
+            }
+        }
+    };
 
-		Ivalue = processconfig.LaunchID;
-		CPPUNIT_ASSERT(Ivalue != -1);
+    void test2()
+    {
+        ProcessConfig processconfig;
 
-		for( int j = 0 ; j < MAX_DEPENDANCY; j++) {
-			if (processconfig.DepProcessName[j].empty())
-				break;
-			Svalue = processconfig.DepProcessName[j];
-			CPPUNIT_ASSERT(!Svalue.empty());
-			Svalue = processconfig.DepModuleName[j];
-			CPPUNIT_ASSERT(!Svalue.empty());
-		}
-	};
+        Oam oamapi;
+        oamapi.getProcessConfig("ProcessManager", "dm1", processconfig);
 
-	void test3() {
-		ProcessConfig processconfig;
-		Oam oamapi;
-		oamapi.getProcessConfig("SNMPTrapDaemonBAD", "dm1", processconfig);
-		CPPUNIT_ASSERT(Svalue.size() == 0);
-	};
+        Svalue = processconfig.ProcessName;
+        CPPUNIT_ASSERT(!Svalue.empty());
 
-	void test4() {
-		Oam oamapi;
-		oamapi.setProcessConfig("ProcessManager", "dm1", "BootLaunch", 10);
+        Svalue = processconfig.ModuleType;
+        CPPUNIT_ASSERT(!Svalue.empty());
 
-		oamapi.getProcessConfig("ProcessManager", "dm1", "BootLaunch", Ivalue);
+        Svalue = processconfig.ProcessLocation;
+        CPPUNIT_ASSERT(!Svalue.empty());
 
-		CPPUNIT_ASSERT(Ivalue == 10);
-	};
+        for ( int j = 0 ; j < oam::MAX_ARGUMENTS; j++)
+        {
+            if (processconfig.ProcessArgs[j].empty())
+                break;
 
-	void test5() {
-		ProcessConfig processconfig;
-		Oam oamapi;
-		oamapi.getProcessConfig("ProcessManager", "dm1", "ModuleTypeBAD", Svalue);
-		CPPUNIT_ASSERT(Svalue.size() == 0);
-	};
+            Svalue = processconfig.ProcessArgs[j];
+            CPPUNIT_ASSERT(!Svalue.empty());
+        }
+
+        Ivalue = processconfig.BootLaunch;
+        CPPUNIT_ASSERT(Ivalue != -1);
+
+        Ivalue = processconfig.LaunchID;
+        CPPUNIT_ASSERT(Ivalue != -1);
+
+        for ( int j = 0 ; j < MAX_DEPENDANCY; j++)
+        {
+            if (processconfig.DepProcessName[j].empty())
+                break;
+
+            Svalue = processconfig.DepProcessName[j];
+            CPPUNIT_ASSERT(!Svalue.empty());
+            Svalue = processconfig.DepModuleName[j];
+            CPPUNIT_ASSERT(!Svalue.empty());
+        }
+    };
+
+    void test3()
+    {
+        ProcessConfig processconfig;
+        Oam oamapi;
+        oamapi.getProcessConfig("SNMPTrapDaemonBAD", "dm1", processconfig);
+        CPPUNIT_ASSERT(Svalue.size() == 0);
+    };
+
+    void test4()
+    {
+        Oam oamapi;
+        oamapi.setProcessConfig("ProcessManager", "dm1", "BootLaunch", 10);
+
+        oamapi.getProcessConfig("ProcessManager", "dm1", "BootLaunch", Ivalue);
+
+        CPPUNIT_ASSERT(Ivalue == 10);
+    };
+
+    void test5()
+    {
+        ProcessConfig processconfig;
+        Oam oamapi;
+        oamapi.getProcessConfig("ProcessManager", "dm1", "ModuleTypeBAD", Svalue);
+        CPPUNIT_ASSERT(Svalue.size() == 0);
+    };
 
 };
 /*
@@ -498,16 +530,16 @@ public:
 		{
 			Svalue = systemprocessstatus.processstatus[i].ProcessName;
 			CPPUNIT_ASSERT(!Svalue.empty());
-	
+
 			Svalue = systemprocessstatus.processstatus[i].Module;
 			CPPUNIT_ASSERT(!Svalue.empty());
 
 			Ivalue = systemprocessstatus.processstatus[i].ProcessID;
 			CPPUNIT_ASSERT(Ivalue != -1);
-	
+
 			Svalue = systemprocessstatus.processstatus[i].StateChangeDate;
 			CPPUNIT_ASSERT(!Svalue.empty());
-	
+
 			Svalue = systemprocessstatus.processstatus[i].ProcessOpState;
 			CPPUNIT_ASSERT(!Svalue.empty());
 
@@ -518,7 +550,7 @@ public:
 		ProcessStatus processstatus;
 
 		oamapi.getProcessStatus("ProcessManager", "dm1", processstatus);
-		
+
 		Svalue = processstatus.ProcessName;
 		CPPUNIT_ASSERT(!Svalue.empty());
 
@@ -533,7 +565,7 @@ public:
 
 		Svalue = processstatus.ProcessOpState;
 		CPPUNIT_ASSERT(!Svalue.empty());
-	
+
 	};
 
 	void test3() {
@@ -565,83 +597,89 @@ public:
 
 };
 */
-class getAlarmConfigTest : public CppUnit::TestFixture {
+class getAlarmConfigTest : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( getAlarmConfigTest );
+    CPPUNIT_TEST_SUITE( getAlarmConfigTest );
 
-CPPUNIT_TEST( test1 );
-CPPUNIT_TEST( test2 );
-CPPUNIT_TEST_EXCEPTION( test3, std::runtime_error );
+    CPPUNIT_TEST( test1 );
+    CPPUNIT_TEST( test2 );
+    CPPUNIT_TEST_EXCEPTION( test3, std::runtime_error );
 //CPPUNIT_TEST( test4 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
-	string Svalue;
-	int Ivalue;
+    string Svalue;
+    int Ivalue;
 
 public:
-	void setUp() {
-		setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
+    void setUp()
+    {
+        setenv("CALPONT_HOME", "/home/buildslave/Buildbot/nightly/export/etc/", 1);
 //		setenv("CALPONT_HOME", "/home/dhill/genii/export/etc/", 1);
-	}
+    }
 
-	void tearDown() {
-	}
+    void tearDown()
+    {
+    }
 
-	void test1() {
-		AlarmConfig alarmconfig;
-		Oam oamapi;
+    void test1()
+    {
+        AlarmConfig alarmconfig;
+        Oam oamapi;
 
-		for( int alarmID = 1 ; alarmID < MAX_ALARM_ID; alarmID++)
-		{
-			oamapi.getAlarmConfig(alarmID, alarmconfig);
+        for ( int alarmID = 1 ; alarmID < MAX_ALARM_ID; alarmID++)
+        {
+            oamapi.getAlarmConfig(alarmID, alarmconfig);
 
-			Svalue = alarmconfig.BriefDesc;
-			CPPUNIT_ASSERT(!Svalue.empty());
+            Svalue = alarmconfig.BriefDesc;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-			Svalue = alarmconfig.DetailedDesc;
-			CPPUNIT_ASSERT(!Svalue.empty());
-	
-			Svalue = alarmconfig.Severity;
-			CPPUNIT_ASSERT(!Svalue.empty());
-	
-			Ivalue = alarmconfig.Threshold;
-			CPPUNIT_ASSERT(Ivalue != -1);
-	
-			Ivalue = alarmconfig.Occurrences;
-			CPPUNIT_ASSERT(Ivalue != -1);
-	
-			Svalue = alarmconfig.LastIssueTime;
-			CPPUNIT_ASSERT(!Svalue.empty());
-			}
- 	};
+            Svalue = alarmconfig.DetailedDesc;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-	void test2() {
-		Oam oamapi;
-		oamapi.setAlarmConfig(CPU_USAGE_MED, "Threshold", 20);
+            Svalue = alarmconfig.Severity;
+            CPPUNIT_ASSERT(!Svalue.empty());
 
-		oamapi.getAlarmConfig(CPU_USAGE_MED, "Threshold", Ivalue);
+            Ivalue = alarmconfig.Threshold;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-		CPPUNIT_ASSERT(Ivalue == 20);
-	};
+            Ivalue = alarmconfig.Occurrences;
+            CPPUNIT_ASSERT(Ivalue != -1);
 
-	void test3() {
-		Oam oamapi;
-		oamapi.getAlarmConfig(CPU_USAGE_MED, "ThresholdBAD", Ivalue);
-		CPPUNIT_ASSERT(Ivalue == 0);
-	};
+            Svalue = alarmconfig.LastIssueTime;
+            CPPUNIT_ASSERT(!Svalue.empty());
+        }
+    };
 
-/*	void test4() {
-		// test getActiveAlarm API
-		AlarmList activeAlarm;
-		#if 1
-		Oam oamapi;
-		oamapi.getActiveAlarms (activeAlarm);
-		#endif
-	};
-*/
-}; 
+    void test2()
+    {
+        Oam oamapi;
+        oamapi.setAlarmConfig(CPU_USAGE_MED, "Threshold", 20);
+
+        oamapi.getAlarmConfig(CPU_USAGE_MED, "Threshold", Ivalue);
+
+        CPPUNIT_ASSERT(Ivalue == 20);
+    };
+
+    void test3()
+    {
+        Oam oamapi;
+        oamapi.getAlarmConfig(CPU_USAGE_MED, "ThresholdBAD", Ivalue);
+        CPPUNIT_ASSERT(Ivalue == 0);
+    };
+
+    /*	void test4() {
+    		// test getActiveAlarm API
+    		AlarmList activeAlarm;
+    		#if 1
+    		Oam oamapi;
+    		oamapi.getActiveAlarms (activeAlarm);
+    		#endif
+    	};
+    */
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( getModuleInfoTest );
 CPPUNIT_TEST_SUITE_REGISTRATION( getSystemConfigTest );
@@ -653,13 +691,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION( getAlarmConfigTest );
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+    return (wasSuccessful ? 0 : 1);
 }
 
 

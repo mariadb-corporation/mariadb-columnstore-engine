@@ -40,8 +40,8 @@ class WESDHandler;					// forward deceleration
 class WEBrmUpdater
 {
 public:
-	WEBrmUpdater(WESDHandler& Ref):	fRef(Ref), fpBrm(0) {}
-	virtual ~WEBrmUpdater() {}
+    WEBrmUpdater(WESDHandler& Ref):	fRef(Ref), fpBrm(0) {}
+    virtual ~WEBrmUpdater() {}
 
 public:
     bool updateCasualPartitionAndHighWaterMarkInBRM();
@@ -54,20 +54,20 @@ public:
     bool createBrmConnection()
     {
         fpBrm = new BRM::DBRM();
-        return (fpBrm)?true:false;
+        return (fpBrm) ? true : false;
     }
     void releaseBrmConnection()
     {
-    	delete fpBrm;
-    	fpBrm = 0;
+        delete fpBrm;
+        fpBrm = 0;
     }
 
 
 
 public:
-    static bool prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows, 
-											int64_t& InsRows);
-    static bool prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum, 
+    static bool prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows,
+                                        int64_t& InsRows);
+    static bool prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
                                             CalpontSystemCatalog::ColDataType& ColType,
                                             std::string& ColName, int& OorValues);
     static bool prepareErrorFileInfo(std::string Entry, std::string& ErrFileName);
@@ -78,11 +78,11 @@ private:
     BRM::DBRM* fpBrm;
 
 
-	//BRM::CPInfoMergeList_t fCPInfo;
+    //BRM::CPInfoMergeList_t fCPInfo;
     std::vector<BRM::CPInfoMerge> fCPInfo;
-	std::vector<BRM::BulkSetHWMArg> fHWMInfo;
-	std::vector<BRM::CPInfo> fCPInfoData;
-	
+    std::vector<BRM::BulkSetHWMArg> fHWMInfo;
+    std::vector<BRM::CPInfo> fCPInfoData;
+
 
 };
 

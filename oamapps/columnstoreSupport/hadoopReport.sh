@@ -13,13 +13,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-if [ $USER = "hdfs" ]; then
-	SUDO=" "
-else
-	SUDO="sudo -u hdfs"
-fi
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
-sudo rm -f /tmp/hdfsReport.txt
+rm -f ${tmpDir}/hdfsReport.txt
 
 {
 echo 
@@ -29,14 +26,14 @@ echo "-- Hadoop version --"
 echo 
 echo "################# hadoop version  #################"
 echo
-$SUDO hadoop version
+hadoop version
 
 echo 
 echo "-- Data File Plugin --"
 echo 
 echo "######### $INSTALLDIR/bin/getConfig SystemConfig DataFilePlugin ##########"
 echo
-sudo $INSTALLDIR/bin/getConfig SystemConfig DataFilePlugin
+$INSTALLDIR/bin/getConfig SystemConfig DataFilePlugin
 
 echo
 echo
@@ -56,14 +53,14 @@ echo "-- Hadoop Health Check --"
 echo 
 echo "################# hdfs dfsadmin -report #################"
 echo 
-$SUDO hadoop dfsadmin -report 2>/dev/null
+hadoop dfsadmin -report 2>/dev/null
 
 echo 
 echo "-- HDFS check --"
 echo 
 echo "################# hdfs fsck $INSTALLDIR #################"
 echo 
-$SUDO hadoop fsck $INSTALLDIR 2>/dev/null
-} > /tmp/hadoopReport.txt
+hadoop fsck $INSTALLDIR 2>/dev/null
+} > ${tmpDir}/hadoopReport.txt
 
 exit 0

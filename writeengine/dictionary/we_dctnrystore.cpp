@@ -28,33 +28,33 @@
 #undef WRITEENGINEDCTSTORE_DLLEXPORT
 
 namespace WriteEngine
-{  
+{
 
 /***********************************************************
  * Constructor
- ***********************************************************/ 
-DctnryStore::DctnryStore() 
-    :m_hashMapFlag(true), m_hashMapSize(MAX_HASHMAP_SIZE)
+ ***********************************************************/
+DctnryStore::DctnryStore()
+    : m_hashMapFlag(true), m_hashMapSize(MAX_HASHMAP_SIZE)
 {
     m_dctnry.setUseHashMap(m_hashMapFlag);
 }
 
 /***********************************************************
  * Destructor
- ***********************************************************/ 
+ ***********************************************************/
 DctnryStore::~DctnryStore()
 {
-} 
+}
 
 /***********************************************************
  * Open a dictionary store file
- ***********************************************************/ 
-const int DctnryStore::openDctnryStore(const OID& dctnryOID, 
-        const OID&     treeOID,
-        const OID&     listOID,
-        const uint16_t dbRoot,
-        const uint32_t partition,
-        const uint16_t segment)
+ ***********************************************************/
+const int DctnryStore::openDctnryStore(const OID& dctnryOID,
+                                       const OID&     treeOID,
+                                       const OID&     listOID,
+                                       const uint16_t dbRoot,
+                                       const uint32_t partition,
+                                       const uint16_t segment)
 {
     int rc2;
     rc2 = m_dctnry.openDctnry(dctnryOID, dbRoot, partition, segment);
@@ -65,29 +65,29 @@ const int DctnryStore::openDctnryStore(const OID& dctnryOID,
 
 /***********************************************************
  * Create a dictionary store file
- ***********************************************************/    
-const int  DctnryStore::createDctnryStore( const OID& dctnryOID, 
+ ***********************************************************/
+const int  DctnryStore::createDctnryStore( const OID& dctnryOID,
         const OID& treeOID, const OID& listOID, int colWidth, const uint16_t dbRoot,
         const uint32_t partition, const uint16_t segment )
-{ 
+{
     int rc2 ;
- 
+
     rc2 = m_dctnry.createDctnry(dctnryOID, colWidth, dbRoot, partition, segment);
-      
+
     return rc2;
 }
 
 /***********************************************************
  * Drop a dictionary store file
- ***********************************************************/            
-const int  DctnryStore::dropDctnryStore( const OID& dctnryOID, 
-                                         const OID& treeOID,
-                                         const OID& listOID)
+ ***********************************************************/
+const int  DctnryStore::dropDctnryStore( const OID& dctnryOID,
+        const OID& treeOID,
+        const OID& listOID)
 {
     int  rc2;
     rc2 = m_dctnry.dropDctnry(dctnryOID);
 
-    return rc2;                                
+    return rc2;
 }
 
 /***********************************************************
@@ -95,23 +95,24 @@ const int  DctnryStore::dropDctnryStore( const OID& dctnryOID,
  * Function first checks to see if the signature is already
  * in our string cache, and returns the corresponding token
  * if it is found in the cache.
- ***********************************************************/    
-const int  DctnryStore::updateDctnryStore(unsigned char* sigValue, 
-                                          int& sigSize,
-                                          Token& token)
+ ***********************************************************/
+const int  DctnryStore::updateDctnryStore(unsigned char* sigValue,
+        int& sigSize,
+        Token& token)
 {
     int rc = NO_ERROR;
     Signature sig;
     sig.signature = sigValue;
-    sig.size = sigSize; 
+    sig.size = sigSize;
 
     //if String cache is enabled then look for string in cache
-    if (m_hashMapFlag) 
+    if (m_hashMapFlag)
     {
         if (m_dctnry.m_arraySize < (int)m_hashMapSize)
         {
             bool found = false;
             found = m_dctnry.getTokenFromArray(sig);
+
             if (found)
             {
                 token = sig.token;
@@ -119,9 +120,9 @@ const int  DctnryStore::updateDctnryStore(unsigned char* sigValue,
             }
         } //end if use hash map and size >0
     }
-       
+
     //Insert into Dictionary
-    rc = m_dctnry.insertDctnry(sigSize, sigValue, token);              
+    rc = m_dctnry.insertDctnry(sigSize, sigValue, token);
 
     //Add the new signature and token into cache if the hashmap flag is on
     // (We currently use an array instead of a hashmap.)
@@ -132,24 +133,25 @@ const int  DctnryStore::updateDctnryStore(unsigned char* sigValue,
         sig.signature = new unsigned char[sigSize];
         memcpy (sig.signature, sigValue, sigSize);
         sig.token = token;
-        m_dctnry.m_sigArray[m_dctnry.m_arraySize]=sig;
+        m_dctnry.m_sigArray[m_dctnry.m_arraySize] = sig;
         m_dctnry.m_arraySize++;
     }
 
     return rc;
-}  
+}
 
 /***********************************************************
  * Delete signature from the dictionary store file
- ***********************************************************/        
-const int  DctnryStore::deleteDctnryToken(Token& token) 
+ ***********************************************************/
+const int  DctnryStore::deleteDctnryToken(Token& token)
 {
     int rc ;
     int sigSize;
     unsigned char* sigValue = NULL;
 
     rc = m_dctnry.deleteDctnryValue( token, sigSize, &sigValue);
-    if (rc!=NO_ERROR)
+
+    if (rc != NO_ERROR)
     {
         return rc;
     }
@@ -162,7 +164,7 @@ const int  DctnryStore::deleteDctnryToken(Token& token)
 
     free(sigValue);
 
-    return rc;  
-}                                                                     
+    return rc;
+}
 
 } //end of namespace

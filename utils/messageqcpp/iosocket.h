@@ -51,7 +51,8 @@ class MessageQTestSuite;
 #define EXPORT
 #endif
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ServerSocket;
 
 /** a socket capable of I/O
@@ -61,165 +62,238 @@ class IOSocket
 {
 public:
 
-	/** ctor
-	 *
-	 */
-	EXPORT explicit IOSocket(Socket* socket=0);
+    /** ctor
+     *
+     */
+    EXPORT explicit IOSocket(Socket* socket = 0);
 
-	/** copy ctor
-	 *
-	 */
-	EXPORT IOSocket(const IOSocket& rhs);
+    /** copy ctor
+     *
+     */
+    EXPORT IOSocket(const IOSocket& rhs);
 
-	/** assign op
-	 *
-	 */
-	EXPORT IOSocket& operator=(const IOSocket& rhs);
+    /** assign op
+     *
+     */
+    EXPORT IOSocket& operator=(const IOSocket& rhs);
 
-	/** dtor
-	 *
-	 */
-	EXPORT virtual ~IOSocket();
+    /** dtor
+     *
+     */
+    EXPORT virtual ~IOSocket();
 
-	/** read a ByteStream from this socket
-	 *
-	 * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
-	 * call close() method if exception is thrown.
-	 */
-	virtual const SBS read(const struct timespec* timeout=0, bool* isTimeOut = NULL, Stats *stats = NULL) const;
+    /** read a ByteStream from this socket
+     *
+     * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
+     * call close() method if exception is thrown.
+     */
+    virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL, Stats* stats = NULL) const;
 
-	/** write a ByteStream to this socket
-	 *
-	 * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
-	 * call close() method if exception is thrown.
-	 */
-	EXPORT virtual void write(const ByteStream& msg, Stats *stats = NULL) const;
-	EXPORT virtual void write_raw(const ByteStream& msg, Stats *stats = NULL) const;
-	EXPORT virtual void write(SBS msg, Stats *stats = NULL) const;
-	
-	/** access the sockaddr member
-	 */
-	inline virtual const sockaddr sa() const;
+    /** write a ByteStream to this socket
+     *
+     * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
+     * call close() method if exception is thrown.
+     */
+    EXPORT virtual void write(const ByteStream& msg, Stats* stats = NULL) const;
+    EXPORT virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
+    EXPORT virtual void write(SBS msg, Stats* stats = NULL) const;
 
-	/** modify the sockaddr member
-	 */
-	inline virtual void sa(const sockaddr* sa);
+    /** access the sockaddr member
+     */
+    inline virtual const sockaddr sa() const;
 
-	/** open the socket
-	 *
-	 */
-	inline virtual void open();
+    /** modify the sockaddr member
+     */
+    inline virtual void sa(const sockaddr* sa);
 
-	/** close the socket
-	 *
-	 */
-	inline virtual void close();
+    /** open the socket
+     *
+     */
+    inline virtual void open();
 
-	/** test if the socket is open
-	 *
-	 */
-	inline virtual const bool isOpen() const;
+    /** close the socket
+     *
+     */
+    inline virtual void close();
 
-	/** get the socket params
-	 *
-	 */
-	inline virtual const SocketParms socketParms() const;
+    /** test if the socket is open
+     *
+     */
+    inline virtual const bool isOpen() const;
 
-	/** set the socket params
-	 *
-	 */
-	inline virtual void socketParms(const SocketParms& socketParms);
+    /** get the socket params
+     *
+     */
+    inline virtual const SocketParms socketParms() const;
 
-	/** set the socket implementation
-	 *
-	 * Install a socket implementation that meets the Socket interface
-	 */
-	EXPORT virtual void setSocketImpl(Socket* socket);
+    /** set the socket params
+     *
+     */
+    inline virtual void socketParms(const SocketParms& socketParms);
 
-	/** get a string rep of the IOSocket
-	 *
-	 */
-	EXPORT virtual const std::string toString() const;
+    /** set the socket implementation
+     *
+     * Install a socket implementation that meets the Socket interface
+     */
+    EXPORT virtual void setSocketImpl(Socket* socket);
 
-	/** syncProto() forwarder for inherited classes
-	 *
-	 */
-	EXPORT virtual void syncProto(bool use) { fSocket->syncProto(use); }
+    /** get a string rep of the IOSocket
+     *
+     */
+    EXPORT virtual const std::string toString() const;
 
-	EXPORT virtual const int getConnectionNum() const;
+    /** syncProto() forwarder for inherited classes
+     *
+     */
+    EXPORT virtual void syncProto(bool use)
+    {
+        fSocket->syncProto(use);
+    }
 
-	// Debug 
-	EXPORT void     setSockID(uint32_t id) {sockID = id;}
-	EXPORT uint32_t getSockID() {return sockID;}
-	/*
-	 * allow test suite access to private data for OOB test
-	 */
-	/**
-	 * @brief return the address as a string
-	 */
-	virtual const std::string addr2String() const { return fSocket->addr2String(); }
+    EXPORT virtual const int getConnectionNum() const;
 
-	/**
-	 * @brief compare 2 addresses
-	 */
-	virtual const bool isSameAddr(const IOSocket *rhs) const { return fSocket->isSameAddr(rhs->fSocket); }
-	
-	/** connect() forwarder for inherited classes
-	 *
-	 */
-	virtual void connect(const struct sockaddr* serv_addr) { fSocket->connect(serv_addr); }
+    // Debug
+    EXPORT void     setSockID(uint32_t id)
+    {
+        sockID = id;
+    }
+    EXPORT uint32_t getSockID()
+    {
+        return sockID;
+    }
+    /*
+     * allow test suite access to private data for OOB test
+     */
+    /**
+     * @brief return the address as a string
+     */
+    virtual const std::string addr2String() const
+    {
+        return fSocket->addr2String();
+    }
 
-	/** connectionTimeout() forwarder for inherited classes
-	 *
-	 */
-	virtual void connectionTimeout(const struct timespec* timeout) { fSocket->connectionTimeout(timeout); }
-	
-	inline virtual bool isConnected() const;
+    /**
+     * @brief compare 2 addresses
+     */
+    virtual const bool isSameAddr(const IOSocket* rhs) const
+    {
+        return fSocket->isSameAddr(rhs->fSocket);
+    }
+
+    /** connect() forwarder for inherited classes
+     *
+     */
+    virtual void connect(const struct sockaddr* serv_addr)
+    {
+        fSocket->connect(serv_addr);
+    }
+
+    /** connectionTimeout() forwarder for inherited classes
+     *
+     */
+    virtual void connectionTimeout(const struct timespec* timeout)
+    {
+        fSocket->connectionTimeout(timeout);
+    }
+
+    inline virtual bool isConnected() const;
     inline virtual bool hasData() const;
-    
-	friend class ::MessageQTestSuite;
+
+    friend class ::MessageQTestSuite;
 
 protected:
 
 
 private:
-	void doCopy(const IOSocket& rhs);
+    void doCopy(const IOSocket& rhs);
 
-	Socket* fSocket;
-	sockaddr fSa;
-	uint32_t sockID;	// For debug purposes
+    Socket* fSocket;
+    sockaddr fSa;
+    uint32_t sockID;	// For debug purposes
 };
 
 
-inline const sockaddr IOSocket::sa() const { return fSa; }
+inline const sockaddr IOSocket::sa() const
+{
+    return fSa;
+}
 inline void IOSocket::sa(const sockaddr* sa)
-	{ fSa = *sa;
-	if (fSocket)
-		fSocket->sa( sa ); }
-inline void IOSocket::open() { idbassert(fSocket); fSocket->open(); }
+{
+    fSa = *sa;
+
+    if (fSocket)
+        fSocket->sa( sa );
+}
+inline void IOSocket::open()
+{
+    idbassert(fSocket);
+    fSocket->open();
+}
 //RJD: changing close() to simply bail on null fSocket. I'm not really sure what's best here, but this is probably
 //   better that asserting...
-inline void IOSocket::close() { if (fSocket) fSocket->close(); }
-inline const bool IOSocket::isOpen() const { return (fSocket && fSocket->isOpen()); }
-inline const SBS IOSocket::read(const struct timespec* timeout, bool* isTimeOut, Stats *stats) const
-	{ idbassert(fSocket); return fSocket->read(timeout, isTimeOut, stats); }
-inline void IOSocket::write(const ByteStream& msg, Stats *stats) const { idbassert(fSocket); fSocket->write(msg, stats); }
-inline void IOSocket::write_raw(const ByteStream& msg, Stats *stats) const { idbassert(fSocket); fSocket->write_raw(msg, stats); }
-inline void IOSocket::write(SBS msg, Stats *stats) const { idbassert(fSocket); fSocket->write(msg, stats); }
-inline const SocketParms IOSocket::socketParms() const { idbassert(fSocket); return fSocket->socketParms(); }
-inline void IOSocket::socketParms(const SocketParms& socketParms) { idbassert(fSocket); fSocket->socketParms(socketParms); }
-inline void IOSocket::setSocketImpl(Socket* socket) { delete fSocket; fSocket = socket; }
-inline const int IOSocket::getConnectionNum() const { return fSocket->getConnectionNum(); }
-inline bool IOSocket::isConnected() const { return fSocket->isConnected(); }
-inline bool IOSocket::hasData() const { return fSocket->hasData(); }
+inline void IOSocket::close()
+{
+    if (fSocket) fSocket->close();
+}
+inline const bool IOSocket::isOpen() const
+{
+    return (fSocket && fSocket->isOpen());
+}
+inline const SBS IOSocket::read(const struct timespec* timeout, bool* isTimeOut, Stats* stats) const
+{
+    idbassert(fSocket);
+    return fSocket->read(timeout, isTimeOut, stats);
+}
+inline void IOSocket::write(const ByteStream& msg, Stats* stats) const
+{
+    idbassert(fSocket);
+    fSocket->write(msg, stats);
+}
+inline void IOSocket::write_raw(const ByteStream& msg, Stats* stats) const
+{
+    idbassert(fSocket);
+    fSocket->write_raw(msg, stats);
+}
+inline void IOSocket::write(SBS msg, Stats* stats) const
+{
+    idbassert(fSocket);
+    fSocket->write(msg, stats);
+}
+inline const SocketParms IOSocket::socketParms() const
+{
+    idbassert(fSocket);
+    return fSocket->socketParms();
+}
+inline void IOSocket::socketParms(const SocketParms& socketParms)
+{
+    idbassert(fSocket);
+    fSocket->socketParms(socketParms);
+}
+inline void IOSocket::setSocketImpl(Socket* socket)
+{
+    delete fSocket;
+    fSocket = socket;
+}
+inline const int IOSocket::getConnectionNum() const
+{
+    return fSocket->getConnectionNum();
+}
+inline bool IOSocket::isConnected() const
+{
+    return fSocket->isConnected();
+}
+inline bool IOSocket::hasData() const
+{
+    return fSocket->hasData();
+}
 
 /**
  * stream an IOSocket rep to any ostream
  */
 inline std::ostream& operator<<(std::ostream& os, const IOSocket& rhs)
 {
-	os << rhs.toString();
-	return os;
+    os << rhs.toString();
+    return os;
 }
 
 } //namespace messageqcpp

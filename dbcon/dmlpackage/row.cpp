@@ -30,7 +30,7 @@ namespace dmlpackage
 {
 
 Row::Row()
-        :fRowID(std::numeric_limits<WriteEngine::RID>::max())
+    : fRowID(std::numeric_limits<WriteEngine::RID>::max())
 {}
 
 Row::~Row()
@@ -39,17 +39,19 @@ Row::~Row()
     {
         delete fColumnList[i];
     }
+
     fColumnList.clear();
 }
 
 Row::Row(const Row& row)
 {
-    for(unsigned int i = 0; i < row.fColumnList.size(); i++)
+    for (unsigned int i = 0; i < row.fColumnList.size(); i++)
     {
-	const DMLColumn* aColumn = row.get_ColumnAt(i);
-	DMLColumn* newColumn = new DMLColumn(aColumn->get_Name(), aColumn->get_Data());
-	fColumnList.push_back(newColumn);
+        const DMLColumn* aColumn = row.get_ColumnAt(i);
+        DMLColumn* newColumn = new DMLColumn(aColumn->get_Name(), aColumn->get_Data());
+        fColumnList.push_back(newColumn);
     }
+
     fRowID = row.fRowID;
 }
 int Row::read(messageqcpp::ByteStream& bytestream)
@@ -60,12 +62,14 @@ int Row::read(messageqcpp::ByteStream& bytestream)
     set_RowID(rowID);
     messageqcpp::ByteStream::quadbyte col_count;
     bytestream >> col_count;
+
     for (unsigned int i = 0; i < col_count; i++)
     {
         DMLColumn* aColumn = new DMLColumn();
         retval = aColumn->read(bytestream);
         fColumnList.push_back(aColumn);
     }
+
     return retval;
 }
 
@@ -79,6 +83,7 @@ int Row::write(messageqcpp::ByteStream& bytestream)
     colListPtr = fColumnList.begin();
     messageqcpp::ByteStream::quadbyte col_count = fColumnList.size();
     bytestream << col_count;
+
     for (; colListPtr != fColumnList.end(); ++colListPtr)
     {
         retval = (*colListPtr)->write(bytestream);

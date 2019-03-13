@@ -31,7 +31,8 @@ using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
 
-namespace BRM {
+namespace BRM
+{
 
   const uint32_t AutoincrementManager::lockTime = 30;   // 30 seconds
 
@@ -44,99 +45,115 @@ AutoincrementManager::~AutoincrementManager()
 }
 
 void AutoincrementManager::startSequence(uint32_t oid, uint64_t firstNum, uint32_t colWidth,
-                                         execplan::CalpontSystemCatalog::ColDataType colDataType)
+        execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
-	sequence s;
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
+    sequence s;
 
-	it = sequences.find(oid);
-	if (it != sequences.end())
-		return;
+    it = sequences.find(oid);
 
-	s.value = firstNum;
+    if (it != sequences.end())
+        return;
+
+    s.value = firstNum;
+
     if (isUnsigned(colDataType))
     {
-        s.overflow = (0xFFFFFFFFFFFFFFFFULL >> (64-colWidth*8)) - 1;
+        s.overflow = (0xFFFFFFFFFFFFFFFFULL >> (64 - colWidth * 8)) - 1;
     }
     else
     {
-        s.overflow = (1ULL << (colWidth*8-1));
+        s.overflow = (1ULL << (colWidth * 8 - 1));
     }
-	sequences[oid] = s;
+
+    sequences[oid] = s;
 }
 
-bool AutoincrementManager::getAIRange(uint32_t oid, uint64_t count, uint64_t *firstNum)
+bool AutoincrementManager::getAIRange(uint32_t oid, uint64_t count, uint64_t* firstNum)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
 
-	it = sequences.find(oid);
-	if (it == sequences.end())
-		throw runtime_error("There is no sequence with that lock");
-	if ((count >= it->second.overflow ||
-	  count + it->second.value > it->second.overflow ||
-	  count + it->second.value <= it->second.value)
-	  && count != 0)
-		return false;
-	*firstNum = it->second.value;
-	it->second.value += count;
-	return true;
+    it = sequences.find(oid);
+
+    if (it == sequences.end())
+        throw runtime_error("There is no sequence with that lock");
+
+    if ((count >= it->second.overflow ||
+            count + it->second.value > it->second.overflow ||
+            count + it->second.value <= it->second.value)
+            && count != 0)
+        return false;
+
+    *firstNum = it->second.value;
+    it->second.value += count;
+    return true;
 }
 
 void AutoincrementManager::resetSequence(uint32_t oid, uint64_t value)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
 
-	it = sequences.find(oid);
-	if (it == sequences.end())
-		return;
-	it->second.value = value;
+    it = sequences.find(oid);
+
+    if (it == sequences.end())
+        return;
+
+    it->second.value = value;
 }
 
 void AutoincrementManager::getLock(uint32_t oid)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
-	ptime stealTime = microsec_clock::local_time() + seconds(lockTime);
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
+    ptime stealTime = microsec_clock::local_time() + seconds(lockTime);
 
-	bool gotIt = false;
+    bool gotIt = false;
 
-	it = sequences.find(oid);
-	if (it == sequences.end())
-		throw runtime_error("There is no sequence with that lock");
-	lk.unlock();
+    it = sequences.find(oid);
 
-	while (!gotIt && microsec_clock::local_time() < stealTime) {
-		gotIt = it->second.lock.try_lock();
-		if (!gotIt)
-			usleep(100000);
-	}
-	// If !gotIt, take possession
+    if (it == sequences.end())
+        throw runtime_error("There is no sequence with that lock");
+
+    lk.unlock();
+
+    while (!gotIt && microsec_clock::local_time() < stealTime)
+    {
+        gotIt = it->second.lock.try_lock();
+
+        if (!gotIt)
+            usleep(100000);
+    }
+
+    // If !gotIt, take possession
 }
 
 void AutoincrementManager::releaseLock(uint32_t oid)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
 
-	it = sequences.find(oid);
-	if (it == sequences.end())
-		return;   // it's unlocked if the lock doesn't exist...
-	lk.unlock();
+    it = sequences.find(oid);
 
-	it->second.lock.unlock();
+    if (it == sequences.end())
+        return;   // it's unlocked if the lock doesn't exist...
+
+    lk.unlock();
+
+    it->second.lock.unlock();
 }
 
 void AutoincrementManager::deleteSequence(uint32_t oid)
 {
-	mutex::scoped_lock lk(lock);
-	map<uint64_t, sequence>::iterator it;
+    mutex::scoped_lock lk(lock);
+    map<uint64_t, sequence>::iterator it;
 
-	it = sequences.find(oid);
-	if (it != sequences.end())
-		sequences.erase(it);
+    it = sequences.find(oid);
+
+    if (it != sequences.end())
+        sequences.erase(it);
 }
 
 

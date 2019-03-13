@@ -45,24 +45,24 @@ namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// all integer
-	CalpontSystemCatalog::ColType ct;
-	ct.colDataType = CalpontSystemCatalog::BIGINT;
-	ct.colWidth = 8;
-	return ct;
+    // all integer
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::BIGINT;
+    ct.colWidth = 8;
+    return ct;
 }
 
 string Func_idbpartition::getStrVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& ct)
 {
-	LogicalPartition part(
-		parm[0]->data()->getIntVal(row, isNull),
-		parm[1]->data()->getIntVal(row, isNull),
-		parm[2]->data()->getIntVal(row, isNull));
+    LogicalPartition part(
+        parm[0]->data()->getIntVal(row, isNull),
+        parm[1]->data()->getIntVal(row, isNull),
+        parm[2]->data()->getIntVal(row, isNull));
 
-	return part.toString();
+    return part.toString();
 }
 
 

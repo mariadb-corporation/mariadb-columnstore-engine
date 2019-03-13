@@ -24,7 +24,12 @@
 
 #include <stack>
 
-namespace apache { namespace thrift { namespace protocol {
+namespace apache
+{
+namespace thrift
+{
+namespace protocol
+{
 
 // Forward declaration
 class TJSONContext;
@@ -87,253 +92,272 @@ class TJSONContext;
  * bind to the same underlying implementation for maximum consistency.
  *
  */
-class TJSONProtocol : public TVirtualProtocol<TJSONProtocol> {
- public:
+class TJSONProtocol : public TVirtualProtocol<TJSONProtocol>
+{
+public:
 
-  TJSONProtocol(boost::shared_ptr<TTransport> ptrans);
+    TJSONProtocol(boost::shared_ptr<TTransport> ptrans);
 
-  ~TJSONProtocol();
+    ~TJSONProtocol();
 
- private:
+private:
 
-  void pushContext(boost::shared_ptr<TJSONContext> c);
+    void pushContext(boost::shared_ptr<TJSONContext> c);
 
-  void popContext();
+    void popContext();
 
-  uint32_t writeJSONEscapeChar(uint8_t ch);
+    uint32_t writeJSONEscapeChar(uint8_t ch);
 
-  uint32_t writeJSONChar(uint8_t ch);
+    uint32_t writeJSONChar(uint8_t ch);
 
-  uint32_t writeJSONString(const std::string &str);
+    uint32_t writeJSONString(const std::string& str);
 
-  uint32_t writeJSONBase64(const std::string &str);
+    uint32_t writeJSONBase64(const std::string& str);
 
-  template <typename NumberType>
-  uint32_t writeJSONInteger(NumberType num);
+    template <typename NumberType>
+    uint32_t writeJSONInteger(NumberType num);
 
-  uint32_t writeJSONDouble(double num);
+    uint32_t writeJSONDouble(double num);
 
-  uint32_t writeJSONObjectStart() ;
+    uint32_t writeJSONObjectStart() ;
 
-  uint32_t writeJSONObjectEnd();
+    uint32_t writeJSONObjectEnd();
 
-  uint32_t writeJSONArrayStart();
+    uint32_t writeJSONArrayStart();
 
-  uint32_t writeJSONArrayEnd();
+    uint32_t writeJSONArrayEnd();
 
-  uint32_t readJSONSyntaxChar(uint8_t ch);
+    uint32_t readJSONSyntaxChar(uint8_t ch);
 
-  uint32_t readJSONEscapeChar(uint8_t *out);
+    uint32_t readJSONEscapeChar(uint8_t* out);
 
-  uint32_t readJSONString(std::string &str, bool skipContext = false);
+    uint32_t readJSONString(std::string& str, bool skipContext = false);
 
-  uint32_t readJSONBase64(std::string &str);
+    uint32_t readJSONBase64(std::string& str);
 
-  uint32_t readJSONNumericChars(std::string &str);
+    uint32_t readJSONNumericChars(std::string& str);
 
-  template <typename NumberType>
-  uint32_t readJSONInteger(NumberType &num);
+    template <typename NumberType>
+    uint32_t readJSONInteger(NumberType& num);
 
-  uint32_t readJSONDouble(double &num);
+    uint32_t readJSONDouble(double& num);
 
-  uint32_t readJSONObjectStart();
+    uint32_t readJSONObjectStart();
 
-  uint32_t readJSONObjectEnd();
+    uint32_t readJSONObjectEnd();
 
-  uint32_t readJSONArrayStart();
+    uint32_t readJSONArrayStart();
 
-  uint32_t readJSONArrayEnd();
+    uint32_t readJSONArrayEnd();
 
- public:
+public:
 
-  /**
-   * Writing functions.
-   */
+    /**
+     * Writing functions.
+     */
 
-  uint32_t writeMessageBegin(const std::string& name,
-                             const TMessageType messageType,
-                             const int32_t seqid);
+    uint32_t writeMessageBegin(const std::string& name,
+                               const TMessageType messageType,
+                               const int32_t seqid);
 
-  uint32_t writeMessageEnd();
+    uint32_t writeMessageEnd();
 
-  uint32_t writeStructBegin(const char* name);
+    uint32_t writeStructBegin(const char* name);
 
-  uint32_t writeStructEnd();
+    uint32_t writeStructEnd();
 
-  uint32_t writeFieldBegin(const char* name,
-                           const TType fieldType,
-                           const int16_t fieldId);
+    uint32_t writeFieldBegin(const char* name,
+                             const TType fieldType,
+                             const int16_t fieldId);
 
-  uint32_t writeFieldEnd();
+    uint32_t writeFieldEnd();
 
-  uint32_t writeFieldStop();
+    uint32_t writeFieldStop();
 
-  uint32_t writeMapBegin(const TType keyType,
-                         const TType valType,
-                         const uint32_t size);
+    uint32_t writeMapBegin(const TType keyType,
+                           const TType valType,
+                           const uint32_t size);
 
-  uint32_t writeMapEnd();
+    uint32_t writeMapEnd();
 
-  uint32_t writeListBegin(const TType elemType,
-                          const uint32_t size);
+    uint32_t writeListBegin(const TType elemType,
+                            const uint32_t size);
 
-  uint32_t writeListEnd();
+    uint32_t writeListEnd();
 
-  uint32_t writeSetBegin(const TType elemType,
-                         const uint32_t size);
+    uint32_t writeSetBegin(const TType elemType,
+                           const uint32_t size);
 
-  uint32_t writeSetEnd();
+    uint32_t writeSetEnd();
 
-  uint32_t writeBool(const bool value);
+    uint32_t writeBool(const bool value);
 
-  uint32_t writeByte(const int8_t byte);
+    uint32_t writeByte(const int8_t byte);
 
-  uint32_t writeI16(const int16_t i16);
+    uint32_t writeI16(const int16_t i16);
 
-  uint32_t writeI32(const int32_t i32);
+    uint32_t writeI32(const int32_t i32);
 
-  uint32_t writeI64(const int64_t i64);
+    uint32_t writeI64(const int64_t i64);
 
-  uint32_t writeDouble(const double dub);
+    uint32_t writeDouble(const double dub);
 
-  uint32_t writeString(const std::string& str);
+    uint32_t writeString(const std::string& str);
 
-  uint32_t writeBinary(const std::string& str);
+    uint32_t writeBinary(const std::string& str);
 
-  /**
-   * Reading functions
-   */
+    /**
+     * Reading functions
+     */
 
-  uint32_t readMessageBegin(std::string& name,
-                            TMessageType& messageType,
-                            int32_t& seqid);
+    uint32_t readMessageBegin(std::string& name,
+                              TMessageType& messageType,
+                              int32_t& seqid);
 
-  uint32_t readMessageEnd();
+    uint32_t readMessageEnd();
 
-  uint32_t readStructBegin(std::string& name);
+    uint32_t readStructBegin(std::string& name);
 
-  uint32_t readStructEnd();
+    uint32_t readStructEnd();
 
-  uint32_t readFieldBegin(std::string& name,
-                          TType& fieldType,
-                          int16_t& fieldId);
+    uint32_t readFieldBegin(std::string& name,
+                            TType& fieldType,
+                            int16_t& fieldId);
 
-  uint32_t readFieldEnd();
+    uint32_t readFieldEnd();
 
-  uint32_t readMapBegin(TType& keyType,
-                        TType& valType,
-                        uint32_t& size);
+    uint32_t readMapBegin(TType& keyType,
+                          TType& valType,
+                          uint32_t& size);
 
-  uint32_t readMapEnd();
+    uint32_t readMapEnd();
 
-  uint32_t readListBegin(TType& elemType,
-                         uint32_t& size);
+    uint32_t readListBegin(TType& elemType,
+                           uint32_t& size);
 
-  uint32_t readListEnd();
+    uint32_t readListEnd();
 
-  uint32_t readSetBegin(TType& elemType,
-                        uint32_t& size);
+    uint32_t readSetBegin(TType& elemType,
+                          uint32_t& size);
 
-  uint32_t readSetEnd();
+    uint32_t readSetEnd();
 
-  uint32_t readBool(bool& value);
+    uint32_t readBool(bool& value);
 
-  // Provide the default readBool() implementation for std::vector<bool>
-  using TVirtualProtocol<TJSONProtocol>::readBool;
+    // Provide the default readBool() implementation for std::vector<bool>
+    using TVirtualProtocol<TJSONProtocol>::readBool;
 
-  uint32_t readByte(int8_t& byte);
+    uint32_t readByte(int8_t& byte);
 
-  uint32_t readI16(int16_t& i16);
+    uint32_t readI16(int16_t& i16);
 
-  uint32_t readI32(int32_t& i32);
+    uint32_t readI32(int32_t& i32);
 
-  uint32_t readI64(int64_t& i64);
+    uint32_t readI64(int64_t& i64);
 
-  uint32_t readDouble(double& dub);
+    uint32_t readDouble(double& dub);
 
-  uint32_t readString(std::string& str);
+    uint32_t readString(std::string& str);
 
-  uint32_t readBinary(std::string& str);
+    uint32_t readBinary(std::string& str);
 
-  class LookaheadReader {
+    class LookaheadReader
+    {
 
-   public:
+    public:
 
-    LookaheadReader(TTransport &trans) :
-      trans_(&trans),
-      hasData_(false) {
-    }
+        LookaheadReader(TTransport& trans) :
+            trans_(&trans),
+            hasData_(false)
+        {
+        }
 
-    uint8_t read() {
-      if (hasData_) {
-        hasData_ = false;
-      }
-      else {
-        trans_->readAll(&data_, 1);
-      }
-      return data_;
-    }
+        uint8_t read()
+        {
+            if (hasData_)
+            {
+                hasData_ = false;
+            }
+            else
+            {
+                trans_->readAll(&data_, 1);
+            }
 
-    uint8_t peek() {
-      if (!hasData_) {
-        trans_->readAll(&data_, 1);
-      }
-      hasData_ = true;
-      return data_;
-    }
+            return data_;
+        }
 
-   private:
-    TTransport *trans_;
-    bool hasData_;
-    uint8_t data_;
-  };
+        uint8_t peek()
+        {
+            if (!hasData_)
+            {
+                trans_->readAll(&data_, 1);
+            }
 
- private:
-  TTransport* trans_;
+            hasData_ = true;
+            return data_;
+        }
 
-  std::stack<boost::shared_ptr<TJSONContext> > contexts_;
-  boost::shared_ptr<TJSONContext> context_;
-  LookaheadReader reader_;
+    private:
+        TTransport* trans_;
+        bool hasData_;
+        uint8_t data_;
+    };
+
+private:
+    TTransport* trans_;
+
+    std::stack<boost::shared_ptr<TJSONContext> > contexts_;
+    boost::shared_ptr<TJSONContext> context_;
+    LookaheadReader reader_;
 };
 
 /**
  * Constructs input and output protocol objects given transports.
  */
-class TJSONProtocolFactory : public TProtocolFactory {
- public:
-  TJSONProtocolFactory() {}
+class TJSONProtocolFactory : public TProtocolFactory
+{
+public:
+    TJSONProtocolFactory() {}
 
-  virtual ~TJSONProtocolFactory() {}
+    virtual ~TJSONProtocolFactory() {}
 
-  boost::shared_ptr<TProtocol> getProtocol(boost::shared_ptr<TTransport> trans) {
-    return boost::shared_ptr<TProtocol>(new TJSONProtocol(trans));
-  }
+    boost::shared_ptr<TProtocol> getProtocol(boost::shared_ptr<TTransport> trans)
+    {
+        return boost::shared_ptr<TProtocol>(new TJSONProtocol(trans));
+    }
 };
 
-}}} // apache::thrift::protocol
+}
+}
+} // apache::thrift::protocol
 
 
 // TODO(dreiss): Move part of ThriftJSONString into a .cpp file and remove this.
 #include <thrift/transport/TBufferTransports.h>
 
-namespace apache { namespace thrift {
+namespace apache
+{
+namespace thrift
+{
 
 template<typename ThriftStruct>
-  std::string ThriftJSONString(const ThriftStruct& ts) {
-  using namespace apache::thrift::transport;
-  using namespace apache::thrift::protocol;
-  TMemoryBuffer* buffer = new TMemoryBuffer;
-  boost::shared_ptr<TTransport> trans(buffer);
-  TJSONProtocol protocol(trans);
+std::string ThriftJSONString(const ThriftStruct& ts)
+{
+    using namespace apache::thrift::transport;
+    using namespace apache::thrift::protocol;
+    TMemoryBuffer* buffer = new TMemoryBuffer;
+    boost::shared_ptr<TTransport> trans(buffer);
+    TJSONProtocol protocol(trans);
 
-  ts.write(&protocol);
+    ts.write(&protocol);
 
-  uint8_t* buf;
-  uint32_t size;
-  buffer->getBuffer(&buf, &size);
-  return std::string((char*)buf, (unsigned int)size);
+    uint8_t* buf;
+    uint32_t size;
+    buffer->getBuffer(&buf, &size);
+    return std::string((char*)buf, (unsigned int)size);
 }
 
-}} // apache::thrift
+}
+} // apache::thrift
 
 #endif // #define _THRIFT_PROTOCOL_TJSONPROTOCOL_H_ 1

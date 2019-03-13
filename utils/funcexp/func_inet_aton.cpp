@@ -34,13 +34,13 @@ namespace funcexp
 
 //------------------------------------------------------------------------------
 // Return input argument type.
-// See IDB_add in udfsdk.h for explanation of this function.
+// See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_aton::operationType(
-	FunctionParm& fp,
-	execplan::CalpontSystemCatalog::ColType& resultType)
+    FunctionParm& fp,
+    execplan::CalpontSystemCatalog::ColType& resultType)
 {
-	return fp[0]->data()->resultType(); // input type
+    return fp[0]->data()->resultType(); // input type
 }
 
 //------------------------------------------------------------------------------
@@ -48,23 +48,25 @@ execplan::CalpontSystemCatalog::ColType Func_inet_aton::operationType(
 // SELECT ... WHERE inet_aton(ipstring) = 11111111 will call getIntVal()
 //------------------------------------------------------------------------------
 int64_t Func_inet_aton::getIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_aton::getIntVal" << std::endl;
 
-	int64_t iValue = joblist::NULL_INT64;
+    int64_t iValue = joblist::NULL_INT64;
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iVal = convertAton( sValue, isNull );
-		if (!isNull)
-			iValue = iVal;
-	}
-	
-	return iValue;
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if (!isNull)
+            iValue = iVal;
+    }
+
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -72,23 +74,25 @@ int64_t Func_inet_aton::getIntVal(rowgroup::Row& row,
 // SELECT ... WHERE inet_aton(ipstring) = '11111111' will call getDoubleVal()
 //------------------------------------------------------------------------------
 double Func_inet_aton::getDoubleVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& fp,
+                                    bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_aton::getDoubleVal" << std::endl;
 
-	double dValue = doubleNullVal();
+    double dValue = doubleNullVal();
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iValue = convertAton( sValue, isNull );
-		if (!isNull)
-			dValue = iValue;
-	}
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-	return dValue;
+    if (!isNull)
+    {
+        int64_t iValue = convertAton( sValue, isNull );
+
+        if (!isNull)
+            dValue = iValue;
+    }
+
+    return dValue;
 }
 
 //------------------------------------------------------------------------------
@@ -100,19 +104,20 @@ double Func_inet_aton::getDoubleVal(rowgroup::Row& row,
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 std::string Func_inet_aton::getStrVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_aton::getStrVal" << std::endl;
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		convertAton( sValue, isNull ); // ignore return value
-	}
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-	return sValue;
+    if (!isNull)
+    {
+        convertAton( sValue, isNull ); // ignore return value
+    }
+
+    return sValue;
 }
 
 //------------------------------------------------------------------------------
@@ -121,21 +126,23 @@ std::string Func_inet_aton::getStrVal(rowgroup::Row& row,
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 bool Func_inet_aton::getBoolVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	bool bValue = false;
+    bool bValue = false;
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iVal = convertAton( sValue, isNull );
-		if ((!isNull) && (iVal != 0))
-			bValue = true;
-	}
-	
-	return bValue;
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if ((!isNull) && (iVal != 0))
+            bValue = true;
+    }
+
+    return bValue;
 }
 
 //------------------------------------------------------------------------------
@@ -143,23 +150,25 @@ bool Func_inet_aton::getBoolVal(rowgroup::Row& row,
 // SELECT ... WHERE inet_aton(ipstring) = 11111111. will call getDecimalVal()
 //------------------------------------------------------------------------------
 execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_aton::getDecimalVal" << std::endl;
 
-	execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
+    execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iValue = convertAton( sValue, isNull );
-		if (!isNull)
-			return execplan::IDB_Decimal( iValue, 0, 0 );
-	}
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-	return dValue;
+    if (!isNull)
+    {
+        int64_t iValue = convertAton( sValue, isNull );
+
+        if (!isNull)
+            return execplan::IDB_Decimal( iValue, 0, 0 );
+    }
+
+    return dValue;
 }
 
 //------------------------------------------------------------------------------
@@ -168,21 +177,23 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row,
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	int32_t iValue = joblist::DATENULL;
+    int32_t iValue = joblist::DATENULL;
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iVal = convertAton( sValue, isNull );
-		if (!isNull)
-			iValue = iVal;
-	}
-	
-	return iValue;
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if (!isNull)
+            iValue = iVal;
+    }
+
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -192,21 +203,43 @@ int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row,
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row,
-	FunctionParm& fp,
-	bool& isNull,
-	execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t iValue = joblist::DATETIMENULL;
+    int64_t iValue = joblist::DATETIMENULL;
 
-	const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
-	if (!isNull)
-	{
-		int64_t iVal = convertAton( sValue, isNull );
-		if (!isNull)
-			iValue = iVal;
-	}
-	
-	return iValue;
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if (!isNull)
+            iValue = iVal;
+    }
+
+    return iValue;
+}
+
+int64_t Func_inet_aton::getTimeIntVal(rowgroup::Row& row,
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    int64_t iValue = joblist::TIMENULL;
+
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if (!isNull)
+            iValue = iVal;
+    }
+
+    return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -215,78 +248,82 @@ int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row,
 // Source code based on MySQL source (Item_func_inet_aton() in item_func.cc).
 //------------------------------------------------------------------------------
 int64_t Func_inet_aton::convertAton(
-	const std::string& ipString,
-	bool& isNull )
+    const std::string& ipString,
+    bool& isNull )
 {
-	char c = '.';
-	int dot_count = 0;
-	unsigned int  byte_result = 0;
-	unsigned long long result = 0;
+    char c = '.';
+    int dot_count = 0;
+    unsigned int  byte_result = 0;
+    unsigned long long result = 0;
 
-	const char* p   = ipString.c_str();
-	const char* end = p + ipString.length();
+    const char* p   = ipString.c_str();
+    const char* end = p + ipString.length();
 
-	// Loop through bytes in the IP address string
-	while (p < end)
-	{
-		c = *p++;
+    // Loop through bytes in the IP address string
+    while (p < end)
+    {
+        c = *p++;
 
-		int digit = (int) (c - '0');  // Assume ascii
-		if (digit >= 0 && digit <= 9)
-		{
-			// Add the next digit from the string to byte_result
-			if ((byte_result = byte_result * 10 + digit) > 255)
-			{
-				// Wrong address
-				isNull = true;
-				return 0;
-			}
-		}
-		// Detect end of one portion of the IP address.
-		// Shift current result over 8 bits, and add next byte (byte_result)
-		else if (c == '.')
-		{
-			dot_count++;
-			result= (result << 8) + (unsigned long long) byte_result;
-			byte_result = 0;
-		}
-		// Exit loop if/when we encounter end of string for fixed length column,
-		// that is padded with '\0' at the end.
-		else if (c == '\0')
-		{
-			break;
-		}
-		else
-		{
-			// Invalid character
-			isNull = true;
-			return 0;
-		}
-	}
+        int digit = (int) (c - '0');  // Assume ascii
 
-	if (c != '.')  // IP number can't end on '.'
-	{
-		//
-		// Handle short-forms addresses according to standard. Examples:
-		// 127     -> 0.0.0.127
-		// 127.1   -> 127.0.0.1
-		// 127.2.1 -> 127.2.0.1
-		//
-		switch (dot_count)
-		{
-			case 1: result<<= 8; /* Fall through */
-			case 2: result<<= 8; /* Fall through */
-		}
+        if (digit >= 0 && digit <= 9)
+        {
+            // Add the next digit from the string to byte_result
+            if ((byte_result = byte_result * 10 + digit) > 255)
+            {
+                // Wrong address
+                isNull = true;
+                return 0;
+            }
+        }
+        // Detect end of one portion of the IP address.
+        // Shift current result over 8 bits, and add next byte (byte_result)
+        else if (c == '.')
+        {
+            dot_count++;
+            result = (result << 8) + (unsigned long long) byte_result;
+            byte_result = 0;
+        }
+        // Exit loop if/when we encounter end of string for fixed length column,
+        // that is padded with '\0' at the end.
+        else if (c == '\0')
+        {
+            break;
+        }
+        else
+        {
+            // Invalid character
+            isNull = true;
+            return 0;
+        }
+    }
+
+    if (c != '.')  // IP number can't end on '.'
+    {
+        //
+        // Handle short-forms addresses according to standard. Examples:
+        // 127     -> 0.0.0.127
+        // 127.1   -> 127.0.0.1
+        // 127.2.1 -> 127.2.0.1
+        //
+        switch (dot_count)
+        {
+            case 1:
+                result <<= 8; /* Fall through */
+
+            case 2:
+                result <<= 8; /* Fall through */
+        }
 
 //		std::cout << "aton: " <<
 //			(result << 8) + (unsigned long long) byte_result << std::endl;
 
-		return (result << 8) + (unsigned long long) byte_result;
-	}
+        return (result << 8) + (unsigned long long) byte_result;
+    }
 
-	// Invalid IP address ended in '.'
-	isNull = true;
-	return 0;
+    // Invalid IP address ended in '.'
+    isNull = true;
+    return 0;
 }
 
 }

@@ -39,42 +39,46 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_replace::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 std::string Func_replace::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+                                    FunctionParm& fp,
+                                    bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType&)
 {
-	const string& str = fp[0]->data()->getStrVal(row, isNull);
+    const string& str = fp[0]->data()->getStrVal(row, isNull);
 
-	const string& fromstr = fp[1]->data()->getStrVal(row, isNull);
+    const string& fromstr = fp[1]->data()->getStrVal(row, isNull);
 
-	const string& tostr = fp[2]->data()->getStrVal(row, isNull);
+    const string& tostr = fp[2]->data()->getStrVal(row, isNull);
 
-	string newstr;
-	unsigned int i = 0;
-	for(;;) 
-	{
-		size_t pos = str.find(fromstr, i);
-		if ( pos != string::npos ) {
-			//match
-			if ( pos > i )
-				newstr = newstr + str.substr(i,pos-i);
+    string newstr;
+    unsigned int i = 0;
 
-			newstr = newstr + tostr;
-			i = pos + fromstr.size();
-		}
-		else {
-			newstr = newstr + str.substr(i,1000);
-			break;
-		}
-	}
+    for (;;)
+    {
+        size_t pos = str.find(fromstr, i);
 
-	return newstr;
+        if ( pos != string::npos )
+        {
+            //match
+            if ( pos > i )
+                newstr = newstr + str.substr(i, pos - i);
+
+            newstr = newstr + tostr;
+            i = pos + fromstr.size();
+        }
+        else
+        {
+            newstr = newstr + str.substr(i, 1000);
+            break;
+        }
+    }
+
+    return newstr;
 }
 
 

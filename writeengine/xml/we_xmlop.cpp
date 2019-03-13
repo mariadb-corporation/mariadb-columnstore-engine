@@ -49,11 +49,12 @@ XMLOp::~XMLOp()
 //------------------------------------------------------------------------------
 // Close xml doc
 //------------------------------------------------------------------------------
-void XMLOp::closeDoc() 
+void XMLOp::closeDoc()
 {
-    if( m_fDoc != NULL ) {
+    if ( m_fDoc != NULL )
+    {
         xmlFreeDoc( m_fDoc );
-        m_fDoc = NULL;         
+        m_fDoc = NULL;
     }
 }
 
@@ -63,16 +64,27 @@ void XMLOp::closeDoc()
 // dataType - data type
 //------------------------------------------------------------------------------
 void XMLOp::convertNodeValue( void* pVal, const char* buf,
-    XML_DTYPE dataType ) const
+                              XML_DTYPE dataType ) const
 {
-    switch( dataType ) {
-        case TYPE_CHAR      :  strcpy( (char*) pVal, buf ); break;
-        case TYPE_DOUBLE    :  
-        case TYPE_FLOAT     :  *((float*)pVal) = (float) atof( buf ); break;
-        case TYPE_LONGLONG  :  *((long long*)pVal) = (long long) atoll( buf );
-                               break;
-        case TYPE_INT       :  
-        default           :  *((int*)pVal) = (int) atoi( buf ); break;
+    switch ( dataType )
+    {
+        case TYPE_CHAR      :
+            strcpy( (char*) pVal, buf );
+            break;
+
+        case TYPE_DOUBLE    :
+        case TYPE_FLOAT     :
+            *((float*)pVal) = (float) atof( buf );
+            break;
+
+        case TYPE_LONGLONG  :
+            *((long long*)pVal) = (long long) atoll( buf );
+            break;
+
+        case TYPE_INT       :
+        default           :
+            *((int*)pVal) = (int) atoi( buf );
+            break;
     }
 }
 
@@ -85,20 +97,22 @@ void XMLOp::convertNodeValue( void* pVal, const char* buf,
 // returns TRUE if found, FALSE otherwise
 //------------------------------------------------------------------------------
 bool XMLOp::getNodeAttribute( xmlNode* pNode, const char* pTag,
-    void* pVal, XML_DTYPE dataType ) const
+                              void* pVal, XML_DTYPE dataType ) const
 {
     char     buf[XML_NODE_BUF_SIZE];
     xmlChar* pTmp = NULL;
     bool     bFound = false;
 
     pTmp = xmlGetProp( pNode, (xmlChar*) pTag );
-    if( pTmp ) {
+
+    if ( pTmp )
+    {
         bFound = true;
         strcpy( buf, (char*) pTmp );
         xmlFree( pTmp );
 
         convertNodeValue( pVal, buf, dataType );
-    } // end if 
+    } // end if
 
     return bFound;
 }
@@ -112,17 +126,19 @@ bool XMLOp::getNodeAttribute( xmlNode* pNode, const char* pTag,
 // returns TRUE if found, FALSE otherwise
 //------------------------------------------------------------------------------
 bool XMLOp::getNodeAttributeStr( xmlNode* pNode, const char* pTag,
-    std::string& strVal ) const
+                                 std::string& strVal ) const
 {
     xmlChar* pTmp = NULL;
     bool     bFound = false;
 
     pTmp = xmlGetProp( pNode, (xmlChar*) pTag );
-    if( pTmp ) {
+
+    if ( pTmp )
+    {
         bFound = true;
         strVal = (char*)pTmp;
         xmlFree( pTmp );
-    } // end if 
+    } // end if
 
     return bFound;
 }
@@ -135,15 +151,18 @@ bool XMLOp::getNodeAttributeStr( xmlNode* pNode, const char* pTag,
 // returns TRUE if found, FALSE otherwise
 //------------------------------------------------------------------------------
 bool XMLOp::getNodeContent( const xmlNode* pNode, void* pVal,
-    XML_DTYPE dataType )
+                            XML_DTYPE dataType )
 {
     char     buf[XML_NODE_BUF_SIZE];
     xmlChar* pTmp = NULL;
     bool     bFound = false;
 
-    if( pNode->children != NULL ) {
+    if ( pNode->children != NULL )
+    {
         pTmp = xmlNodeGetContent( pNode->children );
-        if( pTmp ) {
+
+        if ( pTmp )
+        {
             bFound = true;
             strcpy( buf, (char*) pTmp );
             xmlFree( pTmp );
@@ -151,7 +170,7 @@ bool XMLOp::getNodeContent( const xmlNode* pNode, void* pVal,
         }
     }
 
-    return bFound;      
+    return bFound;
 }
 
 //------------------------------------------------------------------------------
@@ -165,16 +184,19 @@ bool XMLOp::getNodeContentStr( const xmlNode* pNode, std::string& strVal)
     xmlChar* pTmp = NULL;
     bool     bFound = false;
 
-    if( pNode->children != NULL ) {
+    if ( pNode->children != NULL )
+    {
         pTmp = xmlNodeGetContent( pNode->children );
-        if( pTmp ) {
+
+        if ( pTmp )
+        {
             bFound = true;
             strVal = (char*)pTmp;
             xmlFree( pTmp );
         }
     }
 
-    return bFound;      
+    return bFound;
 }
 
 //------------------------------------------------------------------------------
@@ -182,12 +204,13 @@ bool XMLOp::getNodeContentStr( const xmlNode* pNode, std::string& strVal)
 // xmlFileName - xml file name
 // returns NO_ERROR if success; other if failure
 //------------------------------------------------------------------------------
-int XMLOp::parseDoc( const char* xmlFileName ) 
+int XMLOp::parseDoc( const char* xmlFileName )
 {
     int   rc;
 
     rc = readDoc( xmlFileName );
-    if( rc != NO_ERROR )
+
+    if ( rc != NO_ERROR )
         return rc;
 
     return processNode( m_pRoot ) ? NO_ERROR : ERR_XML_PARSE;
@@ -198,17 +221,17 @@ int XMLOp::parseDoc( const char* xmlFileName )
 // xmlFileName - xml file name
 // returns NO_ERROR if success; other if failure
 //------------------------------------------------------------------------------
-int XMLOp::readDoc( const char* xmlFileName ) 
+int XMLOp::readDoc( const char* xmlFileName )
 {
 //  xmlNodePtr curPtr;
     m_fDoc = xmlParseFile( xmlFileName );
 
-    if( m_fDoc == NULL )
+    if ( m_fDoc == NULL )
         return ERR_XML_FILE;
 
     m_pRoot = xmlDocGetRootElement( m_fDoc );
 
-    if( m_pRoot == NULL )
+    if ( m_pRoot == NULL )
     {
         closeDoc();
         return ERR_XML_ROOT_ELEM;
@@ -227,11 +250,11 @@ bool XMLOp::processNode( xmlNode* pParentNode )
     xmlNode* pCurNode = NULL;
     bool     bContinue = true;
 
-    for( pCurNode = pParentNode->children; pCurNode; pCurNode = pCurNode->next)
-        if( pCurNode->type == XML_ELEMENT_NODE) 
+    for ( pCurNode = pParentNode->children; pCurNode; pCurNode = pCurNode->next)
+        if ( pCurNode->type == XML_ELEMENT_NODE)
             bContinue = processNode( pCurNode );
 
-    return bContinue;      
+    return bContinue;
 }
 
 } //end of namespace

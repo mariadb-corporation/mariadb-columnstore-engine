@@ -44,119 +44,128 @@ int dmlparse(void* yyscanner);
 
 namespace dmlpackage
 {
-    using namespace std;
+using namespace std;
 
-	void scanner_finish(void* yyscanner);
-    void scanner_init(const char *str, void* yyscanner);
-    void grammar_init(dmlpackage::ParseTree* _ptree, bool);
-    valbuf_t get_valbuffer(void);
-  
-    void free_copybuffer();
-	void set_defaultSchema(std::string schema);
+void scanner_finish(void* yyscanner);
+void scanner_init(const char* str, void* yyscanner);
+void grammar_init(dmlpackage::ParseTree* _ptree, bool);
+valbuf_t get_valbuffer(void);
 
-    DMLParser::DMLParser() :
+void free_copybuffer();
+void set_defaultSchema(std::string schema);
+
+DMLParser::DMLParser() :
     fStatus(-1), fDebug(false)
-        {}
+{}
 
-    DMLParser::~DMLParser()
-    {
-        scanner_finish(scanner);
-		dmllex_destroy(scanner);
-    }
+DMLParser::~DMLParser()
+{
+    scanner_finish(scanner);
+    dmllex_destroy(scanner);
+}
 
-    void DMLParser::setDebug(bool debug)
-    {
-        fDebug = true;
-    }
+void DMLParser::setDebug(bool debug)
+{
+    fDebug = true;
+}
 
-    int DMLParser::parse(const char* dmltext)
+int DMLParser::parse(const char* dmltext)
+{
+    dmllex_init_extra(&scanData, &scanner);
+    scanner_init(dmltext, scanner);
+    grammar_init(&fParseTree, fDebug);
+    fStatus = dmlparse(scanner);
+
+    if (fStatus == 0)
     {
-		dmllex_init_extra(&scanData, &scanner);
-        scanner_init(dmltext, scanner);
-        grammar_init(&fParseTree, fDebug);
-        fStatus = dmlparse(scanner);
-        if (fStatus == 0)
+        char* str;
+        valbuf_t valueBuffer = get_valbuffer();
+
+        for (unsigned int i = 0; i < valueBuffer.size(); i++)
         {
-            char* str;
-            valbuf_t valueBuffer = get_valbuffer();
+            str = valueBuffer[i];
 
-            for(unsigned int i=0; i < valueBuffer.size(); i++)
+            if (str)
             {
-                str = valueBuffer[i];
-                if(str)
-                {
-                    if (i > 0)
-                        fParseTree.fSqlText += " ";
-                    fParseTree.fSqlText += str;
-                }
+                if (i > 0)
+                    fParseTree.fSqlText += " ";
+
+                fParseTree.fSqlText += str;
             }
         }
-        free_copybuffer();
+    }
+
+    free_copybuffer();
+    return fStatus;
+}
+
+const ParseTree& DMLParser::getParseTree()
+{
+    if (!good())
+    {
+        throw logic_error("The ParseTree is invalid");
+    }
+
+    return fParseTree;
+
+}
+
+bool DMLParser::good()
+{
+    return fStatus == 0;
+}
+
+void DMLParser::setDefaultSchema(std::string schema)
+{
+    set_defaultSchema(schema);
+}
+
+DMLFileParser::DMLFileParser()
+    : DMLParser()
+{}
+
+int DMLFileParser::parse(const string& fileName)
+{
+    fStatus = -1;
+
+    ifstream ifdml;
+    ifdml.open(fileName.c_str());
+
+    if (!ifdml.is_open())
+    {
+        perror(fileName.c_str());
         return fStatus;
     }
 
-    const ParseTree& DMLParser::getParseTree()
-    {
-        if (!good())
-        {
-            throw logic_error("The ParseTree is invalid");
-        }
-        return fParseTree;
+    char dmlbuf[1024 * 1024];
+    unsigned length;
+    ifdml.seekg(0, ios::end);
+    length = ifdml.tellg();
+    ifdml.seekg(0, ios::beg);
 
+    if (length > sizeof(dmlbuf) - 1)
+    {
+        throw length_error("DMLFileParser has file size hard limit of 16K.");
     }
 
-    bool DMLParser::good()
-    {
-        return fStatus == 0;
-    }
+    unsigned rcount;
+    rcount = ifdml.readsome(dmlbuf, sizeof(dmlbuf) - 1);
 
-	void DMLParser::setDefaultSchema(std::string schema)
-	{
-		set_defaultSchema(schema);
-	}
+    if (rcount < 0)
+        return fStatus;
 
-    DMLFileParser::DMLFileParser()
-        :DMLParser()
-        {}
+    dmlbuf[rcount] = 0;
 
-    int DMLFileParser::parse(const string& fileName)
-    {
-        fStatus = -1;
+    // cout << endl << fileName << "(" << rcount << ")" << endl;
+    //cout << "-----------------------------" << endl;
+    //cout << dmlbuf << endl;
 
-        ifstream ifdml;
-        ifdml.open(fileName.c_str());
-        if (!ifdml.is_open())
-        {
-            perror(fileName.c_str());
-            return fStatus;
-        }
-        char dmlbuf[1024*1024];
-        unsigned length;
-        ifdml.seekg(0, ios::end);
-        length = ifdml.tellg();
-        ifdml.seekg(0, ios::beg);
-        if (length > sizeof(dmlbuf) - 1)
-        {
-            throw length_error("DMLFileParser has file size hard limit of 16K.");
-        }
+    return DMLParser::parse(dmlbuf);
+}
 
-        unsigned rcount;
-        rcount = ifdml.readsome(dmlbuf, sizeof(dmlbuf) - 1);
-        if (rcount < 0)
-            return fStatus;
+void end_sql(void)
+{
 
-        dmlbuf[rcount] = 0;
-
-       // cout << endl << fileName << "(" << rcount << ")" << endl;
-        //cout << "-----------------------------" << endl;
-        //cout << dmlbuf << endl;
-
-        return DMLParser::parse(dmlbuf);
-    }
-
-    void end_sql(void)
-    {
-
-    }                                             /* end_sql */
+}                                             /* end_sql */
 
 }                                                 // dmlpackage

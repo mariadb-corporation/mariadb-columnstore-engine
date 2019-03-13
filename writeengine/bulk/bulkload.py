@@ -52,10 +52,10 @@ def find_paths():
   
   """Find DBRoot and BulkRoot."""
   try:
-    config_file = os.environ['CALPONT_CONFIG_FILE']
+    config_file = os.environ['COLUMNSTORE_CONFIG_FILE']
   except KeyError:
     try:
-        logger.info("Environment variable CALPONT_CONFIG_FILE not set, looking for system Columnstore.xml")
+        logger.info("Environment variable COLUMNSTORE_CONFIG_FILE not set, looking for system Columnstore.xml")
         config_file = '/usr/local/mariadb/columnstore/etc/Columnstore.xml'
         os.lstat(config_file)
     except:
@@ -185,10 +185,6 @@ def main():
   clean up old files, sort the index inserts and generally rock and roll
   """
   start_dir = curdir=os.getcwd() # remember where we started
-  
-  if not os.access('.', os.W_OK):
-    os.chdir('/tmp')
-    logger.warn('Changing to /tmp to have permission to write files')
 
   if not os.environ.has_key('LD_LIBRARY_PATH'):
       logger.info('No environment variable LD_LIBRARY_PATH')

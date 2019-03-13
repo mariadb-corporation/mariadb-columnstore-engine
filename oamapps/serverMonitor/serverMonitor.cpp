@@ -31,7 +31,8 @@ using namespace alarmmanager;
 using namespace logging;
 using namespace servermonitor;
 
-namespace servermonitor {
+namespace servermonitor
+{
 
 
 /******************************************************************************************
@@ -62,49 +63,53 @@ ServerMonitor::~ServerMonitor()
 ******************************************************************************************/
 void ServerMonitor::sendAlarm(string alarmItem, ALARMS alarmID, int action, float sensorValue)
 {
-	ServerMonitor serverMonitor;
-	Oam oam;
+    ServerMonitor serverMonitor;
+    Oam oam;
 
-	//Log this event 
-	LoggingID lid(SERVER_MONITOR_LOG_ID);
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(alarmItem);
-	args.add(", sensor value out-of-range: ");
-	args.add(sensorValue);
+    //Log this event
+    LoggingID lid(SERVER_MONITOR_LOG_ID);
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(alarmItem);
+    args.add(", sensor value out-of-range: ");
+    args.add(sensorValue);
 
-	// get current server name
-	string moduleName;
-	oamModuleInfo_t st;
-	try {
-		st = oam.getModuleInfo();
-		moduleName = boost::get<0>(st);
-	}
-	catch (...) {
-		moduleName = "Unknown Server";
-	}
+    // get current server name
+    string moduleName;
+    oamModuleInfo_t st;
 
-	// check if there is an active alarm above the reporting theshold 
-	// that needs to be cleared
-	serverMonitor.checkAlarm(alarmItem, alarmID);
+    try
+    {
+        st = oam.getModuleInfo();
+        moduleName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        moduleName = "Unknown Server";
+    }
 
-	// check if Alarm is already active, don't resend
-	if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) ) {
+    // check if there is an active alarm above the reporting theshold
+    // that needs to be cleared
+    serverMonitor.checkAlarm(alarmItem, alarmID);
 
-		ALARMManager alarmMgr;
-		// send alarm
-		alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
+    // check if Alarm is already active, don't resend
+    if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) )
+    {
 
-		args.add(", Alarm set: ");
-		args.add(alarmID);
-	}
+        ALARMManager alarmMgr;
+        // send alarm
+        alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 
-	// output log
-	msg.format(args);
-	ml.logWarningMessage(msg);
+        args.add(", Alarm set: ");
+        args.add(alarmID);
+    }
 
-	return;
+    // output log
+    msg.format(args);
+    ml.logWarningMessage(msg);
+
+    return;
 }
 
 /******************************************************************************************
@@ -115,48 +120,62 @@ void ServerMonitor::sendAlarm(string alarmItem, ALARMS alarmID, int action, floa
 ******************************************************************************************/
 void ServerMonitor::checkAlarm(string alarmItem, ALARMS alarmID)
 {
-	Oam oam;
+    Oam oam;
 
-	// get current server name
-	string moduleName;
-	oamModuleInfo_t st;
-	try {
-		st = oam.getModuleInfo();
-		moduleName = boost::get<0>(st);
-	}
-	catch (...) {
-		moduleName = "Unknown Server";
-	}
+    // get current server name
+    string moduleName;
+    oamModuleInfo_t st;
 
-	switch (alarmID) {
-		case ALARM_NONE: 	// clear all alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			if ( oam.checkActiveAlarm(HARDWARE_MED, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_MED);
-			if ( oam.checkActiveAlarm(HARDWARE_LOW, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_LOW);
-			break;
-		case HARDWARE_LOW: 	// clear high and medium alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			if ( oam.checkActiveAlarm(HARDWARE_MED, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_MED);
-			break;
-		case HARDWARE_MED: 	// clear high alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			break;
-		default:			// none to clear
-			break;
-		} // end of switch
-	return;
+    try
+    {
+        st = oam.getModuleInfo();
+        moduleName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        moduleName = "Unknown Server";
+    }
+
+    switch (alarmID)
+    {
+        case ALARM_NONE: 	// clear all alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            if ( oam.checkActiveAlarm(HARDWARE_MED, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_MED);
+
+            if ( oam.checkActiveAlarm(HARDWARE_LOW, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_LOW);
+
+            break;
+
+        case HARDWARE_LOW: 	// clear high and medium alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            if ( oam.checkActiveAlarm(HARDWARE_MED, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_MED);
+
+            break;
+
+        case HARDWARE_MED: 	// clear high alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, moduleName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            break;
+
+        default:			// none to clear
+            break;
+    } // end of switch
+
+    return;
 }
 
 /******************************************************************************************
@@ -167,20 +186,20 @@ void ServerMonitor::checkAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 void ServerMonitor::clearAlarm(string alarmItem, ALARMS alarmID)
 {
-	ALARMManager alarmMgr;
-	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
+    ALARMManager alarmMgr;
+    alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
 
-	//Log this event 
-	LoggingID lid(SERVER_MONITOR_LOG_ID);
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(alarmItem);
-	args.add(" alarm #");
-	args.add(alarmID);
-	args.add("cleared");
-	msg.format(args);
-	ml.logWarningMessage(msg);
+    //Log this event
+    LoggingID lid(SERVER_MONITOR_LOG_ID);
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(alarmItem);
+    args.add(" alarm #");
+    args.add(alarmID);
+    args.add("cleared");
+    msg.format(args);
+    ml.logWarningMessage(msg);
 }
 
 /******************************************************************************************
@@ -193,7 +212,7 @@ void ServerMonitor::clearAlarm(string alarmItem, ALARMS alarmID)
 {
 	Oam oam;
 
-	//Log this event 
+	//Log this event
 	LoggingID lid(SERVER_MONITOR_LOG_ID);
 	MessageLog ml(lid);
 	Message msg;
@@ -232,22 +251,27 @@ void ServerMonitor::clearAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 string ServerMonitor::StripWhitespace(string value)
 {
-	for(;;)
-	{
-		string::size_type pos = value.find (' ',0);
-		if (pos == string::npos)
-			// no more found
-			break;
-		// strip leading
-		if (pos == 0) {
-			value = value.substr (pos+1,10000);
-		}
-		else 
-		{ // strip trailing
-			value = value.substr (0, pos);
-		}
-	}
-	return value;
+    for (;;)
+    {
+        string::size_type pos = value.find (' ', 0);
+
+        if (pos == string::npos)
+            // no more found
+            break;
+
+        // strip leading
+        if (pos == 0)
+        {
+            value = value.substr (pos + 1, 10000);
+        }
+        else
+        {
+            // strip trailing
+            value = value.substr (0, pos);
+        }
+    }
+
+    return value;
 }
 
 
@@ -259,79 +283,85 @@ string ServerMonitor::StripWhitespace(string value)
 ******************************************************************************************/
 bool ServerMonitor::sendResourceAlarm(string alarmItem, ALARMS alarmID, int action, int usage)
 {
-	ServerMonitor serverMonitor;
-	Oam oam;
+    ServerMonitor serverMonitor;
+    Oam oam;
 
-	//Log this event 
-	LoggingID lid(SERVER_MONITOR_LOG_ID);
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(alarmItem);
-	args.add(" usage at percentage of ");
-	args.add(usage);
+    //Log this event
+    LoggingID lid(SERVER_MONITOR_LOG_ID);
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(alarmItem);
+    args.add(" usage at percentage of ");
+    args.add(usage);
 
-	// get current module name
-	string moduleName;
-	oamModuleInfo_t st;
-	try {
-		st = oam.getModuleInfo();
-		moduleName = boost::get<0>(st);
-	}
-	catch (...) {
-		moduleName = "Unknown Server";
-	}
+    // get current module name
+    string moduleName;
+    oamModuleInfo_t st;
 
-	// check if there is an active alarm above the reporting theshold 
-	// that needs to be cleared
+    try
+    {
+        st = oam.getModuleInfo();
+        moduleName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        moduleName = "Unknown Server";
+    }
 
-	if (alarmItem == "CPU")
-		serverMonitor.checkCPUAlarm(alarmItem, alarmID);
-	else if (alarmItem == "Local Disk" || alarmItem == "External")
-			serverMonitor.checkDiskAlarm(alarmItem, alarmID);
-	else if (alarmItem == "Local Memory")
-			serverMonitor.checkMemoryAlarm(alarmItem, alarmID);
-	else if (alarmItem == "Local Swap")
-			serverMonitor.checkSwapAlarm(alarmItem, alarmID);
+    // check if there is an active alarm above the reporting theshold
+    // that needs to be cleared
 
-	// don't issue an alarm on thge dbroots is already issued by this or another server
-	if ( alarmItem.find(startup::StartUp::installDir() + "/data") == 0 ) {
-		// check if Alarm is already active from any module, don't resend
-		if ( !( oam.checkActiveAlarm(alarmID, "*", alarmItem)) ) {
-	
-			ALARMManager alarmMgr;
-			// send alarm
-			alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
-	
-			args.add(", Alarm set: ");
-			args.add(alarmID);
-			msg.format(args);
-			ml.logInfoMessage(msg);
-			return true;
-		}
-		else
-			return false;
-	}
-	else
-	{
-		// check if Alarm is already active from this module, don't resend
-		if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) ) {
-	
-			ALARMManager alarmMgr;
-			// send alarm
-			alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
-	
-			args.add(", Alarm set: ");
-			args.add(alarmID);
-			msg.format(args);
-			ml.logInfoMessage(msg);
-			return true;
-		}
-		else
-			return false;
-	}
+    if (alarmItem == "CPU")
+        serverMonitor.checkCPUAlarm(alarmItem, alarmID);
+    else if (alarmItem == "Local Disk" || alarmItem == "External")
+        serverMonitor.checkDiskAlarm(alarmItem, alarmID);
+    else if (alarmItem == "Local Memory")
+        serverMonitor.checkMemoryAlarm(alarmItem, alarmID);
+    else if (alarmItem == "Local Swap")
+        serverMonitor.checkSwapAlarm(alarmItem, alarmID);
 
-	return true;
+    // don't issue an alarm on thge dbroots is already issued by this or another server
+    if ( alarmItem.find(startup::StartUp::installDir() + "/data") == 0 )
+    {
+        // check if Alarm is already active from any module, don't resend
+        if ( !( oam.checkActiveAlarm(alarmID, "*", alarmItem)) )
+        {
+
+            ALARMManager alarmMgr;
+            // send alarm
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
+
+            args.add(", Alarm set: ");
+            args.add(alarmID);
+            msg.format(args);
+            ml.logInfoMessage(msg);
+            return true;
+        }
+        else
+            return false;
+    }
+    else
+    {
+        // check if Alarm is already active from this module, don't resend
+        if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) )
+        {
+
+            ALARMManager alarmMgr;
+            // send alarm
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
+
+            args.add(", Alarm set: ");
+            args.add(alarmID);
+            msg.format(args);
+            ml.logInfoMessage(msg);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    return true;
 }
 
 

@@ -32,10 +32,10 @@
 # 2) Two warning.log entries will be logged at the end of the script if one or min/max EM entries were corrected.
 #    Example:
 #       Mar 11 14:16:36 srvqaperf8 oamcpp[16364]: 36.231731 |0|0|0| W 08 CAL0000: min-max-monitor: some values were reset for oids  3004 3005
-#       Mar 11 14:16:36 srvqaperf8 oamcpp[16365]: 36.263270 |0|0|0| W 08 CAL0000: min-max-monitor: log files are /tmp/idb_mm_mon.sdiff.*.15190
+#       Mar 11 14:16:36 srvqaperf8 oamcpp[16365]: 36.263270 |0|0|0| W 08 CAL0000: min-max-monitor: log files are idb_mm_mon.sdiff.*.15190
 # 3) The script outputs the results of the selects in #3 above as it's going through the columns and will echo a line when it finds a col that was corrected.
 #    Example:
-#       **** Extent map min/max changed on the scan.  See results in /tmp/idb_mm_mon.sdiff.3039.15190
+#       **** Extent map min/max changed on the scan.  See results in idb_mm_mon.sdiff.3039.15190
 
 
 # Define the cols array.  Here's a sql statement that will list the date and datetime cols in the expected format.
@@ -45,7 +45,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root"
+        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-extra-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root"
 fi
 
 if [ -z "$INSTALLDIR" ]; then
@@ -55,6 +55,9 @@ fi
 if [ -z "$PGMPATH" ]; then
 	PGMPATH=$INSTALLDIR/bin
 fi
+
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
 cols=(
 1339664:tpch1.orders.o_orderdate
@@ -71,18 +74,18 @@ cols=(
 # If called with "all", run the script against all of the column types that use CP.
 #
 if [ $# -eq 1 ] && [ "$1" == "all" ]; then
-	$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7);" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
-	cols=( $( cat /tmp/idb_mm_mon.cols ) )
-	rm -f /tmp/idb_mm_mon.cols
+	$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7);" calpontsys --skip-column-names > ${tmpDir}/idb_mm_mon.cols
+	cols=( $( cat${tmpDir}/idb_mm_mon.cols ) )
+	rm -f ${tmpDir}/idb_mm_mon.cols
 
 #
 # Else if one parm passed, run against the columns in the given schema.
 #
 elif [ $# -eq 1 ]; then
 	db=$1
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
-	cols=( $( cat /tmp/idb_mm_mon.cols ) )
-	rm -f /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db';" calpontsys --skip-column-names > ${tmpDir}/idb_mm_mon.cols
+	cols=( $( cat ${tmpDir}/idb_mm_mon.cols ) )
+	rm -f ${tmpDir}/idb_mm_mon.cols
 
 #
 # Else if two parms passed, run the script against all the columns that use CP for that table.
@@ -90,9 +93,9 @@ elif [ $# -eq 1 ]; then
 elif [ $# -eq 2 ]; then
 	db=$1
 	tbl=$2
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db' and tablename = '$tbl';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
-        cols=( $( cat /tmp/idb_mm_mon.cols ) )
-        rm -f /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db' and tablename = '$tbl';" calpontsys --skip-column-names > ${tmpDir}/idb_mm_mon.cols
+        cols=( $( cat ${tmpDir}/idb_mm_mon.cols ) )
+        rm -f ${tmpDir}/idb_mm_mon.cols
 
 #
 # Else if three parms passed, run the script against the column.
@@ -101,9 +104,9 @@ elif [ $# -eq 3 ]; then
 	db=$1
 	tbl=$2
 	col=$3
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$db' and tablename = '$tbl' and columnname='$col';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
-        cols=( $( cat /tmp/idb_mm_mon.cols ) )
-        rm -f /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$db' and tablename = '$tbl' and columnname='$col';" calpontsys --skip-column-names > ${tmpDir}/idb_mm_mon.cols
+        cols=( $( cat ${tmpDir}/idb_mm_mon.cols ) )
+        rm -f ${tmpDir}/idb_mm_mon.cols
 fi
 
 i=0
@@ -127,29 +130,29 @@ while [ $i -lt ${#cols[@]} ]; do
 	# Look up the oid if the cols array is being used to keep from having to continually update the array if tables are dropped and recreated.
 	#
 	if [ $# -eq 0 ]; then
-		$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$schema' and tablename='$table' and columnname='$column';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
-		results=`wc -l /tmp/idb_mm_mon.cols | awk '{print $1}'`
+		$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$schema' and tablename='$table' and columnname='$column';" calpontsys --skip-column-names > ${tmpDir}/idb_mm_mon.cols
+		results=`wc -l ${tmpDir}/idb_mm_mon.cols | awk '{print $1}'`
 		if [ $results -eq 0 ]; then
 			oid=0
 		else
-			oid=`cat /tmp/idb_mm_mon.cols`
+			oid=`cat ${tmpDir}/idb_mm_mon.cols`
 		fi
 	fi	
 
-        $PGMPATH/editem -o$oid | awk '{print $1, $6, $8, $12}' >/tmp/idb_mm_mon.$oid.1.$$
+        $PGMPATH/editem -o$oid | awk '{print $1, $6, $8, $12}' >${tmpDir}/idb_mm_mon.$oid.1.$$
         $PGMPATH/editem -c$oid
         $MYSQLCMD --execute="select count($column) from $table" $schema -vvv
-        $PGMPATH/editem -o$oid | awk '{print $1, $6, $8, $12}' >/tmp/idb_mm_mon.$oid.2.$$
-        sdiff /tmp/idb_mm_mon.$oid.1.$$ /tmp/idb_mm_mon.$oid.2.$$ --suppress-common-lines | grep -n -v invalid > /tmp/idb_mm_mon.sdiff.$oid.$$
-        count=`wc -l /tmp/idb_mm_mon.sdiff.$oid.$$ | awk '{print $1}'`
+        $PGMPATH/editem -o$oid | awk '{print $1, $6, $8, $12}' >${tmpDir}/idb_mm_mon.$oid.2.$$
+        sdiff ${tmpDir}/idb_mm_mon.$oid.1.$$ ${tmpDir}/idb_mm_mon.$oid.2.$$ --suppress-common-lines | grep -n -v invalid > ${tmpDir}/idb_mm_mon.sdiff.$oid.$$
+        count=`wc -l ${tmpDir}/idb_mm_mon.sdiff.$oid.$$ | awk '{print $1}'`
         if [ $count -ne 0 ]; then
                 badoidlist="$badoidlist $oid"
                 ((j++))
-                echo "**** Extent map min/max changed on the scan.  See results in /tmp/idb_mm_mon.sdiff.$oid.$$"
+                echo "**** Extent map min/max changed on the scan.  See results in ${tmpDir}/idb_mm_mon.sdiff.$oid.$$"
 	else
-		rm -f /tmp/idb_mm_mon.sdiff.$oid.$$ 
+		rm -f ${tmpDir}/idb_mm_mon.sdiff.$oid.$$ 
         fi
-        rm -f /tmp/idb_mm_mon.$oid.*.$$
+        rm -f ${tmpDir}/idb_mm_mon.$oid.*.$$
         ((i++))
 done
 echo ""
@@ -160,9 +163,9 @@ if [ $j -eq 0 ]; then
 	exit 0
 else
         $PGMPATH/cplogger -w 0 "min-max-monitor: some values were reset for oids" "$badoidlist"
-        $PGMPATH/cplogger -w 0 "min-max-monitor: log files are /tmp/idb_mm_mon.sdiff.*.$$"
+        $PGMPATH/cplogger -w 0 "min-max-monitor: log files are ${tmpDir}/idb_mm_mon.sdiff.*.$$"
         echo "min-max-monitor: some values were reset for oids" "$badoidlist"
-        echo "min-max-monitor: log files are /tmp/idb_mm_mon.sdiff.*.$$"
+        echo "min-max-monitor: log files are ${tmpDir}/idb_mm_mon.sdiff.*.$$"
         echo ""
 	exit 1
 fi

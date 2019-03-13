@@ -8,14 +8,14 @@ using namespace oam;
 
 int main(int argc, char** argv)
 {
-	Oam oam;
-	int rc;
+    Oam oam;
+    int rc;
 
-	rc = oam.sendDeviceNotification("PM1", START_PM_MASTER_DOWN, "This is a test");
+    rc = oam.sendDeviceNotification("PM1", START_PM_MASTER_DOWN, "This is a test");
 
-	assert(rc == API_SUCCESS);
+    assert(rc == API_SUCCESS);
 
-	return 0;
+    return 0;
 }
 
 // vim:ts=4 sw=4:

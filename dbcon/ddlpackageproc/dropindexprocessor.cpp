@@ -39,9 +39,9 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(ddlpackage::Dro
     CalpontSystemCatalog::IndexOID indexOID;
 
     BRM::TxnID txnID;
-	txnID.id= fTxnid.id;
-	txnID.valid= fTxnid.valid;
-	
+    txnID.id = fTxnid.id;
+    txnID.valid = fTxnid.valid;
+
     DDLResult result;
     result.result = NO_ERROR;
 
@@ -49,17 +49,18 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(ddlpackage::Dro
 
     VERBOSE_INFO(dropIndexStmt);
 
-	SQLLogger logger(dropIndexStmt.fSql, fDDLLoggingId, dropIndexStmt.fSessionID, txnID.id);
+    SQLLogger logger(dropIndexStmt.fSql, fDDLLoggingId, dropIndexStmt.fSessionID, txnID.id);
 
-	indexName.schema = dropIndexStmt.fIndexName->fSchema;
+    indexName.schema = dropIndexStmt.fIndexName->fSchema;
     indexName.index  = dropIndexStmt.fIndexName->fName;
     //Look up table name from indexname. Oracle will error out if same constraintname or indexname exists.
     CalpontSystemCatalog::TableName tableName = sysCatalogPtr->lookupTableForIndex (dropIndexStmt.fIndexName->fName, dropIndexStmt.fIndexName->fSchema );
     indexName.table = tableName.table;
     indexOID = sysCatalogPtr->lookupIndexNbr(indexName);
-    
+
     VERBOSE_INFO("Removing the SYSINDEX meta data");
     removeSysIndexMetaData(dropIndexStmt.fSessionID, txnID.id, result, *dropIndexStmt.fIndexName);
+
     if (result.result != NO_ERROR)
     {
         DETAIL_INFO("writeSysIndexMetaData failed");
@@ -68,6 +69,7 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(ddlpackage::Dro
 
     VERBOSE_INFO("Removing the SYSINDEXCOL meta data");
     removeSysIndexColMetaData(dropIndexStmt.fSessionID, txnID.id, result, *dropIndexStmt.fIndexName);
+
     if (result.result != NO_ERROR)
     {
         DETAIL_INFO("writeSysIndexMetaData failed");
@@ -76,7 +78,8 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(ddlpackage::Dro
 
 
     VERBOSE_INFO("Removing the index files");
-    err = fWriteEngine.dropIndex(txnID.id, indexOID.objnum,indexOID.listOID);
+    err = fWriteEngine.dropIndex(txnID.id, indexOID.objnum, indexOID.listOID);
+
     if (err)
     {
         DETAIL_INFO("WriteEngine dropIndex failed");
@@ -88,11 +91,13 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(ddlpackage::Dro
 
     // register the changes
     err = fWriteEngine.commit( txnID.id );
+
     if (err)
     {
         DETAIL_INFO("Failed to commit the drop index transaction");
         goto rollback;
     }
+
     fSessionManager.committed(txnID);
     //fObjectIDManager.returnOID(indexOID.objnum);
     //fObjectIDManager.returnOID(indexOID.listOID);

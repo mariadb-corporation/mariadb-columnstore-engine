@@ -41,16 +41,16 @@ namespace WriteEngine
 class DctnryCompress0 : public Dctnry
 {
 public:
-   /**
-   * @brief Constructor
-   */
-   EXPORT DctnryCompress0();
-   EXPORT DctnryCompress0(Log* logger);
+    /**
+    * @brief Constructor
+    */
+    EXPORT DctnryCompress0();
+    EXPORT DctnryCompress0(Log* logger);
 
-   /**
-   * @brief Default Destructor
-   */
-   EXPORT virtual ~DctnryCompress0();
+    /**
+    * @brief Default Destructor
+    */
+    EXPORT virtual ~DctnryCompress0();
 };
 
 
@@ -59,92 +59,112 @@ public:
 class DctnryCompress1 : public Dctnry
 {
 public:
-   /**
-   * @brief Constructor
-   */
-   EXPORT DctnryCompress1(Log* logger=0);
+    /**
+    * @brief Constructor
+    */
+    EXPORT DctnryCompress1(Log* logger = 0);
 
-   /**
-   * @brief Default Destructor
-   */
-   EXPORT virtual ~DctnryCompress1();
+    /**
+    * @brief Default Destructor
+    */
+    EXPORT virtual ~DctnryCompress1();
 
-   /**
-   * @brief virtual method in FileOp
-   */
-   EXPORT int flushFile(int rc, std::map<FID,FID> & columnOids);
+    /**
+    * @brief virtual method in FileOp
+    */
+    EXPORT int flushFile(int rc, std::map<FID, FID>& columnOids);
 
-   /**
-   * @brief virtual method in DBFileOp
-   */
-   EXPORT int readDBFile(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t lbid,
-                         const bool isFbo = false );
+    /**
+    * @brief virtual method in DBFileOp
+    */
+    EXPORT int readDBFile(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t lbid,
+                          const bool isFbo = false );
 
-   /**
-   * @brief virtual method in DBFileOp
-   */
-   EXPORT int writeDBFile(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t lbid,
-                          const int numOfBlock = 1);
+    /**
+    * @brief virtual method in DBFileOp
+    */
+    EXPORT int writeDBFile(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t lbid,
+                           const int numOfBlock = 1);
 
-	/**
-   * @brief virtual method in DBFileOp
-   */
-   EXPORT int writeDBFileNoVBCache(IDBDataFile* pFile,
-                                           const unsigned char * writeBuf, const int fbo,
-                                           const int numOfBlock = 1);
+    /**
+    * @brief virtual method in DBFileOp
+    */
+    EXPORT int writeDBFileNoVBCache(IDBDataFile* pFile,
+                                    const unsigned char* writeBuf, const int fbo,
+                                    const int numOfBlock = 1);
 
 
-   /**
-   * @brief virtual method in Dctnry
-   */
-   IDBDataFile* createDctnryFile(const char *name, int width, const char *mode, int ioBuffSize);
+    /**
+    * @brief virtual method in Dctnry
+    */
+    IDBDataFile* createDctnryFile(const char* name, int width, const char* mode, int ioBuffSize);
 
-   /**
-   * @brief virtual method in Dctnry
-   */
-   IDBDataFile* openDctnryFile(bool useTmpSuffix);
+    /**
+    * @brief virtual method in Dctnry
+    */
+    IDBDataFile* openDctnryFile(bool useTmpSuffix);
 
-	/**
-   * @brief virtual method in Dctnry
-   */
-   void closeDctnryFile(bool doFlush, std::map<FID,FID> & columnOids);
-   
-   /**
-   * @brief virtual method in Dctnry
-   */
-   int numOfBlocksInFile();
-   
-   /**
-   * @brief For bulkload to use
-   */
-   void setMaxActiveChunkNum(unsigned int maxActiveChunkNum) { m_chunkManager->setMaxActiveChunkNum(maxActiveChunkNum); };
-   void setBulkFlag(bool isBulkLoad) {m_chunkManager->setBulkFlag(isBulkLoad);};
-   void setFixFlag(bool isFix) {m_chunkManager->setFixFlag(isFix);};
-   int checkFixLastDictChunk () { return m_chunkManager->checkFixLastDictChunk(m_dctnryOID, m_dbRoot, m_partition, m_segment); };
+    /**
+    * @brief virtual method in Dctnry
+    */
+    void closeDctnryFile(bool doFlush, std::map<FID, FID>& columnOids);
+
+    /**
+    * @brief virtual method in Dctnry
+    */
+    int numOfBlocksInFile();
+
+    /**
+    * @brief For bulkload to use
+    */
+    void setMaxActiveChunkNum(unsigned int maxActiveChunkNum)
+    {
+        m_chunkManager->setMaxActiveChunkNum(maxActiveChunkNum);
+    };
+    void setBulkFlag(bool isBulkLoad)
+    {
+        m_chunkManager->setBulkFlag(isBulkLoad);
+    };
+    void setFixFlag(bool isFix)
+    {
+        m_chunkManager->setFixFlag(isFix);
+    };
+    int checkFixLastDictChunk ()
+    {
+        return m_chunkManager->checkFixLastDictChunk(m_dctnryOID, m_dbRoot, m_partition, m_segment);
+    };
 //   void chunkManager(ChunkManager* cm);
 
-   /**
-   * @brief virtual method in FileOp
-   */
-   void setTransId(const TxnID& transId) {Dctnry::setTransId(transId); if(m_chunkManager) m_chunkManager->setTransId(transId);}
+    /**
+    * @brief virtual method in FileOp
+    */
+    void setTransId(const TxnID& transId)
+    {
+        Dctnry::setTransId(transId);
 
-   /**
-   * @brief Set the IsInsert flag in the ChunkManager. 
-   * This forces flush at end of statement. Used only for bulk insert. 
-   */
-   void setIsInsert(bool isInsert) { m_chunkManager->setIsInsert(isInsert); }
+        if (m_chunkManager) m_chunkManager->setTransId(transId);
+    }
+
+    /**
+    * @brief Set the IsInsert flag in the ChunkManager.
+    * This forces flush at end of statement. Used only for bulk insert.
+    */
+    void setIsInsert(bool isInsert)
+    {
+        m_chunkManager->setIsInsert(isInsert);
+    }
 
 protected:
 
-   /**
-   * @brief virtual method in FileOp
-   */
-   int updateDctnryExtent(IDBDataFile* pFile, int nBlocks);
+    /**
+    * @brief virtual method in FileOp
+    */
+    int updateDctnryExtent(IDBDataFile* pFile, int nBlocks);
 
-   /**
-   * @brief convert lbid to fbo
-   */
-   int lbidToFbo(const uint64_t lbid, int& fbo);
+    /**
+    * @brief convert lbid to fbo
+    */
+    int lbidToFbo(const uint64_t lbid, int& fbo);
 };
 
 

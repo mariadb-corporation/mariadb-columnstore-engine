@@ -37,47 +37,49 @@ using namespace joblist;
 
 class to_lower
 {
-    public:
-        char operator() (char c) const            // notice the return type
-        {
-            return tolower(c);
-        }
+public:
+    char operator() (char c) const            // notice the return type
+    {
+        return tolower(c);
+    }
 };
 
 namespace funcexp
 {
 
-CalpontSystemCatalog::ColType Func_lcase::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType){
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+CalpontSystemCatalog::ColType Func_lcase::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+{
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 std::string Func_lcase::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType&)
 {
 //	string str = fp[0]->data()->getStrVal(row, isNull);
 
 //	transform (str.begin(), str.end(), str.begin(), to_lower());
 
-	const string& tstr = fp[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
-	size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-	wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
-	strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-	wstring wstr(wcbuf, strwclen);
+    if (isNull)
+        return "";
 
-	for (uint32_t i = 0; i < strwclen; i++)
-		wstr[i] = std::towlower(wstr[i]);
+    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
+    wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
+    wstring wstr(wcbuf, strwclen);
 
-	size_t strmblen = utf8::idb_wcstombs(0, wstr.c_str(), 0) + 1;
-	char* outbuf = (char*)alloca(strmblen * sizeof(char));
-	strmblen = utf8::idb_wcstombs(outbuf, wstr.c_str(), strmblen);
-	return string(outbuf, strmblen);
-}							
+    for (uint32_t i = 0; i < strwclen; i++)
+        wstr[i] = std::towlower(wstr[i]);
+
+    size_t strmblen = utf8::idb_wcstombs(0, wstr.c_str(), 0) + 1;
+    char* outbuf = (char*)alloca(strmblen * sizeof(char));
+    strmblen = utf8::idb_wcstombs(outbuf, wstr.c_str(), strmblen);
+    return string(outbuf, strmblen);
+}
 
 
 } // namespace funcexp

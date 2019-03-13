@@ -24,7 +24,10 @@
 #include <thrift/protocol/TProtocol.h>
 #include <boost/shared_ptr.hpp>
 
-namespace apache { namespace thrift {
+namespace apache
+{
+namespace thrift
+{
 
 /**
  * Virtual interface class that can handle events from the processor. To
@@ -33,98 +36,114 @@ namespace apache { namespace thrift {
  * such as additional "arguments" to these methods (stored in the object
  * instance's state).
  */
-class TProcessorEventHandler {
- public:
+class TProcessorEventHandler
+{
+public:
 
-  virtual ~TProcessorEventHandler() {}
+    virtual ~TProcessorEventHandler() {}
 
-  /**
-   * Called before calling other callback methods.
-   * Expected to return some sort of context object.
-   * The return value is passed to all other callbacks
-   * for that function invocation.
-   */
-  virtual void* getContext(const char* fn_name, void* serverContext) {
-    (void) fn_name;
-    (void) serverContext;
-    return NULL;
-  }
+    /**
+     * Called before calling other callback methods.
+     * Expected to return some sort of context object.
+     * The return value is passed to all other callbacks
+     * for that function invocation.
+     */
+    virtual void* getContext(const char* fn_name, void* serverContext)
+    {
+        (void) fn_name;
+        (void) serverContext;
+        return NULL;
+    }
 
-  /**
-   * Expected to free resources associated with a context.
-   */
-  virtual void freeContext(void* ctx, const char* fn_name) {
-    (void) ctx;
-    (void) fn_name;
-  }
+    /**
+     * Expected to free resources associated with a context.
+     */
+    virtual void freeContext(void* ctx, const char* fn_name)
+    {
+        (void) ctx;
+        (void) fn_name;
+    }
 
-  /**
-   * Called before reading arguments.
-   */
-  virtual void preRead(void* ctx, const char* fn_name) {
-    (void) ctx;
-    (void) fn_name;
-  }
+    /**
+     * Called before reading arguments.
+     */
+    virtual void preRead(void* ctx, const char* fn_name)
+    {
+        (void) ctx;
+        (void) fn_name;
+    }
 
-  /**
-   * Called between reading arguments and calling the handler.
-   */
-  virtual void postRead(void* ctx, const char* fn_name, uint32_t bytes) {
-    (void) ctx;
-    (void) fn_name;
-    (void) bytes;
-  }
+    /**
+     * Called between reading arguments and calling the handler.
+     */
+    virtual void postRead(void* ctx, const char* fn_name, uint32_t bytes)
+    {
+        (void) ctx;
+        (void) fn_name;
+        (void) bytes;
+    }
 
-  /**
-   * Called between calling the handler and writing the response.
-   */
-  virtual void preWrite(void* ctx, const char* fn_name) {
-    (void) ctx;
-    (void) fn_name;
-  }
+    /**
+     * Called between calling the handler and writing the response.
+     */
+    virtual void preWrite(void* ctx, const char* fn_name)
+    {
+        (void) ctx;
+        (void) fn_name;
+    }
 
-  /**
-   * Called after writing the response.
-   */
-  virtual void postWrite(void* ctx, const char* fn_name, uint32_t bytes) {
-    (void) ctx;
-    (void) fn_name;
-    (void) bytes;
-  }
+    /**
+     * Called after writing the response.
+     */
+    virtual void postWrite(void* ctx, const char* fn_name, uint32_t bytes)
+    {
+        (void) ctx;
+        (void) fn_name;
+        (void) bytes;
+    }
 
-  /**
-   * Called when an async function call completes successfully.
-   */
-  virtual void asyncComplete(void* ctx, const char* fn_name) {
-    (void) ctx;
-    (void) fn_name;
-  }
+    /**
+     * Called when an async function call completes successfully.
+     */
+    virtual void asyncComplete(void* ctx, const char* fn_name)
+    {
+        (void) ctx;
+        (void) fn_name;
+    }
 
-  /**
-   * Called if the handler throws an undeclared exception.
-   */
-  virtual void handlerError(void* ctx, const char* fn_name) {
-    (void) ctx;
-    (void) fn_name;
-  }
+    /**
+     * Called if the handler throws an undeclared exception.
+     */
+    virtual void handlerError(void* ctx, const char* fn_name)
+    {
+        (void) ctx;
+        (void) fn_name;
+    }
 
- protected:
-  TProcessorEventHandler() {}
+protected:
+    TProcessorEventHandler() {}
 };
 
 /**
  * A helper class used by the generated code to free each context.
  */
-class TProcessorContextFreer {
- public:
-  TProcessorContextFreer(TProcessorEventHandler* handler, void* context, const char* method) :
-    handler_(handler), context_(context), method_(method) {}
-  ~TProcessorContextFreer() { if (handler_ != NULL) handler_->freeContext(context_, method_); }
-  void unregister() { handler_ = NULL; }
- private:
-  apache::thrift::TProcessorEventHandler* handler_;
-  void* context_;
-  const char* method_;
+class TProcessorContextFreer
+{
+public:
+    TProcessorContextFreer(TProcessorEventHandler* handler, void* context, const char* method) :
+        handler_(handler), context_(context), method_(method) {}
+    ~TProcessorContextFreer()
+    {
+        if (handler_ != NULL) handler_->freeContext(context_, method_);
+    }
+    void unregister()
+    {
+        handler_ = NULL;
+    }
+private:
+    apache::thrift::TProcessorEventHandler* handler_;
+    void* context_;
+    const char* method_;
 };
 
 /**
@@ -134,31 +153,35 @@ class TProcessorContextFreer {
  * responses to an input stream or forwards data from one pipe onto another.
  *
  */
-class TProcessor {
- public:
-  virtual ~TProcessor() {}
+class TProcessor
+{
+public:
+    virtual ~TProcessor() {}
 
-  virtual bool process(boost::shared_ptr<protocol::TProtocol> in,
-                       boost::shared_ptr<protocol::TProtocol> out,
-                       void* connectionContext) = 0;
+    virtual bool process(boost::shared_ptr<protocol::TProtocol> in,
+                         boost::shared_ptr<protocol::TProtocol> out,
+                         void* connectionContext) = 0;
 
-  bool process(boost::shared_ptr<apache::thrift::protocol::TProtocol> io,
-               void* connectionContext) {
-    return process(io, io, connectionContext);
-  }
+    bool process(boost::shared_ptr<apache::thrift::protocol::TProtocol> io,
+                 void* connectionContext)
+    {
+        return process(io, io, connectionContext);
+    }
 
-  boost::shared_ptr<TProcessorEventHandler> getEventHandler() {
-    return eventHandler_;
-  }
+    boost::shared_ptr<TProcessorEventHandler> getEventHandler()
+    {
+        return eventHandler_;
+    }
 
-  void setEventHandler(boost::shared_ptr<TProcessorEventHandler> eventHandler) {
-    eventHandler_ = eventHandler;
-  }
+    void setEventHandler(boost::shared_ptr<TProcessorEventHandler> eventHandler)
+    {
+        eventHandler_ = eventHandler;
+    }
 
- protected:
-  TProcessor() {}
+protected:
+    TProcessor() {}
 
-  boost::shared_ptr<TProcessorEventHandler> eventHandler_;
+    boost::shared_ptr<TProcessorEventHandler> eventHandler_;
 };
 
 /**
@@ -174,60 +197,68 @@ class TProcessor {
  * when the object is no longer needed, instead of deleting the pointer.
  */
 template<typename HandlerFactory_>
-class ReleaseHandler {
- public:
-   ReleaseHandler(const boost::shared_ptr<HandlerFactory_>& handlerFactory) :
-       handlerFactory_(handlerFactory) {}
+class ReleaseHandler
+{
+public:
+    ReleaseHandler(const boost::shared_ptr<HandlerFactory_>& handlerFactory) :
+        handlerFactory_(handlerFactory) {}
 
-   void operator()(typename HandlerFactory_::Handler* handler) {
-     if (handler) {
-       handlerFactory_->releaseHandler(handler);
-     }
-   }
+    void operator()(typename HandlerFactory_::Handler* handler)
+    {
+        if (handler)
+        {
+            handlerFactory_->releaseHandler(handler);
+        }
+    }
 
- private:
-   boost::shared_ptr<HandlerFactory_> handlerFactory_;
+private:
+    boost::shared_ptr<HandlerFactory_> handlerFactory_;
 };
 
-struct TConnectionInfo {
-  // The input and output protocols
-  boost::shared_ptr<protocol::TProtocol> input;
-  boost::shared_ptr<protocol::TProtocol> output;
-  // The underlying transport used for the connection
-  // This is the transport that was returned by TServerTransport::accept(),
-  // and it may be different than the transport pointed to by the input and
-  // output protocols.
-  boost::shared_ptr<transport::TTransport> transport;
+struct TConnectionInfo
+{
+    // The input and output protocols
+    boost::shared_ptr<protocol::TProtocol> input;
+    boost::shared_ptr<protocol::TProtocol> output;
+    // The underlying transport used for the connection
+    // This is the transport that was returned by TServerTransport::accept(),
+    // and it may be different than the transport pointed to by the input and
+    // output protocols.
+    boost::shared_ptr<transport::TTransport> transport;
 };
 
-class TProcessorFactory {
- public:
-  virtual ~TProcessorFactory() {}
+class TProcessorFactory
+{
+public:
+    virtual ~TProcessorFactory() {}
 
-  /**
-   * Get the TProcessor to use for a particular connection.
-   *
-   * This method is always invoked in the same thread that the connection was
-   * accepted on.  This generally means that this call does not need to be
-   * thread safe, as it will always be invoked from a single thread.
-   */
-  virtual boost::shared_ptr<TProcessor> getProcessor(
-      const TConnectionInfo& connInfo) = 0;
+    /**
+     * Get the TProcessor to use for a particular connection.
+     *
+     * This method is always invoked in the same thread that the connection was
+     * accepted on.  This generally means that this call does not need to be
+     * thread safe, as it will always be invoked from a single thread.
+     */
+    virtual boost::shared_ptr<TProcessor> getProcessor(
+        const TConnectionInfo& connInfo) = 0;
 };
 
-class TSingletonProcessorFactory : public TProcessorFactory {
- public:
-  TSingletonProcessorFactory(boost::shared_ptr<TProcessor> processor) :
-      processor_(processor) {}
+class TSingletonProcessorFactory : public TProcessorFactory
+{
+public:
+    TSingletonProcessorFactory(boost::shared_ptr<TProcessor> processor) :
+        processor_(processor) {}
 
-  boost::shared_ptr<TProcessor> getProcessor(const TConnectionInfo&) {
-    return processor_;
-  }
+    boost::shared_ptr<TProcessor> getProcessor(const TConnectionInfo&)
+    {
+        return processor_;
+    }
 
- private:
-  boost::shared_ptr<TProcessor> processor_;
+private:
+    boost::shared_ptr<TProcessor> processor_;
 };
 
-}} // apache::thrift
+}
+} // apache::thrift
 
 #endif // #ifndef _THRIFT_TPROCESSOR_H_

@@ -39,120 +39,148 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_monthname::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 string Func_monthname::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 CalpontSystemCatalog::ColType& op_ct)
 {
-	uint32_t month= getIntVal(row, parm, isNull, op_ct);
-	return helpers::monthFullNames[month];
+    int32_t month = getIntVal(row, parm, isNull, op_ct);
+
+    if (month == -1)
+        return "";
+
+    return helpers::monthFullNames[month];
 }
 
 int32_t Func_monthname::getDateIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      CalpontSystemCatalog::ColType& ct)
 {
-	uint32_t val = getIntVal(row, parm, isNull, ct);
-	return val;
-}		
+    uint32_t val = getIntVal(row, parm, isNull, ct);
+    return val;
+}
 
 int64_t Func_monthname::getDatetimeIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
 {
-	uint32_t val = getIntVal(row, parm, isNull, ct);
-	return val;
+    uint32_t val = getIntVal(row, parm, isNull, ct);
+    return val;
 }
 
 int64_t Func_monthname::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& parm,
+                                  bool& isNull,
+                                  CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t val = 0;
+    int64_t val = 0;
+    DateTime aDateTime;
+    Time     aTime;
 
-	switch (parm[0]->data()->resultType().colDataType)
-	{
-		case CalpontSystemCatalog::DATE:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			return (unsigned)((val >> 12) & 0xf);
-		case CalpontSystemCatalog::DATETIME:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			return (unsigned)((val >> 44) & 0xf);
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::VARCHAR:
-			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				return (unsigned)((val >> 44) & 0xf);
-			}
-			break;
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::INT:
-			val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				return (unsigned)((val >> 44) & 0xf);
-			}
-			break;	
-		case CalpontSystemCatalog::DECIMAL:
-			if (parm[0]->data()->resultType().scale == 0)
-			{
-				val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-				if (val == -1)
-				{
-					isNull = true;
-					return -1;
-				}
-				else
-				{
-					return (unsigned)((val >> 44) & 0xf);
-				}
-			}
-			break;
-		default:
-			isNull = true;
-			return -1;
-	}
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case CalpontSystemCatalog::DATE:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            return (unsigned)((val >> 12) & 0xf);
 
-	return -1;
+        case CalpontSystemCatalog::DATETIME:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            return (unsigned)((val >> 44) & 0xf);
+
+        // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
+            return (unsigned)((val >> 44) & 0xf);
+            break;
+
+
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        case CalpontSystemCatalog::VARCHAR:
+            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                return (unsigned)((val >> 44) & 0xf);
+            }
+
+            break;
+
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::INT:
+            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                return (unsigned)((val >> 44) & 0xf);
+            }
+
+            break;
+
+        case CalpontSystemCatalog::DECIMAL:
+            if (parm[0]->data()->resultType().scale == 0)
+            {
+                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+                if (val == -1)
+                {
+                    isNull = true;
+                    return -1;
+                }
+                else
+                {
+                    return (unsigned)((val >> 44) & 0xf);
+                }
+            }
+
+            break;
+
+        default:
+            isNull = true;
+            return -1;
+    }
+
+    return -1;
 }
 
 double Func_monthname::getDoubleVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     return 0;
 }
 
 execplan::IDB_Decimal Func_monthname::getDecimalVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct)
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	IDB_Decimal d;
-	d.value = getIntVal(row, fp, isNull, op_ct);
-	d.scale = 0;
-	return d;
+    IDB_Decimal d;
+    d.value = getIntVal(row, fp, isNull, op_ct);
+    d.scale = 0;
+    return d;
 }
 
 

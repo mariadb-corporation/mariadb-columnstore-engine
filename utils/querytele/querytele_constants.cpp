@@ -6,11 +6,13 @@
  */
 #include "querytele_constants.h"
 
-namespace querytele {
+namespace querytele
+{
 
 const queryteleConstants g_querytele_constants;
 
-queryteleConstants::queryteleConstants() {
+queryteleConstants::queryteleConstants()
+{
 }
 
 } // namespace

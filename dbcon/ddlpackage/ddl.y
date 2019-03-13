@@ -29,20 +29,13 @@
    Understanding the New Sql book
    The postgress and mysql sources.  find x -name \*.y -o -name \*.yy.
 
-   We don't support delimited identifiers.
+   We support quoted identifiers.
 
    All literals are stored as unconverted strings.
 
    You can't say "NOT DEFERRABLE".  See the comment below.
 
-   This is not a reentrant parser.  It uses the original global
-   variable style method of communication between the parser and
-   scanner.  If we ever needed more than one parser thread per
-   processes, we would use the pure/reentrant options of bison and
-   flex.  In that model, things that are traditionally global live
-   inside a struct that is passed around.  We would need to upgrade to
-   a more recent version of flex.  At the time of this writing, our
-   development systems have: flex version 2.5.4
+   This is a reentrant parser.
 
    MCOL-66 Modify to be a reentrant parser
    */
@@ -70,7 +63,6 @@ char* copy_string(const char *str);
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
-%debug
 
  /* Bison uses this to generate a C union definition.  This is used to
 	store the application created values associated with syntactic
@@ -110,16 +102,19 @@ char* copy_string(const char *str);
 
 %}
 
-%token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT IDB_BLOB CASCADE IDB_CHAR CHARACTER CHECK CLOB COLUMN
+%token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT BLOB IDB_BLOB CASCADE IDB_CHAR
+CHARACTER CHECK CLOB COLUMN
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
 DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
-FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY MATCH MAX_ROWS
+FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
+MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
-REFERENCES RENAME RESTRICT SET SMALLINT TABLE TIME 
+REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
+BOOL BOOLEAN
 
-%token <str> IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE
+%token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE TIME
 
 /* Notes:
  * 1. "ata" stands for alter_table_action
@@ -136,6 +131,8 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <ata>                  ata_rename_table
 %type <columnType>           character_string_type
 %type <columnType>           binary_string_type
+%type <columnType>           blob_type
+%type <columnType>           text_type
 %type <str>                  check_constraint_def
 %type <columnConstraintDef>  column_constraint
 %type <columnConstraintDef>  column_constraint_def
@@ -172,7 +169,6 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <columnType>           opt_precision_scale
 %type <refAction>            opt_referential_triggered_action
 %type <ival>                 opt_time_precision
-%type <flag>                 opt_with_time_zone
 %type <qualifiedName>        qualified_name
 %type <refActionCode>        referential_action
 %type <refAction>            referential_triggered_action
@@ -201,6 +197,8 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <str>                  opt_if_exists
 %type <str>                  opt_if_not_exists
 %type <sqlStmt>              trunc_table_statement
+%type <sqlStmt>              rename_table_statement
+%type <str>                  ident
 
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
@@ -239,6 +237,7 @@ stmt:
 	| drop_table_statement
 	| create_index_statement
 	| trunc_table_statement
+	| rename_table_statement
 	| { $$ = NULL; }
 	;
 
@@ -300,6 +299,16 @@ trunc_table_statement:
 	TRUNCATE TABLE qualified_name {$$ = new TruncTableStatement($3);}
 	| TRUNCATE qualified_name { {$$ = new TruncTableStatement($2);} }
 	;
+
+rename_table_statement:
+    RENAME TABLE qualified_name TO qualified_name
+    {
+        // MCOL-876. The change reuses existing infrastructure. 
+        AtaRenameTable* renameAction = new AtaRenameTable($5);
+        AlterTableActionList* actionList = new AlterTableActionList();
+        actionList->push_back(renameAction);
+        $$ = new AlterTableStatement($3, actionList);
+    }
 
 table_element_list:
 	table_element
@@ -460,7 +469,7 @@ opt_equal:
 	;
 
 table_option:
- 	ENGINE opt_equal IDENT {$$ = new pair<string,string>("engine", $3);}
+ 	ENGINE opt_equal ident {$$ = new pair<string,string>("engine", $3);}
 	|
  	MAX_ROWS opt_equal ICONST {$$ = new pair<string,string>("max_rows", $3);}
  	|
@@ -475,9 +484,9 @@ table_option:
        $$ = new pair<string,string>("auto_increment", $3);
     }
  	|
- 	DEFAULT CHARSET opt_equal IDENT {$$ = new pair<string,string>("default charset", $4);}
+ 	DEFAULT CHARSET opt_equal ident {$$ = new pair<string,string>("default charset", $4);}
  	|
- 	DEFAULT IDB_CHAR SET opt_equal IDENT {$$ = new pair<string,string>("default charset", $5);}
+ 	DEFAULT IDB_CHAR SET opt_equal ident {$$ = new pair<string,string>("default charset", $5);}
 	;
 
 alter_table_statement:
@@ -607,14 +616,22 @@ table_name:
 	;
 
 qualified_name:
-	IDENT '.' IDENT {$$ = new QualifiedName($1, $3);}
-	| IDENT {
+	ident {
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
 				    $$ = new QualifiedName($1);   
 			}
+    | ident '.' ident
+        {
+            $$ = new QualifiedName($1, $3);
+        }
 	;
+
+ident:
+    DQ_IDENT
+    | IDENT
+    ;
 
 ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
@@ -627,12 +644,13 @@ ata_add_column:
 	;
 
 column_name:
-	DATE
-	|IDENT
+    TIME
+	|DATE
+	|ident
 	;
 
 constraint_name:
-	IDENT
+	ident
 	;
 
 column_option:
@@ -692,11 +710,20 @@ default_clause:
 	{
 		$$ = new ColumnDefaultValue($2);
 	}
+	| DEFAULT DQ_IDENT /* MCOL-1406 */
+	{
+		$$ = new ColumnDefaultValue($2);
+	}
 	| DEFAULT NULL_TOK {$$ = new ColumnDefaultValue(NULL);}
 	| DEFAULT USER {$$ = new ColumnDefaultValue("$USER");}
-	| DEFAULT CURRENT_USER {$$ = new ColumnDefaultValue("$CURRENT_USER");}
+	| DEFAULT CURRENT_USER optional_braces {$$ = new ColumnDefaultValue("$CURRENT_USER");}
 	| DEFAULT SESSION_USER {$$ = new ColumnDefaultValue("$SESSION_USER");}
 	| DEFAULT SYSTEM_USER {$$ = new ColumnDefaultValue("$SYSTEM_USER");}
+	;
+
+optional_braces:
+	/* empty */ {}
+	| '(' ')' {}
 	;
 
 data_type:
@@ -704,6 +731,8 @@ data_type:
 	| binary_string_type
 	| numeric_type
 	| datetime_type
+	| blob_type
+	| text_type
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
@@ -865,6 +894,62 @@ binary_string_type:
 	}
 	;
 
+blob_type:
+	BLOB '(' ICONST ')'
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = atol($3);
+	}
+	| BLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 65535;
+	}
+	| TINYBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 255;
+	}
+	| MEDIUMBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 16777215;
+	}
+	| LONGBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 2100000000;
+	}
+	;
+
+text_type:
+	TEXT '(' ICONST ')'
+	{
+		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = atol($3);
+	}
+	| TEXT
+	{
+		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = 65535;
+	}
+	| TINYTEXT
+	{
+		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = 255;
+	}
+	| MEDIUMTEXT
+	{
+		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = 16777215;
+	}
+	| LONGTEXT
+	{
+		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = 2100000000;
+	}
+	;
+
 numeric_type:
 	exact_numeric_type
 	| approximate_numeric_type
@@ -957,6 +1042,18 @@ exact_numeric_type:
 		$$ = new ColumnType(DDL_UNSIGNED_BIGINT);
 		$$->fLength = DDLDatatypeLength[DDL_BIGINT];
 	}
+        | BOOLEAN
+        {
+                $$ = new ColumnType(DDL_TINYINT);
+                $$->fLength = DDLDatatypeLength[DDL_TINYINT];
+                $$->fPrecision = 1;
+        }
+        | BOOL
+        {
+                $$ = new ColumnType(DDL_TINYINT);
+                $$->fLength = DDLDatatypeLength[DDL_TINYINT];
+                $$->fPrecision = 1;
+        }
 	;
 /* Bug 1570, change default scale to 0 from -1 */
 opt_precision_scale:
@@ -1027,10 +1124,11 @@ literal:
 	;
 
 datetime_type:
-	DATETIME
+	DATETIME opt_time_precision
 	{
 		$$ = new ColumnType(DDL_DATETIME);
 		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
+        $$->fPrecision = $2;
 	}
 	|
 	DATE
@@ -1039,22 +1137,16 @@ datetime_type:
 		$$->fLength = DDLDatatypeLength[DDL_DATE];
 	}
 	|
-	TIME opt_time_precision opt_with_time_zone
+	TIME opt_time_precision
 	{
-		$$ = new ColumnType(DDL_DATETIME);
-		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
+		$$ = new ColumnType(DDL_TIME);
+		$$->fLength = DDLDatatypeLength[DDL_TIME];
 		$$->fPrecision = $2;
-		$$->fWithTimezone = $3;
 	}
 
 opt_time_precision:
 	'(' ICONST ')' {$$ = atoi($2);}
 	| {$$ = -1;}
-	;
-
-opt_with_time_zone:
-	WITH TIME ZONE {$$ = true;}
-	| {$$ = false;}
 	;
 
 drop_column_def:

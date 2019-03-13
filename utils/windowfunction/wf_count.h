@@ -33,19 +33,22 @@ template<typename T>
 class WF_count : public WindowFunctionType
 {
 public:
-	WF_count(int id, const std::string& name) : WindowFunctionType(id, name) {resetData();}
+    WF_count(int id, const std::string& name) : WindowFunctionType(id, name)
+    {
+        resetData();
+    }
 
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
 
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
 
-	uint64_t    fCount;
-	std::set<T> fSet;
+    uint64_t    fCount;
+    std::set<T> fSet;
 };
 
 

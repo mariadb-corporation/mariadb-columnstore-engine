@@ -1,7 +1,6 @@
 
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
-
 ########### next target ###############
 
 set(querystats_LIB_SRCS querystats.cpp)

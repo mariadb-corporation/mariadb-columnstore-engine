@@ -86,8 +86,8 @@ typedef std::vector<SchemaObject*> TableElementList;
 typedef std::vector<TableConstraintDef*> TableConstraintDefList;
 
 std::ostream& operator<<(std::ostream& os, const ColumnType& columnType);
-std::ostream& operator<<(std::ostream &os, const QualifiedName& constraint);
-std::ostream& operator<<(std::ostream &os, const TableConstraintDef& constraint);
+std::ostream& operator<<(std::ostream& os, const QualifiedName& constraint);
+std::ostream& operator<<(std::ostream& os, const TableConstraintDef& constraint);
 std::ostream& operator<<(std::ostream& os, const ColumnConstraintDef& con);
 std::ostream& operator<<(std::ostream& os, const ColumnDef& column);
 EXPORT std::ostream& operator<<(std::ostream& os, const SqlStatementList& ct);
@@ -103,7 +103,8 @@ std::ostream& operator<<(std::ostream& os, const TableDef& tableDef);
 /** @brief Verb List
 *   Make sure to keep the enum and string list in-sync
 */
-enum DDL_VERBS {
+enum DDL_VERBS
+{
     DDL_CREATE,
     DDL_ALTER,
     DDL_DROP,
@@ -112,7 +113,8 @@ enum DDL_VERBS {
 /** @brief Subject List
 *   Make sure to keep the enum and string list in-sync
 */
-enum DDL_SUBJECTS {
+enum DDL_SUBJECTS
+{
     DDL_TABLE,
     DDL_INDEX,
     DDL_INVALID_SUBJECT
@@ -128,16 +130,17 @@ enum DDL_CONSTRAINT_ATTRIBUTES
 };
 
 const std::string ConstraintAttrStrings[] =
-    {
-        "deferrable",
-        "non-deferrable",
-        "initially-immediate",
-        "initially-deferred",
-        "invalid"
-    };
+{
+    "deferrable",
+    "non-deferrable",
+    "initially-immediate",
+    "initially-deferred",
+    "invalid"
+};
 
 
-enum DDL_REFERENTIAL_ACTION {
+enum DDL_REFERENTIAL_ACTION
+{
     DDL_CASCADE,
     DDL_SET_NULL,
     DDL_SET_DEFAULT,
@@ -147,32 +150,34 @@ enum DDL_REFERENTIAL_ACTION {
 };
 
 const std::string ReferentialActionStrings[] =
-    {
-        "cascade",
-        "set_null",
-        "set_default",
-        "no_action",
-        "invalid_action"
-    };
+{
+    "cascade",
+    "set_null",
+    "set_default",
+    "no_action",
+    "invalid_action"
+};
 
-enum DDL_MATCH_TYPE {
+enum DDL_MATCH_TYPE
+{
     DDL_FULL,
     DDL_PARTIAL,
     DDL_INVALID_MATCH_TYPE
 };
 
 const std::string MatchTypeStrings[] =
-    {
-        "full",
-        "partial",
-        "invalid_match_type"
-    };
+{
+    "full",
+    "partial",
+    "invalid_match_type"
+};
 
 
 /** @brief Constraint List
  *   Make sure to keep the enum and string list in-sync
  */
-enum DDL_CONSTRAINTS {
+enum DDL_CONSTRAINTS
+{
     DDL_PRIMARY_KEY,
     DDL_FOREIGN_KEY,
     DDL_CHECK,
@@ -185,21 +190,22 @@ enum DDL_CONSTRAINTS {
 /** @brief
  */
 const std::string ConstraintString[] =
-    {
-        "primary",
-        "foreign",
-        "check",
-        "unique",
-        "references",
-        "not_null",
-        "auto_increment"
-        ""
-    };
+{
+    "primary",
+    "foreign",
+    "check",
+    "unique",
+    "references",
+    "not_null",
+    "auto_increment"
+    ""
+};
 
 /** @brief Datatype List
  *   Make sure to keep the enum, string, and length list in-sync
  */
-enum DDL_DATATYPES {
+enum DDL_DATATYPES
+{
     DDL_BIT,
     DDL_TINYINT,
     DDL_CHAR,
@@ -229,100 +235,107 @@ enum DDL_DATATYPES {
     DDL_UNSIGNED_FLOAT,
     DDL_UNSIGNED_DOUBLE,
     DDL_UNSIGNED_NUMERIC,
+    DDL_TEXT,
+    DDL_TIME,
     DDL_INVALID_DATATYPE
 };
 
 /** @brief Datatype string list
  */
 const std::string DDLDatatypeString[] =
-    {
-        "bit",
-        "tinyint",
-        "char",
-        "smallint",
-        "decimal",
-        "medint",
-        "integer",
-        "float",
-        "date",
-        "bigint",
-        "double",
-        "datetime",
-        "varchar",
-        "varbinary",
-        "clob",
-        "blob",
-        "real",
-        "numeric",
-        "number",
-        "integer",
-        "unsigned-tinyint",
-        "unsigned-smallint",
-        "unsigned-medint",
-        "unsigned-int",
-        "unsigned-bigint",
-        "unsigned-decimal",
-        "unsigned-float",
-        "unsigned-double",
-        "unsigned-numeric",
-        ""
-    };
+{
+    "bit",
+    "tinyint",
+    "char",
+    "smallint",
+    "decimal",
+    "medint",
+    "integer",
+    "float",
+    "date",
+    "bigint",
+    "double",
+    "datetime",
+    "varchar",
+    "varbinary",
+    "clob",
+    "blob",
+    "real",
+    "numeric",
+    "number",
+    "integer",
+    "unsigned-tinyint",
+    "unsigned-smallint",
+    "unsigned-medint",
+    "unsigned-int",
+    "unsigned-bigint",
+    "unsigned-decimal",
+    "unsigned-float",
+    "unsigned-double",
+    "unsigned-numeric",
+    "text",
+    "time"
+    ""
+};
 
 /** @brief Alter table action string list
  */
 const std::string AlterActionString[] =
-    {
-        "AtaAddColumn",
-        "AtaAddColumns",
-        "AtaDropColumn",
-        "AtaDropColumns",
-        "AtaAddTableConstraint",
-        "AtaSetColumnDefault",
-        "AtaDropColumnDefault",
-        "AtaDropTableConstraint",
-        "AtaRenameTable",
-        "AtaModifyColumnType",
-        "AtaRenameColumn",
-        "AtaTableComment"
-    };
+{
+    "AtaAddColumn",
+    "AtaAddColumns",
+    "AtaDropColumn",
+    "AtaDropColumns",
+    "AtaAddTableConstraint",
+    "AtaSetColumnDefault",
+    "AtaDropColumnDefault",
+    "AtaDropTableConstraint",
+    "AtaRenameTable",
+    "AtaModifyColumnType",
+    "AtaRenameColumn",
+    "AtaTableComment"
+};
 /** @brief Datatype Length list
  *
  */
 const int  DDLDatatypeLength[] =
-    {
-        1,		// BIT                
-        1,		// TINYINT       
-        1,		// CHAR          
-        2,		// SMALLINT      
-        2,		// DECIMAL       
-        4,		// MEDINT        
-        4,		// INT           
-        4,		// FLOAT         
-        4,		// DATE          
-        8,		// BIGINT        
-        8,		// DOUBLE        
-        8,		// DATETIME      
-        8, 		// VARCHAR       
-        8, 		// VARBINAR      
-        8,		// CLOB          
-        8,		// BLOB          
-        4,		// REAL          
-        2,		// NUMERIC       
-        4,		// NUMBER        
-        4,		// INTEGER       
-        1,      // UNSIGNED_TINYINT, 
-        2,      // UNSIGNED_SMALLINT,
-        4,      // UNSIGNED_MEDINT,  
-        4,      // UNSIGNED_INT,     
-        8,      // UNSIGNED_BIGINT,  
-        2,      // UNSIGNED_DECIMAL, 
-        4,      // UNSIGNED_FLOAT,   
-        8,      // UNSIGNED_DOUBLE,  
-        2,      // UNSIGNED_NUMERIC, 
-        -1		// INVALID LENGTH
-    };
+{
+    1,		// BIT
+    1,		// TINYINT
+    1,		// CHAR
+    2,		// SMALLINT
+    2,		// DECIMAL
+    4,		// MEDINT
+    4,		// INT
+    4,		// FLOAT
+    4,		// DATE
+    8,		// BIGINT
+    8,		// DOUBLE
+    8,		// DATETIME
+    8, 		// VARCHAR
+    8, 		// VARBINAR
+    8,		// CLOB
+    8,		// BLOB
+    4,		// REAL
+    2,		// NUMERIC
+    4,		// NUMBER
+    4,		// INTEGER
+    1,      // UNSIGNED_TINYINT,
+    2,      // UNSIGNED_SMALLINT,
+    4,      // UNSIGNED_MEDINT,
+    4,      // UNSIGNED_INT,
+    8,      // UNSIGNED_BIGINT,
+    2,      // UNSIGNED_DECIMAL,
+    4,      // UNSIGNED_FLOAT,
+    8,      // UNSIGNED_DOUBLE,
+    2,      // UNSIGNED_NUMERIC,
+    8,      // TEXT
+    8,      // TIME
+    -1		// INVALID LENGTH
+};
 
-enum DDL_SERIAL_TYPE {
+enum DDL_SERIAL_TYPE
+{
     DDL_TABLE_DEF,
     DDL_COLUMN_DEF,
     DDL_COLUMN_CONSTRAINT_DEF,
@@ -357,9 +370,9 @@ enum DDL_SERIAL_TYPE {
     DDL_NULL,
     DDL_INVALID_SERIAL_TYPE,
     DDL_TRUNC_TABLE_STATEMENT,
-	DDL_MARK_PARTITION_STATEMENT,
-	DDL_RESTORE_PARTITION_STATEMENT,
-	DDL_DROP_PARTITION_STATEMENT
+    DDL_MARK_PARTITION_STATEMENT,
+    DDL_RESTORE_PARTITION_STATEMENT,
+    DDL_DROP_PARTITION_STATEMENT
 };
 
 
@@ -380,11 +393,11 @@ struct SchemaObject
     {}
 
     SchemaObject(std::string name):
-            fName(name)
+        fName(name)
     {}
 
     SchemaObject() :
-            fName("unnamed")
+        fName("unnamed")
     {}
 
     std::string fName;
@@ -405,14 +418,14 @@ struct SchemaObject
 struct SqlStatement
 {
     /** @brief Deserialize from ByteStream */
-    virtual int unserialize(messageqcpp::ByteStream& bs)=0;
+    virtual int unserialize(messageqcpp::ByteStream& bs) = 0;
 
     /** @brief Serialize to ByteStream */
-    virtual int serialize(messageqcpp::ByteStream& bs)=0;
+    virtual int serialize(messageqcpp::ByteStream& bs) = 0;
 
 
     /** @brief Dump to stdout. */
-    virtual std::ostream& put(std::ostream &os) const = 0;
+    virtual std::ostream& put(std::ostream& os) const = 0;
 
     EXPORT SqlStatement();
 
@@ -423,12 +436,12 @@ struct SqlStatement
      * XXXPAT: need to fix this.  It should be type execplan::SessionManager::SID, but
      * that causes a circular dependency in the header files.  Should unravel that at
      * some point.
-     	 * 
+     	 *
      * Right now this var is initialized from a counter.  At some point we need
      * to serialize/unserialize it from a byte stream.
      */
     uint32_t fSessionID;
-    
+
     /** @brief The original sql string
     */
     std::string fSql;
@@ -437,9 +450,9 @@ struct SqlStatement
     */
     std::string fOwner;
 
-	
-	uint32_t fTableWithAutoi; // has autoincrement column? 
-	
+
+    uint32_t fTableWithAutoi; // has autoincrement column?
+
 };
 
 
@@ -519,7 +532,7 @@ struct TableDef : public SchemaObject
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-	TableDef() : fQualifiedName(0)
+    TableDef() : fQualifiedName(0)
     {}
 
     EXPORT TableDef(QualifiedName* name, TableElementList* elements, TableOptionMap* options);
@@ -527,14 +540,14 @@ struct TableDef : public SchemaObject
     /** @brief TableDef ctor.
     * ctor
     */
-    TableDef( QualifiedName *name,
+    TableDef( QualifiedName* name,
               ColumnDefList columns,
               TableConstraintDefList constraints, int tableWithAutoinc) :
-            fQualifiedName (name),
-            fColumns (columns),
-            fConstraints (constraints)
-			
-			
+        fQualifiedName (name),
+        fColumns (columns),
+        fConstraints (constraints)
+
+
     {}
 
     EXPORT virtual ~TableDef();
@@ -574,10 +587,11 @@ struct CreateTableStatement : public SqlStatement
     EXPORT virtual std::ostream& put(std::ostream& os) const;
 
     std::string schemaName() const
-        {
-            if (!fTableDef || !fTableDef->fQualifiedName) return "UNKNOWN";
-            return fTableDef->fQualifiedName->fSchema;
-        }
+    {
+        if (!fTableDef || !fTableDef->fQualifiedName) return "UNKNOWN";
+
+        return fTableDef->fQualifiedName->fSchema;
+    }
 
     TableDef* fTableDef; ///< The table defintion.
 
@@ -599,10 +613,10 @@ struct CreateTableStatement : public SqlStatement
 struct AlterTableAction
 {
     /** @brief Deserialize from ByteStream */
-    EXPORT virtual int unserialize(messageqcpp::ByteStream& bs)=0;
+    EXPORT virtual int unserialize(messageqcpp::ByteStream& bs) = 0;
 
     /** @brief Serialize to ByteStream */
-    EXPORT virtual int serialize(messageqcpp::ByteStream& bs)=0;
+    EXPORT virtual int serialize(messageqcpp::ByteStream& bs) = 0;
 
     /** @brief Ctor for deserialization */
     AlterTableAction()
@@ -633,11 +647,11 @@ struct AtaAddColumn : public AlterTableAction
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief Ctor for deserialization */
-	AtaAddColumn() : fColumnDef(0) {}
+    AtaAddColumn() : fColumnDef(0) {}
 
     /** @brief You can't add a column without specifying a column
     	definition. */
-    AtaAddColumn(ColumnDef *columnDef);
+    AtaAddColumn(ColumnDef* columnDef);
 
     virtual ~AtaAddColumn();
 
@@ -645,7 +659,7 @@ struct AtaAddColumn : public AlterTableAction
     virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief The focal column definition. */
-    ColumnDef *fColumnDef;
+    ColumnDef* fColumnDef;
 };
 
 
@@ -664,7 +678,7 @@ struct AtaAddColumns : public AlterTableAction
     AtaAddColumns()
     {}
 
-    AtaAddColumns(TableElementList *tableElements);
+    AtaAddColumns(TableElementList* tableElements);
 
     virtual ~AtaAddColumns();
 
@@ -690,7 +704,7 @@ struct AtaDropColumns : public AlterTableAction
     AtaDropColumns()
     {}
 
-    EXPORT AtaDropColumns(ColumnNameList *tableElements);
+    EXPORT AtaDropColumns(ColumnNameList* tableElements);
 
     EXPORT virtual ~AtaDropColumns();
 
@@ -713,17 +727,17 @@ struct AtaAddTableConstraint : public AlterTableAction
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief Ctor for deserialization */
-	AtaAddTableConstraint() : fTableConstraint(0)
+    AtaAddTableConstraint() : fTableConstraint(0)
     {}
 
-    AtaAddTableConstraint(TableConstraintDef *tableConstraint);
+    AtaAddTableConstraint(TableConstraintDef* tableConstraint);
 
     virtual ~AtaAddTableConstraint();
 
     /** @brief Dump to stdout. */
     virtual std::ostream& put(std::ostream& os) const;
 
-    TableConstraintDef *fTableConstraint;
+    TableConstraintDef* fTableConstraint;
 };
 
 
@@ -766,17 +780,17 @@ struct AtaSetColumnDefault : AlterTableAction
     /** @brief Serialize to ByteStream */
     virtual int serialize(messageqcpp::ByteStream& bs);
 
-	AtaSetColumnDefault() : fDefaultValue(0) {}
+    AtaSetColumnDefault() : fDefaultValue(0) {}
 
     /** @brief Dump to stdout. */
     virtual std::ostream& put(std::ostream& os) const;
 
     virtual ~AtaSetColumnDefault();
 
-    AtaSetColumnDefault(const char *colName, ColumnDefaultValue *defaultValue);
+    AtaSetColumnDefault(const char* colName, ColumnDefaultValue* defaultValue);
 
     std::string fColumnName;
-    ColumnDefaultValue *fDefaultValue;
+    ColumnDefaultValue* fDefaultValue;
 
 };
 
@@ -802,7 +816,7 @@ struct AtaDropColumnDefault : AlterTableAction
     {}
 
     /** @brief Ctor for parser construction */
-    AtaDropColumnDefault(const char *colName);
+    AtaDropColumnDefault(const char* colName);
 
     std::string fColumnName;
 };
@@ -828,7 +842,7 @@ struct AtaDropTableConstraint : AlterTableAction
     virtual ~AtaDropTableConstraint()
     {}
 
-    AtaDropTableConstraint(const char *constraintName, DDL_REFERENTIAL_ACTION dropBehavior);
+    AtaDropTableConstraint(const char* constraintName, DDL_REFERENTIAL_ACTION dropBehavior);
 
     std::string fConstraintName;
     DDL_REFERENTIAL_ACTION fDropBehavior;
@@ -846,15 +860,15 @@ struct AtaRenameTable : public AlterTableAction
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief Ctor for deserialization */
-	AtaRenameTable() : fQualifiedName(0) {}
-    AtaRenameTable(QualifiedName *qualifiedName);
+    AtaRenameTable() : fQualifiedName(0) {}
+    AtaRenameTable(QualifiedName* qualifiedName);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
 
     virtual ~AtaRenameTable();
 
-    QualifiedName *fQualifiedName;
+    QualifiedName* fQualifiedName;
 };
 
 /** alter table comment */
@@ -867,9 +881,9 @@ struct AtaTableComment : public AlterTableAction
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief Ctor for deserialization */
-	AtaTableComment() : fTableComment("")
+    AtaTableComment() : fTableComment("")
     {}
-    AtaTableComment(const char *tableComment);
+    AtaTableComment(const char* tableComment);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
@@ -891,15 +905,15 @@ struct AtaModifyColumnType : public AlterTableAction
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief Ctor for deserialization */
-	AtaModifyColumnType() : fColumnType(0) {}
+    AtaModifyColumnType() : fColumnType(0) {}
 
     /** @brief Ctor for parser construction */
     AtaModifyColumnType(const char* name, ColumnType* columnType) :
-            fColumnType(columnType),
-            fName(name)
+        fColumnType(columnType),
+        fName(name)
     {}
 
-    AtaModifyColumnType(QualifiedName *qualifiedName);
+    AtaModifyColumnType(QualifiedName* qualifiedName);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
@@ -925,36 +939,37 @@ struct AtaRenameColumn : public AlterTableAction
     /** @brief Ctor for deserialization */
     AtaRenameColumn() : fNewType(0), fDefaultValue(0) { }
 
-    AtaRenameColumn(const char* name, const char* newName, ColumnType* newType,  const char * comment=NULL) :
-            fName(name),
-            fNewName(newName),
-            fNewType(newType)    
+    AtaRenameColumn(const char* name, const char* newName, ColumnType* newType,  const char* comment = NULL) :
+        fName(name),
+        fNewName(newName),
+        fNewType(newType)
     {
-		if (comment)
-			fComment = comment;
-		fDefaultValue = 0;
-	}
+        if (comment)
+            fComment = comment;
 
-	AtaRenameColumn(const char* name, const char* newName, ColumnType* newType, ColumnConstraintList *constraint_list,
-              ColumnDefaultValue *defaultValue, const char * comment=NULL) :
-            fName(name),
-            fNewName(newName),
-            fNewType(newType),
-			fDefaultValue(defaultValue)
+        fDefaultValue = 0;
+    }
+
+    AtaRenameColumn(const char* name, const char* newName, ColumnType* newType, ColumnConstraintList* constraint_list,
+                    ColumnDefaultValue* defaultValue, const char* comment = NULL) :
+        fName(name),
+        fNewName(newName),
+        fNewType(newType),
+        fDefaultValue(defaultValue)
     {
-		if (constraint_list)
-			fConstraints = *constraint_list;
-			
-		//if (defaultValue)
-		//{
-			//fDefaultValue = defaultValue;
-		//}
-			
-		if (comment)
-			fComment = comment;
-	}
-	
-    AtaRenameColumn(QualifiedName *qualifiedName);
+        if (constraint_list)
+            fConstraints = *constraint_list;
+
+        //if (defaultValue)
+        //{
+        //fDefaultValue = defaultValue;
+        //}
+
+        if (comment)
+            fComment = comment;
+    }
+
+    AtaRenameColumn(QualifiedName* qualifiedName);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
@@ -964,11 +979,11 @@ struct AtaRenameColumn : public AlterTableAction
     std::string fName; ///< current column name
     std::string fNewName; ///< new column name
     ColumnType* fNewType;
-	 /** @brief Zero or more constraints. */
+    /** @brief Zero or more constraints. */
     ColumnConstraintList fConstraints;
 
     /** @brief NULL if there was no DEFAULT clause */
-    ColumnDefaultValue *fDefaultValue;
+    ColumnDefaultValue* fDefaultValue;
     std::string fComment;
 };
 
@@ -989,7 +1004,7 @@ struct ColumnType
     ColumnType()
     {}
 
-    friend std::ostream &operator<<(std::ostream& os, const ColumnType &ac);
+    friend std::ostream& operator<<(std::ostream& os, const ColumnType& ac);
 
     /** @brief This constructor is used by the parser to construct the
     	ColumnType when a precision/scale clause is encountered. */
@@ -1008,7 +1023,7 @@ struct ColumnType
     int fType;
 
     /** @brief Length of datatype in bytes */
-    int fLength;
+    long fLength;
 
     /** @brief SQL precision. This is the number of digits in the representation. */
     int fPrecision;
@@ -1019,13 +1034,13 @@ struct ColumnType
 
     /** @brief SQL "with timezone" specifier */
     bool fWithTimezone;
-	
-	int fCompressiontype;
-	
-	std::string fAutoincrement;
-	
-	uint64_t fNextvalue;
-	
+
+    int fCompressiontype;
+
+    std::string fAutoincrement;
+
+    uint64_t fNextvalue;
+
 };
 
 
@@ -1050,7 +1065,7 @@ struct ColumnConstraintDef : public SchemaObject
     {}
 
     /** @brief Constructs as check constraint. */
-    EXPORT ColumnConstraintDef(const char *check);
+    EXPORT ColumnConstraintDef(const char* check);
 
 
     /** @brief Constructs as other constraint. */
@@ -1088,7 +1103,7 @@ struct ColumnDefaultValue
     ColumnDefaultValue()
     {}
 
-    ColumnDefaultValue(const char *value);
+    ColumnDefaultValue(const char* value);
 
     virtual ~ColumnDefaultValue()
     {}
@@ -1115,26 +1130,26 @@ struct ColumnDef : public SchemaObject
 
 
     /** @brief For deserialization. */
-	ColumnDef() : fType(0) {}
+    ColumnDef() : fType(0) {}
 
     EXPORT virtual ~ColumnDef();
 
     /** @brief Parser ctor. */
-    EXPORT ColumnDef(const char *name,
-              ColumnType* type,
-              ColumnConstraintList *constraint_list,
-              ColumnDefaultValue *defaultValue, const char * comment=NULL);
+    EXPORT ColumnDef(const char* name,
+                     ColumnType* type,
+                     ColumnConstraintList* constraint_list,
+                     ColumnDefaultValue* defaultValue, const char* comment = NULL);
 
     /** @brief ColumnDef ctor.
      * ctor */
-    ColumnDef(const char *name,
+    ColumnDef(const char* name,
               ColumnType* type,
               ColumnConstraintList constraints,
-              ColumnDefaultValue *defaultValue = NULL, const char * comment=NULL) :
-            SchemaObject(name),
-            fType (type),
-            fConstraints (constraints),
-            fDefaultValue (defaultValue)		
+              ColumnDefaultValue* defaultValue = NULL, const char* comment = NULL) :
+        SchemaObject(name),
+        fType (type),
+        fConstraints (constraints),
+        fDefaultValue (defaultValue)
     {}
 
     void convertDecimal();
@@ -1146,9 +1161,9 @@ struct ColumnDef : public SchemaObject
     ColumnConstraintList fConstraints;
 
     /** @brief NULL if there was no DEFAULT clause */
-    ColumnDefaultValue *fDefaultValue;
-	
-	std::string fComment;
+    ColumnDefaultValue* fDefaultValue;
+
+    std::string fComment;
 };
 
 
@@ -1158,13 +1173,13 @@ struct ColumnDef : public SchemaObject
 struct TableConstraintDef : public SchemaObject
 {
     /** @brief Return DDL_SERIAL code */
-    virtual DDL_SERIAL_TYPE getSerialType()=0;
+    virtual DDL_SERIAL_TYPE getSerialType() = 0;
 
     /** @brief Deserialize from ByteStream */
-    virtual int unserialize(messageqcpp::ByteStream& bs)=0;
+    virtual int unserialize(messageqcpp::ByteStream& bs) = 0;
 
     /** @brief Serialize to ByteStream */
-    virtual int serialize(messageqcpp::ByteStream& bs)=0;
+    virtual int serialize(messageqcpp::ByteStream& bs) = 0;
 
 
     TableConstraintDef();
@@ -1172,7 +1187,7 @@ struct TableConstraintDef : public SchemaObject
     TableConstraintDef(DDL_CONSTRAINTS cType);
 
     /** @brief Dump to stdout. */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     virtual ~TableConstraintDef()
     {}
@@ -1204,12 +1219,12 @@ struct TableUniqueConstraintDef : public TableConstraintDef
     TableUniqueConstraintDef() : TableConstraintDef(DDL_UNIQUE)
     {}
 
-    TableUniqueConstraintDef(ColumnNameList *columns);
+    TableUniqueConstraintDef(ColumnNameList* columns);
     virtual ~TableUniqueConstraintDef()
     {}
 
     /** @brief Dump to stdout. */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     ColumnNameList fColumnNameList;
 };
@@ -1236,13 +1251,13 @@ struct TablePrimaryKeyConstraintDef : public TableConstraintDef
     TablePrimaryKeyConstraintDef() : TableConstraintDef(DDL_PRIMARY_KEY)
     {}
 
-    EXPORT TablePrimaryKeyConstraintDef(ColumnNameList *columns);
+    EXPORT TablePrimaryKeyConstraintDef(ColumnNameList* columns);
 
     virtual ~TablePrimaryKeyConstraintDef()
     {}
 
     /** @brief Dump to stdout. */
-    EXPORT virtual std::ostream& put(std::ostream &os) const;
+    EXPORT virtual std::ostream& put(std::ostream& os) const;
 
     ColumnNameList fColumnNameList;
 };
@@ -1288,28 +1303,28 @@ struct TableReferencesConstraintDef : public TableConstraintDef
 
 
     TableReferencesConstraintDef() :
-		TableConstraintDef(DDL_REFERENCES),
-		fTableName(0),
-		fRefAction(0)
-		{}
+        TableConstraintDef(DDL_REFERENCES),
+        fTableName(0),
+        fRefAction(0)
+    {}
 
     TableReferencesConstraintDef
-    (ColumnNameList *columns,
-     QualifiedName *fTableName,
-     ColumnNameList *foreignColumns,
+    (ColumnNameList* columns,
+     QualifiedName* fTableName,
+     ColumnNameList* foreignColumns,
      DDL_MATCH_TYPE matchType,
-     ReferentialAction *refAction);
+     ReferentialAction* refAction);
 
     virtual ~TableReferencesConstraintDef();
 
     /** @brief Dump to stdout. */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     ColumnNameList fColumns;
-    QualifiedName *fTableName;
+    QualifiedName* fTableName;
     ColumnNameList fForeignColumns;
     DDL_MATCH_TYPE fMatchType;
-    ReferentialAction *fRefAction;
+    ReferentialAction* fRefAction;
 };
 
 
@@ -1334,10 +1349,10 @@ struct TableCheckConstraintDef : public TableConstraintDef
     TableCheckConstraintDef() : TableConstraintDef(DDL_CHECK)
     {}
 
-    TableCheckConstraintDef(const char *check);
+    TableCheckConstraintDef(const char* check);
 
     /** @brief Dump to stdout. */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     virtual ~TableCheckConstraintDef()
     {}
@@ -1361,22 +1376,23 @@ struct AlterTableStatement : public SqlStatement
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-	AlterTableStatement() : fTableName(0)
+    AlterTableStatement() : fTableName(0)
     {}
 
-    EXPORT AlterTableStatement(QualifiedName *qName, AlterTableActionList *ataList);
+    EXPORT AlterTableStatement(QualifiedName* qName, AlterTableActionList* ataList);
 
     /** @brief Dump to stdout. */
-    EXPORT virtual std::ostream& put(std::ostream &os) const;
+    EXPORT virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief Delete members. */
     EXPORT virtual ~AlterTableStatement();
 
     std::string schemaName() const
-        {
-            if (!fTableName) return "UNKNOWN";
-            return fTableName->fSchema;
-        }
+    {
+        if (!fTableName) return "UNKNOWN";
+
+        return fTableName->fSchema;
+    }
 
     QualifiedName* fTableName;
     AlterTableActionList fActions;
@@ -1403,8 +1419,8 @@ struct ConstraintAttributes
     {}
 
     ConstraintAttributes(DDL_CONSTRAINT_ATTRIBUTES checkTime, bool deferrable) :
-            fCheckTime(checkTime),
-            fDeferrable(deferrable)
+        fCheckTime(checkTime),
+        fDeferrable(deferrable)
     {}
 
     virtual ~ConstraintAttributes()
@@ -1429,16 +1445,16 @@ struct CreateIndexStatement : public SqlStatement
     virtual int serialize(messageqcpp::ByteStream& bs);
 
     CreateIndexStatement();
-    CreateIndexStatement(QualifiedName *qualifiedName1, QualifiedName *qualifiedName2,
-                         ColumnNameList *columnNames, bool unique);
+    CreateIndexStatement(QualifiedName* qualifiedName1, QualifiedName* qualifiedName2,
+                         ColumnNameList* columnNames, bool unique);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
 
     virtual ~CreateIndexStatement();
 
-    QualifiedName *fIndexName;
-    QualifiedName *fTableName;
+    QualifiedName* fIndexName;
+    QualifiedName* fTableName;
     ColumnNameList fColumnNames;
     bool fUnique;
 };
@@ -1454,16 +1470,16 @@ struct DropIndexStatement : public SqlStatement
     virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-	DropIndexStatement() : fIndexName(0)
+    DropIndexStatement() : fIndexName(0)
     {}
-    DropIndexStatement(QualifiedName *qualifiedName);
+    DropIndexStatement(QualifiedName* qualifiedName);
 
     /** @brief Dump to stdout. */
     std::ostream& put(std::ostream& os) const;
 
     virtual ~DropIndexStatement();
 
-    QualifiedName *fIndexName;
+    QualifiedName* fIndexName;
 };
 
 /** @brief DropTableStatement represents the drop table operation
@@ -1477,9 +1493,9 @@ struct DropTableStatement : public SqlStatement
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-	DropTableStatement() : fTableName(0)
+    DropTableStatement() : fTableName(0)
     {}
-    EXPORT DropTableStatement(QualifiedName *qualifiedName, bool cascade);
+    EXPORT DropTableStatement(QualifiedName* qualifiedName, bool cascade);
 
     /** @brief Dump to stdout. */
     EXPORT std::ostream& put(std::ostream& os) const;
@@ -1490,12 +1506,13 @@ struct DropTableStatement : public SqlStatement
     }
 
     std::string schemaName() const
-        {
-            if (!fTableName) return "UNKNOWN";
-            return fTableName->fSchema;
-        }
+    {
+        if (!fTableName) return "UNKNOWN";
 
-    QualifiedName *fTableName;
+        return fTableName->fSchema;
+    }
+
+    QualifiedName* fTableName;
     bool fCascade;
 };
 
@@ -1510,9 +1527,9 @@ struct TruncTableStatement : public SqlStatement
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-	TruncTableStatement() : fTableName(0)
+    TruncTableStatement() : fTableName(0)
     {}
-    EXPORT TruncTableStatement(QualifiedName *qualifiedName);
+    EXPORT TruncTableStatement(QualifiedName* qualifiedName);
 
     /** @brief Dump to stdout. */
     EXPORT std::ostream& put(std::ostream& os) const;
@@ -1523,12 +1540,13 @@ struct TruncTableStatement : public SqlStatement
     }
 
     std::string schemaName() const
-        {
-            if (!fTableName) return "UNKNOWN";
-            return fTableName->fSchema;
-        }
+    {
+        if (!fTableName) return "UNKNOWN";
 
-    QualifiedName *fTableName;
+        return fTableName->fSchema;
+    }
+
+    QualifiedName* fTableName;
 };
 
 /** @brief Represents the mark partition out of service statement
@@ -1536,29 +1554,29 @@ struct TruncTableStatement : public SqlStatement
  */
 struct MarkPartitionStatement : public SqlStatement
 {
-	/** @brief Deserialize from ByteStream */
-	EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+    /** @brief Deserialize from ByteStream */
+    EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
 
-	/** @brief Serialize to ByteStream */
-	EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+    /** @brief Serialize to ByteStream */
+    EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-	/** @brief Ctor for deserialization */
-	MarkPartitionStatement() : fTableName(0)
-	{}
+    /** @brief Ctor for deserialization */
+    MarkPartitionStatement() : fTableName(0)
+    {}
 
-	/** @brief You can't have a CreateTableStatement without a table defintion */
-	EXPORT MarkPartitionStatement(QualifiedName *qualifiedName);
+    /** @brief You can't have a CreateTableStatement without a table defintion */
+    EXPORT MarkPartitionStatement(QualifiedName* qualifiedName);
 
-	/** @brief Dump to stdout. */
-	EXPORT virtual std::ostream& put(std::ostream& os) const;
+    /** @brief Dump to stdout. */
+    EXPORT virtual std::ostream& put(std::ostream& os) const;
 
-	virtual ~MarkPartitionStatement()
-	{
-		delete fTableName;
-	}
+    virtual ~MarkPartitionStatement()
+    {
+        delete fTableName;
+    }
 
-	QualifiedName *fTableName; ///< The table defintion
-	std::set<BRM::LogicalPartition> fPartitions; // partition numbers
+    QualifiedName* fTableName; ///< The table defintion
+    std::set<BRM::LogicalPartition> fPartitions; // partition numbers
 };
 
 /** @brief Represents the mark partition out of service statement
@@ -1566,28 +1584,28 @@ struct MarkPartitionStatement : public SqlStatement
  */
 struct RestorePartitionStatement : public SqlStatement
 {
-	/** @brief Deserialize from ByteStream */
-	EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+    /** @brief Deserialize from ByteStream */
+    EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
 
-	/** @brief Serialize to ByteStream */
-	EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
-	
-	/** @brief Ctor for deserialization */
-	RestorePartitionStatement() : fTableName(0)
-	{}
+    /** @brief Serialize to ByteStream */
+    EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-	EXPORT RestorePartitionStatement(QualifiedName *qualifiedName);
-	
-	/** @brief Dump to stdout. */
-	EXPORT virtual std::ostream& put(std::ostream& os) const;
+    /** @brief Ctor for deserialization */
+    RestorePartitionStatement() : fTableName(0)
+    {}
 
-	virtual ~RestorePartitionStatement()
-	{
-		delete fTableName;
-	}
+    EXPORT RestorePartitionStatement(QualifiedName* qualifiedName);
 
-	QualifiedName *fTableName; ///< The table name.
-	std::set<BRM::LogicalPartition> fPartitions; // partition numbers
+    /** @brief Dump to stdout. */
+    EXPORT virtual std::ostream& put(std::ostream& os) const;
+
+    virtual ~RestorePartitionStatement()
+    {
+        delete fTableName;
+    }
+
+    QualifiedName* fTableName; ///< The table name.
+    std::set<BRM::LogicalPartition> fPartitions; // partition numbers
 };
 
 /** @brief Represents the mark partition out of service statement
@@ -1595,28 +1613,28 @@ struct RestorePartitionStatement : public SqlStatement
  */
 struct DropPartitionStatement : public SqlStatement
 {
-	/** @brief Deserialize from ByteStream */
-	EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+    /** @brief Deserialize from ByteStream */
+    EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
 
-	/** @brief Serialize to ByteStream */
-	EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+    /** @brief Serialize to ByteStream */
+    EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-	/** @brief Ctor for deserialization */
-	DropPartitionStatement() : fTableName(0)
-	{}
+    /** @brief Ctor for deserialization */
+    DropPartitionStatement() : fTableName(0)
+    {}
 
-	EXPORT DropPartitionStatement(QualifiedName *qualifiedName);
+    EXPORT DropPartitionStatement(QualifiedName* qualifiedName);
 
-	/** @brief Dump to stdout. */
-	EXPORT virtual std::ostream& put(std::ostream& os) const;
+    /** @brief Dump to stdout. */
+    EXPORT virtual std::ostream& put(std::ostream& os) const;
 
-	virtual ~DropPartitionStatement()
-	{
-		delete fTableName;
-	}
+    virtual ~DropPartitionStatement()
+    {
+        delete fTableName;
+    }
 
-	QualifiedName *fTableName; ///< The table name.
-	std::set<BRM::LogicalPartition> fPartitions; // partition numbers
+    QualifiedName* fTableName; ///< The table name.
+    std::set<BRM::LogicalPartition> fPartitions; // partition numbers
 };
 
 }

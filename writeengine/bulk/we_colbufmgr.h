@@ -36,8 +36,9 @@
 #include "we_colbufsec.h"
 #include "idbcompress.h"
 
-namespace WriteEngine {
-    class Log;
+namespace WriteEngine
+{
+class Log;
 
 struct ColumnInfo;
 
@@ -56,8 +57,9 @@ struct ColumnInfo;
  * disk.
  */
 
-class ColumnBufferManager {
-  public:
+class ColumnBufferManager
+{
+public:
 
     //-------------------------------------------------------------------------
     // Public Functions
@@ -85,7 +87,7 @@ class ColumnBufferManager {
      * @param secRowCnt (out) Resulting size of the reserved section.
      *        May be less than nRows for the case where a group of
      *        dictionary rows crosses an extent boundary.
-     * @param ColumnBufferSection (out) ptr with info on reserved section 
+     * @param ColumnBufferSection (out) ptr with info on reserved section
      * @param lastRIDInExtent (out) last RID in relevant extent.
      * @return success or fail status
      */
@@ -110,7 +112,10 @@ class ColumnBufferManager {
      * @param bTruncFile is file to be truncated
      * @return NO_ERROR or success
      */
-    int finishFile(bool bTruncFile) { return fCBuf->finishFile(bTruncFile); }
+    int finishFile(bool bTruncFile)
+    {
+        return fCBuf->finishFile(bTruncFile);
+    }
 
     /** @brief Method to ensure that all the data in the buffer has been
      *  written to the file (for uncompressed), or the to-be-compressed buffer
@@ -136,19 +141,23 @@ class ColumnBufferManager {
      * @param hdrs with ptr information (only applies to compressed files)
      */
     int setDbFile(IDBDataFile* const cFile, HWM hwm, const char* hdrs)
-    { return fCBuf->setDbFile(cFile, hwm, hdrs); }
+    {
+        return fCBuf->setDbFile(cFile, hwm, hdrs);
+    }
 
     /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
      *  next extent.
      */
     int resetToBeCompressedColBuf(long long& startFileOffset)
-    { return fCBuf->resetToBeCompressedColBuf( startFileOffset ); }
+    {
+        return fCBuf->resetToBeCompressedColBuf( startFileOffset );
+    }
 
     /** @brief Wrapper around extendColumn(), used for dictionary token columns.
      */
     int extendTokenColumn( );
 
-  protected:
+protected:
 
     //-------------------------------------------------------------------------
     // Protected Functions
@@ -251,9 +260,10 @@ class ColumnBufferManager {
 //------------------------------------------------------------------------------
 // Specialization of ColumnBufferManager that is used for Dictionary columns.
 //------------------------------------------------------------------------------
-class ColumnBufferManagerDctnry : public ColumnBufferManager {
+class ColumnBufferManagerDctnry : public ColumnBufferManager
+{
 
-  public:
+public:
     ColumnBufferManagerDctnry(ColumnInfo* pColInfo, int colWidth,
                               Log* logger, int compressionType);
     virtual ~ColumnBufferManagerDctnry();

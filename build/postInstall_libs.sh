@@ -7,5 +7,4 @@ fi
 
 prefix=/usr/local
 
-echo "MariaDB ColumnStore RPM install completed"
 

@@ -59,11 +59,11 @@ namespace joblist
 {
 
 SubQueryStep::SubQueryStep(const JobInfo& jobInfo)
-	: JobStep(jobInfo)
-	, fRowsReturned(0)
+    : JobStep(jobInfo)
+    , fRowsReturned(0)
 {
-	fExtendedInfo = "SQS: ";
-	fQtc.stepParms().stepType = StepTeleStats::T_SQS;
+    fExtendedInfo = "SQS: ";
+    fQtc.stepParms().stepType = StepTeleStats::T_SQS;
 }
 
 SubQueryStep::~SubQueryStep()
@@ -72,34 +72,35 @@ SubQueryStep::~SubQueryStep()
 
 void SubQueryStep::run()
 {
-	fSubJobList->doQuery();
+    fSubJobList->doQuery();
 }
 
 void SubQueryStep::join()
 {
-	if (fRunner)
-		fRunner->join();
+    if (fRunner)
+        fRunner->join();
 }
 
 void SubQueryStep::abort()
 {
-	JobStep::abort();
-	fSubJobList->abort();
+    JobStep::abort();
+    fSubJobList->abort();
 }
 
 const string SubQueryStep::toString() const
 {
-	ostringstream oss;
-	oss << "SubQueryStep    ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
+    ostringstream oss;
+    oss << "SubQueryStep    ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
 
-	if (fOutputJobStepAssociation.outSize() > 0)
-	{
-		oss << " out:";
-		for (unsigned i = 0; i < fOutputJobStepAssociation.outSize(); i++)
-			oss << fOutputJobStepAssociation.outAt(i);
-	}
+    if (fOutputJobStepAssociation.outSize() > 0)
+    {
+        oss << " out:";
 
-	return oss.str();
+        for (unsigned i = 0; i < fOutputJobStepAssociation.outSize(); i++)
+            oss << fOutputJobStepAssociation.outAt(i);
+    }
+
+    return oss.str();
 }
 
 
@@ -142,20 +143,21 @@ void SubQueryStep::formatMiniStats()
 
 
 SubAdapterStep::SubAdapterStep(SJSTEP& s, const JobInfo& jobInfo)
-	: JobStep(jobInfo)
-	, fTableOid(s->tableOid())
-	, fSubStep(s)
-	, fRowsInput(0)
-	, fRowsReturned(0)
-	, fEndOfResult(false)
-	, fInputIterator(0)
-	, fOutputIterator(0)
+    : JobStep(jobInfo)
+    , fTableOid(s->tableOid())
+    , fSubStep(s)
+    , fRowsInput(0)
+    , fRowsReturned(0)
+    , fEndOfResult(false)
+    , fInputIterator(0)
+    , fOutputIterator(0)
+    , fRunner(0)
 {
-	fAlias = s->alias();
-	fView = s->view();
-	fInputJobStepAssociation = s->outputAssociation();
-	fRowGroupIn = dynamic_cast<SubQueryStep*>(s.get())->getOutputRowGroup();
-	setOutputRowGroup(fRowGroupIn);
+    fAlias = s->alias();
+    fView = s->view();
+    fInputJobStepAssociation = s->outputAssociation();
+    fRowGroupIn = dynamic_cast<SubQueryStep*>(s.get())->getOutputRowGroup();
+    setOutputRowGroup(fRowGroupIn);
 }
 
 
@@ -165,388 +167,408 @@ SubAdapterStep::~SubAdapterStep()
 
 void SubAdapterStep::abort()
 {
-	JobStep::abort();
-	if (fSubStep)
-		fSubStep->abort();
+    JobStep::abort();
+
+    if (fSubStep)
+        fSubStep->abort();
 }
 
 void SubAdapterStep::run()
 {
-	if (fInputJobStepAssociation.outSize() == 0)
-		throw logic_error("No input data list for subquery adapter step.");
+    if (fInputJobStepAssociation.outSize() == 0)
+        throw logic_error("No input data list for subquery adapter step.");
 
-	fInputDL = fInputJobStepAssociation.outAt(0)->rowGroupDL();
-	if (fInputDL == NULL)
-		throw logic_error("Input is not a RowGroup data list.");
+    fInputDL = fInputJobStepAssociation.outAt(0)->rowGroupDL();
 
-	fInputIterator = fInputDL->getIterator();
+    if (fInputDL == NULL)
+        throw logic_error("Input is not a RowGroup data list.");
 
-	if (fOutputJobStepAssociation.outSize() == 0)
-		throw logic_error("No output data list for non-delivery subquery adapter step.");
+    fInputIterator = fInputDL->getIterator();
 
-	fOutputDL = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
-	if (fOutputDL == NULL)
-		throw logic_error("Output is not a RowGroup data list.");
+    if (fOutputJobStepAssociation.outSize() == 0)
+        throw logic_error("No output data list for non-delivery subquery adapter step.");
 
-	if (fDelivery)
-		fOutputIterator = fOutputDL->getIterator();
+    fOutputDL = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
 
-	fRunner.reset(new boost::thread(Runner(this)));
+    if (fOutputDL == NULL)
+        throw logic_error("Output is not a RowGroup data list.");
+
+    if (fDelivery)
+        fOutputIterator = fOutputDL->getIterator();
+
+    fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void SubAdapterStep::join()
 {
-	if (fRunner)
-		fRunner->join();
+    if (fRunner)
+        jobstepThreadPool.join(fRunner);
 }
 
 
-uint32_t SubAdapterStep::nextBand(messageqcpp::ByteStream &bs)
+uint32_t SubAdapterStep::nextBand(messageqcpp::ByteStream& bs)
 {
-	RGData rgDataOut;
-	bool more = false;
-	uint32_t rowCount = 0;
+    RGData rgDataOut;
+    bool more = false;
+    uint32_t rowCount = 0;
 
-	try
-	{
-		bs.restart();
-		
-		more = fOutputDL->next(fOutputIterator, &rgDataOut);
-		if (!more || cancelled())
-		{
-			//@bug4459.
-			while (more)
-				more = fOutputDL->next(fOutputIterator, &rgDataOut);			
-			fEndOfResult = true;
-		}
+    try
+    {
+        bs.restart();
 
-		if (more && !fEndOfResult)
-		{
-			fRowGroupDeliver.setData(&rgDataOut);
-			fRowGroupDeliver.serializeRGData(bs);
-			rowCount = fRowGroupDeliver.getRowCount();
-		}
-	}
-	catch(const std::exception& ex)
-	{
-		catchHandler(ex.what(), ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-		while (more)
-			more = fOutputDL->next(fOutputIterator, &rgDataOut);
-		fEndOfResult = true;
-	}
-	catch(...)
-	{
-		catchHandler("SubAdapterStep next band caught an unknown exception",
-						ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-		while (more)
-			more = fOutputDL->next(fOutputIterator, &rgDataOut);
-		fEndOfResult = true;
-	}
+        more = fOutputDL->next(fOutputIterator, &rgDataOut);
 
-	if (fEndOfResult)
-	{
-		// send an empty / error band
-		RGData rgData(fRowGroupDeliver, 0);
-		fRowGroupDeliver.setData(&rgData);
-		fRowGroupDeliver.resetRowGroup(0);
-		fRowGroupDeliver.setStatus(status());
-		fRowGroupDeliver.serializeRGData(bs);
-	}
+        if (!more || cancelled())
+        {
+            //@bug4459.
+            while (more)
+                more = fOutputDL->next(fOutputIterator, &rgDataOut);
 
-	return rowCount;
+            fEndOfResult = true;
+        }
+
+        if (more && !fEndOfResult)
+        {
+            fRowGroupDeliver.setData(&rgDataOut);
+            fRowGroupDeliver.serializeRGData(bs);
+            rowCount = fRowGroupDeliver.getRowCount();
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        catchHandler(ex.what(), ERR_IN_DELIVERY, fErrorInfo, fSessionId);
+
+        while (more)
+            more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
+        fEndOfResult = true;
+    }
+    catch (...)
+    {
+        catchHandler("SubAdapterStep next band caught an unknown exception",
+                     ERR_IN_DELIVERY, fErrorInfo, fSessionId);
+
+        while (more)
+            more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
+        fEndOfResult = true;
+    }
+
+    if (fEndOfResult)
+    {
+        // send an empty / error band
+        RGData rgData(fRowGroupDeliver, 0);
+        fRowGroupDeliver.setData(&rgData);
+        fRowGroupDeliver.resetRowGroup(0);
+        fRowGroupDeliver.setStatus(status());
+        fRowGroupDeliver.serializeRGData(bs);
+    }
+
+    return rowCount;
 }
 
 
 void SubAdapterStep::setFeRowGroup(const rowgroup::RowGroup& rg)
 {
-	fRowGroupFe = rg;
+    fRowGroupFe = rg;
 }
 
 
 void SubAdapterStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
 {
-	fRowGroupOut = fRowGroupDeliver = rg;
-	if (fRowGroupFe.getColumnCount() == 0)
-		fIndexMap = makeMapping(fRowGroupIn, fRowGroupOut);
-	else
-		fIndexMap = makeMapping(fRowGroupFe, fRowGroupOut);
+    fRowGroupOut = fRowGroupDeliver = rg;
 
-	checkDupOutputColumns();
+    if (fRowGroupFe.getColumnCount() == 0)
+        fIndexMap = makeMapping(fRowGroupIn, fRowGroupOut);
+    else
+        fIndexMap = makeMapping(fRowGroupFe, fRowGroupOut);
+
+    checkDupOutputColumns();
 }
 
 
 void SubAdapterStep::checkDupOutputColumns()
 {
-	map<uint32_t, uint32_t> keymap; // map<unique col key, col index in the row group>
-	fDupColumns.clear();
-	const vector<uint32_t>& keys = fRowGroupDeliver.getKeys();
-	for (uint32_t i = 0; i < keys.size(); i++)
-	{
-		map<uint32_t, uint32_t>::iterator j = keymap.find(keys[i]);
-		if (j == keymap.end())
-			keymap.insert(make_pair(keys[i], i));           // map key to col index
-		else
-			fDupColumns.push_back(make_pair(i, j->second)); // dest/src index pair
-	}
+    map<uint32_t, uint32_t> keymap; // map<unique col key, col index in the row group>
+    fDupColumns.clear();
+    const vector<uint32_t>& keys = fRowGroupDeliver.getKeys();
+
+    for (uint32_t i = 0; i < keys.size(); i++)
+    {
+        map<uint32_t, uint32_t>::iterator j = keymap.find(keys[i]);
+
+        if (j == keymap.end())
+            keymap.insert(make_pair(keys[i], i));           // map key to col index
+        else
+            fDupColumns.push_back(make_pair(i, j->second)); // dest/src index pair
+    }
 }
 
 
 void SubAdapterStep::dupOutputColumns(Row& row)
 {
-	for (uint64_t i = 0; i < fDupColumns.size(); i++)
-		row.copyField(fDupColumns[i].first, fDupColumns[i].second);
+    for (uint64_t i = 0; i < fDupColumns.size(); i++)
+        row.copyField(fDupColumns[i].first, fDupColumns[i].second);
 }
 
 
 void SubAdapterStep::outputRow(Row& rowIn, Row& rowOut)
 {
-	applyMapping(fIndexMap, rowIn, &rowOut);
+    applyMapping(fIndexMap, rowIn, &rowOut);
 
-	if (fDupColumns.size() > 0)
-		dupOutputColumns(rowOut);
+    if (fDupColumns.size() > 0)
+        dupOutputColumns(rowOut);
 
-	fRowGroupOut.incRowCount();
-	rowOut.nextRow();
+    fRowGroupOut.incRowCount();
+    rowOut.nextRow();
 }
 
 
 void SubAdapterStep::deliverStringTableRowGroup(bool b)
 {
-	fRowGroupOut.setUseStringTable(b);
-	fRowGroupDeliver.setUseStringTable(b);
+    fRowGroupOut.setUseStringTable(b);
+    fRowGroupDeliver.setUseStringTable(b);
 }
 
 
 bool SubAdapterStep::deliverStringTableRowGroup() const
 {
-	idbassert(fRowGroupOut.usesStringTable() == fRowGroupDeliver.usesStringTable());
-	return fRowGroupDeliver.usesStringTable();
+    idbassert(fRowGroupOut.usesStringTable() == fRowGroupDeliver.usesStringTable());
+    return fRowGroupDeliver.usesStringTable();
 }
 
 
 const string SubAdapterStep::toString() const
 {
-	ostringstream oss;
-	oss << "SubAdapterStep  ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
+    ostringstream oss;
+    oss << "SubAdapterStep  ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
 
-	if (fInputJobStepAssociation.outSize() > 0)
-			oss << fInputJobStepAssociation.outAt(0);
+    if (fInputJobStepAssociation.outSize() > 0)
+        oss << fInputJobStepAssociation.outAt(0);
 
-	if (fOutputJobStepAssociation.outSize() > 0)
-			oss << fOutputJobStepAssociation.outAt(0);
+    if (fOutputJobStepAssociation.outSize() > 0)
+        oss << fOutputJobStepAssociation.outAt(0);
 
-	return oss.str();
+    return oss.str();
 }
 
 
 void SubAdapterStep::execute()
 {
-	RGData rgDataIn;
-	RGData rgDataOut;
-	Row rowIn;
-	Row rowFe;
-	Row rowOut;
-	fRowGroupIn.initRow(&rowIn);
-	fRowGroupOut.initRow(&rowOut);
+    RGData rgDataIn;
+    RGData rgDataOut;
+    Row rowIn;
+    Row rowFe;
+    Row rowOut;
+    fRowGroupIn.initRow(&rowIn);
+    fRowGroupOut.initRow(&rowOut);
 
-	RGData rowFeData;
-	StepTeleStats sts;
-	sts.query_uuid = fQueryUuid;
-	sts.step_uuid = fStepUuid;
-	bool usesFE = false;
-	if (fRowGroupFe.getColumnCount() > 0)
-	{
-		usesFE = true;
-		fRowGroupFe.initRow(&rowFe, true);
-		rowFeData = RGData(fRowGroupFe, 1);
-		fRowGroupFe.setData(&rowFeData);
-		fRowGroupFe.getRow(0, &rowFe);
-	}
+    RGData rowFeData;
+    StepTeleStats sts;
+    sts.query_uuid = fQueryUuid;
+    sts.step_uuid = fStepUuid;
+    bool usesFE = false;
 
-	bool more = false;
-	try
-	{
-		sts.msg_type = StepTeleStats::ST_START;
-		sts.total_units_of_work = 1;
-		postStepStartTele(sts);
+    if (fRowGroupFe.getColumnCount() > 0)
+    {
+        usesFE = true;
+        fRowGroupFe.initRow(&rowFe, true);
+        rowFeData = RGData(fRowGroupFe, 1);
+        fRowGroupFe.setData(&rowFeData);
+        fRowGroupFe.getRow(0, &rowFe);
+    }
 
-		fSubStep->run();
+    bool more = false;
 
-		more = fInputDL->next(fInputIterator, &rgDataIn);
-		if (traceOn()) dlTimes.setFirstReadTime();
+    try
+    {
+        sts.msg_type = StepTeleStats::ST_START;
+        sts.total_units_of_work = 1;
+        postStepStartTele(sts);
 
-		while (more && !cancelled())
-		{
-			fRowGroupIn.setData(&rgDataIn);
-			rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-			fRowGroupOut.setData(&rgDataOut);
-			fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+        fSubStep->run();
 
-			fRowGroupIn.getRow(0, &rowIn);
-			fRowGroupOut.getRow(0, &rowOut);
+        more = fInputDL->next(fInputIterator, &rgDataIn);
 
-			fRowsInput += fRowGroupIn.getRowCount();
+        if (traceOn()) dlTimes.setFirstReadTime();
 
-			for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
-			{
-				if(fExpression.get() == NULL)
-				{
-					outputRow(rowIn, rowOut);
-				}
-				else if (!usesFE)
-				{
-					if(fExpression->evaluate(&rowIn))
-					{
-						outputRow(rowIn, rowOut);
-					}
-				}
-				else
-				{
-					copyRow(rowIn, &rowFe, rowIn.getColumnCount());
-					//memcpy(rowFe.getData(), rowIn.getData(), rowIn.getSize());
-					if(fExpression->evaluate(&rowFe))
-					{
-						outputRow(rowFe, rowOut);
-					}
-				}
+        while (more && !cancelled())
+        {
+            fRowGroupIn.setData(&rgDataIn);
+            rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+            fRowGroupOut.setData(&rgDataOut);
+            fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
 
-				rowIn.nextRow();
-			}
+            fRowGroupIn.getRow(0, &rowIn);
+            fRowGroupOut.getRow(0, &rowOut);
 
-			if (fRowGroupOut.getRowCount() > 0)
-			{
-				fRowsReturned += fRowGroupOut.getRowCount();
-				fOutputDL->insert(rgDataOut);
-			}
+            fRowsInput += fRowGroupIn.getRowCount();
 
-			more = fInputDL->next(fInputIterator, &rgDataIn);
-		}
-	}
-	catch(const std::exception& ex)
-	{
-		catchHandler(ex.what(), ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
-	}
-	catch(...)
-	{
-		catchHandler("SubAdapterStep execute caught an unknown exception",
-						ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
-	}
+            for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
+            {
+                if (fExpression.get() == NULL)
+                {
+                    outputRow(rowIn, rowOut);
+                }
+                else if (!usesFE)
+                {
+                    if (fExpression->evaluate(&rowIn))
+                    {
+                        outputRow(rowIn, rowOut);
+                    }
+                }
+                else
+                {
+                    copyRow(rowIn, &rowFe, rowIn.getColumnCount());
 
-	if (cancelled())
-		while (more)
-			more = fInputDL->next(fInputIterator, &rgDataIn);
+                    //memcpy(rowFe.getData(), rowIn.getData(), rowIn.getSize());
+                    if (fExpression->evaluate(&rowFe))
+                    {
+                        outputRow(rowFe, rowOut);
+                    }
+                }
 
-	if (traceOn())
-	{
-		dlTimes.setLastReadTime();
-		dlTimes.setEndOfInputTime();
-		printCalTrace();
-	}
+                rowIn.nextRow();
+            }
 
-	sts.msg_type = StepTeleStats::ST_SUMMARY;
-	sts.total_units_of_work = sts.units_of_work_completed = 1;
-	sts.rows = fRowsReturned;
-	postStepSummaryTele(sts);
+            if (fRowGroupOut.getRowCount() > 0)
+            {
+                fRowsReturned += fRowGroupOut.getRowCount();
+                fOutputDL->insert(rgDataOut);
+            }
 
-	// Bug 3136, let mini stats to be formatted if traceOn.
-	fOutputDL->endOfInput();
+            more = fInputDL->next(fInputIterator, &rgDataIn);
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        catchHandler(ex.what(), ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
+    }
+    catch (...)
+    {
+        catchHandler("SubAdapterStep execute caught an unknown exception",
+                     ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
+    }
+
+    if (cancelled())
+        while (more)
+            more = fInputDL->next(fInputIterator, &rgDataIn);
+
+    if (traceOn())
+    {
+        dlTimes.setLastReadTime();
+        dlTimes.setEndOfInputTime();
+        printCalTrace();
+    }
+
+    sts.msg_type = StepTeleStats::ST_SUMMARY;
+    sts.total_units_of_work = sts.units_of_work_completed = 1;
+    sts.rows = fRowsReturned;
+    postStepSummaryTele(sts);
+
+    // Bug 3136, let mini stats to be formatted if traceOn.
+    fOutputDL->endOfInput();
 }
 
 
 void SubAdapterStep::addExpression(const JobStepVector& exps, JobInfo& jobInfo)
 {
-	// maps key to the index in the RG
-	map<uint32_t, uint32_t> keyToIndexMap;
-	const vector<uint32_t>& keys = fRowGroupIn.getKeys();
-	for (size_t i = 0; i < keys.size(); i++)
-		keyToIndexMap[keys[i]] = i;
+    // maps key to the index in the RG
+    map<uint32_t, uint32_t> keyToIndexMap;
+    const vector<uint32_t>& keys = fRowGroupIn.getKeys();
 
-	// combine the expression to one parse tree
-	ParseTree* filter = NULL;
-	for (JobStepVector::const_iterator it = exps.begin(); it != exps.end(); it++)
-	{
-		ExpressionStep* e = dynamic_cast<ExpressionStep*>(it->get());
-		idbassert(e);
+    for (size_t i = 0; i < keys.size(); i++)
+        keyToIndexMap[keys[i]] = i;
 
-		e->updateInputIndex(keyToIndexMap, jobInfo);
-		if (filter != NULL)
-		{
-			ParseTree* left = filter;
-			ParseTree* right = new ParseTree();
-			right->copyTree(*(e->expressionFilter()));
-			filter = new ParseTree(new LogicOperator("and"));
-			filter->left(left);
-			filter->right(right);
-		}
-		else
-		{
-			filter = new ParseTree();
-			filter->copyTree(*(e->expressionFilter()));
-		}
-	}
+    // combine the expression to one parse tree
+    ParseTree* filter = NULL;
 
-	// add to the expression wrapper
-	if (fExpression.get() == NULL)
-		fExpression.reset(new funcexp::FuncExpWrapper());
-	fExpression->addFilter(boost::shared_ptr<execplan::ParseTree>(filter));
+    for (JobStepVector::const_iterator it = exps.begin(); it != exps.end(); it++)
+    {
+        ExpressionStep* e = dynamic_cast<ExpressionStep*>(it->get());
+        idbassert(e);
+
+        e->updateInputIndex(keyToIndexMap, jobInfo);
+
+        if (filter != NULL)
+        {
+            ParseTree* left = filter;
+            ParseTree* right = new ParseTree();
+            right->copyTree(*(e->expressionFilter()));
+            filter = new ParseTree(new LogicOperator("and"));
+            filter->left(left);
+            filter->right(right);
+        }
+        else
+        {
+            filter = new ParseTree();
+            filter->copyTree(*(e->expressionFilter()));
+        }
+    }
+
+    // add to the expression wrapper
+    if (fExpression.get() == NULL)
+        fExpression.reset(new funcexp::FuncExpWrapper());
+
+    fExpression->addFilter(boost::shared_ptr<execplan::ParseTree>(filter));
 }
 
 
 void SubAdapterStep::addExpression(const vector<SRCP>& exps)
 {
-	// add to the function wrapper
-	if (fExpression.get() == NULL)
-		fExpression.reset(new funcexp::FuncExpWrapper());
+    // add to the function wrapper
+    if (fExpression.get() == NULL)
+        fExpression.reset(new funcexp::FuncExpWrapper());
 
-	for (vector<SRCP>::const_iterator i = exps.begin(); i != exps.end(); i++)
-		fExpression->addReturnedColumn(*i);
+    for (vector<SRCP>::const_iterator i = exps.begin(); i != exps.end(); i++)
+        fExpression->addReturnedColumn(*i);
 }
 
 
 void SubAdapterStep::addFcnJoinExp(const vector<SRCP>& exps)
 {
-	addExpression(exps);
+    addExpression(exps);
 }
 
 
 void SubAdapterStep::printCalTrace()
 {
-	time_t t = time (0);
-	char timeString[50];
-	ctime_r (&t, timeString);
-	timeString[strlen (timeString )-1] = '\0';
-	ostringstream logStr;
-	logStr  << "ses:" << fSessionId << " st: " << fStepId << " finished at "<< timeString
-			<< "; total rows input-" << fRowsInput
-			<< "; total rows returned-" << fRowsReturned << endl
-			<< "\t1st read " << dlTimes.FirstReadTimeString()
-			<< "; EOI " << dlTimes.EndOfInputTimeString() << "; runtime-"
-			<< JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
-			<< "s;\n\tUUID " << uuids::to_string(fStepUuid) << endl
-			<< "\tJob completion status " << status() << endl;
-	logEnd(logStr.str().c_str());
-	fExtendedInfo += logStr.str();
-	formatMiniStats();
+    time_t t = time (0);
+    char timeString[50];
+    ctime_r (&t, timeString);
+    timeString[strlen (timeString ) - 1] = '\0';
+    ostringstream logStr;
+    logStr  << "ses:" << fSessionId << " st: " << fStepId << " finished at " << timeString
+            << "; total rows input-" << fRowsInput
+            << "; total rows returned-" << fRowsReturned << endl
+            << "\t1st read " << dlTimes.FirstReadTimeString()
+            << "; EOI " << dlTimes.EndOfInputTimeString() << "; runtime-"
+            << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
+            << "s;\n\tUUID " << uuids::to_string(fStepUuid) << endl
+            << "\tJob completion status " << status() << endl;
+    logEnd(logStr.str().c_str());
+    fExtendedInfo += logStr.str();
+    formatMiniStats();
 }
 
 
 void SubAdapterStep::formatMiniStats()
 {
-/*
-	ostringstream oss;
-	oss << "SAS "
-		<< "UM "
-		<< "- "
-		<< "- "
-		<< "- "
-		<< "- "
-		<< "- "
-		<< "- "
-		<< JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-		<< fRowsReturned << " ";
-	fMiniInfo += oss.str();
-*/
+    /*
+    	ostringstream oss;
+    	oss << "SAS "
+    		<< "UM "
+    		<< "- "
+    		<< "- "
+    		<< "- "
+    		<< "- "
+    		<< "- "
+    		<< "- "
+    		<< JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
+    		<< fRowsReturned << " ";
+    	fMiniInfo += oss.str();
+    */
 }
 
 

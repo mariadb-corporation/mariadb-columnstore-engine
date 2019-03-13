@@ -33,17 +33,18 @@ namespace primitives
 {
 
 PrimitiveProcessor::PrimitiveProcessor(int debugLevel) :
-	fDebugLevel(debugLevel), fStatsPtr(NULL), logicalBlockMode(false)
+    fDebugLevel(debugLevel), fStatsPtr(NULL), logicalBlockMode(false)
 {
 
 // 	This does
 //	masks[11] = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023 };
-	int acc, i;
+    int acc, i;
 
-	for (acc = 0, i = 0; i < 11; i++) {
-		masks[i] = acc;
-		acc = acc << 1 | 1;
-	}
+    for (acc = 0, i = 0; i < 11; i++)
+    {
+        masks[i] = acc;
+        acc = acc << 1 | 1;
+    }
 
 }
 
@@ -54,7 +55,7 @@ PrimitiveProcessor::~PrimitiveProcessor()
 
 void PrimitiveProcessor::setParsedColumnFilter(boost::shared_ptr<ParsedColumnFilter> pcf)
 {
-	parsedColumnFilter = pcf;
+    parsedColumnFilter = pcf;
 }
 
 ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(STANDARD), likeOps(0)

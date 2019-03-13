@@ -37,13 +37,14 @@ int main(int argc, char* argv[])
 
     po::options_description desc ("Allowed options");
     desc.add_options ()
-        ("help", "produce help message")
-        ("bisond", /* po::value <string>(),*/ "Have bison produce debug output")
-        ("count", po::value <int>(), "number of runs")
-        ("sql", po::value < string > (), "sql file");
+    ("help", "produce help message")
+    ("bisond", /* po::value <string>(),*/ "Have bison produce debug output")
+    ("count", po::value <int>(), "number of runs")
+    ("sql", po::value < string > (), "sql file");
     po::variables_map vm;
     po::store (po::parse_command_line (argc, argv, desc), vm);
     po::notify (vm);
+
     if (vm.count ("sql"))
         sqlfile = vm["sql"].as <string> ();
 
@@ -51,14 +52,15 @@ int main(int argc, char* argv[])
         count = vm["count"].as<int>();
 
     DMLFileParser parser;
+
     if (vm.count ("bisond"))
         parser.setDebug(true);
 
     parser.parse(sqlfile);
 
-    if(parser.good())
+    if (parser.good())
     {
-        const ParseTree &ptree = parser.getParseTree();
+        const ParseTree& ptree = parser.getParseTree();
 
         cout << "Parser succeeded." << endl;
         cout << ptree.fList.size() << " " << "SQL statements" << endl;
@@ -66,8 +68,10 @@ int main(int argc, char* argv[])
         cout << ptree;
 
         SqlStatement* statementPtr = ptree[0];
+
         if (statementPtr)
             cout << statementPtr->getQueryString();
+
         cout << endl;
     }
     else

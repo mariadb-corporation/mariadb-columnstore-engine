@@ -32,20 +32,23 @@ namespace windowfunction
 class WF_ntile : public WindowFunctionType
 {
 public:
-	WF_ntile(int id, const std::string& name) : WindowFunctionType(id, name) {resetData();}
+    WF_ntile(int id, const std::string& name) : WindowFunctionType(id, name)
+    {
+        resetData();
+    }
 
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
-	void parseParms(const std::vector<execplan::SRCP>&);
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
+    void parseParms(const std::vector<execplan::SRCP>&);
 
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
 
-	uint64_t    fNtile;
-	bool        fNtileNull;
+    uint64_t    fNtile;
+    bool        fNtileNull;
 };
 
 

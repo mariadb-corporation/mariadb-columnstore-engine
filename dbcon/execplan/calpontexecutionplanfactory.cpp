@@ -26,9 +26,10 @@
 #include "vendorexecutionplan.h"
 #include "calpontselectexecutionplan.h"
 
-namespace execplan {
+namespace execplan
+{
 
-//CalpontExecutionPlan* CalpontExecutionPlanFactory::makeCalpontExecutionPlan(const VendorExecutionPlan* vplan) 
+//CalpontExecutionPlan* CalpontExecutionPlanFactory::makeCalpontExecutionPlan(const VendorExecutionPlan* vplan)
 //{
 //	return new CalpontSelectExecutionPlan();
 //}

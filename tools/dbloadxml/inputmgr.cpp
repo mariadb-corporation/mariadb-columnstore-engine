@@ -41,7 +41,7 @@ namespace bulkloadxml
 // InputMgr constructor
 //------------------------------------------------------------------------------
 InputMgr::InputMgr(const string& job)
-{ 
+{
     fParms[ JOBID] = job;                       // add or override default value
 }
 
@@ -57,7 +57,8 @@ InputMgr::~InputMgr( )
 // printUsage
 //------------------------------------------------------------------------------
 void InputMgr::printUsage()
-{   //@bug 391
+{
+    //@bug 391
     cerr << "Usage: " << "colxml [options] dbName"  << endl << endl;
     cerr << "Options: "  << endl;
     cerr << "   -d Delimiter (default '|')\n";
@@ -77,8 +78,8 @@ void InputMgr::printUsage()
     cerr << "   -E EnclosedByChar (if data has enclosed values)\n";
     cerr << "   -C EscapeChar\n";
     cerr << "   -b Debug level (1-3)\n\n";
-    cerr << "   dbName - Required parm specifying the name of the database;"<<
-            endl << "            all others are optional\n\n" ;
+    cerr << "   dbName - Required parm specifying the name of the database;" <<
+         endl << "            all others are optional\n\n" ;
     cerr << "Example:\n\t" << "colxml -t lineitem -j 123 tpch\n";
     //    exit(0);
 }
@@ -86,14 +87,14 @@ void InputMgr::printUsage()
 //------------------------------------------------------------------------------
 // Provide input to this class through argc/argv interface.
 //------------------------------------------------------------------------------
-bool InputMgr::input(int argc, char **argv)
+bool InputMgr::input(int argc, char** argv)
 {
     std::vector<std::string> l_tableList;
     int ch;
 
-    while( (ch=getopt(argc,argv,"b:d:s:j:l:e:n:p:t:u:r:c:w:x:hE:C:")) != EOF )
+    while ( (ch = getopt(argc, argv, "b:d:s:j:l:e:n:p:t:u:r:c:w:x:hE:C:")) != EOF )
     {
-        switch(ch)
+        switch (ch)
         {
             case 't':
             {
@@ -114,29 +115,30 @@ bool InputMgr::input(int argc, char **argv)
             case 'b':
             case 'e':
             {
-                if (verifyArgument(optarg) < 0) 
+                if (verifyArgument(optarg) < 0)
                 {
                     cout << "Argument associated with option -" <<
-                        (char)ch << " is not a number." << endl; 
+                         (char)ch << " is not a number." << endl;
                     return false;
                 }
 
                 errno = 0;
                 long lValue = strtol(optarg, 0, 10);
+
                 if (errno != 0)
                 {
                     cout << "Option -" << (char)ch <<
-                        " is invalid or out of range" << endl;
+                         " is invalid or out of range" << endl;
                     return false;
                 }
 
                 // Limit to INT_MAX because we eventually store in an "int"
                 if ( ((ch == 'e') && (lValue < 0)) ||
-                     ((ch != 'e') && (lValue < 1)) ||
-                     (lValue > INT_MAX))
+                        ((ch != 'e') && (lValue < 1)) ||
+                        (lValue > INT_MAX))
                 {
                     cout << "Option -" << (char)ch <<
-                        " is invalid or out of range." << endl;
+                         " is invalid or out of range." << endl;
                     return false;
                 }
             }
@@ -152,10 +154,12 @@ bool InputMgr::input(int argc, char **argv)
             case 'C':
             {
                 char l_option[4];
-                snprintf(l_option,sizeof(l_option),"-%c",ch);
+                snprintf(l_option, sizeof(l_option), "-%c", ch);
                 ParmList::iterator p = fParms.find(l_option);
+
                 if ( fParms.end() != p  )
                     p->second = optarg;
+
                 break;
             }
 
@@ -168,36 +172,37 @@ bool InputMgr::input(int argc, char **argv)
             default :
             {
                 cout << "Try '" << argv[0] <<
-                    " -h' for more information."<< endl;  
+                     " -h' for more information." << endl;
                 return false;
             }
         }
     }
 
-    if (optind < argc) 
+    if (optind < argc)
     {
         fSchema = argv[optind++];
-        if ( optind < argc ) 
+
+        if ( optind < argc )
         {
             cout << "Extraneous arguments are ignored." << endl;
         }
     }
-    else 
+    else
     {
         cout << "Schema value is required." << endl;
-        cout << "Try '" << argv[0] << " -h' for more information."<< endl;  
+        cout << "Try '" << argv[0] << " -h' for more information." << endl;
         return false;
     }
-    
+
     for (unsigned ndx = 0; ndx < l_tableList.size(); ndx++)
     {
         fTables.push_back(execplan::CalpontSystemCatalog::TableName(
-            fSchema, l_tableList[ndx]));
+                              fSchema, l_tableList[ndx]));
     }
 
     return true;
 }
-  
+
 //------------------------------------------------------------------------------
 // Get list of tables for fSchema, and store the list in fTables.
 //------------------------------------------------------------------------------
@@ -205,12 +210,13 @@ bool  InputMgr::loadCatalogTables()
 {
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(
-        BULK_SYSCAT_SESSION_ID);
+            BULK_SYSCAT_SESSION_ID);
     systemCatPtr->identity(execplan::CalpontSystemCatalog::EC);
-    const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> > tables 
-            = systemCatPtr->getTables( fSchema );
+    const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> > tables
+        = systemCatPtr->getTables( fSchema );
+
     for (vector<pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >::const_iterator it = tables.begin();
-         it != tables.end(); ++it)
+            it != tables.end(); ++it)
     {
         fTables.push_back((*it).second);
     }
@@ -221,16 +227,18 @@ bool  InputMgr::loadCatalogTables()
 //------------------------------------------------------------------------------
 // Verify that string argument is numeric
 //------------------------------------------------------------------------------
-int InputMgr::verifyArgument(char *arg)
+int InputMgr::verifyArgument(char* arg)
 {
-    while(*arg != 0)
+    while (*arg != 0)
     {
         if (!isdigit(*arg))
         {
-          return -1;
+            return -1;
         }
+
         arg++;
     }
+
     return 0;
 }
 
@@ -251,21 +259,22 @@ std::ostream& operator<<(std::ostream& os, const InputMgr& m)
     os << "\n\tSchema:\t" << m.fSchema << "\n\t"   << "Tables:\t";
 
     for ( InputMgr::TableList::const_iterator i = m.fTables.begin();
-          i != m.fTables.end(); ++i)
+            i != m.fTables.end(); ++i)
         os << i->table << "  ";
 
     os << "\n\t" << "Load Files: ";
+
     for ( InputMgr::LoadNames::const_iterator i = m.fLoadNames.begin();
-          i != m.fLoadNames.end(); ++i)
+            i != m.fLoadNames.end(); ++i)
         os << *i << "  ";
 
     for (InputMgr::ParmList::const_iterator i  = m.fParms.begin();
-        i != m.fParms.end(); ++i)
+            i != m.fParms.end(); ++i)
     {
         // Don't report the enclosedBy if not enabled by user
         if ((i->first == XMLGenData::ENCLOSED_BY_CHAR) &&
-            (i->second.length() < 1))
-                continue;
+                (i->second.length() < 1))
+            continue;
 
         os << "\n\t" << i->first << "\t" << i->second;
     }

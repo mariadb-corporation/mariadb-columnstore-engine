@@ -14,6 +14,10 @@
 		<IPAddr>127.0.0.1</IPAddr>
 		<Port>8603</Port>
 	</ProcMgr>
+	<ProcMgr_Alarm>
+		<IPAddr>127.0.0.1</IPAddr>
+		<Port>8606</Port>
+	</ProcMgr_Alarm>
 	<ProcStatusControl>
 		<IPAddr>127.0.0.1</IPAddr>
 		<Port>8604</Port>
@@ -414,7 +418,9 @@
 		<Module>unassigned</Module>
 	</DBRM_Worker10>
 	<DBBC>
-		<!-- The percentage of RAM to use for the disk block cache. Defaults to 86% -->
+		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
+        <!-- Alternatively, this can be specified in absolute terms using
+             the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
 		<NumBlocksPct>50</NumBlocksPct>
 		<!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
@@ -458,6 +464,8 @@
 		<JavaHome>unassigned</JavaHome>
 		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
+		<DistributedInstall>y</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 	</Installation>
 	<ExtentMap>
 		<!--
@@ -494,8 +502,9 @@
 			  is 20 extents worth of work for the PMs to process at any given time.
 			  ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
 			  as many threads are available across all PMs.  -->
-        <!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
-        <MaxOutstandingRequests>20</MaxOutstandingRequests>
+		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
+		<MaxOutstandingRequests>20</MaxOutstandingRequests>
+		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
 	<TupleWSDL>
 		<MaxSize>1M</MaxSize>                   <!-- Max size in bytes per bucket -->
@@ -508,10 +517,13 @@
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 	</RowAggregation>
 	<CrossEngineSupport>
-		<Host>unassigned</Host>
+		<Host>127.0.0.1</Host>
 		<Port>3306</Port>
-		<User>unassigned</User>
+		<User>root</User>
 		<Password></Password>
+		<TLSCA></TLSCA>
+		<TLSClientCert></TLSClientCert>
+		<TLSClientKey></TLSClientKey>
 	</CrossEngineSupport>
 	<QueryStats>
 		<Enabled>N</Enabled>

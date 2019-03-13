@@ -71,70 +71,79 @@ namespace syncstream
 class syncbuf : public std::streambuf
 {
 public:
-	/** ctor */
-	syncbuf(FILE* f) : std::streambuf(), fptr(f) {}
+    /** ctor */
+    syncbuf(FILE* f) : std::streambuf(), fptr(f) {}
 
 protected:
-	/** Write character in the case of overflow */
-	virtual int overflow(int c = EOF) {
-		return (c != EOF ? fputc(c, fptr) : EOF);
-	}
-	/** Get character in the case of overflow */
-	virtual int underflow() {
-		int c = getc(fptr);
-		if (c != EOF)
-			ungetc(c, fptr);
-		return c;
-	}
-	/** Get character in the case of overflow and advance get pointer */
-	virtual int uflow() {
-		return getc(fptr);
-	}
-	/** put character back in the case of backup underflow */
-	virtual int pbackfail(int c = EOF) {
-		return (c != EOF ? ungetc(c, fptr) : EOF);
-	}
-	/** Synchronize stream buffer */
-	virtual int sync() {
-		return fflush(fptr);
-	}
+    /** Write character in the case of overflow */
+    virtual int overflow(int c = EOF)
+    {
+        return (c != EOF ? fputc(c, fptr) : EOF);
+    }
+    /** Get character in the case of overflow */
+    virtual int underflow()
+    {
+        int c = getc(fptr);
+
+        if (c != EOF)
+            ungetc(c, fptr);
+
+        return c;
+    }
+    /** Get character in the case of overflow and advance get pointer */
+    virtual int uflow()
+    {
+        return getc(fptr);
+    }
+    /** put character back in the case of backup underflow */
+    virtual int pbackfail(int c = EOF)
+    {
+        return (c != EOF ? ungetc(c, fptr) : EOF);
+    }
+    /** Synchronize stream buffer */
+    virtual int sync()
+    {
+        return fflush(fptr);
+    }
 
 private:
-	FILE* fptr;
+    FILE* fptr;
 };
 
 /** An istream adaptor for input FILE* streams */
 class isyncstream : public std::istream
 {
 public:
-	/** ctor */
-	isyncstream() : istream(&buf), buf(0) {}
-	/** ctor */
-	isyncstream(FILE* fptr) : istream(&buf), buf(fptr) {}
-	/** const streambuf accessor */
-	const syncbuf* rdbuf() const {
-		return &buf; 
-	}
+    /** ctor */
+    isyncstream() : istream(&buf), buf(0) {}
+    /** ctor */
+    isyncstream(FILE* fptr) : istream(&buf), buf(fptr) {}
+    /** const streambuf accessor */
+    const syncbuf* rdbuf() const
+    {
+        return &buf;
+    }
 
 private:
-	syncbuf buf;
+    syncbuf buf;
 };
 
 /** An ostream adaptor for output FILE* streams */
 class osyncstream : public std::ostream
 {
 public:
-	/** ctor */
-	osyncstream() : ostream(&buf), buf(0) {}
-	/** ctor */
-	osyncstream(FILE* fptr) : ostream(&buf), buf(fptr) {}
-	/** const streambuf accessor */
-	const syncbuf* rdbuf() const {
-		return &buf; 
-	}
+    /** ctor */
+    osyncstream() : ostream(&buf), buf(0) {}
+    /** ctor */
+    osyncstream(FILE* fptr) : ostream(&buf), buf(fptr) {}
+    /** const streambuf accessor */
+    const syncbuf* rdbuf() const
+    {
+        return &buf;
+    }
 
 private:
-	syncbuf buf;
+    syncbuf buf;
 };
 
 }

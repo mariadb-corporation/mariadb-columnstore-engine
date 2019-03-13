@@ -39,8 +39,14 @@ namespace WriteEngine
 class BulkStatus
 {
 public:
-   static int     getJobStatus()           { return fJobStatus; }
-   static void setJobStatus(int jobStatus) { fJobStatus = jobStatus; }
+    static int     getJobStatus()
+    {
+        return fJobStatus;
+    }
+    static void setJobStatus(int jobStatus)
+    {
+        fJobStatus = jobStatus;
+    }
 
 private:
     /* @brief Global job status flag.
@@ -49,7 +55,7 @@ private:
     * as a flag.  Making the variable volatile should suffice, to make it
     * work with multiple threads.
     */
-   static volatile int fJobStatus;
+    static volatile int fJobStatus;
 };
 
 } // end of namespace

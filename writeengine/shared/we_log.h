@@ -26,7 +26,7 @@
 
 #include <time.h>
 #include <sys/types.h>
-#include <unistd.h> 
+#include <unistd.h>
 
 #include <iostream>
 #include <fstream>
@@ -45,12 +45,14 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-const	std::string MSG_LEVEL_STR[] = { 
-	"INFO",
-	"INFO2",
-	"WARN",
-	"ERR ",
-	"CRIT" };
+const	std::string MSG_LEVEL_STR[] =
+{
+    "INFO",
+    "INFO2",
+    "WARN",
+    "ERR ",
+    "CRIT"
+};
 
 /** @brief Class is used to format and write log messages to cpimport.bin log
  *  file.  When applicable, messages are also logged to syslog logs as well.
@@ -58,33 +60,39 @@ const	std::string MSG_LEVEL_STR[] = {
 class Log : public WEObj
 {
 public:
-   /**
-    * @brief Constructor
-    */
+    /**
+     * @brief Constructor
+     */
     EXPORT Log();
 
-   /**
-    * @brief Destructor
-    */
+    /**
+     * @brief Destructor
+     */
     EXPORT ~Log();
 
-   /**
-    * @brief Log a cpimport.bin logfile message; logs errors to syslog as well
-    */
+    /**
+     * @brief Log a cpimport.bin logfile message; logs errors to syslog as well
+     */
     EXPORT void     logMsg( const char* msg, int code, MsgLevel level );
     EXPORT void     logMsg( const char* msg, MsgLevel level )
-                        { logMsg( msg, 0, level ); }
+    {
+        logMsg( msg, 0, level );
+    }
     EXPORT void     logMsg( const std::string& msg, MsgLevel level )
-                        { logMsg( msg.c_str(), level ); }
+    {
+        logMsg( msg.c_str(), level );
+    }
     EXPORT void     logMsg( const std::string& msg, int code, MsgLevel level )
-                        { logMsg( msg.c_str(), code, level ); }
+    {
+        logMsg( msg.c_str(), code, level );
+    }
 
-   /**
-    * @brief Set log file name
-    */
+    /**
+     * @brief Set log file name
+     */
     EXPORT void     setLogFileName( const char* logfile,
-                                const char* errlogfile,
-                                bool consoleFlag = true );
+                                    const char* errlogfile,
+                                    bool consoleFlag = true );
 
     // BUG 5022
     /**
@@ -102,7 +110,7 @@ private:
                                 int                code = 0 ) const;
 
     bool            m_bConsoleOutput;              // flag allowing INFO2 msg
-                                                   //   to display to console
+    //   to display to console
     std::string     m_logFileName;                 // log file name
     std::string     m_errlogFileName;              // error log file name
     pid_t           m_pid;                         // current pid

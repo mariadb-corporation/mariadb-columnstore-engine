@@ -55,75 +55,98 @@ using namespace oam;
 
 namespace
 {
-	void added_a_pm(int)
-	{
-		logging::LoggingID logid(21, 0, 0);
-		logging::Message::Args args1;
-		logging::Message msg(1);
-		args1.add("we_server caught SIGHUP. Resetting connections");
-		msg.format( args1 );
-		logging::Logger logger(logid.fSubsysID);
-		logger.logMessage(logging::LOG_TYPE_DEBUG, msg, logid);
-		joblist::DistributedEngineComm::reset();
-	}
+void added_a_pm(int)
+{
+    logging::LoggingID logid(21, 0, 0);
+    logging::Message::Args args1;
+    logging::Message msg(1);
+    args1.add("we_server caught SIGHUP. Resetting connections");
+    msg.format( args1 );
+    logging::Logger logger(logid.fSubsysID);
+    logger.logMessage(logging::LOG_TYPE_DEBUG, msg, logid);
+    joblist::DistributedEngineComm::reset();
+}
 }
 
 int setupResources()
 {
 #ifndef _MSC_VER
-        struct rlimit rlim;
+    struct rlimit rlim;
 
-        if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-                return -1;
-        }
-        rlim.rlim_cur = rlim.rlim_max = 65536;
-        if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-                return -2;
-        }
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
+    {
+        return -1;
+    }
 
-        if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-                return -3;
-        }
+    rlim.rlim_cur = rlim.rlim_max = 65536;
 
-        if (rlim.rlim_cur != 65536) {
-                return -4;
-        }
+    if (setrlimit(RLIMIT_NOFILE, &rlim) != 0)
+    {
+        return -2;
+    }
+
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
+    {
+        return -3;
+    }
+
+    if (rlim.rlim_cur != 65536)
+    {
+        return -4;
+    }
+
 #endif
-        return 0;
+    return 0;
 }
 
 int main(int argc, char** argv)
 {
-	// get and set locale language
+    // get and set locale language
     string systemLang = "C";
-	systemLang = funcexp::utf8::idb_setlocale();
+    systemLang = funcexp::utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("WriteEngineServ");
 
     printf ("Locale is : %s\n", systemLang.c_str() );
 
-	//set BUSY_INIT state
-	{
-		// Is there a reason to have a seperate Oam instance for this?
-		Oam oam;
-		try
-		{
-			oam.processInitComplete("WriteEngineServer", oam::BUSY_INIT);
-		}
-		catch (...)
-		{
-		}
-	}
-	//BUG 2991
-	setlocale(LC_NUMERIC, "C");
+    int gDebug = 0;
+    int c;
+    while ((c = getopt(argc, argv, "d")) != EOF)
+    {
+        switch (c)
+        {
+            case 'd':
+                gDebug++;
+                break;
+            case '?':
+            default:
+                break;
+        }
+    }
+
+    //set BUSY_INIT state
+    {
+        // Is there a reason to have a seperate Oam instance for this?
+        Oam oam;
+
+        try
+        {
+            oam.processInitComplete("WriteEngineServer", oam::BUSY_INIT);
+        }
+        catch (...)
+        {
+        }
+    }
+    //BUG 2991
+    setlocale(LC_NUMERIC, "C");
 #ifndef _MSC_VER
-	struct sigaction sa;
-	memset(&sa, 0, sizeof(sa));
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
     sa.sa_handler = added_a_pm;
-	sigaction(SIGHUP, &sa, 0);
-	sa.sa_handler = SIG_IGN;
-	sigaction(SIGPIPE, &sa, 0);
+    sigaction(SIGHUP, &sa, 0);
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &sa, 0);
 
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = fatalHandler;
@@ -132,123 +155,178 @@ int main(int argc, char** argv)
     sigaction(SIGFPE, &sa, 0);
 #endif
 
-	// Init WriteEngine Wrapper (including Config Columnstore.xml cache)
-	WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_WE_SRV );
+    // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
+    WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_WE_SRV );
 
 #ifdef _MSC_VER
     // In windows, initializing the wrapper (A dll) does not set the static variables
     // in the main program
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
-	Config weConfig;
-	setupResources();
-	
-	ostringstream serverParms;
-	serverParms << "pm" << weConfig.getLocalModuleID() << "_WriteEngineServer";
+    Config weConfig;
 
-	// Create MessageQueueServer, with one retry in case the call to bind the
-	// known port fails with "Address already in use".
-	boost::scoped_ptr<MessageQueueServer> mqs;
-	bool tellUser = true;
-	for (;;)
-	{
-		try {
-			mqs.reset(new MessageQueueServer(serverParms.str()));
-			break;
-		}
-		// @bug4393 Error Handling for MessageQueueServer constructor exception
-		catch (runtime_error& re) {
-			string what = re.what();
-			if (what.find("Address already in use") != string::npos)
-			{
-				if (tellUser)
-				{
-					cerr << "Address already in use, retrying..." << endl;
-					tellUser = false;
-				}
-				sleep(5);
-			}
-			else
-			{
-				Oam oam;
-				try // Get out of BUSYINIT state; else OAM will not retry
-				{
-					oam.processInitComplete("WriteEngineServer");
-				}
-				catch (...)
-				{
-				}
+    ostringstream serverParms;
+    serverParms << "pm" << weConfig.getLocalModuleID() << "_WriteEngineServer";
 
-				// If/when a common logging class or function is added to the
-				// WriteEngineServer, we should use that.  In the mean time,
-				// I will log this errmsg with inline calls to the logging.
-				logging::Message::Args args;
-				logging::Message message;
-				string errMsg("WriteEngineServer failed to initiate: ");
-				errMsg += what;
-				args.add( errMsg );
-				message.format(args);
-				logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
-				logging::MessageLog ml(lid);
-				ml.logCriticalMessage( message );
+    // Create MessageQueueServer, with one retry in case the call to bind the
+    // known port fails with "Address already in use".
+    boost::scoped_ptr<MessageQueueServer> mqs;
+    bool tellUser = true;
 
-				return 2;
-			}
-		}
-	}
+    for (;;)
+    {
+        try
+        {
+            mqs.reset(new MessageQueueServer(serverParms.str()));
+            break;
+        }
+        // @bug4393 Error Handling for MessageQueueServer constructor exception
+        catch (runtime_error& re)
+        {
+            string what = re.what();
 
-	IOSocket ios;
-	size_t mt = 20;
-	size_t qs = mt * 100;
-	ThreadPool tp(mt, qs);
+            if (what.find("Address already in use") != string::npos)
+            {
+                if (tellUser)
+                {
+                    cerr << "Address already in use, retrying..." << endl;
+                    tellUser = false;
+                }
 
-	//set ACTIVE state
-	{
-		Oam oam;
-		try
-		{
-			oam.processInitComplete("WriteEngineServer", ACTIVE);
-		}
-		catch (...)
-		{
-		}
-	}
-	cout << "WriteEngineServer is ready" << endl;
-	BRM::DBRM dbrm;
-	for (;;)
-	{
-		try // BUG 4834 -
-		{
-			ios = mqs->accept();
-			//tp.invoke(ReadThread(ios));
-			ReadThreadFactory::CreateReadThread(tp,ios, dbrm);
-			{
-/*				logging::Message::Args args;
-				logging::Message message;
-				string aMsg("WriteEngineServer : New incoming connection");
-				args.add(aMsg);
-				message.format(args);
-				logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
-				logging::MessageLog ml(lid);
-				ml.logInfoMessage( message ); */
-			}
-		}
-		catch(std::exception& ex) // BUG 4834 - log the exception
-		{
-			logging::Message::Args args;
-			logging::Message message;
-			string errMsg("WriteEngineServer : Exception caught on accept(): ");
-			errMsg += ex.what();
-			args.add( errMsg );
-			message.format(args);
-			logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
-			logging::MessageLog ml(lid);
-			ml.logCriticalMessage( message );
-			break;
-		}
-	}
+                sleep(5);
+            }
+            else
+            {
+                Oam oam;
 
-	//It is an error to reach here...
-	return 1;
+                try // Get out of BUSYINIT state; else OAM will not retry
+                {
+                    oam.processInitComplete("WriteEngineServer");
+                }
+                catch (...)
+                {
+                }
+
+                // If/when a common logging class or function is added to the
+                // WriteEngineServer, we should use that.  In the mean time,
+                // I will log this errmsg with inline calls to the logging.
+                logging::Message::Args args;
+                logging::Message message;
+                string errMsg("WriteEngineServer failed to initiate: ");
+                errMsg += what;
+                args.add( errMsg );
+                message.format(args);
+                logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+                logging::MessageLog ml(lid);
+                ml.logCriticalMessage( message );
+
+                return 2;
+            }
+        }
+    }
+
+    int err = 0;
+    if (!gDebug)
+        err = setupResources();
+    string errMsg;
+
+    switch (err)
+    {
+        case -1:
+        case -3:
+            errMsg = "Error getting file limits, please see non-root install documentation";
+            break;
+
+        case -2:
+            errMsg = "Error setting file limits, please see non-root install documentation";
+            break;
+
+        case -4:
+            errMsg = "Could not install file limits to required value, please see non-root install documentation";
+            break;
+
+        default:
+            break;
+    }
+
+    if (err < 0)
+    {
+        Oam oam;
+        logging::Message::Args args;
+        logging::Message message;
+        args.add( errMsg );
+        message.format(args);
+        logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+        logging::MessageLog ml(lid);
+        ml.logCriticalMessage( message );
+        cerr << errMsg << endl;
+
+        try
+        {
+            oam.processInitFailure();
+        }
+        catch (...)
+        {
+        }
+
+        return 2;
+    }
+
+
+    IOSocket ios;
+    size_t mt = 20;
+    size_t qs = mt * 100;
+    ThreadPool tp(mt, qs);
+
+    //set ACTIVE state
+    {
+        Oam oam;
+
+        try
+        {
+            oam.processInitComplete("WriteEngineServer", ACTIVE);
+        }
+        catch (...)
+        {
+        }
+    }
+    cout << "WriteEngineServer is ready" << endl;
+    BRM::DBRM dbrm;
+
+    for (;;)
+    {
+        try // BUG 4834 -
+        {
+            ios = mqs->accept();
+            //tp.invoke(ReadThread(ios));
+            ReadThreadFactory::CreateReadThread(tp, ios, dbrm);
+            {
+                /*				logging::Message::Args args;
+                				logging::Message message;
+                				string aMsg("WriteEngineServer : New incoming connection");
+                				args.add(aMsg);
+                				message.format(args);
+                				logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+                				logging::MessageLog ml(lid);
+                				ml.logInfoMessage( message ); */
+            }
+        }
+        catch (std::exception& ex) // BUG 4834 - log the exception
+        {
+            logging::Message::Args args;
+            logging::Message message;
+            string errMsg("WriteEngineServer : Exception caught on accept(): ");
+            errMsg += ex.what();
+            args.add( errMsg );
+            message.format(args);
+            logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+            logging::MessageLog ml(lid);
+            ml.logCriticalMessage( message );
+            break;
+        }
+    }
+
+    //It is an error to reach here...
+    return 1;
 }
 

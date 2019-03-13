@@ -19,7 +19,7 @@
 * $Id: svnQuery.cpp 64 2006-10-12 22:21:51Z dhill $
 *
 *
-*		
+*
 ******************************************************************************************/
 /**
  * @file
@@ -48,148 +48,167 @@
 using namespace std;
 using namespace oam;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	Oam oam;
-	vector <string> queryDirectory;
-	vector <string> queryID;
+    Oam oam;
+    vector <string> queryDirectory;
+    vector <string> queryID;
 
-	// get latest set of svn queries
+    // get latest set of svn queries
 //	system("rm -rf /root/genii/ > /dev/null 2>&1");
-	system("updateGenii.pl > /dev/null 2>&1");
+    system("updateGenii.pl > /dev/null 2>&1");
 
-	system("rm -rf /home/qa/bldqry/mysql/* > /dev/null 2>&1");
+    system("rm -rf /home/qa/bldqry/mysql/* > /dev/null 2>&1");
 
-	string cronFile = "/root/calpontBuildTest";
-	unlink(cronFile.c_str());
+    string cronFile = "/root/calpontBuildTest";
+    unlink(cronFile.c_str());
 
-	// get query directory list
-	string topQueryfileName = "/tmp/topQuerydirs";
-	string secondQueryfileName = "/tmp/secondQuerydirs";
-	string queryfileName = "/home/qa/bldqry/mysql/querydirs";
+    // get query directory list
+    string topQueryfileName = "/tmp/topQuerydirs";
+    string secondQueryfileName = "/tmp/secondQuerydirs";
+    string queryfileName = "/home/qa/bldqry/mysql/querydirs";
 
-	string cmd = "ls /root/genii/mysql/queries/. > " + topQueryfileName;
-	system(cmd.c_str());
+    string cmd = "ls /root/genii/mysql/queries/. > " + topQueryfileName;
+    system(cmd.c_str());
 
-	ifstream file (topQueryfileName.c_str());
-	if (!file) {
-		cout << " Error: can't open " + topQueryfileName << endl;
-		exit (-1);
-	}
+    ifstream file (topQueryfileName.c_str());
 
-	char line[200];
-	string topQueryDir;
-	while (file.getline(line, 200))
-	{
-		topQueryDir = line;
-		if ( topQueryDir.find("queryTester",0) != string::npos || topQueryDir == "Makefile" )
-			continue;
+    if (!file)
+    {
+        cout << " Error: can't open " + topQueryfileName << endl;
+        exit (-1);
+    }
 
-		// only do working queries for now
-		if ( topQueryDir.find("working",0) == string::npos)
-			continue;
+    char line[200];
+    string topQueryDir;
 
-		string cmd = "ls /root/genii/mysql/queries/" + topQueryDir + "/. > " + secondQueryfileName;
-		system(cmd.c_str());
-	
-		ifstream file (secondQueryfileName.c_str());
-		if (file) {
-			char line[200];
-			string buf;
-			while (file.getline(line, 200))
-			{
-				buf = line;
-				if ( buf.empty() )
-					continue;
-				string tempdir =  topQueryDir + "/" + buf;
-				queryDirectory.push_back(tempdir);
-			}
-		}
-		file.close();
-	}
+    while (file.getline(line, 200))
+    {
+        topQueryDir = line;
 
-	file.close();
+        if ( topQueryDir.find("queryTester", 0) != string::npos || topQueryDir == "Makefile" )
+            continue;
 
-	if ( queryDirectory.size() == 0 ) {
-		cout << endl << "Error: no query sub-directories located" << endl;
-		exit (-1);
-	}
+        // only do working queries for now
+        if ( topQueryDir.find("working", 0) == string::npos)
+            continue;
 
-	// get query list for each query directory
-	int test = 1;
-	std::vector<std::string>::iterator pt1 = queryDirectory.begin();
-	for( ; pt1 != queryDirectory.end() ; pt1++)
-	{
-		string directory = *pt1;
-		string::size_type pos = directory.find("/",0);
-		if (pos != string::npos)
-		{
-			string setName;
-			setName = directory.substr(0, pos);
-			setName = setName + "-";
-			setName = setName + directory.substr(pos+1, 200);
-		
-			string cmd = "cd /home/qa/bldqry/mysql/;echo " + setName + ".sql > " + oam.itoa(test) + ".txt";
-			system(cmd.c_str());
-			queryID.push_back(oam.itoa(test));
-			test++;
-	
-			cmd = "rm -f /home/qa/bldqry/mysql/" + setName + ".sql";
-			system(cmd.c_str());
-	
-			cmd = "cat /root/genii/mysql/queries/" + directory + "/*.sql >> /home/qa/bldqry/mysql/" + setName +  ".sql";
-			system(cmd.c_str());
-		}
-	}
+        string cmd = "ls /root/genii/mysql/queries/" + topQueryDir + "/. > " + secondQueryfileName;
+        system(cmd.c_str());
 
-	// setup calpontBuildTest cron job with directories
-	string cronFileTemplate = "/root/calpontBuildTest.template";
+        ifstream file (secondQueryfileName.c_str());
 
-	ifstream cfile (cronFileTemplate.c_str());
-	if (!cfile) {
-		cout << endl << "Error: " + cronFileTemplate + " not found" << endl;
-		exit (-1);
-	}
+        if (file)
+        {
+            char line[200];
+            string buf;
 
-	vector <string> lines;
-	string newLine;
-	string buf;
-	while (cfile.getline(line, 200))
-	{
-		buf = line;
-		string::size_type pos = buf.find("buildTester",0);
-		if (pos != string::npos)
-		{
-	        newLine = buf;
+            while (file.getline(line, 200))
+            {
+                buf = line;
 
-			pt1 = queryID.begin();
-			for( ; pt1 != queryID.end() ; pt1++)
-			{
-				newLine.append(" mysql-");
-				newLine.append(*pt1);
-			}
+                if ( buf.empty() )
+                    continue;
 
-			newLine.append(" mysql-queryTester");
+                string tempdir =  topQueryDir + "/" + buf;
+                queryDirectory.push_back(tempdir);
+            }
+        }
 
-			buf = newLine;
-		}
-		//output to temp file
-		lines.push_back(buf);
-	}
-	
-	cfile.close();
+        file.close();
+    }
 
-   	ofstream newFile (cronFile.c_str());	
-	
-	//create new file
-	int fd = open(cronFile.c_str(), O_RDWR|O_CREAT, 0777);
-	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
-	close(fd);
+    file.close();
 
-	cmd = "chmod 777 " + cronFile;
-	system(cmd.c_str());
+    if ( queryDirectory.size() == 0 )
+    {
+        cout << endl << "Error: no query sub-directories located" << endl;
+        exit (-1);
+    }
+
+    // get query list for each query directory
+    int test = 1;
+    std::vector<std::string>::iterator pt1 = queryDirectory.begin();
+
+    for ( ; pt1 != queryDirectory.end() ; pt1++)
+    {
+        string directory = *pt1;
+        string::size_type pos = directory.find("/", 0);
+
+        if (pos != string::npos)
+        {
+            string setName;
+            setName = directory.substr(0, pos);
+            setName = setName + "-";
+            setName = setName + directory.substr(pos + 1, 200);
+
+            string cmd = "cd /home/qa/bldqry/mysql/;echo " + setName + ".sql > " + oam.itoa(test) + ".txt";
+            system(cmd.c_str());
+            queryID.push_back(oam.itoa(test));
+            test++;
+
+            cmd = "rm -f /home/qa/bldqry/mysql/" + setName + ".sql";
+            system(cmd.c_str());
+
+            cmd = "cat /root/genii/mysql/queries/" + directory + "/*.sql >> /home/qa/bldqry/mysql/" + setName +  ".sql";
+            system(cmd.c_str());
+        }
+    }
+
+    // setup calpontBuildTest cron job with directories
+    string cronFileTemplate = "/root/calpontBuildTest.template";
+
+    ifstream cfile (cronFileTemplate.c_str());
+
+    if (!cfile)
+    {
+        cout << endl << "Error: " + cronFileTemplate + " not found" << endl;
+        exit (-1);
+    }
+
+    vector <string> lines;
+    string newLine;
+    string buf;
+
+    while (cfile.getline(line, 200))
+    {
+        buf = line;
+        string::size_type pos = buf.find("buildTester", 0);
+
+        if (pos != string::npos)
+        {
+            newLine = buf;
+
+            pt1 = queryID.begin();
+
+            for ( ; pt1 != queryID.end() ; pt1++)
+            {
+                newLine.append(" mysql-");
+                newLine.append(*pt1);
+            }
+
+            newLine.append(" mysql-queryTester");
+
+            buf = newLine;
+        }
+
+        //output to temp file
+        lines.push_back(buf);
+    }
+
+    cfile.close();
+
+    ofstream newFile (cronFile.c_str());
+
+    //create new file
+    int fd = open(cronFile.c_str(), O_RDWR | O_CREAT, 0777);
+
+    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+    newFile.close();
+    close(fd);
+
+    cmd = "chmod 777 " + cronFile;
+    system(cmd.c_str());
 
 
 }

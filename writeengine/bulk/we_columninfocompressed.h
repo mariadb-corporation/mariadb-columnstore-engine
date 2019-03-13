@@ -42,16 +42,16 @@ class RBMetaWriter;
  */
 class ColumnInfoCompressed : public ColumnInfo
 {
-  public:
+public:
 
     /** @brief Constructor.
      */
     ColumnInfoCompressed(Log*   logger,
-               int              id,
-               const JobColumn& column,
-               DBRootExtentTracker* pDBRootExtTrk,
-               TableInfo*		pTableInfo);
-               //RBMetaWriter*    rbMetaWriter);
+                         int              id,
+                         const JobColumn& column,
+                         DBRootExtentTracker* pDBRootExtTrk,
+                         TableInfo*		pTableInfo);
+    //RBMetaWriter*    rbMetaWriter);
 
     /** @brief Destructor
      */
@@ -71,9 +71,9 @@ class ColumnInfoCompressed : public ColumnInfo
      * @param sNum Segment number of relevant dictionary store segment file.
      */
     virtual int truncateDctnryStore(OID dctnryOid,
-        uint16_t root, uint32_t pNum, uint16_t sNum) const;
+                                    uint16_t root, uint32_t pNum, uint16_t sNum) const;
 
-  private:
+private:
 
     virtual int resetFileOffsetsNewExtent(const char* hdr);
 

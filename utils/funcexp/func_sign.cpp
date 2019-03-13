@@ -35,40 +35,42 @@ namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_sign::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	CalpontSystemCatalog::ColType ct;
-	ct.colDataType = CalpontSystemCatalog::BIGINT;
-	ct.colWidth = 8;
-	return ct;
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::BIGINT;
+    ct.colWidth = 8;
+    return ct;
 }
 
 int64_t Func_sign::getIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType& op_ct)
 {
-	double val = parm[0]->data()->getDoubleVal(row, isNull);
-	if (isNull)
-		return 0;
-	else if (val > 0)
-		return 1;
-	else if (val < 0)
-		return -1;
-	else
-		return 0;
+    double val = parm[0]->data()->getDoubleVal(row, isNull);
+
+    if (isNull)
+        return 0;
+    else if (val > 0)
+        return 1;
+    else if (val < 0)
+        return -1;
+    else
+        return 0;
 }
 
 string Func_sign::getStrVal(rowgroup::Row& row,
-								FunctionParm& parm,
-								bool& isNull,
-								CalpontSystemCatalog::ColType& op_ct)
+                            FunctionParm& parm,
+                            bool& isNull,
+                            CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t sign = getIntVal(row, parm, isNull, op_ct);
-	if (sign > 0)
-		return string("1");
-	else if (sign < 0)
-		return string("-1");
-	else
-		return string("0");
+    int64_t sign = getIntVal(row, parm, isNull, op_ct);
+
+    if (sign > 0)
+        return string("1");
+    else if (sign < 0)
+        return string("-1");
+    else
+        return string("0");
 }
 
 } // namespace funcexp

@@ -52,47 +52,56 @@ class  ResourceManager;
 class GroupConcatInfo
 {
 public:
-	GroupConcatInfo();
-	virtual ~GroupConcatInfo();
+    GroupConcatInfo();
+    virtual ~GroupConcatInfo();
 
-	void prepGroupConcat(JobInfo&);
-	void mapColumns(const rowgroup::RowGroup&);
+    void prepGroupConcat(JobInfo&);
+    void mapColumns(const rowgroup::RowGroup&);
 
-	std::set<uint32_t>& columns() { return fColumns; }
-	std::vector<rowgroup::SP_GroupConcat>& groupConcat() { return fGroupConcat; }
+    std::set<uint32_t>& columns()
+    {
+        return fColumns;
+    }
+    std::vector<rowgroup::SP_GroupConcat>& groupConcat()
+    {
+        return fGroupConcat;
+    }
 
-	const std::string toString() const;
+    const std::string toString() const;
 
 protected:
-	uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-	boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+    uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
+    boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 
-	std::set<uint32_t>                        fColumns;
-	std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
+    std::set<uint32_t>                        fColumns;
+    std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
 };
 
 
 class GroupConcatAgUM : public rowgroup::GroupConcatAg
 {
 public:
-	EXPORT GroupConcatAgUM(rowgroup::SP_GroupConcat&);
-	EXPORT ~GroupConcatAgUM();
+    EXPORT GroupConcatAgUM(rowgroup::SP_GroupConcat&);
+    EXPORT ~GroupConcatAgUM();
 
-	void initialize();
-	void processRow(const rowgroup::Row&);
-	EXPORT void merge(const rowgroup::Row&, int64_t);
-	boost::scoped_ptr<GroupConcator>& concator() { return fConcator; }
+    void initialize();
+    void processRow(const rowgroup::Row&);
+    EXPORT void merge(const rowgroup::Row&, int64_t);
+    boost::scoped_ptr<GroupConcator>& concator()
+    {
+        return fConcator;
+    }
 
-	EXPORT void getResult(uint8_t*);
-	EXPORT uint8_t * getResult();
+    EXPORT void getResult(uint8_t*);
+    EXPORT uint8_t* getResult();
 
 protected:
-	void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
+    void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
 
-	boost::scoped_ptr<GroupConcator>      fConcator;
-	boost::scoped_array<uint8_t>          fData;
-	rowgroup::Row                         fRow;
-	bool                                  fNoOrder;
+    boost::scoped_ptr<GroupConcator>      fConcator;
+    boost::scoped_array<uint8_t>          fData;
+    rowgroup::Row                         fRow;
+    bool                                  fNoOrder;
 };
 
 
@@ -100,29 +109,29 @@ protected:
 class GroupConcator
 {
 public:
-	GroupConcator();
-	virtual ~GroupConcator();
+    GroupConcator();
+    virtual ~GroupConcator();
 
-	virtual void initialize(const rowgroup::SP_GroupConcat&);
-	virtual void processRow(const rowgroup::Row&) = 0;
+    virtual void initialize(const rowgroup::SP_GroupConcat&);
+    virtual void processRow(const rowgroup::Row&) = 0;
 
-	virtual void merge(GroupConcator*) = 0;
-	virtual void getResult(uint8_t* buff, const std::string &sep) = 0;
-	virtual uint8_t * getResult(const std::string &sep);
+    virtual void merge(GroupConcator*) = 0;
+    virtual void getResult(uint8_t* buff, const std::string& sep) = 0;
+    virtual uint8_t* getResult(const std::string& sep);
 
-	virtual const std::string toString() const;
+    virtual const std::string toString() const;
 
 protected:
-	virtual bool concatColIsNull(const rowgroup::Row&);
-	virtual void outputRow(std::ostringstream&, const rowgroup::Row&);
-	virtual int64_t lengthEstimate(const rowgroup::Row&);
+    virtual bool concatColIsNull(const rowgroup::Row&);
+    virtual void outputRow(std::ostringstream&, const rowgroup::Row&);
+    virtual int64_t lengthEstimate(const rowgroup::Row&);
 
-	std::vector<uint32_t>                 fConcatColumns;
-	std::vector<std::pair<std::string, uint32_t> >  fConstCols;
-	int64_t                               fCurrentLength;
-	int64_t                               fGroupConcatLen;
-	int64_t                               fConstantLen;
-	boost::scoped_array<uint8_t>          fOutputString;
+    std::vector<uint32_t>                 fConcatColumns;
+    std::vector<std::pair<std::string, uint32_t> >  fConstCols;
+    int64_t                               fCurrentLength;
+    int64_t                               fGroupConcatLen;
+    int64_t                               fConstantLen;
+    boost::scoped_array<uint8_t>          fOutputString;
 };
 
 
@@ -130,27 +139,27 @@ protected:
 class GroupConcatNoOrder : public GroupConcator
 {
 public:
-	GroupConcatNoOrder();
-	virtual ~GroupConcatNoOrder();
+    GroupConcatNoOrder();
+    virtual ~GroupConcatNoOrder();
 
-	void initialize(const rowgroup::SP_GroupConcat&);
-	void processRow(const rowgroup::Row&);
+    void initialize(const rowgroup::SP_GroupConcat&);
+    void processRow(const rowgroup::Row&);
 
-	void merge(GroupConcator*);
-	void getResult(uint8_t* buff, const std::string &sep);
+    void merge(GroupConcator*);
+    void getResult(uint8_t* buff, const std::string& sep);
 
-	const std::string toString() const;
+    const std::string toString() const;
 
 protected:
-	rowgroup::RowGroup                    fRowGroup;
-	rowgroup::Row                         fRow;
-	rowgroup::RGData                      fData;
-	std::queue<rowgroup::RGData>          fDataQueue;
-	uint64_t                              fRowsPerRG;
-	uint64_t                              fErrorCode;
-	uint64_t                              fMemSize;
-	ResourceManager*                      fRm;
-	boost::shared_ptr<int64_t>			  fSessionMemLimit;
+    rowgroup::RowGroup                    fRowGroup;
+    rowgroup::Row                         fRow;
+    rowgroup::RGData                      fData;
+    std::queue<rowgroup::RGData>          fDataQueue;
+    uint64_t                              fRowsPerRG;
+    uint64_t                              fErrorCode;
+    uint64_t                              fMemSize;
+    ResourceManager*                      fRm;
+    boost::shared_ptr<int64_t>			  fSessionMemLimit;
 };
 
 
@@ -159,17 +168,17 @@ protected:
 class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
 {
 public:
-	GroupConcatOrderBy();
-	virtual ~GroupConcatOrderBy();
+    GroupConcatOrderBy();
+    virtual ~GroupConcatOrderBy();
 
-	void initialize(const rowgroup::SP_GroupConcat&);
-	void processRow(const rowgroup::Row&);
-	uint64_t getKeyLength() const;
+    void initialize(const rowgroup::SP_GroupConcat&);
+    void processRow(const rowgroup::Row&);
+    uint64_t getKeyLength() const;
 
-	void merge(GroupConcator*);
-	void getResult(uint8_t* buff, const std::string &sep);
+    void merge(GroupConcator*);
+    void getResult(uint8_t* buff, const std::string& sep);
 
-	const std::string toString() const;
+    const std::string toString() const;
 
 protected:
 };

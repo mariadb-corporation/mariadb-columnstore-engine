@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * class Multicast interface
  */
 
@@ -41,50 +41,65 @@ class MulticastImpl;
 class Multicast
 {
 public:
-	/** @brief ctor
-	* Base class
-	*/
-	Multicast();
-	
-	/** @brief dtor
-	*/
-	virtual ~Multicast() { destroy(); }
+    /** @brief ctor
+    * Base class
+    */
+    Multicast();
 
-	virtual void destroy() { }
+    /** @brief dtor
+    */
+    virtual ~Multicast()
+    {
+        destroy();
+    }
 
-	int PMCount() const { return fPMCount; }
-	std::string iFName() const { return fIFName; }
-	int portBase() const { return fPortBase; }
-	int bufSize() const { return fBufSize; }
+    virtual void destroy() { }
+
+    int PMCount() const
+    {
+        return fPMCount;
+    }
+    std::string iFName() const
+    {
+        return fIFName;
+    }
+    int portBase() const
+    {
+        return fPortBase;
+    }
+    int bufSize() const
+    {
+        return fBufSize;
+    }
 
 private:
-	int fPMCount;
-	std::string fIFName;
-	int fPortBase;
-	int fBufSize;
+    int fPMCount;
+    std::string fIFName;
+    int fPortBase;
+    int fBufSize;
 
 };
 
 class MulticastReceiver: public Multicast
 {
 public:
-	/** @brief ctor
-	* 
-	*/
-	MulticastReceiver();
+    /** @brief ctor
+    *
+    */
+    MulticastReceiver();
 
-	~MulticastReceiver();
-	
-	messageqcpp::SBS receive();
+    ~MulticastReceiver();
+
+    messageqcpp::SBS receive();
 
 private:
-	// not copyable
-	MulticastReceiver(const MulticastReceiver& rhs);
-	MulticastReceiver& operator=(const MulticastReceiver& rhs);
+    // not copyable
+    MulticastReceiver(const MulticastReceiver& rhs);
+    MulticastReceiver& operator=(const MulticastReceiver& rhs);
 
-	messageqcpp::SBS fByteStream;
+    messageqcpp::SBS fByteStream;
 
-	MulticastImpl* fPimpl;
+    MulticastImpl* fPimpl;
 };
 
 
@@ -92,25 +107,25 @@ class MulticastSender : public Multicast
 {
 
 public:
-	/** @brief ctor
-	* 
-	*/
-	MulticastSender();
+    /** @brief ctor
+    *
+    */
+    MulticastSender();
 
-	~MulticastSender();
+    ~MulticastSender();
 
-	/** @brief receive 
-	* 
-	* @param bytestream to send
-	*/
-	void send(const messageqcpp::ByteStream& bs);
+    /** @brief receive
+    *
+    * @param bytestream to send
+    */
+    void send(const messageqcpp::ByteStream& bs);
 
 private:
-	//Not copyable
-	MulticastSender(const MulticastSender& rhs);
-	MulticastSender& operator=(const MulticastSender& rhs);
+    //Not copyable
+    MulticastSender(const MulticastSender& rhs);
+    MulticastSender& operator=(const MulticastSender& rhs);
 
-	MulticastImpl* fPimpl;
+    MulticastImpl* fPimpl;
 };
 
 } //namespace

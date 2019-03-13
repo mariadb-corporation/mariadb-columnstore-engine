@@ -117,126 +117,142 @@ namespace joblist
 {
 
 pColScanStep::pColScanStep(
-	CalpontSystemCatalog::OID o,
-	CalpontSystemCatalog::OID t,
-	const CalpontSystemCatalog::ColType& ct,
-	const JobInfo& jobInfo) :
-		JobStep(jobInfo),
-		fRm(jobInfo.rm),
-		fNumThreads(fRm.getJlNumScanReceiveThreads()),
-		fFilterCount(0),
-		fOid(o),
-		fTableOid(t),
-		fColType(ct),
-		fBOP(BOP_OR),
-		sentCount(0),
-		recvCount(0),
-		fScanLbidReqLimit(fRm.getJlScanLbidReqLimit()),
-		fScanLbidReqThreshold(fRm.getJlScanLbidReqThreshold()),
-		fStopSending(false),
-		fSingleThread(false),
-		fPhysicalIO(0),
-		fCacheIO(0),
-		fNumBlksSkipped(0),
-		fMsgBytesIn(0),
-		fMsgBytesOut(0),
-		fMsgsToPm(0)
+    CalpontSystemCatalog::OID o,
+    CalpontSystemCatalog::OID t,
+    const CalpontSystemCatalog::ColType& ct,
+    const JobInfo& jobInfo) :
+    JobStep(jobInfo),
+    fRm(jobInfo.rm),
+    fNumThreads(fRm->getJlNumScanReceiveThreads()),
+    fFilterCount(0),
+    fOid(o),
+    fTableOid(t),
+    fColType(ct),
+    fBOP(BOP_OR),
+    sentCount(0),
+    recvCount(0),
+    fScanLbidReqLimit(fRm->getJlScanLbidReqLimit()),
+    fScanLbidReqThreshold(fRm->getJlScanLbidReqThreshold()),
+    fStopSending(false),
+    fSingleThread(false),
+    fPhysicalIO(0),
+    fCacheIO(0),
+    fNumBlksSkipped(0),
+    fMsgBytesIn(0),
+    fMsgBytesOut(0),
+    fMsgsToPm(0)
 {
-	if (fTableOid == 0)  // cross engine support
-		return;
+    if (fTableOid == 0)  // cross engine support
+        return;
 
-	int err, i, mask;
-	BRM::LBIDRange_v::iterator it;
+    int err, i, mask;
+    BRM::LBIDRange_v::iterator it;
 
-	//pthread_mutex_init(&mutex, NULL);
-	//pthread_mutex_init(&dlMutex, NULL);
-	//pthread_mutex_init(&cpMutex, NULL);
-	//pthread_cond_init(&condvar, NULL);
-	//pthread_cond_init(&condvarWakeupProducer, NULL);
-	finishedSending=false;
-	recvWaiting=0;
-	recvExited = 0;
-	rDoNothing = false;
-	fIsDict = false;
+    //pthread_mutex_init(&mutex, NULL);
+    //pthread_mutex_init(&dlMutex, NULL);
+    //pthread_mutex_init(&cpMutex, NULL);
+    //pthread_cond_init(&condvar, NULL);
+    //pthread_cond_init(&condvarWakeupProducer, NULL);
+    finishedSending = false;
+    recvWaiting = 0;
+    recvExited = 0;
+    rDoNothing = false;
+    fIsDict = false;
 
-	memset(&fMsgHeader, 0, sizeof(fMsgHeader));
+    memset(&fMsgHeader, 0, sizeof(fMsgHeader));
 
-	//If this is a dictionary column, fudge the numbers...
-	if ( fColType.colDataType == CalpontSystemCatalog::VARCHAR )
-	{
-		if (8 > fColType.colWidth && 4 <= fColType.colWidth )
-			fColType.colDataType = CalpontSystemCatalog::CHAR;
+    //If this is a dictionary column, fudge the numbers...
+    if ( fColType.colDataType == CalpontSystemCatalog::VARCHAR )
+    {
+        if (8 > fColType.colWidth && 4 <= fColType.colWidth )
+            fColType.colDataType = CalpontSystemCatalog::CHAR;
 
-		fColType.colWidth++;
-	}
+        fColType.colWidth++;
+    }
 
-	//If this is a dictionary column, fudge the numbers...
-	if (fColType.colDataType == CalpontSystemCatalog::VARBINARY)
-	{
-		fColType.colWidth = 8;
-		fIsDict = true;
-	}
-	else if (fColType.colWidth > 8 )
-	{
-		fColType.colWidth = 8;
-		fIsDict = true;
-		//TODO: is this right?
-		fColType.colDataType = CalpontSystemCatalog::VARCHAR;
-	}
+    //If this is a dictionary column, fudge the numbers...
+    if ((fColType.colDataType == CalpontSystemCatalog::VARBINARY)
+            || (fColType.colDataType == CalpontSystemCatalog::BLOB)
+            || (fColType.colDataType == CalpontSystemCatalog::TEXT))
+    {
+        fColType.colWidth = 8;
+        fIsDict = true;
+    }
+    else if (fColType.colWidth > 8 )
+    {
+        fColType.colWidth = 8;
+        fIsDict = true;
+        //TODO: is this right?
+        fColType.colDataType = CalpontSystemCatalog::VARCHAR;
+    }
 
-	//Round colWidth up
-	if (fColType.colWidth == 3)
-		fColType.colWidth = 4;
-	else if (fColType.colWidth == 5 || fColType.colWidth == 6 || fColType.colWidth == 7)
-		fColType.colWidth = 8;
+    //Round colWidth up
+    if (fColType.colWidth == 3)
+        fColType.colWidth = 4;
+    else if (fColType.colWidth == 5 || fColType.colWidth == 6 || fColType.colWidth == 7)
+        fColType.colWidth = 8;
 
-	err = dbrm.lookup(fOid, lbidRanges);
-	if (err)
-		throw runtime_error("pColScan: BRM LBID range lookup failure (1)");
-	err = dbrm.getExtents(fOid, extents);
-	if (err)
-		throw runtime_error("pColScan: BRM HWM lookup failure (4)");
-	sort(extents.begin(), extents.end(), BRM::ExtentSorter());
-	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+    err = dbrm.lookup(fOid, lbidRanges);
 
-	if (fOid>3000) {
-		lbidList.reset(new LBIDList(fOid, 0));
-	}
+    if (err)
+        throw runtime_error("pColScan: BRM LBID range lookup failure (1)");
 
-	/* calculate shortcuts for rid-based arithmetic */
-	for (i = 1, mask = 1; i <= 32; i++) {
-		mask <<= 1;
-		if (extentSize & mask) {
-			divShift = i;
-			break;
-		}
-	}
-	for (i++, mask <<= 1; i <= 32; i++, mask <<= 1)
-		if (extentSize & mask)
-			throw runtime_error("pColScan: Extent size must be a power of 2 in blocks");
+    err = dbrm.getExtents(fOid, extents);
 
-	ridsPerBlock = BLOCK_SIZE/fColType.colWidth;
-	for (i = 1, mask = 1; i <= 32; i++) {
-		mask <<= 1;
-		if (ridsPerBlock & mask) {
-			rpbShift = i;
-			break;
-		}
-	}
-	for (i++, mask <<= 1; i <= 32; i++, mask <<= 1)
-		if (ridsPerBlock & mask)
-			throw runtime_error("pColScan: Block size and column width must be a power of 2");
+    if (err)
+        throw runtime_error("pColScan: BRM HWM lookup failure (4)");
+
+    sort(extents.begin(), extents.end(), BRM::ExtentSorter());
+    numExtents = extents.size();
+    extentSize = (fRm->getExtentRows() * fColType.colWidth) / BLOCK_SIZE;
+
+    if (fOid > 3000)
+    {
+        lbidList.reset(new LBIDList(fOid, 0));
+    }
+
+    /* calculate shortcuts for rid-based arithmetic */
+    for (i = 1, mask = 1; i <= 32; i++)
+    {
+        mask <<= 1;
+
+        if (extentSize & mask)
+        {
+            divShift = i;
+            break;
+        }
+    }
+
+    for (i++, mask <<= 1; i <= 32; i++, mask <<= 1)
+        if (extentSize & mask)
+            throw runtime_error("pColScan: Extent size must be a power of 2 in blocks");
+
+    ridsPerBlock = BLOCK_SIZE / fColType.colWidth;
+
+    for (i = 1, mask = 1; i <= 32; i++)
+    {
+        mask <<= 1;
+
+        if (ridsPerBlock & mask)
+        {
+            rpbShift = i;
+            break;
+        }
+    }
+
+    for (i++, mask <<= 1; i <= 32; i++, mask <<= 1)
+        if (ridsPerBlock & mask)
+            throw runtime_error("pColScan: Block size and column width must be a power of 2");
 }
 
 pColScanStep::~pColScanStep()
 {
-	//pthread_mutex_destroy(&mutex);
-	//pthread_mutex_destroy(&dlMutex);
-	//pthread_mutex_destroy(&cpMutex);
-	//pthread_cond_destroy(&condvar);
-	//pthread_cond_destroy(&condvarWakeupProducer);
-	//delete lbidList;
+    //pthread_mutex_destroy(&mutex);
+    //pthread_mutex_destroy(&dlMutex);
+    //pthread_mutex_destroy(&cpMutex);
+    //pthread_cond_destroy(&condvar);
+    //pthread_cond_destroy(&condvarWakeupProducer);
+    //delete lbidList;
 //	delete [] fProducerThread;
 //	if (fDec)
 //		fDec->removeQueue(uniqueID);   // in case it gets aborted
@@ -255,14 +271,14 @@ void pColScanStep::initializeConfigParms()
 
 // 	string        strVal;
 
-	//...Get the tuning parameters that throttle msgs sent to primproc
-	//...fScanLbidReqLimit puts a cap on how many LBID's we will request from
-	//...    primproc, before pausing to let the consumer thread catch up.
-	//...    Without this limit, there is a chance that PrimProc could flood
-	//...    ExeMgr with thousands of messages that will consume massive
-	//...    amounts of memory for a 100 gigabyte database.
-	//...fScanLbidReqThreshold is the level at which the number of outstanding
-	//...    LBID reqs must fall below, before the producer can send more LBIDs.
+    //...Get the tuning parameters that throttle msgs sent to primproc
+    //...fScanLbidReqLimit puts a cap on how many LBID's we will request from
+    //...    primproc, before pausing to let the consumer thread catch up.
+    //...    Without this limit, there is a chance that PrimProc could flood
+    //...    ExeMgr with thousands of messages that will consume massive
+    //...    amounts of memory for a 100 gigabyte database.
+    //...fScanLbidReqThreshold is the level at which the number of outstanding
+    //...    LBID reqs must fall below, before the producer can send more LBIDs.
 // 	strVal = cf->getConfig(section, sendLimitName);
 // 	if (strVal.size() > 0)
 // 		fScanLbidReqLimit = static_cast<uint32_t>(Config::uFromText(strVal));
@@ -514,10 +530,10 @@ void pColScanStep::sendPrimitiveMessages()
 // Construct and send a single primitive message to primproc
 //------------------------------------------------------------------------------
 void pColScanStep::sendAPrimitiveMessage(
-	ISMPacketHeader& ism,
-	BRM::LBID_t      msgLbidStart,
-	uint32_t        msgLbidCount
-	)
+    ISMPacketHeader& ism,
+    BRM::LBID_t      msgLbidStart,
+    uint32_t        msgLbidCount
+)
 {
 //	ByteStream bs;
 //
@@ -558,11 +574,12 @@ void pColScanStep::sendAPrimitiveMessage(
 //	fMsgsToPm++;
 }
 
-struct CPInfo {
-	CPInfo(int64_t MIN, int64_t MAX, uint64_t l) : min(MIN), max(MAX), LBID(l) { };
-	int64_t min;
-	int64_t max;
-	uint64_t LBID;
+struct CPInfo
+{
+    CPInfo(int64_t MIN, int64_t MAX, uint64_t l) : min(MIN), max(MAX), LBID(l) { };
+    int64_t min;
+    int64_t max;
+    uint64_t LBID;
 };
 
 void pColScanStep::receivePrimitiveMessages(uint64_t tid)
@@ -885,161 +902,178 @@ void pColScanStep::receivePrimitiveMessages(uint64_t tid)
 
 void pColScanStep::addFilter(int8_t COP, float value)
 {
-	fFilterString << (uint8_t) COP;
-	fFilterString << (uint8_t) 0;
-	fFilterString << *((uint32_t *) &value);
-	fFilterCount++;
+    fFilterString << (uint8_t) COP;
+    fFilterString << (uint8_t) 0;
+    fFilterString << *((uint32_t*) &value);
+    fFilterCount++;
 }
 
 void pColScanStep::addFilter(int8_t COP, int64_t value, uint8_t roundFlag)
 {
-	int8_t tmp8;
-	int16_t tmp16;
-	int32_t tmp32;
+    int8_t tmp8;
+    int16_t tmp16;
+    int32_t tmp32;
 
-	fFilterString << (uint8_t) COP;
-	fFilterString << roundFlag;
+    fFilterString << (uint8_t) COP;
+    fFilterString << roundFlag;
 
-	// converts to a type of the appropriate width, then bitwise
-	// copies into the filter ByteStream
-	switch(fColType.colWidth) {
-		case 1:
-			tmp8 = value;
-			fFilterString << *((uint8_t *) &tmp8);
-			break;
-		case 2:
-			tmp16 = value;
-			fFilterString << *((uint16_t *) &tmp16);
-			break;
-		case 4:
-			tmp32 = value;
-			fFilterString << *((uint32_t *) &tmp32);
-			break;
-		case 8:
-			fFilterString << *((uint64_t *) &value);
-			break;
-		default:
-			ostringstream o;
+    // converts to a type of the appropriate width, then bitwise
+    // copies into the filter ByteStream
+    switch (fColType.colWidth)
+    {
+        case 1:
+            tmp8 = value;
+            fFilterString << *((uint8_t*) &tmp8);
+            break;
 
-			o << "pColScanStep: CalpontSystemCatalog says OID " << fOid <<
-				" has a width of " << fColType.colWidth;
-			throw runtime_error(o.str());
-	}
-	fFilterCount++;
+        case 2:
+            tmp16 = value;
+            fFilterString << *((uint16_t*) &tmp16);
+            break;
+
+        case 4:
+            tmp32 = value;
+            fFilterString << *((uint32_t*) &tmp32);
+            break;
+
+        case 8:
+            fFilterString << *((uint64_t*) &value);
+            break;
+
+        default:
+            ostringstream o;
+
+            o << "pColScanStep: CalpontSystemCatalog says OID " << fOid <<
+              " has a width of " << fColType.colWidth;
+            throw runtime_error(o.str());
+    }
+
+    fFilterCount++;
 }
 
 void pColScanStep::setBOP(int8_t B)
 {
-	fBOP = B;
+    fBOP = B;
 }
 
 void pColScanStep::setSingleThread( bool b)
 {
-	fSingleThread = b;
-	fNumThreads = 1;
+    fSingleThread = b;
+    fNumThreads = 1;
 }
 
 void pColScanStep::setOutputType(int8_t OutputType)
 {
-	fOutputType = OutputType;
+    fOutputType = OutputType;
 }
 
 const string pColScanStep::toString() const
 {
-	ostringstream oss;
-	oss << "pColScanStep    ses:" << fSessionId << " txn:" << fTxnId << " ver:" << fVerId << " st:" << fStepId <<
-		" tb/col:" << fTableOid << "/" << fOid;
-	if (alias().length()) oss << " alias:" << alias();
-	oss << " " << omitOidInDL
-		<< fOutputJobStepAssociation.outAt(0) << showOidInDL;
-	oss << " nf:" << fFilterCount;
-	oss << " in:";
-	for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
-	{
-		oss << fInputJobStepAssociation.outAt(i) << ", ";
-	}
-	return oss.str();
+    ostringstream oss;
+    oss << "pColScanStep    ses:" << fSessionId << " txn:" << fTxnId << " ver:" << fVerId << " st:" << fStepId <<
+        " tb/col:" << fTableOid << "/" << fOid;
+
+    if (alias().length()) oss << " alias:" << alias();
+
+    oss << " " << omitOidInDL
+        << fOutputJobStepAssociation.outAt(0) << showOidInDL;
+    oss << " nf:" << fFilterCount;
+    oss << " in:";
+
+    for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
+    {
+        oss << fInputJobStepAssociation.outAt(i) << ", ";
+    }
+
+    return oss.str();
 }
 
 uint64_t pColScanStep::getFBO(uint64_t lbid)
 {
-	uint32_t i;
-	uint64_t lastLBID;
+    uint32_t i;
+    uint64_t lastLBID;
 
-	for (i = 0; i < numExtents; i++) {
- 		lastLBID = extents[i].range.start + (extents[i].range.size << 10) - 1;
+    for (i = 0; i < numExtents; i++)
+    {
+        lastLBID = extents[i].range.start + (extents[i].range.size << 10) - 1;
+
 //  		lastLBID = extents[i].range.start + (extents[i].range.size * 1024) - 1;
 //  		cerr << "start: " << extents[i].range.start << " end:" << lastLBID <<endl;
-		if (lbid >= (uint64_t) extents[i].range.start && lbid <= lastLBID)
+        if (lbid >= (uint64_t) extents[i].range.start && lbid <= lastLBID)
 // 			return (lbid - extents[i].range.start) + (extentSize * i);
- 			return (lbid - extents[i].range.start) + (i << divShift);
-	}
-	cerr << "pColScan: didn't find the FBO?\n";
-	throw logic_error("pColScan: didn't find the FBO?");
+            return (lbid - extents[i].range.start) + (i << divShift);
+    }
+
+    cerr << "pColScan: didn't find the FBO?\n";
+    throw logic_error("pColScan: didn't find the FBO?");
 }
 
 pColScanStep::pColScanStep(const pColStep& rhs) :
-	JobStep(rhs),
-	fRm(rhs.resourceManager())
+    JobStep(rhs),
+    fRm(rhs.resourceManager())
 {
-	fNumThreads = fRm.getJlNumScanReceiveThreads();
-	fFilterCount = rhs.filterCount();
-	fFilterString = rhs.filterString();
-	isFilterFeeder = rhs.getFeederFlag();
-	fOid = rhs.oid();
-	fTableOid = rhs.tableOid();
-	fColType = rhs.colType();
-	fBOP = rhs.BOP();
-	fIsDict = rhs.isDictCol();
-	sentCount = 0;
-	recvCount = 0;
-	fScanLbidReqLimit = fRm.getJlScanLbidReqLimit();
-	fScanLbidReqThreshold = fRm.getJlScanLbidReqThreshold();
-	fStopSending = false;
-	fSingleThread = false;
-	fPhysicalIO = 0;
-	fCacheIO = 0;
-	fNumBlksSkipped = 0;
-	fMsgBytesIn = 0;
-	fMsgBytesOut = 0;
-	fMsgsToPm = 0;
-	fCardinality = rhs.cardinality();
-	fFilters = rhs.fFilters;
-	fOnClauseFilter = rhs.onClauseFilter();
+    fNumThreads = fRm->getJlNumScanReceiveThreads();
+    fFilterCount = rhs.filterCount();
+    fFilterString = rhs.filterString();
+    isFilterFeeder = rhs.getFeederFlag();
+    fOid = rhs.oid();
+    fTableOid = rhs.tableOid();
+    fColType = rhs.colType();
+    fBOP = rhs.BOP();
+    fIsDict = rhs.isDictCol();
+    sentCount = 0;
+    recvCount = 0;
+    fScanLbidReqLimit = fRm->getJlScanLbidReqLimit();
+    fScanLbidReqThreshold = fRm->getJlScanLbidReqThreshold();
+    fStopSending = false;
+    fSingleThread = false;
+    fPhysicalIO = 0;
+    fCacheIO = 0;
+    fNumBlksSkipped = 0;
+    fMsgBytesIn = 0;
+    fMsgBytesOut = 0;
+    fMsgsToPm = 0;
+    fCardinality = rhs.cardinality();
+    fFilters = rhs.fFilters;
+    fOnClauseFilter = rhs.onClauseFilter();
 
-	if (fTableOid == 0)  // cross engine support
-		return;
+    if (fTableOid == 0)  // cross engine support
+        return;
 
-	int err;
+    int err;
 
-	memset(&fMsgHeader, 0, sizeof(fMsgHeader));
+    memset(&fMsgHeader, 0, sizeof(fMsgHeader));
 
-	err = dbrm.lookup(fOid, lbidRanges);
-	if (err)
-		throw runtime_error("pColScan: BRM LBID range lookup failure (1)");
-	err = dbrm.getExtents(fOid, extents);
-	if (err)
-		throw runtime_error("pColScan: BRM HWM lookup failure (4)");
-	sort(extents.begin(), extents.end(), BRM::ExtentSorter());
-	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
-	lbidList=rhs.lbidList;
-	//pthread_mutex_init(&mutex, NULL);
-	//pthread_mutex_init(&dlMutex, NULL);
-	//pthread_mutex_init(&cpMutex, NULL);
-	//pthread_cond_init(&condvar, NULL);
-	//pthread_cond_init(&condvarWakeupProducer, NULL);
-	finishedSending = sendWaiting = rDoNothing = false;
-	recvWaiting = 0;
-	recvExited = 0;
+    err = dbrm.lookup(fOid, lbidRanges);
 
-	/* calculate some shortcuts for extent-based arithmetic */
-	ridsPerBlock = rhs.ridsPerBlock;
-	rpbShift = rhs.rpbShift;
-	divShift = rhs.divShift;
+    if (err)
+        throw runtime_error("pColScan: BRM LBID range lookup failure (1)");
+
+    err = dbrm.getExtents(fOid, extents);
+
+    if (err)
+        throw runtime_error("pColScan: BRM HWM lookup failure (4)");
+
+    sort(extents.begin(), extents.end(), BRM::ExtentSorter());
+    numExtents = extents.size();
+    extentSize = (fRm->getExtentRows() * fColType.colWidth) / BLOCK_SIZE;
+    lbidList = rhs.lbidList;
+    //pthread_mutex_init(&mutex, NULL);
+    //pthread_mutex_init(&dlMutex, NULL);
+    //pthread_mutex_init(&cpMutex, NULL);
+    //pthread_cond_init(&condvar, NULL);
+    //pthread_cond_init(&condvarWakeupProducer, NULL);
+    finishedSending = sendWaiting = rDoNothing = false;
+    recvWaiting = 0;
+    recvExited = 0;
+
+    /* calculate some shortcuts for extent-based arithmetic */
+    ridsPerBlock = rhs.ridsPerBlock;
+    rpbShift = rhs.rpbShift;
+    divShift = rhs.divShift;
 
 // 	initializeConfigParms ( );
-	fTraceFlags = rhs.fTraceFlags;
+    fTraceFlags = rhs.fTraceFlags;
 //	uniqueID = UniqueNumberGenerator::instance()->getUnique32();
 //	if (fDec)
 //		fDec->addQueue(uniqueID);
@@ -1048,97 +1082,112 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
 
 void pColScanStep::addFilters()
 {
-	AnyDataListSPtr dl = fInputJobStepAssociation.outAt(0);
-	DataList_t* bdl = dl->dataList();
-	idbassert(bdl);
-	int it = -1;
-	bool more;
-	ElementType e;
-	int64_t token;
+    AnyDataListSPtr dl = fInputJobStepAssociation.outAt(0);
+    DataList_t* bdl = dl->dataList();
+    idbassert(bdl);
+    int it = -1;
+    bool more;
+    ElementType e;
+    int64_t token;
 
-	try{
-		it = bdl->getIterator();
-	}catch(std::exception& ex) {
-		cerr << "pColScanStep::addFilters: caught exception: "
-			<< ex.what() << " stepno: " << fStepId << endl;
-		throw;
-	}catch(...) {
-		cerr << "pColScanStep::addFilters: caught exception" << endl;
-		throw;
-	}
+    try
+    {
+        it = bdl->getIterator();
+    }
+    catch (std::exception& ex)
+    {
+        cerr << "pColScanStep::addFilters: caught exception: "
+             << ex.what() << " stepno: " << fStepId << endl;
+        throw;
+    }
+    catch (...)
+    {
+        cerr << "pColScanStep::addFilters: caught exception" << endl;
+        throw;
+    }
 
-	fBOP = BOP_OR;
-	more = bdl->next(it, &e);
-	while (more)
-	{
-		token = e.second;
-		addFilter(COMPARE_EQ, token);
-		more = bdl->next(it, &e);
-	}
-	return;
+    fBOP = BOP_OR;
+    more = bdl->next(it, &e);
+
+    while (more)
+    {
+        token = e.second;
+        addFilter(COMPARE_EQ, token);
+        more = bdl->next(it, &e);
+    }
+
+    return;
 }
 
-bool pColScanStep::isEmptyVal(const uint8_t *val8) const
+bool pColScanStep::isEmptyVal(const uint8_t* val8) const
 {
     const int width = fColType.colWidth;
 
     switch (fColType.colDataType)
     {
-		case CalpontSystemCatalog::UTINYINT:
-		{
-			return(*val8 == joblist::UTINYINTEMPTYROW);
-		}
-		case CalpontSystemCatalog::USMALLINT:
-		{
-			const uint16_t *val16 = reinterpret_cast<const uint16_t *>(val8);
-			return(*val16 == joblist::USMALLINTEMPTYROW);
-		}
-		case CalpontSystemCatalog::UMEDINT:
-		case CalpontSystemCatalog::UINT:
-		{
-			const uint32_t *val32 = reinterpret_cast<const uint32_t *>(val8);
-			return(*val32 == joblist::UINTEMPTYROW);
-		}
-		case CalpontSystemCatalog::UBIGINT:
-		{
-			const uint64_t *val64 = reinterpret_cast<const uint64_t *>(val8);
-			return(*val64 == joblist::BIGINTEMPTYROW);
-		}
+        case CalpontSystemCatalog::UTINYINT:
+        {
+            return (*val8 == joblist::UTINYINTEMPTYROW);
+        }
+
+        case CalpontSystemCatalog::USMALLINT:
+        {
+            const uint16_t* val16 = reinterpret_cast<const uint16_t*>(val8);
+            return (*val16 == joblist::USMALLINTEMPTYROW);
+        }
+
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        {
+            const uint32_t* val32 = reinterpret_cast<const uint32_t*>(val8);
+            return (*val32 == joblist::UINTEMPTYROW);
+        }
+
+        case CalpontSystemCatalog::UBIGINT:
+        {
+            const uint64_t* val64 = reinterpret_cast<const uint64_t*>(val8);
+            return (*val64 == joblist::BIGINTEMPTYROW);
+        }
+
         case CalpontSystemCatalog::FLOAT:
-		case CalpontSystemCatalog::UFLOAT:
+        case CalpontSystemCatalog::UFLOAT:
         {
-            const uint32_t *val32 = reinterpret_cast<const uint32_t *>(val8);
-            return(*val32 == joblist::FLOATEMPTYROW);
+            const uint32_t* val32 = reinterpret_cast<const uint32_t*>(val8);
+            return (*val32 == joblist::FLOATEMPTYROW);
         }
+
         case CalpontSystemCatalog::DOUBLE:
-		case CalpontSystemCatalog::UDOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
         {
-            const uint64_t *val64 = reinterpret_cast<const uint64_t *>(val8);
-            return(*val64 == joblist::DOUBLEEMPTYROW);
+            const uint64_t* val64 = reinterpret_cast<const uint64_t*>(val8);
+            return (*val64 == joblist::DOUBLEEMPTYROW);
         }
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             if (width == 1)
             {
-                return(*val8 == joblist::CHAR1EMPTYROW);
+                return (*val8 == joblist::CHAR1EMPTYROW);
             }
             else if (width == 2)
             {
-                const uint16_t *val16 = reinterpret_cast<const uint16_t *>(val8);
-                return(*val16 == joblist::CHAR2EMPTYROW);
+                const uint16_t* val16 = reinterpret_cast<const uint16_t*>(val8);
+                return (*val16 == joblist::CHAR2EMPTYROW);
             }
             else if (width <= 4)
             {
-                const uint32_t *val32 = reinterpret_cast<const uint32_t *>(val8);
-                return(*val32 == joblist::CHAR4EMPTYROW);
+                const uint32_t* val32 = reinterpret_cast<const uint32_t*>(val8);
+                return (*val32 == joblist::CHAR4EMPTYROW);
             }
             else if (width <= 8)
             {
-                const uint64_t *val64 = reinterpret_cast<const uint64_t *>(val8);
-                return(*val64 == joblist::CHAR8EMPTYROW);
+                const uint64_t* val64 = reinterpret_cast<const uint64_t*>(val8);
+                return (*val64 == joblist::CHAR8EMPTYROW);
             }
+
         default:
             break;
     }
@@ -1147,23 +1196,27 @@ bool pColScanStep::isEmptyVal(const uint8_t *val8) const
     {
         case 1:
         {
-            return(*val8 == joblist::TINYINTEMPTYROW);
+            return (*val8 == joblist::TINYINTEMPTYROW);
         }
+
         case 2:
         {
-            const uint16_t *val16 = reinterpret_cast<const uint16_t *>(val8);
-            return(*val16 == joblist::SMALLINTEMPTYROW);
+            const uint16_t* val16 = reinterpret_cast<const uint16_t*>(val8);
+            return (*val16 == joblist::SMALLINTEMPTYROW);
         }
+
         case 4:
         {
-            const uint32_t *val32 = reinterpret_cast<const uint32_t *>(val8);
-            return(*val32 == joblist::INTEMPTYROW);
+            const uint32_t* val32 = reinterpret_cast<const uint32_t*>(val8);
+            return (*val32 == joblist::INTEMPTYROW);
         }
+
         case 8:
         {
-                const uint64_t *val64 = reinterpret_cast<const uint64_t *>(val8);
-                return(*val64 == joblist::BIGINTEMPTYROW);
+            const uint64_t* val64 = reinterpret_cast<const uint64_t*>(val8);
+            return (*val64 == joblist::BIGINTEMPTYROW);
         }
+
         default:
             MessageLog logger(LoggingID(28));
             logging::Message::Args colWidth;
@@ -1182,7 +1235,7 @@ bool pColScanStep::isEmptyVal(const uint8_t *val8) const
 void pColScanStep::addFilter(const Filter* f)
 {
     if (NULL != f)
-    	fFilters.push_back(f);
+        fFilters.push_back(f);
 }
 
 

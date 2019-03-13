@@ -99,7 +99,7 @@
   ha_example::open() would also have been necessary. Calls to
   ha_example::extra() are hints as to what will be occuring to the request.
 
-  A Longer Example can be found called the "Skeleton Engine" which can be 
+  A Longer Example can be found called the "Skeleton Engine" which can be
   found on TangentOrg. It has both an engine and a full build environment
   for building a pluggable storage engine.
 
@@ -108,25 +108,27 @@
 */
 
 #include "ha_calpont.h"
-#include "versionnumber.h"
+#include "columnstoreversion.h"
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
 
-static handler *calpont_create_handler(handlerton *hton,
-                                       TABLE_SHARE *table, 
-                                       MEM_ROOT *mem_root);
-                                       
-static int calpont_commit(handlerton *hton, THD* thd, bool all);     
+static handler* calpont_create_handler(handlerton* hton,
+                                       TABLE_SHARE* table,
+                                       MEM_ROOT* mem_root);
 
-static int calpont_rollback(handlerton *hton, THD* thd, bool all);                                      
-static int calpont_close_connection ( handlerton *hton, THD* thd );
-static void calpont_set_error( THD*, uint64_t, LEX_STRING*, uint32_t);
-handlerton *calpont_hton;
+static int calpont_commit(handlerton* hton, THD* thd, bool all);
+
+static int calpont_rollback(handlerton* hton, THD* thd, bool all);
+static int calpont_close_connection ( handlerton* hton, THD* thd );
+handlerton* calpont_hton;
+
+static group_by_handler*
+create_calpont_group_by_handler(THD* thd, Query* query);
 
 /* Variables for example share methods */
 
-/* 
+/*
    Hash used to track the number of open tables; variable for example share
    methods
 */
@@ -150,125 +152,124 @@ pthread_mutex_t calpont_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* calpont_get_key(INFINIDB_SHARE *share, size_t *length,
-                             my_bool not_used __attribute__((unused)))
+static uchar* calpont_get_key(INFINIDB_SHARE* share, size_t* length,
+                              my_bool not_used __attribute__((unused)))
 {
-  *length=share->table_name_length;
-  return (uchar*) share->table_name;
+    *length = share->table_name_length;
+    return (uchar*) share->table_name;
 }
 
-int calpont_discover(handlerton *hton, THD* thd, TABLE_SHARE *share)
+int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
-  DBUG_ENTER("calpont_discover");
-  DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str)); 
+    DBUG_ENTER("calpont_discover");
+    DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
 #ifdef INFINIDB_DEBUG
-fprintf(stderr, "calpont_discover()\n");
+    fprintf(stderr, "calpont_discover()\n");
 #endif
 
-  uchar* frm_data = NULL;
-  size_t frm_len = 0;
-  int error = 0;
+    uchar* frm_data = NULL;
+    size_t frm_len = 0;
+    int error = 0;
 
-  if (!ha_calpont_impl_discover_existence(share->db.str, share->table_name.str))
-      DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
+    if (!ha_calpont_impl_discover_existence(share->db.str, share->table_name.str))
+        DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
-  error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
+    error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
 
-  if (error)
-    DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
+    if (error)
+        DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
-  my_errno= share->init_from_binary_frm_image(thd, 1, frm_data, frm_len);
+    my_errno = share->init_from_binary_frm_image(thd, 1, frm_data, frm_len);
 
-  my_free(frm_data);
-  DBUG_RETURN(my_errno);
+    my_free(frm_data);
+    DBUG_RETURN(my_errno);
 }
 
-int calpont_discover_existence(handlerton *hton, const char *db,
-                                const char *table_name)
+int calpont_discover_existence(handlerton* hton, const char* db,
+                               const char* table_name)
 {
-	return ha_calpont_impl_discover_existence(db, table_name);
+    return ha_calpont_impl_discover_existence(db, table_name);
 }
 
-static int columnstore_init_func(void *p)
+static int columnstore_init_func(void* p)
 {
-  DBUG_ENTER("columnstore_init_func");
+    DBUG_ENTER("columnstore_init_func");
 
-  struct tm tm;
-  time_t t;
+    struct tm tm;
+    time_t t;
 
-  time(&t);
-  localtime_r(&t, &tm);
-  fprintf(stderr,"%02d%02d%02d %2d:%02d:%02d ",
-    tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-    tm.tm_hour, tm.tm_min, tm.tm_sec);
+    time(&t);
+    localtime_r(&t, &tm);
+    fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ",
+            tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+            tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+    fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
-  calpont_hton= (handlerton *)p;
+    calpont_hton = (handlerton*)p;
 #ifndef _MSC_VER
-  (void) pthread_mutex_init(&calpont_mutex,MY_MUTEX_INIT_FAST);
+    (void) pthread_mutex_init(&calpont_mutex, MY_MUTEX_INIT_FAST);
 #endif
-  (void) my_hash_init(&calpont_open_tables,system_charset_info,32,0,0,
-                   (my_hash_get_key) calpont_get_key,0,0);
+    (void) my_hash_init(&calpont_open_tables, system_charset_info, 32, 0, 0,
+                        (my_hash_get_key) calpont_get_key, 0, 0);
 
-  calpont_hton->state=   SHOW_OPTION_YES;
-  calpont_hton->create=  calpont_create_handler;
-  calpont_hton->flags=   HTON_CAN_RECREATE;
+    calpont_hton->state =   SHOW_OPTION_YES;
+    calpont_hton->create =  calpont_create_handler;
+    calpont_hton->flags =   HTON_CAN_RECREATE;
 //  calpont_hton->discover_table= calpont_discover;
 //  calpont_hton->discover_table_existence= calpont_discover_existence;
-  calpont_hton->commit= calpont_commit;
-  calpont_hton->rollback= calpont_rollback;
-  calpont_hton->close_connection = calpont_close_connection;
-  calpont_hton->set_error= calpont_set_error;
-  DBUG_RETURN(0);
+    calpont_hton->commit = calpont_commit;
+    calpont_hton->rollback = calpont_rollback;
+    calpont_hton->close_connection = calpont_close_connection;
+    calpont_hton->create_group_by = create_calpont_group_by_handler;
+    DBUG_RETURN(0);
 }
 
-static int infinidb_init_func(void *p)
+static int infinidb_init_func(void* p)
 {
-  DBUG_ENTER("infinidb_init_func");
+    DBUG_ENTER("infinidb_init_func");
 
-  struct tm tm;
-  time_t t;
+    struct tm tm;
+    time_t t;
 
-  time(&t);
-  localtime_r(&t, &tm);
-  fprintf(stderr,"%02d%02d%02d %2d:%02d:%02d ",
-    tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-    tm.tm_hour, tm.tm_min, tm.tm_sec);
+    time(&t);
+    localtime_r(&t, &tm);
+    fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ",
+            tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+            tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-  fprintf(stderr, "InfiniDB: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+    fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
-	calpont_hton= (handlerton *)p;
+    calpont_hton = (handlerton*)p;
 
-	calpont_hton->state=   SHOW_OPTION_YES;
-	calpont_hton->create=  calpont_create_handler;
-	calpont_hton->flags=   HTON_CAN_RECREATE;
+    calpont_hton->state =   SHOW_OPTION_YES;
+    calpont_hton->create =  calpont_create_handler;
+    calpont_hton->flags =   HTON_CAN_RECREATE;
 //  calpont_hton->discover_table= calpont_discover;
 //  calpont_hton->discover_table_existence= calpont_discover_existence;
-	calpont_hton->commit= calpont_commit;
-	calpont_hton->rollback= calpont_rollback;
-	calpont_hton->close_connection = calpont_close_connection;
-	calpont_hton->set_error= calpont_set_error;
-	DBUG_RETURN(0);
+    calpont_hton->commit = calpont_commit;
+    calpont_hton->rollback = calpont_rollback;
+    calpont_hton->close_connection = calpont_close_connection;
+    DBUG_RETURN(0);
 }
 
 
-static int columnstore_done_func(void *p)
+static int columnstore_done_func(void* p)
 {
-  DBUG_ENTER("calpont_done_func");
+    DBUG_ENTER("calpont_done_func");
 
-  my_hash_free(&calpont_open_tables);
+    my_hash_free(&calpont_open_tables);
 #ifndef _MSC_VER
-  pthread_mutex_destroy(&calpont_mutex);
+    pthread_mutex_destroy(&calpont_mutex);
 #endif
-  DBUG_RETURN(0);
+    DBUG_RETURN(0);
 }
 
-static int infinidb_done_func(void *p)
+static int infinidb_done_func(void* p)
 {
-  DBUG_ENTER("calpont_done_func");
+    DBUG_ENTER("calpont_done_func");
 
-  DBUG_RETURN(0);
+    DBUG_RETURN(0);
 }
 
 #if 0
@@ -280,49 +281,52 @@ static int infinidb_done_func(void *p)
   they are needed to function.
 */
 
-static CALPONT_SHARE *get_share(const char *table_name, TABLE *table)
+static CALPONT_SHARE* get_share(const char* table_name, TABLE* table)
 {
-  CALPONT_SHARE *share;
-  uint32_t length;
-  char *tmp_name;
+    CALPONT_SHARE* share;
+    uint32_t length;
+    char* tmp_name;
 #ifndef _MSC_VER
-  pthread_mutex_lock(&calpont_mutex);
+    pthread_mutex_lock(&calpont_mutex);
 #endif
-  length=(uint32_t) strlen(table_name);
+    length = (uint32_t) strlen(table_name);
 
-  if (!(share=(CALPONT_SHARE*) hash_search(&calpont_open_tables,
-                                           (uchar*) table_name,
-                                           length)))
-  {
-    if (!(share=(CALPONT_SHARE *)
-          my_multi_malloc(MYF(MY_WME | MY_ZEROFILL),
-                          &share, sizeof(*share),
-                          &tmp_name, length+1,
-                          NullS)))
+    if (!(share = (CALPONT_SHARE*) hash_search(&calpont_open_tables,
+                  (uchar*) table_name,
+                  length)))
     {
-      pthread_mutex_unlock(&calpont_mutex);
-      return NULL;
+        if (!(share = (CALPONT_SHARE*)
+                      my_multi_malloc(MYF(MY_WME | MY_ZEROFILL),
+                                      &share, sizeof(*share),
+                                      &tmp_name, length + 1,
+                                      NullS)))
+        {
+            pthread_mutex_unlock(&calpont_mutex);
+            return NULL;
+        }
+
+        share->use_count = 0;
+        share->table_name_length = length;
+        share->table_name = tmp_name;
+        strmov(share->table_name, table_name);
+
+        if (my_hash_insert(&calpont_open_tables, (uchar*) share))
+            goto error;
+
+        thr_lock_init(&share->lock);
+        pthread_mutex_init(&share->mutex, MY_MUTEX_INIT_FAST);
     }
 
-    share->use_count=0;
-    share->table_name_length=length;
-    share->table_name=tmp_name;
-    strmov(share->table_name,table_name);
-    if (my_hash_insert(&calpont_open_tables, (uchar*) share))
-      goto error;
-    thr_lock_init(&share->lock);
-    pthread_mutex_init(&share->mutex,MY_MUTEX_INIT_FAST);
-  }
-  share->use_count++;
-  pthread_mutex_unlock(&calpont_mutex);
+    share->use_count++;
+    pthread_mutex_unlock(&calpont_mutex);
 
-  return share;
+    return share;
 
 error:
-  pthread_mutex_destroy(&share->mutex);
-  my_free(share, MYF(0));
+    pthread_mutex_destroy(&share->mutex);
+    my_free(share, MYF(0));
 
-  return NULL;
+    return NULL;
 }
 
 /**
@@ -331,57 +335,54 @@ error:
   the last reference to the share, then we free memory associated with it.
 */
 
-static int free_share(CALPONT_SHARE *share)
+static int free_share(CALPONT_SHARE* share)
 {
-  pthread_mutex_lock(&calpont_mutex);
-  if (!--share->use_count)
-  {
-    hash_delete(&calpont_open_tables, (uchar*) share);
-    thr_lock_delete(&share->lock);
-    pthread_mutex_destroy(&share->mutex);
-    my_free(share, MYF(0));
-  }
-  pthread_mutex_unlock(&calpont_mutex);
+    pthread_mutex_lock(&calpont_mutex);
 
-  return 0;
+    if (!--share->use_count)
+    {
+        hash_delete(&calpont_open_tables, (uchar*) share);
+        thr_lock_delete(&share->lock);
+        pthread_mutex_destroy(&share->mutex);
+        my_free(share, MYF(0));
+    }
+
+    pthread_mutex_unlock(&calpont_mutex);
+
+    return 0;
 }
 #endif
 
-static handler* calpont_create_handler(handlerton *hton,
-                                       TABLE_SHARE *table, 
-                                       MEM_ROOT *mem_root)
+static handler* calpont_create_handler(handlerton* hton,
+                                       TABLE_SHARE* table,
+                                       MEM_ROOT* mem_root)
 {
-  return new (mem_root) ha_calpont(hton, table);
+    return new (mem_root) ha_calpont(hton, table);
 }
 
-static int calpont_commit(handlerton *hton, THD* thd, bool all)
+static int calpont_commit(handlerton* hton, THD* thd, bool all)
 {
-	int rc = ha_calpont_impl_commit( hton, thd, all);
-	return rc;
+    int rc = ha_calpont_impl_commit( hton, thd, all);
+    return rc;
 }
 
-static int calpont_rollback(handlerton *hton, THD* thd, bool all)
+static int calpont_rollback(handlerton* hton, THD* thd, bool all)
 {
-	int rc = ha_calpont_impl_rollback( hton, thd, all);
-	return rc;
+    int rc = ha_calpont_impl_rollback( hton, thd, all);
+    return rc;
 }
 
-static int calpont_close_connection ( handlerton *hton, THD* thd )
+static int calpont_close_connection ( handlerton* hton, THD* thd )
 {
-	int rc = ha_calpont_impl_close_connection( hton, thd);
-	return rc;
+    int rc = ha_calpont_impl_close_connection( hton, thd);
+    return rc;
 }
 
-static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint32_t argCount)
-{
-	return ha_calpont_impl_set_error(thd, errCode, args, argCount);
-}
-
-ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg) :
+ha_calpont::ha_calpont(handlerton* hton, TABLE_SHARE* table_arg) :
     handler(hton, table_arg),
-	int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
-					HA_TABLE_SCAN_ON_INDEX | 
-					HA_CAN_TABLE_CONDITION_PUSHDOWN)
+    int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
+                    HA_TABLE_SCAN_ON_INDEX |
+                    HA_CAN_TABLE_CONDITION_PUSHDOWN)
 //	int_table_flags(HA_NO_BLOBS | HA_BINLOG_STMT_CAPABLE)
 {
 }
@@ -405,13 +406,14 @@ ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg) :
   delete_table method in handler.cc
 */
 
-static const char *ha_calpont_exts[] = {
-  NullS
+static const char* ha_calpont_exts[] =
+{
+    NullS
 };
 
-const char **ha_calpont::bas_ext() const
+const char** ha_calpont::bas_ext() const
 {
-  return ha_calpont_exts;
+    return ha_calpont_exts;
 }
 
 /**
@@ -430,17 +432,17 @@ const char **ha_calpont::bas_ext() const
   handler::ha_open() in handler.cc
 */
 
-int ha_calpont::open(const char *name, int mode, uint32_t test_if_locked)
+int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
 {
-  DBUG_ENTER("ha_calpont::open");
+    DBUG_ENTER("ha_calpont::open");
 
-  //if (!(share = get_share(name, table)))
-  //  DBUG_RETURN(1);
-  //thr_lock_data_init(&share->lock,&lock,NULL);
+    //if (!(share = get_share(name, table)))
+    //  DBUG_RETURN(1);
+    //thr_lock_data_init(&share->lock,&lock,NULL);
 
-  int rc = ha_calpont_impl_open(name, mode, test_if_locked);
+    int rc = ha_calpont_impl_open(name, mode, test_if_locked);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 
@@ -462,12 +464,12 @@ int ha_calpont::open(const char *name, int mode, uint32_t test_if_locked)
 
 int ha_calpont::close(void)
 {
-  DBUG_ENTER("ha_calpont::close");
-  //DBUG_RETURN(free_share(share));
+    DBUG_ENTER("ha_calpont::close");
+    //DBUG_RETURN(free_share(share));
 
-  int rc = ha_calpont_impl_close();
+    int rc = ha_calpont_impl_close();
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 
@@ -501,34 +503,34 @@ int ha_calpont::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_calpont::write_row(uchar *buf)
+int ha_calpont::write_row(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::write_row");
-  int rc = ha_calpont_impl_write_row(buf, table);
+    DBUG_ENTER("ha_calpont::write_row");
+    int rc = ha_calpont_impl_write_row(buf, table);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 void ha_calpont::start_bulk_insert(ha_rows rows, uint flags)
 {
-	DBUG_ENTER("ha_calpont::start_bulk_insert");
-	ha_calpont_impl_start_bulk_insert(rows, table);
-	DBUG_VOID_RETURN;
+    DBUG_ENTER("ha_calpont::start_bulk_insert");
+    ha_calpont_impl_start_bulk_insert(rows, table);
+    DBUG_VOID_RETURN;
 }
 
 int ha_calpont::end_bulk_insert(bool abort)
 {
-	DBUG_ENTER("ha_calpont::end_bulk_insert");
-	int rc = ha_calpont_impl_end_bulk_insert(abort,table);
-	DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::end_bulk_insert");
+    int rc = ha_calpont_impl_end_bulk_insert(abort, table);
+    DBUG_RETURN(rc);
 }
 
- /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
+/**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
 int ha_calpont::end_bulk_insert()
 {
-	DBUG_ENTER("ha_calpont::end_bulk_insert");
-	int rc = ha_calpont_impl_end_bulk_insert(false, table);
-	DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::end_bulk_insert");
+    int rc = ha_calpont_impl_end_bulk_insert(false, table);
+    DBUG_RETURN(rc);
 }
 
 /**
@@ -553,12 +555,12 @@ int ha_calpont::end_bulk_insert()
     @see
   sql_select.cc, sql_acl.cc, sql_update.cc and sql_insert.cc
 */
-int ha_calpont::update_row(const uchar *old_data, uchar *new_data)
+int ha_calpont::update_row(const uchar* old_data, uchar* new_data)
 {
 
-  DBUG_ENTER("ha_calpont::update_row");
-  int rc = ha_calpont_impl_update_row();
-  DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::update_row");
+    int rc = ha_calpont_impl_update_row();
+    DBUG_RETURN(rc);
 }
 
 
@@ -582,11 +584,11 @@ int ha_calpont::update_row(const uchar *old_data, uchar *new_data)
   sql_acl.cc, sql_udf.cc, sql_delete.cc, sql_insert.cc and sql_select.cc
 */
 
-int ha_calpont::delete_row(const uchar *buf)
+int ha_calpont::delete_row(const uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::delete_row");
-  int rc = ha_calpont_impl_delete_row();
-  DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::delete_row");
+    int rc = ha_calpont_impl_delete_row();
+    DBUG_RETURN(rc);
 }
 
 /**
@@ -596,13 +598,13 @@ int ha_calpont::delete_row(const uchar *buf)
   index.
 */
 
-int ha_calpont::index_read_map(uchar *buf, const uchar *key,
+int ha_calpont::index_read_map(uchar* buf, const uchar* key,
                                key_part_map keypart_map __attribute__((unused)),
                                enum ha_rkey_function find_flag
                                __attribute__((unused)))
 {
-  DBUG_ENTER("ha_calpont::index_read");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::index_read");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -611,10 +613,10 @@ int ha_calpont::index_read_map(uchar *buf, const uchar *key,
   Used to read forward through the index.
 */
 
-int ha_calpont::index_next(uchar *buf)
+int ha_calpont::index_next(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::index_next");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::index_next");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -623,10 +625,10 @@ int ha_calpont::index_next(uchar *buf)
   Used to read backwards through the index.
 */
 
-int ha_calpont::index_prev(uchar *buf)
+int ha_calpont::index_prev(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::index_prev");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::index_prev");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -640,10 +642,10 @@ int ha_calpont::index_prev(uchar *buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_calpont::index_first(uchar *buf)
+int ha_calpont::index_first(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::index_first");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::index_first");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -657,10 +659,10 @@ int ha_calpont::index_first(uchar *buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_calpont::index_last(uchar *buf)
+int ha_calpont::index_last(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::index_last");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::index_last");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -679,20 +681,20 @@ int ha_calpont::index_last(uchar *buf)
 */
 int ha_calpont::rnd_init(bool scan)
 {
-  DBUG_ENTER("ha_calpont::rnd_init");
+    DBUG_ENTER("ha_calpont::rnd_init");
 
-  int rc = ha_calpont_impl_rnd_init(table);
+    int rc = ha_calpont_impl_rnd_init(table);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 int ha_calpont::rnd_end()
 {
-  DBUG_ENTER("ha_calpont::rnd_end");
+    DBUG_ENTER("ha_calpont::rnd_end");
 
-  int rc = ha_calpont_impl_rnd_end(table);
+    int rc = ha_calpont_impl_rnd_end(table);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 
@@ -710,13 +712,13 @@ int ha_calpont::rnd_end()
     @see
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and sql_update.cc
 */
-int ha_calpont::rnd_next(uchar *buf)
+int ha_calpont::rnd_next(uchar* buf)
 {
-  DBUG_ENTER("ha_calpont::rnd_next");
+    DBUG_ENTER("ha_calpont::rnd_next");
 
-  int rc = ha_calpont_impl_rnd_next(buf, table);
+    int rc = ha_calpont_impl_rnd_next(buf, table);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 
@@ -744,13 +746,13 @@ int ha_calpont::rnd_next(uchar *buf)
 // @TODO: Implement position() and rnd_pos() and remove HA_NO_BLOBS from table_flags
 // This would require us to add a psuedo-column of some sort for a primary index. This
 // would only be used in rare cases of ORDER BY, so the slow down would be ok and would
-// allow for implementing blobs (is that the same as varbinary?). Perhaps using 
+// allow for implementing blobs (is that the same as varbinary?). Perhaps using
 // lbid and offset as key would work, or something. We also need to add functionality
 // to retrieve records quickly by this "key"
-void ha_calpont::position(const uchar *record)
+void ha_calpont::position(const uchar* record)
 {
-  DBUG_ENTER("ha_calpont::position");
-  DBUG_VOID_RETURN;
+    DBUG_ENTER("ha_calpont::position");
+    DBUG_VOID_RETURN;
 }
 
 
@@ -767,11 +769,11 @@ void ha_calpont::position(const uchar *record)
     @see
   filesort.cc, records.cc, sql_insert.cc, sql_select.cc and sql_update.cc
 */
-int ha_calpont::rnd_pos(uchar *buf, uchar *pos)
+int ha_calpont::rnd_pos(uchar* buf, uchar* pos)
 {
-  DBUG_ENTER("ha_calpont::rnd_pos");
-	int rc = ha_calpont_impl_rnd_pos(buf, pos);
-  DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::rnd_pos");
+    int rc = ha_calpont_impl_rnd_pos(buf, pos);
+    DBUG_RETURN(rc);
 }
 
 
@@ -815,14 +817,14 @@ int ha_calpont::rnd_pos(uchar *buf, uchar *pos)
 */
 int ha_calpont::info(uint32_t flag)
 {
-  DBUG_ENTER("ha_calpont::info");
-  // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist 
-  // the number again if the issue re-occurs
-  stats.records = 2000;
+    DBUG_ENTER("ha_calpont::info");
+    // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
+    // the number again if the issue re-occurs
+    stats.records = 2000;
 #ifdef INFINIDB_DEBUG
-puts("info");
+    puts("info");
 #endif
-  DBUG_RETURN(0);
+    DBUG_RETURN(0);
 }
 
 
@@ -837,35 +839,42 @@ puts("info");
 */
 int ha_calpont::extra(enum ha_extra_function operation)
 {
-  DBUG_ENTER("ha_calpont::extra");
+    DBUG_ENTER("ha_calpont::extra");
 #ifdef INFINIDB_DEBUG
     {
         const char* hefs;
+
         switch (operation)
         {
-        case HA_EXTRA_NO_READCHECK:
-            hefs = "HA_EXTRA_NO_READCHECK";
-            break;
-        case HA_EXTRA_CACHE:
-            hefs = "HA_EXTRA_CACHE";
-            break;
-        case HA_EXTRA_NO_CACHE:
-            hefs = "HA_EXTRA_NO_CACHE";
-            break;
-        case HA_EXTRA_NO_IGNORE_DUP_KEY:
-            hefs = "HA_EXTRA_NO_IGNORE_DUP_KEY";
-            break;
-        case HA_EXTRA_PREPARE_FOR_RENAME:
-            hefs = "HA_EXTRA_PREPARE_FOR_RENAME";
-            break;
-        default:
-            hefs = "UNKNOWN ENUM!";
-            break;
+            case HA_EXTRA_NO_READCHECK:
+                hefs = "HA_EXTRA_NO_READCHECK";
+                break;
+
+            case HA_EXTRA_CACHE:
+                hefs = "HA_EXTRA_CACHE";
+                break;
+
+            case HA_EXTRA_NO_CACHE:
+                hefs = "HA_EXTRA_NO_CACHE";
+                break;
+
+            case HA_EXTRA_NO_IGNORE_DUP_KEY:
+                hefs = "HA_EXTRA_NO_IGNORE_DUP_KEY";
+                break;
+
+            case HA_EXTRA_PREPARE_FOR_RENAME:
+                hefs = "HA_EXTRA_PREPARE_FOR_RENAME";
+                break;
+
+            default:
+                hefs = "UNKNOWN ENUM!";
+                break;
         }
+
         fprintf(stderr, "ha_calpont::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
     }
 #endif
-  DBUG_RETURN(0);
+    DBUG_RETURN(0);
 }
 
 
@@ -890,8 +899,8 @@ int ha_calpont::extra(enum ha_extra_function operation)
 */
 int ha_calpont::delete_all_rows()
 {
-  DBUG_ENTER("ha_calpont::delete_all_rows");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+    DBUG_ENTER("ha_calpont::delete_all_rows");
+    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
@@ -912,14 +921,16 @@ int ha_calpont::delete_all_rows()
   the section "locking functions for mysql" in lock.cc;
   copy_data_between_tables() in sql_table.cc.
 */
-int ha_calpont::external_lock(THD *thd, int lock_type)
+int ha_calpont::external_lock(THD* thd, int lock_type)
 {
-  DBUG_ENTER("ha_calpont::external_lock");
-  //@Bug 2526 Only register the transaction when autocommit is off
-  if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-	trans_register_ha( thd, true, calpont_hton);
-  int rc = ha_calpont_impl_external_lock(thd, table, lock_type);
-  DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::external_lock");
+
+    //@Bug 2526 Only register the transaction when autocommit is off
+    if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
+        trans_register_ha( thd, true, calpont_hton);
+
+    int rc = ha_calpont_impl_external_lock(thd, table, lock_type);
+    DBUG_RETURN(rc);
 }
 
 
@@ -961,17 +972,17 @@ int ha_calpont::external_lock(THD *thd, int lock_type)
   get_lock_data() in lock.cc
 */
 
-THR_LOCK_DATA **ha_calpont::store_lock(THD *thd,
-                                       THR_LOCK_DATA **to,
+THR_LOCK_DATA** ha_calpont::store_lock(THD* thd,
+                                       THR_LOCK_DATA** to,
                                        enum thr_lock_type lock_type)
 {
-  //if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
-  //  lock.type=lock_type;
-  //*to++= &lock;
+    //if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
+    //  lock.type=lock_type;
+    //*to++= &lock;
 #ifdef INFINIDB_DEBUG
-puts("store_lock");
+    puts("store_lock");
 #endif
-  return to;
+    return to;
 }
 
 
@@ -994,14 +1005,14 @@ puts("store_lock");
     @see
   delete_table and ha_create_table() in handler.cc
 */
-int ha_calpont::delete_table(const char *name)
+int ha_calpont::delete_table(const char* name)
 {
-  DBUG_ENTER("ha_calpont::delete_table");
-  /* This is not implemented but we want someone to be able that it works. */
+    DBUG_ENTER("ha_calpont::delete_table");
+    /* This is not implemented but we want someone to be able that it works. */
 
-  int rc = ha_calpont_impl_delete_table(name);
+    int rc = ha_calpont_impl_delete_table(name);
 
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
 
@@ -1019,11 +1030,11 @@ int ha_calpont::delete_table(const char *name)
   @see
   mysql_rename_table() in sql_table.cc
 */
-int ha_calpont::rename_table(const char * from, const char * to)
+int ha_calpont::rename_table(const char* from, const char* to)
 {
-  DBUG_ENTER("ha_calpont::rename_table ");
-  int rc = ha_calpont_impl_rename_table(from, to);
-  DBUG_RETURN(rc);
+    DBUG_ENTER("ha_calpont::rename_table ");
+    int rc = ha_calpont_impl_rename_table(from, to);
+    DBUG_RETURN(rc);
 }
 
 
@@ -1040,11 +1051,11 @@ int ha_calpont::rename_table(const char * from, const char * to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_calpont::records_in_range(uint32_t inx, key_range *min_key,
-                                     key_range *max_key)
+ha_rows ha_calpont::records_in_range(uint32_t inx, key_range* min_key,
+                                     key_range* max_key)
 {
-  DBUG_ENTER("ha_calpont::records_in_range");
-  DBUG_RETURN(10);                         // low number to force index usage
+    DBUG_ENTER("ha_calpont::records_in_range");
+    DBUG_RETURN(10);                         // low number to force index usage
 }
 
 
@@ -1067,74 +1078,337 @@ ha_rows ha_calpont::records_in_range(uint32_t inx, key_range *min_key,
   ha_create_table() in handle.cc
 */
 
-int ha_calpont::create(const char *name, TABLE *table_arg,
-                       HA_CREATE_INFO *create_info)
+int ha_calpont::create(const char* name, TABLE* table_arg,
+                       HA_CREATE_INFO* create_info)
 {
-  DBUG_ENTER("ha_calpont::create");
+    DBUG_ENTER("ha_calpont::create");
 
-  int rc = ha_calpont_impl_create(name, table_arg, create_info);
+    int rc = ha_calpont_impl_create(name, table_arg, create_info);
 //  table_arg->s->write_frm_image();
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
-const COND *ha_calpont::cond_push(const COND *cond)
+const COND* ha_calpont::cond_push(const COND* cond)
 {
-	DBUG_ENTER("ha_calpont::cond_push");
-	DBUG_RETURN(ha_calpont_impl_cond_push(const_cast<COND*>(cond), table));
+    DBUG_ENTER("ha_calpont::cond_push");
+    DBUG_RETURN(ha_calpont_impl_cond_push(const_cast<COND*>(cond), table));
 }
 
 
-struct st_mysql_storage_engine columnstore_storage_engine=
+struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
-struct st_mysql_storage_engine infinidb_storage_engine=
+struct st_mysql_storage_engine infinidb_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
 #if 0
-static ulong srv_enum_var= 0;
-static ulong srv_ulong_var= 0;
+static ulong srv_enum_var = 0;
+static ulong srv_ulong_var = 0;
 
-const char *enum_var_names[]=
+const char* enum_var_names[] =
 {
-  "e1", "e2", NullS
+    "e1", "e2", NullS
 };
 
-TYPELIB enum_var_typelib=
+TYPELIB enum_var_typelib =
 {
-  array_elements(enum_var_names) - 1, "enum_var_typelib",
-  enum_var_names, NULL
+    array_elements(enum_var_names) - 1, "enum_var_typelib",
+    enum_var_names, NULL
 };
 
 static MYSQL_SYSVAR_ENUM(
-  enum_var,                       // name
-  srv_enum_var,                   // varname
-  PLUGIN_VAR_RQCMDARG,            // opt
-  "Sample ENUM system variable.", // comment
-  NULL,                           // check
-  NULL,                           // update
-  0,                              // def
-  &enum_var_typelib);             // typelib
+    enum_var,                       // name
+    srv_enum_var,                   // varname
+    PLUGIN_VAR_RQCMDARG,            // opt
+    "Sample ENUM system variable.", // comment
+    NULL,                           // check
+    NULL,                           // update
+    0,                              // def
+    &enum_var_typelib);             // typelib
 
 static MYSQL_SYSVAR_ULONG(
-  ulong_var,
-  srv_ulong_var,
-  PLUGIN_VAR_RQCMDARG,
-  "0..1000",
-  NULL,
-  NULL,
-  8,
-  0,
-  1000,
-  0);
+    ulong_var,
+    srv_ulong_var,
+    PLUGIN_VAR_RQCMDARG,
+    "0..1000",
+    NULL,
+    NULL,
+    8,
+    0,
+    1000,
+    0);
 #endif
 
-static struct st_mysql_sys_var* calpont_system_variables[]= {
+/*@brief  check_walk - It traverses filter conditions*/
+/************************************************************
+ * DESCRIPTION:
+ * It traverses filter predicates looking for unsupported
+ * JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
+ * logical OR.
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    derived - TABLE_LIST* to work with.
+ * RETURN:
+ *    derived_handler if possible
+ *    NULL in other case
+ ***********************************************************/
+void check_walk(const Item* item, void* arg)
+{
+    bool* unsupported_feature  = static_cast<bool*>(arg);
+    if ( *unsupported_feature )
+        return;
+    switch (item->type())
+    {
+        case Item::FUNC_ITEM:
+        {
+            const Item_func* ifp = static_cast<const Item_func*>(item);
+
+            if ( ifp->functype() != Item_func::EQ_FUNC ) // NON-equi JOIN
+            {
+                if ( ifp->argument_count() == 2 &&
+                    ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
+                    ifp->arguments()[1]->type() == Item::FIELD_ITEM )
+                {
+                    Item_field* left= static_cast<Item_field*>(ifp->arguments()[0]);
+                    Item_field* right= static_cast<Item_field*>(ifp->arguments()[1]);
+
+                    if ( left->field->table != right->field->table )
+                    {
+                        *unsupported_feature = true;
+                        return;
+                    }
+                }
+                else // IN + correlated subquery 
+                {
+                    if ( ifp->functype() == Item_func::NOT_FUNC
+                        && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM )
+                    {
+                        check_walk(ifp->arguments()[0], arg);
+                    }
+                }
+            }
+            break;
+        }
+        
+        case Item::EXPR_CACHE_ITEM: // IN + correlated subquery 
+        {
+            const Item_cache_wrapper* icw = static_cast<const Item_cache_wrapper*>(item);
+            if ( icw->get_orig_item()->type() == Item::FUNC_ITEM )
+            {
+                const Item_func *ifp = static_cast<const Item_func*>(icw->get_orig_item());
+                if ( ifp->argument_count() == 2 &&
+                    ( ifp->arguments()[0]->type() == Item::Item::SUBSELECT_ITEM
+                    || ifp->arguments()[1]->type() == Item::Item::SUBSELECT_ITEM ))
+                {
+                    *unsupported_feature = true;
+                    return;
+                }
+            }
+            break;
+        }
+
+        case Item::COND_ITEM: // OR in cods is unsupported yet
+        {
+            Item_cond* icp = (Item_cond*)item;
+            if ( is_cond_or(icp) )
+            {
+                *unsupported_feature = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+/*@brief  create_calpont_group_by_handler- Creates handler*/
+/***********************************************************
+ * DESCRIPTION:
+ * Creates a group_by pushdown handler if there is no:
+ *  non-equi JOIN, e.g * t1.c1 > t2.c2
+ *  logical OR in the filter predicates
+ *  Impossible WHERE
+ *  Impossible HAVING
+ * Valid queries with the last two crashes the server if processed.
+ * Details are in server/sql/group_by_handler.h
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query structure, that describes the pushdowned query.
+ * RETURN:
+ *    group_by_handler if success
+ *    NULL in other case
+ ***********************************************************/
+static group_by_handler*
+create_calpont_group_by_handler(THD* thd, Query* query)
+{
+    ha_calpont_group_by_handler* handler = NULL;
+    // same as thd->lex->current_select
+    SELECT_LEX *select_lex = query->from->select_lex;
+
+    // Create a handler if query is valid. See comments for details.
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
+        && ( thd->variables.infinidb_vtable_mode == 0
+            || thd->variables.infinidb_vtable_mode == 2 )
+        && ( query->group_by || select_lex->with_sum_func ) )
+    {
+        bool unsupported_feature = false;
+        // Impossible HAVING or WHERE
+        if ( ( query->having && select_lex->having_value == Item::COND_FALSE )
+            || ( select_lex->cond_count > 0
+                && select_lex->cond_value == Item::COND_FALSE ) )
+        {
+            unsupported_feature = true;
+        }
+
+        // Unsupported conditions check.
+        if ( !unsupported_feature )
+        {
+            JOIN *join = select_lex->join;
+            Item_cond *icp = 0;
+
+            if (join != 0)
+                icp = reinterpret_cast<Item_cond*>(join->conds);
+
+            if ( unsupported_feature == false
+                && icp )
+            {
+                icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            }
+        }
+
+        if ( !unsupported_feature )
+        {
+            handler = new ha_calpont_group_by_handler(thd, query);
+
+            // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
+            query->group_by = NULL;
+            query->order_by = NULL;
+            query->having = NULL;
+        }
+    }
+
+    return handler;
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * GROUP BY handler constructor
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query describing structure
+ ***********************************************************/
+ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
+        : group_by_handler(thd_arg, calpont_hton),
+          select(query->select),
+          table_list(query->from),
+          distinct(query->distinct),
+          where(query->where),
+          group_by(query->group_by),
+          order_by(query->order_by),
+          having(query->having)
+{
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * GROUP BY destructor
+ ***********************************************************/
+ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
+{
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Makes the plan and prepares the data
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::init_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
+
+    // Save vtable_state to restore the after we inited.
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    // MCOL-1052 Should be removed after cleaning the code up.
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
+    int rc = ha_calpont_impl_group_by_init(this, table);
+    thd->infinidb_vtable.vtable_state = oldState;
+
+    DBUG_RETURN(rc);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Fetches a row and saves it to a temporary table.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::next_row()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::next_row");
+    int rc = ha_calpont_impl_group_by_next(this, table);
+
+    DBUG_RETURN(rc);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Shuts the scan down.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::end_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
+
+    int rc = ha_calpont_impl_group_by_end(this, table);
+
+    DBUG_RETURN(rc);
+}
+
+
+static struct st_mysql_sys_var* calpont_system_variables[] =
+{
 //  MYSQL_SYSVAR(enum_var),
 //  MYSQL_SYSVAR(ulong_var),
-  NULL
+    NULL
 };
 
 mysql_declare_plugin(columnstore)
+{
+    MYSQL_STORAGE_ENGINE_PLUGIN,
+    &columnstore_storage_engine,
+    "Columnstore",
+    "MariaDB",
+    "Columnstore storage engine",
+    PLUGIN_LICENSE_GPL,
+    columnstore_init_func,                        /* Plugin Init */
+    columnstore_done_func,                        /* Plugin Deinit */
+    0x0100 /* 1.0 */,
+    NULL,                                         /* status variables */
+    calpont_system_variables,                     /* system variables */
+    NULL,                                         /* reserved */
+    0                                             /* config flags */
+},
+{
+    MYSQL_STORAGE_ENGINE_PLUGIN,
+    &infinidb_storage_engine,
+    "InfiniDB",
+    "MariaDB",
+    "Columnstore storage engine (deprecated: use columnstore)",
+    PLUGIN_LICENSE_GPL,
+    infinidb_init_func,                           /* Plugin Init */
+    infinidb_done_func,                            /* Plugin Deinit */
+    0x0100 /* 1.0 */,
+    NULL,                                         /* status variables */
+    calpont_system_variables,                     /* system variables */
+    NULL,                                         /* reserved */
+    0                                             /* config flags */
+}
+mysql_declare_plugin_end;
+maria_declare_plugin(columnstore)
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
   &columnstore_storage_engine,
@@ -1142,13 +1416,13 @@ mysql_declare_plugin(columnstore)
   "MariaDB",
   "Columnstore storage engine",
   PLUGIN_LICENSE_GPL,
-  columnstore_init_func,                        /* Plugin Init */
-  columnstore_done_func,                        /* Plugin Deinit */
-  0x0100 /* 1.0 */,
-  NULL,                                         /* status variables */
-  calpont_system_variables,                     /* system variables */
-  NULL,                                         /* reserved */
-  0                                             /* config flags */
+  columnstore_init_func,
+  columnstore_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 },
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
@@ -1157,13 +1431,13 @@ mysql_declare_plugin(columnstore)
   "MariaDB",
   "Columnstore storage engine (deprecated: use columnstore)",
   PLUGIN_LICENSE_GPL,
-  infinidb_init_func,                           /* Plugin Init */
-  infinidb_done_func,                            /* Plugin Deinit */
-  0x0100 /* 1.0 */,
-  NULL,                                         /* status variables */
-  calpont_system_variables,                     /* system variables */
-  NULL,                                         /* reserved */
-  0                                             /* config flags */
+  infinidb_init_func,
+  infinidb_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 }
-mysql_declare_plugin_end;
+maria_declare_plugin_end;
 

@@ -7,7 +7,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -148,18 +148,18 @@
 #  if defined(__POWERPC__)
 #   define ROTATE(a,n)	__rlwinm(a,n,0,31)
 #  elif defined(__MC68K__)
-    /* Motorola specific tweak. <appro@fy.chalmers.se> */
+/* Motorola specific tweak. <appro@fy.chalmers.se> */
 #   define ROTATE(a,n)	( n<24 ? __rol(a,n) : __ror(a,32-n) )
 #  else
 #   define ROTATE(a,n)	__rol(a,n)
 #  endif
 # elif defined(__GNUC__) && __GNUC__>=2 && !defined(OPENSSL_NO_ASM) && !defined(OPENSSL_NO_INLINE_ASM)
-  /*
-   * Some GNU C inline assembler templates. Note that these are
-   * rotates by *constant* number of bits! But that's exactly
-   * what we need here...
-   * 					<appro@fy.chalmers.se>
-   */
+/*
+ * Some GNU C inline assembler templates. Note that these are
+ * rotates by *constant* number of bits! But that's exactly
+ * what we need here...
+ * 					<appro@fy.chalmers.se>
+ */
 #  if defined(__i386) || defined(__i386__) || defined(__x86_64) || defined(__x86_64__)
 #   define ROTATE(a,n)	({ register unsigned int ret;	\
 				asm (			\
@@ -200,12 +200,12 @@
 #  if ((defined(__i386) || defined(__i386__)) && !defined(I386_ONLY)) || \
       (defined(__x86_64) || defined(__x86_64__))
 #   if !defined(B_ENDIAN)
-    /*
-     * This gives ~30-40% performance improvement in SHA-256 compiled
-     * with gcc [on P4]. Well, first macro to be frank. We can pull
-     * this trick on x86* platforms only, because these CPUs can fetch
-     * unaligned data without raising an exception.
-     */
+/*
+ * This gives ~30-40% performance improvement in SHA-256 compiled
+ * with gcc [on P4]. Well, first macro to be frank. We can pull
+ * this trick on x86* platforms only, because these CPUs can fetch
+ * unaligned data without raising an exception.
+ */
 #   define HOST_c2l(c,l)	({ unsigned int r=*((const unsigned int *)(c));	\
 				   asm ("bswapl %0":"=r"(r):"0"(r));	\
 				   (c)+=4; (l)=r;			})
@@ -252,7 +252,7 @@
 #endif
 #if defined(__i386) || defined(__i386__) || defined(__x86_64) || defined(__x86_64__)
 # ifndef B_ENDIAN
-   /* See comment in DATA_ORDER_IS_BIG_ENDIAN section. */
+/* See comment in DATA_ORDER_IS_BIG_ENDIAN section. */
 #  define HOST_c2l(c,l)	((l)=*((const unsigned int *)(c)), (c)+=4, l)
 #  define HOST_l2c(l,c)	(*((unsigned int *)(c))=(l), (c)+=4, l)
 # endif
@@ -279,108 +279,114 @@
  * Time for some action:-)
  */
 
-int HASH_UPDATE (HASH_CTX *c, const void *data_, size_t len)
-	{
-	const unsigned char *data=data_;
-	unsigned char *p;
-	HASH_LONG l;
-	size_t n;
+int HASH_UPDATE (HASH_CTX* c, const void* data_, size_t len)
+{
+    const unsigned char* data = data_;
+    unsigned char* p;
+    HASH_LONG l;
+    size_t n;
 
-	if (len==0) return 1;
+    if (len == 0) return 1;
 
-	l=(c->Nl+(((HASH_LONG)len)<<3))&0xffffffffUL;
-	/* 95-05-24 eay Fixed a bug with the overflow handling, thanks to
-	 * Wei Dai <weidai@eskimo.com> for pointing it out. */
-	if (l < c->Nl) /* overflow */
-		c->Nh++;
-	c->Nh+=(HASH_LONG)(len>>29);	/* might cause compiler warning on 16-bit */
-	c->Nl=l;
+    l = (c->Nl + (((HASH_LONG)len) << 3)) & 0xffffffffUL;
 
-	n = c->num;
-	if (n != 0)
-		{
-		p=(unsigned char *)c->data;
+    /* 95-05-24 eay Fixed a bug with the overflow handling, thanks to
+     * Wei Dai <weidai@eskimo.com> for pointing it out. */
+    if (l < c->Nl) /* overflow */
+        c->Nh++;
 
-		if (len >= HASH_CBLOCK || len+n >= HASH_CBLOCK)
-			{
-			memcpy (p+n,data,HASH_CBLOCK-n);
-			HASH_BLOCK_DATA_ORDER (c,p,1);
-			n      = HASH_CBLOCK-n;
-			data  += n;
-			len   -= n;
-			c->num = 0;
-			memset (p,0,HASH_CBLOCK);	/* keep it zeroed */
-			}
-		else
-			{
-			memcpy (p+n,data,len);
-			c->num += (unsigned int)len;
-			return 1;
-			}
-		}
+    c->Nh += (HASH_LONG)(len >> 29);	/* might cause compiler warning on 16-bit */
+    c->Nl = l;
 
-	n = len/HASH_CBLOCK;
-	if (n > 0)
-		{
-		HASH_BLOCK_DATA_ORDER (c,data,n);
-		n    *= HASH_CBLOCK;
-		data += n;
-		len  -= n;
-		}
+    n = c->num;
 
-	if (len != 0)
-		{
-		p = (unsigned char *)c->data;
-		c->num = (unsigned int)len;
-		memcpy (p,data,len);
-		}
-	return 1;
-	}
+    if (n != 0)
+    {
+        p = (unsigned char*)c->data;
+
+        if (len >= HASH_CBLOCK || len + n >= HASH_CBLOCK)
+        {
+            memcpy (p + n, data, HASH_CBLOCK - n);
+            HASH_BLOCK_DATA_ORDER (c, p, 1);
+            n      = HASH_CBLOCK - n;
+            data  += n;
+            len   -= n;
+            c->num = 0;
+            memset (p, 0, HASH_CBLOCK);	/* keep it zeroed */
+        }
+        else
+        {
+            memcpy (p + n, data, len);
+            c->num += (unsigned int)len;
+            return 1;
+        }
+    }
+
+    n = len / HASH_CBLOCK;
+
+    if (n > 0)
+    {
+        HASH_BLOCK_DATA_ORDER (c, data, n);
+        n    *= HASH_CBLOCK;
+        data += n;
+        len  -= n;
+    }
+
+    if (len != 0)
+    {
+        p = (unsigned char*)c->data;
+        c->num = (unsigned int)len;
+        memcpy (p, data, len);
+    }
+
+    return 1;
+}
 
 
-void HASH_TRANSFORM (HASH_CTX *c, const unsigned char *data)
-	{
-	HASH_BLOCK_DATA_ORDER (c,data,1);
-	}
+void HASH_TRANSFORM (HASH_CTX* c, const unsigned char* data)
+{
+    HASH_BLOCK_DATA_ORDER (c, data, 1);
+}
 
 
-int HASH_FINAL (unsigned char *md, HASH_CTX *c)
-	{
-	unsigned char *p = (unsigned char *)c->data;
-	size_t n = c->num;
+int HASH_FINAL (unsigned char* md, HASH_CTX* c)
+{
+    unsigned char* p = (unsigned char*)c->data;
+    size_t n = c->num;
 
-	p[n] = 0x80; /* there is always room for one */
-	n++;
+    p[n] = 0x80; /* there is always room for one */
+    n++;
 
-	if (n > (HASH_CBLOCK-8))
-		{
-		memset (p+n,0,HASH_CBLOCK-n);
-		n=0;
-		HASH_BLOCK_DATA_ORDER (c,p,1);
-		}
-	memset (p+n,0,HASH_CBLOCK-8-n);
+    if (n > (HASH_CBLOCK - 8))
+    {
+        memset (p + n, 0, HASH_CBLOCK - n);
+        n = 0;
+        HASH_BLOCK_DATA_ORDER (c, p, 1);
+    }
 
-	p += HASH_CBLOCK-8;
+    memset (p + n, 0, HASH_CBLOCK - 8 - n);
+
+    p += HASH_CBLOCK - 8;
 #if   defined(DATA_ORDER_IS_BIG_ENDIAN)
-	(void)HOST_l2c(c->Nh,p);
-	(void)HOST_l2c(c->Nl,p);
+    (void)HOST_l2c(c->Nh, p);
+    (void)HOST_l2c(c->Nl, p);
 #elif defined(DATA_ORDER_IS_LITTLE_ENDIAN)
-	(void)HOST_l2c(c->Nl,p);
-	(void)HOST_l2c(c->Nh,p);
+    (void)HOST_l2c(c->Nl, p);
+    (void)HOST_l2c(c->Nh, p);
 #endif
-	p -= HASH_CBLOCK;
-	HASH_BLOCK_DATA_ORDER (c,p,1);
-	c->num=0;
-	memset (p,0,HASH_CBLOCK);
+    p -= HASH_CBLOCK;
+    HASH_BLOCK_DATA_ORDER (c, p, 1);
+    c->num = 0;
+    memset (p, 0, HASH_CBLOCK);
 
 #ifndef HASH_MAKE_STRING
 #error "HASH_MAKE_STRING must be defined!"
 #else
-	HASH_MAKE_STRING(c,md);
+    HASH_MAKE_STRING(c, md);
 #endif
 
-	return 1;
-	}
+    return 1;
+}
 
 #ifndef MD32_REG_T
 #if defined(__alpha) || defined(__sparcv9) || defined(__mips)
@@ -398,7 +404,7 @@ int HASH_FINAL (unsigned char *md, HASH_CTX *c)
  * *either* case. Now declaring 'em long excuses the compiler
  * from keeping 32 MSBs zeroed resulting in 13% performance
  * improvement under SPARC Solaris7/64 and 5% under AlphaLinux.
- * Well, to be honest it should say that this *prevents* 
+ * Well, to be honest it should say that this *prevents*
  * performance degradation.
  *				<appro@fy.chalmers.se>
  */

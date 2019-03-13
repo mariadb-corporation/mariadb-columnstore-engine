@@ -14,13 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
-$SUDO rm -f /tmp/${MODULE}_softwareReport.txt
+rm -f ${tmpDir}/${MODULE}_softwareReport.txt
 
 {
 echo " "
@@ -32,14 +29,7 @@ echo "-- Columnstore Package Details --"
 echo " "
 echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
 echo " "
-$INSTALLDIR/bin/mcsadmin getcolumnstoresoftwareinfo
-
-echo " "
-echo "-- Columnstore Release Number file --"
-echo " "
-echo "################# cat $INSTALLDIR/releasenum #################"
-echo " "
-cat $INSTALLDIR/releasenum
+$INSTALLDIR/bin/mcsadmin getsoftwareinfo
 
 echo " "
 echo "-- Columnstore Storage Configuration --"
@@ -48,6 +38,6 @@ echo "################# mcsadmin getStorageConfig #################"
 echo " "
 $INSTALLDIR/bin/mcsadmin getStorageConfig
 
-} > /tmp/${MODULE}_softwareReport.txt
+} > ${tmpDir}/${MODULE}_softwareReport.txt
 
 exit 0

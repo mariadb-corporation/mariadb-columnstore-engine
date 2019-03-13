@@ -32,17 +32,18 @@ using namespace dmlpackage;
 
 #include "we_dmlcommandclient.h"
 
-namespace WriteEngine {
-	WE_DMLCommandClient::WE_DMLCommandClient()
-	{
-		fWEClient = new WEClients(WEClients::DDLPROC);
-	}
+namespace WriteEngine
+{
+WE_DMLCommandClient::WE_DMLCommandClient()
+{
+    fWEClient = new WEClients(WEClients::DDLPROC);
+}
 
-	WE_DMLCommandClient::~WE_DMLCommandClient()
-	{
-		delete fWEClient;
-		fWEClient = NULL;
-	}
+WE_DMLCommandClient::~WE_DMLCommandClient()
+{
+    delete fWEClient;
+    fWEClient = NULL;
+}
 
 }
 

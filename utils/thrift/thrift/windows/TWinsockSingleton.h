@@ -42,7 +42,12 @@
 #error For windows you must choose USE_BOOST_THREAD or USE_STD_THREAD
 #endif
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache
+{
+namespace thrift
+{
+namespace transport
+{
 
 /**
  * Winsock2 must be intialised once only in order to create sockets. This class
@@ -83,6 +88,8 @@ private:
 #endif
 };
 
-}}} // apache::thrift::transport
+}
+}
+} // apache::thrift::transport
 
 #endif // _THRIFT_TRANSPORT_WINDOWS_TWINSOCKSINGLETON_H_

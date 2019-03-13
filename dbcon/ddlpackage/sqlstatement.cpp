@@ -25,22 +25,23 @@
 #include "ddlpkg.h"
 #undef DDLPKG_DLLEXPORT
 
-namespace ddlpackage {
-	using namespace std;
-	
-	static uint32_t sessionID = 1;
-	
-	SqlStatement::SqlStatement()
-	{
-		fSessionID = sessionID;
-	}
-	
-	SqlStatement::~SqlStatement()
-	{
-	}
+namespace ddlpackage
+{
+using namespace std;
 
-	ostream& operator<<(ostream &os, const SqlStatement& stmt)
-	{
-		return stmt.put(os);
-	}
+static uint32_t sessionID = 1;
+
+SqlStatement::SqlStatement()
+{
+    fSessionID = sessionID;
+}
+
+SqlStatement::~SqlStatement()
+{
+}
+
+ostream& operator<<(ostream& os, const SqlStatement& stmt)
+{
+    return stmt.put(os);
+}
 }

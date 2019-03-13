@@ -49,40 +49,40 @@ class DeletePackageProcessor : public DMLPackageProcessor
 
 public:
 
-    DeletePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid){}
+    DeletePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid) {}
     /** @brief process a DeleteDMLPackage
       *
       * @param cpackage the delete dml package to process
       */
-   EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
+    EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
 protected:
 
 private:
 
-	 /** @brief delete a row
-      *
-      * @param txnID the transaction id
-      * @param tablePtr a pointer to the table that is being operated on
-      * @param rowIDList upon return containts the row ids of the rows deleted
-      * @param colOldValuesList upon return contains the values the were delete
-      * @param result upon return will containt the result of the operation
+    /** @brief delete a row
+     *
+     * @param txnID the transaction id
+     * @param tablePtr a pointer to the table that is being operated on
+     * @param rowIDList upon return containts the row ids of the rows deleted
+     * @param colOldValuesList upon return contains the values the were delete
+     * @param result upon return will containt the result of the operation
     bool deleteRows(execplan::CalpontSystemCatalog::SCN txnID, dmlpackage::DMLTable* tablePtr,
-                   WriteEngine::RIDList& rowIDList, WriteEngine::ColValueList& colOldValuesList,
-                   DMLResult& result);
-	  */
-    bool processRowgroup(messageqcpp::ByteStream & aRowGroup, DMLResult& result, const uint64_t uniqueId, dmlpackage::CalpontDMLPackage& cpackage, std::map<unsigned, bool>& pmStateDel, 
-						bool isMeta = false, uint32_t dbroot=1);
+                  WriteEngine::RIDList& rowIDList, WriteEngine::ColValueList& colOldValuesList,
+                  DMLResult& result);
+     */
+    bool processRowgroup(messageqcpp::ByteStream& aRowGroup, DMLResult& result, const uint64_t uniqueId, dmlpackage::CalpontDMLPackage& cpackage, std::map<unsigned, bool>& pmStateDel,
+                         bool isMeta = false, uint32_t dbroot = 1);
 
 
     /** @brief add all rows if we have no filter for the delete
       *
       * @param tablePtr a pointer to the table that is being operated on
       */
-   uint64_t fixUpRows(dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result, const uint64_t uniqueId, const uint32_t tableOid);
-   bool receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs, std::map<unsigned, bool>& pmStateDel, const uint32_t tableOid);
-   
-	//bandListsByExtent bandListsMap;
+    uint64_t fixUpRows(dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result, const uint64_t uniqueId, const uint32_t tableOid);
+    bool receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs, std::map<unsigned, bool>& pmStateDel, const uint32_t tableOid);
+
+    //bandListsByExtent bandListsMap;
 
 };
 

@@ -47,11 +47,13 @@
 #include <endian.h>
 #if __BYTE_ORDER == __BIG_ENDIAN       // 4312
 inline uint64_t htonll(uint64_t n)
-{ return n; }
+{
+    return n;
+}
 #elif __BYTE_ORDER == __LITTLE_ENDIAN  // 1234
 inline uint64_t htonll(uint64_t n)
 {
-return ((((uint64_t) htonl(n & 0xFFFFFFFFLLU)) << 32) | (htonl((n & 0xFFFFFFFF00000000LLU) >> 32)));
+    return ((((uint64_t) htonl(n & 0xFFFFFFFFLLU)) << 32) | (htonl((n & 0xFFFFFFFF00000000LLU) >> 32)));
 }
 #else  // __BYTE_ORDER == __PDP_ENDIAN    3412
 inline uint64_t htonll(uint64_t n);
@@ -62,14 +64,16 @@ inline uint64_t htonll(uint64_t n);
 //Assume we're on little-endian
 inline uint64_t htonll(uint64_t n)
 {
-return ((((uint64_t) htonl(n & 0xFFFFFFFFULL)) << 32) | (htonl((n & 0xFFFFFFFF00000000ULL) >> 32)));
+    return ((((uint64_t) htonl(n & 0xFFFFFFFFULL)) << 32) | (htonl((n & 0xFFFFFFFF00000000ULL) >> 32)));
 }
 #endif //_MSC_VER
 #endif //__linux__
 
 // this method evalutes the uint64 that stores a char[] to expected value
 inline uint64_t uint64ToStr(uint64_t n)
-{ return htonll(n); }
+{
+    return htonll(n);
+}
 
 
 #if defined(_MSC_VER) && defined(xxxDATACONVERT_DLLEXPORT)
@@ -78,26 +82,27 @@ inline uint64_t uint64ToStr(uint64_t n)
 #define EXPORT
 #endif
 
-const int64_t IDB_pow[19] = {
-1,
-10,
-100,
-1000,
-10000,
-100000,
-1000000,
-10000000,
-100000000,
-1000000000,
-10000000000LL,
-100000000000LL,
-1000000000000LL,
-10000000000000LL,
-100000000000000LL,
-1000000000000000LL,
-10000000000000000LL,
-100000000000000000LL,
-1000000000000000000LL
+const int64_t IDB_pow[19] =
+{
+    1,
+    10,
+    100,
+    1000,
+    10000,
+    100000,
+    1000000,
+    10000000,
+    100000000,
+    1000000000,
+    10000000000LL,
+    100000000000LL,
+    1000000000000LL,
+    10000000000000LL,
+    100000000000000LL,
+    1000000000000000LL,
+    10000000000000000LL,
+    100000000000000000LL,
+    1000000000000000000LL
 };
 
 
@@ -107,7 +112,8 @@ namespace dataconvert
 enum CalpontDateTimeFormat
 {
     CALPONTDATE_ENUM     = 1, // date format is: "YYYY-MM-DD"
-    CALPONTDATETIME_ENUM = 2  // date format is: "YYYY-MM-DD HH:MI:SS"
+    CALPONTDATETIME_ENUM = 2, // date format is: "YYYY-MM-DD HH:MI:SS"
+    CALPONTTIME_ENUM     = 3
 };
 
 
@@ -134,7 +140,7 @@ struct Date
 inline
 int32_t Date::convertToMySQLint() const
 {
-    return (int32_t) (year*10000)+(month*100)+day;
+    return (int32_t) (year * 10000) + (month * 100) + day;
 }
 
 /** @brief a structure to hold a datetime
@@ -167,7 +173,7 @@ struct DateTime
 inline
 int64_t DateTime::convertToMySQLint() const
 {
-    return (int64_t) (year*10000000000LL)+(month*100000000)+(day*1000000)+(hour*10000)+(minute*100)+second;
+    return (int64_t) (year * 10000000000LL) + (month * 100000000) + (day * 1000000) + (hour * 10000) + (minute * 100) + second;
 }
 
 inline
@@ -191,14 +197,17 @@ struct Time
     signed second  : 8;
     signed minute  : 8;
     signed hour    : 12;
-    signed day     : 12;
-    
+    signed day     : 11;
+    signed is_neg  : 1;
+
     // NULL column value = 0xFFFFFFFFFFFFFFFE
     Time() : msecond (0xFFFFFE),
-             second (0xFF),
-             minute (0xFF),
-             hour (0xFFF),
-             day (0xFFF){}
+        second (0xFF),
+        minute (0xFF),
+        hour (0xFFF),
+        day (0x7FF),
+        is_neg (0b1)
+    {}
 
     // Construct a Time from a 64 bit integer InfiniDB time.
     Time(int64_t val) :
@@ -206,22 +215,73 @@ struct Time
         second((val >> 24) & 0xff),
         minute((val >> 32) & 0xff),
         hour((val >> 40) & 0xfff),
-        day((val >> 52) & 0xfff)
-        {}
+        day((val >> 52) & 0x7ff),
+        is_neg(val >> 63)
+    {}
+
+    Time(signed d, signed h, signed min, signed sec, signed msec, bool neg) :
+        msecond(msec), second(sec), minute(min), hour(h), day(d), is_neg(neg)
+    {
+        if (h < 0)
+            is_neg = 0b1;
+    }
+
+    int64_t convertToMySQLint() const;
+    void reset();
 };
+
+inline
+void    Time::reset()
+{
+    msecond = 0xFFFFFE;
+    second  = 0xFF;
+    minute  = 0xFF;
+    hour    = 0xFFF;
+    is_neg  = 0b1;
+    day     = 0x7FF;
+}
+
+inline
+int64_t Time::convertToMySQLint() const
+{
+    if ((hour >= 0) && is_neg)
+    {
+        return (int64_t) ((hour * 10000) + (minute * 100) + second) * -1;
+    }
+    else if (hour >= 0)
+    {
+        return (int64_t) (hour * 10000) + (minute * 100) + second;
+    }
+    else
+    {
+        return (int64_t) (hour * 10000) - (minute * 100) - second;
+    }
+}
 
 static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
 
-inline uint32_t getDaysInMonth(uint32_t month)
-{ return ( (month < 1 || month > 12) ? 0 : daysInMonth[month-1]);}
-
 inline bool isLeapYear ( int year)
 {
-    if( year % 400 == 0 )
+    if ( year % 400 == 0 )
         return true;
-    if( ( year % 4 == 0 ) && ( year % 100 != 0 ) )
+
+    if ( ( year % 4 == 0 ) && ( year % 100 != 0 ) )
         return true;
+
     return false;
+}
+
+inline uint32_t getDaysInMonth(uint32_t month, int year)
+{
+    if (month < 1 || month > 12)
+        return 0;
+
+    uint32_t days = daysInMonth[month - 1];
+
+    if ((month == 2) && isLeapYear(year))
+        days++;
+
+    return days;
 }
 
 inline
@@ -229,21 +289,20 @@ bool isDateValid ( int day, int month, int year)
 {
     bool valid = true;
 
-	if ( year == 0 && month == 0 && year == 0 )
-	{
-		return true;
-	}
+    if ( year == 0 && month == 0 && year == 0 )
+    {
+        return true;
+    }
 
-    int daycheck = getDaysInMonth( month );
-    if( month == 2 && isLeapYear( year ) )
-        //  29 days in February in a leap year
-        daycheck = 29;
+    int daycheck = getDaysInMonth( month, year );
+
     if ( ( year < 1000 ) || ( year > 9999 ) )
         valid = false;
     else if ( month < 1 || month > 12 )
         valid = false;
     else if ( day < 1 || day > daycheck )
         valid = false;
+
     return ( valid );
 }
 
@@ -251,6 +310,7 @@ inline
 bool isDateTimeValid ( int hour, int minute, int second, int microSecond)
 {
     bool valid = false;
+
     if ( hour >= 0 && hour <= 24 )
     {
         if ( minute >= 0 && minute < 60 )
@@ -264,6 +324,29 @@ bool isDateTimeValid ( int hour, int minute, int second, int microSecond)
             }
         }
     }
+
+    return valid;
+}
+
+inline
+bool isTimeValid ( int hour, int minute, int second, int microSecond)
+{
+    bool valid = false;
+
+    if ( hour >= -838 && hour <= 838 )
+    {
+        if ( minute >= 0 && minute < 60 )
+        {
+            if ( second >= 0 && second < 60 )
+            {
+                if ( microSecond >= 0 && microSecond <= 999999 )
+                {
+                    valid = true;
+                }
+            }
+        }
+    }
+
     return valid;
 }
 
@@ -272,8 +355,8 @@ int64_t string_to_ll( const std::string& data, bool& bSaturate )
 {
     // This function doesn't take into consideration our special values
     // for NULL and EMPTY when setting the saturation point. Should it?
-    char *ep = NULL;
-    const char *str = data.c_str();
+    char* ep = NULL;
+    const char* str = data.c_str();
     errno = 0;
     int64_t value = strtoll(str, &ep, 10);
 
@@ -292,8 +375,8 @@ uint64_t string_to_ull( const std::string& data, bool& bSaturate )
 {
     // This function doesn't take into consideration our special values
     // for NULL and EMPTY when setting the saturation point. Should it?
-    char *ep = NULL;
-    const char *str = data.c_str();
+    char* ep = NULL;
+    const char* str = data.c_str();
     errno = 0;
 
     // check for negative number. saturate to 0;
@@ -302,7 +385,9 @@ uint64_t string_to_ull( const std::string& data, bool& bSaturate )
         bSaturate = true;
         return 0;
     }
+
     uint64_t value = strtoull(str, &ep, 10);
+
     //  (no digits) || (more chars)  || (other errors & value = 0)
     if ((ep == str) || (*ep != '\0') || (errno != 0 && value == 0))
         throw logging::QueryDataExcept("value is not numerical.", logging::formatErr);
@@ -327,44 +412,62 @@ public:
      * @param data the columns string representation of it's data
      */
     EXPORT static boost::any convertColumnData( const execplan::CalpontSystemCatalog::ColType& colType,
-                                                  const std::string& dataOrig, bool& bSaturate,
-                                                bool nulFlag = false, bool noRoundup = false, bool isUpdate = false);
+            const std::string& dataOrig, bool& bSaturate,
+            bool nulFlag = false, bool noRoundup = false, bool isUpdate = false);
 
-   /**
-     * @brief convert a columns data from native format to a string
-     *
-     * @param type the columns database type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static std::string dateToString( int  datevalue );  
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string dateToString( int  datevalue );
     static inline void dateToString( int datevalue, char* buf, unsigned int buflen );
 
-   /**
-     * @brief convert a columns data from native format to a string
-     *
-     * @param type the columns database type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static std::string datetimeToString( long long  datetimevalue );      
-    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen );
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string datetimeToString( long long  datetimevalue, long decimals = 0 );
+    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals = 0 );
 
-   /**
-     * @brief convert a columns data from native format to a string
-     *
-     * @param type the columns database type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static std::string dateToString1( int  datevalue );  
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string timeToString( long long  timevalue, long decimals = 0 );
+    static inline void timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals = 0);
+
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string dateToString1( int  datevalue );
     static inline void dateToString1( int datevalue, char* buf, unsigned int buflen );
 
-   /**
-     * @brief convert a columns data from native format to a string
-     *
-     * @param type the columns database type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static std::string datetimeToString1( long long  datetimevalue );      
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string datetimeToString1( long long  datetimevalue );
     static inline void datetimeToString1( long long datetimevalue, char* buf, unsigned int buflen );
+
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string timeToString1( long long  timevalue );
+    static inline void timeToString1( long long timevalue, char* buf, unsigned int buflen );
 
     /**
      * @brief convert a date column data, represnted as a string, to it's native
@@ -377,14 +480,14 @@ public:
      * @param dataOrgLen length specification of dataOrg
      */
     EXPORT static int32_t convertColumnDate( const char* dataOrg,
-                                  CalpontDateTimeFormat dateFormat,
-                                  int& status, unsigned int dataOrgLen );
+            CalpontDateTimeFormat dateFormat,
+            int& status, unsigned int dataOrgLen );
 
     /**
      * @brief Is specified date valid; used by binary bulk load
      */
     EXPORT static bool      isColumnDateValid( int32_t date );
-                                                                 
+
     /**
      * @brief convert a datetime column data, represented as a string,
      * to it's native format. This function is for bulkload to use.
@@ -396,20 +499,39 @@ public:
      * @param dataOrgLen length specification of dataOrg
      */
     EXPORT static int64_t convertColumnDatetime( const char* dataOrg,
-                                  CalpontDateTimeFormat datetimeFormat,
-                                  int& status, unsigned int dataOrgLen );  
+            CalpontDateTimeFormat datetimeFormat,
+            int& status, unsigned int dataOrgLen );
+
+    /**
+     * @brief convert a time column data, represented as a string,
+     * to it's native format. This function is for bulkload to use.
+     *
+     * @param type the columns data type
+     * @param dataOrig the columns string representation of it's data
+     * @param timeFormat the format the time value in
+     * @param status 0 - success, -1 - fail
+     * @param dataOrgLen length specification of dataOrg
+     */
+    EXPORT static int64_t convertColumnTime( const char* dataOrg,
+            CalpontDateTimeFormat datetimeFormat,
+            int& status, unsigned int dataOrgLen );
 
     /**
      * @brief Is specified datetime valid; used by binary bulk load
      */
     EXPORT static bool      isColumnDateTimeValid( int64_t dateTime );
+    EXPORT static bool      isColumnTimeValid( int64_t time );
 
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline std::string constructRegexp(const std::string& str);
-    static inline bool isEscapedChar(char c) { return ('%' == c || '_' == c); }
-    
+    static inline void trimWhitespace(int64_t& charData);
+    static inline bool isEscapedChar(char c)
+    {
+        return ('%' == c || '_' == c);
+    }
+
     // convert string to date
     EXPORT static int64_t stringToDate(const std::string& data);
     // convert string to datetime
@@ -418,11 +540,13 @@ public:
     EXPORT static int64_t intToDate(int64_t data);
     // convert integer to datetime
     EXPORT static int64_t intToDatetime(int64_t data, bool* isDate = NULL);
-    
+    // convert integer to date
+    EXPORT static int64_t intToTime(int64_t data, bool fromString = false);
     // convert string to date. alias to stringToDate
     EXPORT static int64_t dateToInt(const std::string& date);
     // convert string to datetime. alias to datetimeToInt
     EXPORT static int64_t datetimeToInt(const std::string& datetime);
+    EXPORT static int64_t timeToInt(const std::string& time);
     EXPORT static int64_t stringToTime (const std::string& data);
     // bug4388, union type conversion
     EXPORT static execplan::CalpontSystemCatalog::ColType convertUnionColType(std::vector<execplan::CalpontSystemCatalog::ColType>&);
@@ -431,43 +555,130 @@ public:
 inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int buflen)
 {
     snprintf( buf, buflen, "%04d-%02d-%02d",
-                (unsigned)((datevalue >> 16) & 0xffff),
-                (unsigned)((datevalue >> 12) & 0xf),
-                (unsigned)((datevalue >> 6) & 0x3f)
+              (unsigned)((datevalue >> 16) & 0xffff),
+              (unsigned)((datevalue >> 12) & 0xf),
+              (unsigned)((datevalue >> 6) & 0x3f)
             );
 }
 
-inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen )
+inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals )
 {
-    snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d", 
-                    (unsigned)((datetimevalue >> 48) & 0xffff), 
-                    (unsigned)((datetimevalue >> 44) & 0xf),
-                    (unsigned)((datetimevalue >> 38) & 0x3f),
-                    (unsigned)((datetimevalue >> 32) & 0x3f),
-                    (unsigned)((datetimevalue >> 26) & 0x3f),
-                    (unsigned)((datetimevalue >> 20) & 0x3f)
-                );
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    int msec = 0;
+
+    if ((datetimevalue & 0xfffff) > 0)
+    {
+        msec = (unsigned)((datetimevalue) & 0xfffff);
+    }
+
+    snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
+              (unsigned)((datetimevalue >> 48) & 0xffff),
+              (unsigned)((datetimevalue >> 44) & 0xf),
+              (unsigned)((datetimevalue >> 38) & 0x3f),
+              (unsigned)((datetimevalue >> 32) & 0x3f),
+              (unsigned)((datetimevalue >> 26) & 0x3f),
+              (unsigned)((datetimevalue >> 20) & 0x3f)
+            );
+
+    if (msec || decimals)
+    {
+        snprintf(buf + strlen(buf), buflen - strlen(buf), ".%0*d", (int)decimals, msec);
+    }
+}
+
+inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals )
+{
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    // Handle negative correctly
+    int hour = 0, msec = 0;
+
+    if ((timevalue >> 40) & 0x800)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
+    if ((timevalue & 0xffffff) > 0)
+    {
+        msec = (unsigned)((timevalue) & 0xffffff);
+    }
+
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
+
+    snprintf( buf, buflen, "%02d:%02d:%02d",
+              hour,
+              (unsigned)((timevalue >> 32) & 0xff),
+              (unsigned)((timevalue >> 24) & 0xff)
+            );
+
+    if (msec || decimals)
+    {
+        // Pad start with zeros
+        snprintf(buf + strlen(buf), buflen - strlen(buf), ".%0*d", (int)decimals, msec);
+    }
 }
 
 inline void DataConvert::dateToString1( int datevalue, char* buf, unsigned int buflen)
 {
     snprintf( buf, buflen, "%04d%02d%02d",
-                (unsigned)((datevalue >> 16) & 0xffff),
-                (unsigned)((datevalue >> 12) & 0xf),
-                (unsigned)((datevalue >> 6) & 0x3f)
+              (unsigned)((datevalue >> 16) & 0xffff),
+              (unsigned)((datevalue >> 12) & 0xf),
+              (unsigned)((datevalue >> 6) & 0x3f)
             );
 }
 
 inline void DataConvert::datetimeToString1( long long datetimevalue, char* buf, unsigned int buflen )
 {
-    snprintf( buf, buflen, "%04d%02d%02d%02d%02d%02d", 
-                    (unsigned)((datetimevalue >> 48) & 0xffff), 
-                    (unsigned)((datetimevalue >> 44) & 0xf),
-                    (unsigned)((datetimevalue >> 38) & 0x3f),
-                    (unsigned)((datetimevalue >> 32) & 0x3f),
-                    (unsigned)((datetimevalue >> 26) & 0x3f),
-                    (unsigned)((datetimevalue >> 20) & 0x3f)
-                );
+    snprintf( buf, buflen, "%04d%02d%02d%02d%02d%02d",
+              (unsigned)((datetimevalue >> 48) & 0xffff),
+              (unsigned)((datetimevalue >> 44) & 0xf),
+              (unsigned)((datetimevalue >> 38) & 0x3f),
+              (unsigned)((datetimevalue >> 32) & 0x3f),
+              (unsigned)((datetimevalue >> 26) & 0x3f),
+              (unsigned)((datetimevalue >> 20) & 0x3f)
+            );
+}
+
+inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned int buflen )
+{
+    // Handle negative correctly
+    int hour = 0;
+
+    if ((timevalue >> 40) & 0x800)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
+
+    snprintf( buf, buflen, "%02d%02d%02d",
+              hour,
+              (unsigned)((timevalue >> 32) & 0xff),
+              (unsigned)((timevalue >> 14) & 0xff)
+            );
 }
 
 inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType)
@@ -478,13 +689,13 @@ inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, ex
 }
 
 inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* buf, unsigned int buflen,
-                                         execplan::CalpontSystemCatalog::ColDataType colDataType)
+        execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
     // Need to convert a string with a binary unsigned number in it to a 64-bit signed int
-    
+
     // MySQL seems to round off values unless we use the string store method. Groan.
     // Taken from ha_calpont_impl.cpp
-    
+
     //biggest Calpont supports is DECIMAL(18,x), or 18 total digits+dp+sign for column
     // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
     if (isUnsigned(colDataType))
@@ -511,25 +722,31 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     //we want to move the trailing null as well, so it's really dt_scale+1 chars
     size_t l1 = strlen(buf);
     char* ptr = &buf[0];
+
     if (int_val < 0)
     {
         ptr++;
         idbassert(l1 >= 2);
         l1--;
     }
+
     //need to make sure we have enough leading zeros for this to work...
     //at this point scale is always > 0
     size_t l2 = 1;
+
     if ((unsigned)scale > l1)
     {
         const char* zeros = "00000000000000000000"; //20 0's
-        size_t diff=0;
+        size_t diff = 0;
+
         if (int_val != 0)
             diff = scale - l1; //this will always be > 0
         else
             diff = scale;
+
         memmove((ptr + diff), ptr, l1 + 1); //also move null
         memcpy(ptr, zeros, diff);
+
         if (int_val != 0)
             l1 = 0;
         else
@@ -544,6 +761,7 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     {
         l1 -= scale;
     }
+
     memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
 
     if (l2 == 2)
@@ -552,6 +770,19 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     *(ptr + l1) = '.';
 }
 
+inline void DataConvert::trimWhitespace(int64_t& charData)
+{
+    // Trims whitespace characters off non-dict character data
+    char* ch_data = (char*) &charData;
+
+    for (int8_t i = 7; i > 0; i--)
+    {
+        if (ch_data[i] == ' ' || ch_data[i] == '\0')
+            ch_data[i] = '\0';
+        else
+            break;
+    }
+}
 
 //FIXME: copy/pasted from dictionary.cpp: refactor
 inline std::string DataConvert::constructRegexp(const std::string& str)
@@ -562,15 +793,20 @@ inline std::string DataConvert::constructRegexp(const std::string& str)
     uint32_t i, cBufIdx = 0;
     // translate to regexp symbols
     cBuf[cBufIdx++] = '^';  // implicit leading anchor
-    for (i = 0; i < str.length(); i++) {
+
+    for (i = 0; i < str.length(); i++)
+    {
         c = (char) str.c_str()[i];
-        switch (c) {
+
+        switch (c)
+        {
 
             // chars to substitute
             case '%':
                 cBuf[cBufIdx++] = '.';
                 cBuf[cBufIdx++] = '*';
                 break;
+
             case '_':
                 cBuf[cBufIdx++] = '.';
                 break;
@@ -581,45 +817,49 @@ inline std::string DataConvert::constructRegexp(const std::string& str)
             case '*':
             case '^':
             case '$':
-             case '?':
-             case '+':
-             case '|':
-             case '[':
-             case '{':
-             case '}':
-             case '(':
-             case ')':
+            case '?':
+            case '+':
+            case '|':
+            case '[':
+            case '{':
+            case '}':
+            case '(':
+            case ')':
                 cBuf[cBufIdx++] = '\\';
                 cBuf[cBufIdx++] = c;
                 break;
+
             case '\\':  //this is the sql escape char
                 if ( i + 1 < str.length())
                 {
-                    if (isEscapedChar(str.c_str()[i+1]))
+                    if (isEscapedChar(str.c_str()[i + 1]))
                     {
                         cBuf[cBufIdx++] = str.c_str()[++i];
                         break;
                     }
-                    else if ('\\' == str.c_str()[i+1])
+                    else if ('\\' == str.c_str()[i + 1])
                     {
                         cBuf[cBufIdx++] = c;
                         cBuf[cBufIdx++] = str.c_str()[++i];
                         break;
                     }
-                    
+
                 }  //single slash
+
                 cBuf[cBufIdx++] = '\\';
                 cBuf[cBufIdx++] = c;
                 break;
+
             default:
                 cBuf[cBufIdx++] = c;
         }
     }
+
     cBuf[cBufIdx++] = '$';  // implicit trailing anchor
     cBuf[cBufIdx++] = '\0';
 
 #ifdef VERBOSE
-      cerr << "regexified string is " << cBuf << endl;
+    cerr << "regexified string is " << cBuf << endl;
 #endif
     return cBuf;
 }

@@ -52,7 +52,7 @@ namespace utf8
 {
 extern bool JPcodePoint;		// code point ordering (Japanese UTF) flag, used in idb_strcoll
 
-const int MAX_UTF8_BYTES_PER_CHAR=4;
+const int MAX_UTF8_BYTES_PER_CHAR = 4;
 
 
 //Infinidb version of strlocale  BUG 5362
@@ -61,57 +61,61 @@ const int MAX_UTF8_BYTES_PER_CHAR=4;
 inline
 std::string idb_setlocale()
 {
-	// get and set locale language
-	std::string systemLang("C");
-	Oam oam;
-	try
-	{
-		oam.getSystemConfig("SystemLang", systemLang);
-	}
-	catch(...)
-	{
-		systemLang = "C";
-	}
-	
-	char*pLoc = setlocale(LC_ALL, systemLang.c_str());
-	if(pLoc == NULL)
-	{
-		try
-		{
-			//send alarm
-			ALARMManager alarmMgr;
-			std::string alarmItem = "system";
-			alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, SET);
-			printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
-		}
-		catch(...)
-		{
-			// Ignoring for time being.
-		}
-	}
-	else
-	{
-		try
-		{
-			//send alarm
-			ALARMManager alarmMgr;
-			std::string alarmItem = "system";
-			alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, CLEAR);
-		}
-		catch(...)
-		{
-			// Ignoring for time being.
-		}
+    // get and set locale language
+    std::string systemLang("C");
+    Oam oam;
 
-	}
+    try
+    {
+        oam.getSystemConfig("SystemLang", systemLang);
+    }
+    catch (...)
+    {
+        systemLang = "C";
+    }
 
-	printf ("Locale is : %s\n", systemLang.c_str() );
+    char* pLoc = setlocale(LC_ALL, systemLang.c_str());
 
-	//BUG 2991
-	setlocale(LC_NUMERIC, "C");
-	if(systemLang.find("ja_JP") != std::string::npos)
-		JPcodePoint = true;
-	return systemLang;	
+    if (pLoc == NULL)
+    {
+        try
+        {
+            //send alarm
+            ALARMManager alarmMgr;
+            std::string alarmItem = "system";
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, SET);
+            printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
+        }
+        catch (...)
+        {
+            // Ignoring for time being.
+        }
+    }
+    else
+    {
+        try
+        {
+            //send alarm
+            ALARMManager alarmMgr;
+            std::string alarmItem = "system";
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, CLEAR);
+        }
+        catch (...)
+        {
+            // Ignoring for time being.
+        }
+
+    }
+
+    printf ("Locale is : %s\n", systemLang.c_str() );
+
+    //BUG 2991
+    setlocale(LC_NUMERIC, "C");
+
+    if (systemLang.find("ja_JP") != std::string::npos)
+        JPcodePoint = true;
+
+    return systemLang;
 }
 
 // Infinidb version of strcoll.  BUG 5362
@@ -120,10 +124,10 @@ std::string idb_setlocale()
 inline
 int idb_strcoll(const char* str1, const char* str2)
 {
-	if (JPcodePoint)
-		return strcmp(str1, str2);
-	else
-		return strcoll(str1, str2);
+    if (JPcodePoint)
+        return strcmp(str1, str2);
+    else
+        return strcoll(str1, str2);
 }
 
 
@@ -134,14 +138,14 @@ inline
 size_t idb_mbstowcs(wchar_t* dest, const char* src, size_t max)
 {
 #ifdef _MSC_VER
-	// 4th param (-1) denotes to convert till hit NULL char
-	// if 6th param max = 0, will return the required buffer size
-	size_t strwclen = MultiByteToWideChar(CP_UTF8, 0, src, -1, dest, (int)max);
-	// decrement the count of NULL; will become -1 on failure
-	return --strwclen;
+    // 4th param (-1) denotes to convert till hit NULL char
+    // if 6th param max = 0, will return the required buffer size
+    size_t strwclen = MultiByteToWideChar(CP_UTF8, 0, src, -1, dest, (int)max);
+    // decrement the count of NULL; will become -1 on failure
+    return --strwclen;
 
 #else
-	return mbstowcs(dest, src, max);
+    return mbstowcs(dest, src, max);
 #endif
 }
 
@@ -152,13 +156,13 @@ inline
 size_t idb_wcstombs(char* dest, const wchar_t* src, size_t max)
 {
 #ifdef _MSC_VER
-	// 4th param (-1) denotes to convert till hit NULL char
-	//if 6th param max = 0, will return the required buffer size 
-	size_t strmblen = WideCharToMultiByte( CP_UTF8, 0, src, -1, dest, (int)max, NULL, NULL);
-	// decrement the count of NULL; will become -1 on failure
-	return --strmblen;
+    // 4th param (-1) denotes to convert till hit NULL char
+    //if 6th param max = 0, will return the required buffer size
+    size_t strmblen = WideCharToMultiByte( CP_UTF8, 0, src, -1, dest, (int)max, NULL, NULL);
+    // decrement the count of NULL; will become -1 on failure
+    return --strmblen;
 #else
-	return wcstombs(dest, src, max);
+    return wcstombs(dest, src, max);
 #endif
 }
 
@@ -166,17 +170,19 @@ size_t idb_wcstombs(char* dest, const wchar_t* src, size_t max)
 inline
 std::wstring utf8_to_wstring (const std::string& str)
 {
-    int bufsize = (int)((str.length()+1) * sizeof(wchar_t));
+    int bufsize = (int)((str.length() + 1) * sizeof(wchar_t));
 
     // Convert to wide characters. Do all further work in wide characters
     wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
-	// Passing +1 so that windows is happy to see extra position to place NULL
-    size_t strwclen = idb_mbstowcs(wcbuf, str.c_str(), str.length()+1);
+    // Passing +1 so that windows is happy to see extra position to place NULL
+    size_t strwclen = idb_mbstowcs(wcbuf, str.c_str(), str.length() + 1);
+
     // if result is -1 it means bad characters which may happen if locale is wrong.
     // return an empty string
-    if( strwclen == static_cast<size_t>(-1) )
-    	strwclen = 0;
-    return std::wstring(wcbuf,strwclen);
+    if ( strwclen == static_cast<size_t>(-1) )
+        strwclen = 0;
+
+    return std::wstring(wcbuf, strwclen);
 }
 
 
@@ -184,14 +190,15 @@ std::wstring utf8_to_wstring (const std::string& str)
 inline
 std::string wstring_to_utf8 (const std::wstring& str)
 {
-    char* outbuf = (char*)alloca((str.length()*MAX_UTF8_BYTES_PER_CHAR)+1);
-	// Passing +1 so that windows is happy to see extra position to place NULL
-    size_t strmblen = idb_wcstombs(outbuf, str.c_str(), str.length()*MAX_UTF8_BYTES_PER_CHAR+1);
+    char* outbuf = (char*)alloca((str.length() * MAX_UTF8_BYTES_PER_CHAR) + 1);
+    // Passing +1 so that windows is happy to see extra position to place NULL
+    size_t strmblen = idb_wcstombs(outbuf, str.c_str(), str.length() * MAX_UTF8_BYTES_PER_CHAR + 1);
 
     // if result is -1 it means bad characters which may happen if locale is wrong.
     // return an empty string
-    if( strmblen == static_cast<size_t>(-1) )
-    	strmblen = 0;
+    if ( strmblen == static_cast<size_t>(-1) )
+        strmblen = 0;
+
     return std::string(outbuf, strmblen);
 }
 
@@ -205,7 +212,8 @@ uint8_t utf8_truncate_point(const char* input, size_t length)
         return 0;
     }
 
-    const unsigned char *b = (const unsigned char*)(input) + length - 3;
+    const unsigned char* b = (const unsigned char*)(input) + length - 3;
+
     if (b[2] & 0x80)
     {
         // First byte in a new multi-byte sequence
@@ -215,6 +223,7 @@ uint8_t utf8_truncate_point(const char* input, size_t length)
         // 4 byte sequence
         else if ((b[0] & 0xf0) == 0xf0) return 3;
     }
+
     return 0;
 }
 

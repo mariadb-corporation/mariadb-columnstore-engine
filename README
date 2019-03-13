@@ -1,12 +1,12 @@
-This is MariaDB ColumnStore 1.0.16
-MariaDB ColumnStore 1.0.16 is the development version of MariaDB ColumnStore. 
-It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.35 and adding entirely 
+This is MariaDB ColumnStore 1.2
+MariaDB ColumnStore 1.2 is the GA version of MariaDB ColumnStore. 
+It is built by porting InfiniDB 4.6.7 on MariaDB 10.2 and adding entirely 
 new features not found anywhere else.
 
-MariaDB ColumnStore 1.0.16 is an GA release. This is the first MariaDB 
-ColumnStore release, not all features planned for the MariaDB ColumnStore 1.0 
-series are included in this release. 
+MariaDB ColumnStore 1.2 is a GA.
 
 Additional features will be pushed in future releases. 
 A few things to notice:
+- Do not use pre-releases on production systems.
 - The building of the ColumnStore engine needs a special build environment. We're working on making it available for everyone to build.
+

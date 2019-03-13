@@ -37,45 +37,45 @@ namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_abs::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 int64_t Func_abs::getIntVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                            FunctionParm& parm,
+                            bool& isNull,
+                            CalpontSystemCatalog::ColType&)
 {
-	// null value is indicated by isNull
-	return llabs(parm[0]->data()->getIntVal(row, isNull));
+    // null value is indicated by isNull
+    return llabs(parm[0]->data()->getIntVal(row, isNull));
 }
 
 uint64_t Func_abs::getUintVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	// null value is indicated by isNull
-	return parm[0]->data()->getIntVal(row, isNull);
+    // null value is indicated by isNull
+    return parm[0]->data()->getIntVal(row, isNull);
 }
 
 IDB_Decimal Func_abs::getDecimalVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType&)
 {
-	IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-	d.value = llabs(d.value);
-	return d;
+    IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+    d.value = llabs(d.value);
+    return d;
 }
 
 
 double Func_abs::getDoubleVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	return fabs(parm[0]->data()->getDoubleVal(row, isNull));
+    return fabs(parm[0]->data()->getDoubleVal(row, isNull));
 }
 
 

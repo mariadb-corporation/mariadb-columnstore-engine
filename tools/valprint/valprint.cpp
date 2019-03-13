@@ -26,23 +26,25 @@ using namespace config;
 
 int main(int argc, char** argv)
 {
-	int c;
-	opterr = 0;
-	while ((c = getopt(argc, argv, "")) != EOF)
-		switch (c)
-		{
-		case '?':
-		default:
-			break;
-		}
+    int c;
+    opterr = 0;
 
-	string s;
-	for (int i = optind; i < argc; i++)
-	{
-		s = argv[i];
-		cout << s << " = " << Config::fromText(s) << endl;
-	}
+    while ((c = getopt(argc, argv, "")) != EOF)
+        switch (c)
+        {
+            case '?':
+            default:
+                break;
+        }
 
-	return 0;
+    string s;
+
+    for (int i = optind; i < argc; i++)
+    {
+        s = argv[i];
+        cout << s << " = " << Config::fromText(s) << endl;
+    }
+
+    return 0;
 }
 

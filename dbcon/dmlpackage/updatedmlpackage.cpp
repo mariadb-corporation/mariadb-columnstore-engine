@@ -38,7 +38,7 @@ UpdateDMLPackage::UpdateDMLPackage()
 
 UpdateDMLPackage::UpdateDMLPackage(std::string schemaName, std::string tableName,
                                    std::string dmlStatement, int sessionID)
-        :CalpontDMLPackage( schemaName, tableName, dmlStatement, sessionID)
+    : CalpontDMLPackage( schemaName, tableName, dmlStatement, sessionID)
 {}
 
 UpdateDMLPackage::~UpdateDMLPackage()
@@ -52,12 +52,12 @@ int UpdateDMLPackage::write(messageqcpp::ByteStream& bytestream)
 
     messageqcpp::ByteStream::quadbyte session_id = fSessionID;
     bytestream << session_id;
-/*
-    if(fPlan != 0)
-        fHasFilter = true;
-    else
-        fHasFilter = false;
-*/
+    /*
+        if(fPlan != 0)
+            fHasFilter = true;
+        else
+            fHasFilter = false;
+    */
     messageqcpp::ByteStream::quadbyte hasFilter = fHasFilter;
     bytestream << hasFilter;
 
@@ -67,11 +67,13 @@ int UpdateDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << fSQLStatement;
     bytestream << fSchemaName;
     bytestream << (uint8_t)fIsFromCol;
+
     if (fTable != 0)
     {
         retval = fTable->write(bytestream);
     }
-    if(fHasFilter)
+
+    if (fHasFilter)
     {
         bytestream += *(fPlan.get());
     }
@@ -105,7 +107,8 @@ int UpdateDMLPackage::read(messageqcpp::ByteStream& bytestream)
     fIsFromCol = (isFromCol != 0);
     fTable = new DMLTable();
     retval = fTable->read(bytestream);
-    if(fHasFilter)
+
+    if (fHasFilter)
     {
         fPlan.reset(new messageqcpp::ByteStream(bytestream));
     }
@@ -130,6 +133,7 @@ int UpdateDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
     // Push one row always and let the filter happen on the proc side.
     Row* rowPtr = new Row();
     ColumnAssignmentList::const_iterator iter = updateStmt.fColAssignmentListPtr->begin();
+
     while (iter != updateStmt.fColAssignmentListPtr->end())
     {
         ColumnAssignment* colaPtr  = *iter;
@@ -138,7 +142,9 @@ int UpdateDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 
         ++iter;
     }
+
     fTable->get_RowList().push_back(rowPtr);
+
     if (0 != updateStmt.fWhereClausePtr)
     {
         // We need to filter the rows...get row ids
@@ -166,6 +172,7 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":,");
     tokenizer tokens(buffer, sep);
+
     for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
     {
         dataList.push_back(StripLeadingWhitespace(*tok_iter));
@@ -173,10 +180,11 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
     }
 
     int n = 0;
-    for (int i=0; i < rows; i++)
+
+    for (int i = 0; i < rows; i++)
     {
         //get a new row
-        Row *aRowPtr = new Row();
+        Row* aRowPtr = new Row();
         std::string colName;
         std::string colValue;
         //get row ID from the buffer
@@ -200,6 +208,7 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
             DMLColumn* aColumn = new DMLColumn(colName, colValue);
             (aRowPtr->get_ColumnList()).push_back(aColumn);
         }
+
         //build a row list for a table
         fTable->get_RowList().push_back(aRowPtr);
     }
@@ -211,19 +220,21 @@ int UpdateDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
     int retval = 1;
 
     initializeTable();
-    Row *aRowPtr = new Row();
+    Row* aRowPtr = new Row();
     std::string colName;
     std::vector<std::string> colValList;
+
     for (int j = 0; j < columns; j++)
     {
-      //Build a column list
-      colName = colNameList[j];
+        //Build a column list
+        colName = colNameList[j];
 
-      colValList = tableValuesMap[j];
+        colValList = tableValuesMap[j];
 
-      DMLColumn* aColumn = new DMLColumn(colName, colValList, false, 0, nullValues[j]);
-      (aRowPtr->get_ColumnList()).push_back(aColumn);
+        DMLColumn* aColumn = new DMLColumn(colName, colValList, false, 0, nullValues[j]);
+        (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
+
     //build a row list for a table
     fTable->get_RowList().push_back(aRowPtr);
     return retval;
@@ -242,6 +253,7 @@ void UpdateDMLPackage::buildUpdateFromMysqlBuffer(UpdateSqlStatement&  updateStm
     // Push one row always and let the filter happen on the proc side.
     Row* rowPtr = new Row();
     ColumnAssignmentList::const_iterator iter = updateStmt.fColAssignmentListPtr->begin();
+
     while (iter != updateStmt.fColAssignmentListPtr->end())
     {
         ColumnAssignment* colaPtr  = *iter;
@@ -250,6 +262,7 @@ void UpdateDMLPackage::buildUpdateFromMysqlBuffer(UpdateSqlStatement&  updateStm
 
         ++iter;
     }
+
     fTable->get_RowList().push_back(rowPtr);
 }
 }                                                 // namespace dmlpackage

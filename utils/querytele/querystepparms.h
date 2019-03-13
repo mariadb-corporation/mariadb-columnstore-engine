@@ -26,10 +26,10 @@ namespace querytele
 class QueryStepParms
 {
 public:
-	explicit QueryStepParms(StepTeleStats::StepType st=StepTeleStats::T_INVALID) : stepType(st) { }
-	~QueryStepParms() { }
+    explicit QueryStepParms(StepTeleStats::StepType st = StepTeleStats::T_INVALID) : stepType(st) { }
+    ~QueryStepParms() { }
 
-	StepTeleStats::StepType stepType;
+    StepTeleStats::StepType stepType;
 
 protected:
 

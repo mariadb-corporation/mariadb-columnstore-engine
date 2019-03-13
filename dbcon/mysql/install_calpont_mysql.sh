@@ -14,12 +14,11 @@ for arg in "$@"; do
 		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--password='` -eq 11 ]; then
-		password="`echo $arg | awk -F= '{print $2}'`"
-		pwprompt="--password=$password"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+	elif [ `expr -- "$arg" : '--tmpdir='` -eq 9 ]; then
+		tmpdir="`echo $arg | awk -F= '{print $2}'`"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -27,7 +26,7 @@ done
 
 df=$installdir/mysql/my.cnf
 
-$installdir/mysql/bin/mysql --defaults-file=$df --force --user=root $pwprompt mysql 2>/tmp/mysql_install.log <<EOD
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
 INSTALL PLUGIN infinidb SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
@@ -85,6 +84,23 @@ CREATE FUNCTION idbextentmin RETURNS STRING soname 'libcalmysql.so';
 CREATE FUNCTION idbextentmax RETURNS STRING soname 'libcalmysql.so';
 CREATE FUNCTION idbpartition RETURNS STRING soname 'libcalmysql.so';
 CREATE FUNCTION idblocalpm RETURNS INTEGER soname 'libcalmysql.so';
+CREATE FUNCTION mcssystemready RETURNS INTEGER soname 'libcalmysql.so';
+CREATE FUNCTION mcssystemreadonly RETURNS INTEGER soname 'libcalmysql.so';
+CREATE FUNCTION mcssystemprimary RETURNS INTEGER soname 'libcalmysql.so';
+CREATE AGGREGATE FUNCTION regr_avgx RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_avgy RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_count RETURNS INTEGER soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_slope RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_intercept RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_r2 RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION corr RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_sxx RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_syy RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_sxy RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION covar_pop RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION covar_samp RETURNS REAL soname 'libregr_mysql.so';
+
+CREATE AGGREGATE FUNCTION distinct_count RETURNS INTEGER soname 'libudf_mysql.so';
 
 CREATE DATABASE IF NOT EXISTS infinidb_vtable;
 CREATE DATABASE IF NOT EXISTS infinidb_querystats;
@@ -130,11 +146,11 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
-$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
-$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
-$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
-$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
 
 sed -i 's/infinidb_compression_type=1/infinidb_compression_type=2/' $installdir/mysql/my.cnf >/dev/null 2>&1
 

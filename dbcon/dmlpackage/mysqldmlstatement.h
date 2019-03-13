@@ -35,7 +35,7 @@ class MySQLDMLStatement : public VendorDMLStatement
 {
 
 public:
-	MySQLDMLStatement() : VendorDMLStatement("", 0) {}
+    MySQLDMLStatement() : VendorDMLStatement("", 0) {}
 
 protected:
 

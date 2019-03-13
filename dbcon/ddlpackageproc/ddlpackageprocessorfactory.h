@@ -28,28 +28,30 @@
 #include "ddlpackageprocessor.h"
 
 
-namespace ddlpackageprocessor { 
+namespace ddlpackageprocessor
+{
 
 /** @brief create a ddlPackageProcessor object from a CalpontddlPackage object
  *
  */
-class DDLPackageProcessorFactory {
+class DDLPackageProcessorFactory
+{
 
 public:
 
-/** @brief static ddlPackageProcessor constructor method
-  * 
-  * @param packageType the ddl Package type
-  * @param cpackage the CalpontddlPackage from which the ddlPackageProcessor is constructed
-  */
-  static DDLPackageProcessor* 
-	makePackageProcessor( int packageType, ddlpackage::CalpontDDLPackage& cpackage );
+    /** @brief static ddlPackageProcessor constructor method
+      *
+      * @param packageType the ddl Package type
+      * @param cpackage the CalpontddlPackage from which the ddlPackageProcessor is constructed
+      */
+    static DDLPackageProcessor*
+    makePackageProcessor( int packageType, ddlpackage::CalpontDDLPackage& cpackage );
 
 protected:
 
 private:
 };
 
-} 
+}
 #endif //DDLPACKAGEPROCESSORFACTORY_H
 

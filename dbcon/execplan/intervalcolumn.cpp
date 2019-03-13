@@ -37,7 +37,8 @@ using namespace funcexp;
 #define strcasecmp stricmp
 #endif
 
-namespace execplan {
+namespace execplan
+{
 
 /**
  * Constructors/Destructors
@@ -46,10 +47,10 @@ IntervalColumn::IntervalColumn()
 {}
 
 IntervalColumn::IntervalColumn(SRCP& val, int intervalType):
-	fVal(val->clone()), fIntervalType(intervalType)
+    fVal(val->clone()), fIntervalType(intervalType)
 {
 //	cout << "intervalType=" << fIntervalType << endl;
-	}
+}
 
 IntervalColumn::IntervalColumn( const IntervalColumn& rhs, const uint32_t sessionID):
     ReturnedColumn(rhs, sessionID),
@@ -62,18 +63,20 @@ IntervalColumn::IntervalColumn( const IntervalColumn& rhs, const uint32_t sessio
  */
 const string IntervalColumn::toString() const
 {
-  ostringstream output;
-	output << "INTERVAL" << endl;
-	if (fVal)
-		output << fVal->toString();
-	output << " IntervalType=" << fIntervalType << endl;
-	return output.str();
+    ostringstream output;
+    output << "INTERVAL" << endl;
+
+    if (fVal)
+        output << fVal->toString();
+
+    output << " IntervalType=" << fIntervalType << endl;
+    return output.str();
 }
 
 ostream& operator<<(ostream& output, const IntervalColumn& rhs)
 {
-	output << rhs.toString();
-	return output;
+    output << rhs.toString();
+    return output;
 }
 
 }   //namespace

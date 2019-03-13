@@ -44,11 +44,11 @@ namespace WriteEngine
 // ColumnInfoCompressed constructor
 //------------------------------------------------------------------------------
 ColumnInfoCompressed::ColumnInfoCompressed(Log*             logger,
-                                           int              idIn,
-                                           const JobColumn& columnIn,
-                                           DBRootExtentTracker* pDBRootExtTrk,
-                                           TableInfo*		pTableInfo):
-                                           //RBMetaWriter*    rbMetaWriter) :
+        int              idIn,
+        const JobColumn& columnIn,
+        DBRootExtentTracker* pDBRootExtTrk,
+        TableInfo*		pTableInfo):
+    //RBMetaWriter*    rbMetaWriter) :
     ColumnInfo(logger, idIn, columnIn, pDBRootExtTrk, pTableInfo),
     fRBMetaWriter(pTableInfo->rbMetaWriter())
 {
@@ -65,7 +65,7 @@ ColumnInfoCompressed::~ColumnInfoCompressed()
 // Close the current compressed Column file after first compressing/flushing
 // any remaining data, and re-writing the headers as well.
 //------------------------------------------------------------------------------
-int ColumnInfoCompressed::closeColumnFile(bool bCompletingExtent,bool bAbort)
+int ColumnInfoCompressed::closeColumnFile(bool bCompletingExtent, bool bAbort)
 {
     int rc = NO_ERROR;
 
@@ -80,6 +80,7 @@ int ColumnInfoCompressed::closeColumnFile(bool bCompletingExtent,bool bAbort)
             if (fColBufferMgr)
             {
                 rc = fColBufferMgr->finishFile( bCompletingExtent );
+
                 if (rc != NO_ERROR)
                 {
                     WErrorCodes ec;
@@ -111,7 +112,8 @@ int ColumnInfoCompressed::setupInitialColumnFile( HWM oldHwm, HWM hwm )
     RETURN_ON_ERROR( colOp->readHeaders(curCol.dataFile.pFile, hdr) );
 
     // Initialize the output buffer manager for the column.
-    WriteEngine::ColumnBufferManager *mgr;
+    WriteEngine::ColumnBufferManager* mgr;
+
     if (column.colType == COL_TYPE_DICT)
     {
         mgr = new ColumnBufferManagerDctnry(
@@ -124,12 +126,13 @@ int ColumnInfoCompressed::setupInitialColumnFile( HWM oldHwm, HWM hwm )
             this, column.width, fLog, column.compressionType);
         RETURN_ON_ERROR( mgr->setDbFile(curCol.dataFile.pFile, hwm, hdr) );
     }
+
     fColBufferMgr = mgr;
 
     IDBCompressInterface compressor;
     int abbrevFlag =
         ( compressor.getBlockCount(hdr) ==
-            uint64_t(INITIAL_EXTENT_ROWS_TO_DISK*column.width/BYTE_PER_BLOCK) );
+          uint64_t(INITIAL_EXTENT_ROWS_TO_DISK * column.width / BYTE_PER_BLOCK) );
     setFileSize( hwm, abbrevFlag );
 
     // See if dealing with abbreviated extent that will need expanding.
@@ -141,9 +144,10 @@ int ColumnInfoCompressed::setupInitialColumnFile( HWM oldHwm, HWM hwm )
     if (isAbbrevExtent())
     {
         unsigned int numBlksForFirstExtent =
-          (INITIAL_EXTENT_ROWS_TO_DISK*column.width) / BYTE_PER_BLOCK;
-        if ( ((oldHwm+1) <= numBlksForFirstExtent) &&
-             ((hwm+1   ) >  numBlksForFirstExtent) )
+            (INITIAL_EXTENT_ROWS_TO_DISK * column.width) / BYTE_PER_BLOCK;
+
+        if ( ((oldHwm + 1) <= numBlksForFirstExtent) &&
+                ((hwm + 1   ) >  numBlksForFirstExtent) )
         {
             RETURN_ON_ERROR( expandAbbrevExtent(false) );
         }
@@ -164,13 +168,13 @@ int ColumnInfoCompressed::setupInitialColumnFile( HWM oldHwm, HWM hwm )
     {
         std::ostringstream oss;
         oss << "Init raw data offsets in compressed column file OID-" <<
-                curCol.dataFile.fid <<
+            curCol.dataFile.fid <<
             "; DBRoot-" << curCol.dataFile.fDbRoot    <<
             "; part-"   << curCol.dataFile.fPartition <<
             "; seg-"    << curCol.dataFile.fSegment   <<
             "; abbrev-" << abbrevFlag   <<
-            "; begByte-"<< fSizeWritten <<
-            "; endByte-"<< fileSize     <<
+            "; begByte-" << fSizeWritten <<
+            "; endByte-" << fileSize     <<
             "; freeBytes-" << availFileSize;
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
     }
@@ -202,11 +206,11 @@ int ColumnInfoCompressed::resetFileOffsetsNewExtent(const char* hdr)
         // Reinitialize ColBuf for the next extent
         long long startFileOffset;
         RETURN_ON_ERROR( fColBufferMgr->resetToBeCompressedColBuf(
-                         startFileOffset ) );
+                             startFileOffset ) );
 
         // Set the file offset to point to the chunk we are adding or updating
         RETURN_ON_ERROR( colOp->setFileOffset(curCol.dataFile.pFile,
-                         startFileOffset) );
+                                              startFileOffset) );
     }
 
     return NO_ERROR;
@@ -224,23 +228,25 @@ int ColumnInfoCompressed::saveDctnryStoreHWMChunk(bool& needBackup)
 #endif
     needBackup = false;
     int rc = NO_ERROR;
+
     try
     {
         needBackup = fRBMetaWriter->backupDctnryHWMChunk(
-            column.dctnry.dctnryOid,
-            curCol.dataFile.fDbRoot,
-            curCol.dataFile.fPartition,
-            curCol.dataFile.fSegment );
+                         column.dctnry.dctnryOid,
+                         curCol.dataFile.fDbRoot,
+                         curCol.dataFile.fPartition,
+                         curCol.dataFile.fSegment );
     }
     catch (WeException& ex)
     {
         fLog->logMsg(ex.what(), ex.errorCode(), MSGLVL_ERROR);
         rc = ex.errorCode();
     }
+
 #ifdef PROFILE
     Stats::stopParseEvent(WE_STATS_COMPRESS_DCT_BACKUP_CHUNK);
 #endif
-        
+
     return rc;
 }
 
@@ -273,10 +279,10 @@ int ColumnInfoCompressed::truncateDctnryStore(
     {
         std::ostringstream oss1;
         oss1 << "Finished writing dictionary file"
-            ": OID-"    << dctnryOid <<
-            "; DBRoot-" << root      <<
-            "; part-"   << pNum      <<
-            "; seg-"    << sNum;
+             ": OID-"    << dctnryOid <<
+             "; DBRoot-" << root      <<
+             "; part-"   << pNum      <<
+             "; seg-"    << sNum;
 
         // Have to rework this logging if we want to keep it.
         // Filesize is not correct when adding data to an "existing" file,
@@ -300,7 +306,8 @@ int ColumnInfoCompressed::truncateDctnryStore(
         // (to the nearest extent)
         std::string segFile;
         IDBDataFile* dFile = fTruncateDctnryFileOp.openFile(dctnryOid,
-            root, pNum, sNum, segFile);
+                             root, pNum, sNum, segFile);
+
         if (dFile == 0)
         {
             rc = ERR_FILE_OPEN;
@@ -319,7 +326,8 @@ int ColumnInfoCompressed::truncateDctnryStore(
 
         char controlHdr[ IDBCompressInterface::HDR_BUF_LEN ];
         rc = fTruncateDctnryFileOp.readFile( dFile,
-            (unsigned char*)controlHdr, IDBCompressInterface::HDR_BUF_LEN);
+                                             (unsigned char*)controlHdr, IDBCompressInterface::HDR_BUF_LEN);
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -339,6 +347,7 @@ int ColumnInfoCompressed::truncateDctnryStore(
 
         IDBCompressInterface compressor;
         int rc1 = compressor.verifyHdr( controlHdr );
+
         if (rc1 != 0)
         {
             rc = ERR_COMP_VERIFY_HDRS;
@@ -358,22 +367,23 @@ int ColumnInfoCompressed::truncateDctnryStore(
             return rc;
         }
 
-    // No need to perform file truncation if the dictionary file just contains
-    // a single abbreviated extent.  Truncating up to the nearest extent would
-    // actually grow the file (something we don't want to do), because we have
-    // not yet reserved a full extent (on disk) for this dictionary store file.
+        // No need to perform file truncation if the dictionary file just contains
+        // a single abbreviated extent.  Truncating up to the nearest extent would
+        // actually grow the file (something we don't want to do), because we have
+        // not yet reserved a full extent (on disk) for this dictionary store file.
         const int PSEUDO_COL_WIDTH = 8;
         uint64_t numBlocks = compressor.getBlockCount( controlHdr );
+
         if ( numBlocks == uint64_t
-            (INITIAL_EXTENT_ROWS_TO_DISK*PSEUDO_COL_WIDTH/BYTE_PER_BLOCK) )
+                (INITIAL_EXTENT_ROWS_TO_DISK * PSEUDO_COL_WIDTH / BYTE_PER_BLOCK) )
         {
             std::ostringstream oss1;
             oss1 << "Skip truncating abbreviated dictionary file"
-                ": OID-"    << dctnryOid <<
-                "; DBRoot-" << root      <<
-                "; part-"   << pNum      <<
-                "; seg-"    << sNum      <<
-                "; blocks-" << numBlocks;
+                 ": OID-"    << dctnryOid <<
+                 "; DBRoot-" << root      <<
+                 "; part-"   << pNum      <<
+                 "; seg-"    << sNum      <<
+                 "; blocks-" << numBlocks;
             fLog->logMsg( oss1.str(), MSGLVL_INFO2 );
             fTruncateDctnryFileOp.closeFile( dFile );
 
@@ -385,7 +395,8 @@ int ColumnInfoCompressed::truncateDctnryStore(
         char*    pointerHdr = new char[ptrHdrSize];
 
         rc = fTruncateDctnryFileOp.readFile(dFile,
-            (unsigned char*)pointerHdr, ptrHdrSize);
+                                            (unsigned char*)pointerHdr, ptrHdrSize);
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -406,6 +417,7 @@ int ColumnInfoCompressed::truncateDctnryStore(
         CompChunkPtrList chunkPtrs;
         rc1 = compressor.getPtrList( pointerHdr, ptrHdrSize, chunkPtrs );
         delete[] pointerHdr;
+
         if (rc1 != 0)
         {
             rc = ERR_COMP_PARSE_HDRS;
@@ -428,33 +440,36 @@ int ColumnInfoCompressed::truncateDctnryStore(
         // Truncate the relevant dictionary store file to the nearest extent
         if (chunkPtrs.size() > 0)
         {
-            long long dataByteLength = chunkPtrs[chunkPtrs.size()-1].first  +
-                                       chunkPtrs[chunkPtrs.size()-1].second -
-                                       hdrSize;                      
+            long long dataByteLength = chunkPtrs[chunkPtrs.size() - 1].first  +
+                                       chunkPtrs[chunkPtrs.size() - 1].second -
+                                       hdrSize;
 
             long long extentBytes =
                 fRowsPerExtent * PSEUDO_COL_WIDTH;
 
             long long rem = dataByteLength % extentBytes;
+
             if (rem > 0)
             {
                 dataByteLength = dataByteLength - rem + extentBytes;
             }
+
             long long truncateFileSize = dataByteLength + hdrSize;
 
             std::ostringstream oss1;
             oss1 << "Truncating dictionary file"
-                ": OID-"    << dctnryOid <<
-                "; DBRoot-" << root      <<
-                "; part-"   << pNum      <<
-                "; seg-"    << sNum      <<
-                "; size-"   << truncateFileSize;
+                 ": OID-"    << dctnryOid <<
+                 "; DBRoot-" << root      <<
+                 "; part-"   << pNum      <<
+                 "; seg-"    << sNum      <<
+                 "; size-"   << truncateFileSize;
             fLog->logMsg( oss1.str(), MSGLVL_INFO2 );
 
             if (truncateFileSize > 0)
-                rc = fTruncateDctnryFileOp.truncateFile(dFile,truncateFileSize);
+                rc = fTruncateDctnryFileOp.truncateFile(dFile, truncateFileSize);
             else
                 rc = ERR_COMP_TRUNCATE_ZERO;//@bug3913-Catch truncate to 0 bytes
+
             if (rc != NO_ERROR)
             {
                 WErrorCodes ec;
@@ -491,20 +506,21 @@ int ColumnInfoCompressed::extendColumnOldExtent(
     HWM         hwmNextIn )
 {
     const unsigned int BLKS_PER_EXTENT =
-        (fRowsPerExtent * column.width)/BYTE_PER_BLOCK;
+        (fRowsPerExtent * column.width) / BYTE_PER_BLOCK;
 
     // Round up HWM to the end of the current extent
     unsigned int nBlks = hwmNextIn + 1;
     unsigned int nRem  = nBlks % BLKS_PER_EXTENT;
     HWM hwmNext        = 0;
+
     if (nRem > 0)
         hwmNext = nBlks - nRem + BLKS_PER_EXTENT - 1;
     else
         hwmNext = nBlks - 1;
 
-    std::ostringstream oss;  
+    std::ostringstream oss;
     oss << "Padding compressed partial extent to extent boundary in OID-" <<
-           curCol.dataFile.fid <<
+        curCol.dataFile.fid <<
         "; DBRoot-" << dbRootNext    <<
         "; part-"   << partitionNext <<
         "; seg-"    << segmentNext   <<
@@ -521,15 +537,16 @@ int ColumnInfoCompressed::extendColumnOldExtent(
     std::string segFileName;
     std::string errTask;
     int rc = colOp->fillCompColumnExtentEmptyChunks(
-        curCol.dataFile.fid,
-        curCol.colWidth,
-        column.emptyVal,
-        curCol.dataFile.fDbRoot,
-        curCol.dataFile.fPartition,
-        curCol.dataFile.fSegment,
-        curCol.dataFile.hwm,
-        segFileName,
-        errTask);
+                 curCol.dataFile.fid,
+                 curCol.colWidth,
+                 column.emptyVal,
+                 curCol.dataFile.fDbRoot,
+                 curCol.dataFile.fPartition,
+                 curCol.dataFile.fSegment,
+                 curCol.dataFile.hwm,
+                 segFileName,
+                 errTask);
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;

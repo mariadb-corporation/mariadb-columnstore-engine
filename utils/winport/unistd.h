@@ -64,19 +64,19 @@ extern unsigned int sleep(unsigned int);
 #endif
 struct flock
 {
-	int l_type;
-	int l_whence;
-	int l_start;
-	int l_len;
-	int l_pid;
+    int l_type;
+    int l_whence;
+    int l_start;
+    int l_len;
+    int l_pid;
 };
 extern int flock(int, int);
 extern int fcntl(int, int, ...);
 #ifndef _my_pthread_h
 struct timespec
 {
-	long tv_sec;
-	long tv_nsec;
+    long tv_sec;
+    long tv_nsec;
 };
 #endif
 int poll(struct pollfd*, unsigned long, int);
@@ -84,10 +84,10 @@ int poll(struct pollfd*, unsigned long, int);
 #define SHUT_RDWR SD_BOTH
 #endif
 extern int inet_aton(const char*, struct in_addr*);
-struct timezone 
+struct timezone
 {
-  int  tz_minuteswest; /* minutes W of Greenwich */
-  int  tz_dsttime;     /* type of dst correction */
+    int  tz_minuteswest; /* minutes W of Greenwich */
+    int  tz_dsttime;     /* type of dst correction */
 };
 extern int gettimeofday(struct timeval*, struct timezone*);
 #define ctime_r(tp, b) ctime_s((b), sizeof(b), (tp))

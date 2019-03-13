@@ -43,40 +43,42 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_exp::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 double Func_exp::getDoubleVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	// null value is indicated by isNull
-	double x = parm[0]->data()->getDoubleVal(row, isNull);
-	double ret = 0.0;
-	if (!isNull)
-	{
-		errno = 0;
-		ret = exp(x);
-		if (errno == ERANGE)  // display NULL for out range value
-		{
-			if (x > 0)
-			{
-				isNull = true;
-		        Message::Args args;
-		        args.add("exp");
-		        args.add(x);
-		        unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
-		        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-			}
-			else
-				ret = 0.0;
-		}
-	}
+    // null value is indicated by isNull
+    double x = parm[0]->data()->getDoubleVal(row, isNull);
+    double ret = 0.0;
 
-	return ret;
+    if (!isNull)
+    {
+        errno = 0;
+        ret = exp(x);
+
+        if (errno == ERANGE)  // display NULL for out range value
+        {
+            if (x > 0)
+            {
+                isNull = true;
+                Message::Args args;
+                args.add("exp");
+                args.add(x);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
+            else
+                ret = 0.0;
+        }
+    }
+
+    return ret;
 }
 
 

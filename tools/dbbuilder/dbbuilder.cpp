@@ -43,32 +43,39 @@ using namespace execplan;
 
 #include "installdir.h"
 
+string tmpDir;
+string logFile;
+
 enum BUILD_OPTION
 {
     SYSCATALOG_ONLY = 7, //Create systables only
 };
 
-namespace {
+namespace
+{
 
 int setUp()
 {
 #ifndef _MSC_VER
-  	(void)system("/bin/rm -f /tmp/dbbuilder.status >/dev/null 2>&1");
-  	(void)system("/bin/touch /tmp/dbbuilder.status >/dev/null 2>&1");
+	string cmd = "/bin/rm -f " + logFile + " >/dev/null 2>&1";
+    (void)system(cmd.c_str());
+    cmd = "/bin/touch -f " + logFile + " >/dev/null 2>&1";
+    (void)system(cmd.c_str());
 #endif
-	return 0;
+    return 0;
 }
 
 int checkNotThere(WriteEngine::FID fid)
 {
-	WriteEngine::FileOp fileOp;
+    WriteEngine::FileOp fileOp;
 
-	return (fileOp.existsOIDDir(fid) ? -1 : 0);
+    return (fileOp.existsOIDDir(fid) ? -1 : 0);
 }
 
 void tearDown()
 {
-    unlink("/tmp/oidbitmap");
+	string file = tmpDir + "/oidbitmap";
+    unlink(file.c_str());
 }
 
 void usage()
@@ -80,36 +87,37 @@ void usage()
          << "  7  Build system tables only" << endl
          << endl
          << "WARNING! Using this tool improperly can render your database unusable!" << endl
-		;
+         ;
 }
 
 const unsigned sysCatalogErr = logging::M0060;
 
 void errorHandler(const unsigned mid,
-	const string& src,
-	const string& msg,
-	bool  isCritErr=true)
+                  const string& src,
+                  const string& msg,
+                  bool  isCritErr = true)
 {
-      logging::LoggingID lid(19);
-      logging::MessageLog ml(lid);
-      logging::Message::Args args;
-      logging::Message message(mid);
-      if (isCritErr)
-      {
-          args.add(string("error"));
-          args.add(msg);
-          message.format( args );
-          ml.logCriticalMessage(message );
-          cout <<  src << " was not successful. " << msg << endl;
-      }
-      else
-      {
-          args.add(string("status"));
-          args.add(msg);
-          message.format( args );
-          ml.logInfoMessage(message );
-          cout <<  src << " was not completed. " << msg << endl;
-      }
+    logging::LoggingID lid(19);
+    logging::MessageLog ml(lid);
+    logging::Message::Args args;
+    logging::Message message(mid);
+
+    if (isCritErr)
+    {
+        args.add(string("error"));
+        args.add(msg);
+        message.format( args );
+        ml.logCriticalMessage(message );
+        cout <<  src << " was not successful. " << msg << endl;
+    }
+    else
+    {
+        args.add(string("status"));
+        args.add(msg);
+        message.format( args );
+        ml.logInfoMessage(message );
+        cout <<  src << " was not completed. " << msg << endl;
+    }
 }
 
 
@@ -117,195 +125,216 @@ void errorHandler(const unsigned mid,
 
 int main(int argc, char* argv[])
 {
-	int buildOption;
-	int c;
-	std::string schema("tpch");
-	Oam oam;
-	bool fFlg = false;
+    int buildOption;
+    int c;
+    std::string schema("tpch");
+    Oam oam;
+    bool fFlg = false;
 
-	opterr = 0;
+    opterr = 0;
 
-	while ((c = getopt(argc, argv, "u:fh")) != EOF)
-		switch (c)
-		{
-		case 'u':
-			schema = optarg;
-			break;
-		case 'f':
-			fFlg = true;
-			break;
-		case 'h':
-		case '?':
-		default:
-			usage();
-			return (c == 'h' ? 0 : 1);
-			break;
-		}
+    while ((c = getopt(argc, argv, "u:fh")) != EOF)
+        switch (c)
+        {
+            case 'u':
+                schema = optarg;
+                break;
 
-	if ((argc - optind) < 1)
-	{
-		usage();
-		return 1;
-	}
+            case 'f':
+                fFlg = true;
+                break;
 
-	oamModuleInfo_t t;
-	bool parentOAMModuleFlag = false;
+            case 'h':
+            case '?':
+            default:
+                usage();
+                return (c == 'h' ? 0 : 1);
+                break;
+        }
 
-	//get local module info; validate running on Active Parent OAM Module
-	try {
-		t = oam.getModuleInfo();
-		parentOAMModuleFlag = boost::get<4>(t);
-	}
-	catch (exception&) {
-		parentOAMModuleFlag = true;
-	}
+    if ((argc - optind) < 1)
+    {
+        usage();
+        return 1;
+    }
 
-	if ( !parentOAMModuleFlag )
-	{
-		cerr << "Exiting, dbbuilder can only be run on the Active "
-			"Parent OAM Module" << endl;
-		return 1;
-	}
+    oamModuleInfo_t t;
+    bool parentOAMModuleFlag = false;
 
-	buildOption = atoi(argv[optind++]);
+    //get local module info; validate running on Active Parent OAM Module
+    try
+    {
+        t = oam.getModuleInfo();
+        parentOAMModuleFlag = boost::get<4>(t);
+    }
+    catch (exception&)
+    {
+        parentOAMModuleFlag = true;
+    }
 
-	if (buildOption != 7 && !fFlg)
-	{
-		usage();
-		return 1;
-	}
+    if ( !parentOAMModuleFlag )
+    {
+        cerr << "Exiting, dbbuilder can only be run on the Active "
+             "Parent OAM Module" << endl;
+        return 1;
+    }
 
-       if ( buildOption == SYSCATALOG_ONLY )
-	{
-		setUp();
+	//get tmp log directory
+    tmpDir = startup::StartUp::tmpDir();
+    logFile = tmpDir + "/dbbuilder.status";
 
-		bool canWrite = true;
-		if (access("/tmp/dbbuilder.status", W_OK) != 0)
-			canWrite = false;
+    buildOption = atoi(argv[optind++]);
 
-		try
-		{
-			if (checkNotThere(1001) != 0)
-			{
-				string cmd = "echo 'FAILED: buildOption=" +
-					oam.itoa(buildOption) +
-					"' > /tmp/dbbuilder.status";
+    if (buildOption != 7 && !fFlg)
+    {
+        usage();
+        return 1;
+    }
 
-				if (canWrite)
-					(void)system(cmd.c_str());
-				else
-					cerr << cmd << endl;
-				errorHandler(sysCatalogErr,
-					"Build system catalog",
-					"System catalog appears to exist.  It will remain intact "
-						"for reuse.  The database is not recreated.",
-						false);
-				return 1;
-			}
+    if ( buildOption == SYSCATALOG_ONLY )
+    {
+        setUp();
 
-			//@bug5554, make sure IDBPolicy matches the Columnstore.xml config
-			try
-			{
-				string calpontConfigFile(startup::StartUp::installDir() + "/etc/Columnstore.xml");
-				config::Config* sysConfig = config::Config::makeConfig(calpontConfigFile.c_str());
-				string tmp = sysConfig->getConfig("Installation", "DBRootStorageType");
-				if (boost::iequals(tmp, "hdfs"))
-				{
-					// HDFS is configured
-					if (!IDBPolicy::useHdfs())  // error install plugin
-						throw runtime_error("HDFS is not enabled, installPlugin may have failed.");
+        bool canWrite = true;
 
-					else if (!IDBFileSystem::getFs(IDBDataFile::HDFS).filesystemIsUp())
-						throw runtime_error("HDFS FS is NULL, check env variables.");
-				}
-			}
-			catch(const exception& ex)
-			{
-				string cmd(string("echo 'FAILED: ") + ex.what() + "' > /tmp/dbbuilder.status");
+        if (access(logFile.c_str(), W_OK) != 0)
+            canWrite = false;
 
-				if (canWrite)
-					(void)system(cmd.c_str());
-				else
-					cerr << cmd << endl;
-				errorHandler(sysCatalogErr, "Build system catalog", ex.what(), false);
-				return 1;
-			}
-			catch(...)
-			{
-				string cmd = "echo 'FAILED:  HDFS checking.' > /tmp/dbbuilder.status";
+        try
+        {
+            if (checkNotThere(1001) != 0)
+            {
+                string cmd = "echo 'FAILED: buildOption=" +
+                             oam.itoa(buildOption) +
+                             "' > " + logFile;
 
-				if (canWrite)
-					(void)system(cmd.c_str());
-				else
-					cerr << cmd << endl;
-				errorHandler(sysCatalogErr, "Build system catalog", "HDFS check failed.", false);
-				return 1;
-			}
+                if (canWrite)
+                    (void)system(cmd.c_str());
+                else
+                    cerr << cmd << endl;
 
-			//create an initial oid bitmap file
-			{
-				ObjectIDManager oidm;
-			}
+                errorHandler(sysCatalogErr,
+                             "Build system catalog",
+                             "System catalog appears to exist.  It will remain intact "
+                             "for reuse.  The database is not recreated.",
+                             false);
+                return 1;
+            }
 
-			SystemCatalog sysCatalog;
-			sysCatalog.build();
+            //@bug5554, make sure IDBPolicy matches the Columnstore.xml config
+            try
+            {
+                string calpontConfigFile(startup::StartUp::installDir() + "/etc/Columnstore.xml");
+                config::Config* sysConfig = config::Config::makeConfig(calpontConfigFile.c_str());
+                string tmp = sysConfig->getConfig("Installation", "DBRootStorageType");
 
-			std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+                if (boost::iequals(tmp, "hdfs"))
+                {
+                    // HDFS is configured
+                    if (!IDBPolicy::useHdfs())  // error install plugin
+                        throw runtime_error("HDFS is not enabled, installPlugin may have failed.");
 
-			if (canWrite)
-				(void)system(cmd.c_str());
-			else
+                    else if (!IDBFileSystem::getFs(IDBDataFile::HDFS).filesystemIsUp())
+                        throw runtime_error("HDFS FS is NULL, check env variables.");
+                }
+            }
+            catch (const exception& ex)
+            {
+                string cmd(string("echo 'FAILED: ") + ex.what() + "' > " + logFile);
+
+                if (canWrite)
+                    (void)system(cmd.c_str());
+                else
+                    cerr << cmd << endl;
+
+                errorHandler(sysCatalogErr, "Build system catalog", ex.what(), false);
+                return 1;
+            }
+            catch (...)
+            {
+                string cmd = "echo 'FAILED:  HDFS checking.' > " + logFile;
+
+                if (canWrite)
+                    (void)system(cmd.c_str());
+                else
+                    cerr << cmd << endl;
+
+                errorHandler(sysCatalogErr, "Build system catalog", "HDFS check failed.", false);
+                return 1;
+            }
+
+            //create an initial oid bitmap file
+            {
+                ObjectIDManager oidm;
+            }
+
+            SystemCatalog sysCatalog;
+            sysCatalog.build();
+
+            std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
+
+            if (canWrite)
+                (void)system(cmd.c_str());
+            else
 #ifdef _MSC_VER
-				(void)0;
+                (void)0;
+
 #else
-				cerr << cmd << endl;
+                cerr << cmd << endl;
 #endif
 
-			cmd = startup::StartUp::installDir() + "/bin/save_brm";
-			if (canWrite) {
-				int err;
+            cmd = startup::StartUp::installDir() + "/bin/save_brm";
 
-				err = system(cmd.c_str());
-				if (err != 0) {
-					ostringstream os;
-					os << "Warning: running " << cmd << " failed.  This is usually non-fatal.";
-					cerr << os.str() << endl;
-					errorHandler(sysCatalogErr, "Save BRM", os.str());
-				}
-			}
-			else
-				cerr << cmd << endl;
+            if (canWrite)
+            {
+                int err;
 
-			return 0;
-		}
-		catch (exception& ex)
-		{
-			string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+                err = system(cmd.c_str());
 
-			if (canWrite)
-				(void)system(cmd.c_str());
-			else
-				cerr << cmd << endl;
-			errorHandler(sysCatalogErr, "Build system catalog", ex.what());
-		}
-		catch (...)
-		{
-			string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+                if (err != 0)
+                {
+                    ostringstream os;
+                    os << "Warning: running " << cmd << " failed.  This is usually non-fatal.";
+                    cerr << os.str() << endl;
+                    errorHandler(sysCatalogErr, "Save BRM", os.str());
+                }
+            }
+            else
+                cerr << cmd << endl;
 
-			if (canWrite)
-				(void)system(cmd.c_str());
-			else
-				cerr << cmd << endl;
-			string err("Caught unknown exception!");
-			errorHandler(sysCatalogErr, "Build system catalog", err);
-		}
-	}
-	else
-	{
-		usage();
-		return 1;
-	}
-	return 1;
+            return 0;
+        }
+        catch (exception& ex)
+        {
+            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
+
+            if (canWrite)
+                (void)system(cmd.c_str());
+            else
+                cerr << cmd << endl;
+
+            errorHandler(sysCatalogErr, "Build system catalog", ex.what());
+        }
+        catch (...)
+        {
+            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
+
+            if (canWrite)
+                (void)system(cmd.c_str());
+            else
+                cerr << cmd << endl;
+
+            string err("Caught unknown exception!");
+            errorHandler(sysCatalogErr, "Build system catalog", err);
+        }
+    }
+    else
+    {
+        usage();
+        return 1;
+    }
+
+    return 1;
 }
 // vim:ts=4 sw=4:
 

@@ -45,18 +45,18 @@ extern const unsigned LogEndSql;
 class SQLLogger
 {
 public:
-	SQLLogger(const std::string sql, unsigned subsys, unsigned session, unsigned txn = 0, unsigned thread = 0);
-	SQLLogger(const std::string sql, const LoggingID& logId);
+    SQLLogger(const std::string sql, unsigned subsys, unsigned session, unsigned txn = 0, unsigned thread = 0);
+    SQLLogger(const std::string sql, const LoggingID& logId);
 
-	~SQLLogger();	
+    ~SQLLogger();
 
-	std::string logMessage(logging::LOG_TYPE logLevel, const std::string& msg, logging::Message::MessageID mid = LogDefaultMsg );
+    std::string logMessage(logging::LOG_TYPE logLevel, const std::string& msg, logging::Message::MessageID mid = LogDefaultMsg );
 
 private:
-	void makeMsgMap();
-	MsgMap fMsgMap;
-	LoggingID fLogId;
-	bool fLog;
+    void makeMsgMap();
+    MsgMap fMsgMap;
+    LoggingID fLogId;
+    bool fLog;
 };
 
 }

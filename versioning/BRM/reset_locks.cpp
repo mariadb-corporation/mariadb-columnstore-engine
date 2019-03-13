@@ -50,117 +50,126 @@ bool sFlg;
 
 void usage()
 {
-	cout << "usage: reset_locks [-vnh]" << endl;
-	cout << "   reset all InfiniDB shared memory locks" << endl;
-	cout << "   -h display this help" << endl;
-	cout << "   -v verbose output" << endl;
-	cout << "   -s skip session mgr resets" << endl;
-	cout << "   -n don't actually reset anything (implies -v)" << endl;
+    cout << "usage: reset_locks [-vnh]" << endl;
+    cout << "   reset all InfiniDB shared memory locks" << endl;
+    cout << "   -h display this help" << endl;
+    cout << "   -v verbose output" << endl;
+    cout << "   -s skip session mgr resets" << endl;
+    cout << "   -n don't actually reset anything (implies -v)" << endl;
 }
 }
 
 int main(int argc, char** argv)
 {
 #ifdef _MSC_VER
-	const char* envp = getenv("SystemRoot");
-	string SystemRoot;
-	if (envp && *envp)
-		SystemRoot = envp;
-	else
-		SystemRoot = "C:\\WINDOWS";
-	string tmpEnv = "TMP=" + SystemRoot + "\\Temp";
-	_putenv(tmpEnv.c_str());
+    const char* envp = getenv("SystemRoot");
+    string SystemRoot;
+
+    if (envp && *envp)
+        SystemRoot = envp;
+    else
+        SystemRoot = "C:\\WINDOWS";
+
+    string tmpEnv = "TMP=" + SystemRoot + "\\Temp";
+    _putenv(tmpEnv.c_str());
 #endif
 
-	BRM::DBRM dbrm;
+    BRM::DBRM dbrm;
 
-	int c;
-	opterr = 0;
-	vFlg = false;
-	nFlg = false;
-	sFlg = false;
+    int c;
+    opterr = 0;
+    vFlg = false;
+    nFlg = false;
+    sFlg = false;
 
-	while ((c = getopt(argc, argv, "vnh")) != EOF)
-		switch (c)
-		{
-		case 'v':
-			vFlg = true;
-			break;
-		case 'n':
-			nFlg = true;
-			break;
-		case 's':
-			sFlg = true;
-			break;
-		case 'h':
-		default:
-			usage();
-			return (c == 'h' ? 0 : 1);
-			break;
-		}
+    while ((c = getopt(argc, argv, "vnh")) != EOF)
+        switch (c)
+        {
+            case 'v':
+                vFlg = true;
+                break;
 
-	if (nFlg)
-		vFlg = true;
+            case 'n':
+                nFlg = true;
+                break;
 
-	ShmKeys keys;
+            case 's':
+                sFlg = true;
+                break;
 
-	cerr << "(Exception msgs are probably OK)" << std::endl;
+            case 'h':
+            default:
+                usage();
+                return (c == 'h' ? 0 : 1);
+                break;
+        }
 
-	RWLock *rwlock[MasterSegmentTable::nTables];
-	int RWLockKeys[MasterSegmentTable::nTables];
-	int i;
+    if (nFlg)
+        vFlg = true;
 
-	if (MasterSegmentTable::nTables != 5) {
-		cout << "There are more locks than reset_locks knows of.  Time for an update." << endl;
-		exit(1);
-	}
+    ShmKeys keys;
 
-	RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
-	RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
-	RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
-	RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
-	RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
+    cerr << "(Exception msgs are probably OK)" << std::endl;
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		rwlock[i] = new RWLock(RWLockKeys[i]);
+    RWLock* rwlock[MasterSegmentTable::nTables];
+    int RWLockKeys[MasterSegmentTable::nTables];
+    int i;
 
-	if (vFlg)
-	{
-		PRINT("Extent Map", 0);
-		PRINT("Extent Map free list", 1);
-		PRINT("VBBM", 2);
-		PRINT("VSS", 3);
-		PRINT("CL", 4);
-	}
+    if (MasterSegmentTable::nTables != 5)
+    {
+        cout << "There are more locks than reset_locks knows of.  Time for an update." << endl;
+        exit(1);
+    }
 
-	if (!nFlg)
-	{
-		RESET("Extent Map", 0);
-		RESET("Extent Map free list", 1);
-		RESET("VBBM", 2);
-		RESET("VSS", 3);
-		RESET("CL", 4);
+    RWLockKeys[0] = keys.KEYRANGE_EXTENTMAP_BASE;
+    RWLockKeys[1] = keys.KEYRANGE_EMFREELIST_BASE;
+    RWLockKeys[2] = keys.KEYRANGE_VBBM_BASE;
+    RWLockKeys[3] = keys.KEYRANGE_VSS_BASE;
+    RWLockKeys[4] = keys.KEYRANGE_CL_BASE;
 
-		if (!sFlg)
-		{
-			if (dbrm.isDBRMReady())
-			{
-				cout << " - resetting SessionManager semaphore" << endl;
-				try {
-					execplan::SessionManager sm;
-					sm.reset();
-				}
-				catch (std::exception &e) {
-					std::cout << e.what() << std::endl;
-				}
-			}
-		}
-	}
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        rwlock[i] = new RWLock(RWLockKeys[i]);
 
-	for (i = 0; i < MasterSegmentTable::nTables; i++)
-		delete rwlock[i];
-		
-	std::cout << "OK." << std::endl;
-	return 0;
+    if (vFlg)
+    {
+        PRINT("Extent Map", 0);
+        PRINT("Extent Map free list", 1);
+        PRINT("VBBM", 2);
+        PRINT("VSS", 3);
+        PRINT("CL", 4);
+    }
+
+    if (!nFlg)
+    {
+        RESET("Extent Map", 0);
+        RESET("Extent Map free list", 1);
+        RESET("VBBM", 2);
+        RESET("VSS", 3);
+        RESET("CL", 4);
+
+        if (!sFlg)
+        {
+            if (dbrm.isDBRMReady())
+            {
+                cout << " - resetting SessionManager semaphore" << endl;
+
+                try
+                {
+                    execplan::SessionManager sm;
+                    sm.reset();
+                }
+                catch (std::exception& e)
+                {
+                    std::cout << e.what() << std::endl;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < MasterSegmentTable::nTables; i++)
+        delete rwlock[i];
+
+    std::cout << "OK." << std::endl;
+    return 0;
 }
 

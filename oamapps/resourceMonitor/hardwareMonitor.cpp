@@ -34,6 +34,8 @@
 #include "loggingid.h"
 #include "alarmmanager.h"
 
+#include "installdir.h"
+
 using namespace std;
 using namespace oam;
 using namespace alarmmanager;
@@ -68,103 +70,113 @@ void sendAlarm(string alarmItem, ALARMS alarmID, int action);
 ************************************************************************************************************/
 int main (int argc, char** argv)
 {
-	string data[10];
-	string SensorName;
-	string SensorValue;
+    string data[10];
+    string SensorName;
+    string SensorValue;
     string Units;
-	string SensorStatus;
-	string lowFatal;
-	string lowCritical;
-	string lowWarning;
-	string highWarning;
-	string highCritical;
-	string highFatal;
-	char *p;
+    string SensorStatus;
+    string lowFatal;
+    string lowCritical;
+    string lowWarning;
+    string highWarning;
+    string highCritical;
+    string highFatal;
+    char* p;
+    
+    string tmpDir = startup::StartUp::tmpDir();
 
-	// loop forever reading the hardware status
-	while(TRUE)
-	{
-		int returnCode = system("ipmitool sensor list > /tmp/harwareMonitor.txt");
-	
-		if (returnCode) {
-			// System error
-			cout << "Error running ipmitool sensor list!!!" << endl;
-			exit(-1);
-		}
-	
-		// parse output file
-	
-		ifstream File ("/tmp/harwareMonitor.txt");
-		if (!File){
-			// System error
-			cout << "Error opening /tmp/harwareMonitor.txt!!!" << endl;
-			exit(-1);
-		}
-		
-		char line[200];
-		while (File.getline(line, 200))
-		{
-			// parse the line
-			int f = 0;
-			p = strtok(line,"|");
-			while (p) 
-			{
-				data[f]=p;
-				p = strtok (NULL, "|");
-				f++;
-			}
-	
-			if( f == 0 )
-				// nothing on this line, skip
-				continue;
-	
-			SensorName = data[0];
-			SensorValue = data[1];
-			Units = data[2];
-			SensorStatus = data[3];
-			lowFatal = data[4];
-			lowCritical = data[5];
-			lowWarning = data[6];
-			highWarning = data[7];
-			highCritical = data[8];
-			highFatal = data[9];
-	
-			// check status and issue apporiate alarm if needed
-			if ( (SensorStatus != "ok") && (SensorStatus != "nr") ) {
-				// Status error, check for warning or critical levels
+    // loop forever reading the hardware status
+    while (TRUE)
+    {
+		string logFile = tmpDir + "/harwareMonitor.txt";
+		string cmd = "ipmitool sensor list > " + logFile;
+        int returnCode = system(cmd.c_str());
 
-				if ( SensorValue >= highFatal )
-					// issue critical alarm
-					sendAlarm(SensorName, HARDWARE_HIGH, SET);
+        if (returnCode)
+        {
+            // System error
+            cout << "Error running ipmitool sensor list!!!" << endl;
+            exit(-1);
+        }
 
-				else if ( (SensorValue < highFatal) && (SensorValue >= highCritical) )
-					// issue major alarm
-					sendAlarm(SensorName, HARDWARE_MED, SET);
+        // parse output file
 
-				else if ( (SensorValue < highCritical ) && (SensorValue >= highWarning) )
-					// issue minor alarm
-					sendAlarm(SensorName, HARDWARE_LOW, SET);
+        ifstream File (logFile);
 
-				else if ( (SensorValue <= lowWarning) && (SensorValue > lowCritical) )
-					// issue minor alarm
-					sendAlarm(SensorName, HARDWARE_LOW, SET);
+        if (!File)
+        {
+            // System error
+            cout << "Error opening " << logFile << endl;
+            exit(-1);
+        }
 
-				else if ( (SensorValue <= lowCritical) && (SensorValue > lowFatal) )
-					// issue major alarm
-					sendAlarm(SensorName, HARDWARE_MED, SET);
+        char line[200];
 
-				else if ( SensorValue <= lowFatal )
-					// issue critical alarm
-					sendAlarm(SensorName, HARDWARE_HIGH, SET);
-			}
-	
-		} //end of parsing file while
-		
-		File.close();
-		sleep(5);
-	} //end of forever while loop
+        while (File.getline(line, 200))
+        {
+            // parse the line
+            int f = 0;
+            p = strtok(line, "|");
+
+            while (p)
+            {
+                data[f] = p;
+                p = strtok (NULL, "|");
+                f++;
+            }
+
+            if ( f == 0 )
+                // nothing on this line, skip
+                continue;
+
+            SensorName = data[0];
+            SensorValue = data[1];
+            Units = data[2];
+            SensorStatus = data[3];
+            lowFatal = data[4];
+            lowCritical = data[5];
+            lowWarning = data[6];
+            highWarning = data[7];
+            highCritical = data[8];
+            highFatal = data[9];
+
+            // check status and issue apporiate alarm if needed
+            if ( (SensorStatus != "ok") && (SensorStatus != "nr") )
+            {
+                // Status error, check for warning or critical levels
+
+                if ( SensorValue >= highFatal )
+                    // issue critical alarm
+                    sendAlarm(SensorName, HARDWARE_HIGH, SET);
+
+                else if ( (SensorValue < highFatal) && (SensorValue >= highCritical) )
+                    // issue major alarm
+                    sendAlarm(SensorName, HARDWARE_MED, SET);
+
+                else if ( (SensorValue < highCritical ) && (SensorValue >= highWarning) )
+                    // issue minor alarm
+                    sendAlarm(SensorName, HARDWARE_LOW, SET);
+
+                else if ( (SensorValue <= lowWarning) && (SensorValue > lowCritical) )
+                    // issue minor alarm
+                    sendAlarm(SensorName, HARDWARE_LOW, SET);
+
+                else if ( (SensorValue <= lowCritical) && (SensorValue > lowFatal) )
+                    // issue major alarm
+                    sendAlarm(SensorName, HARDWARE_MED, SET);
+
+                else if ( SensorValue <= lowFatal )
+                    // issue critical alarm
+                    sendAlarm(SensorName, HARDWARE_HIGH, SET);
+            }
+
+        } //end of parsing file while
+
+        File.close();
+        sleep(5);
+    } //end of forever while loop
 }
-	
+
 /******************************************************************************************
 * @brief	sendAlarm
 *
@@ -173,26 +185,29 @@ int main (int argc, char** argv)
 ******************************************************************************************/
 void sendAlarm(string alarmItem, ALARMS alarmID, int action)
 {
-	Oam oam;
-	ALARMManager alarmMgr;
-	// send alarm
-	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
+    Oam oam;
+    ALARMManager alarmMgr;
+    // send alarm
+    alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 
-	//Log this event 
-	LoggingID lid;
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add("Alarm action against ");
-	args.add(alarmItem);
-	if ( action == SET ) {
-		args.add("Action type: SET");
-	}
-	else
-	{
-		args.add("Action type: CLEAR");
-	}
-	ml.logDebugMessage(msg);
+    //Log this event
+    LoggingID lid;
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add("Alarm action against ");
+    args.add(alarmItem);
 
-	return;
+    if ( action == SET )
+    {
+        args.add("Action type: SET");
+    }
+    else
+    {
+        args.add("Action type: CLEAR");
+    }
+
+    ml.logDebugMessage(msg);
+
+    return;
 }

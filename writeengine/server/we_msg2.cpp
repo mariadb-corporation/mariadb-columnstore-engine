@@ -33,7 +33,7 @@ namespace WriteEngine
 
 ByteStream::byte doMsg2(ByteStream& bs, std::string err)
 {
-	return 0;
+    return 0;
 }
 
 }

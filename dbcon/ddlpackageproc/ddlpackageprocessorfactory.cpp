@@ -28,30 +28,31 @@
 
 using namespace ddlpackage;
 
-namespace ddlpackageprocessor {
+namespace ddlpackageprocessor
+{
 
 DDLPackageProcessor*  DDLPackageProcessorFactory::
 makePackageProcessor(int packageType, ddlpackage::CalpontDDLPackage& cpackage)
 {
-	DDLPackageProcessor* ddlProcPtr = 0;
+    DDLPackageProcessor* ddlProcPtr = 0;
 
-	switch( packageType )
-   	{
-		case DDL_CREATE:
-		  ddlProcPtr = new CreatePackageProcessor();
-		break;
-		
-		case DDL_ALTER:
-		  ddlProcPtr = new AlterPackageProcessor();
-		break;
+    switch ( packageType )
+    {
+        case DDL_CREATE:
+            ddlProcPtr = new CreatePackageProcessor();
+            break;
 
-		case DDL_DROP:
-		  ddlProcPtr = new DropPackageProcessor();
-		break;
+        case DDL_ALTER:
+            ddlProcPtr = new AlterPackageProcessor();
+            break;
 
-	}	
+        case DDL_DROP:
+            ddlProcPtr = new DropPackageProcessor();
+            break;
 
-	return ddlProcPtr;	  
+    }
+
+    return ddlProcPtr;
 }
 
 } // namespace ddlpackageprocessor

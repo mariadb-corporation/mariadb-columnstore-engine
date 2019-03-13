@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/*
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,9 +15,8 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
-
-//  $Id: windowframe.cpp 3821 2013-05-17 23:58:16Z xlou $
+   MA 02110-1301, USA.
+*/
 
 
 //#define NDEBUG
@@ -52,37 +53,37 @@ namespace windowfunction
 
 pair<uint64_t, uint64_t> WindowFrame::getWindow(int64_t b, int64_t e, int64_t c)
 {
-	int64_t upper = fUpper->getBound(b, e, c);
-	int64_t lower = fLower->getBound(b, e, c);
+    int64_t upper = fUpper->getBound(b, e, c);
+    int64_t lower = fLower->getBound(b, e, c);
 
-	//     case 1       ||         case 2           ||        case 3
-	if ((upper > lower) || (upper < b && lower < b) || (upper > e && lower > e))
-	{
-		// construct an empty window
-		upper = b+1;
-		lower = b;
-	}
+    //     case 1       ||         case 2           ||        case 3
+    if ((upper > lower) || (upper < b && lower < b) || (upper > e && lower > e))
+    {
+        // construct an empty window
+        upper = b + 1;
+        lower = b;
+    }
 
-	if (upper < b)  // case 2, lower >= b
-	{
-		upper = b;
-	}
+    if (upper < b)  // case 2, lower >= b
+    {
+        upper = b;
+    }
 
-	if (lower > e)  // case 3, upper <= e
-	{
-		lower = e;
-	}
+    if (lower > e)  // case 3, upper <= e
+    {
+        lower = e;
+    }
 
-	return make_pair(upper, lower);
+    return make_pair(upper, lower);
 }
 
 
 const string WindowFrame::toString() const
 {
-	string ret(UnitStr[fUnit]);
-	ret = ret + " between " + fUpper->toString() + " and " + fLower->toString();
+    string ret(UnitStr[fUnit]);
+    ret = ret + " between " + fUpper->toString() + " and " + fLower->toString();
 
-	return ret;
+    return ret;
 }
 
 }   //namespace

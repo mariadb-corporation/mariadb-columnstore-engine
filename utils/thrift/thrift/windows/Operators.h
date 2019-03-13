@@ -24,7 +24,10 @@
 #pragma once
 #endif // _MSC_VER
 
-namespace apache { namespace thrift {
+namespace apache
+{
+namespace thrift
+{
 
 class TEnumIterator;
 
@@ -35,6 +38,7 @@ inline bool operator == (const TEnumIterator&, const TEnumIterator&)
     return true;
 }
 
-}} // apache::thrift
+}
+} // apache::thrift
 
 #endif // _THRIFT_WINDOWS_OPERATORS_H_

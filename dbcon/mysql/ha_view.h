@@ -32,7 +32,7 @@
 
 namespace execplan
 {
-	class CalpontSystemCatalog;
+class CalpontSystemCatalog;
 }
 
 namespace cal_impl_if
@@ -41,24 +41,24 @@ namespace cal_impl_if
 class View
 {
 public:
-	View(SELECT_LEX& select, gp_walk_info* parentGwip) :
-		fSelect(select),
-		fParentGwip(parentGwip) {}
-	~View() {}
+    View(SELECT_LEX& select, gp_walk_info* parentGwip) :
+        fSelect(select),
+        fParentGwip(parentGwip) {}
+    ~View() {}
 
-	execplan::CalpontSystemCatalog::TableAliasName& viewName();
-	void viewName(execplan::CalpontSystemCatalog::TableAliasName& viewName);
+    execplan::CalpontSystemCatalog::TableAliasName& viewName();
+    void viewName(execplan::CalpontSystemCatalog::TableAliasName& viewName);
 
-	/** get execution plan for this view. merge the table list and join list to the
-	    parent select.
-	 */
-	void transform();
-	uint32_t processOuterJoin(gp_walk_info& gwi);
+    /** get execution plan for this view. merge the table list and join list to the
+        parent select.
+     */
+    void transform();
+    uint32_t processOuterJoin(gp_walk_info& gwi);
 
 private:
-	SELECT_LEX fSelect;
-	gp_walk_info* fParentGwip;
-	execplan::CalpontSystemCatalog::TableAliasName fViewName;
+    SELECT_LEX fSelect;
+    gp_walk_info* fParentGwip;
+    execplan::CalpontSystemCatalog::TableAliasName fViewName;
 };
 
 }
