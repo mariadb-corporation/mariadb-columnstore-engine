@@ -1010,7 +1010,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "libjemalloc1" "libsnappy1V5" "net-tools" "libnuma1")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "libreadline-dev" "rsync" "libjemalloc1" "libsnappy1V5" "net-tools" "libnuma1")
   declare -a UBUNTU_PKG_NOT=("mariadb-server" "libmariadb18")
 
   if [ "$OS" == "ubuntu16" ] || [ "$OS" == "ubuntu18" ]; then
