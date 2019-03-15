@@ -28,6 +28,7 @@
 
 #include "jobstep.h"
 #include "primitivestep.h"
+#include "threadnaming.h"
 
 using namespace std;
 
@@ -192,6 +193,7 @@ protected:
         Runner(CrossEngineStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("CESRunner");
             fStep->execute();
         }
 

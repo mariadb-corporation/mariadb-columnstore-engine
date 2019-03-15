@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -18,6 +19,7 @@
 #include "jobstep.h"
 #include "tuplehashjoin.h"
 #include "joinpartition.h"
+#include "threadnaming.h"
 #include "../../utils/threadpool/prioritythreadpool.h"
 
 #ifndef DISKJOINSTEP_H
@@ -65,6 +67,7 @@ private:
         Runner(DiskJoinStep* d) : djs(d) { }
         void operator()()
         {
+            utils::setThreadName("DJSMainRunner");
             djs->mainRunner();
         }
         DiskJoinStep* djs;
@@ -92,6 +95,7 @@ private:
         Loader(DiskJoinStep* d) : djs(d) { }
         void operator()()
         {
+            utils::setThreadName("DJSLoader");
             djs->loadFcn();
         }
         DiskJoinStep* djs;
@@ -114,6 +118,7 @@ private:
         Builder(DiskJoinStep* d) : djs(d) { }
         void operator()()
         {
+            utils::setThreadName("DJSBuilder");
             djs->buildFcn();
         }
         DiskJoinStep* djs;
@@ -126,6 +131,7 @@ private:
         Joiner(DiskJoinStep* d) : djs(d) { }
         void operator()()
         {
+            utils::setThreadName("DJSJoiner");
             djs->joinFcn();
         }
         DiskJoinStep* djs;

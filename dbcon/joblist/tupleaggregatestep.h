@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -23,6 +24,7 @@
 
 #include "jobstep.h"
 #include "rowaggregation.h"
+#include "threadnaming.h"
 
 #include <boost/thread.hpp>
 
@@ -138,6 +140,7 @@ private:
         Aggregator(TupleAggregateStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("TASAggr");
             fStep->doAggregate();
         }
 
@@ -153,6 +156,7 @@ private:
         {}
         void operator()()
         {
+            utils::setThreadName("TASThrAggr");
             fStep->threadedAggregateRowGroups(fThreadID);
         }
 
@@ -171,6 +175,7 @@ private:
         }
         void operator()()
         {
+            utils::setThreadName("TASThr2ndPAggr");
             for (uint32_t i = 0; i < bucketCount; i++)
                 fStep->doThreadedSecondPhaseAggregate(fThreadID + i);
         }
