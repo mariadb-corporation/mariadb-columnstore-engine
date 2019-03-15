@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace boost::filesystem;
+namespace bf = boost::filesystem;
 
 namespace storagemanager
 {
@@ -64,7 +64,7 @@ Cache::Cache() : currentCacheSize(0)
     
     try 
     {
-        boost::filesystem::create_directories(prefix);
+        bf::create_directories(prefix);
     }
     catch (exception &e)
     {
@@ -74,11 +74,38 @@ Cache::Cache() : currentCacheSize(0)
     //cout << "Cache got prefix " << prefix << endl;
     
     downloader.setDownloadPath(prefix.string());
-    /* todo: populate structures with existing files in the cache path */
+    populate();
 }
 
 Cache::~Cache()
 {
+}
+
+void Cache::populate()
+{
+    bf::directory_iterator dir(prefix);
+    bf::diretory_iterator dend;
+    while (dir != dend)
+    {
+        // put everything that doesn't end with '.journal' in lru & m_lru
+        if (bf::is_regular_file(*dir))
+        {
+            size_t size = bf::file_size(*dir);
+            if (dir->extension() == "obj")
+            {
+                lru.push_back(dir->string());
+                m_lru.insert(lru.end() - 1);
+                currentCacheSize += size;
+            }
+            else if (dir->extension() == "journal")
+                currentCacheSize += size;
+            else
+                logger->log(LOG_WARN, "Cache: found a file in the cache that does not belong '%s'", dir->string().c_str());
+        }
+        else
+            logger->log(LOG_WARN, "Cache: found something in the cache that does not belong '%s'", dir->string().c_str());
+        ++dir;
+    }
 }
 
 void Cache::read(const vector<string> &keys)
@@ -178,7 +205,7 @@ void Cache::removeFromDNE(const LRU_t::iterator &key)
         doNotEvict.erase(it);
 }
     
-const boost::filesystem::path & Cache::getCachePath()
+const bf::path & Cache::getCachePath()
 {
     return prefix;
 }
@@ -257,7 +284,7 @@ void Cache::makeSpace(size_t size)
             continue;   // it's in the do-not-evict list
         }
         
-        boost::filesystem::path cachedFile = prefix / *it;
+        bf::path cachedFile = prefix / *it;
         int err = stat(cachedFile.string().c_str(), &statbuf);
         if (err)
         {
@@ -277,7 +304,7 @@ void Cache::makeSpace(size_t size)
         thisMuch -= statbuf.st_size;
         sync->flushObject(*it);
         // Deleting the files will be done through Synchronizer->Replicator
-        //boost::filesystem::remove(cachedFile);
+        //bf::remove(cachedFile);
         LRU_t::iterator toRemove = it++;
         lru.erase(toRemove);
         m_lru.erase(*toRemove);

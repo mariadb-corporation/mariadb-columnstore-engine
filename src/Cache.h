@@ -48,6 +48,7 @@ class Cache : public boost::noncopyable
         Synchronizer *sync;
         SMLogging *logger;
         
+        void populate();
         void makeSpace(size_t size);
 
         /* The main cache structures */
