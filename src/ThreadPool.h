@@ -14,8 +14,8 @@ namespace storagemanager
 class ThreadPool : public boost::noncopyable
 {
     public:
-        ThreadPool();    // this ctor uses an 'unbounded' # of threads; relies on the context for a natural max.
-        ThreadPool(uint num_threads);   // this ctor lets caller specify a limit.
+        ThreadPool();   // this ctor uses an 'unbounded' # of threads; relies on the context for a natural max, 
+        ThreadPool(uint num_threads, bool processQueueOnExit = false);   // this ctor lets caller specify a limit.
         virtual ~ThreadPool();
         
         // addJob doesn't block
@@ -35,6 +35,7 @@ class ThreadPool : public boost::noncopyable
         SMLogging *logger;
         uint maxThreads;
         bool die;
+        bool processQueueOnExit;
         int threadsWaiting;
         boost::thread_group threads;
         

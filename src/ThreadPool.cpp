@@ -15,18 +15,20 @@ ThreadPool::ThreadPool() : maxThreads(1000), die(false), threadsWaiting(0)
     logger = SMLogging::get();
 }
 
-ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), threadsWaiting(0)
+ThreadPool::ThreadPool(uint num_threads, bool _processQueueOnExit) : maxThreads(num_threads), die(false), 
+    processQueueOnExit(_processQueueOnExit), threadsWaiting(0)
 {
     logger = SMLogging::get();
     pruner = boost::thread([this] { this->prune(); } );
 }
 
-// TBD: Should the default behavior be to finish the job queue or not?
 ThreadPool::~ThreadPool()
 {
     boost::unique_lock<boost::mutex> s(mutex);
     die = true;
-    jobs.clear();
+    if (!processQueueOnExit)
+        jobs.clear();
+        
     jobAvailable.notify_all();
     s.unlock();
     
@@ -38,6 +40,9 @@ ThreadPool::~ThreadPool()
 void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
 {
     boost::unique_lock<boost::mutex> s(mutex);
+    if (die)
+        return;
+    
     jobs.push_back(j);
     // Start another thread if necessary
     if (threadsWaiting == 0 && threads.size() < maxThreads) {
@@ -105,7 +110,7 @@ void ThreadPool::_processingLoop()
             if (timedout)
                 return;
         }
-        if (die)
+        if (jobs.empty())
             return;
         boost::shared_ptr<Job> job = jobs.front();
         jobs.pop_front();
@@ -121,7 +126,7 @@ void ThreadPool::_processingLoop()
         }
         s.lock();
     }
-    cout << "threadpool thread exiting" << endl;
+    //cout << "threadpool thread exiting" << endl;
 }
 
 inline bool ThreadPool::id_compare::operator()(const ID_Thread &t1, const ID_Thread &t2) const
