@@ -21,6 +21,7 @@ ThreadPool::ThreadPool(uint num_threads) : maxThreads(num_threads), die(false), 
     pruner = boost::thread([this] { this->prune(); } );
 }
 
+// TBD: Should the default behavior be to finish the job queue or not?
 ThreadPool::~ThreadPool()
 {
     boost::unique_lock<boost::mutex> s(mutex);

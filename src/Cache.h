@@ -24,11 +24,16 @@ class Cache : public boost::noncopyable
         virtual ~Cache();
         
         void read(const std::vector<std::string> &keys);
+        bool exists(const std::string &key);
         void exists(const std::vector<std::string> &keys, std::vector<bool> *out);
         void newObject(const std::string &key, size_t size);
         void newJournalEntry(size_t size);
         void deletedObject(const std::string &key, size_t size);
         void deletedJournal(size_t size);
+        
+        // rename is used when an old obj gets merged with its journal file
+        // the size will change in that process; sizediff is by how much
+        void rename(const std::string &oldKey, const std::string &newKey, ssize_t sizediff);
         void setMaxCacheSize(size_t size);
         size_t getCurrentCacheSize() const;
         

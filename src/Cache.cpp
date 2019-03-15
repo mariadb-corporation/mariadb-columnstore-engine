@@ -192,6 +192,12 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out)
         (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
+bool Cache::exists(const string &key)
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    return m_lru.find(keys[i]) != m_lru.end();
+}
+
 void Cache::newObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
@@ -276,6 +282,19 @@ void Cache::makeSpace(size_t size)
         lru.erase(toRemove);
         m_lru.erase(*toRemove);
     }
+}
+
+void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    auto it = m_lru(oldKey);
+    assert(it != m_lru.end());
+    
+    auto lit = it->lit;
+    m_lru.erase(it);
+    *lit = newKey;
+    m_lru.insert(lit);
+    currentCacheSize += sizediff;
 }
 
 size_t Cache::getCurrentCacheSize() const

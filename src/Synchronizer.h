@@ -16,6 +16,7 @@
 namespace storagemanager
 {
 
+/* TODO: Need to think about how errors are handled / propagated */
 class Synchronizer : public boost::noncopyable
 {
     public:
@@ -29,6 +30,11 @@ class Synchronizer : public boost::noncopyable
         
     private:
         Synchronizer();
+        
+        void process(const std::string &key);
+        void synchronize(const std::string &key, bool isFlush);
+        void synchronizeDelete(const std::string &key);
+        void synchronizeWithJournal(const std::string &key, bool isFlush);
         
         struct FlushListener
         {

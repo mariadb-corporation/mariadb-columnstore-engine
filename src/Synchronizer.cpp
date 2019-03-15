@@ -10,6 +10,7 @@ namespace
     boost::mutex inst_mutex;
 }
 
+namespace bf = boost::filesystem;
 namespace storagemanager
 {
 
@@ -138,16 +139,24 @@ void Synchronizer::process(const string &key)
     pendingOps.erase(it);
     s.unlock();
     
-    if (pending->opFlags & DELETE)
-        synchronizeDelete(key);
-    else if (pending->opFlags & JOURNAL)
-        synchronizerWithJournal(key, pending->opFlags & IS_FLUSH);
-    else if (pending->opFlags & NEW_OBJECT)
-        synchronize(key, pending->opFlags & IS_FLUSH);
-    else
-        // complain
-        ;
-    
+    try {
+        if (pending->opFlags & DELETE)
+            synchronizeDelete(key);
+        else if (pending->opFlags & JOURNAL)
+            synchronizerWithJournal(key, pending->opFlags & IS_FLUSH);
+        else if (pending->opFlags & NEW_OBJECT)
+            synchronize(key, pending->opFlags & IS_FLUSH);
+        else
+            throw logic_error("Synchronizer::process(): got an unknown op flag");
+    }
+    catch(exception &e) {
+        logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Requeueing it.", key.c_str(),
+            pending->opFlags, e.what());
+        s.lock();
+        workQueue.push_back(key);
+        pendingOps[key] = pending;
+        return;
+    }
     if (pending->opFlags & IS_FLUSH)
         pending->notify();
 }
@@ -157,11 +166,11 @@ struct ScopedReadLock
     ScopedReadLock(IOCoordinator *i, string &key)
     {
         ioc = i;
-        ioc->getReadLock(key);
+        ioc->readLock(key.c_str());
     }
     ~ScopedReadLock()
-    {
-        ioc->releaseReadLock(key);
+    
+        ioc->readUnlock(key.c_str());
     }
     IOCoordinator *ioc;
 };
@@ -171,35 +180,145 @@ struct ScopedWriteLock
     ScopedWriteLock(IOCoordinator *i, string &key)
     {
         ioc = i;
-        ioc->getWriteLock(key);
+        ioc->writeLock(key.c_str());
+        locked = true;
     }
     ~ScopedReadLock()
     {
-        ioc->releaseWriteLock(key);
+        if (locked)
+            ioc->writeUnlock(key.c_str());
+    }
+    
+    void unlock()
+    {
+        if (locked)
+        {
+            ioc->writeUnlock(key.c_str());
+            locked = false;
+        }
     }
     IOCoordinator *ioc;
+    bool locked;
 };
 
-void Synchronizer::synchronize(const std::string &key, bool isFlush)
+void Synchronizer::synchronize(const string &key, bool isFlush)
 {
     ScopedReadLock s(ioc, key);
     
+    char buf[80];
     bool exists = false;
-    cs->exists(key, &exists);
+    int err;
+    err = cs->exists(key, &exists);
+    if (err)
+        throw runtime_error(strerror_r(errno, buf, 80));
     if (!exists)
     {
-        cs->putObject(cache->getCachePath() / key, key);
+        err = cs->putObject(cache->getCachePath() / key, key);
+        if (err)
+            throw runtime_error(strerror_r(errno, buf, 80));
         replicator->delete(key, Replicator::NO_LOCAL);
     }
     if (isFlush)
         replicator->delete(key, Replicator::LOCAL_ONLY);
 }
 
+void Synchronizer::synchronizeDelete(const string &key)
+{
+    /* Right now I think this is being told to delete key from cloud storage, 
+       and that it has already been deleted everywhere locally. */
+    cs->delete(key);
+}
+
 void Synchronizer::synchronizeWithJournal(const string &key, bool isFlush)
 {
+    // interface to Metadata TBD
+    //string sourceFilename = Metadata::getSourceFromKey(key);
+    ScopedWriteLock s(ioc, sourceFilename);
+    bf::path oldCachePath = cache->getCachePath() / key;
+    string journalName = oldCachePath.string() + ".journal";
+    int err;
+    boost::shared_array<uint8_t> data;
+    size_t count = 0, size = 0;
+    char buf[80];
+    bool oldObjIsCached = cache->exists(key);
     
-
+    // get the base object if it is not already cached
+    // merge it with its journal file
+    if (!oldObjIsCached)
+    {
+        err = cs->getObject(key, data, &size);
+        if (err)
+            throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
+        err = ios->mergeJournalInMem(data, journalName, &size);
+        assert(!err);
+    }
+    else
+        data = ios->mergeJournal(oldCachePath.string(), journalName, 0, &size);
+    assert(data);
     
+    // get a new key for the resolved version & upload it
+    string newKey = ios->newKeyFromOldKey(key);
+    err = cs->putObject(data, size, newKey);
+    if (err)
+        throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(errno, buf, 80));
+    
+    // if this isn't a flush operation..
+    //   write the new data to disk,
+    //   tell the cache about the rename
+    //   rename the file in any pending ops in Synchronizer
+    
+    if (!isFlush && oldObjIsCached)
+    {
+        // Is this the only thing outside of Replicator that writes files?
+        // If so move this write loop to Replicator.
+        bf::path newCachePath = cache->getCachePath() / newKey;
+        int newFD = ::open(newCachePath.string().c_str(), O_WRONLY, 0600);
+        if (newFD < 0)
+            throw runtime_error(string("Synchronizer: Failed to open a new object in local storage!  Got ") 
+              + strerror_r(errno, buf, 80));
+        ScopedCloser s(newFD);
+        
+        while (count < size)
+        {
+            err = ::write(newFD, data.get(), size - count);
+            if (err < 0)
+                throw runtime_error(string("Synchronizer: Failed to write to a new object in local storage!  Got ") 
+                  + strerror_r(errno, buf, 80));
+            count += err;
+        }
+        
+        // the total size difference is the new obj size - (old obj size + journal size)
+        // might be wise to add things like getting a file size to a utility class.
+        // TBD how often we need to do it.
+        struct stat statbuf;
+        err = stat(oldCachePath.string().c_str(), &statbuf);
+        assert(!err);
+        size_t oldObjSize = statbuf.st_size;
+        err = stat((oldCachePath.string() + ".journal").c_str(), &statbuf);
+        assert(!err);
+        size_t journalSize = statbuf.st_size;
+        
+        cache->rename(key, newKey, size - oldObjSize - journalSize);
+        rename(key, newKey);
+    }
+    
+    // update the metadata for the source file
+    // waiting for stubs to see what these calls look like
+    /*
+    Metadata md(sourceFilename);
+    md.rename(key, newKey);
+    replicator->updateMetadata(sourceFilename, md);
+    */
+    
+    s.unlock();
+    
+    // delete the old object & journal file
+    vector<string> files;
+    files.push_back(key);
+    files.push_back(journalName);
+    replicator->delete(files);
+    cs->delete(key);
+}
 
 
 /* The helper objects & fcns */

@@ -38,10 +38,10 @@ class IOCoordinator : public boost::noncopyable
         void getNewKeyFromSourceName(const std::string &sourceName, std::string *newKey);
         
         // The shared logic for merging a journal file with its base file.
-        // The default values for offset and len mean 'process the whole file'.  Otherwise,
-        // offset is relative to the object.
-        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset = 0, size_t len = 0) const;
-        int mergeJournalInMem(uint8_t *objData, const char *journalPath);
+        // *len should be set to the length of the data requested (0 means read the whole file),
+        // on return *len will be the actual length returned.
+        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, size_t *len) const;
+        int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath);
         
     private:
         IOCoordinator();

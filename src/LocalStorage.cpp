@@ -7,7 +7,7 @@
 #include "Config.h"
 
 using namespace std;
-using namespace boost::filesystem;
+namespace bf = boost::filesystem;
 
 namespace storagemanager
 {
@@ -16,11 +16,11 @@ LocalStorage::LocalStorage()
 {
     prefix = Config::get()->getValue("LocalStorage", "path");
     //cout << "LS: got prefix " << prefix << endl;
-    if (!is_directory(prefix))
+    if (!bf::is_directory(prefix))
     {
         try 
         {
-            create_directories(prefix);
+            bf::create_directories(prefix);
         }
         catch (exception &e)
         {
@@ -28,13 +28,14 @@ LocalStorage::LocalStorage()
             throw e;
         }
     }
+    logger = SMLogging::get();
 }
 
 LocalStorage::~LocalStorage()
 {
 }
 
-const boost::filesystem::path & LocalStorage::getPrefix() const 
+const bf::path & LocalStorage::getPrefix() const 
 {
     return prefix;
 }
@@ -42,7 +43,7 @@ const boost::filesystem::path & LocalStorage::getPrefix() const
 int LocalStorage::copy(const path &source, const path &dest)
 {
     boost::system::error_code err;
-    copy_file(source, dest, copy_option::fail_if_exists, err);
+    bf::copy_file(source, dest, copy_option::fail_if_exists, err);
     if (err)
     {
         errno = err.value();
@@ -51,9 +52,9 @@ int LocalStorage::copy(const path &source, const path &dest)
     return 0;
 }
 
-path operator+(const path &p1, const path &p2)
+bf::path operator+(const bf::path &p1, const bf::path &p2)
 {
-    path ret(p1);
+    bf::path ret(p1);
     ret /= p2;
     return ret;
 }
@@ -64,13 +65,73 @@ int LocalStorage::getObject(const string &source, const string &dest, size_t *si
     if (ret)
         return ret;
     if (size)
-        *size = boost::filesystem::file_size(dest);
+        *size = bf::file_size(dest);
     return ret;
+}
+
+int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<uint8_t> &data, size_t *size)
+{
+    int ret;
+    bf::path source = prefix / sourceKey;
+    const char *c_source = source.string().c_str();
+    size_t l_size = bf::file_size(source);
+    data.reset(new uint8_t[l_size]);
+    char buf[80];
+    
+    int fd = open(c_source, O_RDONLY);
+    if (fd < 0)
+    {
+        logger->log(LOG_CRIT, "LocalStorage::getObject() failed to open %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+        return fd;
+    }
+    scoped_closer s(fd);
+    size_t count = 0;
+    while (count < l_size)
+    {
+        int err = ::read(fd, &data[count], l_size - count);
+        if (err < 0)
+        {
+            logger->log(LOG_CRIT, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+            return err;
+        }
+        count += err;
+    }
+    if (size)
+        *size = l_size;
+    return 0;
 }
 
 int LocalStorage::putObject(const string &source, const string &dest)
 {
     return copy(source, prefix / dest);
+}
+
+int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const string &dest)
+{
+    bf::path destPath = prefix / dest;
+    const char *c_dest = destPath.string().c_str();
+    char buf[80];
+    
+    int fd = ::open(c_dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd < 0)
+    {
+        logger->log("LocalStorage::putObject(): Failed to open %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+        return fd;
+    }
+    scoped_closer s(fd);
+    size_t count = 0;
+    int err;
+    while (count < len)
+    {
+        err = ::write(fd, &data[count], len - count);
+        if (err < 0)
+        {
+            logger->log("LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+            return err;
+        }
+        count += err;
+    }
+    return 0;
 }
 
 int LocalStorage::copyObject(const string &source, const string &dest)
@@ -82,12 +143,12 @@ void LocalStorage::deleteObject(const string &key)
 {
     boost::system::error_code err;
     
-    boost::filesystem::remove(prefix / key, err);
+    bf::remove(prefix / key, err);
 }
 
 int LocalStorage::exists(const std::string &key, bool *out)
 {
-    *out = boost::filesystem::exists(prefix / key);
+    *out = bf::exists(prefix / key);
     return 0;
 }
 
