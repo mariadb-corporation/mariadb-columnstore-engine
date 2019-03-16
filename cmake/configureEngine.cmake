@@ -453,7 +453,7 @@ EXECUTE_PROCESS(
     COMMAND rm -f conftest.sym conftest.file
     COMMAND touch conftest.file
     COMMAND ln -s conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ..
     )
 CHECK_CXX_SOURCE_RUNS(
 "
@@ -720,5 +720,5 @@ ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ..
     )

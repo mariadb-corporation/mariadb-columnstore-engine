@@ -32,7 +32,9 @@ set(dmlpackage_LIB_SRCS
 
 add_library(dmlpackage SHARED ${dmlpackage_LIB_SRCS})
 
-add_dependencies(dmlpackage ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
+  PROPERTIES GENERATED TRUE
+)
 
 set_target_properties(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

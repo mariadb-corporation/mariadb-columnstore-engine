@@ -32,7 +32,9 @@ set(ddlpackage_LIB_SRCS
 
 add_library(ddlpackage SHARED ${ddlpackage_LIB_SRCS})
 
-add_dependencies(ddlpackage ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
+  PROPERTIES GENERATED TRUE
+  )
 
 set_target_properties(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
