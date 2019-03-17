@@ -256,6 +256,20 @@ int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
     return iValue;
 }
 
+int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+//	std::cout << "In Func_inet_ntoa::getTimestampVal" << std::endl;
+
+//	int64t iValue = fp[0]->data()->getTimestampIntVal(row, isNull);
+    int64_t iValue = joblist::TIMESTAMPNULL;
+    isNull = true;
+
+    return iValue;
+}
+
 int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row,
                                       FunctionParm& fp,
                                       bool& isNull,

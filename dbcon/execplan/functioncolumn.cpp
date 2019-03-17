@@ -74,6 +74,7 @@ FunctionColumn::FunctionColumn( const FunctionColumn& rhs, const uint32_t sessio
     fFunctionName(rhs.functionName()),
     fTableAlias (rhs.tableAlias()),
     fData (rhs.data()),
+    fTimeZone(rhs.timeZone()),
     fFunctor(rhs.fFunctor)
 {
     fFunctionParms.clear();
@@ -266,6 +267,7 @@ void FunctionColumn::serialize(messageqcpp::ByteStream& b) const
 
     b << fTableAlias;
     b << fData;
+    b << fTimeZone;
 }
 
 void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
@@ -297,8 +299,10 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
 
     b >> fTableAlias;
     b >> fData;
+    b >> fTimeZone;
     FuncExp* funcExp = FuncExp::instance();
     fFunctor = funcExp->getFunctor(fFunctionName);
+    fFunctor->timeZone(fTimeZone);
 
     // @bug 3506. Special treatment for rand() function. reset the seed
     Func_rand* rand = dynamic_cast<Func_rand*>(fFunctor);
@@ -338,8 +342,10 @@ bool FunctionColumn::operator==(const FunctionColumn& t) const
     if (fData != t.fData)
         return false;
 
+    if (fTimeZone != t.fTimeZone)
+        return false;
+
     return true;
-    return false;
 }
 
 bool FunctionColumn::operator==(const TreeNode* t) const

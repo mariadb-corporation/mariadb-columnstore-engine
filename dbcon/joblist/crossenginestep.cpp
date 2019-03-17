@@ -247,7 +247,7 @@ int64_t CrossEngineStep::convertValueNum(
     //                   bool nulFlag,
     //                   bool noRoundup )
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, false, true);
+    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, fTimeZone, false, true, false);
 
     // Out of range values are treated as NULL as discussed during design review.
     if (pushWarning)
@@ -348,6 +348,10 @@ int64_t CrossEngineStep::convertValueNum(
             break;
 
         case CalpontSystemCatalog::DATETIME:
+            rv = boost::any_cast<uint64_t>(anyVal);
+            break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
             rv = boost::any_cast<uint64_t>(anyVal);
             break;
 

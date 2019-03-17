@@ -88,7 +88,8 @@ JobStep::JobStep(const JobInfo& j) :
     fLocalQuery(j.localQuery),
     fQueryUuid(j.uuid),
     fProgress(0),
-    fStartTime(-1)
+    fStartTime(-1),
+    fTimeZone(j.timeZone)
 {
     QueryTeleServerParms tsp;
     string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));

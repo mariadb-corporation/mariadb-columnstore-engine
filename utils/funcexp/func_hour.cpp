@@ -109,6 +109,15 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            return m_time.hour;
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             isTime = true;

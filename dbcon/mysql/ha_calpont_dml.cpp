@@ -137,6 +137,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_DATE ||
                     (*field)->type() == MYSQL_TYPE_DATETIME ||
                     (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
                     (*field)->type() == MYSQL_TYPE_TIME )
                 vals.append("'");
 
@@ -168,6 +170,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_DATE ||
                     (*field)->type() == MYSQL_TYPE_DATETIME ||
                     (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
                     (*field)->type() == MYSQL_TYPE_TIME )
                 vals.append("'");
         }
@@ -409,6 +413,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
     pDMLPackage->set_TableName(name);
     name = table->s->db.str;
     pDMLPackage->set_SchemaName(name);
+    pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
 
     if (thd->lex->sql_command == SQLCOM_INSERT_SELECT)
         pDMLPackage->set_isInsertSelect(true);
@@ -914,6 +919,41 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
 
                         buf += table->field[colpos]->pack_length();
                     }
+
+                    break;
+                }
+
+                case CalpontSystemCatalog::TIMESTAMP:
+                {
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                    {
+                        fprintf(ci.filePtr, "%c", ci.delimiter);
+                    }
+                    else
+                    {
+                        const uchar* pos = buf;
+                        struct timeval tm;
+                        my_timestamp_from_binary(&tm, pos, table->field[colpos]->decimals());
+
+                        MySQLTime time;
+                        gmtSecToMySQLTime(tm.tv_sec, time, current_thd->variables.time_zone->get_name()->ptr());
+
+                        if (!tm.tv_usec)
+                        {
+                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
+                                    time.year, time.month, time.day,
+                                    time.hour, time.minute, time.second, ci.delimiter);
+                        }
+                        else
+                        {
+                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
+                                    time.year, time.month, time.day,
+                                    time.hour, time.minute, time.second,
+                                    tm.tv_usec, ci.delimiter);
+                        }
+                    }
+
+                    buf += table->field[colpos]->pack_length();
 
                     break;
                 }

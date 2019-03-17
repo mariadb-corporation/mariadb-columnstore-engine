@@ -497,6 +497,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
     b << fDJSPartitionSize;
     b << fUMMemLimit;
     b << (uint8_t) fIsDML;
+    b << fTimeZone;
 }
 
 void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
@@ -670,6 +671,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
     b >> fUMMemLimit;
     b >> tmp8;
     fIsDML = tmp8;
+    b >> fTimeZone;
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const

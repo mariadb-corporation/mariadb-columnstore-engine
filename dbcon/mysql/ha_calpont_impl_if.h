@@ -348,13 +348,13 @@ execplan::ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& no
 execplan::ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi);
 execplan::ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
 execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, uint32_t pseudoType);
-void addIntervalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castCharArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castDecimalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castTypeArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
+void addIntervalArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castCharArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castDecimalArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castTypeArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
 //void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
-execplan::ParseTree* buildRowPredicate(execplan::RowColumn* lhs, execplan::RowColumn* rhs, std::string predicateOp);
+execplan::ParseTree* buildRowPredicate(THD* thd, execplan::RowColumn* lhs, execplan::RowColumn* rhs, std::string predicateOp);
 bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan::RowColumn* lhs, Item_func* ifp);
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip);
 void collectAllCols(gp_walk_info& gwi, Item_field* ifp);
@@ -364,13 +364,13 @@ std::string getViewName(TABLE_LIST* table_ptr);
 bool buildConstPredicate(Item_func* ifp, execplan::ReturnedColumn* rhs, gp_walk_info* gwip);
 execplan::CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field);
 execplan::CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item);
-execplan::SPTP getIntervalType(int interval_type);
+execplan::SPTP getIntervalType(THD* thd, int interval_type);
 uint32_t isPseudoColumn(std::string funcName);
 void setDerivedTable(execplan::ParseTree* n);
-execplan::ParseTree* setDerivedFilter(execplan::ParseTree*& n,
+execplan::ParseTree* setDerivedFilter(THD* thd, execplan::ParseTree*& n,
                                       std::map<std::string, execplan::ParseTree*>& obj,
                                       execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
-void derivedTableOptimization(execplan::SCSEP& csep);
+void derivedTableOptimization(THD* thd, execplan::SCSEP& csep);
 
 #ifdef DEBUG_WALK_COND
 void debug_walk(const Item* item, void* arg);

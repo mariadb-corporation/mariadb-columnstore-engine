@@ -130,11 +130,11 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
 
 /* This looks like an inefficient way to get NULL values. Much easier ways
    to do it. */
-int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct)
+int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone)
 {
     int64_t n = 0;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, "", pushWarning, true);
+    boost::any anyVal = DataConvert::convertColumnData(ct, "", pushWarning, timeZone, true, false, false);
 
     switch (ct.colDataType)
     {
@@ -282,6 +282,10 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct)
             n = boost::any_cast<uint64_t>(anyVal);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            n = boost::any_cast<uint64_t>(anyVal);
+            break;
+
         case CalpontSystemCatalog::TIME:
             n = boost::any_cast<int64_t>(anyVal);
             break;
@@ -308,14 +312,14 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct)
     return n;
 }
 
-int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf)
+int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf, const string& timeZone)
 {
-    if (str.size() == 0 || isNull ) return valueNullNum(ct);
+    if (str.size() == 0 || isNull ) return valueNullNum(ct, timeZone);
 
     int64_t v = 0;
     rf = 0;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, false, true);
+    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, timeZone, false, true, false);
 
     switch (ct.colDataType)
     {
@@ -422,6 +426,10 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
             break;
 
         case CalpontSystemCatalog::DATETIME:
+            v = boost::any_cast<uint64_t>(anyVal);
+            break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
             v = boost::any_cast<uint64_t>(anyVal);
             break;
 
@@ -1824,7 +1832,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             try
             {
                 bool isNull = ConstantColumn::NULLDATA == cc->type();
-                value = convertValueNum(constval, ct, isNull, rf);
+                value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
 
                 if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                 {
@@ -1863,7 +1871,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
 #else
             bool isNull = ConstantColumn::NULLDATA == cc->type();
-            value = convertValueNum(constval, ct, isNull, rf);
+            value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
 
             if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
             {
@@ -2964,7 +2972,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;
                     bool isNull = ConstantColumn::NULLDATA == cc->type();
-                    value = convertValueNum(constval, ct, isNull, rf);
+                    value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
 
                     if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                     {

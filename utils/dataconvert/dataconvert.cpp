@@ -1065,7 +1065,6 @@ bool mysql_str_to_time( const string& input, Time& output, long decimals )
     return true;
 }
 
-
 bool stringToDateStruct( const string& data, Date& date )
 {
     bool isDate;
@@ -1109,9 +1108,76 @@ bool stringToTimeStruct(const string& data, Time& dtime, long decimals)
     return true;
 }
 
+bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const string& timeZone)
+{
+    // special handling for 0000-00-00 00:00:00
+    // "0" is sent by the server when checking for default value
+    // in the DDL. This is equivalent of 0000-00-00 00:00:00
+    if (data.substr(0, 19) == "0000-00-00 00:00:00" || data == "0")
+    {
+        timeStamp.second = 0;
+        timeStamp.msecond = 0;
+        return true;
+    }
+
+    // for alter table add column <columnname> timestamp,
+    // if the table is non-empty, then columnstore will apply
+    // default value to populate the new column
+    if (data == "current_timestamp() ON UPDATE current_timestamp()")
+    {
+        struct timeval tv;
+        gettimeofday(&tv, 0);
+        timeStamp.second = tv.tv_sec;
+        timeStamp.msecond = tv.tv_usec;
+        return true;
+    }
+
+    bool isDate;
+
+    DateTime dtime;
+
+    if ( !mysql_str_to_datetime( data, dtime, isDate ) )
+    {
+        timeStamp.reset();
+        return false;
+    }
+
+    if ( isDate )
+    {
+        dtime.hour = 0;
+        dtime.minute = 0;
+        dtime.second = 0;
+        dtime.msecond = 0;
+    }
+
+    MySQLTime m_time;
+    m_time.year = dtime.year;
+    m_time.month = dtime.month;
+    m_time.day = dtime.day;
+    m_time.hour = dtime.hour;
+    m_time.minute = dtime.minute;
+    m_time.second = dtime.second;
+    m_time.second_part = dtime.msecond;
+
+    bool isValid = true;
+    int64_t seconds = mySQLTimeToGmtSec(m_time, timeZone, isValid);
+
+    if (!isValid)
+    {
+        timeStamp.reset();
+        return false;
+    }
+
+    timeStamp.second = seconds;
+    timeStamp.msecond = m_time.second_part;
+
+    return true;
+
+}
+
 boost::any
 DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
-                               const std::string& dataOrig, bool& pushWarning, bool nulFlag, bool noRoundup, bool isUpdate )
+                               const std::string& dataOrig, bool& pushWarning, const std::string& timeZone, bool nulFlag, bool noRoundup, bool isUpdate)
 {
     boost::any value;
     std::string data( dataOrig );
@@ -1457,6 +1523,18 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                TimeStamp aTimestamp;
+
+                if (!stringToTimestampStruct(data, aTimestamp, timeZone))
+                {
+                    pushWarning = true;
+                }
+
+                value = (uint64_t) *(reinterpret_cast<uint64_t*>(&aTimestamp));
+            }
+            break;
 
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::CLOB:
@@ -1570,6 +1648,13 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             case CalpontSystemCatalog::DATETIME:
             {
                 uint64_t d = joblist::DATETIMENULL;
+                value = d;
+            }
+            break;
+
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                uint64_t d = joblist::TIMESTAMPNULL;
                 value = d;
             }
             break;
@@ -1929,6 +2014,186 @@ int64_t DataConvert::convertColumnDatetime(
 }
 
 //------------------------------------------------------------------------------
+// Convert timestamp string to binary timestamp.  Used by BulkLoad.
+// Most of this code is taken from DataConvert::convertColumnDatetime
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertColumnTimestamp(
+    const char* dataOrg,
+    CalpontDateTimeFormat datetimeFormat,
+    int& status,
+    unsigned int dataOrgLen,
+    const std::string& timeZone )
+{
+
+    std::string dataOrgTemp = dataOrg;
+    if (dataOrgTemp.substr(0, 19) == "0000-00-00 00:00:00")
+    {
+        return 0;
+    }
+
+    // this is the default value of the first timestamp field in a table,
+    // which is stored in the system catalog
+    if (strcmp(dataOrg, "current_timestamp() ON UPDATE current_timestamp()") == 0)
+    {
+        struct timeval tv;
+        char tmbuf[64];
+        gettimeofday(&tv, 0);
+        MySQLTime time;
+        gmtSecToMySQLTime(tv.tv_sec, time, timeZone);
+        sprintf(tmbuf, "%04d-%02d-%02d %02d:%02d:%02d.%06ld", time.year, time.month, time.day, time.hour, time.minute, time.second, tv.tv_usec);
+        dataOrg = tmbuf;
+        dataOrgLen = strlen(tmbuf);
+    }
+
+    status = 0;
+    const char* p;
+    p = dataOrg;
+    char fld[10];
+    int64_t value = 0;
+
+    if ( datetimeFormat != CALPONTDATETIME_ENUM )
+    {
+        status = -1;
+        return value;
+    }
+
+    unsigned int dataLen = dataOrgLen;
+
+    if ((dataOrgLen > 0) && (dataOrg[0] == ' '))
+    {
+        unsigned nblanks = 0;
+
+        for (unsigned nn = 0; nn < dataOrgLen; nn++)
+        {
+            if (dataOrg[nn] == ' ')
+                nblanks++;
+            else
+                break;
+        }
+
+        p       = dataOrg    + nblanks;
+        dataLen = dataOrgLen - nblanks;
+    }
+
+    if ( dataLen < 10)
+    {
+        status = -1;
+        return value;
+    }
+
+    int inYear, inMonth, inDay, inHour, inMinute, inSecond, inMicrosecond;
+    memcpy( fld, p, 4);
+    fld[4] = '\0';
+
+    inYear = strtol(fld, 0, 10);
+
+    memcpy( fld, p + 5, 2);
+    fld[2] = '\0';
+
+    inMonth = strtol(fld, 0, 10);
+
+    memcpy( fld, p + 8, 2);
+    fld[2] = '\0';
+
+    inDay = strtol(fld, 0, 10);
+
+    inHour        = 0;
+    inMinute      = 0;
+    inSecond      = 0;
+    inMicrosecond = 0;
+
+    if (dataLen > 12)
+    {
+        // For backwards compatability we still allow leading blank
+        if ((!isdigit(p[11]) && (p[11] != ' ')) ||
+                !isdigit(p[12]))
+        {
+            status = -1;
+            return value;
+        }
+
+        memcpy( fld, p + 11, 2);
+        fld[2] = '\0';
+
+        inHour = strtol(fld, 0, 10);
+
+        if (dataLen > 15)
+        {
+            if (!isdigit(p[14]) || !isdigit(p[15]))
+            {
+                status = -1;
+                return value;
+            }
+
+            memcpy( fld, p + 14, 2);
+            fld[2] = '\0';
+
+            inMinute = strtol(fld, 0, 10);
+
+            if (dataLen > 18)
+            {
+                if (!isdigit(p[17]) || !isdigit(p[18]))
+                {
+                    status = -1;
+                    return value;
+                }
+
+                memcpy( fld, p + 17, 2);
+                fld[2] = '\0';
+
+                inSecond = strtol(fld, 0, 10);
+
+                if (dataLen > 20)
+                {
+                    unsigned int microFldLen = dataLen - 20;
+
+                    if (microFldLen > (sizeof(fld) - 1))
+                        microFldLen = sizeof(fld) - 1;
+
+                    memcpy( fld, p + 20, microFldLen);
+                    fld[microFldLen] = '\0';
+                    inMicrosecond = strtol(fld, 0, 10);
+                }
+            }
+        }
+    }
+
+    if ( isDateValid (inDay, inMonth, inYear) &&
+            isDateTimeValid (inHour, inMinute, inSecond, inMicrosecond) )
+    {
+        MySQLTime m_time;
+        m_time.year = inYear;
+        m_time.month = inMonth;
+        m_time.day = inDay;
+        m_time.hour = inHour;
+        m_time.minute = inMinute;
+        m_time.second = inSecond;
+        m_time.second_part = inMicrosecond;
+
+        bool isValid = true;
+        int64_t seconds = mySQLTimeToGmtSec(m_time, timeZone, isValid);
+
+        if (!isValid)
+        {
+            status = -1;
+            return value;
+        }
+
+        TimeStamp timestamp;
+        timestamp.second = seconds;
+        timestamp.msecond = m_time.second_part;
+
+        memcpy( &value, &timestamp, 8 );
+    }
+    else
+    {
+        status = -1;
+    }
+
+    return value;
+}
+
+//------------------------------------------------------------------------------
 // Convert time string to binary time.  Used by BulkLoad.
 // Most of this is taken from str_to_time in sql-common/my_time.c
 //------------------------------------------------------------------------------
@@ -2097,6 +2362,14 @@ bool DataConvert::isColumnTimeValid( int64_t time )
     return isTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
 }
 
+bool DataConvert::isColumnTimeStampValid( int64_t timeStamp )
+{
+    TimeStamp dt;
+    memcpy(&dt, &timeStamp, sizeof(uint64_t));
+
+    return isTimestampValid(dt.second, dt.msecond);
+}
+
 std::string DataConvert::dateToString( int  datevalue )
 {
     // @bug 4703 abandon multiple ostringstream's for conversion
@@ -2127,6 +2400,34 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
     {
         // Pad start with zeros
         sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
+    }
+
+    return buf;
+}
+
+std::string DataConvert::timestampToString( long long  timestampvalue, const std::string& timezone, long decimals )
+{
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    TimeStamp timestamp(timestampvalue);
+    int64_t seconds = timestamp.second;
+
+    MySQLTime time;
+    gmtSecToMySQLTime(seconds, time, timezone);
+
+    const int TIMESTAMPTOSTRING_LEN = 28; // YYYY-MM-DD HH:MM:SS.mmmmmm\0
+    char buf[TIMESTAMPTOSTRING_LEN];
+
+    sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", time.year, time.month, time.day, time.hour, time.minute, time.second);
+
+    if (timestamp.msecond && decimals)
+    {
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, timestamp.msecond);
     }
 
     return buf;
@@ -2182,6 +2483,20 @@ std::string DataConvert::datetimeToString1( long long  datetimevalue )
     char buf[DATETIMETOSTRING1_LEN];
 
     sprintf(buf, "%04d%02d%02d%02d%02d%02d%06d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.msecond);
+    return buf;
+}
+
+std::string DataConvert::timestampToString1( long long  timestampvalue, const std::string& timezone )
+{
+    const int TIMESTAMPTOSTRING1_LEN = 22; // YYYYMMDDHHMMSSmmmmmm\0
+    char buf[TIMESTAMPTOSTRING1_LEN];
+
+    TimeStamp timestamp(timestampvalue);
+    int64_t seconds = timestamp.second;
+    MySQLTime time;
+    gmtSecToMySQLTime(seconds, time, timezone);
+
+    sprintf(buf, "%04d%02d%02d%02d%02d%02d%06d", time.year, time.month, time.day, time.hour, time.minute, time.second, timestamp.msecond);
     return buf;
 }
 
@@ -2418,6 +2733,11 @@ int64_t DataConvert::datetimeToInt(const string& datetime)
     return stringToDatetime(datetime);
 }
 
+int64_t DataConvert::timestampToInt(const string& timestamp, const string& timeZone)
+{
+    return stringToTimestamp(timestamp, timeZone);
+}
+
 int64_t DataConvert::timeToInt(const string& time)
 {
     return stringToTime(time);
@@ -2439,6 +2759,16 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
 
     if ( stringToDatetimeStruct( data, dtime, date ) )
         return *(reinterpret_cast<uint64_t*>(&dtime));
+    else
+        return -1;
+}
+
+int64_t DataConvert::stringToTimestamp(const string& data, const string& timeZone)
+{
+    TimeStamp aTimestamp;
+
+    if ( stringToTimestampStruct( data, aTimestamp, timeZone ) )
+        return *(reinterpret_cast<uint64_t*>(&aTimestamp));
     else
         return -1;
 }
@@ -2997,6 +3327,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
 
                     case CalpontSystemCatalog::TIME:
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIMESTAMP:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.colWidth = 26;
                         break;
@@ -3065,6 +3396,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
 
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIMESTAMP:
                     case CalpontSystemCatalog::TIME:
                     default:
                         break;
@@ -3095,6 +3427,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UDOUBLE:
                     case CalpontSystemCatalog::TIME:
                     case CalpontSystemCatalog::LONGDOUBLE:
+                    case CalpontSystemCatalog::TIMESTAMP:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.scale = 0;
                         unionedType.colWidth = 26;
@@ -3125,6 +3458,58 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                 break;
             }
 
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                switch (unionedType.colDataType)
+                {
+                    case CalpontSystemCatalog::TINYINT:
+                    case CalpontSystemCatalog::SMALLINT:
+                    case CalpontSystemCatalog::MEDINT:
+                    case CalpontSystemCatalog::INT:
+                    case CalpontSystemCatalog::BIGINT:
+                    case CalpontSystemCatalog::DECIMAL:
+                    case CalpontSystemCatalog::FLOAT:
+                    case CalpontSystemCatalog::DOUBLE:
+                    case CalpontSystemCatalog::UTINYINT:
+                    case CalpontSystemCatalog::USMALLINT:
+                    case CalpontSystemCatalog::UMEDINT:
+                    case CalpontSystemCatalog::UINT:
+                    case CalpontSystemCatalog::UBIGINT:
+                    case CalpontSystemCatalog::UDECIMAL:
+                    case CalpontSystemCatalog::UFLOAT:
+                    case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::TIME:
+                    case CalpontSystemCatalog::DATETIME:
+                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
+                        unionedType.scale = 0;
+                        unionedType.colWidth = 26;
+                        break;
+
+                    case CalpontSystemCatalog::DATE:
+                        unionedType.colDataType = CalpontSystemCatalog::TIMESTAMP;
+                        unionedType.colWidth = types[i].colWidth;
+                        break;
+
+                    case CalpontSystemCatalog::CHAR:
+                        if (unionedType.colWidth < 26)
+                            unionedType.colWidth = 26;
+
+                        break;
+
+                    case CalpontSystemCatalog::VARCHAR:
+                        if (unionedType.colWidth < 27)
+                            unionedType.colWidth = 27;
+
+                        break;
+
+                    case CalpontSystemCatalog::TIMESTAMP:
+                    default:
+                        break;
+                }
+
+                break;
+            }
+
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UFLOAT:
@@ -3139,6 +3524,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                         break;
 
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIMESTAMP:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.scale = 0;
                         unionedType.colWidth = 26;
@@ -3273,6 +3659,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                         break;
 
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIMESTAMP:
                         unionedType.colWidth = (types[i].colWidth > 26) ? types[i].colWidth : 26;
                         break;
 

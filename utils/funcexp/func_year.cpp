@@ -61,6 +61,15 @@ int64_t Func_year::getIntVal(rowgroup::Row& row,
             val = parm[0]->data()->getIntVal(row, isNull);
             return (unsigned)((val >> 48) & 0xffff);
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            return m_time.year;
+        }
+
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<DateTime>(nowDatetime());

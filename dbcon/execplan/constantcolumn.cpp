@@ -195,7 +195,8 @@ ConstantColumn::ConstantColumn( const ConstantColumn& rhs):
     ReturnedColumn(rhs),
     fConstval (rhs.constval()),
     fType (rhs.type()),
-    fData (rhs.data())
+    fData (rhs.data()),
+    fTimeZone (rhs.timeZone())
 {
     sequence(rhs.sequence());
     fAlias = rhs.alias();
@@ -306,6 +307,7 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
     b << (uint32_t) fType;
     //b << fAlias;
     b << fData;
+    b << fTimeZone;
     b << static_cast<const ByteStream::doublebyte>(fReturnAll);
     b << (uint64_t)fResult.intVal;
     b << fResult.uintVal;
@@ -329,6 +331,7 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fConstval;
     b >> (uint32_t&) fType;
     b >> fData;
+    b >> fTimeZone;
     b >> reinterpret_cast< ByteStream::doublebyte&>(fReturnAll);
     b >> (uint64_t&)fResult.intVal;
     b >> fResult.uintVal;
@@ -363,6 +366,9 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
         return false;
 
     if (fReturnAll != t.fReturnAll)
+        return false;
+
+    if (fTimeZone != t.fTimeZone)
         return false;
 
     return true;

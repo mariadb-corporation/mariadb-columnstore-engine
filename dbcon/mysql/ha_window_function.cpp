@@ -144,22 +144,25 @@ ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi
 
         // put interval val column to bound
         (dynamic_cast<FunctionColumn*>(rc))->functionName(funcName);
+        (dynamic_cast<FunctionColumn*>(rc))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
         sptp.reset(new ParseTree(order->clone()));
         funcParms.push_back(sptp);
         sptp.reset(new ParseTree(intervalCol->val()->clone()));
         funcParms.push_back(sptp);
-        funcParms.push_back(getIntervalType(intervalCol->intervalType()));
+        funcParms.push_back(getIntervalType(gwi.thd, intervalCol->intervalType()));
         SRCP srcp(intervalCol->val());
         bound.fVal = srcp;
 
         if (addOp)
         {
             sptp.reset(new ParseTree(new ConstantColumn("ADD")));
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(sptp);
         }
         else
         {
             sptp.reset(new ParseTree(new ConstantColumn("SUB")));
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(sptp);
         }
 
@@ -181,6 +184,7 @@ ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi
     else
         aop = new ArithmeticOperator("-");
 
+    aop->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     ParseTree* pt = new ParseTree(aop);
     ParseTree* lhs = 0, *rhs = 0;
     lhs = new ParseTree(order->clone());
@@ -348,6 +352,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     Item_sum* item_sum = wf->window_func();
     string funcName = ConvertFuncName(item_sum);
     WindowFunctionColumn* ac = new WindowFunctionColumn(funcName);
+    ac->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     ac->distinct(item_sum->has_with_distinct());
     Window_spec* win_spec = wf->window_spec;
     SRCP srcp;
@@ -441,33 +446,42 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
             char sRespectNulls[18];
             sprintf(sRespectNulls, "%lu", bRespectNulls);
             srcp.reset(new ConstantColumn(sRespectNulls, (uint64_t)bRespectNulls, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             break;
         }
 
         case Item_sum::FIRST_VALUE_FUNC:
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // OFFSET (always one)
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // FROM_FIRST
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             break;
 
         case Item_sum::LAST_VALUE_FUNC:
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // OFFSET (always one)
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("0", (uint64_t)0, ConstantColumn::NUM)); // FROM_LAST
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             break;
 
         case Item_sum::NTH_VALUE_FUNC:
             // When the front end supports these paramters, this needs modification
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // FROM FIRST/LAST 1 => FIRST
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             break;
 
@@ -475,8 +489,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         case Item_sum::LAG_FUNC:
             // When the front end supports these paramters, this needs modification
             srcp.reset(new ConstantColumn("", ConstantColumn::NULLDATA)); // Default to fill in for NULL values
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
             funcParms.push_back(srcp);
             break;
 
@@ -622,6 +638,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
                         case CalpontSystemCatalog::TIME:
+                        case CalpontSystemCatalog::TIMESTAMP:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) == NULL)
@@ -674,6 +691,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
                         case CalpontSystemCatalog::TIME:
+                        case CalpontSystemCatalog::TIMESTAMP:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) == NULL)
@@ -826,6 +844,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                             bound = 1;
 
                         srcp.reset(new ConstantColumn((int64_t)bound));
+                        (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
                         frm.fStart.fVal = srcp;
                         frm.fStart.fBound.reset(buildBoundExp(frm.fStart, srcp, gwi));
 
@@ -841,6 +860,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                             bound = 1;
 
                         srcp.reset(new ConstantColumn((int64_t)bound));
+                        (dynamic_cast<ConstantColumn*>(srcp.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
                         frm.fEnd.fVal = srcp;
                         frm.fEnd.fBound.reset(buildBoundExp(frm.fEnd, srcp, gwi));
 

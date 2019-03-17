@@ -66,6 +66,7 @@ int UpdateDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << fDMLStatement;
     bytestream << fSQLStatement;
     bytestream << fSchemaName;
+    bytestream << fTimeZone;
     bytestream << (uint8_t)fIsFromCol;
 
     if (fTable != 0)
@@ -102,6 +103,7 @@ int UpdateDMLPackage::read(messageqcpp::ByteStream& bytestream)
     bytestream >> fDMLStatement;
     bytestream >> fSQLStatement;
     bytestream >> fSchemaName;
+    bytestream >> fTimeZone;
     uint8_t isFromCol;
     bytestream >> isFromCol;
     fIsFromCol = (isFromCol != 0);

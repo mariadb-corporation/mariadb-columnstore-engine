@@ -190,6 +190,10 @@ public:
     {
         return fConsoleOutput;
     }
+    const std::string& getTimeZone() const
+    {
+        return fTimeZone;
+    }
 
 
 private:	// variables for SplitterApp
@@ -294,6 +298,7 @@ private:	// variables for SplitterApp
     bool fbTruncationAsError; // Treat string truncation as error
     boost::uuids::uuid fUUID;
     bool fConsoleOutput;    // If false, no output to console.
+    std::string fTimeZone;      // Timezone to use for TIMESTAMP datatype
 };
 //----------------------------------------------------------------------
 

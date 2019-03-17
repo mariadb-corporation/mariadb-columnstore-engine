@@ -72,7 +72,9 @@ ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(ope
 {
 }
 
-ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs): Operator(rhs)
+ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
+    Operator(rhs),
+    fTimeZone(rhs.timeZone())
 {
 }
 
@@ -100,21 +102,26 @@ ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
 void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 {
     b << (ObjectReader::id_t) ObjectReader::ARITHMETICOPERATOR;
+    b << fTimeZone;
     Operator::serialize(b);
 }
 
 void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 {
     ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
+    b >> fTimeZone;
     Operator::unserialize(b);
 }
 
 bool ArithmeticOperator::operator==(const ArithmeticOperator& t) const
 {
-    if (data() == t.data())
-        return true;
+    if (data() != t.data())
+        return false;
 
-    return false;
+    if (timeZone() != t.timeZone())
+        return false;
+
+    return true;
 }
 
 bool ArithmeticOperator::operator==(const TreeNode* t) const

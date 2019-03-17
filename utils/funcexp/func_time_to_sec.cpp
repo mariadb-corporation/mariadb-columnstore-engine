@@ -70,6 +70,19 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
             sec = (int32_t)((val >> 20) & 0x3f);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            val = parm[0]->data()->getIntVal(row, isNull);
+            TimeStamp timestamp(val);
+            int64_t seconds = timestamp.second;
+            MySQLTime time;
+            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            hour = time.hour;
+            min = time.minute;
+            sec = time.second;
+            break;
+        }
+
         case CalpontSystemCatalog::TIME:
             val = parm[0]->data()->getTimeIntVal(row, isNull);
 

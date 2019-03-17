@@ -423,6 +423,15 @@ public:
         fOnClauseFilter = b;
     }
 
+    void timeZone(const std::string& timezone)
+    {
+        fTimeZone = timezone;
+    }
+    const std::string timeZone() const
+    {
+        return fTimeZone;
+    }
+
     static ThreadPool jobstepThreadPool;
 protected:
 
@@ -490,6 +499,7 @@ protected:
     uint64_t fProgress;
     int64_t  fStartTime;
     int64_t  fLastStepTeleTime;
+    std::string fTimeZone;
 
 private:
     static boost::mutex fLogMutex;

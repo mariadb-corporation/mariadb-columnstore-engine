@@ -360,6 +360,7 @@ struct JobInfo
     int64_t largeSideLimit;
     uint64_t partitionSize;
     bool isDML;
+    std::string timeZone;
 
 private:
     //defaults okay

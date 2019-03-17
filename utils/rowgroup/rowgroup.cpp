@@ -709,6 +709,10 @@ void Row::initToNull()
                 *((uint64_t*) &data[offsets[i]]) = joblist::DATETIMENULL;
                 break;
 
+            case CalpontSystemCatalog::TIMESTAMP:
+                *((uint64_t*) &data[offsets[i]]) = joblist::TIMESTAMPNULL;
+                break;
+
             case CalpontSystemCatalog::TIME:
                 *((uint64_t*) &data[offsets[i]]) = joblist::TIMENULL;
                 break;
@@ -847,6 +851,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 
         case CalpontSystemCatalog::DATETIME:
             return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::DATETIMENULL);
+
+        case CalpontSystemCatalog::TIMESTAMP:
+            return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::TIMESTAMPNULL);
 
         case CalpontSystemCatalog::TIME:
             return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::TIMENULL);

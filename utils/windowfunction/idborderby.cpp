@@ -318,6 +318,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
 
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             case CalpontSystemCatalog::TIME:
             {
                 Compare* c = new UintCompare(*i);
@@ -451,6 +452,7 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::UBIGINT:
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             case CalpontSystemCatalog::TIME:
             {
                 // equal compare. ignore sign and null

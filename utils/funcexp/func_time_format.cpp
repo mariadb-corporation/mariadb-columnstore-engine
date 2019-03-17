@@ -72,6 +72,19 @@ string Func_time_format::getStrVal(rowgroup::Row& row,
             msec = (uint32_t)((val & 0xfffff));
             break;
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            hour = m_time.hour;
+            min = m_time.minute;
+            sec = m_time.second;
+            msec = timestamp.msecond;
+            break;
+        }
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:

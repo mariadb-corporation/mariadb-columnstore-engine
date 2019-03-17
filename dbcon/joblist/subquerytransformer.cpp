@@ -245,9 +245,10 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
                 fVtable.columnType(ct, i);
             }
         }
-        // MySQL time/date/datetime type is different from IDB type
+        // MySQL timestamp/time/date/datetime type is different from IDB type
         else if (colDataTypeInRg == CalpontSystemCatalog::DATE ||
                  colDataTypeInRg == CalpontSystemCatalog::DATETIME ||
+                 colDataTypeInRg == CalpontSystemCatalog::TIMESTAMP ||
                  colDataTypeInRg == CalpontSystemCatalog::TIME)
         {
             ct.colWidth = row.getColumnWidth(i);

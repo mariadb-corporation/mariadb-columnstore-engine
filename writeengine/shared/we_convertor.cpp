@@ -367,9 +367,10 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
             internalType = WriteEngine::WR_FLOAT;
             break;
 
-        // Map BIGINT and DATETIME to WR_LONGLONG
+        // Map BIGINT, DATETIME, TIMESTAMP, and TIME to WR_LONGLONG
         case CalpontSystemCatalog::BIGINT :
         case CalpontSystemCatalog::DATETIME :
+        case CalpontSystemCatalog::TIMESTAMP :
         case CalpontSystemCatalog::TIME :
             internalType = WriteEngine::WR_LONGLONG;
             break;
@@ -429,7 +430,7 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
             internalType = WriteEngine::WR_UINT;
             break;
 
-        // Map UBIGINT to WR_ULONGLONG
+        // Map UBIGINT, TIMESTAMP to WR_ULONGLONG
         case CalpontSystemCatalog::UBIGINT:
             internalType = WriteEngine::WR_ULONGLONG;
             break;
@@ -481,7 +482,7 @@ void Convertor::convertWEColType(ColType internalType,
             dataType = CalpontSystemCatalog::FLOAT;
             break;
 
-        // Map BIGINT and DATETIME to WR_LONGLONG
+        // Map BIGINT, DATETIME, TIME, and TIMESTAMP to WR_LONGLONG
         case WriteEngine::WR_LONGLONG :
             dataType = CalpontSystemCatalog::BIGINT;
             break;
@@ -531,7 +532,7 @@ void Convertor::convertWEColType(ColType internalType,
             dataType = CalpontSystemCatalog::UINT;
             break;
 
-        // Map UBIGINT to WR_ULONGLONG
+        // Map UBIGINT and TIMESTAMP to WR_ULONGLONG
         case WriteEngine::WR_ULONGLONG:
             dataType = CalpontSystemCatalog::UBIGINT;
             break;
@@ -595,9 +596,10 @@ void Convertor::convertColType(ColStruct* curStruct)
             *internalType = WriteEngine::WR_FLOAT;
             break;
 
-        // Map BIGINT and DATETIME to WR_LONGLONG
+        // Map BIGINT, DATETIME, TIME, and TIMESTAMP to WR_LONGLONG
         case CalpontSystemCatalog::BIGINT :
         case CalpontSystemCatalog::DATETIME :
+        case CalpontSystemCatalog::TIMESTAMP :
         case CalpontSystemCatalog::TIME :
             *internalType = WriteEngine::WR_LONGLONG;
             break;
@@ -767,6 +769,7 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
 
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIME:
+        case CalpontSystemCatalog::TIMESTAMP:
             newWidth = 8;
             break;
 

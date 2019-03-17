@@ -85,6 +85,17 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            year = m_time.year;
+            month = m_time.month;
+            day = m_time.day;
+            return helpers::calc_mysql_daynr(year, month, day);
+        }
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
         {

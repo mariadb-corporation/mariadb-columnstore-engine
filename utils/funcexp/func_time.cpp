@@ -118,6 +118,23 @@ string Func_time::getStrVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            Time time;
+            time.hour = m_time.hour;
+            time.minute = m_time.minute;
+            time.second = m_time.second;
+            time.is_neg = 0;
+            time.day = 0;
+            time.msecond = 0;
+            val = *(reinterpret_cast<int64_t*>(&time));
+            break;
+        }
+
         default:
         {
             isNull = true;

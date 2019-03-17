@@ -164,6 +164,7 @@ uint64_t BlockOp::getEmptyRowValue(
         case CalpontSystemCatalog::VARCHAR :
         case CalpontSystemCatalog::DATE :
         case CalpontSystemCatalog::DATETIME :
+        case CalpontSystemCatalog::TIMESTAMP :
         default:
             offset = ( colDataType == CalpontSystemCatalog::VARCHAR ) ? -1 : 0;
             emptyVal = joblist::CHAR1EMPTYROW;

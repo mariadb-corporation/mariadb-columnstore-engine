@@ -291,6 +291,14 @@ public:
             return fData->getDatetimeIntVal(row, isNull);
     }
 
+    inline int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        if (fLeft && fRight)
+            return (reinterpret_cast<Operator*>(fData))->getTimestampIntVal(row, isNull, fLeft, fRight);
+        else
+            return fData->getTimestampIntVal(row, isNull);
+    }
+
     inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {
         if (fLeft && fRight)

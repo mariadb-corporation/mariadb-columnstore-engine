@@ -2258,6 +2258,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
         bpp->fAggregateRG = fAggregateRG;
         bpp->fAggregator.reset(new RowAggregation(
                                    fAggregator->getGroupByCols(), fAggregator->getAggFunctions()));
+        bpp->fAggregator->timeZone(fAggregator->timeZone());
     }
 
     bpp->sendRidsAtDelivery = sendRidsAtDelivery;

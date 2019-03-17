@@ -247,6 +247,24 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
             time = parm[0]->data()->getDatetimeIntVal(row, isNull);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            DateTime dt;
+            dt.year = m_time.year;
+            dt.month = m_time.month;
+            dt.day = m_time.day;
+            dt.hour = m_time.hour;
+            dt.minute = m_time.minute;
+            dt.second = m_time.second;
+            dt.msecond = timestamp.msecond;
+            time =  *(reinterpret_cast<uint64_t*>(&dt));
+            break;
+        }
+
         case CalpontSystemCatalog::TIME:
             time = parm[0]->data()->getTimeIntVal(row, isNull);
             isTime = true;

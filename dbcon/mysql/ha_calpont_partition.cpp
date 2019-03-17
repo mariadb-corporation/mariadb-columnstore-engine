@@ -128,6 +128,9 @@ string name(CalpontSystemCatalog::ColType& ct)
         case CalpontSystemCatalog::TIME:
             return "TIME";
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            return "TIMESTAMP";
+
         case CalpontSystemCatalog::DECIMAL:
             return "DECIMAL";
 
@@ -208,6 +211,7 @@ bool CP_type(CalpontSystemCatalog::ColType& ct)
             ct.colDataType == CalpontSystemCatalog::DATE ||
             ct.colDataType == CalpontSystemCatalog::DATETIME ||
             ct.colDataType == CalpontSystemCatalog::TIME ||
+            ct.colDataType == CalpontSystemCatalog::TIMESTAMP ||
             ct.colDataType == CalpontSystemCatalog::DECIMAL ||
             ct.colDataType == CalpontSystemCatalog::UTINYINT ||
             ct.colDataType == CalpontSystemCatalog::USMALLINT ||
@@ -268,6 +272,10 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
             oss << DataConvert::datetimeToString(v);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            oss << DataConvert::timestampToString(v, current_thd->variables.time_zone->get_name()->ptr());
+            break;
+
         case CalpontSystemCatalog::TIME:
             oss << DataConvert::timeToString(v);
 
@@ -326,7 +334,7 @@ const int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& 
     int64_t v = 0;
     bool pushWarning = false;
     rf = 0;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, false, true);
+    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, current_thd->variables.time_zone->get_name()->ptr(), false, true, false);
 
     switch (ct.colDataType)
     {
@@ -393,6 +401,7 @@ const int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& 
             v = boost::any_cast<uint32_t>(anyVal);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::DATETIME:
             v = boost::any_cast<uint64_t>(anyVal);
             break;

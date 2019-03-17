@@ -288,6 +288,7 @@ inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
@@ -321,6 +322,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (joblist::CHAR4EMPTYROW == *val);
 
@@ -348,6 +350,7 @@ inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (joblist::CHAR2EMPTYROW == *val);
 
@@ -374,6 +377,7 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (*val == joblist::CHAR1EMPTYROW);
 
@@ -405,6 +409,7 @@ inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
@@ -442,6 +447,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (joblist::DATENULL == *val);
 
@@ -469,6 +475,7 @@ inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (joblist::CHAR2NULL == *val);
 
@@ -495,6 +502,7 @@ inline bool isNullVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (*val == joblist::CHAR1NULL);
 
@@ -558,6 +566,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
             case CalpontSystemCatalog::BIGINT:
             case CalpontSystemCatalog::DATETIME:
             case CalpontSystemCatalog::TIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:

@@ -356,7 +356,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, isNULL);
+                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -1235,7 +1235,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, isNULL);
+                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -1782,6 +1782,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                             case execplan::CalpontSystemCatalog::BIGINT:
                             case execplan::CalpontSystemCatalog::DATETIME:
                             case execplan::CalpontSystemCatalog::TIME:
+                            case execplan::CalpontSystemCatalog::TIMESTAMP:
                             case execplan::CalpontSystemCatalog::UBIGINT:
                                 bs >> val64;
 
@@ -2689,6 +2690,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
     CalpontSystemCatalog::OID oid = 0;
     CalpontSystemCatalog::ROPair tableRO;
 
+    std::string timeZone = cpackages[txnId].get_TimeZone();
+
     try
     {
         tableRO =  systemCatalogPtr->tableRID(tableName);
@@ -2981,6 +2984,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         {
                             intColVal = row.getUintField<8>(fetchColPos);
                             value = DataConvert::datetimeToString(intColVal, colType.precision);
+                            break;
+                        }
+
+                        case CalpontSystemCatalog::TIMESTAMP:
+                        {
+                            intColVal = row.getUintField<8>(fetchColPos);
+                            value = DataConvert::timestampToString(intColVal, timeZone, colType.precision);
                             break;
                         }
 
@@ -3321,6 +3331,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                 break;
                             }
 
+                            case CalpontSystemCatalog::TIMESTAMP:
+                            {
+                                intColVal = row.getUintField<8>(fetchColPos);
+                                value = DataConvert::timestampToString(intColVal, timeZone, colType.precision);
+                                break;
+                            }
+
                             case CalpontSystemCatalog::TIME:
                             {
                                 intColVal = row.getIntField<8>(fetchColPos);
@@ -3495,7 +3512,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, isNull);
+                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3527,7 +3544,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, value, pushWarn, isNull);
+                            datavalue = DataConvert::convertColumnData(colType, value, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3568,7 +3585,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 string inData (columnsUpdated[j]->get_Data());
 
                 if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData == "0000-00-00")) ||
-                        ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (inData == "0000-00-00 00:00:00")))
+                        ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (inData == "0000-00-00 00:00:00")) ||
+                        ((colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) && (inData == "0000-00-00 00:00:00")))
                 {
                     isNull = true;
                 }
@@ -3623,7 +3641,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, isNull);
+                            datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3669,7 +3687,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, isNull);
+                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3702,7 +3720,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 {
                     try
                     {
-                        datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, isNull, false, true);
+                        datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, true);
                     }
                     catch (exception& ex)
                     {

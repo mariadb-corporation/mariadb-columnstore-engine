@@ -73,6 +73,15 @@ int64_t Func_monthname::getDatetimeIntVal(rowgroup::Row& row,
     return val;
 }
 
+int64_t Func_monthname::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    uint32_t val = getIntVal(row, parm, isNull, ct);
+    return val;
+}
+
 int64_t Func_monthname::getIntVal(rowgroup::Row& row,
                                   FunctionParm& parm,
                                   bool& isNull,
@@ -91,6 +100,16 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DATETIME:
             val = parm[0]->data()->getIntVal(row, isNull);
             return (unsigned)((val >> 44) & 0xf);
+
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            val = parm[0]->data()->getIntVal(row, isNull);
+            TimeStamp timestamp(val);
+            int64_t seconds = timestamp.second;
+            MySQLTime time;
+            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            return time.month;
+        }
 
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:

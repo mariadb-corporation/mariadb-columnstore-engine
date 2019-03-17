@@ -1168,6 +1168,7 @@ bool pColScanStep::isEmptyVal(const uint8_t* val8) const
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIME:
+        case CalpontSystemCatalog::TIMESTAMP:
             if (width == 1)
             {
                 return (*val8 == joblist::CHAR1EMPTYROW);

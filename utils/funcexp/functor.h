@@ -71,6 +71,16 @@ public:
     {
         fFuncName = funcName;
     }
+
+    const std::string timeZone() const
+    {
+        return fTimeZone;
+    }
+    void timeZone(const std::string timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
     virtual execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) = 0;
 
     virtual int64_t getIntVal(rowgroup::Row& row,
@@ -125,6 +135,14 @@ public:
         return intToDatetime(getIntVal(row, fp, isNull, op_ct));
     }
 
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row,
+                                       FunctionParm& fp,
+                                       bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return intToTimestamp(getIntVal(row, fp, isNull, op_ct));
+    }
+
     virtual int64_t getTimeIntVal(rowgroup::Row& row,
                                   FunctionParm& fp,
                                   bool& isNull,
@@ -167,10 +185,12 @@ public:
 protected:
     virtual uint32_t stringToDate(std::string);
     virtual uint64_t stringToDatetime(std::string);
+    virtual uint64_t stringToTimestamp(std::string);
     virtual int64_t stringToTime(std::string);
 
     virtual uint32_t intToDate(int64_t);
     virtual uint64_t intToDatetime(int64_t);
+    virtual uint64_t intToTimestamp(int64_t);
     virtual int64_t intToTime(int64_t);
 
     virtual std::string intToString(int64_t);
@@ -182,6 +202,7 @@ protected:
     virtual int64_t addTime(dataconvert::Time& dt1, dataconvert::Time& dt2);
 
     std::string fFuncName;
+    std::string fTimeZone;
 
 private:
     //defaults okay

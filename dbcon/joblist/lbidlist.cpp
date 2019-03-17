@@ -511,6 +511,7 @@ bool LBIDList::CasualPartitionDataType(const CalpontSystemCatalog::ColDataType t
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::UTINYINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UDECIMAL:

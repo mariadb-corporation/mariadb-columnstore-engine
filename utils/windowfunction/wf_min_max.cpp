@@ -77,6 +77,7 @@ boost::shared_ptr<WindowFunctionType> WF_min_max<T>::makeFunction(int id, const 
         case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
         {
             func.reset(new WF_min_max<uint64_t>(id, name));

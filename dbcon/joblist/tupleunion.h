@@ -201,6 +201,7 @@ private:
     bool runRan, joinRan;
 
     boost::shared_ptr<int64_t> sessionMemLimit;
+    std::string fTimeZone;
 };
 
 }

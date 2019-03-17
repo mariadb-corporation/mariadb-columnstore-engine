@@ -106,6 +106,7 @@ execplan::ParseTree* ScalarSub::transform()
     {
         fSub = (Item_subselect*)(fFunc->arguments()[0]);
         fColumn.reset(new ConstantColumn("", ConstantColumn::NULLDATA));
+        (dynamic_cast<ConstantColumn*>(fColumn.get()))->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
         delete rhs;
         return buildParseTree(op);
     }
@@ -171,6 +172,7 @@ execplan::ParseTree* ScalarSub::transform_between()
         SOP sop;
         sop.reset(op_LE);
         rhs = new ParseTree(new SimpleFilter(sop, fColumn.get(), op3));
+        (dynamic_cast<SimpleFilter*>(rhs->data()))->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
     }
 
     SubSelect* sub1 = dynamic_cast<SubSelect*>(op2);
@@ -186,6 +188,7 @@ execplan::ParseTree* ScalarSub::transform_between()
         SOP sop;
         sop.reset(op_GE);
         lhs = new ParseTree(new SimpleFilter(sop, fColumn.get(), op2));
+        (dynamic_cast<SimpleFilter*>(lhs->data()))->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
     }
 
     if (!rhs || !lhs)
