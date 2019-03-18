@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/uuid/uuid.hpp>
 #include <iostream>
 
 #define max(x, y) (x > y ? x : y)
@@ -411,13 +412,29 @@ int IOCoordinator::mergeJournalInMem(uint8_t *objData, const char *journalPath)
     }
     return 0;
 }
-    
-void IOCoordinator::getNewKeyFromOldKey(const string &oldKey, string *newKey)
+
+string IOCoordinator::getNewKeyFromOldKey(const string &oldKey)
 {
+    boost::uuids::uuid u;
+    string ret(oldKey);
+    strcpy(&(*newKey)[0], u.to_string().c_str());
 }
 
-void IOCoordinator::getNewKeyFromSourceName(const string &sourceName, string *newKey)
+string IOCoordinator::getNewKey(string sourceName, size_t offset, size_t length)
 {
+    boost::uuids::uuid u;
+    stringstream ss;
+    
+    for (int i = 0; i < sourceName.length(); i++)
+        if (sourceName[i] == '/')
+            sourceName[i] = '-';
+    
+    ss << u << "_" << offset << "_" << length << "_" << sourceName;
+    return ss.str();
+}
+    
+    
+    
 }
 
 }
