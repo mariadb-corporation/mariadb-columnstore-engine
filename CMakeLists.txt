@@ -28,6 +28,7 @@ set(storagemanager_SRCS
     src/SMLogging.cpp
     src/Downloader.cpp
     src/Synchronizer.cpp
+    src/RWLock.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)
