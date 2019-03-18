@@ -748,8 +748,9 @@ void RowAggregation::initialize()
 	{
 		fHasher.reset(new AggHasher(fRow, &tmpRow, fGroupByCols.size(), this));
 		fEq.reset(new AggComparator(fRow, &tmpRow, fGroupByCols.size(), this));
-		fAlloc.reset(new utils::STLPoolAllocator<RowPosition>());
-		fAggMapPtr = new RowAggMap_t(10, *fHasher, *fEq, *fAlloc);
+		auto & oPool = utils::STLPoolAllocator<RowPosition>::get();
+		pool_mem_usage = [&](){ return oPool.getMemUsage(); };
+		fAggMapPtr = new RowAggMap_t(10, *fHasher, *fEq, oPool);
 	}
 	else
 	{
@@ -791,9 +792,10 @@ void RowAggregation::reset()
 	{
 		fHasher.reset(new AggHasher(fRow, &tmpRow, fGroupByCols.size(), this));
 		fEq.reset(new AggComparator(fRow, &tmpRow, fGroupByCols.size(), this));
-		fAlloc.reset(new utils::STLPoolAllocator<RowPosition>());
 		delete fAggMapPtr;
-		fAggMapPtr = new RowAggMap_t(10, *fHasher, *fEq, *fAlloc);
+		auto & oPool = utils::STLPoolAllocator<RowPosition>::get();
+		pool_mem_usage = [&](){ return oPool.getMemUsage(); };
+		fAggMapPtr = new RowAggMap_t(10, *fHasher, *fEq, oPool);
 	}
 
 	fResultDataVec.clear();
@@ -811,8 +813,9 @@ void RowAggregationUM::reset()
 		fKeyStore.reset(new KeyStorage(fKeyRG, &tmpRow));
 		fExtEq.reset(new ExternalKeyEq(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
 		fExtHash.reset(new ExternalKeyHasher(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
-		fExtKeyMapAlloc.reset(new utils::STLPoolAllocator<pair<RowPosition, RowPosition> >());
-		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, *fExtKeyMapAlloc));
+		auto & oPool = utils::STLPoolAllocator<pair<RowPosition, RowPosition> >::get();
+		pool_mem_usage = [&](){ return oPool.getMemUsage(); };
+		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, oPool));
 	}
 }
 
@@ -1864,8 +1867,9 @@ void RowAggregationUM::initialize()
 		fKeyStore.reset(new KeyStorage(fKeyRG, &tmpRow));
 		fExtEq.reset(new ExternalKeyEq(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
 		fExtHash.reset(new ExternalKeyHasher(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
-		fExtKeyMapAlloc.reset(new utils::STLPoolAllocator<pair<RowPosition, RowPosition> >());
-		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, *fExtKeyMapAlloc));
+		auto & oPool = utils::STLPoolAllocator<pair<RowPosition, RowPosition> >::get();
+		pool_mem_usage = [&](){ return oPool.getMemUsage(); };
+		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, oPool));
 	}
 }
 
@@ -2711,9 +2715,9 @@ bool RowAggregationUM::newRowGroup()
 
 	allocSize = fRowGroupOut->getSizeWithStrings();
 	if (fKeyOnHeap)
-		memDiff = fKeyStore->getMemUsage() + fExtKeyMapAlloc->getMemUsage() - fLastMemUsage;
+		memDiff = fKeyStore->getMemUsage() + pool_mem_usage() - fLastMemUsage;
 	else
-		memDiff = fAlloc->getMemUsage() - fLastMemUsage;
+		memDiff = pool_mem_usage() - fLastMemUsage;
 
 	fLastMemUsage += memDiff;
 
@@ -2746,8 +2750,7 @@ void RowAggregationUM::setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRo
 		fKeyStore.reset(new KeyStorage(fKeyRG, &tmpRow));
 		fExtEq.reset(new ExternalKeyEq(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
 		fExtHash.reset(new ExternalKeyHasher(fKeyRG, fKeyStore.get(), fKeyRG.getColumnCount(), &tmpRow));
-		fExtKeyMapAlloc.reset(new utils::STLPoolAllocator<pair<RowPosition, RowPosition> >());
-		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, *fExtKeyMapAlloc));
+		fExtKeyMap.reset(new ExtKeyMap_t(10, *fExtHash, *fExtEq, utils::STLPoolAllocator<pair<RowPosition, RowPosition> >::get()));
 	}
 }
 

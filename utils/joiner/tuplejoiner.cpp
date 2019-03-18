@@ -45,16 +45,14 @@ TupleJoiner::TupleJoiner(
 	threadCount(1), typelessJoin(false), bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
 	if (smallRG.usesStringTable()) {
-		STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc(64*1024*1024 + 1);
-		_pool = alloc.getPoolAllocator();
-
-		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
+		auto & oPool = STLPoolAllocator<pair<const int64_t, Row::Pointer> >::get();
+		pool_usage = [&](){ return oPool.getMemUsage(); };
+		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), oPool));
 	}
 	else {
-		STLPoolAllocator<pair<const int64_t, uint8_t *> > alloc(64*1024*1024 + 1);
-		_pool = alloc.getPoolAllocator();
-
-		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
+		auto & oPool = STLPoolAllocator<pair<const int64_t, uint8_t *> >::get();
+		pool_usage = [&](){ return oPool.getMemUsage(); };
+		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), oPool));
 	}
 
 	smallRG.initRow(&smallNullRow);
@@ -95,10 +93,10 @@ TupleJoiner::TupleJoiner(
 	smallKeyColumns(smallJoinColumns), largeKeyColumns(largeJoinColumns),
 	bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
-	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
-	_pool = alloc.getPoolAllocator();
 
-	ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
+	auto & oPool = STLPoolAllocator<pair<const TypelessData, Row::Pointer> >::get();
+  pool_usage = [&](){ return oPool.getMemUsage(); };
+	ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(),oPool));
 	smallRG.initRow(&smallNullRow);
 	if (smallOuterJoin() || largeOuterJoin() || semiJoin() || antiJoin()) {
 		smallNullMemory = RGData(smallRG, 1);
@@ -527,9 +525,9 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer> *out)
 uint64_t TupleJoiner::getMemUsage() const
 {
 	if (inUM() && typelessJoin)
-		return _pool->getMemUsage() + storedKeyAlloc.getMemUsage();
+		return pool_usage() + storedKeyAlloc.getMemUsage();
 	else if (inUM())
-		return _pool->getMemUsage();
+		return pool_usage();
 	else
 		return (rows.size() * sizeof(Row::Pointer));
 }
@@ -799,16 +797,20 @@ void TupleJoiner::setTableName(const string &tname)
 
 void TupleJoiner::clearData()
 {
-	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
-	_pool = alloc.getPoolAllocator();
 
-	if (typelessJoin)
-		ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
-	else if (smallRG.usesStringTable())
-		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
-	else
-		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
-
+	if (typelessJoin) {
+		auto &oPool = STLPoolAllocator<pair<const TypelessData, Row::Pointer> >::get();
+		pool_usage = [&]() { return oPool.getMemUsage(); };
+		ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), oPool));
+	}else if (smallRG.usesStringTable()) {
+		auto & oPool = utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> >::get();
+		pool_usage = [&]() { return oPool.getMemUsage(); };
+		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), oPool));
+	}else {
+		auto & oPool = utils::STLPoolAllocator<std::pair<const int64_t, uint8_t *> >::get();
+		pool_usage = [&]() { return oPool.getMemUsage(); };
+		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), oPool));
+	}
 	std::vector<rowgroup::Row::Pointer> empty;
 	rows.swap(empty);
 	finished = false;

@@ -41,7 +41,7 @@ using namespace execplan;
 using namespace rowgroup;
 using namespace dataconvert;
 
-#ifndef __linux__
+
 #ifndef M_LN10
 #define M_LN10 2.30258509299404568402	/* log_e 10 */
 #endif
@@ -52,7 +52,7 @@ inline double pow10(double x)
 	return exp(x * M_LN10);
 }
 }
-#endif
+
 
 namespace joblist
 {
@@ -87,7 +87,6 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
 	outputIt(-1),
 	memUsage(0),
 	rm(jobInfo.rm),
-	allocator(64*1024*1024 + 1),
 	runnersDone(0),
 	distinctCount(0),
 	distinctDone(0),
@@ -96,7 +95,7 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
 	joinRan(false),
 	sessionMemLimit(jobInfo.umMemLimit)
 {
-	uniquer.reset(new Uniquer_t(10, Hasher(this), Eq(this), allocator));
+	uniquer.reset(new Uniquer_t(10, Hasher(this), Eq(this), utils::STLPoolAllocator<RowPosition>::get()));
 	fExtendedInfo = "TUN: ";
 	fQtc.stepParms().stepType = StepTeleStats::T_TUN;
 }
@@ -212,7 +211,7 @@ void TupleUnion::readInput(uint32_t which)
 				{
 					mutex::scoped_lock lk(uniquerMutex);
 					getOutput(&l_outputRG, &outRow, &outRGData);
-					memUsageBefore = allocator.getMemUsage();
+					memUsageBefore = utils::STLPoolAllocator<RowPosition>::get().getMemUsage();
 					for (uint32_t i = 0; i < l_tmpRG.getRowCount(); i++, tmpRow.nextRow()) {
 						pair<Uniquer_t::iterator, bool> inserted;
 						inserted = uniquer->insert(RowPosition(which | RowPosition::normalizedFlag, i));
@@ -223,7 +222,7 @@ void TupleUnion::readInput(uint32_t which)
 							addToOutput(&outRow, &l_outputRG, true, outRGData);
 						}
 					}
-					memUsageAfter = allocator.getMemUsage();
+					memUsageAfter = utils::STLPoolAllocator<RowPosition>::get().getMemUsage();
 					memDiff += (memUsageAfter - memUsageBefore);
 					memUsage += memDiff;
 				}

@@ -25,6 +25,8 @@ set(windowfunction_LIB_SRCS
 
 add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
+target_link_libraries(windowfunction PUBLIC tbb)
+
 set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

@@ -19,6 +19,7 @@
 #include "configcpp.h"
 #include "logger.h"
 #include <fstream>
+#include <iostream>
 #include <boost/regex.hpp>
 #ifdef _MSC_VER
 #include "unistd.h"
@@ -36,7 +37,7 @@ using namespace std;
         printedWarning = true; \
         ostringstream os; \
         os << "CGroup warning!  The group " << cGroupName << " does not exist."; \
-        cerr << os.str() << endl; \
+        std::cerr << os.str() << endl; \
         log(logging::LOG_TYPE_WARNING, os.str()); \
     } \
     return err; \

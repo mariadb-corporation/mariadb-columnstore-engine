@@ -240,10 +240,9 @@ private:
 	};
 	JoinAlg joinAlg;
 	joblist::JoinType joinType;
-	boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
 	uint32_t threadCount;
 	std::string tableName;
-
+	std::function<size_t()> pool_usage;
 	/* vars, & fcns for typeless join */
 	bool typelessJoin;
 	std::vector<uint32_t> smallKeyColumns, largeKeyColumns;

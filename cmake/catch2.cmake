@@ -16,4 +16,4 @@ execute_process(
 
 add_library(catch2 INTERFACE IMPORTED GLOBAL)
 
-target_include_directories(catch2 INTERFACE ${CMAKE_CURRENT_LIST_DIR}/catch2/include)
+target_include_directories(catch2 INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/catch2/include)

@@ -384,7 +384,7 @@ void TupleAnnexStep::executeNoOrderBy()
 
 void TupleAnnexStep::executeNoOrderByWithDistinct()
 {
-	scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
+	scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this), STLPoolAllocator<rowgroup::Row::Pointer>::get()));
 	vector<RGData> dataVec;
 	RGData rgDataIn;
 	RGData rgDataOut;

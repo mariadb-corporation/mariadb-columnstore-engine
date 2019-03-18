@@ -14,6 +14,7 @@ add_library(common SHARED ${common_LIB_SRCS})
 
 add_dependencies(common loggingcpp)
 
+target_link_libraries(common PRIVATE tbb)
 
 set_target_properties(common PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

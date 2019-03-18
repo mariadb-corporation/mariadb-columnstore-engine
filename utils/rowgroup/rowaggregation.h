@@ -461,6 +461,7 @@ class RowAggregation : public messageqcpp::Serializeable
 		inline uint32_t aggMapKeyLength() { return fAggMapKeyCount; }
 
 	protected:
+		std::function<size_t()> pool_mem_usage;
 		virtual void initialize();
 		virtual void initMapData(const Row& row);
 		virtual void attachGroupConcatAg();
@@ -519,9 +520,6 @@ class RowAggregation : public messageqcpp::Serializeable
 		boost::shared_array<int>                        fLargeMapping;
 		uint32_t                                            fSmallSideCount;
 		boost::scoped_array<Row> rowSmalls;
-
-		// for hashmap
-		boost::shared_ptr<utils::STLPoolAllocator<RowPosition> > fAlloc;
 
 		// for 8k poc
 		RowGroup                                        fEmptyRowGroup;
@@ -671,10 +669,10 @@ class RowAggregationUM : public RowAggregation
 		boost::scoped_ptr<ExternalKeyEq> fExtEq;
 		boost::scoped_ptr<ExternalKeyHasher> fExtHash;
 		boost::scoped_ptr<KeyStorage> fKeyStore;
-		boost::scoped_ptr<utils::STLPoolAllocator<std::pair<RowPosition, RowPosition> > > fExtKeyMapAlloc;
 		boost::scoped_ptr<ExtKeyMap_t> fExtKeyMap;
 
 		boost::shared_ptr<int64_t> fSessionMemLimit;
+	std::function<size_t()> pool_mem_usage;
 	private:
 		uint64_t fLastMemUsage;
 		uint32_t fNextRGIndex;
