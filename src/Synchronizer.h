@@ -35,29 +35,31 @@ class Synchronizer : public boost::noncopyable
         void synchronize(const std::string &key, bool isFlush);
         void synchronizeDelete(const std::string &key);
         void synchronizeWithJournal(const std::string &key, bool isFlush);
+        void rename(const std::string &oldkey, const std::string &newkey);
+        void makeJob(const std::string &key);
         
-        struct FlushListener
-        {
-            FlushListener(boost::mutex *m, boost::condvar *c);
-            boost::mutex *mutex;
-            boost::condition *condvar;
-            void flushed();
-        }
-        
+        // this struct kind of got sloppy.  Need to clean it at some point.
         struct PendingOps
         {
-            PendingOps(int flags, std::list<std::string>::iterator pos);
+            PendingOps(int flags);
             int opFlags;
             bool finished;
-            std::list<std::string>::iterator queueEntry;
             boost::condition condvar;
-            void wait();
-            void notify();
+            void wait(boost::mutex *);
+            void notify(boost::mutex *);
+        };
+        
+        struct Job : public ThreadPool::Job
+        {
+            Job(Synchronizer *s, const std::string &k) : sync(s), key(k) { }
+            void operator()() { sync->process(key); }
+            Synchronizer *sync;
+            std::string key;
         };
         
         ThreadPool threadPool;
         std::map<std::string, boost::shared_ptr<PendingOps> > pendingOps;
-        std::list<std::string> workQueue;
+        std::map<std::string, boost::shared_ptr<PendingOps> > opsInProgress;
         SMLogging *logger;
         Cache *cache;
         Replicator *replicator;

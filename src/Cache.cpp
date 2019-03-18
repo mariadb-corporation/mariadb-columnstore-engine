@@ -303,8 +303,7 @@ void Cache::makeSpace(size_t size)
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
         sync->flushObject(*it);
-        // Deleting the files will be done through Synchronizer->Replicator
-        //bf::remove(cachedFile);
+        replicator->delete(cachedFile, Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
         lru.erase(toRemove);
         m_lru.erase(*toRemove);
