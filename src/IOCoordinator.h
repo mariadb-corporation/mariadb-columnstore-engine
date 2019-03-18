@@ -34,8 +34,9 @@ class IOCoordinator : public boost::noncopyable
         int unlink(const char *path);
         int copyFile(const char *filename1, const char *filename2);
         
-        void getNewKeyFromOldKey(const std::string &oldKey, std::string *newKey);
-        void getNewKeyFromSourceName(const std::string &sourceName, std::string *newKey);
+        // TBD: this may have to go; there may be no use case where only the uuid needs to change.
+        std::string getNewKeyFromOldKey(const std::string &oldKey);
+        std::string getNewKey(std::string sourceName, size_t offset, size_t length);
         
         // The shared logic for merging a journal file with its base file.
         // *len should be set to the length of the data requested (0 means read the whole file),
