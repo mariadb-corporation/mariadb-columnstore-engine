@@ -35,8 +35,8 @@ class IOCoordinator : public boost::noncopyable
         int copyFile(const char *filename1, const char *filename2);
         
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
-        string getNewKeyFromOldKey(const std::string &oldKey);
-        string getNewKey(std::string sourceName, size_t offset, size_t length);
+        std::string getNewKeyFromOldKey(const std::string &oldKey);
+        std::string getNewKey(std::string sourceName, size_t offset, size_t length);
         
         // The shared logic for merging a journal file with its base file.
         // The default values for offset and len mean 'process the whole file'.  Otherwise,

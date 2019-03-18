@@ -9,6 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <iostream>
 
 #define max(x, y) (x > y ? x : y)
@@ -417,7 +418,8 @@ string IOCoordinator::getNewKeyFromOldKey(const string &oldKey)
 {
     boost::uuids::uuid u;
     string ret(oldKey);
-    strcpy(&(*newKey)[0], u.to_string().c_str());
+    strcpy(&ret[0], boost::uuids::to_string(u).c_str());
+    return ret;
 }
 
 string IOCoordinator::getNewKey(string sourceName, size_t offset, size_t length)
@@ -431,10 +433,6 @@ string IOCoordinator::getNewKey(string sourceName, size_t offset, size_t length)
     
     ss << u << "_" << offset << "_" << length << "_" << sourceName;
     return ss.str();
-}
-    
-    
-    
 }
 
 }
