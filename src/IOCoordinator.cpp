@@ -435,4 +435,50 @@ string IOCoordinator::getNewKey(string sourceName, size_t offset, size_t length)
     return ss.str();
 }
 
+bool IOCoordinator::readLock(const string &filename)
+{
+    boost::unique_lock<boost::mutex> s(lockMutex);
+
+    auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
+    if (ins.second)
+        ins.first->second = new RWLock();
+    ins.first->second->readLock(s);
+}
+
+void IOCoordinator::readUnlock(const string &filename)
+{
+    boost::unique_lock<boost::mutex> s(lockMutex);
+    
+    auto it = locks.find(filename);
+    it->second->readUnlock();
+    if (!it->second->inUse())
+    {
+        delete it->second;
+        locks.erase(it);
+    }
+}
+
+bool IOCoordinator::writeLock(const string &filename)
+{
+    boost::unique_lock<boost::mutex> s(lockMutex);
+    
+    auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
+    if (ins.second)
+        ins.first->second = new RWLock();
+    ins.first->second->writeLock(s);
+}
+
+void IOCoordinator::writeUnlock(const string &filename)
+{
+    boost::unique_lock<boost::mutex> s(lockMutex);
+    
+    auto it = locks.find(filename);
+    it->second->readUnlock();
+    if (!it->second->inUse())
+    {
+        delete it->second;
+        locks.erase(it);
+    }
+}
+
 }

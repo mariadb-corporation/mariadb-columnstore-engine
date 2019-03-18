@@ -15,9 +15,27 @@ RWLock::~RWLock()
     assert(!writersRunning);
 }
 
+bool RWLock::inUse()
+{
+    return readersWaiting || readersRunning || writersWaiting || writersRunning;
+}
+
 void RWLock::readLock()
 {
     boost::unique_lock<boost::mutex> s(m);
+    
+    ++readersWaiting;
+    while (writersWaiting != 0 || writersRunning != 0)
+        okToRead.wait(s);
+        
+    ++readersRunning;
+    --readersWaiting;
+}
+
+void RWLock::readLock(boost::unique_lock<boost::mutex> &l)
+{
+    boost::unique_lock<boost::mutex> s(m);
+    l.unlock();
     
     ++readersWaiting;
     while (writersWaiting != 0 || writersRunning != 0)
@@ -39,6 +57,19 @@ void RWLock::readUnlock()
 void RWLock::writeLock()
 {
     boost::unique_lock<boost::mutex> s(m);
+    
+    ++writersWaiting;
+    while (readersRunning != 0 || writersRunning != 0)
+        okToWrite.wait(s);
+    
+    ++writersRunning;
+    --writersWaiting;
+}
+
+void RWLock::writeLock(boost::unique_lock<boost::mutex> &l)
+{
+    boost::unique_lock<boost::mutex> s(m);
+    l.unlock();
     
     ++writersWaiting;
     while (readersRunning != 0 || writersRunning != 0)
