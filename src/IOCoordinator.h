@@ -13,6 +13,7 @@
 
 #include "Config.h"
 #include "SMLogging.h"
+#include "RWLock.h"
 
 namespace storagemanager
 {
@@ -44,11 +45,20 @@ class IOCoordinator : public boost::noncopyable
         boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, size_t *len) const;
         int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath);
         
+        /* Lock manipulation fcns.  They can lock on any param given to them. */
+        bool readLock(const std::string &filename);
+        bool writeLock(const std::string &filename);
+        void readUnlock(const std::string &filename);
+        void writeUnlock(const std::string &filename);
+        
     private:
         IOCoordinator();
         Config *config;
         SMLogging *logger;
         size_t objectSize;
+        
+        std::map<std::string, RWLock *> locks;
+        boost::mutex lockMutex;  // lol
 };
 
 }
