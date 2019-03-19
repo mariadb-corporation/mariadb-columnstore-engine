@@ -51,15 +51,22 @@ class Synchronizer : public boost::noncopyable
         
         struct Job : public ThreadPool::Job
         {
-            Job(Synchronizer *s, const std::string &k) : sync(s), key(k) { }
-            void operator()() { sync->process(key); }
+            Job(Synchronizer *s, std::list<std::string>::iterator &i) : sync(s), it(i) { }
+            void operator()() { sync->process(it); }
             Synchronizer *sync;
-            std::string key;
+            std::list<std::string>::iterator it;
         };
         
         ThreadPool threadPool;
         std::map<std::string, boost::shared_ptr<PendingOps> > pendingOps;
         std::map<std::string, boost::shared_ptr<PendingOps> > opsInProgress;
+        
+        // this is a bit of a kludge to handle objects being renamed.  Jobs can be issued
+        // against name1, but when the job starts running, the target may be name2.
+        // some consolidation should be possible between this and the two maps above, tbd.
+        // in general the code got kludgier b/c of renaming, needs a cleanup pass.
+        std::list<std::string> objNames;
+        
         SMLogging *logger;
         Cache *cache;
         Replicator *replicator;
