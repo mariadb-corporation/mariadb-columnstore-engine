@@ -1,5 +1,7 @@
 
 #include "IOCoordinator.h"
+#include "Cache.h"
+#include "MetadataFile.h"
 #include "SMLogging.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -8,8 +10,6 @@
 #include <errno.h>
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <iostream>
 
 #define max(x, y) (x > y ? x : y)
@@ -30,6 +30,7 @@ IOCoordinator::IOCoordinator()
 {
     config = Config::get();
     logger = SMLogging::get();
+    replicator = Replicator::get();
     objectSize = 5 * (1<<20);
     try 
     {
@@ -101,21 +102,77 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
 
 int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset, size_t length)
 {
-    int fd, err;
-    
-    OPEN(filename, O_WRONLY);
-    size_t count = 0;
-    ::lseek(fd, offset, SEEK_SET);
-    while (count < length) {
-        err = ::write(fd, &data[count], length - count);
-        if (err <= 0)
-            if (count > 0)   // return what was successfully written
-                return count;
+    int err = 0;
+    uint64_t count = 0;
+    uint64_t writelength = 0;
+    uint64_t dataRemaining = length;
+    uint64_t journalOffset = 0;
+    bool updateMeta = false;
+    vector<metadataObject> objects;
+
+    //writeLock(filename);
+
+    MetadataFile metadata = MetadataFile(filename);
+
+    //read metadata determine how many objects overlap
+    objects = metadata.metadataRead(offset,length);
+
+    // if there are objects append the journalfile in replicator
+    if(!objects.empty())
+    {
+        for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
+        {
+            // figure out how much data to write to this object
+            if (count == 0 && offset > i->offset)
+            {
+                // first object in the list so start at offset and
+                // write to end of oject or all the data
+                journalOffset = offset - i->offset;
+                writelength = min((objectSize - journalOffset),dataRemaining);
+            }
             else
-                return err;
-        count += err;
+            {
+                // starting at beginning of next object write the rest of data
+                // or until object length is reached
+                writelength = min(objectSize,dataRemaining);
+                journalOffset = 0;
+            }
+            err = replicator->addJournalEntry(i->name.c_str(),&data[count],journalOffset,writelength);
+            if (err <= 0)
+            {
+                //log error and abort
+            }
+            count += err;
+            dataRemaining -= err;
+        }
+        //cache.makeSpace(journal_data_size)
+        //Synchronizer::newJournalData(journal_file);
     }
+
+    // there is no overlapping data, or data goes beyond end of last object
+    while (dataRemaining > 0 && err >= 0)
+    {
+        //add a new metaDataObject
+        writelength = min(objectSize,dataRemaining);
+        //cache.makeSpace(size)
+        // add a new metadata object, this will get a new objectKey
+        metadataObject newObject = metadata.addMetadataObject(filename,writelength);
+        // write the new object
+        err = replicator->newObject(newObject.name.c_str(),data,writelength);
+        if (err <= 0)
+        {
+            //log error and abort
+        }
+        // sync
+        //Synchronizer::newObject(newname)
+        count += err;
+        dataRemaining -= err;
+    }
+
+    metadata.updateMetadata(filename);
     
+    //writeUnlock(filename);
+
     return count;
 }
 
@@ -263,11 +320,11 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     objFD = ::open(object, O_RDONLY);
     if (objFD < 0)
-        return NULL;
+        return ret;
     scoped_closer s1(objFD);
     journalFD = ::open(journal, O_RDONLY);
     if (journalFD < 0)
-        return NULL;
+        return ret;
     scoped_closer s2(journalFD);
     
     // TODO: Right now this assumes that max object size has not been changed.
@@ -412,27 +469,6 @@ int IOCoordinator::mergeJournalInMem(uint8_t *objData, const char *journalPath)
         ::lseek(journalFD, offlen[1] - lengthOfRead, SEEK_CUR);
     }
     return 0;
-}
-
-string IOCoordinator::getNewKeyFromOldKey(const string &oldKey)
-{
-    boost::uuids::uuid u;
-    string ret(oldKey);
-    strcpy(&ret[0], boost::uuids::to_string(u).c_str());
-    return ret;
-}
-
-string IOCoordinator::getNewKey(string sourceName, size_t offset, size_t length)
-{
-    boost::uuids::uuid u;
-    stringstream ss;
-    
-    for (int i = 0; i < sourceName.length(); i++)
-        if (sourceName[i] == '/')
-            sourceName[i] = '-';
-    
-    ss << u << "_" << offset << "_" << length << "_" << sourceName;
-    return ss.str();
 }
 
 bool IOCoordinator::readLock(const string &filename)

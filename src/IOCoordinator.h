@@ -14,9 +14,12 @@
 #include "Config.h"
 #include "SMLogging.h"
 #include "RWLock.h"
+#include "Replicator.h"
 
 namespace storagemanager
 {
+
+boost::shared_array<char> seekToEndOfHeader1(int fd);
 
 class IOCoordinator : public boost::noncopyable
 {
@@ -35,10 +38,6 @@ class IOCoordinator : public boost::noncopyable
         int unlink(const char *path);
         int copyFile(const char *filename1, const char *filename2);
         
-        // TBD: this may have to go; there may be no use case where only the uuid needs to change.
-        std::string getNewKeyFromOldKey(const std::string &oldKey);
-        std::string getNewKey(std::string sourceName, size_t offset, size_t length);
-        
         // The shared logic for merging a journal file with its base file.
         // The default values for offset and len mean 'process the whole file'.  Otherwise,
         // offset is relative to the object.
@@ -50,11 +49,12 @@ class IOCoordinator : public boost::noncopyable
         bool writeLock(const std::string &filename);
         void readUnlock(const std::string &filename);
         void writeUnlock(const std::string &filename);
-        
+
     private:
         IOCoordinator();
         Config *config;
         SMLogging *logger;
+        Replicator *replicator;
         size_t objectSize;
         
         std::map<std::string, RWLock *> locks;
