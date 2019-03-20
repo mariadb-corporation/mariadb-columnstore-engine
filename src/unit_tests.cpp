@@ -11,6 +11,8 @@
 #include "Config.h"
 #include "Cache.h"
 #include "LocalStorage.h"
+#include "MetadataFile.h"
+#include "Replicator.h"
 
 #include <iostream>
 #include <stdlib.h>
@@ -22,6 +24,9 @@
 #include <fcntl.h>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
+#include <algorithm>
+#include <random>
 
 
 #undef NDEBUG
@@ -135,6 +140,59 @@ bool opentask()
     return true;
 }
 
+bool replicatorTest()
+{
+    Replicator *repli = Replicator::get();
+    int err,fd;
+    const char *newobject = "newobjectTest";
+    const char *newobjectJournal = "newobjectTest.journal";
+    uint8_t buf[1024];
+    uint8_t data[1024];
+    int version = 1;
+    uint64_t max_offset = 0;
+    memcpy(data,"1234567890",10);
+    string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % max_offset).str();
+    ::pwrite(fd, header.c_str(), header.length() + 1,0);
+
+    // test newObject
+    repli->newObject(newobject,data,10);
+    
+    //check file contents
+    fd = ::open(newobject, O_RDONLY);
+    err = ::read(fd, buf, 1024);
+    assert(err == 10);
+    buf[10] = 0;
+    assert(!strcmp("1234567890", (const char *) buf));
+    cout << "replicator newObject OK" << endl;
+    ::close(fd);
+
+    // test addJournalEntry
+    repli->addJournalEntry(newobject,data,0,10);
+
+    fd = ::open(newobjectJournal, O_RDONLY);
+    err = ::read(fd, buf, 1024);
+    assert(err == (header.length() + 1 + 16 + 10));
+    buf[err] = 0;
+    assert(!strcmp("1234567890", (const char *) buf + header.length() + 1 + 16));
+    cout << "replicator addJournalEntry OK" << endl;
+    ::close(fd);
+
+    repli->remove(newobject,0);
+    repli->remove(newobjectJournal,0);
+    assert(!boost::filesystem::exists(newobject));
+    cout << "replicator remove OK" << endl;
+    return true;
+}
+
+::vector<uint64_t> GenerateData(std::size_t bytes)
+{
+    assert(bytes % sizeof(uint64_t) == 0);
+    ::vector<uint64_t> data(bytes / sizeof(uint64_t));
+    ::iota(data.begin(), data.end(), 0);
+    ::shuffle(data.begin(), data.end(), std::mt19937{ std::random_device{}() });
+    return data;
+}
+
 bool writetask()
 {
     // make an empty file to write to
@@ -144,41 +202,46 @@ bool writetask()
     assert(fd > 0);
     scoped_closer f(fd);
  
-    uint8_t buf[1024];
-    sm_msg_header *hdr = (sm_msg_header *) buf;
-    write_cmd *cmd = (write_cmd *) &hdr[1];
-    uint8_t *data;
+    std::size_t writeSize = (10 * 1024);
+    std::vector<uint64_t> writeData = GenerateData(writeSize);
+    off_t nextOffset = 0;
+
+    for (std::size_t size = writeSize; size <= (5 * writeSize); size += writeSize)
+    {
+        uint8_t buf[(1024 + writeSize)];
+        uint8_t *data;
+        sm_msg_header *hdr = (sm_msg_header *) buf;
+        write_cmd *cmd = (write_cmd *) &hdr[1];
+        cmd->opcode = WRITE;
+        cmd->offset = nextOffset;
+        cmd->count = writeSize;
+        cmd->flen = 10;
+        memcpy(&cmd->filename, filename, cmd->flen);
+
+        data = (uint8_t *) &cmd->filename[cmd->flen];
+        memcpy(data, &writeData, writeSize);
     
-    cmd->opcode = WRITE;
-    cmd->offset = 0;
-    cmd->count = 9;
-    cmd->flen = 10;
-    memcpy(&cmd->filename, filename, cmd->flen);
-    data = (uint8_t *) &cmd->filename[cmd->flen];
-    memcpy(data, "123456789", cmd->count);
+        hdr->type = SM_MSG_START;
+        hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
+
+        WriteTask w(clientSock, hdr->payloadLen);
+        ::write(sessionSock, cmd, hdr->payloadLen);
+        w.run();
+
+        // verify response
+        int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err == sizeof(*resp));
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.payloadLen == 4);
+        assert(resp->header.flags == 0);
+        assert(resp->returnCode == writeSize);
+        nextOffset += (writeSize);
+    }
+    // This leaves behind object journal and metadata files currently
     
-    hdr->type = SM_MSG_START;
-    hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
-    
-    WriteTask w(clientSock, hdr->payloadLen);
-    ::write(sessionSock, cmd, hdr->payloadLen);
-    w.run();
-    
-    // verify response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(*resp));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.payloadLen == 4);
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 9);
-    
-    //check file contents
-    err = ::read(fd, buf, 1024);
-    assert(err == 9);
-    buf[9] = 0;
-    assert(!strcmp("123456789", (const char *) buf));
-    ::unlink(filename);
+    MetadataFile mdf("./writetest1");
+    mdf.printObjects();
     cout << "write task OK" << endl;
     return true;
 }
@@ -521,34 +584,6 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
-// the merged version should look like
-// (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
-void makeTestObject()
-{
-    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(objFD >= 0);
-    scoped_closer s1(objFD);
-    
-    int i;
-    for (i = 0; i < 2048; i++)
-        assert(write(objFD, &i, 4) == 4);
-}
-
-void makeTestJournal()
-{
-    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(journalFD >= 0);
-    scoped_closer s2(journalFD);
-    
-    char header[] = "{ \"version\" : 1, \"max_offset\" : 39 }";
-    write(journalFD, header, strlen(header) + 1);
-    
-    uint64_t offlen[2] = { 20, 20 };
-    write(journalFD, offlen, 16);
-    for (i = 0; i < 5; i++)
-        assert(write(journalFD, &i, 4) == 4);
-}
-
 bool mergeJournalTest()
 {
     /*
@@ -557,8 +592,27 @@ bool mergeJournalTest()
         verify the expected values
     */
     
-    makeTestJournal();
-    makeTestObject();
+    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(objFD >= 0);
+    scoped_closer s1(objFD);
+    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(journalFD >= 0);
+    scoped_closer s2(journalFD);
+    
+    int i;
+    for (i = 0; i < 2048; i++)
+        assert(write(objFD, &i, 4) == 4);
+    
+    char header[] = "{ \"version\" : 1 }";
+    write(journalFD, header, strlen(header) + 1);
+    
+    uint64_t offlen[2] = { 20, 20 };
+    write(journalFD, offlen, 16);
+    for (i = 0; i < 5; i++)
+        assert(write(journalFD, &i, 4) == 4);
+    
+    // the merged version should look like
+    // (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
     
     IOCoordinator *ioc = IOCoordinator::get();
     boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal");
@@ -604,13 +658,11 @@ bool mergeJournalTest()
     bf::remove("test-journal");
     cout << "mergeJournalTest OK" << endl;
 }
-
 bool syncTest1()
 {
     Synchronizer *sync = Synchronizer::get();
     Cache *cache = Cache::get();
     CloudStorage *cs = CloudStorage.get();
-    
     bf::path cachePath = sync->getCachePath();
     bf::path journalPath = sync->getJournalPath();
     
@@ -668,6 +720,6 @@ int main()
     localstorageTest1();
     cacheTest1();
     mergeJournalTest();
-    
+    replicatorTest();
     return 0;
 }

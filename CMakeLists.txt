@@ -29,6 +29,8 @@ set(storagemanager_SRCS
     src/Downloader.cpp
     src/Synchronizer.cpp
     src/RWLock.cpp
+    src/MetadataFile.cpp
+    src/Replicator.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)
