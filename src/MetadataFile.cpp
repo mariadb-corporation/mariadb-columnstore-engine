@@ -162,12 +162,13 @@ int MetadataFile::updateMetadata(const char *filename)
     write_json(metadataFilename, jsontree);
 }
 
-string MetadataFile::getNewKeyFromOldKey(const string &oldKey)
+string MetadataFile::getNewKeyFromOldKey(string oldKey, size_t length)
 {
     boost::uuids::uuid u;
-    string ret(oldKey);
-    strcpy(&ret[0], boost::uuids::to_string(u).c_str());
-    return ret;
+    if (length != 0)
+        setLength(oldKey, length);
+    strcpy(&oldKey[0], boost::uuids::to_string(u).c_str());
+    return oldKey;
 }
 
 string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
@@ -187,6 +188,29 @@ string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
     return ss.str();
 }
 
+off_t MetadataFile::getOffsetFromKey(const string &key)
+{
+    return 0;
+}
+
+string MetadataFile::getSourceFromKey(const string &key)
+{
+    return "dookie";
+}
+
+size_t MetadataFile::getLengthFromKey(const string &key)
+{
+    return 0;
+}
+
+void MetadataFile::setOffset(string &key, off_t newOffset)
+{
+}
+
+void MetadataFile::setLength(string &key, size_t newLength)
+{
+}
+
 void MetadataFile::printObjects()
 {
     printf("Version: %i Revision: %i\n",mVersion,mRevision);
@@ -196,6 +220,9 @@ void MetadataFile::printObjects()
     }
 }
 
+void MetadataFile::updateEntry(off_t offset, const string &newName, size_t newLength)
+{
+}
 
 }
 

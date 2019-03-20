@@ -37,11 +37,20 @@ class MetadataFile
         vector<metadataObject> metadataRead(off_t offset, size_t length);
         // updates the metadatafile with new object
         int updateMetadata(const char *filename);
+        
+        // updates the name and length fields of an entry, given the offset
+        void updateEntry(off_t offset, const std::string &newName, size_t newLength); 
         metadataObject addMetadataObject(const char *filename, size_t length);
 
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
-        std::string getNewKeyFromOldKey(const std::string &oldKey);
-        std::string getNewKey(std::string sourceName, size_t offset, size_t length);
+        static std::string getNewKeyFromOldKey(std::string oldKey, size_t length=0);
+        static std::string getNewKey(std::string sourceName, size_t offset, size_t length);
+        static off_t getOffsetFromKey(const std::string &key);
+        static std::string getSourceFromKey(const std::string &key);
+        static size_t getLengthFromKey(const std::string &key);
+        static void setOffset(std::string &key, off_t newOffset);
+        static void setLength(std::string &key, size_t newLength);
+        
 
     private:
         Config *mpConfig;
