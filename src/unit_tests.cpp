@@ -521,6 +521,34 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
+// the merged version should look like
+// (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
+void makeTestObject()
+{
+    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(objFD >= 0);
+    scoped_closer s1(objFD);
+    
+    int i;
+    for (i = 0; i < 2048; i++)
+        assert(write(objFD, &i, 4) == 4);
+}
+
+void makeTestJournal()
+{
+    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(journalFD >= 0);
+    scoped_closer s2(journalFD);
+    
+    char header[] = "{ \"version\" : 1, \"max_offset\" : 39 }";
+    write(journalFD, header, strlen(header) + 1);
+    
+    uint64_t offlen[2] = { 20, 20 };
+    write(journalFD, offlen, 16);
+    for (i = 0; i < 5; i++)
+        assert(write(journalFD, &i, 4) == 4);
+}
+
 bool mergeJournalTest()
 {
     /*
@@ -529,27 +557,8 @@ bool mergeJournalTest()
         verify the expected values
     */
     
-    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(objFD >= 0);
-    scoped_closer s1(objFD);
-    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(journalFD >= 0);
-    scoped_closer s2(journalFD);
-    
-    int i;
-    for (i = 0; i < 2048; i++)
-        assert(write(objFD, &i, 4) == 4);
-    
-    char header[] = "{ \"version\" : 1 }";
-    write(journalFD, header, strlen(header) + 1);
-    
-    uint64_t offlen[2] = { 20, 20 };
-    write(journalFD, offlen, 16);
-    for (i = 0; i < 5; i++)
-        assert(write(journalFD, &i, 4) == 4);
-    
-    // the merged version should look like
-    // (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
+    makeTestJournal();
+    makeTestObject();
     
     IOCoordinator *ioc = IOCoordinator::get();
     boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal");
@@ -595,7 +604,50 @@ bool mergeJournalTest()
     bf::remove("test-journal");
     cout << "mergeJournalTest OK" << endl;
 }
+
+bool syncTest1()
+{
+    Synchronizer *sync = Synchronizer::get();
+    Cache *cache = Cache::get();
+    CloudStorage *cs = CloudStorage.get();
     
+    bf::path cachePath = sync->getCachePath();
+    bf::path journalPath = sync->getJournalPath();
+    
+    // make the test obj and journal and put them in the cache dir
+    makeTestObject();
+    makeTestJournal();
+    bf::rename("test-object", cachePath / "test-object.obj");
+    bf::rename("test-journal", journalPath / "test-object.journal");
+    cache->newObject("test-object.obj", bf::file_size(cachePath/"test-object.obj"));
+    cache->newJournalEntry(bf::file_size(journalPath/"test-object.journal"));
+
+    vector<string> vObj;
+    vObj.push_back("test-object");
+    sync->newObjects(vObj);
+    sleep(1);  // wait for the job to run
+    
+    // make sure that it made it to the cloud
+    bool exists = false;
+    int err = cs->exists("test-object", &exists);
+    assert(!err);
+    assert(exists);
+    
+    sync->newJournalEntry("test-object");
+    sleep(1);  // let it do what it does
+    
+    // check that the original objects no longer exist
+    assert(!cache->exists("test-object.obj");
+    assert(!bf::exists(cachePath
+    
+    
+    // cleanup
+    bf::remove(cachePath / "test-object");
+    bf::remove(cachePath / "test-journal");
+    
+        
+    
+}
 
 int main()
 {

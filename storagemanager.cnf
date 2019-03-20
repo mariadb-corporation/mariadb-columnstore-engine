@@ -2,9 +2,9 @@
 service = S3
 object_size = 5M
 metadata_path = ${HOME}/storagemanager/metadata
+journal_path = ${HOME}/storagemanager/journal
 max_concurrent_downloads = 20
 max_concurrent_uploads = 20
-
 
 [S3]
 region = us-west-1
@@ -14,9 +14,9 @@ region = us-west-1
 # see https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 [LocalStorage]
-path = ${HOME}/fake-cloud
+path = ${HOME}/storagemanager/fake-cloud
 
 [Cache]
 cache_size = 2g
-path = ${HOME}/cache
+path = ${HOME}/storagemanager/cache
 

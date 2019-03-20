@@ -23,11 +23,16 @@ class Synchronizer : public boost::noncopyable
         static Synchronizer *get();
         virtual ~Synchronizer();
         
+        // these take keys as parameters, not full path names, ex, pass in '12345' not
+        // 'cache/12345.obj'.
         void newJournalEntry(const std::string &key);
         void newObjects(const std::vector<std::string> &keys);
         void deletedObjects(const std::vector<std::string> &keys);        
         void flushObject(const std::string &key);
         
+        // for testing primarily
+        boost::filesystem::path getJournalPath();
+        boost::filesystem::path getCachePath();
     private:
         Synchronizer();
         
@@ -71,6 +76,9 @@ class Synchronizer : public boost::noncopyable
         Cache *cache;
         Replicator *replicator;
         IOCoordinator *ioc;
+        
+        boost::filesystem::path cachePath;
+        boost::filesystem::path journalPath;
         boost::mutex mutex;
 };
 

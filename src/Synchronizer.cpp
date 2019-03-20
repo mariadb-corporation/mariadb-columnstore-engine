@@ -45,6 +45,24 @@ Synchronizer::Synchronizer() : maxUploads(0)
     }
     if (maxUploads == 0)
         maxUploads = 20;
+        
+    stmp = config->getValue("ObjectStorage", "journal_path");
+    if (prefix.empty())
+    {
+        logger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
+        throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+    }
+    try
+    {
+        bf::create_directories(stmp);
+    }
+    catch (exception &e)
+    {
+        syslog(LOG_CRIT, "Failed to create %s, got: %s", stmp.string().c_str(), e.what());
+        throw e;
+    }
+    journalPath = stmp;
+    cachePath = cache->getCachePath();
     threadPool.setMaxThreads(maxUploads);
 }
 
@@ -241,14 +259,14 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
 
     // can this run after a delete op?
-    exists = bf::exists(cache->getCachePath() / key);
+    exists = bf::exists(cachePath / key);
     if (!exists)
     {
         logger->log(LOG_WARNING, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
         return;
     }
 
-    err = cs->putObject(cache->getCachePath() / key, key);
+    err = cs->putObject(cachePath / key, key);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
     replicator->delete(key, Replicator::NO_LOCAL);
@@ -266,8 +284,8 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     ScopedWriteLock s(ioc, sourceFile);
     
     string &key = *lit;
-    bf::path oldCachePath = cache->getCachePath() / key;
-    string journalName = oldCachePath.string() + ".journal";
+    bf::path oldCachePath = cachePath / key;
+    string journalName = journalPath.string() + key + ".journal";
     
     if (!bf::exists(journalName))
     {
@@ -311,7 +329,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     {
         // Is this the only thing outside of Replicator that writes files?
         // If so move this write loop to Replicator.
-        bf::path newCachePath = cache->getCachePath() / newKey;
+        bf::path newCachePath = cachePath / newKey;
         int newFD = ::open(newCachePath.string().c_str(), O_WRONLY, 0600);
         if (newFD < 0)
             throw runtime_error(string("Synchronizer: Failed to open a new object in local storage!  Got ") 
@@ -361,6 +379,16 @@ void Synchronizer::rename(const string &oldKey, const string &newKey)
     for (auto &name: objNames)
         if (*name == oldKey)
             *name = newKey;
+}
+
+bf::path Synchronizer::getJournalPath()
+{
+    return journalPath;
+}
+
+bf::path Synchronizer::getCachePath()
+{
+    return cachePath;
 }
 
 /* The helper objects & fcns */
