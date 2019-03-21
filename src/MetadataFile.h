@@ -48,8 +48,8 @@ class MetadataFile
         static off_t getOffsetFromKey(const std::string &key);
         static std::string getSourceFromKey(const std::string &key);
         static size_t getLengthFromKey(const std::string &key);
-        static void setOffset(std::string &key, off_t newOffset);
-        static void setLength(std::string &key, size_t newLength);
+        static void setOffsetInKey(std::string &key, off_t newOffset);
+        static void setLengthInKey(std::string &key, size_t newLength);
         
 
     private:

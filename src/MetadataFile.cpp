@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/algorithm/string.hpp>
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
@@ -166,7 +167,7 @@ string MetadataFile::getNewKeyFromOldKey(string oldKey, size_t length)
 {
     boost::uuids::uuid u;
     if (length != 0)
-        setLength(oldKey, length);
+        setLengthInKey(oldKey, length);
     strcpy(&oldKey[0], boost::uuids::to_string(u).c_str());
     return oldKey;
 }
@@ -190,25 +191,42 @@ string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
 
 off_t MetadataFile::getOffsetFromKey(const string &key)
 {
-    return 0;
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    return stoll(split[1]);
 }
 
 string MetadataFile::getSourceFromKey(const string &key)
 {
-    return "dookie";
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    return split[3];
 }
 
 size_t MetadataFile::getLengthFromKey(const string &key)
 {
-    return 0;
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    return stoull(split[2]);
 }
 
-void MetadataFile::setOffset(string &key, off_t newOffset)
+// more efficient way to do these?
+void MetadataFile::setOffsetInKey(string &key, off_t newOffset)
 {
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    ostringstream oss;
+    oss << split[0] << "_" << newOffset << "_" << split[2] << "_" << split[3];
+    key = oss.str();
 }
 
-void MetadataFile::setLength(string &key, size_t newLength)
+void MetadataFile::setLengthInKey(string &key, size_t newLength)
 {
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    ostringstream oss;
+    oss << split[0] << "_" << split[1] << "_" << newLength << "_" << split[3];
+    key = oss.str();
 }
 
 void MetadataFile::printObjects()
