@@ -37,7 +37,6 @@ Cache::Cache() : currentCacheSize(0)
 {
     Config *conf = Config::get();
     logger = SMLogging::get();
-    sync = Synchronizer::get();
     replicator = Replicator::get();
     
     string stmp = conf->getValue("Cache", "cache_size");
@@ -329,7 +328,7 @@ void Cache::_makeSpace(size_t size)
         assert(currentCacheSize >= statbuf.st_size);
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
-        sync->flushObject(*it);
+        Synchronizer::get()->flushObject(*it);
         replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
         lru.erase(toRemove);

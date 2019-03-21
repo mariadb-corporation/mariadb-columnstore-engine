@@ -1,5 +1,5 @@
 [ObjectStorage]
-service = S3
+service = LocalStorage
 object_size = 5M
 metadata_path = ${HOME}/storagemanager/metadata
 journal_path = ${HOME}/storagemanager/journal

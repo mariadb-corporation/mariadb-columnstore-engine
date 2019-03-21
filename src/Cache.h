@@ -52,7 +52,6 @@ class Cache : public boost::noncopyable
         size_t currentCacheSize;
         Downloader downloader;
         Replicator *replicator;
-        Synchronizer *sync;
         SMLogging *logger;
         
         void populate();

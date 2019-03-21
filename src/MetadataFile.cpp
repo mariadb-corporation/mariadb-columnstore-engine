@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/random_generator.hpp>
 #include <boost/algorithm/string.hpp>
 
 #define max(x, y) (x > y ? x : y)
@@ -163,18 +164,19 @@ int MetadataFile::updateMetadata(const char *filename)
     write_json(metadataFilename, jsontree);
 }
 
-string MetadataFile::getNewKeyFromOldKey(string oldKey, size_t length)
+string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 {
-    boost::uuids::uuid u;
-    if (length != 0)
-        setLengthInKey(oldKey, length);
-    strcpy(&oldKey[0], boost::uuids::to_string(u).c_str());
-    return oldKey;
+    boost::uuids::uuid u = boost::uuids::random_generator()();
+    vector<string> split;
+    boost::split(split, key, boost::is_any_of("_"));
+    ostringstream oss;
+    oss << u << "_" << split[1] << "_" << length << "_" << split[3];
+    return oss.str();
 }
 
 string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
 {
-    boost::uuids::uuid u;
+    boost::uuids::uuid u = boost::uuids::random_generator()();
     stringstream ss;
 
     for (int i = 0; i < sourceName.length(); i++)

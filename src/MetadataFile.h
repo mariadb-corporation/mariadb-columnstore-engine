@@ -43,7 +43,7 @@ class MetadataFile
         metadataObject addMetadataObject(const char *filename, size_t length);
 
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
-        static std::string getNewKeyFromOldKey(std::string oldKey, size_t length=0);
+        static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);
         static std::string getNewKey(std::string sourceName, size_t offset, size_t length);
         static off_t getOffsetFromKey(const std::string &key);
         static std::string getSourceFromKey(const std::string &key);

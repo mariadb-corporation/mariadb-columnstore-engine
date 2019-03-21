@@ -301,7 +301,7 @@ void Synchronizer::process(list<string>::iterator name, bool use_lock)
             success = true;
         }
         catch(exception &e) {
-            logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Requeueing it.", key.c_str(),
+            logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
                 pending->opFlags, e.what());
             sleep(1);
             // TODO: requeue the job instead of looping infinitely
@@ -357,7 +357,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     string &key = *lit;
     bf::path oldCachePath = cachePath / key;
-    string journalName = journalPath.string() + key + ".journal";
+    string journalName = (journalPath/ (key + ".journal")).string();
     
     if (!bf::exists(journalName))
     {
@@ -402,7 +402,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         // Is this the only thing outside of Replicator that writes files?
         // If so move this write loop to Replicator.
         bf::path newCachePath = cachePath / newKey;
-        int newFD = ::open(newCachePath.string().c_str(), O_WRONLY, 0600);
+        int newFD = ::open(newCachePath.string().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
         if (newFD < 0)
             throw runtime_error(string("Synchronizer: Failed to open a new object in local storage!  Got ") 
               + strerror_r(errno, buf, 80));

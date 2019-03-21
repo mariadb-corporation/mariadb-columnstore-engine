@@ -584,9 +584,9 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
-void makeTestObject()
+void makeTestObject(const char *dest)
 {
-    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    int objFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(objFD >= 0);
     scoped_closer s1(objFD);
     
@@ -596,9 +596,9 @@ void makeTestObject()
 
 // the merged version should look like
 // (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
-void makeTestJournal()
+void makeTestJournal(const char *dest)
 {
-    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    int journalFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(journalFD >= 0);
     scoped_closer s2(journalFD);
     
@@ -610,7 +610,31 @@ void makeTestJournal()
     for (int i = 0; i < 5; i++)
         assert(write(journalFD, &i, 4) == 4);
 }
-        
+
+const char *testObjKey = "12345_0_8192_test-object";
+
+void makeTestMetadata(const char *dest)
+{
+    int metaFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(metaFD >= 0);
+    scoped_closer sc(metaFD);
+    
+    const char *metadata = 
+    "{ \
+        \"version\" : 1, \
+        \"revision\" : 1, \
+        \"objects\" : \
+        [ \
+            { \
+                \"offset\" : 0, \
+                \"length\" : 8192, \
+                \"name\" : \"12345_0_8192_test-object\" \
+            } \
+        ] \
+    }";
+    write(metaFD, metadata, strlen(metadata));
+}
+
 bool mergeJournalTest()
 {
     /*
@@ -619,8 +643,8 @@ bool mergeJournalTest()
         verify the expected values
     */
     
-    makeTestObject();
-    makeTestJournal();
+    makeTestObject("test-object");
+    makeTestJournal("test-journal");
     
     int i;
     IOCoordinator *ioc = IOCoordinator::get();
@@ -673,42 +697,70 @@ bool mergeJournalTest()
 }
 bool syncTest1()
 {
+    Config *config = Config::get();
     Synchronizer *sync = Synchronizer::get();
     Cache *cache = Cache::get();
     CloudStorage *cs = CloudStorage::get();
     bf::path cachePath = sync->getCachePath();
     bf::path journalPath = sync->getJournalPath();
     
-    // make the test obj and journal and put them in the cache dir
-    makeTestObject();
-    makeTestJournal();
-    bf::rename("test-object", cachePath / "test-object.obj");
-    bf::rename("test-journal", journalPath / "test-object.journal");
-    cache->newObject("test-object.obj", bf::file_size(cachePath/"test-object.obj"));
-    cache->newJournalEntry(bf::file_size(journalPath/"test-object.journal"));
+    string stmp = config->getValue("ObjectStorage", "metadata_path");
+    assert(!stmp.empty());
+    bf::path metaPath = stmp;
+    // nothing creates the dir yet
+    bf::create_directories(metaPath);
+    
+    // make the test obj, journal, and metadata and put them in their dirs
+    string key = "12345_0_8192_test-object";
+    string journalName = key + ".journal";
+    
+    makeTestObject((cachePath/key).string().c_str());
+    makeTestJournal((journalPath/journalName).string().c_str());
+    makeTestMetadata((metaPath/"test-file.meta").string().c_str());
+
+    cout << "made test objects" << endl;
+    
+    cache->newObject(key, bf::file_size(cachePath/key));
+    cache->newJournalEntry(bf::file_size(journalPath/journalName));
 
     vector<string> vObj;
-    vObj.push_back("test-object");
+    vObj.push_back(key);
+    
+    cout << "calling sync.newObjects()" << endl;
+    
     sync->newObjects(vObj);
     sleep(1);  // wait for the job to run
     
     // make sure that it made it to the cloud
     bool exists = false;
-    int err = cs->exists("test-object", &exists);
+    int err = cs->exists(key, &exists);
     assert(!err);
     assert(exists);
     
-    sync->newJournalEntry("test-object");
+    cout << "calling sync.newJournalEntry()" << endl;
+    
+    sync->newJournalEntry(key);
     sleep(1);  // let it do what it does
     
     // check that the original objects no longer exist
-    assert(!cache->exists("test-object.obj"));
-    //working here assert(!bf::exists(cachePath
+    assert(!cache->exists(key));
+    assert(!bf::exists(journalPath / journalName));
+    
+/*
+        void newJournalEntry(const std::string &key);
+        void newObjects(const std::vector<std::string> &keys);
+        void deletedObjects(const std::vector<std::string> &keys);        
+        void flushObject(const std::string &key);
+*/
+    // TODO test the rest of the fcns, esp syncwithjournal where the obj is not in the cache
+    // TODO test error paths, pass in some junk
     
     
     // cleanup
-    bf::remove(cachePath / "test-object.obj");
-    bf::remove(journalPath / "test-object.journal");
+    bf::remove(cachePath / key);
+    bf::remove(journalPath / journalName);
+    
+    cout << "Sync test 1 OK" << endl;
 }
 
 int main()
@@ -731,5 +783,6 @@ int main()
     cacheTest1();
     mergeJournalTest();
     replicatorTest();
+    syncTest1();
     return 0;
 }

@@ -41,7 +41,7 @@ CloudStorage * CloudStorage::get()
         return inst;
     if (type == "s3")
         inst = new S3Storage();
-    else if (type == "local")
+    else if (type == "local" || type == "localstorage")
         inst = new LocalStorage();
     else {
         logger->log(LOG_CRIT,"CloudStorage: got unknown service provider: %s", type.c_str());

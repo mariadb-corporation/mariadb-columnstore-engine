@@ -27,7 +27,7 @@ class Synchronizer : public boost::noncopyable
         virtual ~Synchronizer();
         
         // these take keys as parameters, not full path names, ex, pass in '12345' not
-        // 'cache/12345.obj'.
+        // 'cache/12345'.
         void newJournalEntry(const std::string &key);
         void newObjects(const std::vector<std::string> &keys);
         void deletedObjects(const std::vector<std::string> &keys);        
