@@ -5,6 +5,7 @@
 #include "Downloader.h"
 #include "SMLogging.h"
 #include "Synchronizer.h"
+#include "Replicator.h"
 
 #include <string>
 #include <vector>
@@ -17,10 +18,12 @@
 namespace storagemanager
 {
 
+class Synchronizer;
+
 class Cache : public boost::noncopyable
 {
     public:
-        Cache();
+        static Cache *get();
         virtual ~Cache();
         
         void read(const std::vector<std::string> &keys);
@@ -35,21 +38,25 @@ class Cache : public boost::noncopyable
         // the size will change in that process; sizediff is by how much
         void rename(const std::string &oldKey, const std::string &newKey, ssize_t sizediff);
         void setMaxCacheSize(size_t size);
+        void makeSpace(size_t size);
         size_t getCurrentCacheSize() const;
         
         // test helpers
         const boost::filesystem::path &getCachePath();
     private:
+        Cache();
+        
         boost::filesystem::path prefix;
         size_t maxCacheSize;
         size_t objectSize;
         size_t currentCacheSize;
         Downloader downloader;
+        Replicator *replicator;
         Synchronizer *sync;
         SMLogging *logger;
         
         void populate();
-        void makeSpace(size_t size);
+        void _makeSpace(size_t size);
 
         /* The main cache structures */
         // lru owns the string memory for the filenames it manages.  m_lru and DNE point to those strings.

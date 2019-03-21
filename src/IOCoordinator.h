@@ -45,6 +45,7 @@ class IOCoordinator : public boost::noncopyable
         int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath);
         
         /* Lock manipulation fcns.  They can lock on any param given to them. */
+        void renameObject(const std::string &oldKey, const std::string &newKey);
         bool readLock(const std::string &filename);
         bool writeLock(const std::string &filename);
         void readUnlock(const std::string &filename);

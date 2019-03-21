@@ -13,14 +13,32 @@
 using namespace std;
 namespace bf = boost::filesystem;
 
+namespace
+{
+    boost::mutex m;
+    storagemanager::Cache *inst = NULL;
+}
+
 namespace storagemanager
 {
+
+Cache * Cache::get()
+{
+    if (inst)
+        return inst;
+    boost::unique_lock<boost::mutex> s(m);
+    if (inst)
+        return inst;
+    inst = new Cache();
+    return inst;
+}
 
 Cache::Cache() : currentCacheSize(0)
 {
     Config *conf = Config::get();
     logger = SMLogging::get();
     sync = Synchronizer::get();
+    replicator = Replicator::get();
     
     string stmp = conf->getValue("Cache", "cache_size");
     if (stmp.empty()) 
@@ -84,26 +102,28 @@ Cache::~Cache()
 void Cache::populate()
 {
     bf::directory_iterator dir(prefix);
-    bf::diretory_iterator dend;
+    bf::directory_iterator dend;
     while (dir != dend)
     {
         // put everything that doesn't end with '.journal' in lru & m_lru
-        if (bf::is_regular_file(*dir))
+        const bf::path &p = dir->path();
+        if (bf::is_regular_file(p))
         {
             size_t size = bf::file_size(*dir);
-            if (dir->extension() == "obj")
+            if (p.extension() == "")   // need to decide whether objects should have an extension
             {
-                lru.push_back(dir->string());
-                m_lru.insert(lru.end() - 1);
+                lru.push_back(p.string());
+                auto last = lru.end();
+                m_lru.insert(--last);
                 currentCacheSize += size;
             }
-            else if (dir->extension() == "journal")
+            else if (p.extension() == "journal")
                 currentCacheSize += size;
             else
-                logger->log(LOG_WARN, "Cache: found a file in the cache that does not belong '%s'", dir->string().c_str());
+                logger->log(LOG_WARNING, "Cache: found a file in the cache that does not belong '%s'", p.string().c_str());
         }
         else
-            logger->log(LOG_WARN, "Cache: found something in the cache that does not belong '%s'", dir->string().c_str());
+            logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
         ++dir;
     }
 }
@@ -147,7 +167,7 @@ void Cache::read(const vector<string> &keys)
     s.lock();
     // do makespace() before downloading.  Problem is, until the download is finished, this fcn can't tell which
     // downloads it was responsible for.  Need Downloader to make the call...?
-    makeSpace(sum_sizes);      
+    _makeSpace(sum_sizes);      
     currentCacheSize += sum_sizes;
 
     // move all keys to the back of the LRU
@@ -222,14 +242,14 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out)
 bool Cache::exists(const string &key)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    return m_lru.find(keys[i]) != m_lru.end();
+    return m_lru.find(key) != m_lru.end();
 }
 
 void Cache::newObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(m_lru.find(key) == m_lru.end());
-    makeSpace(size);
+    _makeSpace(size);
     lru.push_back(key);
     LRU_t::iterator back = lru.end();
     m_lru.insert(--back);
@@ -239,7 +259,7 @@ void Cache::newObject(const string &key, size_t size)
 void Cache::newJournalEntry(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    makeSpace(size);
+    _makeSpace(size);
     currentCacheSize += size;
 }
 
@@ -262,13 +282,20 @@ void Cache::deletedObject(const string &key, size_t size)
 
 void Cache::setMaxCacheSize(size_t size)
 {
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     if (size < maxCacheSize)
-        makeSpace(maxCacheSize - size);
+        _makeSpace(maxCacheSize - size);
     maxCacheSize = size;
 }
 
-// call this holding lru_mutex
 void Cache::makeSpace(size_t size)
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    _makeSpace(size);
+}
+
+// call this holding lru_mutex
+void Cache::_makeSpace(size_t size)
 {
     ssize_t thisMuch = currentCacheSize + size - maxCacheSize;
     if (thisMuch <= 0)
@@ -303,7 +330,7 @@ void Cache::makeSpace(size_t size)
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
         sync->flushObject(*it);
-        replicator->delete(cachedFile, Replicator::LOCAL_ONLY);
+        replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
         lru.erase(toRemove);
         m_lru.erase(*toRemove);
@@ -313,7 +340,7 @@ void Cache::makeSpace(size_t size)
 void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    auto it = m_lru(oldKey);
+    auto it = m_lru.find(oldKey);
     assert(it != m_lru.end());
     
     auto lit = it->lit;

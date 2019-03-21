@@ -4,6 +4,7 @@
 
 #include <string>
 #include <boost/shared_array.hpp>
+#include "SMLogging.h"
 
 namespace storagemanager
 {
@@ -23,7 +24,13 @@ class CloudStorage
         
         // this will return a CloudStorage instance of the type specified in StorageManager.cnf
         static CloudStorage *get();
+        
+    protected:
+        SMLogging *logger;
+        CloudStorage();
+        
     private:
+        
 };
 
 }

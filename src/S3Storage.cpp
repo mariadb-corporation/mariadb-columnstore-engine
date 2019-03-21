@@ -19,7 +19,7 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     return 0;
 }
 
-int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> &data, size_t *size = NULL)
+int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> &data, size_t *size)
 {
     return 0;
 }
@@ -29,7 +29,7 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
     return 0;
 }
 
-int S3Storage::putObject(boost::shared_array<uint8_t> data, uint len, const string &destKey)
+int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, const string &destKey)
 {
     return 0;
 }

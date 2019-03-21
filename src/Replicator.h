@@ -2,6 +2,7 @@
 #define REPLICATOR_H_
 
 //#include "ThreadPool.h"
+#include "MetadataFile.h"
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -18,10 +19,18 @@ class Replicator
         static Replicator *get();
         virtual ~Replicator();
 
+        enum Flags
+        {
+            NONE = 0,
+            LOCAL_ONLY = 0x1,
+            NO_LOCAL = 0x2
+        };
+        
         int addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length);
         int newObject(const char *filename, const uint8_t *data, size_t length);
-        int remove(const char *key ,uint8_t flags);
-
+        int remove(const char *key, Flags flags = NONE);
+        
+        int updateMetadata(const char *filename, const MetadataFile &meta);
 
     private:
         Replicator();

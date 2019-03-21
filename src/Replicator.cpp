@@ -134,7 +134,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     return count;
 }
 
-int Replicator::remove(const char *filename, uint8_t flags)
+int Replicator::remove(const char *filename, Flags flags)
 {
     int ret = 0;
     boost::filesystem::path p(filename);
@@ -149,6 +149,11 @@ int Replicator::remove(const char *filename, uint8_t flags)
         ret = -1;
     }
     return ret;
+}
+
+int Replicator::updateMetadata(const char *filename, const MetadataFile &meta)
+{
+    return 0;
 }
 
 }

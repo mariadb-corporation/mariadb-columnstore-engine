@@ -2,7 +2,9 @@
 
 #include <boost/filesystem.hpp>
 #include <iostream>
-#include <syslog.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "LocalStorage.h"
 #include "Config.h"
 
@@ -24,11 +26,10 @@ LocalStorage::LocalStorage()
         }
         catch (exception &e)
         {
-            syslog(LOG_CRIT, "Failed to create %s, got: %s", prefix.string().c_str(), e.what());
+            logger->log(LOG_CRIT, "Failed to create %s, got: %s", prefix.string().c_str(), e.what());
             throw e;
         }
     }
-    logger = SMLogging::get();
 }
 
 LocalStorage::~LocalStorage()
@@ -40,10 +41,10 @@ const bf::path & LocalStorage::getPrefix() const
     return prefix;
 }
 
-int LocalStorage::copy(const path &source, const path &dest)
+int LocalStorage::copy(const bf::path &source, const bf::path &dest)
 {
     boost::system::error_code err;
-    bf::copy_file(source, dest, copy_option::fail_if_exists, err);
+    bf::copy_file(source, dest, bf::copy_option::fail_if_exists, err);
     if (err)
     {
         errno = err.value();
@@ -78,13 +79,13 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
     data.reset(new uint8_t[l_size]);
     char buf[80];
     
-    int fd = open(c_source, O_RDONLY);
+    int fd = ::open(c_source, O_RDONLY);
     if (fd < 0)
     {
         logger->log(LOG_CRIT, "LocalStorage::getObject() failed to open %s, got '%s'", c_source, strerror_r(errno, buf, 80));
         return fd;
     }
-    scoped_closer s(fd);
+
     size_t count = 0;
     while (count < l_size)
     {
@@ -92,12 +93,14 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
         if (err < 0)
         {
             logger->log(LOG_CRIT, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+            close(fd);
             return err;
         }
         count += err;
     }
     if (size)
         *size = l_size;
+    close(fd);
     return 0;
 }
 
@@ -115,10 +118,10 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
     int fd = ::open(c_dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
     {
-        logger->log("LocalStorage::putObject(): Failed to open %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+        logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to open %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
         return fd;
     }
-    scoped_closer s(fd);
+
     size_t count = 0;
     int err;
     while (count < len)
@@ -126,11 +129,13 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
         err = ::write(fd, &data[count], len - count);
         if (err < 0)
         {
-            logger->log("LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+            logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+            close(fd);
             return err;
         }
         count += err;
     }
+    close(fd);
     return 0;
 }
 

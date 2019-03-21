@@ -27,6 +27,7 @@ string tolower(const string &s)
 
 namespace storagemanager
 {
+
 CloudStorage * CloudStorage::get()
 {
     if (inst)
@@ -48,6 +49,11 @@ CloudStorage * CloudStorage::get()
     }
  
     return inst;
+}
+
+CloudStorage::CloudStorage()
+{
+    logger = SMLogging::get();
 }
 
 }

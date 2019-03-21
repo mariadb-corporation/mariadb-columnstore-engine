@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -336,7 +337,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     boost::property_tree::json_parser::read_json(ss, header);
     assert(header.get<string>("version") == "1");
     string stmp = header.get<string>("max_offset");
-    size_t maxJournalOffset = strtoul(stmp);
+    size_t maxJournalOffset = strtoul(stmp.c_str(), NULL, 0);
     
     struct stat objStat;
     fstat(objFD, &objStat);
@@ -368,7 +369,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
             // at the EOF of the object.  The journal may contain entries that append to the data,
             // so 0-fill the remaining bytes.
             #ifdef DEBUG
-            memset(&ret[count], 0, len-count);
+            memset(&ret[count], 0, *len-count);
             #endif
             break;
         }
@@ -385,7 +386,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         
         // if this entry overlaps, read the overlapping section
         uint64_t lastJournalOffset = offlen[0] + offlen[1];
-        uint64_t lastBufOffset = offset + len;
+        uint64_t lastBufOffset = offset + *len;
         if (offlen[0] <= lastBufOffset && lastJournalOffset >= offset)
         {
             uint64_t startReadingAt = max(offlen[0], offset);
@@ -441,7 +442,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     boost::property_tree::json_parser::read_json(ss, header);
     assert(header.get<string>("version") == "1");
     string stmp = header.get<string>("max_offset");
-    size_t maxJournalOffset = strtoul(stmp);    
+    size_t maxJournalOffset = strtoul(stmp.c_str(), NULL, 0);    
     
     if (maxJournalOffset > *len)
     {
@@ -486,6 +487,12 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     }
     return 0;
 }
+
+void IOCoordinator::renameObject(const string &oldKey, const string &newKey)
+{
+    // does anything need to be done here?
+}
+
 
 bool IOCoordinator::readLock(const string &filename)
 {

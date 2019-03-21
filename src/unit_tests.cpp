@@ -177,8 +177,8 @@ bool replicatorTest()
     cout << "replicator addJournalEntry OK" << endl;
     ::close(fd);
 
-    repli->remove(newobject,0);
-    repli->remove(newobjectJournal,0);
+    repli->remove(newobject);
+    repli->remove(newobjectJournal);
     assert(!boost::filesystem::exists(newobject));
     cout << "replicator remove OK" << endl;
     return true;
@@ -535,7 +535,7 @@ bool localstorageTest1()
 bool cacheTest1()
 {
 
-    Cache cache;
+    Cache *cache = Cache::get();
     CloudStorage *cs = CloudStorage::get();
     LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
     if (ls == NULL) {
@@ -544,15 +544,15 @@ bool cacheTest1()
     }
     
     bf::path storagePath = ls->getPrefix();
-    bf::path cachePath = cache.getCachePath();
+    bf::path cachePath = cache->getCachePath();
     vector<string> v_bogus;
     vector<bool> exists;
     
     // make sure nothing shows up in the cache path for files that don't exist
     v_bogus.push_back("does-not-exist");
-    cache.read(v_bogus);
+    cache->read(v_bogus);
     assert(!bf::exists(cachePath / "does-not-exist"));
-    cache.exists(v_bogus, &exists);
+    cache->exists(v_bogus, &exists);
     assert(exists.size() == 1);
     assert(!exists[0]);
     
@@ -560,21 +560,21 @@ bool cacheTest1()
     string realFile("storagemanager.cnf");
     bf::copy_file(realFile, storagePath / realFile, bf::copy_option::overwrite_if_exists);
     v_bogus[0] = realFile;
-    cache.read(v_bogus);
+    cache->read(v_bogus);
     assert(bf::exists(cachePath / realFile));
     exists.clear();
-    cache.exists(v_bogus, &exists);
+    cache->exists(v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
-    ssize_t currentSize = cache.getCurrentCacheSize();
+    ssize_t currentSize = cache->getCurrentCacheSize();
     assert(currentSize == bf::file_size(cachePath / realFile));
     
     // lie about the file being deleted and then replaced
-    cache.deletedObject(realFile, currentSize);
-    assert(cache.getCurrentCacheSize() == 0);
-    cache.newObject(realFile, currentSize);
-    assert(cache.getCurrentCacheSize() == currentSize);
-    cache.exists(v_bogus, &exists);
+    cache->deletedObject(realFile, currentSize);
+    assert(cache->getCurrentCacheSize() == 0);
+    cache->newObject(realFile, currentSize);
+    assert(cache->getCurrentCacheSize() == currentSize);
+    cache->exists(v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
     
@@ -584,6 +584,33 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
+void makeTestObject()
+{
+    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(objFD >= 0);
+    scoped_closer s1(objFD);
+    
+    for (int i = 0; i < 2048; i++)
+        assert(write(objFD, &i, 4) == 4);
+}
+
+// the merged version should look like
+// (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
+void makeTestJournal()
+{
+    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(journalFD >= 0);
+    scoped_closer s2(journalFD);
+    
+    char header[] = "{ \"version\" : 1, \"max_offset\": 39 }";
+    write(journalFD, header, strlen(header) + 1);
+    
+    uint64_t offlen[2] = { 20, 20 };
+    write(journalFD, offlen, 16);
+    for (int i = 0; i < 5; i++)
+        assert(write(journalFD, &i, 4) == 4);
+}
+        
 bool mergeJournalTest()
 {
     /*
@@ -592,30 +619,13 @@ bool mergeJournalTest()
         verify the expected values
     */
     
-    int objFD = open("test-object", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(objFD >= 0);
-    scoped_closer s1(objFD);
-    int journalFD = open("test-journal", O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(journalFD >= 0);
-    scoped_closer s2(journalFD);
+    makeTestObject();
+    makeTestJournal();
     
     int i;
-    for (i = 0; i < 2048; i++)
-        assert(write(objFD, &i, 4) == 4);
-    
-    char header[] = "{ \"version\" : 1 }";
-    write(journalFD, header, strlen(header) + 1);
-    
-    uint64_t offlen[2] = { 20, 20 };
-    write(journalFD, offlen, 16);
-    for (i = 0; i < 5; i++)
-        assert(write(journalFD, &i, 4) == 4);
-    
-    // the merged version should look like
-    // (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
-    
     IOCoordinator *ioc = IOCoordinator::get();
-    boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal");
+    size_t len = 0;
+    boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal", 0, &len);
     assert(data);
     int *idata = (int *) data.get();
     for (i = 0; i < 5; i++)
@@ -627,7 +637,8 @@ bool mergeJournalTest()
         
     // try different range parameters
     // read at the beginning of the change
-    data = ioc->mergeJournal("test-object", "test-journal", 20, 40);
+    len = 40;
+    data = ioc->mergeJournal("test-object", "test-journal", 20, &len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 5; i++)
@@ -636,7 +647,8 @@ bool mergeJournalTest()
         assert(idata[i] == i+5);
     
     // read s.t. beginning of the change is in the middle of the range
-    data = ioc->mergeJournal("test-object", "test-journal", 8, 24);
+    len = 24;
+    data = ioc->mergeJournal("test-object", "test-journal", 8, &len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 3; i++)
@@ -645,7 +657,8 @@ bool mergeJournalTest()
         assert(idata[i] == i - 3);
     
     // read s.t. end of the change is in the middle of the range
-    data = ioc->mergeJournal("test-object", "test-journal", 28, 20);
+    len = 20;
+    data = ioc->mergeJournal("test-object", "test-journal", 28, &len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 3; i++)
@@ -662,7 +675,7 @@ bool syncTest1()
 {
     Synchronizer *sync = Synchronizer::get();
     Cache *cache = Cache::get();
-    CloudStorage *cs = CloudStorage.get();
+    CloudStorage *cs = CloudStorage::get();
     bf::path cachePath = sync->getCachePath();
     bf::path journalPath = sync->getJournalPath();
     
@@ -689,16 +702,13 @@ bool syncTest1()
     sleep(1);  // let it do what it does
     
     // check that the original objects no longer exist
-    assert(!cache->exists("test-object.obj");
-    assert(!bf::exists(cachePath
+    assert(!cache->exists("test-object.obj"));
+    //working here assert(!bf::exists(cachePath
     
     
     // cleanup
-    bf::remove(cachePath / "test-object");
-    bf::remove(cachePath / "test-journal");
-    
-        
-    
+    bf::remove(cachePath / "test-object.obj");
+    bf::remove(journalPath / "test-object.journal");
 }
 
 int main()

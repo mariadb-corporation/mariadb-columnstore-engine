@@ -6,6 +6,7 @@
 #include <map>
 #include <deque>
 #include <boost/utility.hpp>
+#include <boost/filesystem.hpp>
 
 #include "SMLogging.h"
 #include "Cache.h"
@@ -15,6 +16,8 @@
 
 namespace storagemanager
 {
+
+class Cache;
 
 /* TODO: Need to think about how errors are handled / propagated */
 class Synchronizer : public boost::noncopyable
@@ -36,10 +39,10 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
-        void process(const std::string &key);
-        void synchronize(const std::string &key, bool isFlush);
-        void synchronizeDelete(const std::string &key);
-        void synchronizeWithJournal(const std::string &key, bool isFlush);
+        void process(std::list<std::string>::iterator key, bool use_lock=true);
+        void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
+        void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
+        void synchronizeWithJournal(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void rename(const std::string &oldkey, const std::string &newkey);
         void makeJob(const std::string &key);
         
@@ -56,12 +59,13 @@ class Synchronizer : public boost::noncopyable
         
         struct Job : public ThreadPool::Job
         {
-            Job(Synchronizer *s, std::list<std::string>::iterator &i) : sync(s), it(i) { }
+            Job(Synchronizer *s, std::list<std::string>::iterator i) : sync(s), it(i) { }
             void operator()() { sync->process(it); }
             Synchronizer *sync;
             std::list<std::string>::iterator it;
         };
         
+        uint maxUploads;
         ThreadPool threadPool;
         std::map<std::string, boost::shared_ptr<PendingOps> > pendingOps;
         std::map<std::string, boost::shared_ptr<PendingOps> > opsInProgress;
@@ -76,6 +80,7 @@ class Synchronizer : public boost::noncopyable
         Cache *cache;
         Replicator *replicator;
         IOCoordinator *ioc;
+        CloudStorage *cs;
         
         boost::filesystem::path cachePath;
         boost::filesystem::path journalPath;

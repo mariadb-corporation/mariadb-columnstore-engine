@@ -3,6 +3,7 @@
 
 #include <string>
 #include "CloudStorage.h"
+#include "SMLogging.h"
 #include <boost/filesystem/path.hpp>
 
 namespace storagemanager
@@ -26,7 +27,6 @@ class LocalStorage : public CloudStorage
 
     private:
         boost::filesystem::path prefix;
-        SMLogging *logger;
         
         int copy(const boost::filesystem::path &sourceKey, const boost::filesystem::path &destKey);
 };
