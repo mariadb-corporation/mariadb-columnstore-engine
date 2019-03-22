@@ -91,6 +91,25 @@ Cache::Cache() : currentCacheSize(0)
     //cout << "Cache got prefix " << prefix << endl;
     
     downloader.setDownloadPath(prefix.string());
+    
+    stmp = conf->getValue("ObjectStorage", "journal_path");
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
+        throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+    }
+    journalPrefix = stmp;
+    bf::create_directories(journalPrefix);
+    try 
+    {
+        bf::create_directories(journalPrefix);
+    }
+    catch (exception &e)
+    {
+        syslog(LOG_CRIT, "Failed to create %s, got: %s", journalPrefix.string().c_str(), e.what());
+        throw e;
+    }
+    
     populate();
 }
 
@@ -104,25 +123,39 @@ void Cache::populate()
     bf::directory_iterator dend;
     while (dir != dend)
     {
-        // put everything that doesn't end with '.journal' in lru & m_lru
+        // put everything in lru & m_lru
         const bf::path &p = dir->path();
         if (bf::is_regular_file(p))
         {
-            size_t size = bf::file_size(*dir);
             if (p.extension() == "")   // need to decide whether objects should have an extension
             {
-                lru.push_back(p.string());
+                lru.push_back(p.filename().string());
                 auto last = lru.end();
                 m_lru.insert(--last);
-                currentCacheSize += size;
+                currentCacheSize += bf::file_size(*dir);
             }
-            else if (p.extension() == "journal")
-                currentCacheSize += size;
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the cache that does not belong '%s'", p.string().c_str());
         }
         else
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
+        ++dir;
+    }
+    
+    // account for what's in the journal dir
+    dir = bf::directory_iterator(journalPrefix);
+    while (dir != dend)
+    {
+        const bf::path &p = dir->path();
+        if (bf::is_regular_file(p))
+        {
+            if (p.extension() == ".journal")   // need to decide whether objects should have an extension
+                currentCacheSize += bf::file_size(*dir);
+            else
+                logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
+        }
+        else
+            logger->log(LOG_WARNING, "Cache: found something in the journal dir that does not belong '%s'", p.string().c_str());
         ++dir;
     }
 }
@@ -229,8 +262,12 @@ const bf::path & Cache::getCachePath()
     return prefix;
 }
 
+const bf::path & Cache::getJournalPath()
+{
+    return journalPrefix;
+}
         
-void Cache::exists(const vector<string> &keys, vector<bool> *out)
+void Cache::exists(const vector<string> &keys, vector<bool> *out) const
 {
     out->resize(keys.size());
     boost::unique_lock<boost::mutex> s(lru_mutex);
@@ -238,7 +275,7 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out)
         (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
-bool Cache::exists(const string &key)
+bool Cache::exists(const string &key) const
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
     return m_lru.find(key) != m_lru.end();
@@ -293,6 +330,11 @@ void Cache::makeSpace(size_t size)
     _makeSpace(size);
 }
 
+size_t Cache::getMaxCacheSize() const
+{
+    return maxCacheSize;
+}
+
 // call this holding lru_mutex
 void Cache::_makeSpace(size_t size)
 {
@@ -314,7 +356,7 @@ void Cache::_makeSpace(size_t size)
         int err = stat(cachedFile.string().c_str(), &statbuf);
         if (err)
         {
-            logger->log(LOG_WARNING, "Downloader: There seems to be a cached file that couldn't be stat'ed: %s", cachedFile.string().c_str());
+            logger->log(LOG_WARNING, "Cache::makeSpace(): There seems to be a cached file that couldn't be stat'ed: %s", cachedFile.string().c_str());
             ++it;
             continue;
         }
@@ -331,8 +373,8 @@ void Cache::_makeSpace(size_t size)
         Synchronizer::get()->flushObject(*it);
         replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
-        lru.erase(toRemove);
         m_lru.erase(*toRemove);
+        lru.erase(toRemove);
     }
 }
 
@@ -352,6 +394,20 @@ void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
 size_t Cache::getCurrentCacheSize() const
 {
     return currentCacheSize;
+}
+
+void Cache::reset()
+{
+    m_lru.clear();
+    lru.clear();
+    
+    bf::directory_iterator dir;
+    bf::directory_iterator dend;
+    for (dir = bf::directory_iterator(prefix); dir != dend; ++dir)
+        bf::remove_all(dir->path());
+        
+    for (dir = bf::directory_iterator(journalPrefix); dir != dend; ++dir)
+        bf::remove_all(dir->path());
 }
 
 /* The helper classes */

@@ -39,7 +39,7 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
-        void process(std::list<std::string>::iterator key, bool use_lock=true);
+        void process(std::list<std::string>::iterator key, bool callerHoldsLock=false);
         void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeWithJournal(const std::string &sourceFile, std::list<std::string>::iterator &it);

@@ -19,7 +19,7 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     return 0;
 }
 
-int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> &data, size_t *size)
+int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
 {
     return 0;
 }

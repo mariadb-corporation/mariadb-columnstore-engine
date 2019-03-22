@@ -460,8 +460,6 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
         
         uint64_t startReadingAt = offlen[0];
         uint64_t lengthOfRead = offlen[1];
-
-        ::lseek(journalFD, startReadingAt, SEEK_CUR);
             
         uint count = 0;
         while (count < lengthOfRead)
@@ -471,19 +469,18 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
             {
                 char buf[80];
                 int l_errno = errno;
-                logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(errno, buf, 80));
+                logger->log(LOG_ERR, "mergeJournalInMem: got %s", strerror_r(errno, buf, 80));
                 errno = l_errno;
                 return -1;
             }
             else if (err == 0)
             {
-                logger->log(LOG_ERR, "mergeJournal: got early EOF");
+                logger->log(LOG_ERR, "mergeJournalInMem: got early EOF");
                 errno = ENODATA;  // is there a better errno for early EOF?
                 return -1;
             }
             count += err;
         }
-        ::lseek(journalFD, offlen[1] - lengthOfRead, SEEK_CUR);
     }
     return 0;
 }
@@ -532,7 +529,7 @@ void IOCoordinator::writeUnlock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
     
     auto it = locks.find(filename);
-    it->second->readUnlock();
+    it->second->writeUnlock();
     if (!it->second->inUse())
     {
         delete it->second;

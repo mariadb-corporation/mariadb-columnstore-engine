@@ -49,6 +49,7 @@ void RWLock::readUnlock()
 {
     boost::unique_lock<boost::mutex> s(m);
     
+    assert(readersRunning > 0);
     --readersRunning;
     if (readersRunning == 0 && writersWaiting != 0)
         okToWrite.notify_one();
@@ -83,6 +84,7 @@ void RWLock::writeUnlock()
 {
     boost::unique_lock<boost::mutex> s(m);
     
+    assert(writersRunning > 0);
     --writersRunning;
     if (writersWaiting != 0)
         okToWrite.notify_one();

@@ -70,13 +70,11 @@ int LocalStorage::getObject(const string &source, const string &dest, size_t *si
     return ret;
 }
 
-int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<uint8_t> &data, size_t *size)
+int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
 {
     int ret;
     bf::path source = prefix / sourceKey;
     const char *c_source = source.string().c_str();
-    size_t l_size = bf::file_size(source);
-    data.reset(new uint8_t[l_size]);
     char buf[80];
     
     int fd = ::open(c_source, O_RDONLY);
@@ -85,11 +83,13 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
         logger->log(LOG_CRIT, "LocalStorage::getObject() failed to open %s, got '%s'", c_source, strerror_r(errno, buf, 80));
         return fd;
     }
-
+    
+    size_t l_size = bf::file_size(source);
+    data->reset(new uint8_t[l_size]);
     size_t count = 0;
     while (count < l_size)
     {
-        int err = ::read(fd, &data[count], l_size - count);
+        int err = ::read(fd, &(*data)[count], l_size - count);
         if (err < 0)
         {
             logger->log(LOG_CRIT, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));

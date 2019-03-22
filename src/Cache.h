@@ -27,8 +27,8 @@ class Cache : public boost::noncopyable
         virtual ~Cache();
         
         void read(const std::vector<std::string> &keys);
-        bool exists(const std::string &key);
-        void exists(const std::vector<std::string> &keys, std::vector<bool> *out);
+        bool exists(const std::string &key) const;
+        void exists(const std::vector<std::string> &keys, std::vector<bool> *out) const;
         void newObject(const std::string &key, size_t size);
         void newJournalEntry(size_t size);
         void deletedObject(const std::string &key, size_t size);
@@ -40,13 +40,18 @@ class Cache : public boost::noncopyable
         void setMaxCacheSize(size_t size);
         void makeSpace(size_t size);
         size_t getCurrentCacheSize() const;
+        size_t getMaxCacheSize() const;
         
         // test helpers
         const boost::filesystem::path &getCachePath();
+        const boost::filesystem::path &getJournalPath();
+        // this will delete everything in the cache and journal paths, and empty all Cache structures.
+        void reset();
     private:
         Cache();
         
         boost::filesystem::path prefix;
+        boost::filesystem::path journalPrefix;
         size_t maxCacheSize;
         size_t objectSize;
         size_t currentCacheSize;
@@ -105,7 +110,7 @@ class Cache : public boost::noncopyable
         DNE_t doNotEvict;
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
-        boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
+        mutable boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
 };
 
 

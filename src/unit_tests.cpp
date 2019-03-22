@@ -701,6 +701,20 @@ bool syncTest1()
     Synchronizer *sync = Synchronizer::get();
     Cache *cache = Cache::get();
     CloudStorage *cs = CloudStorage::get();
+    LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
+    if (!ls)
+    {
+        cout << "syncTest1() requires using local storage at the moment." << endl;
+        return true;
+    }
+    
+    cache->reset();
+    
+    // delete everything in the fake cloud to make it easier to list later
+    bf::path fakeCloudPath = ls->getPrefix();
+    for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
+        bf::remove(dir->path());
+    
     bf::path cachePath = sync->getCachePath();
     bf::path journalPath = sync->getJournalPath();
     
@@ -710,23 +724,19 @@ bool syncTest1()
     // nothing creates the dir yet
     bf::create_directories(metaPath);
     
-    // make the test obj, journal, and metadata and put them in their dirs
+    // make the test obj, journal, and metadata
     string key = "12345_0_8192_test-object";
     string journalName = key + ".journal";
     
     makeTestObject((cachePath/key).string().c_str());
     makeTestJournal((journalPath/journalName).string().c_str());
     makeTestMetadata((metaPath/"test-file.meta").string().c_str());
-
-    cout << "made test objects" << endl;
     
     cache->newObject(key, bf::file_size(cachePath/key));
     cache->newJournalEntry(bf::file_size(journalPath/journalName));
 
     vector<string> vObj;
     vObj.push_back(key);
-    
-    cout << "calling sync.newObjects()" << endl;
     
     sync->newObjects(vObj);
     sleep(1);  // wait for the job to run
@@ -737,8 +747,6 @@ bool syncTest1()
     assert(!err);
     assert(exists);
     
-    cout << "calling sync.newJournalEntry()" << endl;
-    
     sync->newJournalEntry(key);
     sleep(1);  // let it do what it does
     
@@ -746,19 +754,59 @@ bool syncTest1()
     assert(!cache->exists(key));
     assert(!bf::exists(journalPath / journalName));
     
-/*
-        void newJournalEntry(const std::string &key);
-        void newObjects(const std::vector<std::string> &keys);
-        void deletedObjects(const std::vector<std::string> &keys);        
-        void flushObject(const std::string &key);
-*/
-    // TODO test the rest of the fcns, esp syncwithjournal where the obj is not in the cache
+    // Replicator doesn't implement all of its functionality yet, need to delete key from the cache manually for now
+    bf::remove(cachePath/key);
+    
+    // check that a new version of object exists in cloud storage
+    // D'oh, this would have to list the objects to find it, not going to implement 
+    // that everywhere just now.  For now, making this test require LocalStorage.
+    bool foundIt = false;
+    string newKey;
+    for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator() && !foundIt; ++dir)
+    {
+        newKey = dir->path().filename().string();
+        foundIt = (MetadataFile::getSourceFromKey(newKey) == "test-object");
+        if (foundIt)
+        {
+            size_t fsize = bf::file_size(dir->path());
+            assert(cache->exists(newKey));
+            cs->deleteObject(newKey);
+            break;
+        }
+    }
+    
+    assert(foundIt);
+    cache->makeSpace(cache->getMaxCacheSize());   // clear the cache & make it call sync->flushObject() 
+    
+    // the key should now be back in cloud storage and deleted from the cache
+    assert(!cache->exists(newKey));
+    err = cs->exists(newKey, &exists);
+    assert(!err && exists);
+    
+    // make the journal again, call sync->newJournalObject()
+    makeTestJournal((journalPath / (newKey + ".journal")).string().c_str());
+    sync->newJournalEntry(newKey);
+    sleep(1);
+    
+    // verify that newkey is no longer in cloud storage, and that another permutation is
+    err = cs->exists(newKey, &exists);
+    assert(!err && !exists);
+    foundIt = false;
+    for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator() && !foundIt; ++dir)
+    {
+        key = dir->path().filename().string();
+        foundIt = (MetadataFile::getSourceFromKey(key) == "test-object");
+    }
+    assert(foundIt);
+    
     // TODO test error paths, pass in some junk
     
-    
-    // cleanup
-    bf::remove(cachePath / key);
-    bf::remove(journalPath / journalName);
+    // cleanup, just blow away everything for now
+    cache->reset();
+    vector<string> keys;
+    for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
+        keys.push_back(dir->path().filename().string());
+    sync->deletedObjects(keys);
     
     cout << "Sync test 1 OK" << endl;
 }
