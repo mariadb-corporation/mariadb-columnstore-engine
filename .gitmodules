@@ -1,3 +1,0 @@
-[submodule "aws-sdk-cpp"]
-	path = aws-sdk-cpp
-	url = git@github.com:aws/aws-sdk-cpp.git
