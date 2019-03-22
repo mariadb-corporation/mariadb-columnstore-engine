@@ -40,13 +40,37 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DDEBUG)
+    set(S3_CONFIGURE_OPT --enable-debug)
 endif()
 
+set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
+
+include(ExternalProject)
+ExternalProject_Add(marias3
+    SOURCE_DIR ${S3API_DIR}
+    CONFIGURE_COMMAND autoreconf ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
+    BUILD_COMMAND make
+    BUILD_IN_SOURCE 0
+    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+#add_custom_command(TARGET marias3 
+#    PRE_BUILD 
+#    COMMAND autoreconf -fi
+#    WORKING_DIRECTORY ${S3API_DIR}
+#)
+    
+
+
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
-target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex)
+add_dependencies(StorageManager marias3)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex libmarias3.a)
 
 add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
-target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex)
+add_dependencies(unit_tests marias3)
+target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex libmarias3.a)
+
 
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

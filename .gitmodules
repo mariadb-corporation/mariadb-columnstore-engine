@@ -1,0 +1,3 @@
+[submodule "libmarias3"]
+	path = libmarias3
+	url = git@github.com:mariadb-corporation/libmarias3.git
