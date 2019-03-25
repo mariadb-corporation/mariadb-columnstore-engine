@@ -4,6 +4,7 @@
 
 #include <string>
 #include "CloudStorage.h"
+#include "libmarias3/marias3.h"
 
 namespace storagemanager
 {
@@ -23,7 +24,8 @@ class S3Storage : public CloudStorage
         int exists(const std::string &key, bool *out);
 
     private:
-        
+        ms3_st *creds;
+        std::string bucket;   // might store this as a char *, since it's only used that way
 };
 
 

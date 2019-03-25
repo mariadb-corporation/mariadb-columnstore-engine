@@ -8,9 +8,13 @@ max_concurrent_uploads = 20
 
 [S3]
 region = us-west-1
+bucket = s3-cs-test
+# endpoint = <non-S3 endpoint to use>
 
-# S3 credentials will come through standard AWS methods
-# ex, by setting AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY envvars.
+# S3 credentials will come through standard AWS method
+# of setting AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY envvars.
+# TBD whether we should make it check the other places the awscli looks
+# for creds.
 # see https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 [LocalStorage]

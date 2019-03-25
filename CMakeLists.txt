@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(storagemanager)
 
-include_directories(include)
+include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 set(storagemanager_SRCS 
     src/AppendTask.cpp
