@@ -694,7 +694,9 @@ bool mergeJournalTest()
     bf::remove("test-object");
     bf::remove("test-journal");
     cout << "mergeJournalTest OK" << endl;
+    return true;
 }
+
 bool syncTest1()
 {
     Config *config = Config::get();
@@ -809,6 +811,7 @@ bool syncTest1()
     sync->deletedObjects(keys);
     
     cout << "Sync test 1 OK" << endl;
+    return true;
 }
 
 int main()
