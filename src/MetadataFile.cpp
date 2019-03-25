@@ -14,6 +14,8 @@
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
 
+using namespace std;
+
 namespace storagemanager
 {
 
@@ -56,6 +58,7 @@ MetadataFile::MetadataFile(const char* filename)
         boost::property_tree::ptree jsontree;
         boost::property_tree::read_json(metadataFilename, jsontree);
         metadataObject newObject;
+        //try catch
         mVersion = jsontree.get<int>("version");
         mRevision = jsontree.get<int>("revision");
 
@@ -64,15 +67,15 @@ MetadataFile::MetadataFile(const char* filename)
             metadataObject newObject;
             newObject.offset = v.second.get<uint64_t>("offset");
             newObject.length = v.second.get<uint64_t>("length");
-            newObject.name = v.second.get<string>("name");
-            mObjects.push_back(newObject);
+            newObject.key = v.second.get<string>("key");
+            mObjects.insert(newObject);
         }
     }
     else
     {
         mVersion = 1;
         mRevision = 1;
-        updateMetadata(filename);
+        writeMetadata(filename);
     }
 }
 
@@ -88,7 +91,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
     uint64_t endData = offset + length;
     uint64_t dataRemaining = length;
     bool foundStart = false;
-    for (std::vector<metadataObject>::iterator i = mObjects.begin(); i != mObjects.end(); ++i)
+    for (std::set<metadataObject>::iterator i = mObjects.begin(); i != mObjects.end(); ++i)
     {
         uint64_t startObject = i->offset;
         uint64_t endObject = i->offset + i->length;
@@ -97,22 +100,12 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
         if (startData >= startObject && (startData < endObject || startData < maxEndObject))
         {
             returnObjs.push_back(*i);
-            if (startData >= endObject)
-            {
-                // data starts and the end of current object and can atleast partially fit here update length
-                i->length += min((maxEndObject-startData),dataRemaining);
-            }
             foundStart = true;
         }
         else if (endData >= startObject && (endData < endObject || endData < maxEndObject))
         {
             // data ends in this object
             returnObjs.push_back(*i);
-            if (endData >= endObject)
-            {
-                // data end is beyond old length
-                i->length += (endData - endObject);
-            }
         }
         else if (endData >= startObject && foundStart)
         {
@@ -126,11 +119,14 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
 
 metadataObject MetadataFile::addMetadataObject(const char *filename, size_t length)
 {
-    metadataObject addObject,lastObject;
+    // this needs to handle if data write is beyond the end of the last object
+    // but not at start of new object
+    // 
+    metadataObject addObject;
     if (!mObjects.empty())
     {
-        metadataObject lastObject = mObjects.back();
-        addObject.offset = lastObject.offset + lastObject.length;
+        std::set<metadataObject>::reverse_iterator iLastObject = mObjects.rbegin();
+        addObject.offset = iLastObject->offset + iLastObject->length;
     }
     else
     {
@@ -138,26 +134,26 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
     }
     addObject.length = length;
     string newObjectKey = getNewKey(filename, addObject.offset, addObject.length);
-    addObject.name = string(newObjectKey);
-    mObjects.push_back(addObject);
+    addObject.key = string(newObjectKey);
+    mObjects.insert(addObject);
 
     return addObject;
 }
 
 
-int MetadataFile::updateMetadata(const char *filename)
+int MetadataFile::writeMetadata(const char *filename)
 {
     string metadataFilename = string(filename) + ".meta";
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;
     jsontree.put("version",mVersion);
     jsontree.put("revision",mRevision);
-    for (std::vector<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
+    for (std::set<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
     {
         boost::property_tree::ptree object;
         object.put("offset",i->offset);
         object.put("length",i->length);
-        object.put("name",i->name);
+        object.put("key",i->key);
         objs.push_back(std::make_pair("", object));
     }
     jsontree.add_child("objects", objs);
@@ -234,14 +230,35 @@ void MetadataFile::setLengthInKey(string &key, size_t newLength)
 void MetadataFile::printObjects()
 {
     printf("Version: %i Revision: %i\n",mVersion,mRevision);
-    for (std::vector<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
+    for (std::set<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
     {
-        printf("Name: %s Length: %lu Offset: %lu\n",i->name.c_str(),i->length,i->offset);
+        printf("Name: %s Length: %lu Offset: %lu\n",i->key.c_str(),i->length,i->offset);
     }
 }
 
 void MetadataFile::updateEntry(off_t offset, const string &newName, size_t newLength)
 {
+    metadataObject lookup;
+    lookup.offset = offset;
+    set<metadataObject>::iterator updateObj = mObjects.find(lookup);
+    if (updateObj == mObjects.end())
+    {
+        //throw
+    }
+    updateObj->key = newName;
+    updateObj->length = newLength;
+}
+
+void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
+{
+    metadataObject lookup;
+    lookup.offset = offset;
+    set<metadataObject>::iterator updateObj = mObjects.find(lookup);
+    if (updateObj == mObjects.end())
+    {
+        //throw
+    }
+    updateObj->length = newLength;
 }
 
 }
