@@ -105,10 +105,9 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
 {
     int err = 0;
     uint64_t count = 0;
-    uint64_t writelength = 0;
+    uint64_t writeLength = 0;
     uint64_t dataRemaining = length;
     uint64_t journalOffset = 0;
-    bool updateMeta = false;
     vector<metadataObject> objects;
 
     //writeLock(filename);
@@ -129,20 +128,26 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
                 // first object in the list so start at offset and
                 // write to end of oject or all the data
                 journalOffset = offset - i->offset;
-                writelength = min((objectSize - journalOffset),dataRemaining);
+                writeLength = min((objectSize - journalOffset),dataRemaining);
             }
             else
             {
                 // starting at beginning of next object write the rest of data
                 // or until object length is reached
-                writelength = min(objectSize,dataRemaining);
+                writeLength = min(objectSize,dataRemaining);
                 journalOffset = 0;
             }
-            err = replicator->addJournalEntry(i->name.c_str(),&data[count],journalOffset,writelength);
+            err = replicator->addJournalEntry(i->key.c_str(),&data[count],journalOffset,writeLength);
             if (err <= 0)
             {
-                //log error and abort
+                metadata.updateEntryLength(i->offset, count);
+                metadata.writeMetadata(filename);
+                logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
+                return count;
             }
+            if ((writeLength + journalOffset) > i->length)
+                metadata.updateEntryLength(i->offset, (writeLength + journalOffset));
+
             count += err;
             dataRemaining -= err;
         }
@@ -154,14 +159,19 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     while (dataRemaining > 0 && err >= 0)
     {
         //add a new metaDataObject
-        writelength = min(objectSize,dataRemaining);
+        writeLength = min(objectSize,dataRemaining);
         //cache.makeSpace(size)
-        // add a new metadata object, this will get a new objectKey
-        metadataObject newObject = metadata.addMetadataObject(filename,writelength);
+        // add a new metadata object, this will get a new objectKey NOTE: probably needs offset too
+        metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
         // write the new object
-        err = replicator->newObject(newObject.name.c_str(),data,writelength);
+        err = replicator->newObject(newObject.key.c_str(),data,writeLength);
         if (err <= 0)
         {
+            // update metadataObject length to reflect what awas actually written
+            metadata.updateEntryLength(newObject.offset, count);
+            metadata.writeMetadata(filename);
+            logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
+            return count;
             //log error and abort
         }
         // sync
@@ -170,7 +180,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
         dataRemaining -= err;
     }
 
-    metadata.updateMetadata(filename);
+    metadata.writeMetadata(filename);
     
     //writeUnlock(filename);
 

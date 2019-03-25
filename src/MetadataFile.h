@@ -13,15 +13,13 @@
 #include <iostream>
 #include <set>
 
-using namespace std;
-
 namespace storagemanager
 {
 
 struct metadataObject {
     uint64_t offset;
-    uint64_t length;
-    string name;
+    mutable uint64_t length;
+    mutable std::string key;
     bool operator < (const metadataObject &b) const { return offset < b.offset; }
 };
 
@@ -34,12 +32,13 @@ class MetadataFile
 
         void printObjects();
         // returns the objects needed to update
-        vector<metadataObject> metadataRead(off_t offset, size_t length);
+        std::vector<metadataObject> metadataRead(off_t offset, size_t length);
         // updates the metadatafile with new object
-        int updateMetadata(const char *filename);
+        int writeMetadata(const char *filename);
         
         // updates the name and length fields of an entry, given the offset
-        void updateEntry(off_t offset, const std::string &newName, size_t newLength); 
+        void updateEntry(off_t offset, const std::string &newName, size_t newLength);
+        void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const char *filename, size_t length);
 
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
@@ -58,8 +57,8 @@ class MetadataFile
         int mVersion;
         int mRevision;
         size_t mObjectSize;
-        //set<metadataObject> mObjects;
-        vector<metadataObject> mObjects;
+        std::set<metadataObject> mObjects;
+        //vector<metadataObject> mObjects;
 };
 
 }

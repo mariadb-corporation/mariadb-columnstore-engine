@@ -184,13 +184,62 @@ bool replicatorTest()
     return true;
 }
 
-::vector<uint64_t> GenerateData(std::size_t bytes)
+bool metadataJournalTest(std::size_t size, off_t offset)
 {
-    assert(bytes % sizeof(uint64_t) == 0);
-    ::vector<uint64_t> data(bytes / sizeof(uint64_t));
-    ::iota(data.begin(), data.end(), 0);
-    ::shuffle(data.begin(), data.end(), std::mt19937{ std::random_device{}() });
-    return data;
+    // make an empty file to write to
+    const char *filename = "metadataJournalTest";
+    uint8_t buf[(sizeof(write_cmd)+std::strlen(filename)+size)];
+    uint64_t *data;
+
+    sm_msg_header *hdr = (sm_msg_header *) buf;
+    write_cmd *cmd = (write_cmd *) &hdr[1];
+    cmd->opcode = WRITE;
+    cmd->offset = offset;
+    cmd->count = size;
+    cmd->flen = std::strlen(filename);
+    memcpy(&cmd->filename, filename, cmd->flen);
+    data = (uint64_t *) &cmd->filename[cmd->flen];
+    int count = 0;
+    for (uint64_t i = 0; i < (size/sizeof(uint64_t)); i++)
+    {
+        data[i] = i;
+        count++;
+    }
+    hdr->type = SM_MSG_START;
+    hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
+    WriteTask w(clientSock, hdr->payloadLen);
+    int error = ::write(sessionSock, cmd, hdr->payloadLen);
+
+    w.run();
+
+    // verify response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(*resp));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == size);
+
+    MetadataFile mdfTest(filename);
+    mdfTest.printObjects();
+
+}
+
+void metadataJournalTestCleanup(std::size_t size)
+{
+    const char *filename = "metadataJournalTest";
+    MetadataFile mdfTest(filename);
+    std::vector<metadataObject> objects = mdfTest.metadataRead(0,size);
+    for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
+    {
+        string keyJournal = i->key + ".journal";
+        if(boost::filesystem::exists(i->key.c_str()))
+            ::unlink(i->key.c_str());
+        if(boost::filesystem::exists(keyJournal.c_str()))
+            ::unlink(keyJournal.c_str());
+    }
+    ::unlink("metadataJournalTest.meta");
 }
 
 bool writetask()
@@ -202,46 +251,41 @@ bool writetask()
     assert(fd > 0);
     scoped_closer f(fd);
  
-    std::size_t writeSize = (10 * 1024);
-    std::vector<uint64_t> writeData = GenerateData(writeSize);
-    off_t nextOffset = 0;
+    uint8_t buf[1024];
+    sm_msg_header *hdr = (sm_msg_header *) buf;
+    write_cmd *cmd = (write_cmd *) &hdr[1];
+    uint8_t *data;
 
-    for (std::size_t size = writeSize; size <= (5 * writeSize); size += writeSize)
-    {
-        uint8_t buf[(1024 + writeSize)];
-        uint8_t *data;
-        sm_msg_header *hdr = (sm_msg_header *) buf;
-        write_cmd *cmd = (write_cmd *) &hdr[1];
-        cmd->opcode = WRITE;
-        cmd->offset = nextOffset;
-        cmd->count = writeSize;
-        cmd->flen = 10;
-        memcpy(&cmd->filename, filename, cmd->flen);
+    cmd->opcode = WRITE;
+    cmd->offset = 0;
+    cmd->count = 9;
+    cmd->flen = 10;
+    memcpy(&cmd->filename, filename, cmd->flen);
+    data = (uint8_t *) &cmd->filename[cmd->flen];
+    memcpy(data, "123456789", cmd->count);
 
-        data = (uint8_t *) &cmd->filename[cmd->flen];
-        memcpy(data, &writeData, writeSize);
+    hdr->type = SM_MSG_START;
+    hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
+
+    WriteTask w(clientSock, hdr->payloadLen);
+    ::write(sessionSock, cmd, hdr->payloadLen);
+    w.run();
     
-        hdr->type = SM_MSG_START;
-        hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
-
-        WriteTask w(clientSock, hdr->payloadLen);
-        ::write(sessionSock, cmd, hdr->payloadLen);
-        w.run();
-
-        // verify response
-        int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-        sm_response *resp = (sm_response *) buf;
-        assert(err == sizeof(*resp));
-        assert(resp->header.type == SM_MSG_START);
-        assert(resp->header.payloadLen == 4);
-        assert(resp->header.flags == 0);
-        assert(resp->returnCode == writeSize);
-        nextOffset += (writeSize);
-    }
-    // This leaves behind object journal and metadata files currently
+    // verify response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(*resp));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == 9);
     
-    MetadataFile mdf("./writetest1");
-    mdf.printObjects();
+    //check file contents
+    err = ::read(fd, buf, 1024);
+    assert(err == 9);
+    buf[9] = 0;
+    assert(!strcmp("123456789", (const char *) buf));
+    ::unlink(filename);
     cout << "write task OK" << endl;
     return true;
 }
@@ -814,14 +858,43 @@ bool syncTest1()
     return true;
 }
 
+void metadataUpdateTest()
+{
+    MetadataFile mdfTest("metadataUpdateTest");
+    mdfTest.addMetadataObject("metadataUpdateTest",100);
+    mdfTest.printObjects();
+    mdfTest.updateEntryLength(0,200);
+    mdfTest.printObjects();
+    //mdfTest.updateEntryLength(0,100);
+    //mdfTest.printObjects();
+    ::unlink("metadataUpdateTest.meta");
+
+    }    
+
 int main()
 {
+    std::size_t sizeKB = 1024;
     cout << "connecting" << endl;
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
     opentask();
-    writetask();
+    metadataUpdateTest();
+    // requires 8K object size to test boundries
+    //Case 1 new write that spans full object
+    metadataJournalTest((10*sizeKB),0);
+    //Case 2 write data beyond end of data in object 2 that still ends in object 2
+    metadataJournalTest((4*sizeKB),(8*sizeKB));
+    //Case 3 write spans 2 journal objects
+    metadataJournalTest((8*sizeKB),(4*sizeKB));
+    //Case 4 write starts object1 ends object3
+    metadataJournalTest((10*sizeKB),(7*sizeKB));
+    //Case 5 write starts in new object at offset >0
+    //TODO add zero padding to writes in this scenario
+    //metadataJournalTest((8*sizeKB),4*sizeKB);
+    metadataJournalTestCleanup(17*sizeKB);
+
+    //writetask();
     appendtask();
     unlinktask();
     stattask();
@@ -835,5 +908,6 @@ int main()
     mergeJournalTest();
     replicatorTest();
     syncTest1();
+
     return 0;
 }
