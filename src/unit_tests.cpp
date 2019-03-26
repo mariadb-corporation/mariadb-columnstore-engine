@@ -877,6 +877,12 @@ void metadataUpdateTest()
 
 void s3storageTest1()
 {
+    if (!getenv("AWS_ACCESS_KEY_ID") || !getenv("AWS_SECRET_ACCESS_KEY"))
+    {
+        cout << "s3storageTest1 requires exporting your AWS creds, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY" << endl;
+        return;
+    }
+
     S3Storage s3;
     bool exists;
     int err;
