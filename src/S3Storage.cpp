@@ -1,6 +1,5 @@
 
 #include "S3Storage.h"
-#include "libmarias3/marias3.h"
 #include "Config.h"
 #include <stdlib.h>
 #include <sys/stat.h>
