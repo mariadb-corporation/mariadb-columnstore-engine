@@ -398,6 +398,7 @@ size_t Cache::getCurrentCacheSize() const
 
 void Cache::reset()
 {
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     m_lru.clear();
     lru.clear();
     
@@ -408,6 +409,7 @@ void Cache::reset()
         
     for (dir = bf::directory_iterator(journalPrefix); dir != dend; ++dir)
         bf::remove_all(dir->path());
+    currentCacheSize = 0;
 }
 
 /* The helper classes */
