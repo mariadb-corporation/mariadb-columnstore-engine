@@ -50,9 +50,9 @@ class MetadataFile
         static void setOffsetInKey(std::string &key, off_t newOffset);
         static void setLengthInKey(std::string &key, size_t newLength);
         
-
     private:
         Config *mpConfig;
+        std::string prefix;
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;

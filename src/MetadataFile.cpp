@@ -243,7 +243,10 @@ void MetadataFile::updateEntry(off_t offset, const string &newName, size_t newLe
     set<metadataObject>::iterator updateObj = mObjects.find(lookup);
     if (updateObj == mObjects.end())
     {
-        //throw
+        stringstream ss;
+        ss << "MetadataFile::updateEntry(): failed to find object at offset " << offset;
+        mpLogger->log(LOG_ERR, ss.str().c_str());
+        throw logic_error(ss.str());
     }
     updateObj->key = newName;
     updateObj->length = newLength;
@@ -256,7 +259,10 @@ void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
     set<metadataObject>::iterator updateObj = mObjects.find(lookup);
     if (updateObj == mObjects.end())
     {
-        //throw
+        stringstream ss;
+        ss << "MetadataFile::updateEntryLength(): failed to find object at offset " << offset;
+        mpLogger->log(LOG_ERR, ss.str().c_str());
+        throw logic_error(ss.str());
     }
     updateObj->length = newLength;
 }

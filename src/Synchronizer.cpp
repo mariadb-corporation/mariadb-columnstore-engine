@@ -277,6 +277,8 @@ void Synchronizer::process(list<string>::iterator name, bool callerHoldsLock)
         mutex.unlock();
     
     bool success = false;
+    
+    // in testing, this seems to only run once when an exception is caught.  Not obvious why yet....  ??
     while (!success)
     {
         try {
@@ -296,6 +298,7 @@ void Synchronizer::process(list<string>::iterator name, bool callerHoldsLock)
         catch(exception &e) {
             logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
                 pending->opFlags, e.what());
+            success = false;
             sleep(1);
             // TODO: requeue the job instead of looping infinitely
         }
@@ -419,8 +422,10 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     // update the metadata for the source file
-    
-    MetadataFile md(sourceFile.c_str());
+    // note: a temporary fix.  Metadatafile needs the full path to the metadata atm.  Fix this
+    // once MDF knows where to look.
+    string metaPrefix = Config::get()->getValue("ObjectStorage", "metadata_path");
+    MetadataFile md((metaPrefix + "/" + sourceFile).c_str());
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newKey, size);
     replicator->updateMetadata(sourceFile.c_str(), md);
 

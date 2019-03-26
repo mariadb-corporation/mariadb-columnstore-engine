@@ -13,6 +13,7 @@
 #include "LocalStorage.h"
 #include "MetadataFile.h"
 #include "Replicator.h"
+#include "S3Storage.h"
 
 #include <iostream>
 #include <stdlib.h>
@@ -94,7 +95,6 @@ void makeConnection()
     assert(err == 0);
     t.join();
 }
-
     
 bool opentask()
 {
@@ -458,7 +458,7 @@ bool listdirtask()
     assert(fd > 0);
     scoped_closer f(fd);
     
-    uint8_t buf[1024];
+    uint8_t buf[8192];
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     cmd->opcode = LIST_DIRECTORY;
@@ -471,7 +471,7 @@ bool listdirtask()
 
     /* going to keep this simple. Don't run this in a big dir. */
     /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    int err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
     assert(err > 0);
     assert(resp->header.type == SM_MSG_START);
@@ -587,6 +587,9 @@ bool cacheTest1()
         return false;
     }
     
+    cache->reset();
+    assert(cache->getCurrentCacheSize() == 0);
+    
     bf::path storagePath = ls->getPrefix();
     bf::path cachePath = cache->getCachePath();
     vector<string> v_bogus;
@@ -663,19 +666,20 @@ void makeTestMetadata(const char *dest)
     assert(metaFD >= 0);
     scoped_closer sc(metaFD);
     
+    // need to parameterize the object name in the objects list
     const char *metadata = 
-    "{ \
-        \"version\" : 1, \
-        \"revision\" : 1, \
-        \"objects\" : \
-        [ \
-            { \
-                \"offset\" : 0, \
-                \"length\" : 8192, \
-                \"name\" : \"12345_0_8192_test-object\" \
-            } \
-        ] \
-    }";
+    "{ \n\
+        \"version\" : 1, \n\
+        \"revision\" : 1, \n\
+        \"objects\" : \n\
+        [ \n\
+            { \n\
+                \"offset\" : 0, \n\
+                \"length\" : 8192, \n\
+                \"key\" : \"12345_0_8192_test-file\" \n\
+            } \n\
+        ] \n\
+    }\n";
     write(metaFD, metadata, strlen(metadata));
 }
 
@@ -771,7 +775,7 @@ bool syncTest1()
     bf::create_directories(metaPath);
     
     // make the test obj, journal, and metadata
-    string key = "12345_0_8192_test-object";
+    string key = "12345_0_8192_test-file";
     string journalName = key + ".journal";
     
     makeTestObject((cachePath/key).string().c_str());
@@ -811,7 +815,7 @@ bool syncTest1()
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator() && !foundIt; ++dir)
     {
         newKey = dir->path().filename().string();
-        foundIt = (MetadataFile::getSourceFromKey(newKey) == "test-object");
+        foundIt = (MetadataFile::getSourceFromKey(newKey) == "test-file");
         if (foundIt)
         {
             size_t fsize = bf::file_size(dir->path());
@@ -841,7 +845,7 @@ bool syncTest1()
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator() && !foundIt; ++dir)
     {
         key = dir->path().filename().string();
-        foundIt = (MetadataFile::getSourceFromKey(key) == "test-object");
+        foundIt = (MetadataFile::getSourceFromKey(key) == "test-file");
     }
     assert(foundIt);
     
@@ -869,7 +873,79 @@ void metadataUpdateTest()
     //mdfTest.printObjects();
     ::unlink("metadataUpdateTest.meta");
 
-    }    
+}    
+
+void s3storageTest1()
+{
+    S3Storage s3;
+    bool exists;
+    int err;
+    string testFile = "storagemanager.cnf";
+    string testFile2 = testFile + "2";
+    
+    exists = bf::exists(testFile);
+    if (!exists)
+    {
+        cout << "s3storageTest1() requires having " << testFile << " in the current directory.";
+        return;
+    }
+    
+    try {
+        err = s3.exists(testFile, &exists);
+        assert(!err);
+        if (exists)
+            s3.deleteObject(testFile);
+            
+        err = s3.exists(testFile2, &exists);
+        assert(!err);
+        if (exists)
+            s3.deleteObject(testFile2);
+            
+        // put it & get it
+        err = s3.putObject(testFile, testFile);
+        assert(!err);
+        err = s3.exists(testFile, &exists);
+        assert(!err);
+        assert(exists);
+        err = s3.getObject(testFile, testFile2);
+        assert(!err);
+        exists = bf::exists(testFile2);
+        assert(bf::file_size(testFile) == bf::file_size(testFile2));
+        
+        // do a deep compare testFile vs testFile2
+        size_t len = bf::file_size(testFile);
+        int fd1 = open(testFile.c_str(), O_RDONLY);
+        assert(fd1 >= 0);
+        int fd2 = open(testFile2.c_str(), O_RDONLY);
+        assert(fd2 >= 0);
+        
+        uint8_t *data1 = new uint8_t[len];
+        uint8_t *data2 = new uint8_t[len];
+        err = read(fd1, data1, len);
+        assert(err == len);
+        err = read(fd2, data2, len);
+        assert(err == len);
+        assert(!memcmp(data1, data2, len));
+        close(fd1);
+        close(fd2);
+        delete [] data1;
+        delete [] data2;
+        
+        err = s3.copyObject(testFile, testFile2);
+        assert(!err);
+        err = s3.exists(testFile2, &exists);
+        assert(!err);
+        assert(exists);
+        s3.deleteObject(testFile);
+        s3.deleteObject(testFile2);
+    }
+    catch(exception &e)
+    {
+        cout << __FUNCTION__ << " caught " << e.what() << endl;
+        assert(0);
+    }
+    cout << "S3Storage Test 1 OK" << endl;
+}
 
 int main()
 {
@@ -908,6 +984,8 @@ int main()
     mergeJournalTest();
     replicatorTest();
     syncTest1();
+    
+    s3storageTest1();
 
     return 0;
 }
