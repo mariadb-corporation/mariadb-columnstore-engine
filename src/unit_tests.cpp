@@ -142,17 +142,20 @@ bool opentask()
 
 bool replicatorTest()
 {
+    Config* config = Config::get();
+    string metaPath = config->getValue("ObjectStorage", "metadata_path");
+    string journalPath = config->getValue("ObjectStorage", "journal_path");
     Replicator *repli = Replicator::get();
     int err,fd;
     const char *newobject = "newobjectTest";
     const char *newobjectJournal = "newobjectTest.journal";
+    string newObjectJournalFullPath = journalPath + "/" + "newobjectTest.journal";
     uint8_t buf[1024];
     uint8_t data[1024];
     int version = 1;
     uint64_t max_offset = 0;
     memcpy(data,"1234567890",10);
     string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % max_offset).str();
-    ::pwrite(fd, header.c_str(), header.length() + 1,0);
 
     // test newObject
     repli->newObject(newobject,data,10);
@@ -169,7 +172,7 @@ bool replicatorTest()
     // test addJournalEntry
     repli->addJournalEntry(newobject,data,0,10);
 
-    fd = ::open(newobjectJournal, O_RDONLY);
+    fd = ::open(newObjectJournalFullPath.c_str(), O_RDONLY);
     err = ::read(fd, buf, 1024);
     assert(err == (header.length() + 1 + 16 + 10));
     buf[err] = 0;
@@ -178,7 +181,7 @@ bool replicatorTest()
     ::close(fd);
 
     repli->remove(newobject);
-    repli->remove(newobjectJournal);
+    repli->remove(newObjectJournalFullPath.c_str());
     assert(!boost::filesystem::exists(newobject));
     cout << "replicator remove OK" << endl;
     return true;
@@ -228,18 +231,22 @@ bool metadataJournalTest(std::size_t size, off_t offset)
 
 void metadataJournalTestCleanup(std::size_t size)
 {
+    Config* config = Config::get();
+    string metaPath = config->getValue("ObjectStorage", "metadata_path");
+    string journalPath = config->getValue("ObjectStorage", "journal_path");
     const char *filename = "metadataJournalTest";
     MetadataFile mdfTest(filename);
     std::vector<metadataObject> objects = mdfTest.metadataRead(0,size);
     for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
     {
-        string keyJournal = i->key + ".journal";
+        string keyJournal = journalPath + "/" + i->key + ".journal";
         if(boost::filesystem::exists(i->key.c_str()))
             ::unlink(i->key.c_str());
         if(boost::filesystem::exists(keyJournal.c_str()))
             ::unlink(keyJournal.c_str());
     }
-    ::unlink("metadataJournalTest.meta");
+    string mdfFile = metaPath + "/" + "metadataJournalTest.meta";
+    ::unlink(mdfFile.c_str());
 }
 
 bool writetask()
@@ -802,7 +809,7 @@ bool syncTest1()
     
     // check that the original objects no longer exist
     assert(!cache->exists(key));
-    assert(!bf::exists(journalPath / journalName));
+    assert(!bf::exists(journalPath/journalName));
     
     // Replicator doesn't implement all of its functionality yet, need to delete key from the cache manually for now
     bf::remove(cachePath/key);
@@ -857,6 +864,7 @@ bool syncTest1()
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
         keys.push_back(dir->path().filename().string());
     sync->deletedObjects(keys);
+    ::unlink((metaPath/"test-file.meta").string().c_str());
     
     cout << "Sync test 1 OK" << endl;
     return true;
@@ -864,6 +872,8 @@ bool syncTest1()
 
 void metadataUpdateTest()
 {
+    Config* config = Config::get();
+    string metaPath = config->getValue("ObjectStorage", "metadata_path");
     MetadataFile mdfTest("metadataUpdateTest");
     mdfTest.addMetadataObject("metadataUpdateTest",100);
     mdfTest.printObjects();
@@ -871,7 +881,8 @@ void metadataUpdateTest()
     mdfTest.printObjects();
     //mdfTest.updateEntryLength(0,100);
     //mdfTest.printObjects();
-    ::unlink("metadataUpdateTest.meta");
+    string metaFilePath = metaPath + "/" + "metadataUpdateTest.meta";
+    ::unlink(metaFilePath.c_str());
 
 }    
 

@@ -422,10 +422,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     // update the metadata for the source file
-    // note: a temporary fix.  Metadatafile needs the full path to the metadata atm.  Fix this
-    // once MDF knows where to look.
-    string metaPrefix = Config::get()->getValue("ObjectStorage", "metadata_path");
-    MetadataFile md((metaPrefix + "/" + sourceFile).c_str());
+    MetadataFile md(sourceFile.c_str());
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newKey, size);
     replicator->updateMetadata(sourceFile.c_str(), md);
 

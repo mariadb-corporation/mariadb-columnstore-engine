@@ -57,6 +57,7 @@ class MetadataFile
         int mVersion;
         int mRevision;
         size_t mObjectSize;
+        std::string msMetadataPath;
         std::set<metadataObject> mObjects;
         //vector<metadataObject> mObjects;
 };

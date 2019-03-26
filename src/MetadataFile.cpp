@@ -33,6 +33,30 @@ MetadataFile::MetadataFile()
         cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
         throw;
     }
+    try
+    {
+        msMetadataPath = mpConfig->getValue("ObjectStorage", "metadata_path");
+        if (msMetadataPath.empty())
+        {
+            mpLogger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
+            throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+        }
+    }
+    catch (...)
+    {
+        mpLogger->log(LOG_CRIT, "ObjectStorage/metadata_path is not set");
+        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
+    }
+    boost::filesystem::create_directories(msMetadataPath);
+    try
+    {
+        boost::filesystem::create_directories(msMetadataPath);
+    }
+    catch (exception &e)
+    {
+        syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
+        throw e;
+    }
     mVersion=1;
     mRevision=1;
 }
@@ -52,7 +76,26 @@ MetadataFile::MetadataFile(const char* filename)
         cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
         throw;
     }
-    string metadataFilename = string(filename) + ".meta";
+    try
+    {
+        msMetadataPath = mpConfig->getValue("ObjectStorage", "metadata_path");
+    }
+    catch (...)
+    {
+        mpLogger->log(LOG_CRIT, "Could not load metadata_path from storagemanger.cnf file.");
+        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
+    }
+    boost::filesystem::create_directories(msMetadataPath);
+    try
+    {
+        boost::filesystem::create_directories(msMetadataPath);
+    }
+    catch (exception &e)
+    {
+        syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
+        throw e;
+    }
+    string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
     if (boost::filesystem::exists(metadataFilename))
     {
         boost::property_tree::ptree jsontree;
@@ -89,7 +132,6 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
     vector<metadataObject> returnObjs;
     uint64_t startData = offset;
     uint64_t endData = offset + length;
-    uint64_t dataRemaining = length;
     bool foundStart = false;
     for (std::set<metadataObject>::iterator i = mObjects.begin(); i != mObjects.end(); ++i)
     {
@@ -143,7 +185,9 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
 
 int MetadataFile::writeMetadata(const char *filename)
 {
-    string metadataFilename = string(filename) + ".meta";
+    int error=0;
+
+    string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;
     jsontree.put("version",mVersion);
@@ -158,6 +202,8 @@ int MetadataFile::writeMetadata(const char *filename)
     }
     jsontree.add_child("objects", objs);
     write_json(metadataFilename, jsontree);
+
+    return error;
 }
 
 string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)

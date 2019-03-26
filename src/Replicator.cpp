@@ -26,6 +26,32 @@ namespace storagemanager
 
 Replicator::Replicator()
 {
+    mpConfig = Config::get();
+    mpLogger = SMLogging::get();
+    try
+    {
+        msJournalPath = mpConfig->getValue("ObjectStorage", "journal_path");
+        if (msJournalPath.empty())
+        {
+            mpLogger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
+            throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+        }
+    }
+    catch (...)
+    {
+        mpLogger->log(LOG_CRIT, "Could not load metadata_path from storagemanger.cnf file.");
+        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
+    }
+    boost::filesystem::create_directories(msJournalPath);
+    try
+    {
+        boost::filesystem::create_directories(msJournalPath);
+    }
+    catch (exception &e)
+    {
+        syslog(LOG_CRIT, "Failed to create %s, got: %s", msJournalPath.c_str(), e.what());
+        throw e;
+    }
 }
 
 Replicator::~Replicator()
@@ -84,7 +110,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     uint64_t offlen[] = {offset,length};
     size_t count = 0;
     int version = 1;
-    string journalFilename = string(filename) + ".journal";
+    string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
     uint64_t thisEntryMaxOffset = (offset + length - 1);
     if (!boost::filesystem::exists(journalFilename))
     {

@@ -34,6 +34,9 @@ class Replicator
 
     private:
         Replicator();
+        Config *mpConfig;
+        SMLogging *mpLogger;
+        std::string msJournalPath;
         //ThreadPool threadPool;
 };
 
