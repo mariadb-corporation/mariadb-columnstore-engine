@@ -1,6 +1,7 @@
 
 #include "Synchronizer.h"
 #include "MetadataFile.h"
+#include "Utilities.h"
 #include <boost/thread/mutex.hpp>
 
 #include <sys/stat.h>
@@ -13,57 +14,6 @@ namespace
 {
 storagemanager::Synchronizer *instance = NULL;
 boost::mutex inst_mutex;
-
-// a few utility classes.  Maybe move these to a utilities header. 
-struct ScopedReadLock
-{
-    ScopedReadLock(storagemanager::IOCoordinator *i, const string &k) : ioc(i), key(k)
-    {
-        ioc->readLock(key);
-    }
-    ~ScopedReadLock()
-    {
-        ioc->readUnlock(key);
-    }
-    storagemanager::IOCoordinator *ioc;
-    const string key;
-};
-
-struct ScopedWriteLock
-{
-    ScopedWriteLock(storagemanager::IOCoordinator *i, const string &k) : ioc(i), key(k)
-    {
-        ioc->writeLock(key);
-        locked = true;
-    }
-    ~ScopedWriteLock()
-    {
-        unlock();
-    }
-    
-    void unlock()
-    {
-        if (locked)
-        {
-            ioc->writeUnlock(key);
-            locked = false;
-        }
-    }
-    storagemanager::IOCoordinator *ioc;
-    bool locked;
-    const string key;
-};
-
-struct ScopedCloser {
-    ScopedCloser(int f) : fd(f) { }
-    ~ScopedCloser() { 
-        int s_errno = errno;
-        ::close(fd);
-        errno = s_errno; 
-    }
-    int fd;
-};
-
 }
 
 namespace bf = boost::filesystem;

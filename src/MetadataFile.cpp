@@ -129,6 +129,27 @@ MetadataFile::~MetadataFile()
 
 vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
 {
+    // this version assumes mObjects is sorted by offset, and there are no gaps between objects
+    vector<metadataObject> ret;
+    size_t foundLen = 0;
+    
+    auto i = mObjects.begin();
+    // find the first object in range
+    while (i != mObjects.end())
+        if (offset >= i->offset)
+            break;
+            
+    // append objects until foundLen >= length or EOF
+    while (i != mObjects.end() && foundLen < length)
+    {
+        ret.push_back(*i);
+        foundLen += i->length;
+        ++i;
+    }
+    return ret;
+
+#if 0
+    // this version assumed mObjects was unsorted
     vector<metadataObject> returnObjs;
     uint64_t startData = offset;
     uint64_t endData = offset + length;
@@ -157,6 +178,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
     }
 
     return returnObjs;
+#endif
 }
 
 metadataObject MetadataFile::addMetadataObject(const char *filename, size_t length)

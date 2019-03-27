@@ -1,8 +1,7 @@
 
 #include "IOCoordinator.h"
-#include "Cache.h"
 #include "MetadataFile.h"
-#include "SMLogging.h"
+#include "Utilities.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -24,12 +23,15 @@ namespace
     boost::mutex m;
 }
 
+namespace bf = boost::filesystem;
+
 namespace storagemanager
 {
 
 IOCoordinator::IOCoordinator()
 {
     config = Config::get();
+    cache = Cache::get();
     logger = SMLogging::get();
     replicator = Replicator::get();
     objectSize = 5 * (1<<20);
@@ -42,6 +44,8 @@ IOCoordinator::IOCoordinator()
         cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
         throw;
     }
+    cachePath = cache->getCachePath();
+    journalPath = cache->getJournalPath();
 }
 
 IOCoordinator::~IOCoordinator()
@@ -62,26 +66,149 @@ IOCoordinator * IOCoordinator::get()
 void IOCoordinator::willRead(const char *, off_t, size_t)
 {
     // no cache yet
+    // not sure we will implement this.
 }
-
-struct scoped_closer {
-    scoped_closer(int f) : fd(f) { }
-    ~scoped_closer() { 
-        int s_errno = errno;
-        ::close(fd);
-        errno = s_errno; 
-    }
-    int fd;
-};
 
 #define OPEN(name, mode) \
     fd = ::open(filename, mode, 0660); \
     if (fd < 0) \
         return fd; \
-    scoped_closer sc(fd);
+    ScopedCloser sc(fd);
+
+int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length)
+{
+    size_t count = 0;
+    int err;
+    
+    ::lseek(fd, offset, SEEK_SET);
+    while (count < length)
+    {
+        err = ::read(fd, &data[count], length - count);
+        if (err < 0)
+            return err;
+        else if (err == 0)
+        {
+            errno = ENODATA;   // better errno for early EOF?
+            return -1;
+        }
+        count += err;
+    }
+}
+
+int IOCoordinator::loadObjectWithJournal(const char *objFilename, const char *journalFilename, 
+    uint8_t *data, off_t offset, size_t length)
+{
+    boost::shared_array<uint8_t> argh;
+    
+    argh = mergeJournal(objFilename, journalFilename, offset, &length);
+    if (!argh)
+        return -1;
+    else
+        memcpy(data, argh.get(), length);
+    return 0;
+}
 
 int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_t length)
 {
+    /*
+        This is a bit complex and verbose, so for the first cut, it won't bother returning 
+        a partial result.  If an error happens, it will just fail the whole operation.
+    */
+
+    /*
+        Get the read lock on filename
+        Figure out which objects are relevant to the request
+        call Cache::read(objects)
+        Open any journal files that exist to prevent deletion
+        open all object files to prevent deletion
+        release read lock
+        put together the response in data
+    */
+
+    ScopedReadLock fileLock(filename);
+    Metadatafile meta(filename);
+    vector<metadataObject> relevants = meta.metadataRead(offset, length);
+    map<string, int> journalFDs, objectFDs;
+    map<string, string> keyToJournalName, keyToObjectName;
+    vector<SharedCloser> fdMinders;
+    char buf[80];
+    
+    // load them into the cache
+    vector<string> keys;
+    for (const auto &it : relevants)
+        keys.push_back(it->key);
+    cache->read(keys);
+    
+    // open the journal files and objects that exist to prevent them from being 
+    // deleted mid-operation
+    for (const auto &key : keys)
+    {
+        // trying not to think about how expensive all these type conversions are.
+        // need to standardize on type.  Or be smart and build filenames in a char [].
+        // later.  not thinking about it for now.
+        
+        // open all of the journal files that exist
+        string filename = (journalPath/(*key + ".journal").string();
+        int fd = ::open(filename.c_str(), O_RDONLY);
+        if (fd >= 0)
+        {
+            keyToJournalName[*key] = filename;
+            journalFDs[filename] = fd;
+            fdMinders.push_back(SharedCloser(fd));
+        }
+        else if (errno != EEXIST)
+        {
+            int l_errno = errno;
+            logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
+                filename.c_str(), strerror_r(l_errno, buf, 80));
+            errno = l_errno;
+            return -1;
+        }
+        
+        // open all of the objects
+        filename = (cachePath)/(*key)).string();
+        fd = ::open(filename.c_str(), O_RDONLY);
+        if (fd < 0)
+        {
+            int l_errno = errno;
+            logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
+                filename.c_str(), strerror_r(l_errno, buf, 80));
+            errno = l_errno;
+            return -1;
+        }
+        keyToObjectName[*key] = filename;
+        objectFDs[*key] = fd;
+        fdMinders.push_back(SharedCloser(fd));
+    }
+    fileLock.unlock();
+    
+    // copy data from each object + journal into the returned data
+    size_t count = 0;
+    boost::shared_array<uint8_t> mergedData;
+    for (auto &object : relevants)
+    {
+        auto &jit = journalFDs.find(object->key);
+        
+        // if this is the first object, the offset to start reading at is offset - object->offset
+        off_t thisOffset = (object == relevants.begin() ? offset - object->offset : 0);
+        
+        // if this is the last object, the length of the read is length - count,
+        // otherwise it is the length of the object
+        size_t thisLength = min(object->length, count - length);
+        if (jit == journalFDs.end())
+            err = loadObject(objectFDs.find(object->key), &data[count], thisOffset, thisLength);
+        else
+            err = loadObjectAndJournal(keyToObjectName, keyToJournalName, &data[count], thisOffset, thisLength);
+        if (err)
+            return -1;    
+            
+        count += thisLength;
+    }
+    
+    // all done
+    return length;
+
+/*
     int fd, err;
     
     OPEN(filename, O_RDONLY);
@@ -99,6 +226,7 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
     }
     
     return count;    
+*/
 }
 
 int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset, size_t length)
@@ -212,9 +340,9 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
     
     /* create all subdirs if necessary.  We don't care if directories actually get created. */
     if (openmode & O_CREAT)  {
-        boost::filesystem::path p(filename);
+        bf::path p(filename);
         boost::system::error_code ec;
-        boost::filesystem::create_directories(p.parent_path(), ec);
+        bf::create_directories(p.parent_path(), ec);
     }
     OPEN(filename, openmode);
     return fstat(fd, out);
@@ -222,22 +350,22 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
 
 int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
 {
-    boost::filesystem::path p(filename);
+    bf::path p(filename);
     
     listing->clear();
-    if (!boost::filesystem::exists(p))
+    if (!bf::exists(p))
     {
         errno = ENOENT;
         return -1;
     }
-    if (!boost::filesystem::is_directory(p))
+    if (!bf::is_directory(p))
     {
         errno = ENOTDIR;
         return -1;
     }
     
-    boost::filesystem::directory_iterator it(p), end;
-    for (boost::filesystem::directory_iterator it(p); it != end; it++)
+    bf::directory_iterator it(p), end;
+    for (bf::directory_iterator it(p); it != end; it++)
         listing->push_back(it->path().filename().string());
     return 0;
 }
@@ -258,13 +386,13 @@ will no longer make it like the 'unlink' syscall. */
 int IOCoordinator::unlink(const char *path)
 {
     int ret = 0;
-    boost::filesystem::path p(path);
+    bf::path p(path);
 
     try
     {
-        boost::filesystem::remove_all(path);
+        bf::remove_all(path);
     }
-    catch(boost::filesystem::filesystem_error &e)
+    catch(bf::filesystem_error &e)
     {
         errno = e.code().value();
         ret = -1;
@@ -279,9 +407,9 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     SMLogging* logger = SMLogging::get();
     int err = 0, l_errno;
     try {
-        boost::filesystem::copy_file(filename1, filename2);
+        bf::copy_file(filename1, filename2);
     }
-    catch (boost::filesystem::filesystem_error &e) {
+    catch (bf::filesystem_error &e) {
         err = -1;
         l_errno = e.code().value();   // why not.
         // eh, not going to translate all of boost's errors into our errors for this.
@@ -322,7 +450,11 @@ boost::shared_array<char> seekToEndOfHeader1(int fd)
     }
     throw runtime_error("seekToEndOfHeader1: did not find the end of the header");
 }
-    
+
+void IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t *buf, off_t offset, size_t *len)
+{
+    throw runtime_error("IOCoordinator::mergeJournal(int, int, etc) is not implemented yet.");
+}
 
 boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, const char *journal, off_t offset,
     size_t *len) const
@@ -456,7 +588,9 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     
     if (maxJournalOffset > *len)
     {
-        objData.reset(new uint8_t[maxJournalOffset]);
+        uint8_t *newbuf = new uint8_t[maxJournalOffset];
+        memcpy(newbuf, objData.get(), *len);
+        objData.reset(newbuf);
         *len = maxJournalOffset;
     }
     
