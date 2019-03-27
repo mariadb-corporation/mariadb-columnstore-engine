@@ -75,7 +75,7 @@ void IOCoordinator::willRead(const char *, off_t, size_t)
         return fd; \
     ScopedCloser sc(fd);
 
-int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length)
+int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length) const
 {
     size_t count = 0;
     int err;
@@ -95,8 +95,8 @@ int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length
     }
 }
 
-int IOCoordinator::loadObjectWithJournal(const char *objFilename, const char *journalFilename, 
-    uint8_t *data, off_t offset, size_t length)
+int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
+    uint8_t *data, off_t offset, size_t length) const
 {
     boost::shared_array<uint8_t> argh;
     
@@ -125,8 +125,8 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         put together the response in data
     */
 
-    ScopedReadLock fileLock(filename);
-    Metadatafile meta(filename);
+    ScopedReadLock fileLock(this, filename);
+    MetadataFile meta(filename);
     vector<metadataObject> relevants = meta.metadataRead(offset, length);
     map<string, int> journalFDs, objectFDs;
     map<string, string> keyToJournalName, keyToObjectName;
@@ -135,8 +135,8 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
     
     // load them into the cache
     vector<string> keys;
-    for (const auto &it : relevants)
-        keys.push_back(it->key);
+    for (const auto &object : relevants)
+        keys.push_back(object.key);
     cache->read(keys);
     
     // open the journal files and objects that exist to prevent them from being 
@@ -148,11 +148,11 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         // later.  not thinking about it for now.
         
         // open all of the journal files that exist
-        string filename = (journalPath/(*key + ".journal").string();
+        string filename = (journalPath/(key + ".journal")).string();
         int fd = ::open(filename.c_str(), O_RDONLY);
         if (fd >= 0)
         {
-            keyToJournalName[*key] = filename;
+            keyToJournalName[key] = filename;
             journalFDs[filename] = fd;
             fdMinders.push_back(SharedCloser(fd));
         }
@@ -166,7 +166,7 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         }
         
         // open all of the objects
-        filename = (cachePath)/(*key)).string();
+        filename = (cachePath/key).string();
         fd = ::open(filename.c_str(), O_RDONLY);
         if (fd < 0)
         {
@@ -176,29 +176,31 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
             errno = l_errno;
             return -1;
         }
-        keyToObjectName[*key] = filename;
-        objectFDs[*key] = fd;
+        keyToObjectName[key] = filename;
+        objectFDs[key] = fd;
         fdMinders.push_back(SharedCloser(fd));
     }
     fileLock.unlock();
     
     // copy data from each object + journal into the returned data
     size_t count = 0;
+    int err;
     boost::shared_array<uint8_t> mergedData;
     for (auto &object : relevants)
     {
-        auto &jit = journalFDs.find(object->key);
+        const auto &jit = journalFDs.find(object.key);
         
         // if this is the first object, the offset to start reading at is offset - object->offset
-        off_t thisOffset = (object == relevants.begin() ? offset - object->offset : 0);
+        off_t thisOffset = (object.offset == 0 ? offset - object.offset : 0);
         
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object
-        size_t thisLength = min(object->length, count - length);
+        size_t thisLength = min(object.length, count - length);
         if (jit == journalFDs.end())
-            err = loadObject(objectFDs.find(object->key), &data[count], thisOffset, thisLength);
+            err = loadObject(objectFDs[object.key], &data[count], thisOffset, thisLength);
         else
-            err = loadObjectAndJournal(keyToObjectName, keyToJournalName, &data[count], thisOffset, thisLength);
+            err = loadObjectAndJournal(keyToObjectName[object.key].c_str(), keyToJournalName[object.key].c_str(), 
+                &data[count], thisOffset, thisLength);
         if (err)
             return -1;    
             
@@ -451,7 +453,7 @@ boost::shared_array<char> seekToEndOfHeader1(int fd)
     throw runtime_error("seekToEndOfHeader1: did not find the end of the header");
 }
 
-void IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t *buf, off_t offset, size_t *len)
+int IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t *buf, off_t offset, size_t *len) const
 {
     throw runtime_error("IOCoordinator::mergeJournal(int, int, etc) is not implemented yet.");
 }
@@ -465,11 +467,11 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     objFD = ::open(object, O_RDONLY);
     if (objFD < 0)
         return ret;
-    scoped_closer s1(objFD);
+    ScopedCloser s1(objFD);
     journalFD = ::open(journal, O_RDONLY);
     if (journalFD < 0)
         return ret;
-    scoped_closer s2(journalFD);
+    ScopedCloser s2(journalFD);
     
     // grab the journal header, make sure the version is 1, and get the max offset
     boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);
@@ -569,12 +571,12 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
 }
 
 // MergeJournalInMem is a specialized version of mergeJournal().  TODO: refactor if possible.
-int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath)
+int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath) const
 {
     int journalFD = ::open(journalPath, O_RDONLY);
     if (journalFD < 0)
         return -1;
-    scoped_closer s(journalFD);
+    ScopedCloser s(journalFD);
 
     // grab the journal header and make sure the version is 1
     boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);

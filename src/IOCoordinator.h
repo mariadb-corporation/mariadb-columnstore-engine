@@ -55,7 +55,8 @@ class IOCoordinator : public boost::noncopyable
         // it's wasteful, and will leave this as a likely future optimization.
         int mergeJournal(int objFD, int journalFD, uint8_t *buf, off_t offset, size_t *len) const;
         
-        /* Lock manipulation fcns.  They can lock on any param given to them. */
+        /* Lock manipulation fcns.  They can lock on any param given to them.  For convention's sake,
+           the parameter should mostly be the abs filename being accessed. */
         void renameObject(const std::string &oldKey, const std::string &newKey);
         bool readLock(const std::string &filename);
         bool writeLock(const std::string &filename);
@@ -75,9 +76,9 @@ class IOCoordinator : public boost::noncopyable
         std::map<std::string, RWLock *> locks;
         boost::mutex lockMutex;  // lol
         
-        int loadObjectWithJournal(const char *objFilename, const char *journalFilename, 
-            uint8_t *data, off_t offset, size_t length);
-        int loadObject(int fd, uint8_t *data, off_t offset, size_t length);
+        int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
+            uint8_t *data, off_t offset, size_t length) const;
+        int loadObject(int fd, uint8_t *data, off_t offset, size_t length) const;
 };
 
 }

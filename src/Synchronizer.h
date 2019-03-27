@@ -9,15 +9,15 @@
 #include <boost/filesystem.hpp>
 
 #include "SMLogging.h"
-#include "Cache.h"
 #include "Replicator.h"
-#include "IOCoordinator.h"
 #include "ThreadPool.h"
+#include "CloudStorage.h"
 
 namespace storagemanager
 {
 
-class Cache;
+class Cache;  // break circular dependency in header files
+class IOCoordinator;
 
 /* TODO: Need to think about how errors are handled / propagated */
 class Synchronizer : public boost::noncopyable

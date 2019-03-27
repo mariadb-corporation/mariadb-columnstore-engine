@@ -1,5 +1,7 @@
 
 #include "Synchronizer.h"
+#include "Cache.h"
+#include "IOCoordinator.h"
 #include "MetadataFile.h"
 #include "Utilities.h"
 #include <boost/thread/mutex.hpp>

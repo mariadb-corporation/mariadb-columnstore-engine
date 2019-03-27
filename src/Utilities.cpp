@@ -4,7 +4,6 @@
 namespace storagemanager
 {
 
-
 ScopedReadLock::ScopedReadLock(IOCoordinator *i, const std::string &k) : ioc(i), key(k)
 {
     lock();
@@ -61,25 +60,6 @@ ScopedCloser::~ScopedCloser() {
     ::close(fd);
     errno = s_errno; 
 }
-
-
-
-struct SharedCloser
-{
-    public: 
-        SharedCloser(int f);
-        SharedCloser(const SharedCloser &);
-        ~SharedCloser();
-    
-    private:
-        struct CtrlBlock
-        {
-            int fd;
-            uint refCount;
-        };
-        
-        CtrlBlock *block;
-};
     
 SharedCloser::SharedCloser(int f)
 { 
@@ -88,7 +68,7 @@ SharedCloser::SharedCloser(int f)
     block->refCount = 1;
 }
 
-SharedCloser(const SharedCloser &s) : block(s.block)
+SharedCloser::SharedCloser(const SharedCloser &s) : block(s.block)
 {
     block->refCount++;
 }

@@ -1,5 +1,7 @@
+#ifndef UTILITIES_H_
+#define UTILITIES_H_
 
-#include <std::string>
+#include <string>
 
 
 namespace storagemanager
@@ -7,7 +9,8 @@ namespace storagemanager
 
 class IOCoordinator;
 
-// a few utility classes we've coded here and there, now de-duped and centralized
+// a few utility classes we've coded here and there, now de-duped and centralized.
+// modify as necessary.
 struct ScopedReadLock
 {
     ScopedReadLock(IOCoordinator *i, const std::string &k);
@@ -32,7 +35,14 @@ struct ScopedWriteLock
     const std::string key;
 };
 
-class ScopedCloser
+struct ScopedCloser
+{
+    ScopedCloser(int f);
+    ~ScopedCloser();
+    int fd;
+};
+
+class SharedCloser
 {
     public: 
         SharedCloser(int f);
@@ -50,3 +60,5 @@ class ScopedCloser
 };
 
 }
+
+#endif
