@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
+#include <iostream>
 
 using namespace std;
 
@@ -56,23 +57,36 @@ const char *s3err_msgs[] = {
     "Data to PUT is too large; 4GB maximum length"
 };
 
-S3Storage::S3Storage() : creds(NULL)
+
+S3Storage::ScopedConnection::ScopedConnection(S3Storage *s, ms3_st *m) : s3(s), conn(m)
+{
+    assert(conn);
+}
+
+S3Storage::ScopedConnection::~ScopedConnection()
+{
+    s3->returnConnection(conn);
+}
+
+S3Storage::S3Storage()
 {
     /*  Check creds from envvars
         Get necessary vars from config
         Init an ms3_st object
     */
-    char *key_id = getenv("AWS_ACCESS_KEY_ID");
-    char *secret = getenv("AWS_SECRET_ACCESS_KEY");
-    if (!key_id || !secret)
+    char *_key_id = getenv("AWS_ACCESS_KEY_ID");
+    char *_secret = getenv("AWS_SECRET_ACCESS_KEY");
+    if (!_key_id || !_secret)
     {
         const char *msg = "S3 access requires setting the env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY";
         logger->log(LOG_ERR, msg);
         throw runtime_error(msg);
     }
+    key = _key_id;
+    secret = _secret;
     
     Config *config = Config::get();
-    string region = config->getValue("S3", "region");
+    region = config->getValue("S3", "region");
     bucket = config->getValue("S3", "bucket");
     if (region.empty() || bucket.empty())
     {
@@ -81,20 +95,15 @@ S3Storage::S3Storage() : creds(NULL)
         throw runtime_error(msg);
     }
     
-    string endpoint = config->getValue("S3", "endpoint");
-    
-    creds = ms3_init(key_id, secret, region.c_str(), (endpoint.empty() ? NULL : endpoint.c_str()));
-    if (!creds)
-    {
-        const char *msg = "S3Storage: Failed to init s3 creds";
-        logger->log(LOG_ERR, msg);
-        throw runtime_error(msg);
-    }
+    endpoint = config->getValue("S3", "endpoint");
+
+    ms3_library_init();
 }
 
 S3Storage::~S3Storage()
 {
-    ms3_deinit(creds);
+    for (auto &conn : freeConns)
+        ms3_deinit(conn.conn);
 }
 
 int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t *size)
@@ -132,6 +141,9 @@ int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *
     uint8_t err;
     size_t len = 0;
     uint8_t *_data = NULL;
+    
+    ms3_st *creds = getConnection();
+    ScopedConnection sc(this, creds);
     
     do {
         err = ms3_get(creds, bucket.c_str(), sourceKey.c_str(), &_data, &len);
@@ -210,6 +222,8 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
 int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, const string &destKey)
 {
     uint8_t s3err;
+    ms3_st *creds = getConnection();
+    ScopedConnection sc(this, creds);
     
     do {
         s3err = ms3_put(creds, bucket.c_str(), destKey.c_str(), data.get(), len);
@@ -233,7 +247,9 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
 void S3Storage::deleteObject(const string &key)
 {
     uint8_t s3err;
-    
+    ms3_st *creds = getConnection();
+    ScopedConnection sc(this, creds);
+        
     do {
         s3err = ms3_delete(creds, bucket.c_str(), key.c_str());
         if (s3err && s3err != MS3_ERR_NOT_FOUND)
@@ -266,6 +282,8 @@ int S3Storage::exists(const string &key, bool *out)
 {
     uint8_t s3err;
     ms3_status_st status;
+    ms3_st *creds = getConnection();
+    ScopedConnection sc(this, creds);
     
     do {
         s3err = ms3_status(creds, bucket.c_str(), key.c_str(), &status);
@@ -287,6 +305,47 @@ int S3Storage::exists(const string &key, bool *out)
         
     *out = (s3err == 0);
     return 0;
+}
+
+ms3_st * S3Storage::getConnection()
+{
+    boost::unique_lock<boost::mutex> s(connMutex);
+    
+    ms3_st *ret = NULL;
+    if (freeConns.empty())
+    {
+        s.unlock();
+        ret = ms3_thread_init(key.c_str(), secret.c_str(), region.c_str(), (endpoint.empty() ? NULL : endpoint.c_str()));
+        if (ret == NULL)
+            logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_thread_init returned NULL, no specific info to report");
+        return ret;
+    }
+    ret = freeConns.front().conn;
+    freeConns.pop_front();
+    return ret;
+}
+
+void S3Storage::returnConnection(ms3_st *ms3)
+{
+    assert(ms3);
+    Connection conn;
+    conn.conn = ms3;
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &conn.idleSince);
+    
+    boost::unique_lock<boost::mutex> s(connMutex);
+    // prune the list
+    while (!freeConns.empty())
+    {
+        Connection &back = freeConns.back();
+        if (back.idleSince.tv_sec + maxIdleSecs <= back.idleSince.tv_sec)
+        {
+            ms3_deinit(back.conn);
+            freeConns.pop_back();
+        }
+        else
+            break;  // everything in front of this entry will not have been idle enough
+    }
+    freeConns.push_front(conn);
 }
 
 }

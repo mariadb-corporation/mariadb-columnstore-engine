@@ -27,8 +27,31 @@ class S3Storage : public CloudStorage
         int exists(const std::string &key, bool *out);
 
     private:
-        ms3_st *creds;
+        ms3_st *getConnection();
+        void returnConnection(ms3_st *);
+    
         std::string bucket;   // might store this as a char *, since it's only used that way
+        std::string region;
+        std::string key;
+        std::string secret;
+        std::string endpoint;
+        
+        struct Connection
+        {
+            ms3_st *conn;
+            timespec idleSince;
+        };
+        struct ScopedConnection
+        {
+            ScopedConnection(S3Storage *, ms3_st *);
+            ~ScopedConnection();
+            S3Storage *s3;
+            ms3_st *conn;
+        };
+        
+        boost::mutex connMutex;
+        std::deque<Connection> freeConns;   // using this as a stack to keep lru objects together
+        const time_t maxIdleSecs = 120;
 };
 
 
