@@ -44,6 +44,7 @@ IOCoordinator::IOCoordinator()
         cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
         throw;
     }
+
     cachePath = cache->getCachePath();
     journalPath = cache->getJournalPath();
 }
@@ -93,6 +94,7 @@ int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length
         }
         count += err;
     }
+    return 0;
 }
 
 int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
@@ -124,9 +126,16 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         release read lock
         put together the response in data
     */
-
+    
     ScopedReadLock fileLock(this, filename);
-    MetadataFile meta(filename);
+    MetadataFile meta(filename, MetadataFile::no_create_t());
+    
+    if (!meta.exists())
+    {
+        errno = ENOENT;
+        return -1;
+    }
+    
     vector<metadataObject> relevants = meta.metadataRead(offset, length);
     map<string, int> journalFDs, objectFDs;
     map<string, string> keyToJournalName, keyToObjectName;
@@ -153,10 +162,10 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         if (fd >= 0)
         {
             keyToJournalName[key] = filename;
-            journalFDs[filename] = fd;
+            journalFDs[key] = fd;
             fdMinders.push_back(SharedCloser(fd));
         }
-        else if (errno != EEXIST)
+        else if (errno != ENOENT)
         {
             int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
@@ -196,9 +205,9 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object
         size_t thisLength = min(object.length, length - count);
-        if (jit == journalFDs.end())
+        if (jit == journalFDs.end()) 
             err = loadObject(objectFDs[object.key], &data[count], thisOffset, thisLength);
-        else
+        else 
             err = loadObjectAndJournal(keyToObjectName[object.key].c_str(), keyToJournalName[object.key].c_str(), 
                 &data[count], thisOffset, thisLength);
         if (err) 

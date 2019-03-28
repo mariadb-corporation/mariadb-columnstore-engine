@@ -638,6 +638,7 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
+// (ints) 0 1 2 3 ... 2048
 void makeTestObject(const char *dest)
 {
     int objFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
@@ -665,7 +666,8 @@ void makeTestJournal(const char *dest)
         assert(write(journalFD, &i, 4) == 4);
 }
 
-const char *testObjKey = "12345_0_8192_test-object";
+const char *testObjKey = "12345_0_8192_test-file";
+const char *testFile = "test-file";
 
 void makeTestMetadata(const char *dest)
 {
@@ -964,6 +966,86 @@ void s3storageTest1()
     cout << "S3Storage Test 1 OK" << endl;
 }
 
+void IOCReadTest1()
+{
+    /*  Generate the test object & metadata
+        read it, verify result
+        
+        Generate the journal object
+        read it, verify the merged result
+        
+        TODO: do partial reads with an offset similar to what the mergeJournal tests do
+        TODO: some error path testing
+    */
+    Cache *cache = Cache::get();
+    CloudStorage *cs = CloudStorage::get();
+    IOCoordinator *ioc = IOCoordinator::get();
+    Config *config = Config::get();
+    LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
+    if (!ls)
+    {
+        cout << "IOC read test 1 requires LocalStorage for now." << endl;
+        return;
+    }
+        
+    bf::path storagePath = ls->getPrefix();
+    bf::path cachePath = cache->getCachePath();
+    bf::path journalPath = cache->getJournalPath();
+    bf::path metaPath = config->getValue("ObjectStorage", "metadata_path");
+    assert(!metaPath.empty());
+    bf::create_directories(metaPath);
+    
+    string objFilename = (storagePath/testObjKey).string();
+    string journalFilename = (journalPath/testObjKey).string() + ".journal";
+    string metaFilename = (metaPath/testFile).string() + ".meta";
+    
+    cache->reset();
+    bf::remove(objFilename);
+    bf::remove(journalFilename);
+    bf::remove(metaFilename);
+    
+    int err;
+    boost::scoped_array<uint8_t> data(new uint8_t[1<<20]);
+    memset(data.get(), 0, 1<<20);
+    err = ioc->read(testFile, data.get(), 0, 1<<20);
+    assert(err < 0);
+    assert(errno == ENOENT);
+    
+    makeTestObject(objFilename.c_str());
+    makeTestMetadata(metaFilename.c_str());
+    size_t objSize = bf::file_size(objFilename);
+    err = ioc->read(testFile, data.get(), 0, 1<<20);
+    assert(err == objSize);
+    
+    // verify the data
+    int *data32 = (int *) data.get();
+    int i;
+    for (i = 0; i < 2048; i++)
+        assert(data32[i] == i);
+    for (; i < (1<<20)/4; i++)
+        assert(data32[i] == 0);
+        
+    makeTestJournal(journalFilename.c_str());
+    
+    err = ioc->read(testFile, data.get(), 0, 1<<20);
+    assert(err == objSize);
+    for (i = 0; i < 5; i++)
+        assert(data32[i] == i);
+    for (; i < 10; i++)
+        assert(data32[i] == i-5);
+    for (; i < 2048; i++)
+        assert(data32[i] == i);
+    for (; i < (1<<20)/4; i++)
+        assert(data32[i] == 0);
+    
+    cache->reset();
+    bf::remove(objFilename);
+    bf::remove(journalFilename);
+    bf::remove(metaFilename);
+    
+    cout << "IOC read test 1 OK" << endl;
+}
+
 int main()
 {
     std::size_t sizeKB = 1024;
@@ -1003,6 +1085,7 @@ int main()
     syncTest1();
     
     s3storageTest1();
+    IOCReadTest1();
 
     return 0;
 }

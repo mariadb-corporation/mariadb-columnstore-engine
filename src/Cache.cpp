@@ -85,7 +85,7 @@ Cache::Cache() : currentCacheSize(0)
     }
     catch (exception &e)
     {
-        syslog(LOG_CRIT, "Failed to create %s, got: %s", prefix.string().c_str(), e.what());
+        logger->log(LOG_CRIT, "Failed to create %s, got: %s", prefix.string().c_str(), e.what());
         throw e;
     }
     //cout << "Cache got prefix " << prefix << endl;
@@ -209,7 +209,8 @@ void Cache::read(const vector<string> &keys)
         if (mit != m_lru.end())
         {
             lru.splice(lru.end(), lru, mit->lit);
-            removeFromDNE(lru.end());
+            LRU_t::iterator lit = lru.end();
+            removeFromDNE(--lit);
         }
         else if (dl_errnos[i] == 0)   // successful download
         {

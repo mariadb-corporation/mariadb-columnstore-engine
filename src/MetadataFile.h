@@ -26,10 +26,13 @@ struct metadataObject {
 class MetadataFile
 {
     public:
+        struct no_create_t {};
         MetadataFile();
         MetadataFile(const char* filename);
+        MetadataFile(const char* filename, no_create_t);   // this one won't create it if it doesn't exist
         ~MetadataFile();
 
+        bool exists();
         void printObjects();
         // returns the objects needed to update
         std::vector<metadataObject> metadataRead(off_t offset, size_t length);
@@ -59,6 +62,7 @@ class MetadataFile
         size_t mObjectSize;
         std::string msMetadataPath;
         std::set<metadataObject> mObjects;
+        bool _exists;
         //vector<metadataObject> mObjects;
 };
 
