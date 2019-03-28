@@ -49,6 +49,7 @@ using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
 
@@ -4868,6 +4869,7 @@ void gp_walk(const Item* item, void* arg)
                     {
                         cval.assign(str->ptr(), str->length());
                     }
+//                    boost::trim_right_if(cval, boost::is_any_of(" "));
 
                     gwip->rcWorkStack.push(new ConstantColumn(cval));
                     break;

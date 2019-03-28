@@ -36,6 +36,7 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 namespace ba = boost::algorithm;
 
 #include "calpontexecutionplan.h"
@@ -1635,6 +1636,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         string constval(cc->constval());
+        boost::trim_right_if(constval, boost::is_any_of(" "));
 
 
         CalpontSystemCatalog::OID dictOid = 0;
