@@ -111,8 +111,8 @@ int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *jou
 int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_t length)
 {
     /*
-        This is a bit complex and verbose, so for the first cut, it won't bother returning 
-        a partial result.  If an error happens, it will just fail the whole operation.
+        This is a bit complex and verbose, so for the first cut, it will only return a partial
+        result where that is easy to do.  Otherwise it will return an error.
     */
 
     /*
@@ -195,20 +195,25 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object
-        size_t thisLength = min(object.length, count - length);
+        size_t thisLength = min(object.length, length - count);
         if (jit == journalFDs.end())
             err = loadObject(objectFDs[object.key], &data[count], thisOffset, thisLength);
         else
             err = loadObjectAndJournal(keyToObjectName[object.key].c_str(), keyToJournalName[object.key].c_str(), 
                 &data[count], thisOffset, thisLength);
-        if (err)
-            return -1;    
+        if (err) 
+        {
+            if (count == 0)
+                return -1;
+            else
+                return count;
+        }
             
         count += thisLength;
     }
     
     // all done
-    return length;
+    return count;
 
 /*
     int fd, err;
