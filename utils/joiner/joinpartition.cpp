@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2018 MariaDB Corporation
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -118,7 +118,6 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     totalBytesWritten(0), maxLargeSize(0), maxSmallSize(0),
     nextSmallOffset(0), nextLargeOffset(0)
 {
-    config::Config* config = config::Config::makeConfig();
     boost::posix_time::ptime t;
     ostringstream os;
 

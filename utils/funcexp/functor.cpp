@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -60,6 +61,7 @@ void Func::init()
     double* dp = reinterpret_cast<double*>(&dni);
     fDoubleNullVal = *dp;
 
+    fDoubleNullVal = joblist::LONGDOUBLENULL;
 }
 
 
@@ -339,6 +341,11 @@ string Func::intToString(int64_t i)
 string Func::doubleToString(double d)
 {
     return helpers::doubleToString(d);
+}
+
+string Func::longDoubleToString(long double ld)
+{
+    return helpers::longDoubleToString(ld);
 }
 
 

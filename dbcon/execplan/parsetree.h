@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -248,6 +249,14 @@ public:
             return (reinterpret_cast<Operator*>(fData))->getDoubleVal(row, isNull, fLeft, fRight);
         else
             return fData->getDoubleVal(row, isNull);
+    }
+
+    inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+    {
+        if (fLeft && fRight)
+            return (reinterpret_cast<Operator*>(fData))->getLongDoubleVal(row, isNull, fLeft, fRight);
+        else
+            return fData->getLongDoubleVal(row, isNull);
     }
 
     inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)

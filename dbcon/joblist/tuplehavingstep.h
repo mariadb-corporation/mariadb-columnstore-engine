@@ -23,6 +23,7 @@
 
 #include "jobstep.h"
 #include "expressionstep.h"
+#include "threadnaming.h"
 
 // forward reference
 namespace fucexp
@@ -97,6 +98,7 @@ protected:
         Runner(TupleHavingStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("HVSRunner");
             fStep->execute();
         }
 

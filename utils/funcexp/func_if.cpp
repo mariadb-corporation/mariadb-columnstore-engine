@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -60,6 +61,9 @@ bool boolVal(SPTP& parm, Row& row)
             case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UDOUBLE:
                 ret = (parm->data()->getDoubleVal(row, isNull) != 0);
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+                ret = (parm->data()->getLongDoubleVal(row, isNull) != 0);
 
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
@@ -185,6 +189,21 @@ double Func_if::getDoubleVal(Row& row,
     else
     {
         return parm[2]->data()->getDoubleVal(row, isNull);
+    }
+}
+
+long double Func_if::getLongDoubleVal(Row& row,
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType&)
+{
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getLongDoubleVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getLongDoubleVal(row, isNull);
     }
 }
 

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -391,7 +392,7 @@ private:
     boost::condition condvar;
     boost::condition flushed;
     SP_LBIDList lbidList;
-    std::vector<int> scanFlags; // use to keep track of which extents to eliminate from this step
+    std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
     uint32_t uniqueID;
 
     //@bug 2634

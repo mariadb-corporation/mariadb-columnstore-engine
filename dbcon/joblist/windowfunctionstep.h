@@ -25,6 +25,7 @@
 #include "jobstep.h"
 #include "rowgroup.h"
 #include "windowfunctioncolumn.h"
+#include "threadnaming.h"
 
 namespace execplan
 {
@@ -153,6 +154,7 @@ private:
         Runner(WindowFunctionStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("WFSRunner");
             fStep->execute();
         }
 

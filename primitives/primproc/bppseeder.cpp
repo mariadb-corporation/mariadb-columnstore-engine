@@ -142,6 +142,7 @@ int BPPSeeder::operator()()
     pthread_t tid = 0;
     boost::mutex::scoped_lock scoped(bppLock, boost::defer_lock_t());
 
+
     try
     {
         if (firstRun)

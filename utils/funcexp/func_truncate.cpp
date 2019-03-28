@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -42,7 +43,9 @@ namespace
 
 using namespace funcexp;
 
-inline void decimalPlaceDouble(FunctionParm& fp, int64_t& s, double& p, Row& row, bool& isNull)
+// P should be double or long double
+template <typename P>
+inline void decimalPlaceDouble(FunctionParm& fp, int64_t& s, P& p, Row& row, bool& isNull)
 {
     s = fp[1]->data()->getIntVal(row, isNull);
     int64_t d = s;
@@ -57,9 +60,9 @@ inline void decimalPlaceDouble(FunctionParm& fp, int64_t& s, double& p, Row& row
         r *= 10;
 
     if (d >= 0)
-        p = (double) r;
+        p = (P) r;
     else
-        p = 1.0 / ((double) r);
+        p = 1.0 / ((P) r);
 }
 
 }
@@ -223,6 +226,60 @@ double Func_truncate::getDoubleVal(Row& row,
     return d;
 }
 
+long double Func_truncate::getLongDoubleVal(Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType& op_ct)
+{
+    if (execplan::CalpontSystemCatalog::LONGDOUBLE == op_ct.colDataType)
+    {
+        int64_t d = 0;
+        long double  p = 1;
+        decimalPlaceDouble(parm, d, p, row, isNull);
+
+        if (isNull)
+            return 0.0;
+
+        long double x = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+        if (!isNull)
+        {
+            x *= p;
+
+            if (x > 0)
+                x = floor(x);
+            else
+                x = ceil(x);
+
+            if (p != 0.0)
+                x /= p;
+            else
+                x = 0.0;
+        }
+
+        return x;
+    }
+
+    IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return 0.0;
+
+    double d = x.value;
+
+    if (x.scale > 0)
+    {
+        while (x.scale-- > 0)
+            d /= 10.0;
+    }
+    else
+    {
+        while (x.scale++ < 0)
+            d *= 10.0;
+    }
+
+    return d;
+}
 
 IDB_Decimal Func_truncate::getDecimalVal(Row& row,
         FunctionParm& parm,
@@ -315,6 +372,26 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row,
                 break;
 
             double x = parm[0]->data()->getDoubleVal(row, isNull);
+
+            if (!isNull)
+            {
+                x *= p;
+                decimal.value = (int64_t) x;
+                decimal.scale = s;
+            }
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            int64_t s = 0;
+            long double  p = 1;
+            decimalPlaceDouble(parm, s, p, row, isNull);
+
+            if (isNull)
+                break;
+
+            long double x = parm[0]->data()->getLongDoubleVal(row, isNull);
 
             if (!isNull)
             {

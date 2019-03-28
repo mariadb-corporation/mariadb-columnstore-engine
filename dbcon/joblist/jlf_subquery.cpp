@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -123,6 +124,11 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row)
         case CalpontSystemCatalog::DOUBLE:
             oss << fixed << row.getDoubleField(i);
             *cc = new ConstantColumn(oss.str(), row.getDoubleField(i));
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            oss << fixed << row.getLongDoubleField(i);
+            *cc = new ConstantColumn(oss.str(), row.getLongDoubleField(i));
             break;
 
         case CalpontSystemCatalog::DATE:

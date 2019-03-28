@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -718,8 +718,7 @@ new_plan:
                         string emsg("NOERROR");
                         ByteStream emsgBs;
                         ByteStream::quadbyte tflg = 0;
-                        jl = JobListFactory::makeJobList(
-                                 &csep, fRm, true, true);
+                        jl = JobListFactory::makeJobList(&csep, fRm, true, true);
                         // assign query stats
                         jl->queryStats(fStats);
 

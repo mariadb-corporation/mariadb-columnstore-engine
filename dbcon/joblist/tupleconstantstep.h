@@ -22,6 +22,7 @@
 #define JOBLIST_TUPLECONSTANTSTEP_H
 
 #include "jobstep.h"
+#include "threadnaming.h"
 
 namespace joblist
 {
@@ -98,6 +99,7 @@ protected:
         Runner(TupleConstantStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("TCSRunner");
             fStep->execute();
         }
 

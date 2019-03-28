@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -510,6 +511,18 @@ void TupleUnion::normalize(const Row& in, Row* out)
                         break;
                     }
 
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                    {
+                        int scale = in.getScale(i);
+                        long double d = in.getIntField(i);
+                        if (scale != 0)
+                        {
+                            d /= (uint64_t) pow(10.0, scale);
+                        }
+                        out->setLongDoubleField(d, i);
+                        break;
+                    }
+
                     case CalpontSystemCatalog::DECIMAL:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
@@ -616,6 +629,22 @@ dec1:
                         }
                         else
                             out->setDoubleField(in.getUintField(i), i);
+
+                        break;
+                    }
+
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                    {
+                        int scale = in.getScale(i);
+
+                        if (scale != 0)
+                        {
+                            long double d = in.getUintField(i);
+                            d /= (uint64_t) pow(10.0, scale);
+                            out->setLongDoubleField(d, i);
+                        }
+                        else
+                            out->setLongDoubleField(in.getUintField(i), i);
 
                         break;
                     }
@@ -804,6 +833,10 @@ dec2:
                         out->setDoubleField(val, i);
                         break;
 
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                        out->setLongDoubleField(val, i);
+                        break;
+
                     case CalpontSystemCatalog::CHAR:
                     case CalpontSystemCatalog::TEXT:
                     case CalpontSystemCatalog::VARCHAR:
@@ -819,6 +852,83 @@ dec2:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
 dec3:					/* have to pick a scale to use for the double. using 5... */
+                        uint32_t scale = 5;
+                        uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
+                        int diff = out->getScale(i) - scale;
+
+                        if (diff < 0)
+                            ival /= (uint64_t) pow((double) 10, (double) - diff);
+                        else
+                            ival *= (uint64_t) pow((double) 10, (double) diff);
+
+                        out->setIntField((int64_t) val, i);
+                        break;
+                    }
+
+                    default:
+                        ostringstream os;
+                        os << "TupleUnion::normalize(): tried an illegal conversion: floating point to "
+                           << out->getColTypes()[i];
+                        throw logic_error(os.str());
+                }
+
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double val = in.getLongDoubleField(i);
+
+                switch (out->getColTypes()[i])
+                {
+                    case CalpontSystemCatalog::TINYINT:
+                    case CalpontSystemCatalog::SMALLINT:
+                    case CalpontSystemCatalog::MEDINT:
+                    case CalpontSystemCatalog::INT:
+                    case CalpontSystemCatalog::BIGINT:
+                        if (out->getScale(i))
+                            goto dec4;
+
+                        out->setIntField((int64_t) val, i);
+                        break;
+
+                    case CalpontSystemCatalog::UTINYINT:
+                    case CalpontSystemCatalog::USMALLINT:
+                    case CalpontSystemCatalog::UMEDINT:
+                    case CalpontSystemCatalog::UINT:
+                    case CalpontSystemCatalog::UBIGINT:
+                        out->setUintField((uint64_t) val, i);
+                        break;
+
+                    case CalpontSystemCatalog::FLOAT:
+                    case CalpontSystemCatalog::UFLOAT:
+                        out->setFloatField(val, i);
+                        break;
+
+                    case CalpontSystemCatalog::DOUBLE:
+                    case CalpontSystemCatalog::UDOUBLE:
+                        out->setDoubleField(val, i);
+                        break;
+
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                        out->setLongDoubleField(val, i);
+                        break;
+
+                    case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
+                    case CalpontSystemCatalog::VARCHAR:
+                    {
+                        ostringstream os;
+                        os.precision(15);  // to match mysql's output
+                        os << val;
+                        out->setStringField(os.str(), i);
+                        break;
+                    }
+
+                    case CalpontSystemCatalog::DECIMAL:
+                    case CalpontSystemCatalog::UDECIMAL:
+                    {
+dec4:					/* have to pick a scale to use for the double. using 5... */
                         uint32_t scale = 5;
                         uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
                         int diff = out->getScale(i) - scale;
@@ -882,9 +992,17 @@ dec3:					/* have to pick a scale to use for the double. using 5... */
                     }
 
                     case CalpontSystemCatalog::DOUBLE:
+                    case CalpontSystemCatalog::UDOUBLE:
                     {
                         double dval = ((double) val) / IDB_pow[scale];
                         out->setDoubleField(dval, i);
+                        break;
+                    }
+
+                    case CalpontSystemCatalog::LONGDOUBLE:
+                    {
+                        long double dval = ((long double) val) / IDB_pow[scale];
+                        out->setLongDoubleField(dval, i);
                         break;
                     }
 

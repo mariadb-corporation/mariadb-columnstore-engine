@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -47,8 +48,8 @@ public:
     static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
-    T           fAvg;
-    T           fSum;
+    long double fAvg;
+    long double fSum;
     uint64_t    fCount;
     bool        fDistinct;
     std::set<T> fSet;

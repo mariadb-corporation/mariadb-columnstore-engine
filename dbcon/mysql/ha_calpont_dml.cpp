@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1168,6 +1168,20 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                     else
                     {
                         fprintf(ci.filePtr, "%.15g%c", *((double*)buf), ci.delimiter);
+                        //printf("%.15g|", *((double*)buf));
+                    }
+
+                    buf += 8;
+                    break;
+                }
+
+                case CalpontSystemCatalog::LONGDOUBLE:
+                {
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                        fprintf(ci.filePtr, "%c", ci.delimiter);
+                    else
+                    {
+                        fprintf(ci.filePtr, "%.15Lg%c", *((long double*)buf), ci.delimiter);
                         //printf("%.15g|", *((double*)buf));
                     }
 

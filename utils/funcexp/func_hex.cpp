@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -100,6 +101,21 @@ string Func_hex::getStrVal(rowgroup::Row& row,
                 dec = (uint64_t) (val + (val > 0 ? 0.5 : -0.5));
 
             retval = helpers::convNumToStr(dec, ans, 16);
+            break;
+        }
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            char buf[256];
+            long double val = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+#ifdef _MSC_VER
+            sprintf(buf, "%llA", val);
+
+#else
+            sprintf(buf, "%LA", val);
+#endif
+            retval = buf;
             break;
         }
 

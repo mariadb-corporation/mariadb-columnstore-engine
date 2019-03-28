@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -378,6 +379,14 @@ void WindowFunctionColumn::adjustResultType()
             boost::iequals(fFunctionName, "NTH_VALUE")) &&
             !fFunctionParms.empty())
         fResultType = fFunctionParms[0]->resultType();
+
+    if (boost::iequals(fFunctionName, "SUM") ||
+        boost::iequals(fFunctionName, "AVG"))
+    {
+        fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+        fResultType.colWidth = sizeof(long double);
+        fResultType.precision = -1;
+    }
 }
 
 void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
@@ -579,6 +588,16 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                 isNull = true;
             else
                 fResult.doubleVal = row.getDoubleField(fInputIndex);
+
+            break;
+        }
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            if (row.equals(LONGDOUBLENULL, fInputIndex))
+                isNull = true;
+            else
+                fResult.longDoubleVal = row.getLongDoubleField(fInputIndex);
 
             break;
         }

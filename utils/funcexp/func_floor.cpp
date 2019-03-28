@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -118,6 +119,12 @@ int64_t Func_floor::getIntVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            ret = (int64_t) floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -216,6 +223,12 @@ uint64_t Func_floor::getUintVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            ret = (uint64_t) floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -286,6 +299,10 @@ double Func_floor::getDoubleVal(Row& row,
     {
         ret = floor(parm[0]->data()->getDoubleVal(row, isNull));
     }
+    else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
+    }
     else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
              op_ct.colDataType == CalpontSystemCatalog::CHAR ||
              op_ct.colDataType == CalpontSystemCatalog::TEXT)
@@ -303,6 +320,38 @@ double Func_floor::getDoubleVal(Row& row,
     return ret;
 }
 
+long double Func_floor::getLongDoubleVal(Row& row,
+                                FunctionParm& parm,
+                                bool& isNull,
+                                CalpontSystemCatalog::ColType& op_ct)
+{
+    long double ret = 0.0;
+
+    if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::FLOAT)
+    {
+        ret = floor(parm[0]->data()->getDoubleVal(row, isNull));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::TEXT)
+    {
+        const string& str = parm[0]->data()->getStrVal(row, isNull);
+
+        if (!isNull)
+            ret = floor(strtod(str.c_str(), 0));
+    }
+    else
+    {
+        ret = (long double) getIntVal(row, parm, isNull, op_ct);
+    }
+
+    return ret;
+}
 
 string Func_floor::getStrVal(Row& row,
                              FunctionParm& parm,
@@ -320,6 +369,18 @@ string Func_floor::getStrVal(Row& row,
             op_ct.colDataType == CalpontSystemCatalog::TEXT)
     {
         snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
+
+        // remove the decimals in the oss string.
+        char* d = tmp;
+
+        while ((*d != '.') && (*d != '\0'))
+            d++;
+
+        *d = '\0';
+    }
+    if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+    {
+        snprintf(tmp, 511, "%Lf", getLongDoubleVal(row, parm, isNull, op_ct));
 
         // remove the decimals in the oss string.
         char* d = tmp;

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -85,6 +86,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -137,6 +143,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -185,6 +196,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -228,6 +244,11 @@ public:
                       execplan::CalpontSystemCatalog::ColType& op_ct);
 
     double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
@@ -289,6 +310,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -337,6 +363,11 @@ public:
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
                           bool& isNull,
@@ -380,6 +411,11 @@ public:
                       execplan::CalpontSystemCatalog::ColType& op_ct);
 
     double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);
@@ -452,6 +488,11 @@ public:
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 
     double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct);

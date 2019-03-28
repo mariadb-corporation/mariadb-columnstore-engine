@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -173,6 +174,31 @@ double Func_coalesce::getDoubleVal(rowgroup::Row& row,
     for (uint32_t i = 0; i < parm.size(); i++)
     {
         d = parm[i]->data()->getDoubleVal(row, isNull);
+
+        if (isNull)
+        {
+            isNull = false;
+            continue;
+        }
+
+        return d;
+    }
+
+    isNull = true;
+    return d;
+}
+
+
+long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType& ct)
+{
+    long double d = 0.0;
+
+    for (uint32_t i = 0; i < parm.size(); i++)
+    {
+        d = parm[i]->data()->getLongDoubleVal(row, isNull);
 
         if (isNull)
         {

@@ -52,6 +52,7 @@ using namespace boost;
 #include "fixedallocator.h"
 #include "blockcacheclient.h"
 #include "MonitorProcMem.h"
+#include "threadnaming.h"
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL
@@ -156,7 +157,6 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     sendThread = bppst;
     pthread_mutex_init(&objLock, NULL);
     initBPP(b);
-// 	cerr << "made a BPP\n";
 }
 
 #if 0
@@ -1961,6 +1961,7 @@ void BatchPrimitiveProcessor::makeResponse()
 
 int BatchPrimitiveProcessor::operator()()
 {
+    utils::setThreadName("PPBatchPrimProc");
     if (currentBlockOffset == 0)
     {
 #ifdef PRIMPROC_STOPWATCH   // TODO: needs to be brought up-to-date
