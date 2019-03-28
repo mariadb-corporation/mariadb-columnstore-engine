@@ -223,26 +223,6 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
     
     // all done
     return count;
-
-/*
-    int fd, err;
-    
-    OPEN(filename, O_RDONLY);
-    
-    size_t count = 0;
-    ::lseek(fd, offset, SEEK_SET);
-    while (count < length) {
-        err = ::read(fd, &data[count], length - count);
-        if (err <= 0)
-            if (count > 0)   // return what was successfully read
-                return count;
-            else
-                return err;
-        count += err;
-    }
-    
-    return count;    
-*/
 }
 
 int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset, size_t length)
@@ -352,6 +332,25 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
 
 int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
 {
+    
+    if (openmode & O_CREAT)
+    {
+        MetadataFile meta(filename);
+        meta.stat(out);
+    }
+    else
+    {
+        MetadataFile meta(filename, MetadataFile::no_create_t());
+        if (!meta.exists())
+        {
+            errno = ENOENT;
+            return -1;
+        }
+        meta.stat(out);
+    }
+    return 0;
+
+#if 0
     int fd, err;
     
     /* create all subdirs if necessary.  We don't care if directories actually get created. */
@@ -362,6 +361,7 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
     }
     OPEN(filename, openmode);
     return fstat(fd, out);
+#endif
 }
 
 int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)

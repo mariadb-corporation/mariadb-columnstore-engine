@@ -8,6 +8,7 @@
 #include "SMLogging.h"
 #include <string>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdint.h>
 #include <vector>
 #include <iostream>
@@ -32,8 +33,9 @@ class MetadataFile
         MetadataFile(const char* filename, no_create_t);   // this one won't create it if it doesn't exist
         ~MetadataFile();
 
-        bool exists();
+        bool exists() const;
         void printObjects();
+        int stat(struct stat *) const;
         // returns the objects needed to update
         std::vector<metadataObject> metadataRead(off_t offset, size_t length);
         // updates the metadatafile with new object
@@ -55,12 +57,12 @@ class MetadataFile
         
     private:
         Config *mpConfig;
-        std::string prefix;
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;
         size_t mObjectSize;
         std::string msMetadataPath;
+        std::string mFilename;
         std::set<metadataObject> mObjects;
         bool _exists;
         //vector<metadataObject> mObjects;

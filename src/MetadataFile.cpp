@@ -10,6 +10,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/algorithm/string.hpp>
+#include <unistd.h>
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
@@ -69,6 +70,7 @@ MetadataFile::MetadataFile(const char* filename)
     mpLogger = SMLogging::get();
     mObjectSize = 5 * (1<<20);
     _exists = true;
+    
     try
     {
         mObjectSize = stoul(mpConfig->getValue("ObjectStorage", "object_size"));
@@ -97,11 +99,11 @@ MetadataFile::MetadataFile(const char* filename)
         syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
         throw e;
     }
-    string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
-    if (boost::filesystem::exists(metadataFilename))
+    mFilename = msMetadataPath + "/" + string(filename) + ".meta";
+    if (boost::filesystem::exists(mFilename))
     {
         boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(metadataFilename, jsontree);
+        boost::property_tree::read_json(mFilename, jsontree);
         metadataObject newObject;
         //try catch
         mVersion = jsontree.get<int>("version");
@@ -157,12 +159,12 @@ MetadataFile::MetadataFile(const char* filename, no_create_t)
         syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
         throw e;
     }
-    string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
-    if (boost::filesystem::exists(metadataFilename))
+    mFilename = msMetadataPath + "/" + string(filename) + ".meta";
+    if (boost::filesystem::exists(mFilename))
     {
         _exists = true;
         boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(metadataFilename, jsontree);
+        boost::property_tree::read_json(mFilename, jsontree);
         metadataObject newObject;
         //try catch
         mVersion = jsontree.get<int>("version");
@@ -190,7 +192,24 @@ MetadataFile::~MetadataFile()
 
 }
 
-bool MetadataFile::exists()
+int MetadataFile::stat(struct stat *out) const
+{
+    int err = ::stat(mFilename.c_str(), out);
+    if (err)
+    {
+        cout << "Failed to stat " << mFilename << endl;
+        return err;
+    }
+        
+    cout << "Got the stat for " << mFilename << endl;
+    size_t totalSize = 0;
+    for (auto &object : mObjects)
+        totalSize += object.length;
+    out->st_size = totalSize;
+    return 0;
+}
+
+bool MetadataFile::exists() const
 {
     return _exists;
 }
@@ -276,8 +295,9 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
 int MetadataFile::writeMetadata(const char *filename)
 {
     int error=0;
-
+    
     string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
+    boost::filesystem::path pMetadataFilename = metadataFilename;
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;
     jsontree.put("version",mVersion);
@@ -291,8 +311,12 @@ int MetadataFile::writeMetadata(const char *filename)
         objs.push_back(std::make_pair("", object));
     }
     jsontree.add_child("objects", objs);
+    
+    if (!boost::filesystem::exists(pMetadataFilename.parent_path()))
+        boost::filesystem::create_directories(pMetadataFilename.parent_path());
     write_json(metadataFilename, jsontree);
     _exists = true;
+    mFilename = metadataFilename;
 
     return error;
 }

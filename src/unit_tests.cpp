@@ -134,8 +134,12 @@ bool opentask()
     assert(_stat->st_size == 0);
     
     /* verify the file is there */
-    assert(boost::filesystem::exists(filename));
-    ::unlink(filename);
+    string metaPath = Config::get()->getValue("ObjectStorage", "metadata_path");
+    assert(!metaPath.empty());
+    metaPath += string("/") + filename + ".meta";
+    
+    assert(boost::filesystem::exists(metaPath));
+    ::unlink(metaPath.c_str());
     cout << "opentask OK" << endl;
     return true;
 }
