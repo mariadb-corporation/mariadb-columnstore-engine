@@ -336,19 +336,13 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
     if (openmode & O_CREAT)
     {
         MetadataFile meta(filename);
-        meta.stat(out);
+        return meta.stat(out);
     }
     else
     {
         MetadataFile meta(filename, MetadataFile::no_create_t());
-        if (!meta.exists())
-        {
-            errno = ENOENT;
-            return -1;
-        }
-        meta.stat(out);
+        return meta.stat(out);
     }
-    return 0;
 
 #if 0
     int fd, err;

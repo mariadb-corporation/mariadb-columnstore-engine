@@ -196,12 +196,8 @@ int MetadataFile::stat(struct stat *out) const
 {
     int err = ::stat(mFilename.c_str(), out);
     if (err)
-    {
-        cout << "Failed to stat " << mFilename << endl;
         return err;
-    }
-        
-    cout << "Got the stat for " << mFilename << endl;
+
     size_t totalSize = 0;
     for (auto &object : mObjects)
         totalSize += object.length;
