@@ -47,6 +47,61 @@ struct scoped_closer {
     int fd;
 };
 
+// (ints) 0 1 2 3 ... 2048
+void makeTestObject(const char *dest)
+{
+    int objFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(objFD >= 0);
+    scoped_closer s1(objFD);
+    
+    for (int i = 0; i < 2048; i++)
+        assert(write(objFD, &i, 4) == 4);
+}
+
+// the merged version should look like
+// (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
+void makeTestJournal(const char *dest)
+{
+    int journalFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(journalFD >= 0);
+    scoped_closer s2(journalFD);
+    
+    char header[] = "{ \"version\" : 1, \"max_offset\": 39 }";
+    write(journalFD, header, strlen(header) + 1);
+    
+    uint64_t offlen[2] = { 20, 20 };
+    write(journalFD, offlen, 16);
+    for (int i = 0; i < 5; i++)
+        assert(write(journalFD, &i, 4) == 4);
+}
+
+const char *testObjKey = "12345_0_8192_test-file";
+const char *testFile = "test-file";
+const char *_metadata = 
+"{ \n\
+    \"version\" : 1, \n\
+    \"revision\" : 1, \n\
+    \"objects\" : \n\
+    [ \n\
+        { \n\
+            \"offset\" : 0, \n\
+            \"length\" : 8192, \n\
+            \"key\" : \"12345_0_8192_test-file\" \n\
+        } \n\
+    ] \n\
+}\n";
+
+
+void makeTestMetadata(const char *dest)
+{
+    int metaFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(metaFD >= 0);
+    scoped_closer sc(metaFD);
+    
+    // need to parameterize the object name in the objects list
+    write(metaFD, _metadata, strlen(_metadata));
+}
+
 int getSocket()
 {
     int sock = ::socket(AF_UNIX, SOCK_STREAM, 0);
@@ -386,18 +441,18 @@ bool unlinktask()
 
 bool stattask()
 {
-    const char *filename = "stattest1";
-    ::unlink(filename);
-    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
-    assert(fd > 0);
-    scoped_closer f(fd);
+    string filename = "stattest1";
+    string fullFilename = Config::get()->getValue("ObjectStorage", "metadata_path") + "/" + filename + ".meta";
+    
+    ::unlink(fullFilename.c_str());
+    makeTestMetadata(fullFilename.c_str());
 
     uint8_t buf[1024];
     stat_cmd *cmd = (stat_cmd *) buf;
     
     cmd->opcode = STAT;
-    cmd->flen = strlen(filename);
-    strcpy((char *) cmd->filename, filename);
+    cmd->flen = filename.length();
+    strcpy((char *) cmd->filename, filename.c_str());
     
     ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
     StatTask s(clientSock, sizeof(*cmd) + cmd->flen);
@@ -416,9 +471,9 @@ bool stattask()
     // what can we verify about the stat...
     assert(_stat->st_uid == getuid());
     assert(_stat->st_gid == getgid());
-    assert(_stat->st_size == 0);
+    assert(_stat->st_size == 8192);
     
-    ::unlink(filename);
+    ::unlink(fullFilename.c_str());
     cout << "stattask OK" << endl;
     return true;
 }
@@ -642,59 +697,7 @@ bool cacheTest1()
     cout << "cache test 1 OK" << endl;
 }
 
-// (ints) 0 1 2 3 ... 2048
-void makeTestObject(const char *dest)
-{
-    int objFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(objFD >= 0);
-    scoped_closer s1(objFD);
-    
-    for (int i = 0; i < 2048; i++)
-        assert(write(objFD, &i, 4) == 4);
-}
 
-// the merged version should look like
-// (ints)  0 1 2 3 4 0 1 2 3 4 10 11 12 13...
-void makeTestJournal(const char *dest)
-{
-    int journalFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(journalFD >= 0);
-    scoped_closer s2(journalFD);
-    
-    char header[] = "{ \"version\" : 1, \"max_offset\": 39 }";
-    write(journalFD, header, strlen(header) + 1);
-    
-    uint64_t offlen[2] = { 20, 20 };
-    write(journalFD, offlen, 16);
-    for (int i = 0; i < 5; i++)
-        assert(write(journalFD, &i, 4) == 4);
-}
-
-const char *testObjKey = "12345_0_8192_test-file";
-const char *testFile = "test-file";
-
-void makeTestMetadata(const char *dest)
-{
-    int metaFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    assert(metaFD >= 0);
-    scoped_closer sc(metaFD);
-    
-    // need to parameterize the object name in the objects list
-    const char *metadata = 
-    "{ \n\
-        \"version\" : 1, \n\
-        \"revision\" : 1, \n\
-        \"objects\" : \n\
-        [ \n\
-            { \n\
-                \"offset\" : 0, \n\
-                \"length\" : 8192, \n\
-                \"key\" : \"12345_0_8192_test-file\" \n\
-            } \n\
-        ] \n\
-    }\n";
-    write(metaFD, metadata, strlen(metadata));
-}
 
 bool mergeJournalTest()
 {

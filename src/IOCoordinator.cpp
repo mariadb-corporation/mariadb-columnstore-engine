@@ -382,7 +382,9 @@ int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
 
 int IOCoordinator::stat(const char *path, struct stat *out)
 {
-    return ::stat(path, out);
+    ScopedReadLock s(this, path);
+    MetadataFile meta(path, MetadataFile::no_create_t());
+    return meta.stat(out);
 }
 
 int IOCoordinator::truncate(const char *path, size_t newsize)
