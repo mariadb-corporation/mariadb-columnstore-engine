@@ -63,6 +63,8 @@ using namespace rowgroup;
 #include "querytele.h"
 using namespace querytele;
 
+#include "threadnaming.h"
+
 namespace joblist
 {
 
@@ -75,6 +77,7 @@ struct pDictionaryScanPrimitive
     {
         try
         {
+            utils::setThreadName("DSSScan");
             fPDictScan->sendPrimitiveMessages();
         }
         catch (runtime_error& re)
@@ -99,6 +102,7 @@ struct pDictionaryScanAggregator
     {
         try
         {
+            utils::setThreadName("DSSAgg");
             fPDictScan->receivePrimitiveMessages();
         }
         catch (runtime_error& re)

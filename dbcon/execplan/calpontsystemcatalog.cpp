@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -153,6 +153,10 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
 
         case CalpontSystemCatalog::DOUBLE:
             return "double";
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return "long double";
             break;
 
         case CalpontSystemCatalog::DATETIME:

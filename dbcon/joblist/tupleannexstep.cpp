@@ -51,6 +51,7 @@ using namespace rowgroup;
 
 #include "hasher.h"
 #include "stlpoolallocator.h"
+#include "threadnaming.h"
 using namespace utils;
 
 #include "querytele.h"
@@ -314,6 +315,7 @@ void TupleAnnexStep::execute()
 
 void TupleAnnexStep::executeNoOrderBy()
 {
+    utils::setThreadName("TASwoOrd");
     RGData rgDataIn;
     RGData rgDataOut;
     bool more = false;
@@ -399,6 +401,7 @@ void TupleAnnexStep::executeNoOrderBy()
 
 void TupleAnnexStep::executeNoOrderByWithDistinct()
 {
+    utils::setThreadName("TASwoOrdDist");
     scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
     vector<RGData> dataVec;
     RGData rgDataIn;
@@ -500,6 +503,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
 void TupleAnnexStep::executeWithOrderBy()
 {
+    utils::setThreadName("TASwOrd");
     RGData rgDataIn;
     RGData rgDataOut;
     bool more = false;

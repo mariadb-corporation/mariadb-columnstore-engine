@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2017, MariaDB
    Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -612,14 +612,15 @@ protected:
     virtual void attachGroupConcatAg();
 
     virtual void updateEntry(const Row& row);
-    virtual void doMinMaxSum(const Row&, int64_t, int64_t, int);
+    virtual void doMinMax(const Row&, int64_t, int64_t, int);
+    virtual void doSum(const Row&, int64_t, int64_t, int);
     virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
     virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
     virtual void doBitOp(const Row&, int64_t, int64_t, int);
     virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
     virtual bool countSpecial(const RowGroup* pRG)
     {
-        fRow.setIntField<8>(fRow.getIntField<8>(0) + pRG->getRowCount(), 0);
+        fRow.setUintField<8>(fRow.getUintField<8>(0) + pRG->getRowCount(), 0);
         return true;
     }
 
@@ -642,13 +643,9 @@ protected:
     inline void updateUintMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);
     inline void updateCharMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);
     inline void updateDoubleMinMax(double val1, double val2, int64_t col, int func);
+    inline void updateLongDoubleMinMax(long double val1, long double val2, int64_t col, int func);
     inline void updateFloatMinMax(float val1, float val2, int64_t col, int func);
     inline void updateStringMinMax(std::string val1, std::string val2, int64_t col, int func);
-    inline void updateIntSum(int64_t val1, int64_t val2, int64_t col);
-    inline void updateUintSum(uint64_t val1, uint64_t val2, int64_t col);
-    inline void updateDoubleSum(double val1, double val2, int64_t col);
-    inline void updateFloatSum(float val1, float val2, int64_t col);
-
     std::vector<SP_ROWAGG_GRPBY_t>                  fGroupByCols;
     std::vector<SP_ROWAGG_FUNC_t>                   fFunctionCols;
     RowAggMap_t*                                    fAggMapPtr;
@@ -711,6 +708,7 @@ protected:
     static const static_any::any& ullTypeId;
     static const static_any::any& floatTypeId;
     static const static_any::any& doubleTypeId;
+    static const static_any::any& longdoubleTypeId;
     static const static_any::any& strTypeId;
 };
 

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1454,7 +1455,10 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps,
             TupleInfo ti1 = getTupleInfo(key1, jobInfo);
             TupleInfo ti2 = getTupleInfo(key2, jobInfo);
 
-            if (ti1.dtype == CalpontSystemCatalog::CHAR || ti1.dtype == CalpontSystemCatalog::VARCHAR || ti1.dtype == CalpontSystemCatalog::TEXT)
+            if (ti1.dtype == CalpontSystemCatalog::CHAR 
+             || ti1.dtype == CalpontSystemCatalog::VARCHAR 
+             || ti1.dtype == CalpontSystemCatalog::TEXT)
+//             || ti1.dtype == CalpontSystemCatalog::LONGDOUBLE)
                 m1->second.fTypeless = m2->second.fTypeless = true;  // ti2 is compatible
             else
                 m1->second.fTypeless = m2->second.fTypeless = false;
@@ -3623,9 +3627,21 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
                 TupleInfo ti2(getTupleInfo(key2, jobInfo));
 
                 if (ti1.width > 8 || ti2.width > 8)
-                    m1->second.fTypeless = m2->second.fTypeless = true;
+                {
+                    if (ti1.dtype ==  execplan::CalpontSystemCatalog::LONGDOUBLE
+                     || ti2.dtype ==  execplan::CalpontSystemCatalog::LONGDOUBLE)
+                    {
+                        m1->second.fTypeless = m2->second.fTypeless = false;
+                    }
+                    else
+                    {
+                        m1->second.fTypeless = m2->second.fTypeless = true;
+                    }
+                }
                 else
+                {
                     m1->second.fTypeless = m2->second.fTypeless = false;
+                }
             }
             else
             {

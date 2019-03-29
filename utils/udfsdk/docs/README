@@ -1,0 +1,8 @@
+To Build PDF:
+<as root>
+
+[root@me docs]# sphinx-build -b latex source build
+[root@me docs]# cd build
+[root@me docs]# make
+
+The UDAF.pdf file will be in the build directory

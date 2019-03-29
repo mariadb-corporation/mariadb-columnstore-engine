@@ -77,7 +77,7 @@ The serialize method leverages Columnstore's :ref:`ByteStream <bytestream>` clas
 For MEDIAN, serialize() iterates over the set and streams the values to the :ref:`ByteStream <bytestream>` and unserialze unstreams them back into the set:
 
 .. literalinclude:: ../../../median.cpp
-   :lines: 290-305
+   :lines: 194-208
    :language: cpp
 
 .. rubric:: createUserData()
@@ -93,6 +93,6 @@ This function may be called many times from different modules. Do not expect you
 The implementation of the createUserData() method() in MEDIAN:
 
 .. literalinclude:: ../../../median.cpp
-   :lines: 283-288
+   :lines: 187-192
    :language: cpp
 

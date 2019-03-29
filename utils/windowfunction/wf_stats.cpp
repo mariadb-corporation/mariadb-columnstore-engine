@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -93,6 +94,12 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
         case CalpontSystemCatalog::UFLOAT:
         {
             func.reset(new WF_stats<float>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_stats<long double>(id, name));
             break;
         }
 

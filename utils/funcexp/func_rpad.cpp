@@ -20,7 +20,7 @@
 *
 *
 ****************************************************************************/
-
+#include "errorids.h"
 #include <string>
 using namespace std;
 
@@ -39,6 +39,8 @@ using namespace joblist;
 
 namespace funcexp
 {
+const string Func_rpad::fPad = " ";
+
 CalpontSystemCatalog::ColType Func_rpad::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
     // operation type is not used by this functor
@@ -114,9 +116,19 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        {
+            const string& strval = fp[1]->data()->getStrVal(row, isNull);
+            len = strtol(strval.c_str(), NULL, 10);
+            break;
+        }
+
         default:
         {
-            len = fp[1]->data()->getIntVal(row, isNull);
+            std::ostringstream oss;
+            oss << "lpad parameter 2 must be numeric, not  " << execplan::colDataTypeToString(fp[1]->data()->resultType().colDataType);
+            throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
         }
     }
 
@@ -124,7 +136,12 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
         return "";
 
     // The pad characters.
-    const string& pad = fp[2]->data()->getStrVal(row, isNull);
+    // MCOL-2182 As of MariaDB 10.3 the third parameter - pad characters - is optional
+    const string* pad = &fPad;
+    if (fp.size() > 2)
+    {
+        pad = &fp[2]->data()->getStrVal(row, isNull);
+    }
 
     if (isNull)
         return "";
@@ -172,10 +189,10 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
     // This is the case where there's room to pad.
 
     // Convert the pad string to wide
-    padwclen = pad.length();  // A guess to start.
+    padwclen = pad->length();  // A guess to start.
     int padbufsize = (padwclen + 1) * sizeof(wchar_t);
     wchar_t* wcpad = (wchar_t*)alloca(padbufsize);
-    size_t padlen = utf8::idb_mbstowcs(wcpad, pad.c_str(), padwclen + 1);
+    size_t padlen = utf8::idb_mbstowcs(wcpad, pad->c_str(), padwclen + 1);
 
     // How many chars do we need?
     unsigned int padspace = len - strSize;

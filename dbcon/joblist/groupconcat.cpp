@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -484,6 +485,12 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                oss << setprecision(15) << row.getLongDoubleField(*i);
+                break;
+            }
+
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
             {
@@ -623,6 +630,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::UDOUBLE:
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
+            case CalpontSystemCatalog::LONGDOUBLE:
             {
                 fieldLen = 1; // minimum length
                 break;

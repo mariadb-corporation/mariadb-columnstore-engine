@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1519,6 +1520,26 @@ string Func_format::getStrVal(Row& row,
 
             dataconvert::DataConvert::decimalToString( decimal.value, decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
 
+            value = buf;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double rawValue = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+            // roundup
+            if (scale < 0) scale = 0;
+
+            if (rawValue >= 0)
+                rawValue += 0.5 / pow(10.0, scale);
+            else
+                rawValue -= 0.5 / pow(10.0, scale);
+
+            // double's can be *really* long to print out.  Max mysql
+            // is e308 so allow for 308 + 36 decimal places minimum.
+            char buf[384];
+            snprintf(buf, 384, "%0.36Lf", rawValue);
             value = buf;
         }
         break;

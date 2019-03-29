@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -124,6 +125,25 @@ double Func_ifnull::getDoubleVal(Row& row,
     {
         isNull = false;
         return parm[1]->data()->getDoubleVal(row, isNull);
+    }
+
+    return r;
+}
+
+long double Func_ifnull::getLongDoubleVal(Row& row,
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 CalpontSystemCatalog::ColType&)
+{
+    if (isNull)
+        return 0.0;
+
+    long double r = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+    if (isNull)
+    {
+        isNull = false;
+        return parm[1]->data()->getLongDoubleVal(row, isNull);
     }
 
     return r;

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -232,6 +233,27 @@ inline uint64_t simple_case_cmp(Row& row,
             for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getFloatVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double ev = parm[n]->data()->getLongDoubleVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getLongDoubleVal(row, isNull) && !isNull)
                 {
                     foundIt = true;
                     break;
@@ -510,6 +532,19 @@ double Func_simple_case::getDoubleVal(Row& row,
     return parm[i]->data()->getDoubleVal(row, isNull);
 }
 
+long double Func_simple_case::getLongDoubleVal(Row& row,
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      CalpontSystemCatalog::ColType& operationColType)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, operationColType);
+
+    if (isNull)
+        return doubleNullVal();
+
+    return parm[i]->data()->getLongDoubleVal(row, isNull);
+}
+
 
 int32_t Func_simple_case::getDateIntVal(rowgroup::Row& row,
                                         FunctionParm& parm,
@@ -647,6 +682,19 @@ double Func_searched_case::getDoubleVal(Row& row,
         return doubleNullVal();
 
     return parm[i]->data()->getDoubleVal(row, isNull);
+}
+
+long double Func_searched_case::getLongDoubleVal(Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType&)
+{
+    uint64_t i = searched_case_cmp(row, parm, isNull);
+
+    if (isNull)
+        return longDoubleNullVal();
+
+    return parm[i]->data()->getLongDoubleVal(row, isNull);
 }
 
 

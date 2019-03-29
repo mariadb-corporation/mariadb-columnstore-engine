@@ -203,6 +203,7 @@
             <F N="crashtrace.cpp"/>
             <F N="fixedallocator.cpp"/>
             <F N="MonitorProcMem.cpp"/>
+            <F N="nullvaluemanip.cpp"/>
             <F N="poolallocator.cpp"/>
         </Folder>
         <Folder
@@ -213,6 +214,7 @@
             <F N="fixedallocator.h"/>
             <F N="hasher.h"/>
             <F N="MonitorProcMem.h"/>
+            <F N="nullvaluemanip.h"/>
             <F N="poolallocator.h"/>
             <F N="simpleallocator.h"/>
             <F N="stlpoolallocator.h"/>

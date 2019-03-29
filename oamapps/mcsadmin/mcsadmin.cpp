@@ -5404,7 +5404,14 @@ int processCommand(string* arguments)
 
                             for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
                             {
-                                string ipAddr = (*pt1).IPAddr;
+                                /* MCOL-1607.  IPAddr may be a host name here b/c it is read straight
+                                from the config file. */
+                                string tmphost = oam.getIPAddress(pt1->IPAddr);
+                                string ipAddr;
+                                if (tmphost.empty())
+                                    ipAddr = pt1->IPAddr;
+                                else
+                                    ipAddr = tmphost;
                                 string hostname = (*pt1).HostName;
                                 string nicID = oam.itoa((*pt1).NicID);
 

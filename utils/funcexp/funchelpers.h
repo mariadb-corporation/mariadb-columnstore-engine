@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -748,6 +749,16 @@ string doubleToString(double d)
     // is e308 so allow for 308 + 36 decimal places minimum.
     char buf[384];
     snprintf(buf, 384, "%f", d);
+    return buf;
+}
+
+inline
+string longDoubleToString(long double ld)
+{
+    // long double's can be *really* long to print out.  Max mysql
+    // is e308 so allow for 308 + 36 decimal places minimum.
+    char buf[384];
+    snprintf(buf, 384, "%Lf", ld);
     return buf;
 }
 

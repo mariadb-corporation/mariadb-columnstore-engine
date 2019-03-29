@@ -31,6 +31,7 @@
 #include "jobstep.h"
 #include "joblist.h"
 #include "funcexpwrapper.h"
+#include "threadnaming.h"
 
 namespace joblist
 {
@@ -264,6 +265,7 @@ protected:
         Runner(SubAdapterStep* step) : fStep(step) { }
         void operator()()
         {
+            utils::setThreadName("SQSRunner");
             fStep->execute();
         }
 

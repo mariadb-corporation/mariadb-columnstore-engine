@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -189,6 +189,9 @@ string name(CalpontSystemCatalog::ColType& ct)
 
         case CalpontSystemCatalog::UDOUBLE:
             return "UDOUBLE";
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            return "LONGDOUBLE";
 
         default:
             return "Unknown Type";
