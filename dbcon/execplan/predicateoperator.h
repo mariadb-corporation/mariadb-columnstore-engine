@@ -36,6 +36,7 @@
 #endif
 #include <cstring>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "expressionparser.h"
 #include "returnedcolumn.h"
@@ -460,11 +461,17 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return false;
 
             const std::string& val1 = lop->getStrVal(row, isNull);
-
             if (isNull)
                 return false;
 
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+            const std::string& val2 = rop->getStrVal(row, isNull);
+            if (isNull)
+                return false;
+
+            boost::trim_right_if(val1, boost::is_any_of(" "));
+            boost::trim_right_if(val2, boost::is_any_of(" "));
+
+            return strCompare(val1, val2);
         }
 
         //FIXME: ???
