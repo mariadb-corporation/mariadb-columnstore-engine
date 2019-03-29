@@ -14,6 +14,7 @@
 #include "MetadataFile.h"
 #include "Replicator.h"
 #include "S3Storage.h"
+#include "Utilities.h"
 
 #include <iostream>
 #include <stdlib.h>
@@ -517,19 +518,31 @@ bool truncatetask()
 
 bool listdirtask()
 {
-    // make a file, make sure it's in the list returned.
-    const char *filename = "listdirtest1";
-    ::unlink(filename);
-    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
-    assert(fd > 0);
-    scoped_closer f(fd);
+    IOCoordinator *ioc = IOCoordinator::get();
+    const bf::path metaPath = ioc->getMetadataPath();
+    const char *relPath = "listdirtask";
+    bf::path tmpPath = metaPath/relPath;
+    
+    // make some dummy files, make sure they are in the list returned.
+    set<string> files;
+    int err;
+    vector<SharedCloser> fdMinders;
+    
+    bf::create_directories(tmpPath);
+    for (int i = 0; i < 10; i++) {
+        string file(tmpPath.string() + "/dummy" + to_string(i));
+        files.insert(file);
+        err = ::open(file.c_str(), O_CREAT | O_WRONLY, 0600);
+        assert(err >= 0);
+        fdMinders.push_back(err);
+    }
     
     uint8_t buf[8192];
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     cmd->opcode = LIST_DIRECTORY;
-    cmd->plen = 1;
-    cmd->path[0] = '.';
+    cmd->plen = strlen(relPath);
+    memcpy(cmd->path, relPath, cmd->plen);
     
     ::write(sessionSock, cmd, sizeof(*cmd) + cmd->plen);
     ListDirectoryTask l(clientSock, sizeof(*cmd) + cmd->plen);
@@ -537,32 +550,31 @@ bool listdirtask()
 
     /* going to keep this simple. Don't run this in a big dir. */
     /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
-    int err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
+    err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
     assert(err > 0);
     assert(resp->header.type == SM_MSG_START);
     assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     listdir_resp *r = (listdir_resp *) resp->payload;
-    //cout << "resp has " << r->elements << " elements" << endl;
+    cout << "resp has " << r->elements << " elements" << endl;
+    assert(r->elements == 10);
     int off = sizeof(sm_response) + sizeof(listdir_resp);
+    int fileCounter = 0;
     while (off < err)
     {
         listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
         //cout << "len = " << e->flen << endl;
-        assert(off + e->flen + sizeof(listdir_resp_entry) < 1024);
-        if (!strncmp(e->filename, filename, strlen(filename))) {
-            cout << "listdirtask OK" << endl;
-            ::unlink(filename);
-            return true;
-        }
-        //string name(e->filename, e->flen);
-        //cout << "name = " << name << endl;
+        assert(off + e->flen + sizeof(listdir_resp_entry) < 8092);
+        string file(e->filename, e->flen);
+        assert(files.find((tmpPath/file).string()) != files.end());
+        fileCounter++;
+        //cout << "name = " << file << endl;
         off += e->flen + sizeof(listdir_resp_entry);
     }
-    cout << "listdirtask().  Didn't find '" << filename << " in the listing.  Dir too large for this test?" << endl;
-    assert(1);
-    return false;
+    assert(fileCounter == r->elements);
+    bf::remove_all(tmpPath);
+    return true;
 }
 
 bool pingtask()

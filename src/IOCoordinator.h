@@ -62,7 +62,12 @@ class IOCoordinator : public boost::noncopyable
         bool writeLock(const std::string &filename);
         void readUnlock(const std::string &filename);
         void writeUnlock(const std::string &filename);
-
+        
+        // some accessors...
+        const boost::filesystem::path &getCachePath() const;
+        const boost::filesystem::path &getJournalPath() const;
+        const boost::filesystem::path &getMetadataPath() const;
+        
     private:
         IOCoordinator();
         Config *config;
@@ -72,6 +77,7 @@ class IOCoordinator : public boost::noncopyable
         size_t objectSize;
         boost::filesystem::path journalPath;
         boost::filesystem::path cachePath;
+        boost::filesystem::path metaPath;
         
         std::map<std::string, RWLock *> locks;
         boost::mutex lockMutex;  // lol

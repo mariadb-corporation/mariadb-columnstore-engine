@@ -34,17 +34,32 @@ IOCoordinator::IOCoordinator()
     cache = Cache::get();
     logger = SMLogging::get();
     replicator = Replicator::get();
-    objectSize = 5 * (1<<20);
+    
     try 
     {
         objectSize = stoul(config->getValue("ObjectStorage", "object_size"));
     }
     catch (...)
     {
-        cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
-        throw;
+        logger->log(LOG_ERR, "ObjectStorage/object_size must be set to a numeric value");
+        throw runtime_error("Please set ObjectStorage/object_size in the storagemanager.cnf file");
     }
 
+    try
+    {
+        metaPath = config->getValue("ObjectStorage", "metadata_path");
+        if (metaPath.empty())
+        {
+            logger->log(LOG_ERR, "ObjectStorage/journal_path is not set");
+            throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+        }
+    }
+    catch (...)
+    {
+        logger->log(LOG_ERR, "ObjectStorage/metadata_path is not set");
+        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
+    }
+    
     cachePath = cache->getCachePath();
     journalPath = cache->getJournalPath();
 }
@@ -360,7 +375,7 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
 
 int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
 {
-    bf::path p(filename);
+    bf::path p(metaPath / filename);
     
     listing->clear();
     if (!bf::exists(p))
@@ -410,8 +425,6 @@ int IOCoordinator::unlink(const char *path)
         ret = -1;
     }
     return ret;
-    
-    //return ::unlink(path);
 }
 
 int IOCoordinator::copyFile(const char *filename1, const char *filename2)
@@ -433,6 +446,21 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
         l_errno = EIO;
     }
     return err;
+}
+
+const bf::path &IOCoordinator::getCachePath() const
+{
+    return cachePath;
+}
+
+const bf::path &IOCoordinator::getJournalPath() const
+{
+    return journalPath;
+}
+
+const bf::path &IOCoordinator::getMetadataPath() const
+{
+    return metaPath;
 }
 
 // this is not generic by any means.  This is assuming a version 1 journal header, and is looking
