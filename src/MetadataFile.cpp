@@ -17,35 +17,53 @@
 
 using namespace std;
 
+namespace
+{   
+    boost::mutex mutex;
+    storagemanager::MetadataFile::MetadataConfig *inst = NULL;
+}
+
 namespace storagemanager
 {
 
-MetadataFile::MetadataFile()
+MetadataFile::MetadataConfig * MetadataFile::MetadataConfig::get()
 {
-    mpConfig = Config::get();
-    mpLogger = SMLogging::get();
-    mObjectSize = 5 * (1<<20);
-    try 
+    if (inst)
+        return inst;
+    boost::unique_lock<boost::mutex> s(mutex);
+    if (inst)
+        return inst;
+    inst = new MetadataConfig();
+    return inst;
+}
+
+MetadataFile::MetadataConfig::MetadataConfig()
+{
+    Config *config = Config::get();
+    SMLogging *logger = SMLogging::get();
+    
+    try
     {
-        mObjectSize = stoul(mpConfig->getValue("ObjectStorage", "object_size"));
+        mObjectSize = stoul(config->getValue("ObjectStorage", "object_size"));
     }
     catch (...)
     {
-        cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
-        throw;
+        logger->log(LOG_CRIT, "ObjectStorage/object_size must be set to a numeric value");
+        throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
     }
+        
     try
     {
-        msMetadataPath = mpConfig->getValue("ObjectStorage", "metadata_path");
+        msMetadataPath = config->getValue("ObjectStorage", "metadata_path");
         if (msMetadataPath.empty())
         {
-            mpLogger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
+            logger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
             throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
         }
     }
     catch (...)
     {
-        mpLogger->log(LOG_CRIT, "ObjectStorage/metadata_path is not set");
+        logger->log(LOG_CRIT, "ObjectStorage/metadata_path is not set");
         throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
     }
 
@@ -55,9 +73,16 @@ MetadataFile::MetadataFile()
     }
     catch (exception &e)
     {
-        mpLogger->log(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
+        logger->log(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
         throw e;
     }
+
+}
+
+MetadataFile::MetadataFile()
+{
+    mpConfig = MetadataConfig::get();
+    mpLogger = SMLogging::get();
     mVersion=1;
     mRevision=1;
     _exists = false;
@@ -66,40 +91,11 @@ MetadataFile::MetadataFile()
 
 MetadataFile::MetadataFile(const char* filename)
 {
-    mpConfig = Config::get();
+    mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
-    mObjectSize = 5 * (1<<20);
     _exists = true;
     
-    try
-    {
-        mObjectSize = stoul(mpConfig->getValue("ObjectStorage", "object_size"));
-    }
-    catch (...)
-    {
-        cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
-        throw;
-    }
-    try
-    {
-        msMetadataPath = mpConfig->getValue("ObjectStorage", "metadata_path");
-    }
-    catch (...)
-    {
-        mpLogger->log(LOG_CRIT, "Could not load metadata_path from storagemanger.cnf file.");
-        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
-    }
-    boost::filesystem::create_directories(msMetadataPath);
-    try
-    {
-        boost::filesystem::create_directories(msMetadataPath);
-    }
-    catch (exception &e)
-    {
-        syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
-        throw e;
-    }
-    mFilename = msMetadataPath + "/" + string(filename) + ".meta";
+    mFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
     if (boost::filesystem::exists(mFilename))
     {
         boost::property_tree::ptree jsontree;
@@ -128,38 +124,10 @@ MetadataFile::MetadataFile(const char* filename)
 
 MetadataFile::MetadataFile(const char* filename, no_create_t)
 {
-    mpConfig = Config::get();
+    mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
-    mObjectSize = 5 * (1<<20);
-    try
-    {
-        mObjectSize = stoul(mpConfig->getValue("ObjectStorage", "object_size"));
-    }
-    catch (...)
-    {
-        cerr << "ObjectStorage/object_size must be set to a numeric value" << endl;
-        throw;
-    }
-    try
-    {
-        msMetadataPath = mpConfig->getValue("ObjectStorage", "metadata_path");
-    }
-    catch (...)
-    {
-        mpLogger->log(LOG_CRIT, "Could not load metadata_path from storagemanger.cnf file.");
-        throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
-    }
-    boost::filesystem::create_directories(msMetadataPath);
-    try
-    {
-        boost::filesystem::create_directories(msMetadataPath);
-    }
-    catch (exception &e)
-    {
-        syslog(LOG_CRIT, "Failed to create %s, got: %s", msMetadataPath.c_str(), e.what());
-        throw e;
-    }
-    mFilename = msMetadataPath + "/" + string(filename) + ".meta";
+ 
+    mFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
     if (boost::filesystem::exists(mFilename))
     {
         _exists = true;
@@ -292,7 +260,7 @@ int MetadataFile::writeMetadata(const char *filename)
 {
     int error=0;
     
-    string metadataFilename = msMetadataPath + "/" + string(filename) + ".meta";
+    string metadataFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
     boost::filesystem::path pMetadataFilename = metadataFilename;
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;

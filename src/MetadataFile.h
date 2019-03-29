@@ -24,6 +24,8 @@ struct metadataObject {
     bool operator < (const metadataObject &b) const { return offset < b.offset; }
 };
 
+
+
 class MetadataFile
 {
     public:
@@ -55,17 +57,28 @@ class MetadataFile
         static void setOffsetInKey(std::string &key, off_t newOffset);
         static void setLengthInKey(std::string &key, size_t newLength);
         
+        // this will be a singleton, which stores the config used
+        // by all MetadataFile instances so we don't have to keep bothering Config.
+        // members are public b/c i don't want to write accessors right now.  Also who cares.
+        class MetadataConfig
+        {
+            public:
+                static MetadataConfig *get();
+                size_t mObjectSize;
+                std::string msMetadataPath;
+            
+            private:
+                MetadataConfig();
+        };
+        
     private:
-        Config *mpConfig;
+        MetadataConfig *mpConfig;
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;
-        size_t mObjectSize;
-        std::string msMetadataPath;
         std::string mFilename;
         std::set<metadataObject> mObjects;
         bool _exists;
-        //vector<metadataObject> mObjects;
 };
 
 }
