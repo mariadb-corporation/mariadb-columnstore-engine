@@ -479,13 +479,75 @@ bool stattask()
     return true;
 }
 
+bool IOCTruncate()
+{
+
+    IOCoordinator *ioc = IOCoordinator::get();
+    CloudStorage *cs = CloudStorage::get();
+    LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
+    if (!ls)
+    {
+        cout << "IOCTruncate() currently requires using Local storage" << endl;
+        return true;
+    }
+    
+    bf::path cachePath = ioc->getCachePath();
+    bf::path journalPath = ioc->getJournalPath();
+    bf::path metaPath = ioc->getMetadataPath();
+    bf::path cloudPath = ls->getPrefix(); 
+    
+    // metaPath doesn't necessarily exist until a MetadataFile instance is created
+    bf::create_directories(metaPath);
+    
+    /*  start with one object in cloud storage
+        truncate past the end of the object
+        verify nothing changed & got success
+        truncate at 4000 bytes
+        verify everything sees the 'file' as 4000 bytes
+            - IOC + meta
+        truncate at 0 bytes
+        verify file now looks empty
+        verify the object was deleted
+        
+        add 2 8k test objects and a journal against the second one
+        truncate @ 10000 bytes
+        verify all files still exist
+        truncate @ 6000 bytes, 2nd object & journal were deleted
+        truncate @ 0 bytes, verify no files are left
+    */
+    
+    makeTestMetadata((metaPath/"test-file.meta").string().c_str());
+    makeTestObject((cloudPath/testObjKey).string().c_str());
+    int err;
+    uint8_t buf[8192];
+    
+    // Extending a file doesn't quite work yet, punting on it for now
+    
+    err = ioc->truncate(testFile, 4000);
+    assert(!err);
+    MetadataFile meta(testFile);
+    assert(meta.getLength() == 4000);
+    
+    // read the data, make sure there are only 4000 bytes
+    err = ioc->read(testFile, buf, 0, 8192);
+    assert(err == 4000);
+    err = ioc->read(testFile, buf, 4000, 1);
+    assert(err == 0);
+    return true;
+}
+
+
 bool truncatetask()
 {
+    IOCoordinator *ioc = IOCoordinator::get();
+    Cache *cache = Cache::get();
+    bf::path metaPath = ioc->getMetadataPath();
+    
     const char *filename = "trunctest1";
-    ::unlink(filename);
-    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
-    assert(fd > 0);
-    scoped_closer f(fd);
+    // get the metafile created
+    string metaFullName = (metaPath/filename).string() + ".meta";
+    ::unlink(metaFullName.c_str());
+    MetadataFile meta(filename);
 
     uint8_t buf[1024];
     truncate_cmd *cmd = (truncate_cmd *) buf;
@@ -508,10 +570,12 @@ bool truncatetask()
     assert(resp->header.payloadLen == 4);
     assert(resp->returnCode == 0);
     
-    struct stat statbuf;
-    ::stat(filename, &statbuf);
-    assert(statbuf.st_size == 1000);
-    ::unlink(filename);
+    // reload the metadata, check that it is 1000 bytes
+    meta = MetadataFile(filename);
+    assert(meta.getLength() == 1000);
+    
+    cache->reset();
+    ::unlink(metaFullName.c_str());
     cout << "truncate task OK" << endl;
     return true;
 }
@@ -1072,6 +1136,10 @@ int main()
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
+    
+    //IOCTruncate();
+    //return 0;
+    
     opentask();
     metadataUpdateTest();
     // requires 8K object size to test boundries
@@ -1092,7 +1160,7 @@ int main()
     appendtask();
     unlinktask();
     stattask();
-    truncatetask();
+    //truncatetask();   // currently waiting on IOC::write() to be completed.
     listdirtask();
     pingtask();
     copytask();
@@ -1105,6 +1173,7 @@ int main()
     
     s3storageTest1();
     IOCReadTest1();
+    IOCTruncate();
 
     return 0;
 }

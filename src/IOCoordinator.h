@@ -30,6 +30,7 @@ class IOCoordinator : public boost::noncopyable
         virtual ~IOCoordinator();
 
         void willRead(const char *filename, off_t offset, size_t length);
+        /* TODO: make read, write, append return a ssize_t */
         int read(const char *filename, uint8_t *data, off_t offset, size_t length);
         int write(const char *filename, const uint8_t *data, off_t offset, size_t length);
         int append(const char *filename, const uint8_t *data, size_t length);
@@ -74,6 +75,7 @@ class IOCoordinator : public boost::noncopyable
         Cache *cache;
         SMLogging *logger;
         Replicator *replicator;
+        Synchronizer *synchronizer;
         size_t objectSize;
         boost::filesystem::path journalPath;
         boost::filesystem::path cachePath;

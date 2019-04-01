@@ -215,7 +215,7 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         const auto &jit = journalFDs.find(object.key);
         
         // if this is the first object, the offset to start reading at is offset - object->offset
-        off_t thisOffset = (object.offset == 0 ? offset - object.offset : 0);
+        off_t thisOffset = (object.offset <= offset ? offset - object.offset : 0);
         
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object
@@ -345,32 +345,16 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
     return count;
 }
 
+// TODO: might need to support more open flags, ex: O_EXCL
 int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
 {
-    
-    if (openmode & O_CREAT)
-    {
-        MetadataFile meta(filename);
-        return meta.stat(out);
-    }
-    else
-    {
-        MetadataFile meta(filename, MetadataFile::no_create_t());
-        return meta.stat(out);
-    }
+    ScopedReadLock s(this, filename);
 
-#if 0
-    int fd, err;
+    MetadataFile meta(filename, MetadataFile::no_create_t());
     
-    /* create all subdirs if necessary.  We don't care if directories actually get created. */
-    if (openmode & O_CREAT)  {
-        bf::path p(filename);
-        boost::system::error_code ec;
-        bf::create_directories(p.parent_path(), ec);
-    }
-    OPEN(filename, openmode);
-    return fstat(fd, out);
-#endif
+    if ((openmode & O_CREAT) && !meta.exists())
+        replicator->updateMetadata(filename, meta);   // this will end up creating filename
+    return meta.stat(out);
 }
 
 int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
@@ -402,9 +386,83 @@ int IOCoordinator::stat(const char *path, struct stat *out)
     return meta.stat(out);
 }
 
-int IOCoordinator::truncate(const char *path, size_t newsize)
+int IOCoordinator::truncate(const char *path, size_t newSize)
 {
-    return ::truncate(path, newsize);
+    /*
+        grab the write lock.
+        get the relevant metadata.
+        truncate the metadata.
+        tell replicator to write the new metadata
+        release the lock
+        
+        tell replicator to delete all of the objects that no longer exist & their journal files
+        tell cache they were deleted
+        tell synchronizer they were deleted
+    */
+    
+    synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
+    
+    int err;
+    ScopedWriteLock lock(this, path);
+    MetadataFile meta(path, MetadataFile::no_create_t());
+    if (!meta.exists())
+    {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    size_t filesize = meta.getLength();
+    if (filesize == newSize)
+        return 0;
+    
+    // extend the file, going to make IOC::write() do it
+    if (filesize < newSize)
+    {
+        lock.unlock();
+        uint8_t zero = 0;
+        err = write(path, &zero, newSize - 1, 1);
+        if (err < 0)
+            return -1;
+        return 0;
+    }
+    
+    vector<metadataObject> objects = meta.metadataRead(newSize, filesize);
+    
+    // truncate the file
+    if (newSize == objects[0].offset)
+        meta.removeEntry(objects[0].offset);
+    else
+        meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
+    for (uint i = 1; i < objects.size(); i++)
+        meta.removeEntry(objects[i].offset);
+    
+    err = replicator->updateMetadata(path, meta);
+    if (err)
+        return err;
+    lock.unlock();
+    
+    uint i = (newSize == objects[0].offset ? 0 : 1);
+    vector<string> deletedObjects;
+    while (i < objects.size())
+    {
+        bf::path cached = cachePath / objects[i].key;
+        bf::path journal = journalPath / (objects[i].key + ".journal");
+        if (bf::exists(journal))
+        {
+            size_t jsize = bf::file_size(journal);
+            replicator->remove(journal);
+            cache->deletedJournal(jsize);
+        }
+            
+        size_t fsize = bf::file_size(cached);
+        replicator->remove(cached);
+        cache->deletedObject(objects[i].key, fsize);
+        deletedObjects.push_back(objects[i].key);
+        ++i;
+    }
+    if (!deletedObjects.empty())
+        synchronizer->deletedObjects(deletedObjects);
+    return 0;
 }
 
 /* Might need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it

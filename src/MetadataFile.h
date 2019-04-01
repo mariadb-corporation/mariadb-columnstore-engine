@@ -18,13 +18,13 @@ namespace storagemanager
 {
 
 struct metadataObject {
+    metadataObject();
+    metadataObject(uint64_t offset);   // so we can search mObjects by integer
     uint64_t offset;
     mutable uint64_t length;
     mutable std::string key;
     bool operator < (const metadataObject &b) const { return offset < b.offset; }
 };
-
-
 
 class MetadataFile
 {
@@ -36,10 +36,11 @@ class MetadataFile
         ~MetadataFile();
 
         bool exists() const;
-        void printObjects();
+        void printObjects() const;
         int stat(struct stat *) const;
+        size_t getLength() const;
         // returns the objects needed to update
-        std::vector<metadataObject> metadataRead(off_t offset, size_t length);
+        std::vector<metadataObject> metadataRead(off_t offset, size_t length) const;
         // updates the metadatafile with new object
         int writeMetadata(const char *filename);
         
@@ -47,6 +48,7 @@ class MetadataFile
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const char *filename, size_t length);
+        void removeEntry(off_t offset);
 
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
         static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);

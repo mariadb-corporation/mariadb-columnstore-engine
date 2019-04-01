@@ -3,6 +3,7 @@
 
 //#include "ThreadPool.h"
 #include "MetadataFile.h"
+#include <boost/filesystem.hpp>
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -28,9 +29,10 @@ class Replicator
         
         int addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length);
         int newObject(const char *filename, const uint8_t *data, size_t length);
-        int remove(const char *key, Flags flags = NONE);
+        int remove(const char *filename, Flags flags = NONE);
+        int remove(const boost::filesystem::path &file, Flags flags = NONE);
         
-        int updateMetadata(const char *filename, const MetadataFile &meta);
+        int updateMetadata(const char *filename, MetadataFile &meta);
 
     private:
         Replicator();

@@ -157,7 +157,6 @@ MetadataFile::MetadataFile(const char* filename, no_create_t)
 
 MetadataFile::~MetadataFile()
 {
-
 }
 
 int MetadataFile::stat(struct stat *out) const
@@ -165,12 +164,17 @@ int MetadataFile::stat(struct stat *out) const
     int err = ::stat(mFilename.c_str(), out);
     if (err)
         return err;
+        
+    out->st_size = getLength();
+    return 0;
+}
 
+size_t MetadataFile::getLength() const
+{
     size_t totalSize = 0;
     for (auto &object : mObjects)
         totalSize += object.length;
-    out->st_size = totalSize;
-    return 0;
+    return totalSize;
 }
 
 bool MetadataFile::exists() const
@@ -178,7 +182,7 @@ bool MetadataFile::exists() const
     return _exists;
 }
 
-vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
+vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) const
 {
     // this version assumes mObjects is sorted by offset, and there are no gaps between objects
     vector<metadataObject> ret;
@@ -187,8 +191,11 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length)
     auto i = mObjects.begin();
     // find the first object in range
     while (i != mObjects.end())
-        if (offset >= i->offset)
+    {
+        if (offset <= (i->offset + i->length - 1))
             break;
+        ++i;
+    }
             
     // append objects until foundLen >= length or EOF
     while (i != mObjects.end() && foundLen < length)
@@ -285,6 +292,35 @@ int MetadataFile::writeMetadata(const char *filename)
     return error;
 }
 
+/*
+void MetadataFile::truncate(size_t newLength)
+{
+    // there's only one object to modify; the objects after it are deleted
+    auto &it = mObjects.begin();
+    while (it != mObjects.end())
+    {
+        size_t lastOffset = it->offset + it->length - 1;
+        if (lastOffset > newLength)
+        {
+            it->length = newLength - it->offset;
+            ++it;
+            break;
+        }
+        ++it;
+    }
+    while (it != mObjects.end())
+    {
+        auto toDelete = it++;
+        mObjects.erase(toDelete);
+    }
+}
+*/
+
+void MetadataFile::removeEntry(off_t offset)
+{
+    mObjects.erase(offset);
+}
+
 string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 {
     boost::uuids::uuid u = boost::uuids::random_generator()();
@@ -352,7 +388,7 @@ void MetadataFile::setLengthInKey(string &key, size_t newLength)
     key = oss.str();
 }
 
-void MetadataFile::printObjects()
+void MetadataFile::printObjects() const
 {
     printf("Version: %i Revision: %i\n",mVersion,mRevision);
     for (std::set<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
@@ -391,6 +427,12 @@ void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
     }
     updateObj->length = newLength;
 }
+
+metadataObject::metadataObject()
+{}
+
+metadataObject::metadataObject(uint64_t _offset) : offset(_offset) 
+{}
 
 }
 
