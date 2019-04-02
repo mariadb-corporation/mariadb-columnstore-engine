@@ -660,8 +660,10 @@ bool listdirtask()
     
     bf::create_directories(tmpPath);
     for (int i = 0; i < 10; i++) {
+        
         string file(tmpPath.string() + "/dummy" + to_string(i));
         files.insert(file);
+        file += ".meta";
         err = ::open(file.c_str(), O_CREAT | O_WRONLY, 0600);
         assert(err >= 0);
         fdMinders.push_back(err);
@@ -687,7 +689,6 @@ bool listdirtask()
     assert(resp->header.flags == 0);
     assert(resp->returnCode == 0);
     listdir_resp *r = (listdir_resp *) resp->payload;
-    cout << "resp has " << r->elements << " elements" << endl;
     assert(r->elements == 10);
     int off = sizeof(sm_response) + sizeof(listdir_resp);
     int fileCounter = 0;

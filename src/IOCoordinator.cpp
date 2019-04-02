@@ -358,9 +358,9 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
     return meta.stat(out);
 }
 
-int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
+int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 {
-    bf::path p(metaPath / filename);
+    bf::path p(metaPath / dirname);
     
     listing->clear();
     if (!bf::exists(p))
@@ -376,7 +376,7 @@ int IOCoordinator::listDirectory(const char *filename, vector<string> *listing)
     
     bf::directory_iterator it(p), end;
     for (bf::directory_iterator it(p); it != end; it++)
-        listing->push_back(it->path().filename().string());
+        listing->push_back(it->path().stem().string());
     return 0;
 }
 
