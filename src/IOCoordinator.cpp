@@ -215,11 +215,12 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         const auto &jit = journalFDs.find(object.key);
         
         // if this is the first object, the offset to start reading at is offset - object->offset
-        off_t thisOffset = (object.offset <= offset ? offset - object.offset : 0);
+        off_t thisOffset = (count == 0 ? offset - object.offset : 0);
         
         // if this is the last object, the length of the read is length - count,
-        // otherwise it is the length of the object
-        size_t thisLength = min(object.length, length - count);
+        // otherwise it is the length of the object - starting offset
+        
+        size_t thisLength = min(object.length - thisOffset, length - count);
         if (jit == journalFDs.end()) 
             err = loadObject(objectFDs[object.key], &data[count], thisOffset, thisLength);
         else 

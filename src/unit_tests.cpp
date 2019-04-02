@@ -490,6 +490,8 @@ bool IOCTruncate()
         cout << "IOCTruncate() currently requires using Local storage" << endl;
         return true;
     }
+    Cache *cache = Cache::get();
+    cache->reset();
     
     bf::path cachePath = ioc->getCachePath();
     bf::path journalPath = ioc->getJournalPath();
@@ -516,23 +518,87 @@ bool IOCTruncate()
         truncate @ 0 bytes, verify no files are left
     */
     
-    makeTestMetadata((metaPath/"test-file.meta").string().c_str());
-    makeTestObject((cloudPath/testObjKey).string().c_str());
+    bf::path metadataFile = metaPath/"test-file.meta";
+    bf::path objectPath = cloudPath/testObjKey;
+    bf::path cachedObjectPath = cachePath/testObjKey;
+    makeTestMetadata(metadataFile.string().c_str());
+    makeTestObject(objectPath.string().c_str());
     int err;
-    uint8_t buf[8192];
+    uint8_t buf[1<<14];
     
-    // Extending a file doesn't quite work yet, punting on it for now
+    // Extending a file doesn't quite work yet, punting on that part of the test for now
     
     err = ioc->truncate(testFile, 4000);
     assert(!err);
     MetadataFile meta(testFile);
     assert(meta.getLength() == 4000);
     
-    // read the data, make sure there are only 4000 bytes
+    // read the data, make sure there are only 4000 bytes & the object still exists
     err = ioc->read(testFile, buf, 0, 8192);
     assert(err == 4000);
     err = ioc->read(testFile, buf, 4000, 1);
     assert(err == 0);
+    assert(bf::exists(objectPath));
+    
+    // truncate to 0 bytes, make sure everything is consistent with that, and the object no longer exists
+    err = ioc->truncate(testFile, 0);
+    assert(!err);
+    meta = MetadataFile(testFile);
+    assert(meta.getLength() == 0);
+    err = ioc->read(testFile, buf, 0, 1);
+    assert(err == 0);
+    err = ioc->read(testFile, buf, 4000, 1);
+    assert(err == 0);
+    sleep(1);  // give Sync a chance to delete the object from the cloud
+    assert(!bf::exists(objectPath));
+    
+    // recreate the meta file, make a 2-object version
+    ::unlink(metadataFile.string().c_str());
+    makeTestMetadata(metadataFile.string().c_str());
+    makeTestObject(objectPath.string().c_str());
+    
+    meta = MetadataFile(testFile);
+    bf::path secondObjectPath = cloudPath / meta.addMetadataObject(testFile, 8192).key;
+    bf::path cachedSecondObject = cachePath/secondObjectPath.filename();
+    makeTestObject(secondObjectPath.string().c_str());
+    meta.writeMetadata(testFile);
+    
+    // make sure there are 16k bytes, and the data is valid before going forward
+    memset(buf, 0, 16384);
+    err = ioc->read(testFile, buf, 0, 16384);
+    assert(err == 16384);
+    int *buf32 = (int *) buf;
+    for (int i = 0; i < 16384/4; i++)
+        assert(buf32[i] == (i % 2048));
+    assert(bf::exists(cachedSecondObject));
+    assert(bf::exists(cachedObjectPath));
+    
+    // truncate to 10k, make sure everything looks right
+    err = ioc->truncate(testFile, 10240);
+    assert(!err);
+    meta = MetadataFile(testFile);
+    assert(meta.getLength() == 10240);
+    memset(buf, 0, 16384);
+    err = ioc->read(testFile, buf, 0, 10240);
+    for (int i = 0; i < 10240/4; i++)
+        assert(buf32[i] == (i % 2048));
+    err = ioc->read(testFile, buf, 10239, 10);
+    assert(err == 1);
+    
+    // truncate to 6000 bytes, make sure second object got deleted
+    err = ioc->truncate(testFile, 6000);
+    meta = MetadataFile(testFile);
+    assert(meta.getLength() == 6000);
+    err = ioc->read(testFile, buf, 0, 8192);
+    assert(err == 6000);
+    sleep(1);   // give Synchronizer a chance to delete the file from the 'cloud'
+    assert(!bf::exists(secondObjectPath));
+    assert(!bf::exists(cachedSecondObject));
+    
+    bf::remove(metadataFile);
+    bf::remove(objectPath);
+    cache->reset();
+    cout << "IOCTruncate OK" << endl;
     return true;
 }
 
@@ -1136,9 +1202,6 @@ int main()
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
-    
-    //IOCTruncate();
-    //return 0;
     
     opentask();
     metadataUpdateTest();
