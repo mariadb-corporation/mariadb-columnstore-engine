@@ -408,7 +408,8 @@ void IdbOrderBy::initialize(const RowGroup& rg)
 
     if (fDistinct)
     {
-        fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength())));
+        fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength()),
+          utils::STLPoolAllocator<rowgroup::Row::Pointer>::get()));
     }
 }
 

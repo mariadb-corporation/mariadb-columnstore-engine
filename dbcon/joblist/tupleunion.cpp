@@ -42,6 +42,7 @@ using namespace execplan;
 using namespace rowgroup;
 using namespace dataconvert;
 
+
 #ifndef __linux__
 #ifndef M_LN10
 #define M_LN10 2.30258509299404568402	/* log_e 10 */
@@ -94,7 +95,6 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
     outputIt(-1),
     memUsage(0),
     rm(jobInfo.rm),
-    allocator(64 * 1024 * 1024 + 1),
     runnersDone(0),
     distinctCount(0),
     distinctDone(0),
@@ -146,7 +146,7 @@ void TupleUnion::readInput(uint32_t which)
      * thread-local memory.  Building the result in a common space allows us to
      * store 8-byte offsets in rowMemory rather than 16-bytes for absolute pointers.
      */
-
+    using mutex = boost::mutex;
     RowGroupDL* dl = NULL;
     bool more = true;
     RGData inRGData, outRGData, *tmpRGData;
@@ -394,7 +394,7 @@ void TupleUnion::addToOutput(Row* r, RowGroup* rg, bool keepit,
     if (rg->getRowCount() == 8192)
     {
         {
-            mutex::scoped_lock lock(sMutex);
+            boost::mutex::scoped_lock lock(sMutex);
             output->insert(data);
         }
         data = RGData(*rg);
@@ -1051,7 +1051,7 @@ void TupleUnion::run()
 {
     uint32_t i;
 
-    mutex::scoped_lock lk(jlLock);
+    boost::mutex::scoped_lock lk(jlLock);
 
     if (runRan)
         return;
@@ -1094,7 +1094,7 @@ void TupleUnion::run()
 
 void TupleUnion::join()
 {
-    mutex::scoped_lock lk(jlLock);
+    boost::mutex::scoped_lock lk(jlLock);
 
     if (joinRan)
         return;

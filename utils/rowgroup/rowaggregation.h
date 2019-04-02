@@ -675,9 +675,6 @@ protected:
     uint32_t                                            fSmallSideCount;
     boost::scoped_array<Row> rowSmalls;
 
-    // for hashmap
-    boost::shared_ptr<utils::STLPoolAllocator<RowPosition> > fAlloc;
-
     // for 8k poc
     RowGroup                                        fEmptyRowGroup;
     RGData                                          fEmptyRowData;
@@ -883,7 +880,6 @@ protected:
     boost::scoped_ptr<ExternalKeyEq> fExtEq;
     boost::scoped_ptr<ExternalKeyHasher> fExtHash;
     boost::scoped_ptr<KeyStorage> fKeyStore;
-    boost::scoped_ptr<utils::STLPoolAllocator<std::pair<RowPosition, RowPosition> > > fExtKeyMapAlloc;
     boost::scoped_ptr<ExtKeyMap_t> fExtKeyMap;
 
     boost::shared_ptr<int64_t> fSessionMemLimit;

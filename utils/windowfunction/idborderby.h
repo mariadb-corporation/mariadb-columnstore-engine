@@ -28,14 +28,9 @@
 #include <utility>
 #include <vector>
 #include <sstream>
+#include <unordered_set>
 #include <boost/shared_array.hpp>
 #include <boost/scoped_ptr.hpp>
-
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
-#include <tr1/unordered_set>
-#endif
 
 #include "rowgroup.h"
 #include "hasher.h"
@@ -280,7 +275,7 @@ protected:
         bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
     };
 
-    typedef std::tr1::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
+    typedef std::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
             utils::STLPoolAllocator<rowgroup::Row::Pointer> > DistinctMap_t;
     boost::scoped_ptr<DistinctMap_t>    fDistinctMap;
     rowgroup::Row row1, row2;  // scratch space for Hasher & Eq

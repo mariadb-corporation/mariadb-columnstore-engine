@@ -22,11 +22,7 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-#ifdef _MSC_VER
 #include <unordered_set>
-#else
-#include <tr1/unordered_set>
-#endif
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -402,7 +398,8 @@ void TupleAnnexStep::executeNoOrderBy()
 void TupleAnnexStep::executeNoOrderByWithDistinct()
 {
     utils::setThreadName("TASwoOrdDist");
-    scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
+    scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this),
+                                                            STLPoolAllocator<rowgroup::Row::Pointer>::get()));
     vector<RGData> dataVec;
     RGData rgDataIn;
     RGData rgDataOut;

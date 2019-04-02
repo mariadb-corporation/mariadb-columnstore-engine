@@ -48,22 +48,22 @@ TupleJoiner::TupleJoiner(
 {
     if (smallRG.getColTypes()[smallJoinColumn] == CalpontSystemCatalog::LONGDOUBLE)
     {
-        STLPoolAllocator<pair<const long double, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
-        _pool = alloc.getPoolAllocator();
+        auto & alloc = STLPoolAllocator<pair<const long double, Row::Pointer> >::get();
+        get_allocator_size = [&alloc](){ return alloc.getMemUsage(); };
 
         ld.reset(new ldhash_t(10, hasher(), ldhash_t::key_equal(), alloc));
     }
     else if (smallRG.usesStringTable())
     {
-        STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
-        _pool = alloc.getPoolAllocator();
+        auto & alloc = STLPoolAllocator<pair<const int64_t, Row::Pointer> >::get();
+        get_allocator_size = [&alloc](){ return alloc.getMemUsage(); };
 
         sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
     }
     else
     {
-        STLPoolAllocator<pair<const int64_t, uint8_t*> > alloc(64 * 1024 * 1024 + 1);
-        _pool = alloc.getPoolAllocator();
+        auto & alloc = STLPoolAllocator<pair<const int64_t, uint8_t*> >::get();
+        get_allocator_size = [&alloc](){ return alloc.getMemUsage(); };
 
         h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
     }
@@ -112,8 +112,8 @@ TupleJoiner::TupleJoiner(
     smallKeyColumns(smallJoinColumns), largeKeyColumns(largeJoinColumns),
     bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
-    _pool = alloc.getPoolAllocator();
+    auto & alloc = STLPoolAllocator<pair<const TypelessData, Row::Pointer> >::get();
+    get_allocator_size = [&alloc](){ return alloc.getMemUsage(); };
 
     ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
     smallRG.initRow(&smallNullRow);
@@ -777,9 +777,9 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
 uint64_t TupleJoiner::getMemUsage() const
 {
     if (inUM() && typelessJoin)
-        return _pool->getMemUsage() + storedKeyAlloc.getMemUsage();
+        return get_allocator_size() + storedKeyAlloc.getMemUsage();
     else if (inUM())
-        return _pool->getMemUsage();
+        return get_allocator_size();
     else
         return (rows.size() * sizeof(Row::Pointer));
 }
@@ -1352,15 +1352,15 @@ void TupleJoiner::setTableName(const string& tname)
 
 void TupleJoiner::clearData()
 {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
-    _pool = alloc.getPoolAllocator();
+    auto & alloc = STLPoolAllocator<pair<const TypelessData, Row::Pointer> >::get();
+    get_allocator_size = [&alloc](){ return alloc.getMemUsage(); };
 
     if (typelessJoin)
         ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
     else if (smallRG.usesStringTable())
-        sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
+        sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> >::get()));
     else
-        h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
+        h.reset(new hash_t(10, hasher(), hash_t::key_equal(), utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*> >::get()));
 
     std::vector<rowgroup::Row::Pointer> empty;
     rows.swap(empty);

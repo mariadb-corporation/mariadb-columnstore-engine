@@ -187,7 +187,7 @@ private:
     rowgroup::Row row, row2;
     std::vector<bool> distinctFlags;
     ResourceManager* rm;
-    utils::STLPoolAllocator<RowPosition> allocator;
+    utils::STLPoolAllocator<RowPosition> & allocator = utils::STLPoolAllocator<RowPosition>::get();
     boost::scoped_array<rowgroup::RGData> normalizedData;
 
     uint32_t runnersDone;

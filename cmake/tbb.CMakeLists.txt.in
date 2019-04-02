@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+include(ExternalProject)
+
+ExternalProject_Add(tbb_download
+  SOURCE_DIR @CMAKE_CURRENT_BINARY_DIR@/tbb
+  GIT_REPOSITORY https://github.com/01org/tbb.git
+  GIT_TAG tbb_4.4 GIT_SHALLOW TRUE
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+)

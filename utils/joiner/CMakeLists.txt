@@ -10,6 +10,8 @@ add_library(joiner SHARED ${joiner_LIB_SRCS})
 
 set_target_properties(joiner PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
+target_link_libraries(joiner PUBLIC common)
+
 install(TARGETS joiner DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 

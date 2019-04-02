@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <vector>
+#include <functional>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -340,6 +341,7 @@ private:
     typedef hash_t::iterator iterator;
     typedef typelesshash_t::iterator thIterator;
     typedef ldhash_t::iterator ldIterator;
+    std::function<size_t()> get_allocator_size;
 
     TupleJoiner();
     TupleJoiner(const TupleJoiner&);
@@ -372,7 +374,6 @@ private:
     };
     JoinAlg joinAlg;
     joblist::JoinType joinType;
-    boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
     uint32_t threadCount;
     std::string tableName;
 
