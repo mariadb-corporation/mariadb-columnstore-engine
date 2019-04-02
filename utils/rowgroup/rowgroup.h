@@ -1176,7 +1176,12 @@ inline bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) con
 
         if (!isLongString(col))
         {
-            if (getUintField(col) != r2.getUintField(col))
+            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            {
+                if (getLongDoubleField(i) != r2.getLongDoubleField(i))
+                    return false;
+            }
+            else if (getUintField(col) != r2.getUintField(col))
                 return false;
         }
         else
@@ -1204,7 +1209,12 @@ inline bool Row::equals(const Row& r2, uint32_t lastCol) const
     for (uint32_t i = 0; i <= lastCol; i++)
         if (!isLongString(i))
         {
-            if (getUintField(i) != r2.getUintField(i))
+            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            {
+                if (getLongDoubleField(i) != r2.getLongDoubleField(i))
+                    return false;
+            }
+            else if (getUintField(i) != r2.getUintField(i))
                 return false;
         }
         else
