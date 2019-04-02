@@ -35,9 +35,9 @@ IF(NOT CMAKE_BUILD_TYPE)
         "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-#set( CMAKE_VERBOSE_MAKEFILE on )
 
-INCLUDE(columnstore_version.cmake)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+INCLUDE(columnstore_version)
 
 SET (PACKAGE columnstore)
 SET (PACKAGE_NAME columnstore)
@@ -75,13 +75,13 @@ IF("${isSystemDir}" STREQUAL "-1")
     SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${INSTALL_ENGINE}/mysql/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
-INCLUDE (configureEngine.cmake)
+INCLUDE (configureEngine)
 
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+CONFIGURE_FILE(cmake/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 exec_program("git"
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -91,7 +91,7 @@ exec_program("git"
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
 
-INCLUDE(bison.cmake)
+INCLUDE(bison)
 
 FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
 if(NOT LEX_EXECUTABLE)
@@ -101,13 +101,9 @@ if(NOT LEX_EXECUTABLE)
     endif()
 endif()
 
-INCLUDE (FindLibXml2)
+find_package (LibXml2 REQUIRED)
 
-if (NOT LIBXML2_FOUND)
-    MESSAGE(FATAL_ERROR "Could not find a usable libxml2 development environment!")
-endif()
-
-INCLUDE (FindSnappy.cmake)
+INCLUDE (FindSnappy)
 if (NOT SNAPPY_FOUND)
     MESSAGE(FATAL_ERROR "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
 endif()
@@ -116,7 +112,7 @@ endif()
 IF (EXISTS "/etc/SuSE-release")
     SET(JEMALLOC_LIBRARIES "")
 ELSE ()
-    INCLUDE (FindJeMalloc.cmake)
+    INCLUDE (FindJeMalloc)
     if (NOT JEMALLOC_FOUND)
         message(FATAL_ERROR "jemalloc not found!")
         SET(JEMALLOC_LIBRARIES "")
@@ -128,7 +124,7 @@ if(NOT AWK_EXECUTABLE)
     message(FATAL_ERROR "awk not found!")
 endif()
 
-INCLUDE(check_compiler_flag.cmake)
+INCLUDE(check_compiler_flag)
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
@@ -276,6 +272,6 @@ ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 
-INCLUDE(cpackEngineRPM.cmake)
-INCLUDE(cpackEngineDEB.cmake)
+INCLUDE(cpackEngineRPM)
+INCLUDE(cpackEngineDEB)
 

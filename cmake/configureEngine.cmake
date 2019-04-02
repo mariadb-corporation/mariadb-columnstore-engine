@@ -453,7 +453,6 @@ EXECUTE_PROCESS(
     COMMAND rm -f conftest.sym conftest.file
     COMMAND touch conftest.file
     COMMAND ln -s conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 CHECK_CXX_SOURCE_RUNS(
 "
@@ -469,8 +468,6 @@ struct stat sbuf;
   ;
   return 0;
 }" LSTAT_FOLLOWS_SLASHED_SYMLINK)
-
-
 
 SET (SELECT_INCLUDES ${TEST_INCLUDES})
 IF (HAVE_SYS_SELECT_H)
@@ -722,5 +719,5 @@ ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ..
     )
