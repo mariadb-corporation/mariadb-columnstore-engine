@@ -205,38 +205,6 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
         ++i;
     }
     return ret;
-
-#if 0
-    // this version assumed mObjects was unsorted
-    vector<metadataObject> returnObjs;
-    uint64_t startData = offset;
-    uint64_t endData = offset + length;
-    bool foundStart = false;
-    for (std::set<metadataObject>::iterator i = mObjects.begin(); i != mObjects.end(); ++i)
-    {
-        uint64_t startObject = i->offset;
-        uint64_t endObject = i->offset + i->length;
-        uint64_t maxEndObject = i->offset + mObjectSize;
-        // This logic assumes objects are in ascending order of offsets
-        if (startData >= startObject && (startData < endObject || startData < maxEndObject))
-        {
-            returnObjs.push_back(*i);
-            foundStart = true;
-        }
-        else if (endData >= startObject && (endData < endObject || endData < maxEndObject))
-        {
-            // data ends in this object
-            returnObjs.push_back(*i);
-        }
-        else if (endData >= startObject && foundStart)
-        {
-            // data overlaps this object
-            returnObjs.push_back(*i);
-        }
-    }
-
-    return returnObjs;
-#endif
 }
 
 metadataObject MetadataFile::addMetadataObject(const char *filename, size_t length)
@@ -292,30 +260,6 @@ int MetadataFile::writeMetadata(const char *filename)
     return error;
 }
 
-/*
-void MetadataFile::truncate(size_t newLength)
-{
-    // there's only one object to modify; the objects after it are deleted
-    auto &it = mObjects.begin();
-    while (it != mObjects.end())
-    {
-        size_t lastOffset = it->offset + it->length - 1;
-        if (lastOffset > newLength)
-        {
-            it->length = newLength - it->offset;
-            ++it;
-            break;
-        }
-        ++it;
-    }
-    while (it != mObjects.end())
-    {
-        auto toDelete = it++;
-        mObjects.erase(toDelete);
-    }
-}
-*/
-
 void MetadataFile::removeEntry(off_t offset)
 {
     mObjects.erase(offset);
@@ -340,7 +284,7 @@ string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
     {
         if (sourceName[i] == '/')
         {
-            sourceName[i] = '-';
+            sourceName[i] = '~';
         }
     }
 
@@ -359,6 +303,13 @@ string MetadataFile::getSourceFromKey(const string &key)
 {
     vector<string> split;
     boost::split(split, key, boost::is_any_of("_"));
+    
+    // this is to convert the munged filenames back to regular filenames
+    // for consistent use in IOC locks
+    for (int i = 0; i < split[3].length(); i++)
+        if (split[3][i] == '~')
+            split[3][i] = '/';
+    
     return split[3];
 }
 

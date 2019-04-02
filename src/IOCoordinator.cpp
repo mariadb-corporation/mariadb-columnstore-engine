@@ -374,7 +374,7 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
         return -1;
     }
     
-    bf::directory_iterator it(p), end;
+    bf::directory_iterator end;
     for (bf::directory_iterator it(p); it != end; it++)
         listing->push_back(it->path().stem().string());
     return 0;
@@ -401,7 +401,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
         tell synchronizer they were deleted
     */
     
-    synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
+    Synchronizer *synchronizer = Synchronizer::get();  // needs to init sync here to break circular dependency...
     
     int err;
     ScopedWriteLock lock(this, path);
@@ -466,11 +466,104 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     return 0;
 }
 
-/* Might need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it
+
+
+void IOCoordinator::deleteMetaFile(const bf::path &file)
+{
+    /*
+        lock for writing
+        tell replicator to delete every object
+        tell cache they were deleted
+        tell synchronizer to delete them in cloud storage
+    */
+    Synchronizer *synchronizer = Synchronizer::get();
+    ScopedWriteLock lock(this, file.string());
+    
+    MetadataFile meta(file.stem().string().c_str());
+    replicator->remove(file);
+    lock.unlock();
+    
+    vector<metadataObject> objects = meta.metadataRead(0, meta.getLength());
+    vector<string> deletedObjects;
+    bf::path journal;
+    for (auto &object : objects)
+    {
+        size_t size = bf::file_size(object.key);
+        replicator->remove(cachePath/object.key);
+        cache->deletedObject(object.key, size);
+        journal = journalPath/(object.key + ".journal");
+        if (bf::exists(journal))
+        {
+            size = bf::file_size(journal);
+            replicator->remove(journal);
+            cache->deletedJournal(size);
+        }
+        deletedObjects.push_back(object.key);
+    }
+    synchronizer->deletedObjects(deletedObjects);
+}
+
+void IOCoordinator::remove(const bf::path &p)
+{
+    if (bf::is_regular_file(p) && p.extension() == ".meta")
+    {
+        deleteMetaFile(p);
+        return;
+    }
+    else if (bf::is_regular_file(p))
+    {
+        logger->log(LOG_WARNING, "IOC::unlink(): deleting something that should be here: %s", p.string().c_str());
+        bf::remove(p);
+        return;
+    }
+
+    if (!bf::is_directory(p))
+    {
+        logger->log(LOG_WARNING, "IOC::unlink(): Ignoring something that isn't a directory or a regular file: %s", 
+            p.string().c_str());
+        return;
+    }
+    
+    bf::directory_iterator dend;
+    bf::directory_iterator entry(p);
+    while (entry != dend) 
+    {
+        remove(p/(*entry));  
+        ++entry;
+    }
+}
+
+/* Need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it
 deletes files, but also entire directories, like an 'rm -rf' command.  Implementing that here
 will no longer make it like the 'unlink' syscall. */
 int IOCoordinator::unlink(const char *path)
 {
+    /*  recursively iterate over path
+        open every metadata file
+        lock for writing
+        tell replicator to delete every object
+        tell cache they were deleted
+        tell synchronizer to delete them in cloud storage
+    */
+    bf::path p(metaPath/path);
+
+    try 
+    {
+        if (!bf::exists(p))
+        {
+            errno = ENOENT;
+            return -1;
+        }
+        remove(p);
+    }
+    catch (bf::filesystem_error &e)
+    {
+        errno = e.code().value();
+        return -1;
+    }
+    return 0;
+
+/*
     int ret = 0;
     bf::path p(path);
 
@@ -484,6 +577,7 @@ int IOCoordinator::unlink(const char *path)
         ret = -1;
     }
     return ret;
+*/
 }
 
 int IOCoordinator::copyFile(const char *filename1, const char *filename2)

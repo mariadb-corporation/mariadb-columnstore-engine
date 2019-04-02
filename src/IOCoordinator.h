@@ -75,7 +75,7 @@ class IOCoordinator : public boost::noncopyable
         Cache *cache;
         SMLogging *logger;
         Replicator *replicator;
-        Synchronizer *synchronizer;
+
         size_t objectSize;
         boost::filesystem::path journalPath;
         boost::filesystem::path cachePath;
@@ -83,6 +83,9 @@ class IOCoordinator : public boost::noncopyable
         
         std::map<std::string, RWLock *> locks;
         boost::mutex lockMutex;  // lol
+        
+        void remove(const boost::filesystem::path &path);
+        void deleteMetaFile(const boost::filesystem::path &file);
         
         int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
             uint8_t *data, off_t offset, size_t length) const;
