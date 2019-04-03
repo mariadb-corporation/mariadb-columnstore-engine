@@ -407,12 +407,14 @@ bool appendtask()
 
 bool unlinktask()
 {
-    // make a file and delete it
+    // make a meta file and delete it
     const char *filename = "unlinktest1";
-    ::unlink(filename);
-    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
-    assert(fd > 0);
-    scoped_closer f(fd);
+    IOCoordinator *ioc = IOCoordinator::get();
+    bf::path fullPath = ioc->getMetadataPath()/(string(filename) + ".meta");
+    bf::remove(fullPath);
+    
+    MetadataFile meta(filename);
+    assert(bf::exists(fullPath));
     
     uint8_t buf[1024];
     unlink_cmd *cmd = (unlink_cmd *) buf;
@@ -436,7 +438,35 @@ bool unlinktask()
     assert(resp->returnCode == 0);
     
     // confirm it no longer exists
-    assert(!boost::filesystem::exists(filename));
+    assert(!bf::exists(fullPath));
+    
+    // delete it again, make sure we get an error message & reasonable error code
+    // Interesting.  boost::filesystem::remove() doesn't consider it an error if the file doesn't
+    // exist.  Need to look into the reasoning for that, and decide whether IOC
+    // should return an error anyway.  For now, this test below doesn't get 
+    // an error msg.
+    #if 0
+    memset(buf, 0, 1024);
+    cmd->opcode = UNLINK;
+    cmd->flen = strlen(filename);
+    memcpy(&cmd->filename, filename, cmd->flen);
+    
+    UnlinkTask u2(clientSock, sizeof(unlink_cmd) + cmd->flen);
+    ::write(sessionSock, cmd, sizeof(unlink_cmd) + cmd->flen);
+    u2.run();
+    
+    // verify response
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    resp = (sm_response *) buf;
+    assert(err == sizeof(*resp) + 4);
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 8);
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == -1);
+    err = (*(int *) resp->payload);
+    assert(err == ENOENT);
+    #endif
+    
     cout << "unlink task OK" << endl;
 }
 
@@ -696,7 +726,7 @@ bool listdirtask()
     {
         listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
         //cout << "len = " << e->flen << endl;
-        assert(off + e->flen + sizeof(listdir_resp_entry) < 8092);
+        assert(off + e->flen + sizeof(listdir_resp_entry) < 8192);
         string file(e->filename, e->flen);
         assert(files.find((tmpPath/file).string()) != files.end());
         fileCounter++;
@@ -1196,6 +1226,12 @@ void IOCReadTest1()
     cout << "IOC read test 1 OK" << endl;
 }
 
+void IOCUnlink()
+{
+    cout << "IOCUnlink not implmemented yet" << endl;
+}
+
+
 int main()
 {
     std::size_t sizeKB = 1024;
@@ -1238,6 +1274,7 @@ int main()
     s3storageTest1();
     IOCReadTest1();
     IOCTruncate();
+    IOCUnlink();
 
     return 0;
 }

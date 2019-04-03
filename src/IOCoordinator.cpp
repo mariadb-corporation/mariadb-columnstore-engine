@@ -505,32 +505,24 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
 
 void IOCoordinator::remove(const bf::path &p)
 {
-    if (bf::is_regular_file(p) && p.extension() == ".meta")
+    if (bf::is_directory(p))
     {
-        deleteMetaFile(p);
-        return;
-    }
-    else if (bf::is_regular_file(p))
-    {
-        logger->log(LOG_WARNING, "IOC::unlink(): deleting something that should be here: %s", p.string().c_str());
+        bf::directory_iterator dend;
+        bf::directory_iterator entry(p);
+        while (entry != dend) 
+        {
+            remove(p/(*entry));     
+            ++entry;
+        }
         bf::remove(p);
         return;
     }
-
-    if (!bf::is_directory(p))
-    {
-        logger->log(LOG_WARNING, "IOC::unlink(): Ignoring something that isn't a directory or a regular file: %s", 
-            p.string().c_str());
-        return;
-    }
     
-    bf::directory_iterator dend;
-    bf::directory_iterator entry(p);
-    while (entry != dend) 
-    {
-        remove(p/(*entry));  
-        ++entry;
-    }
+    bf::path possibleMetaFile = p.string() + ".meta";
+    if (bf::is_regular_file(possibleMetaFile))
+        deleteMetaFile(possibleMetaFile);
+    else
+        bf::remove(p);
 }
 
 /* Need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it
@@ -545,15 +537,13 @@ int IOCoordinator::unlink(const char *path)
         tell cache they were deleted
         tell synchronizer to delete them in cloud storage
     */
+    
+    /* TODO!  We need to make sure the input params to IOC fcns don't go up to parent dirs,
+        ex, if path = '../../../blahblah'. */
     bf::path p(metaPath/path);
-
+    
     try 
     {
-        if (!bf::exists(p))
-        {
-            errno = ENOENT;
-            return -1;
-        }
         remove(p);
     }
     catch (bf::filesystem_error &e)

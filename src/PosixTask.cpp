@@ -35,16 +35,16 @@ PosixTask::~PosixTask()
 void PosixTask::handleError(const char *name, int errCode)
 {
     SMLogging* logger = SMLogging::get();
-    char buf[sizeof(sm_response) + 4];
+    char buf[80];
     
     // send an error response if possible
     sm_response *resp = (sm_response *) buf;
     resp->returnCode = -1;
     *((int *) resp->payload) = errCode;
-    write(*resp, 4);
+    bool success = write(*resp, 4);
     
-    // TODO: construct and log a message
-    logger->log(LOG_ERR,"%s caught an error: %s.",name,strerror_r(errCode, buf, 80));
+    if (!success)
+        logger->log(LOG_ERR, "%s caught an error: %s.", name, strerror_r(errCode, buf, 80));
 }
 
 uint PosixTask::getRemainingLength()
