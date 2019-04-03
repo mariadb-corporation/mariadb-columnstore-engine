@@ -18,7 +18,6 @@
 //  $Id: we_fileop.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 
 #include "config.h"
-
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -1072,6 +1071,19 @@ int FileOp::initColumnExtent(
         // Create vector of mutexes used to serialize extent access per DBRoot
         initDbRootExtentMutexes( );
 
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
+        if ( bOptExtension )
+        {
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+                ? bOptExtension : false;
+        }
+        // Reduce number of blocks allocated for abbreviated extents thus
+        // CS writes less when creates a new table. This couldn't be zero
+        // b/c Snappy compressed file format doesn't tolerate empty files.
+        int realNBlocks = ( bOptExtension && nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK ) ? 3 : nBlocks;
+
         // Determine the number of blocks in each call to fwrite(), and the
         // number of fwrite() calls to make, based on this.  In other words,
         // we put a cap on the "writeSize" so that we don't allocate and write
@@ -1079,16 +1091,15 @@ int FileOp::initColumnExtent(
         // expanding an abbreviated 64M extent, we may not have an even
         // multiple of MAX_NBLOCKS to write; remWriteSize is the number of
         // blocks above and beyond loopCount*MAX_NBLOCKS.
-        int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
+        int writeSize = realNBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
-        off64_t currFileSize = pFile->size();
 
-        if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
+        if (realNBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
-            loopCount = nBlocks / MAX_NBLOCKS;
-            remWriteSize = nBlocks - (loopCount * MAX_NBLOCKS);
+            loopCount = realNBlocks / MAX_NBLOCKS;
+            remWriteSize = realNBlocks - (loopCount * MAX_NBLOCKS);
         }
 
         // Allocate a buffer, initialize it, and use it to create the extent
@@ -1109,39 +1120,13 @@ int FileOp::initColumnExtent(
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 #endif
-        // MCOL-498 Skip the huge preallocations if the option is set
-        // for the dbroot. This check is skiped for abbreviated extent.
-        // IMO it is better to check bool then to call a function.
-        if ( bOptExtension )
+        // Skip space preallocation if configured so
+        // fallback to sequential write otherwise.
+        // Couldn't avoid preallocation for full extents,
+        // e.g. ADD COLUMN DDL b/c CS has to fill the file
+        // with empty magics.
+        if ( !bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
-                ? bOptExtension : false;
-        }
-        int savedErrno = 0;
-        // MCOL-498 fallocate the abbreviated extent,
-        // fallback to sequential write if fallocate failed
-        // Couldn't use fallocate for full extents, e.g. ADD COLUMN DDL
-        // b/c CS has to fill the file with empty magics.
-        if ( !bOptExtension || ( nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK
-            && pFile->fallocate(0, currFileSize, writeSize) )
-        )
-        {
-            savedErrno = errno;
-            // Log the failed fallocate() call result
-            if ( bOptExtension )
-            {
-                std::ostringstream oss;
-                std::string errnoMsg;
-                Convertor::mapErrnoToString(savedErrno, errnoMsg);
-                oss << "FileOp::initColumnExtent(): fallocate(" << currFileSize <<
-                    ", " << writeSize << "): errno = " << savedErrno <<
-                    ": " << errnoMsg;
-                logging::Message::Args args;
-                args.add(oss.str());
-                SimpleSysLog::instance()->logMsg(args, logging::LOG_TYPE_INFO,
-                     logging::M0006);
-            }
-
 #ifdef PROFILE
             Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);
 #endif
@@ -1838,7 +1823,6 @@ int FileOp::initDctnryExtent(
     bool           bExpandExtent,
     bool           bOptExtension )
 {
-    off64_t currFileSize = pFile->size();
     // @bug5769 Don't initialize extents or truncate db files on HDFS
     if (idbdatafile::IDBPolicy::useHdfs())
     {
@@ -1854,6 +1838,19 @@ int FileOp::initDctnryExtent(
         // Create vector of mutexes used to serialize extent access per DBRoot
         initDbRootExtentMutexes( );
 
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
+        if ( bOptExtension )
+        {
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+                ? bOptExtension : false;
+        }
+        // Reduce number of blocks allocated for abbreviated extents thus
+        // CS writes less when creates a new table. This couldn't be zero
+        // b/c Snappy compressed file format doesn't tolerate empty files.
+        int realNBlocks = ( bOptExtension && nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK ) ? 1 : nBlocks;
+
         // Determine the number of blocks in each call to fwrite(), and the
         // number of fwrite() calls to make, based on this.  In other words,
         // we put a cap on the "writeSize" so that we don't allocate and write
@@ -1861,15 +1858,15 @@ int FileOp::initDctnryExtent(
         // expanding an abbreviated 64M extent, we may not have an even
         // multiple of MAX_NBLOCKS to write; remWriteSize is the number of
         // blocks above and beyond loopCount*MAX_NBLOCKS.
-        int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
+        int writeSize = realNBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
 
-        if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
+        if (realNBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
-            loopCount = nBlocks / MAX_NBLOCKS;
-            remWriteSize = nBlocks - (loopCount * MAX_NBLOCKS);
+            loopCount = realNBlocks / MAX_NBLOCKS;
+            remWriteSize = realNBlocks - (loopCount * MAX_NBLOCKS);
         }
 
         // Allocate a buffer, initialize it, and use it to create the extent
@@ -1890,36 +1887,13 @@ int FileOp::initDctnryExtent(
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
-        // MCOL-498 Skip the huge preallocations if the option is set
-        // for the dbroot. This check is skiped for abbreviated extent.
-        // IMO it is better to check bool then to call a function.
-        if ( bOptExtension )
+        // Skip space preallocation if configured so
+        // fallback to sequential write otherwise.
+        // Couldn't avoid preallocation for full extents,
+        // e.g. ADD COLUMN DDL b/c CS has to fill the file
+        // with empty magics.
+        if ( !bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
-                ? bOptExtension : false;
-        }
-        int savedErrno = 0;
-        // MCOL-498 fallocate the abbreviated extent,
-        // fallback to sequential write if fallocate failed
-        if ( !bOptExtension || ( nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK
-            && pFile->fallocate(0, currFileSize, writeSize) )
-        )
-        {
-            // MCOL-498 Log the failed  fallocate() call result
-            if ( bOptExtension )
-            {
-                std::ostringstream oss;
-                std::string errnoMsg;
-                Convertor::mapErrnoToString(savedErrno, errnoMsg);
-                oss << "FileOp::initDctnryExtent(): fallocate(" << currFileSize <<
-                    ", " << writeSize << "): errno = " << savedErrno <<
-                    ": " << errnoMsg;
-                logging::Message::Args args;
-                args.add(oss.str());
-                SimpleSysLog::instance()->logMsg(args, logging::LOG_TYPE_INFO,
-                     logging::M0006);
-            }
-
             // Allocate buffer, and store in scoped_array to insure it's deletion.
             // Create scope {...} to manage deletion of writeBuf.
             {
@@ -1932,7 +1906,7 @@ int FileOp::initDctnryExtent(
 
                 memset(writeBuf, 0, writeSize);
 
-                for (int i = 0; i < nBlocks; i++)
+                for (int i = 0; i < realNBlocks; i++)
                 {
                     memcpy( writeBuf + (i * BYTE_PER_BLOCK),
                             blockHdrInit,
