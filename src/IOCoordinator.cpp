@@ -476,21 +476,27 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
         tell cache they were deleted
         tell synchronizer to delete them in cloud storage
     */
+
     Synchronizer *synchronizer = Synchronizer::get();
     ScopedWriteLock lock(this, file.string());
     
-    MetadataFile meta(file.stem().string().c_str());
+    MetadataFile meta(file);
     replicator->remove(file);
     lock.unlock();
     
     vector<metadataObject> objects = meta.metadataRead(0, meta.getLength());
     vector<string> deletedObjects;
-    bf::path journal;
+    bf::path journal, obj;
+    size_t size;
     for (auto &object : objects)
     {
-        size_t size = bf::file_size(object.key);
-        replicator->remove(cachePath/object.key);
-        cache->deletedObject(object.key, size);
+        obj = cachePath/object.key;
+        if (bf::exists(obj))
+        {
+            size = bf::file_size(obj);
+            replicator->remove(obj);
+            cache->deletedObject(object.key, size);
+        }
         journal = journalPath/(object.key + ".journal");
         if (bf::exists(journal))
         {
@@ -505,24 +511,33 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
 
 void IOCoordinator::remove(const bf::path &p)
 {
+    // recurse on dirs
     if (bf::is_directory(p))
     {
         bf::directory_iterator dend;
         bf::directory_iterator entry(p);
         while (entry != dend) 
         {
-            remove(p/(*entry));     
+            remove(*entry);     
             ++entry;
         }
         bf::remove(p);
         return;
     }
     
-    bf::path possibleMetaFile = p.string() + ".meta";
-    if (bf::is_regular_file(possibleMetaFile))
-        deleteMetaFile(possibleMetaFile);
+    // if p is a metadata file call deleteMetaFile
+    if (p.extension() == ".meta" && bf::is_regular_file(p))
+        deleteMetaFile(p);
     else
-        bf::remove(p);
+    {
+        // if we were passed a 'logical' file, it needs to have the meta extension added
+        bf::path possibleMetaFile = p.string() + ".meta";
+        if (bf::is_regular_file(possibleMetaFile))
+            deleteMetaFile(possibleMetaFile);
+        else
+            bf::remove(p);   // if p.meta doesn't exist, and it's not a dir, then just throw it out
+    }
+    
 }
 
 /* Need to rename this one.  The corresponding fcn in IDBFileSystem specifies that it
@@ -548,6 +563,7 @@ int IOCoordinator::unlink(const char *path)
     }
     catch (bf::filesystem_error &e)
     {
+        cout << "IOC::unlink caught an error: " << e.what() << endl;
         errno = e.code().value();
         return -1;
     }

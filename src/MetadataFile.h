@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <boost/filesystem/path.hpp>
 
 namespace storagemanager
 {
@@ -33,6 +34,11 @@ class MetadataFile
         MetadataFile();
         MetadataFile(const char* filename);
         MetadataFile(const char* filename, no_create_t);   // this one won't create it if it doesn't exist
+        
+        // this ctor is 'special'.  It will take an absolute path, and it will assume it points to a metafile
+        // meaning, that it doesn't need the metadata prefix prepended, or the .meta extension appended.
+        // aside from that, it will behave like the no_create ctor variant above
+        MetadataFile(const boost::filesystem::path &path);
         ~MetadataFile();
 
         bool exists() const;

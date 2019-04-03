@@ -155,6 +155,39 @@ MetadataFile::MetadataFile(const char* filename, no_create_t)
     }
 }
 
+MetadataFile::MetadataFile(const boost::filesystem::path &path)
+{
+    mpConfig = MetadataConfig::get();
+    mpLogger = SMLogging::get();
+ 
+    mFilename = path.string();
+    if (boost::filesystem::exists(path))
+    {
+        _exists = true;
+        boost::property_tree::ptree jsontree;
+        boost::property_tree::read_json(mFilename, jsontree);
+        metadataObject newObject;
+        //try catch
+        mVersion = jsontree.get<int>("version");
+        mRevision = jsontree.get<int>("revision");
+
+        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree.get_child("objects"))
+        {
+            metadataObject newObject;
+            newObject.offset = v.second.get<uint64_t>("offset");
+            newObject.length = v.second.get<uint64_t>("length");
+            newObject.key = v.second.get<string>("key");
+            mObjects.insert(newObject);
+        }
+    }
+    else
+    {
+        mVersion = 1;
+        mRevision = 1;
+        _exists = false;
+    }
+}
+
 MetadataFile::~MetadataFile()
 {
 }

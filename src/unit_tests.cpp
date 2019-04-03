@@ -1228,12 +1228,68 @@ void IOCReadTest1()
 
 void IOCUnlink()
 {
-    cout << "IOCUnlink not implmemented yet" << endl;
+    IOCoordinator *ioc = IOCoordinator::get();
+    CloudStorage *cs = CloudStorage::get();
+    Cache *cache = Cache::get();
+    Synchronizer *sync = Synchronizer::get();
+    
+    cache->reset();
+    
+    /* 
+        Make a metadata file with a complex path
+        make the test object and test journal
+        delete it at the parent dir level
+        make sure the parent dir was deleted
+        make sure the object and journal were deleted
+    */
+    
+    bf::path metaPath = ioc->getMetadataPath();
+    bf::path cachePath = ioc->getCachePath();
+    bf::path journalPath = ioc->getJournalPath();
+    bf::path cachedObjPath = cachePath/testObjKey;
+    bf::path cachedJournalPath = journalPath/(string(testObjKey) + ".journal");
+    bf::path basedir = "unlinktest";
+    bf::path metadataFile = metaPath/basedir/(string(testFile) + ".meta");
+    bf::create_directories(metaPath/basedir);
+    makeTestMetadata(metadataFile.string().c_str());
+    makeTestObject(cachedObjPath.string().c_str());
+    makeTestJournal(cachedJournalPath.string().c_str());
+    
+    cache->newObject(cachedObjPath.filename().string(), bf::file_size(cachedObjPath));
+    cache->newJournalEntry(bf::file_size(cachedJournalPath));
+    vector<string> keys;
+    keys.push_back(cachedObjPath.filename().string());
+    sync->newObjects(keys);
+    //sync->newJournalEntry(keys[0]);    don't want to end up renaming it
+    sleep(1);
+    
+    // ok, they should be fully 'in the system' now.
+    // verify that they are
+    assert(bf::exists(metaPath/basedir));
+    assert(bf::exists(cachedObjPath));
+    assert(bf::exists(cachedJournalPath));
+    bool exists;
+    cs->exists(cachedObjPath.filename().string(), &exists);
+    assert(exists);
+    
+    int err = ioc->unlink(basedir.string().c_str());
+    assert(err == 0);
+    
+    assert(!bf::exists(metaPath/basedir));
+    assert(!bf::exists(cachedObjPath));
+    assert(!bf::exists(cachedJournalPath));
+    sleep(1);   // stall for sync
+    cs->exists(cachedObjPath.filename().string(), &exists);
+    assert(!exists);
+    assert(cache->getCurrentCacheSize() == 0);
+    
+    cout << "IOC unlink test OK" << endl;
 }
 
 
 int main()
 {
+
     std::size_t sizeKB = 1024;
     cout << "connecting" << endl;
     makeConnection();
