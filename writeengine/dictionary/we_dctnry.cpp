@@ -259,16 +259,15 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
 
     if ( m_dFile != NULL )
     {
-        // MCOL-498 CS doesn't optimize abbreviated extent
+        // MCOL-498 CS optimizes abbreviated extent
         // creation.
-        bool optimizePrealloc = ( flag ) ? false : true;
         rc = FileOp::initDctnryExtent( m_dFile,
                                        m_dbRoot,
                                        totalSize,
                                        m_dctnryHeader2,
                                        m_totalHdrBytes,
                                        false,
-                                       optimizePrealloc );
+                                       true ); // explicitly optimize
 
         if (rc != NO_ERROR)
         {
@@ -334,7 +333,7 @@ int  Dctnry::expandDctnryExtent()
                                        m_dctnryHeader2,
                                        m_totalHdrBytes,
                                        true,
-                                       true );
+                                       true ); // explicitly optimize
 
     if (rc != NO_ERROR)
         return rc;
