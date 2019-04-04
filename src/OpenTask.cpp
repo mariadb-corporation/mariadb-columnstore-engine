@@ -50,7 +50,18 @@ bool OpenTask::run()
     logger->log(LOG_DEBUG,"open filename %s mode %o.",cmd->filename,cmd->openmode);
     #endif
     sm_response *resp = (sm_response *) buf;
-    int err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &resp->payload);
+    int err;
+    
+    try
+    {
+        err = ioc->open(cmd->filename, cmd->openmode, (struct stat *) &resp->payload);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "OpenTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
     if (err)
     {
         handleError("OpenTask open", errno);

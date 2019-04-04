@@ -46,8 +46,18 @@ bool CopyTask::run()
     #ifdef SM_TRACE
     logger->log(LOG_DEBUG,"copy %s to %s.",filename1.c_str(),filename2->filename);
     #endif
-    
-    int err = ioc->copyFile(filename1.c_str(), filename2->filename);
+    int err;
+    try
+    {
+        err = ioc->copyFile(filename1.c_str(), filename2->filename);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "CopyTask: caught %s", e.what());
+        err = -1;
+        errno = EIO;
+    }
+        
     if (err)
     {
         handleError("CopyTask copy", errno);
@@ -55,7 +65,6 @@ bool CopyTask::run()
     }
     
     sm_response *resp = (sm_response *) buf;
-    uint payloadLen = 0;
     resp->returnCode = 0;
     success = write(*resp, 0);
     return success;

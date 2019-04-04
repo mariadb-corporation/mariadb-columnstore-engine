@@ -61,9 +61,19 @@ bool WriteTask::run()
         check_error("WriteTask read data", false);
         readCount += toRead;
         uint writePos = 0;
+        int err;
         while (writeCount < readCount)
         {
-            int err = ioc->write(cmd->filename, &databuf[writePos], cmd->offset + writeCount, toRead - writePos);
+            try 
+            {
+                err = ioc->write(cmd->filename, &databuf[writePos], cmd->offset + writeCount, toRead - writePos);
+            }
+            catch (exception &e)
+            {
+                logger->log(LOG_DEBUG, "WriteTask: caught '%s'", e.what());
+                errno = EIO;
+                err = -1;
+            }
             if (err <= 0)
                 break;
             writeCount += err;

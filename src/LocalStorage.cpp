@@ -72,7 +72,6 @@ int LocalStorage::getObject(const string &source, const string &dest, size_t *si
 
 int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
 {
-    int ret;
     bf::path source = prefix / sourceKey;
     const char *c_source = source.string().c_str();
     char buf[80];

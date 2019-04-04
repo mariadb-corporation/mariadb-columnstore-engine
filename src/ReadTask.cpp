@@ -58,10 +58,19 @@ bool ReadTask::run()
     // todo: need to make this use O_DIRECT on the IOC side
     ioc->willRead(cmd->filename, cmd->offset, cmd->count);
     int err;
-    while (resp->returnCode < cmd->count)
+    while ((uint) resp->returnCode < cmd->count)
     {
-        err = ioc->read(cmd->filename, &resp->payload[resp->returnCode], cmd->offset + resp->returnCode, 
-          cmd->count - resp->returnCode);
+        try
+        {
+            err = ioc->read(cmd->filename, &resp->payload[resp->returnCode], cmd->offset + resp->returnCode, 
+                cmd->count - resp->returnCode);
+        }
+        catch (exception &e)
+        {
+            logger->log(LOG_DEBUG, "ReadTask: caught '%s'", e.what());
+            errno = EIO;
+            err = -1;
+        }
         if (err < 0) {
             if (resp->returnCode == 0) {
                 resp->returnCode = err;

@@ -37,7 +37,7 @@ bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const s
         check_error("ListDirectoryTask::writeString()", false);
         *offset = 0;
     }
-    uint count = 0, len = str.length();
+    int count = 0, len = str.length();
     *((uint32_t *) &buf[*offset]) = len;
     *offset += 4;
     while (count < len)
@@ -77,7 +77,15 @@ bool ListDirectoryTask::run()
     #endif
     
     vector<string> listing;
-    err = ioc->listDirectory(cmd->path, &listing);
+    try {
+        err = ioc->listDirectory(cmd->path, &listing);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "ListDirectoryTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
     if (err)
     {
         handleError("ListDirectory", errno);

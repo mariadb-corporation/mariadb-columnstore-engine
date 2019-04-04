@@ -42,8 +42,18 @@ bool TruncateTask::run()
     #ifdef SM_TRACE
     logger->log(LOG_DEBUG,"truncate %s newlength %i.",cmd->filename,cmd->length);
     #endif
+    int err;
     
-    int err = ioc->truncate(cmd->filename, cmd->length);
+    try
+    {
+        err = ioc->truncate(cmd->filename, cmd->length);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "TruncateTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
     if (err)
     {
         handleError("TruncateTask truncate", errno);

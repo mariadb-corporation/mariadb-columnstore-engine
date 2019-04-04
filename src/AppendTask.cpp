@@ -61,9 +61,19 @@ bool AppendTask::run()
         check_error("AppendTask read data", false);
         readCount += toRead;
         uint writePos = 0;
+
         while (writeCount < readCount)
         {
-            int err = ioc->append(cmd->filename, &databuf[writePos], toRead - writePos);
+            try
+            {
+                err = ioc->append(cmd->filename, &databuf[writePos], toRead - writePos);
+            }
+            catch (exception &e)
+            {
+                logger->log(LOG_DEBUG, "AppendTask: caught '%s'", e.what());
+                errno = EIO;
+                err = -1;
+            }
             if (err <= 0)
                 break;
             writeCount += err;

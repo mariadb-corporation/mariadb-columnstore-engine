@@ -43,8 +43,19 @@ bool UnlinkTask::run()
     #ifdef SM_TRACE
     logger->log(LOG_DEBUG,"unlink %s.",cmd->filename);
     #endif
+    int err;
     
-    int err = ioc->unlink(cmd->filename);
+    try
+    {
+        err = ioc->unlink(cmd->filename);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "UnlinkTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
+    
     if (err)
     {
         handleError("UnlinkTask unlink", errno);

@@ -4,7 +4,7 @@
 namespace storagemanager
 {
 
-ScopedReadLock::ScopedReadLock(IOCoordinator *i, const std::string &k) : ioc(i), key(k), locked(false)
+ScopedReadLock::ScopedReadLock(IOCoordinator *i, const std::string &k) : ioc(i), locked(false), key(k)
 {
     lock();
 }
@@ -29,7 +29,7 @@ void ScopedReadLock::unlock()
     }
 }
 
-ScopedWriteLock::ScopedWriteLock(IOCoordinator *i, const std::string &k) : ioc(i), key(k), locked(false)
+ScopedWriteLock::ScopedWriteLock(IOCoordinator *i, const std::string &k) : ioc(i), locked(false), key(k)
 {
     lock();
 }

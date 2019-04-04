@@ -231,9 +231,7 @@ int SessionManager::start()
                     uint remainingBytes = 0;
                     uint endOfData, i;
                     int peakLength,len;
-                    struct timespec ts;
-                    ts.tv_sec = 0;
-                    ts.tv_nsec = 100000000;   // .1 sec
+                    
                     //logger->log(LOG_DEBUG,"reading from fd %i index is %i", fds[socketIncr].fd,socketIncr);
                     if (sockState.find(fds[socketIncr].fd) != sockState.end())
                     {

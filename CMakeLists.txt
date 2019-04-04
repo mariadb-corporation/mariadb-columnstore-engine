@@ -40,7 +40,7 @@ if (TRACE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    add_definitions(-DDEBUG)
+    add_definitions(-DDEBUG -Werror -Wall)
     set(S3_CONFIGURE_OPT --enable-debug)
 endif()
 

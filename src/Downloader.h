@@ -22,9 +22,9 @@ class Downloader
         Downloader();
         virtual ~Downloader();
         
-        // returns 0 on success.  If != 0, errnos will contains the errno associated with the failure
         // caller owns the memory for the strings.
-        int download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
+        // errors are reported through errnos
+        void download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
         void setDownloadPath(const std::string &path);
         const std::string & getDownloadPath() const;
         

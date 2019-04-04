@@ -52,7 +52,7 @@ Config::Config() : die(false)
         paths.push_back(cs_install_dir);
     paths.push_back("/etc");
     
-    for (int i = 0; i < paths.size(); i++)
+    for (uint i = 0; i < paths.size(); i++)
     {
         if (boost::filesystem::exists(paths[i] + "/storagemanager.cnf"))
         {

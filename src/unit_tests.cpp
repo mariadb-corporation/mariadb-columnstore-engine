@@ -125,7 +125,7 @@ void acceptConnection()
         sa.sun_family = AF_UNIX;
         memcpy(&sa.sun_path[1], "testing", 7);
         
-        int err = ::bind(serverSock, (struct sockaddr *) &sa, sizeof(sa));
+        err = ::bind(serverSock, (struct sockaddr *) &sa, sizeof(sa));
         assert(err == 0);
         err = ::listen(serverSock, 2);
         assert(err == 0);
@@ -210,7 +210,6 @@ bool replicatorTest()
     Replicator *repli = Replicator::get();
     int err,fd;
     const char *newobject = "newobjectTest";
-    const char *newobjectJournal = "newobjectTest.journal";
     string newObjectJournalFullPath = journalPath + "/" + "newobjectTest.journal";
     string newObjectCacheFullPath = cacehPath + "/" + "newobjectTest";
     uint8_t buf[1024];
@@ -237,7 +236,7 @@ bool replicatorTest()
 
     fd = ::open(newObjectJournalFullPath.c_str(), O_RDONLY);
     err = ::read(fd, buf, 1024);
-    assert(err == (header.length() + 1 + 16 + 10));
+    assert((uint) err == (header.length() + 1 + 16 + 10));
     buf[err] = 0;
     assert(!strcmp("1234567890", (const char *) buf + header.length() + 1 + 16));
     cout << "replicator addJournalEntry OK" << endl;
@@ -274,18 +273,18 @@ bool metadataJournalTest(std::size_t size, off_t offset)
     hdr->type = SM_MSG_START;
     hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
     WriteTask w(clientSock, hdr->payloadLen);
-    int error = ::write(sessionSock, cmd, hdr->payloadLen);
+    int err = ::write(sessionSock, cmd, hdr->payloadLen);
 
     w.run();
 
     // verify response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
     assert(err == sizeof(*resp));
     assert(resp->header.type == SM_MSG_START);
     assert(resp->header.payloadLen == 4);
     assert(resp->header.flags == 0);
-    assert(resp->returnCode == size);
+    assert(resp->returnCode == (int) size);
 }
 
 void metadataJournalTestCleanup(std::size_t size)
@@ -408,7 +407,7 @@ bool appendtask()
     return true;
 }
 
-bool unlinktask()
+void unlinktask()
 {
     // make a meta file and delete it
     const char *filename = "unlinktest1";
@@ -421,7 +420,6 @@ bool unlinktask()
     
     uint8_t buf[1024];
     unlink_cmd *cmd = (unlink_cmd *) buf;
-    uint8_t *data;
     
     cmd->opcode = UNLINK;
     cmd->flen = strlen(filename);
@@ -724,7 +722,7 @@ bool listdirtask()
     listdir_resp *r = (listdir_resp *) resp->payload;
     assert(r->elements == 10);
     int off = sizeof(sm_response) + sizeof(listdir_resp);
-    int fileCounter = 0;
+    uint fileCounter = 0;
     while (off < err)
     {
         listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
@@ -741,7 +739,7 @@ bool listdirtask()
     return true;
 }
 
-bool pingtask()
+void pingtask()
 {
     uint8_t buf[1024];
     ping_cmd *cmd = (ping_cmd *) buf;
@@ -853,7 +851,7 @@ bool cacheTest1()
     cache->exists(v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
-    ssize_t currentSize = cache->getCurrentCacheSize();
+    size_t currentSize = cache->getCurrentCacheSize();
     assert(currentSize == bf::file_size(cachePath / realFile));
     
     // lie about the file being deleted and then replaced
@@ -869,9 +867,8 @@ bool cacheTest1()
     bf::remove(cachePath / realFile);
     bf::remove(storagePath / realFile);
     cout << "cache test 1 OK" << endl;
+    return true;
 }
-
-
 
 bool mergeJournalTest()
 {
@@ -1008,7 +1005,6 @@ bool syncTest1()
         foundIt = (MetadataFile::getSourceFromKey(newKey) == "test-file");
         if (foundIt)
         {
-            size_t fsize = bf::file_size(dir->path());
             assert(cache->exists(newKey));
             cs->deleteObject(newKey);
             break;
@@ -1123,9 +1119,9 @@ void s3storageTest1()
         uint8_t *data1 = new uint8_t[len];
         uint8_t *data2 = new uint8_t[len];
         err = read(fd1, data1, len);
-        assert(err == len);
+        assert(err == (int) len);
         err = read(fd2, data2, len);
-        assert(err == len);
+        assert(err == (int) len);
         assert(!memcmp(data1, data2, len));
         close(fd1);
         close(fd2);
@@ -1197,7 +1193,7 @@ void IOCReadTest1()
     makeTestMetadata(metaFilename.c_str());
     size_t objSize = bf::file_size(objFilename);
     err = ioc->read(testFile, data.get(), 0, 1<<20);
-    assert(err == objSize);
+    assert(err == (int) objSize);
     
     // verify the data
     int *data32 = (int *) data.get();
@@ -1210,7 +1206,7 @@ void IOCReadTest1()
     makeTestJournal(journalFilename.c_str());
     
     err = ioc->read(testFile, data.get(), 0, 1<<20);
-    assert(err == objSize);
+    assert(err == (int) objSize);
     for (i = 0; i < 5; i++)
         assert(data32[i] == i);
     for (; i < 10; i++)
@@ -1365,9 +1361,8 @@ void IOCCopyFile3()
         call ioc::copyFile()
         verify dest file exists
     */
-        IOCoordinator *ioc = IOCoordinator::get();
+    IOCoordinator *ioc = IOCoordinator::get();
     Cache *cache = Cache::get();
-    CloudStorage *cs = CloudStorage::get();
     
     bf::path metaPath = ioc->getMetadataPath();
     bf::path journalPath = ioc->getJournalPath();

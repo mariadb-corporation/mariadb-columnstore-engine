@@ -4,6 +4,7 @@
 #include <string>
 #include <errno.h>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 namespace storagemanager
@@ -36,9 +37,8 @@ inline boost::mutex & Downloader::getDownloadMutex()
     return download_mutex;
 }
 
-int Downloader::download(const vector<const string *> &keys, vector<int> *errnos, vector<size_t> *sizes)
+void Downloader::download(const vector<const string *> &keys, vector<int> *errnos, vector<size_t> *sizes)
 {
-    //volatile uint counter = keys.size();
     uint counter = keys.size();
     boost::condition condvar;
     boost::mutex m;
@@ -96,19 +96,14 @@ int Downloader::download(const vector<const string *> &keys, vector<int> *errnos
     s.unlock();
             
     // check for errors & propagate
-    int ret = 0;
     errnos->resize(keys.size());
+    char buf[80];
     for (i = 0; i < keys.size(); i++)
     {
         auto &dl = dls[i];
         (*errnos)[i] = dl->dl_errno;
         if (dl->dl_errno != 0)
-        {
-            char buf[80];
-            // not sure why yet, but valgrind complains about the call below
             logger->log(LOG_ERR, "Downloader: failed to download %s, got '%s'", keys[i]->c_str(), strerror_r(dl->dl_errno, buf, 80));
-            ret = -1;
-        }
     }
 }
 
@@ -132,7 +127,11 @@ void Downloader::Download::operator()()
     CloudStorage *storage = CloudStorage::get();
     int err = storage->getObject(*key, dler->getDownloadPath() + "/" + *key, &size);
     if (err != 0)
+    {
+        boost::filesystem::remove(dler->getDownloadPath() + "/" + *key);
+        size = 0;
         dl_errno = errno;
+    }
     
     boost::unique_lock<boost::mutex> s(dler->getDownloadMutex());
     for (auto &listener : listeners)
