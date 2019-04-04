@@ -309,7 +309,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
         {
             //this is starting beyond last object in metadata
             //figure out if the offset is in this object
-            if (offset < objectSize)
+            if ((uint64_t) offset < objectSize)
             {
                 journalOffset = offset;
                 writeLength = min((objectSize - journalOffset),dataRemaining);
@@ -364,7 +364,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
 //
 int IOCoordinator::append(const char *filename, const uint8_t *data, size_t length)
 {
-    int fd, err;
+    int err;
     size_t count = 0;
     uint64_t writeLength = 0;
     uint64_t dataRemaining = length;
@@ -375,7 +375,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
 
     MetadataFile metadata = MetadataFile(filename);
 
-    int offset = metadata.getLength();
+    uint64_t offset = metadata.getLength();
     
     //read metadata determine if this fits in the last object
     objects = metadata.metadataRead(offset,length);
