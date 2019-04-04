@@ -13,14 +13,25 @@ endif()
 execute_process(
   COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
   WORKING_DIRECTORY ${_tbb_download_dir}
+  RESULT_VARIABLE _tbb_download_failed
   )
+
+if(_tbb_download_failed)
+  message(FATAL_ERROR "Unable to download TBB sources")
+endif()
 
 execute_process(
   COMMAND ${CMAKE_COMMAND} --build .
   WORKING_DIRECTORY ${_tbb_download_dir}
+  RESULT_VARIABLE _tbb_download_failed
 )
 
-unset(_tbb_download_dir )
+if(_tbb_download_failed)
+  message(FATAL_ERROR "Unable to download TBB sources")
+endif()
+
+unset(_tbb_download_dir)
+unset(_tbb_download_failed)
 
 set(tbb_dir ${CMAKE_CURRENT_BINARY_DIR}/tbb)
 
