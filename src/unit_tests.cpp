@@ -1414,9 +1414,6 @@ int main()
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
     
-    IOCCopyFile();
-    return 0;
-    
     opentask();
     metadataUpdateTest();
     // requires 8K object size to test boundries
