@@ -205,11 +205,14 @@ bool replicatorTest()
     Config* config = Config::get();
     string metaPath = config->getValue("ObjectStorage", "metadata_path");
     string journalPath = config->getValue("ObjectStorage", "journal_path");
+    string cacehPath = config->getValue("Cache", "path");
+
     Replicator *repli = Replicator::get();
     int err,fd;
     const char *newobject = "newobjectTest";
     const char *newobjectJournal = "newobjectTest.journal";
     string newObjectJournalFullPath = journalPath + "/" + "newobjectTest.journal";
+    string newObjectCacheFullPath = cacehPath + "/" + "newobjectTest";
     uint8_t buf[1024];
     uint8_t data[1024];
     int version = 1;
@@ -218,10 +221,10 @@ bool replicatorTest()
     string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % max_offset).str();
 
     // test newObject
-    repli->newObject(newobject,data,10);
+    repli->newObject(newobject,data,0,10);
     
     //check file contents
-    fd = ::open(newobject, O_RDONLY);
+    fd = ::open(newObjectCacheFullPath.c_str(), O_RDONLY);
     err = ::read(fd, buf, 1024);
     assert(err == 10);
     buf[10] = 0;
@@ -240,9 +243,9 @@ bool replicatorTest()
     cout << "replicator addJournalEntry OK" << endl;
     ::close(fd);
 
-    repli->remove(newobject);
+    repli->remove(newObjectCacheFullPath.c_str());
     repli->remove(newObjectJournalFullPath.c_str());
-    assert(!boost::filesystem::exists(newobject));
+    assert(!boost::filesystem::exists(newObjectCacheFullPath.c_str()));
     cout << "replicator remove OK" << endl;
     return true;
 }
@@ -283,10 +286,6 @@ bool metadataJournalTest(std::size_t size, off_t offset)
     assert(resp->header.payloadLen == 4);
     assert(resp->header.flags == 0);
     assert(resp->returnCode == size);
-
-    MetadataFile mdfTest(filename);
-    mdfTest.printObjects();
-
 }
 
 void metadataJournalTestCleanup(std::size_t size)
@@ -294,14 +293,18 @@ void metadataJournalTestCleanup(std::size_t size)
     Config* config = Config::get();
     string metaPath = config->getValue("ObjectStorage", "metadata_path");
     string journalPath = config->getValue("ObjectStorage", "journal_path");
+    string cachePath = config->getValue("Cache", "path");
+
     const char *filename = "metadataJournalTest";
     MetadataFile mdfTest(filename);
+    mdfTest.printObjects();
     std::vector<metadataObject> objects = mdfTest.metadataRead(0,size);
     for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
     {
+        string casheObject = cachePath + "/" + i->key;
         string keyJournal = journalPath + "/" + i->key + ".journal";
         if(boost::filesystem::exists(i->key.c_str()))
-            ::unlink(i->key.c_str());
+            ::unlink(casheObject.c_str());
         if(boost::filesystem::exists(keyJournal.c_str()))
             ::unlink(keyJournal.c_str());
     }
@@ -1415,7 +1418,7 @@ int main()
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
     
     opentask();
-    metadataUpdateTest();
+    //metadataUpdateTest();
     // requires 8K object size to test boundries
     //Case 1 new write that spans full object
     metadataJournalTest((10*sizeKB),0);
@@ -1428,13 +1431,12 @@ int main()
     //Case 5 write starts in new object at offset >0
     //TODO add zero padding to writes in this scenario
     //metadataJournalTest((8*sizeKB),4*sizeKB);
-    metadataJournalTestCleanup(17*sizeKB);
 
     //writetask();
-    appendtask();
+    //appendtask();
     unlinktask();
     stattask();
-    //truncatetask();   // currently waiting on IOC::write() to be completed.
+    truncatetask();   // currently waiting on IOC::write() to be completed.
     listdirtask();
     pingtask();
     copytask();
@@ -1450,6 +1452,9 @@ int main()
     IOCTruncate();
     IOCUnlink();
     IOCCopyFile();
+
+    sleep(5); // sometimes this deletes them before syncwithjournal is called
+    metadataJournalTestCleanup(17*sizeKB);
 
     return 0;
 }

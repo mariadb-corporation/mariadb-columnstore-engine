@@ -2,6 +2,7 @@
 #include "Replicator.h"
 #include "IOCoordinator.h"
 #include "SMLogging.h"
+#include "Cache.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -42,7 +43,6 @@ Replicator::Replicator()
         mpLogger->log(LOG_CRIT, "Could not load metadata_path from storagemanger.cnf file.");
         throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
     }
-    boost::filesystem::create_directories(msJournalPath);
     try
     {
         boost::filesystem::create_directories(msJournalPath);
@@ -50,6 +50,21 @@ Replicator::Replicator()
     catch (exception &e)
     {
         syslog(LOG_CRIT, "Failed to create %s, got: %s", msJournalPath.c_str(), e.what());
+        throw e;
+    }
+    msCachePath = mpConfig->getValue("Cache", "path");
+    if (msCachePath.empty())
+    {
+        mpLogger->log(LOG_CRIT, "Cache/path is not set");
+        throw runtime_error("Please set Cache/path in the storagemanager.cnf file");
+    }
+    try
+    {
+        boost::filesystem::create_directories(msCachePath);
+    }
+    catch (exception &e)
+    {
+        mpLogger->log(LOG_CRIT, "Failed to create %s, got: %s", msCachePath.c_str(), e.what());
         throw e;
     }
 }
@@ -85,14 +100,15 @@ struct scoped_closer {
         return fd; \
     scoped_closer sc(fd);
 
-int Replicator::newObject(const char *filename, const uint8_t *data, size_t length )
+int Replicator::newObject(const char *filename, const uint8_t *data, off_t offset, size_t length )
 {
     int fd, err;
+    string objectFilename = msCachePath + "/" + string(filename);
 
-    OPEN(filename, O_WRONLY | O_CREAT);
+    OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
     size_t count = 0;
     while (count < length) {
-        err = ::write(fd, &data[count], length - count);
+        err = ::pwrite(fd, &data[count], length - count, offset);
         if (err <= 0)
             if (count > 0)   // return what was successfully written
                 return count;
@@ -112,11 +128,14 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     int version = 1;
     string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
     uint64_t thisEntryMaxOffset = (offset + length - 1);
+    Cache *cache = Cache::get();  // need to init sync here to break circular dependency...
+
     if (!boost::filesystem::exists(journalFilename))
     {
         // create new journal file with header
         OPEN(journalFilename.c_str(), O_WRONLY | O_CREAT);
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
+        cache->makeSpace(header.size());
         err = ::write(fd, header.c_str(), header.length() + 1);
         if (err <= 0)
             return err;
@@ -143,7 +162,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
 
     OPEN(journalFilename.c_str(), O_WRONLY | O_APPEND);
 
-    err = ::write(fd, offlen, 16);
+    err = ::write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
     if (err <= 0)
         return err;
 

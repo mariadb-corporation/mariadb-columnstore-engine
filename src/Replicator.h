@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <stdint.h>
 
+#define JOURNAL_ENTRY_HEADER_SIZE 16
+
 namespace storagemanager
 {
 
@@ -28,7 +30,7 @@ class Replicator
         };
         
         int addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length);
-        int newObject(const char *filename, const uint8_t *data, size_t length);
+        int newObject(const char *filename, const uint8_t *data, off_t offset, size_t length);
         int remove(const char *filename, Flags flags = NONE);
         int remove(const boost::filesystem::path &file, Flags flags = NONE);
         
@@ -39,6 +41,7 @@ class Replicator
         Config *mpConfig;
         SMLogging *mpLogger;
         std::string msJournalPath;
+        std::string msCachePath;
         //ThreadPool threadPool;
 };
 

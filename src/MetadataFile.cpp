@@ -229,12 +229,14 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
             break;
         ++i;
     }
-            
     // append objects until foundLen >= length or EOF
+    // first time thrus foundLen should be adjusted based on offset
+    off_t foundOffset = offset - i->offset;
     while (i != mObjects.end() && foundLen < length)
     {
         ret.push_back(*i);
-        foundLen += i->length;
+        foundLen += (i->length - foundOffset);
+        foundOffset = 0; //zero on every other time thru this loop
         ++i;
     }
     return ret;

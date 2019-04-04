@@ -249,8 +249,10 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     uint64_t dataRemaining = length;
     uint64_t journalOffset = 0;
     vector<metadataObject> objects;
+    vector<string> newObjectKeys;
+    Synchronizer *synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
 
-    //writeLock(filename);
+    ScopedWriteLock lock(this, filename);
 
     MetadataFile metadata = MetadataFile(filename);
 
@@ -263,7 +265,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
         for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
         {
             // figure out how much data to write to this object
-            if (count == 0 && offset > i->offset)
+            if (count == 0 && offset >= i->offset)
             {
                 // first object in the list so start at offset and
                 // write to end of oject or all the data
@@ -277,10 +279,122 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
                 writeLength = min(objectSize,dataRemaining);
                 journalOffset = 0;
             }
+            cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+
+            err = replicator->addJournalEntry(i->key.c_str(),&data[count],journalOffset,writeLength);
+
+            if (err <= 0)
+            {
+                if ((count + journalOffset) > i->length)
+                    metadata.updateEntryLength(i->offset, (count + journalOffset));
+                metadata.writeMetadata(filename);
+                logger->log(LOG_ERR,"IOCoordinator::write(): object failed to complete write, %u of %u bytes written.",count,length);
+                return count;
+            }
+            if ((writeLength + journalOffset) > i->length)
+                metadata.updateEntryLength(i->offset, (writeLength + journalOffset));
+
+            cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+
+            synchronizer->newJournalEntry(i->key);
+            count += err;
+            dataRemaining -= err;
+        }
+    }
+    // there is no overlapping data, or data goes beyond end of last object
+    while (dataRemaining > 0 && err >= 0)
+    {
+        //add a new metaDataObject
+        if (count == 0)
+        {
+            //this is starting beyond last object in metadata
+            //figure out if the offset is in this object
+            if (offset < objectSize)
+            {
+                journalOffset = offset;
+                writeLength = min((objectSize - journalOffset),dataRemaining);
+            }
+            else
+            {
+                //we need to create an object that is only padding
+            }
+        }
+        else
+        {
+            // count != 0 we've already started writing and are going to new object
+            // start at beginning of the new object
+            writeLength = min(objectSize,dataRemaining);
+            journalOffset = 0;
+        }
+        cache->makeSpace(journalOffset+writeLength);
+        // add a new metadata object, this will get a new objectKey
+        metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
+        // write the new object
+        err = replicator->newObject(newObject.key.c_str(),data,journalOffset,writeLength);
+        if (err <= 0)
+        {
+            // update metadataObject length to reflect what awas actually written
+            if ((count + journalOffset) > newObject.length)
+                metadata.updateEntryLength(newObject.offset, (count + journalOffset));
+            metadata.writeMetadata(filename);
+            logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
+            return count;
+            //log error and abort
+        }
+        if ((writeLength + journalOffset) > newObject.length)
+            metadata.updateEntryLength(newObject.offset, (writeLength + journalOffset));
+
+        cache->newObject(newObject.key,(writeLength + journalOffset));
+        newObjectKeys.push_back(newObject.key);
+
+        count += err;
+        dataRemaining -= err;
+    }
+
+    synchronizer->newObjects(newObjectKeys);
+
+    metadata.writeMetadata(filename);
+    
+    lock.unlock();
+
+    return count;
+}
+//
+// Still fixing stuff here
+//
+int IOCoordinator::append(const char *filename, const uint8_t *data, size_t length)
+{
+    int fd, err;
+    size_t count = 0;
+    uint64_t writeLength = 0;
+    uint64_t dataRemaining = length;
+    uint64_t journalOffset = 0;
+    vector<metadataObject> objects;
+
+    //writeLock(filename);
+
+    MetadataFile metadata = MetadataFile(filename);
+
+    int offset = metadata.getLength();
+    
+    //read metadata determine if this fits in the last object
+    objects = metadata.metadataRead(offset,length);
+
+    if(!objects.empty() && objects.size() == 1)
+    {
+        std::vector<metadataObject>::const_iterator i = objects.begin();
+
+            // figure out how much data to write to this object
+            if (offset > i->offset)
+            {
+                journalOffset = offset - i->offset;
+                writeLength = min((objectSize - journalOffset),dataRemaining);
+            }
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],journalOffset,writeLength);
             if (err <= 0)
             {
-                metadata.updateEntryLength(i->offset, count);
+                if ((count + journalOffset) > i->length)
+                    metadata.updateEntryLength(i->offset, (count + journalOffset));
                 metadata.writeMetadata(filename);
                 logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
                 return count;
@@ -290,25 +404,33 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
 
             count += err;
             dataRemaining -= err;
-        }
-        //cache.makeSpace(journal_data_size)
+        //cache->makeSpace(journal_data_size)
         //Synchronizer::newJournalData(journal_file);
     }
-
+    else
+    {
+        //Something went wrong this shouldn't overlap objects
+    }
     // there is no overlapping data, or data goes beyond end of last object
     while (dataRemaining > 0 && err >= 0)
     {
         //add a new metaDataObject
         writeLength = min(objectSize,dataRemaining);
-        //cache.makeSpace(size)
+        if (count == 0)
+        {
+            //this is append and it starting beyond last object in metadata
+            //figure out if the offset is in this object
+        }
+        //cache->makeSpace(size)
         // add a new metadata object, this will get a new objectKey NOTE: probably needs offset too
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
         // write the new object
-        err = replicator->newObject(newObject.key.c_str(),data,writeLength);
+        err = replicator->newObject(newObject.key.c_str(),data,journalOffset,writeLength);
         if (err <= 0)
         {
             // update metadataObject length to reflect what awas actually written
-            metadata.updateEntryLength(newObject.offset, count);
+            if ((count + journalOffset) > newObject.length)
+                metadata.updateEntryLength(newObject.offset, (count + journalOffset));
             metadata.writeMetadata(filename);
             logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
             return count;
@@ -321,28 +443,6 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     }
 
     metadata.writeMetadata(filename);
-    
-    //writeUnlock(filename);
-
-    return count;
-}
-
-int IOCoordinator::append(const char *filename, const uint8_t *data, size_t length)
-{
-    int fd, err;
-    
-    OPEN(filename, O_WRONLY | O_APPEND);
-    size_t count = 0;
-    while (count < length) {
-        err = ::write(fd, &data[count], length - count);
-        if (err <= 0)
-            if (count > 0)   // return what was successfully written
-                return count;
-            else
-                return err;
-        count += err;
-    }
-    
     return count;
 }
 
