@@ -249,7 +249,7 @@ bool replicatorTest()
     return true;
 }
 
-bool metadataJournalTest(std::size_t size, off_t offset)
+void metadataJournalTest(std::size_t size, off_t offset)
 {
     // make an empty file to write to
     const char *filename = "metadataJournalTest";
