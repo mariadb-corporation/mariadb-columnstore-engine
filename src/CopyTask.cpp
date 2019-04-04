@@ -65,7 +65,6 @@ bool CopyTask::run()
     }
     
     sm_response *resp = (sm_response *) buf;
-    uint payloadLen = 0;
     resp->returnCode = 0;
     success = write(*resp, 0);
     return success;

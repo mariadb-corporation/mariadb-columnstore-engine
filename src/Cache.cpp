@@ -186,11 +186,10 @@ void Cache::read(const vector<string> &keys)
     s.unlock();
     
     // start downloading the keys to fetch
-    int dl_err;
     vector<int> dl_errnos;
     vector<size_t> sizes;
     if (!keysToFetch.empty())
-        dl_err = downloader.download(keysToFetch, &dl_errnos, &sizes);
+        downloader.download(keysToFetch, &dl_errnos, &sizes);
     
     size_t sum_sizes = 0;
     for (size_t &size : sizes)
@@ -272,7 +271,7 @@ void Cache::exists(const vector<string> &keys, vector<bool> *out) const
 {
     out->resize(keys.size());
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    for (int i = 0; i < keys.size(); i++)
+    for (uint i = 0; i < keys.size(); i++)
         (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
@@ -370,7 +369,7 @@ void Cache::_makeSpace(size_t size)
             remove it from our structs
             update current size
         */
-        assert(currentCacheSize >= statbuf.st_size);
+        assert(currentCacheSize >= (size_t) statbuf.st_size);
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
         Synchronizer::get()->flushObject(*it);

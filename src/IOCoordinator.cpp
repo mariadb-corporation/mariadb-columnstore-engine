@@ -263,7 +263,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
         for (std::vector<metadataObject>::const_iterator i = objects.begin(); i != objects.end(); ++i)
         {
             // figure out how much data to write to this object
-            if (count == 0 && offset > i->offset)
+            if (count == 0 && (uint64_t) offset > i->offset)
             {
                 // first object in the list so start at offset and
                 // write to end of oject or all the data
@@ -335,11 +335,13 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
     size_t count = 0;
     while (count < length) {
         err = ::write(fd, &data[count], length - count);
-        if (err <= 0)
+        if (err <= 0) 
+        {
             if (count > 0)   // return what was successfully written
                 return count;
             else
                 return err;
+        }
         count += err;
     }
     
@@ -809,10 +811,10 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     if (*len == 0)
         // read to the end of the file
-        *len = max(maxJournalOffset, objStat.st_size) - offset;
+        *len = max(maxJournalOffset, (size_t) objStat.st_size) - offset;
     else
         // make sure len is within the bounds of the data
-        *len = min(*len, (max(maxJournalOffset, objStat.st_size) - offset));
+        *len = min(*len, (max(maxJournalOffset, (size_t) objStat.st_size) - offset));
     ret.reset(new uint8_t[*len]);
     
     // read the object into memory
@@ -852,9 +854,9 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         // if this entry overlaps, read the overlapping section
         uint64_t lastJournalOffset = offlen[0] + offlen[1];
         uint64_t lastBufOffset = offset + *len;
-        if (offlen[0] <= lastBufOffset && lastJournalOffset >= offset)
+        if (offlen[0] <= lastBufOffset && lastJournalOffset >= (uint64_t) offset)
         {
-            uint64_t startReadingAt = max(offlen[0], offset);
+            uint64_t startReadingAt = max(offlen[0], (uint64_t) offset);
             uint64_t lengthOfRead = min(lastBufOffset, lastJournalOffset) - startReadingAt;
             
             if (startReadingAt != offlen[0])
@@ -958,7 +960,7 @@ void IOCoordinator::renameObject(const string &oldKey, const string &newKey)
 }
 
 
-bool IOCoordinator::readLock(const string &filename)
+void IOCoordinator::readLock(const string &filename)
 {
     boost::unique_lock<boost::mutex> s(lockMutex);
 
@@ -981,7 +983,7 @@ void IOCoordinator::readUnlock(const string &filename)
     }
 }
 
-bool IOCoordinator::writeLock(const string &filename)
+void IOCoordinator::writeLock(const string &filename)
 {
     boost::unique_lock<boost::mutex> s(lockMutex);
     

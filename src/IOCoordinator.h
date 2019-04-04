@@ -59,8 +59,8 @@ class IOCoordinator : public boost::noncopyable
         /* Lock manipulation fcns.  They can lock on any param given to them.  For convention's sake,
            the parameter should mostly be the abs filename being accessed. */
         void renameObject(const std::string &oldKey, const std::string &newKey);
-        bool readLock(const std::string &filename);
-        bool writeLock(const std::string &filename);
+        void readLock(const std::string &filename);
+        void writeLock(const std::string &filename);
         void readUnlock(const std::string &filename);
         void writeUnlock(const std::string &filename);
         

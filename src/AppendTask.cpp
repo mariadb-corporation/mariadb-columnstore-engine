@@ -61,7 +61,7 @@ bool AppendTask::run()
         check_error("AppendTask read data", false);
         readCount += toRead;
         uint writePos = 0;
-        int err;
+
         while (writeCount < readCount)
         {
             try

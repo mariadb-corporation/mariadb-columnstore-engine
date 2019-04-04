@@ -225,7 +225,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     // find the first object in range
     while (i != mObjects.end())
     {
-        if (offset <= (i->offset + i->length - 1))
+        if ((uint64_t) offset <= (i->offset + i->length - 1))
             break;
         ++i;
     }
@@ -313,7 +313,7 @@ string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
     boost::uuids::uuid u = boost::uuids::random_generator()();
     stringstream ss;
 
-    for (int i = 0; i < sourceName.length(); i++)
+    for (uint i = 0; i < sourceName.length(); i++)
     {
         if (sourceName[i] == '/')
         {
@@ -339,7 +339,7 @@ string MetadataFile::getSourceFromKey(const string &key)
     
     // this is to convert the munged filenames back to regular filenames
     // for consistent use in IOC locks
-    for (int i = 0; i < split[3].length(); i++)
+    for (uint i = 0; i < split[3].length(); i++)
         if (split[3][i] == '~')
             split[3][i] = '/';
     

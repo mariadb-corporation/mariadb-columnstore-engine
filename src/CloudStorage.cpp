@@ -18,7 +18,7 @@ namespace
 string tolower(const string &s)
 {
     string ret(s);
-    for (int i = 0; i < ret.length(); i++)
+    for (uint i = 0; i < ret.length(); i++)
         ret[i] = ::tolower(ret[i]);
     return ret;
 }

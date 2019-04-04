@@ -94,10 +94,12 @@ int Replicator::newObject(const char *filename, const uint8_t *data, size_t leng
     while (count < length) {
         err = ::write(fd, &data[count], length - count);
         if (err <= 0)
+        {
             if (count > 0)   // return what was successfully written
                 return count;
             else
                 return err;
+        }
         count += err;
     }
 
@@ -107,7 +109,7 @@ int Replicator::newObject(const char *filename, const uint8_t *data, size_t leng
 int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length)
 {
     int fd, err;
-    uint64_t offlen[] = {offset,length};
+    uint64_t offlen[] = {(uint64_t) offset,length};
     size_t count = 0;
     int version = 1;
     string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
@@ -150,10 +152,12 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     while (count < length) {
         err = ::write(fd, &data[count], length - count);
         if (err <= 0)
+        {
             if (count > 0)   // return what was successfully written
                 return count;
             else
                 return err;
+        }
         count += err;
     }
 

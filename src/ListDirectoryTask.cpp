@@ -37,7 +37,7 @@ bool ListDirectoryTask::writeString(uint8_t *buf, int *offset, int size, const s
         check_error("ListDirectoryTask::writeString()", false);
         *offset = 0;
     }
-    uint count = 0, len = str.length();
+    int count = 0, len = str.length();
     *((uint32_t *) &buf[*offset]) = len;
     *offset += 4;
     while (count < len)
