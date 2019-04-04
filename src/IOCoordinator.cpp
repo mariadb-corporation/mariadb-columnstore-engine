@@ -608,6 +608,12 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     int err;
     char errbuf[80];
     
+    if (!bf::exists(metaFile1))
+    {
+        errno = ENOENT;
+        return -1;
+    }
+    
     if (bf::exists(metaFile2))
         deleteMetaFile(metaFile2);
     // since we don't implement mkdir(), assume the caller did that and

@@ -1339,6 +1339,19 @@ void IOCCopyFile1()
 void IOCCopyFile2()
 {
     // call IOC::copyFile() with non-existant file
+    IOCoordinator *ioc = IOCoordinator::get();
+    
+    bf::path metaPath = ioc->getMetadataPath();
+    bf::remove(metaPath/"not-there.meta");
+    bf::remove(metaPath/"not-there2.meta");
+    
+    int err = ioc->copyFile("not-there", "not-there2");
+    assert(err);
+    assert(errno == ENOENT);
+    assert(!bf::exists(metaPath/"not-there.meta"));
+    assert(!bf::exists(metaPath/"not-there2.meta"));
+    
+    cout << "IOC copy file 2 OK" << endl;
 }
 
 void IOCCopyFile3()
@@ -1349,6 +1362,40 @@ void IOCCopyFile3()
         call ioc::copyFile()
         verify dest file exists
     */
+        IOCoordinator *ioc = IOCoordinator::get();
+    Cache *cache = Cache::get();
+    CloudStorage *cs = CloudStorage::get();
+    
+    bf::path metaPath = ioc->getMetadataPath();
+    bf::path journalPath = ioc->getJournalPath();
+    bf::path cachePath = ioc->getCachePath();
+    bf::path sourcePath = metaPath/"copyfile1"/"source.meta";
+    bf::path destPath = metaPath/"copyfile2"/"dest.meta";
+    const char *l_sourceFile = "copyfile1/source";
+    const char *l_destFile = "copyfile2/dest";
+    
+    cache->reset();
+    
+    bf::create_directories(sourcePath.parent_path());
+    makeTestMetadata(sourcePath.string().c_str());
+    makeTestObject((cachePath/testObjKey).string().c_str());
+    makeTestJournal((journalPath/(string(testObjKey) + ".journal")).string().c_str());
+    cache->newObject(testObjKey, bf::file_size(cachePath/testObjKey));
+    cache->newJournalEntry(bf::file_size(journalPath/(string(testObjKey) + ".journal")));
+    
+    int err = ioc->copyFile("copyfile1/source", "copyfile2/dest");
+    assert(!err);
+    uint8_t buf1[8192], buf2[8192];
+    err = ioc->read(l_sourceFile, buf1, 0, 8192);
+    assert(err == 8192);
+    err = ioc->read(l_destFile, buf2, 0, 8192);
+    assert(err == 8192);
+    assert(memcmp(buf1, buf2, 8192) == 0);
+    
+    ioc->unlink("copyfile1");
+    ioc->unlink("copyfile2");
+    assert(cache->getCurrentCacheSize() == 0);
+    cout << "IOC copy file 3 OK" << endl;
 }
 
 void IOCCopyFile()
@@ -1366,6 +1413,9 @@ int main()
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
+    
+    IOCCopyFile();
+    return 0;
     
     opentask();
     metadataUpdateTest();
