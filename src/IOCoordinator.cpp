@@ -605,18 +605,31 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     Synchronizer *sync = Synchronizer::get();
     bf::path metaFile1 = metaPath/(string(filename1) + ".meta");
     bf::path metaFile2 = metaPath/(string(filename2) + ".meta");
+    int err;
+    char errbuf[80];
     
     if (bf::exists(metaFile2))
         deleteMetaFile(metaFile2);
-    
+    // since we don't implement mkdir(), assume the caller did that and
+    // create any necessary parent dirs for filename2
+    try
+    {
+        bf::create_directories(metaFile2.parent_path());
+    }
+    catch(bf::filesystem_error &e)
+    {
+        logger->log(LOG_CRIT, "IOCoordinator::copyFile(): failed to create directory %s.  Got %s", 
+            metaFile2.parent_path().string().c_str(), strerror_r(e.code().value(), errbuf, 80));
+        errno = e.code().value();
+        return -1;
+    }
+
     vector<string> newJournalEntries;
     ScopedReadLock lock(this, filename1);
     MetadataFile meta1(metaFile1);
     MetadataFile meta2(metaFile2);
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
     
-    int err;
-    char errbuf[80];
     // TODO.  I dislike large try-catch blocks, and large loops.  Maybe a little refactoring is in order.
     try 
     {

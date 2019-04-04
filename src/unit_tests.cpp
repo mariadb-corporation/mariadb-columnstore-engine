@@ -766,23 +766,18 @@ bool copytask()
         copy it
         verify it exists
     */
-    const char *filename = "copytest1";
-    ::unlink(filename);
-    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
-    assert(fd > 0);
-    scoped_closer f(fd);
-    int err = ::write(fd, "testjunk", 8);
-    assert(err == 8);
+    const char *source = "dummy1";
+    const char *dest = "dummy2";
+    MetadataFile meta1(source);
     
     uint8_t buf[1024];
     copy_cmd *cmd = (copy_cmd *) buf;
     cmd->opcode = COPY;
-    cmd->file1.flen = strlen(filename);
-    strncpy(cmd->file1.filename, filename, cmd->file1.flen);
-    const char *filename2 = "copytest2";
+    cmd->file1.flen = strlen(source);
+    strncpy(cmd->file1.filename, source, cmd->file1.flen);
     f_name *file2 = (f_name *) &cmd->file1.filename[cmd->file1.flen];
-    file2->flen = strlen(filename2);
-    strncpy(file2->filename, filename2, file2->flen);
+    file2->flen = strlen(dest);
+    strncpy(file2->filename, dest, file2->flen);
     
     uint len = (uint64_t) &file2->filename[file2->flen] - (uint64_t) buf;
     ::write(sessionSock, buf, len);
@@ -790,7 +785,7 @@ bool copytask()
     c.run();
     
     // read the response
-    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
     assert(err == sizeof(sm_response));
     assert(resp->header.type == SM_MSG_START);
@@ -799,9 +794,12 @@ bool copytask()
     assert(resp->returnCode == 0);
     
     // verify copytest2 is there
-    assert(boost::filesystem::exists(filename2));
-    ::unlink(filename);
-    ::unlink(filename2);
+    MetadataFile meta2(dest, MetadataFile::no_create_t());
+    assert(meta2.exists());
+    
+    bf::path metaPath = IOCoordinator::get()->getMetadataPath();
+    bf::remove(metaPath/(string(source) + ".meta"));
+    bf::remove(metaPath/(string(dest) + ".meta"));
     cout << "copytask OK " << endl;
     return true;
 }
@@ -1295,7 +1293,7 @@ int main()
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
-    
+
     opentask();
     metadataUpdateTest();
     // requires 8K object size to test boundries
