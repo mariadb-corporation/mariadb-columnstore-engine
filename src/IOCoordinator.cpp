@@ -568,26 +568,130 @@ int IOCoordinator::unlink(const char *path)
         return -1;
     }
     return 0;
-
-/*
-    int ret = 0;
-    bf::path p(path);
-
-    try
-    {
-        bf::remove_all(path);
-    }
-    catch(bf::filesystem_error &e)
-    {
-        errno = e.code().value();
-        ret = -1;
-    }
-    return ret;
-*/
 }
 
+// a helper to de-uglify error handling in copyFile
+struct CFException
+{
+    CFException(int err, const string &logEntry) : l_errno(err), entry(logEntry) { }
+    int l_errno;
+    string entry;
+};
+    
 int IOCoordinator::copyFile(const char *filename1, const char *filename2)
 {
+    /*
+        if filename2 exists, delete it
+        if filename1 does not exist return ENOENT
+        if filename1 is not a meta file return EINVAL
+        
+        get a new metadata object
+        get a read lock on filename1
+        
+        for every object in filename1
+            get a new key for the object
+            tell cloudstorage to copy obj1 to obj2
+                if it errors out b/c obj1 doesn't exist
+                    upload it with the new name from the cache
+            copy the journal file if any
+            add the new key to the new metadata
+        
+        on error, delete all of the newly created objects
+        
+        write the new metadata object
+    */
+    
+    CloudStorage *cs = CloudStorage::get();
+    Synchronizer *sync = Synchronizer::get();
+    bf::path metaFile1 = metaPath/(string(filename1) + ".meta");
+    bf::path metaFile2 = metaPath/(string(filename2) + ".meta");
+    
+    if (bf::exists(metaFile2))
+        deleteMetaFile(metaFile2);
+    
+    vector<string> newJournalEntries;
+    ScopedReadLock lock(this, filename1);
+    MetadataFile meta1(metaFile1);
+    MetadataFile meta2(metaFile2);
+    vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
+    
+    int err;
+    char errbuf[80];
+    // TODO.  I dislike large try-catch blocks, and large loops.  Maybe a little refactoring is in order.
+    try 
+    {
+        for (const auto &object : objects)
+        {
+            bf::path journalFile = journalPath/(object.key + ".journal");
+            metadataObject newObj = meta2.addMetadataObject(filename2, object.length);
+            assert(newObj.offset == object.offset);
+            err = cs->copyObject(object.key, newObj.key);
+            if (err)
+            {
+                if (errno == ENOENT)
+                {
+                    // it's not in cloudstorage, see if it's in the cache
+                    bf::path cachedObjPath = cachePath/object.key;
+                    bool objExists = bf::exists(cachedObjPath);
+                    if (!objExists)
+                        throw CFException(ENOENT, string("IOCoordinator::copyFile(): source = ") + filename1 + 
+                            ", dest = " + filename2 + ".  Object " + object.key + " does not exist in either "
+                            "cloud storage or the cache!");
+
+                    // put the copy in cloudstorage
+                    err = cs->putObject(cachedObjPath.string(), newObj.key);
+                    if (err)
+                        throw CFException(errno, string("IOCoordinator::copyFile(): source = ") + filename1 + 
+                            ", dest = " + filename2 + ".  Got an error uploading object " + object.key + ": " +
+                            strerror_r(errno, errbuf, 80));
+                }
+                else      // the problem was something other than it not existing in cloud storage
+                    throw CFException(errno, string("IOCoordinator::copyFile(): source = ") + filename1 + 
+                        ", dest = " + filename2 + ".  Got an error copying object " + object.key + ": " +
+                        strerror_r(errno, errbuf, 80));
+            }
+            
+            // if there's a journal file for this object, make a copy
+            if (bf::exists(journalFile))
+            {
+                bf::path newJournalFile = journalPath/(newObj.key + ".journal");
+                try 
+                {
+                    bf::copy_file(journalFile, newJournalFile);
+                    cache->newJournalEntry(bf::file_size(newJournalFile));
+                    newJournalEntries.push_back(newObj.key);
+                }
+                catch (bf::filesystem_error &e)
+                {
+                    throw CFException(e.code().value(), string("IOCoordinator::copyFile(): source = ") + filename1 + 
+                        ", dest = " + filename2 + ".  Got an error copying " + journalFile.string() + ": " +
+                        strerror_r(e.code().value(), errbuf, 80));
+                }
+            }
+        }
+    }
+    catch (CFException &e)
+    {
+        logger->log(LOG_CRIT, e.entry.c_str());
+        for (const auto &newObject : meta2.metadataRead(0, meta2.getLength()))
+            cs->deleteObject(newObject.key);
+        for (auto &jEntry : newJournalEntries)
+        {
+            bf::path fullJournalPath = journalPath/(jEntry + ".journal");
+            cache->deletedJournal(bf::file_size(fullJournalPath));
+            bf::remove(fullJournalPath);
+        }
+        errno = e.l_errno;
+        return -1;
+    }
+    lock.unlock();
+    
+    meta2.writeMetadata(filename2);
+    for (auto &jEntry : newJournalEntries)
+        sync->newJournalEntry(jEntry);
+    return 0;
+
+#if 0
     SMLogging* logger = SMLogging::get();
     int err = 0, l_errno;
     try {
@@ -605,6 +709,7 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
         l_errno = EIO;
     }
     return err;
+#endif
 }
 
 const bf::path &IOCoordinator::getCachePath() const
