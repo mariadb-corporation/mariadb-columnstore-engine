@@ -705,7 +705,7 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     }
     lock.unlock();
     
-    meta2.writeMetadata(filename2);
+    replicator->updateMetadata(filename2, meta2);
     for (auto &jEntry : newJournalEntries)
         sync->newJournalEntry(jEntry);
     return 0;
