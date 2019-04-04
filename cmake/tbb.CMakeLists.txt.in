@@ -5,7 +5,7 @@ include(ExternalProject)
 ExternalProject_Add(tbb_download
   SOURCE_DIR @CMAKE_CURRENT_BINARY_DIR@/tbb
   GIT_REPOSITORY https://github.com/01org/tbb.git
-  GIT_TAG tbb_4.4 GIT_SHALLOW TRUE
+  GIT_TAG tbb_4.4
   UPDATE_COMMAND ""
   PATCH_COMMAND ""
   CONFIGURE_COMMAND ""
