@@ -47,8 +47,17 @@ bool StatTask::run()
     #ifdef SM_TRACE
     logger->log(LOG_DEBUG,"stat %s.",cmd->filename);
     #endif
-    
-    int err = ioc->stat(cmd->filename, (struct stat *) resp->payload);
+    int err;
+    try
+    {
+        err = ioc->stat(cmd->filename, (struct stat *) resp->payload);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "StatTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
 
     resp->returnCode = err;
     uint payloadLen;

@@ -77,7 +77,15 @@ bool ListDirectoryTask::run()
     #endif
     
     vector<string> listing;
-    err = ioc->listDirectory(cmd->path, &listing);
+    try {
+        err = ioc->listDirectory(cmd->path, &listing);
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_DEBUG, "ListDirectoryTask: caught '%s'", e.what());
+        errno = EIO;
+        err = -1;
+    }
     if (err)
     {
         handleError("ListDirectory", errno);
