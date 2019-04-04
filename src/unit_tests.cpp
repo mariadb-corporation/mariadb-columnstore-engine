@@ -1022,6 +1022,7 @@ bool syncTest1()
     
     // make the journal again, call sync->newJournalObject()
     makeTestJournal((journalPath / (newKey + ".journal")).string().c_str());
+    cache->newJournalEntry(bf::file_size(journalPath / (newKey + ".journal")));
     sync->newJournalEntry(newKey);
     sleep(1);
     
@@ -1284,6 +1285,78 @@ void IOCUnlink()
     cout << "IOC unlink test OK" << endl;
 }
 
+void IOCCopyFile1()
+{
+    /*
+        Make our usual test files
+            with metadata in a subdir
+            with object in cloud storage
+        call ioc::copyFile()
+            with dest in a different subdir
+        verify the contents
+    */
+    IOCoordinator *ioc = IOCoordinator::get();
+    Cache *cache = Cache::get();
+    CloudStorage *cs = CloudStorage::get();
+    LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
+    if (!ls)
+    {
+        cout << "IOCCopyFile1 requires local storage at the moment" << endl;
+        return;
+    }
+    
+    bf::path metaPath = ioc->getMetadataPath();
+    bf::path csPath = ls->getPrefix();
+    bf::path journalPath = ioc->getJournalPath();
+    bf::path sourcePath = metaPath/"copyfile1"/"source.meta";
+    bf::path destPath = metaPath/"copyfile2"/"dest.meta";
+    const char *l_sourceFile = "copyfile1/source";
+    const char *l_destFile = "copyfile2/dest";
+    
+    cache->reset();
+    
+    bf::create_directories(sourcePath.parent_path());
+    makeTestMetadata(sourcePath.string().c_str());
+    makeTestObject((csPath/testObjKey).string().c_str());
+    makeTestJournal((journalPath/(string(testObjKey) + ".journal")).string().c_str());
+    cache->newJournalEntry(bf::file_size(journalPath/(string(testObjKey) + ".journal")));
+    
+    int err = ioc->copyFile("copyfile1/source", "copyfile2/dest");
+    assert(!err);
+    uint8_t buf1[8192], buf2[8192];
+    err = ioc->read(l_sourceFile, buf1, 0, 8192);
+    assert(err == 8192);
+    err = ioc->read(l_destFile, buf2, 0, 8192);
+    assert(err == 8192);
+    assert(memcmp(buf1, buf2, 8192) == 0);
+    
+    ioc->unlink("copyfile1");
+    ioc->unlink("copyfile2");
+    assert(cache->getCurrentCacheSize() == 0);
+    cout << "IOC copy file 1 OK" << endl;
+}
+
+void IOCCopyFile2()
+{
+    // call IOC::copyFile() with non-existant file
+}
+
+void IOCCopyFile3()
+{
+    /*
+        Make our usual test files
+            with object in the cache not in CS
+        call ioc::copyFile()
+        verify dest file exists
+    */
+}
+
+void IOCCopyFile()
+{
+    IOCCopyFile1();
+    IOCCopyFile2();
+    IOCCopyFile3();
+}
 
 int main()
 {
@@ -1293,7 +1366,7 @@ int main()
     makeConnection();
     cout << "connected" << endl;
     scoped_closer sc1(serverSock), sc2(sessionSock), sc3(clientSock);
-
+    
     opentask();
     metadataUpdateTest();
     // requires 8K object size to test boundries
@@ -1329,6 +1402,7 @@ int main()
     IOCReadTest1();
     IOCTruncate();
     IOCUnlink();
+    IOCCopyFile();
 
     return 0;
 }

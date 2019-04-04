@@ -303,12 +303,14 @@ void Cache::newJournalEntry(size_t size)
 void Cache::deletedJournal(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
+    assert(currentCacheSize >= size);
     currentCacheSize -= size;
 }
 
 void Cache::deletedObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
+    assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());
     assert(doNotEvict.find(mit->lit) == doNotEvict.end());
