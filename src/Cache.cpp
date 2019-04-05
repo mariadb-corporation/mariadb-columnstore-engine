@@ -387,8 +387,8 @@ void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
     //assert(it != m_lru.end());
     if (it == m_lru.end())
     {
-        logger->log(LOG_ERR, "Cache: was told to rename %s, but it does not exist", oldKey.string().c_str());
-        assert(0);
+        logger->log(LOG_WARNING, "Cache: was told to rename %s, but it is not in the cache", oldKey.c_str());
+        return;
     }
     
     auto lit = it->lit;

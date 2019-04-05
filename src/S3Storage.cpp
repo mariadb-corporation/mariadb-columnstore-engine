@@ -147,16 +147,16 @@ int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *
     
     do {
         err = ms3_get(creds, bucket.c_str(), sourceKey.c_str(), &_data, &len);
-        if (err)
+        if (err && retryable_error(err))
         {
-            logger->log(LOG_CRIT, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.  Retrying...", 
+            logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.  Retrying...", 
                 s3err_msgs[err], bucket.c_str(), sourceKey.c_str());
             sleep(5);
         }
     } while (err && retryable_error(err));
     if (err)
     {
-        logger->log(LOG_CRIT, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.", 
+        logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.", 
             s3err_msgs[err], bucket.c_str(), sourceKey.c_str());
         data->reset();
         errno = s3err_to_errno[err];
@@ -200,7 +200,7 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
         if (err < 0)
         {
             int l_errno = errno;
-            logger->log(LOG_ERR, "S3Storage::putObject(): Failed to read %s @ position %s, got %s", sourceFile.c_str(),
+            logger->log(LOG_ERR, "S3Storage::putObject(): Failed to read %s @ position %ld, got %s", sourceFile.c_str(),
                 count, strerror_r(l_errno, buf, 80));
             errno = l_errno;
             return -1;
@@ -208,7 +208,7 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
         else if (err == 0)
         {
             // this shouldn't happen, we just checked the size
-            logger->log(LOG_ERR, "S3Storage::putObject(): Got early EOF reading %s @ position %s", sourceFile.c_str(),
+            logger->log(LOG_ERR, "S3Storage::putObject(): Got early EOF reading %s @ position %ld", sourceFile.c_str(),
                 count);
             errno = ENODATA;   // is there a better errno for early eof?
             return -1;
@@ -227,16 +227,16 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     
     do {
         s3err = ms3_put(creds, bucket.c_str(), destKey.c_str(), data.get(), len);
-        if (s3err)
+        if (s3err && retryable_error(s3err))
         {
-            logger->log(LOG_CRIT, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s."
+            logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s."
                 "  Retrying...", s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
             sleep(5);
         }
     } while (s3err && retryable_error(s3err));
     if (s3err)
     {
-        logger->log(LOG_CRIT, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s.",
+        logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s.",
             s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
         errno = s3err_to_errno[s3err];
         return -1;
@@ -252,7 +252,7 @@ void S3Storage::deleteObject(const string &key)
         
     do {
         s3err = ms3_delete(creds, bucket.c_str(), key.c_str());
-        if (s3err && s3err != MS3_ERR_NOT_FOUND)
+        if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
             logger->log(LOG_CRIT, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.  Retrying...", 
                 s3err_msgs[s3err], bucket.c_str(), key.c_str());
@@ -287,7 +287,7 @@ int S3Storage::exists(const string &key, bool *out)
     
     do {
         s3err = ms3_status(creds, bucket.c_str(), key.c_str(), &status);
-        if (s3err && s3err != MS3_ERR_NOT_FOUND)
+        if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
             logger->log(LOG_CRIT, "S3Storage::exists(): failed to HEAD, got '%s'.  bucket = %s, key = %s.  Retrying...",
                 s3err_msgs[s3err], bucket.c_str(), key.c_str());

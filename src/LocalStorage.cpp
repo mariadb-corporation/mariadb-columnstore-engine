@@ -74,12 +74,15 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
 {
     bf::path source = prefix / sourceKey;
     const char *c_source = source.string().c_str();
-    char buf[80];
+    //char buf[80];
+    int l_errno;
     
     int fd = ::open(c_source, O_RDONLY);
     if (fd < 0)
     {
-        logger->log(LOG_CRIT, "LocalStorage::getObject() failed to open %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+        l_errno = errno;
+        //logger->log(LOG_WARNING, "LocalStorage::getObject() failed to open %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+        errno = l_errno;
         return fd;
     }
     
@@ -91,8 +94,10 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
         int err = ::read(fd, &(*data)[count], l_size - count);
         if (err < 0)
         {
-            logger->log(LOG_CRIT, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));
+            l_errno = errno;
+            //logger->log(LOG_WARNING, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));
             close(fd);
+            errno = l_errno;
             return err;
         }
         count += err;
@@ -112,12 +117,15 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
 {
     bf::path destPath = prefix / dest;
     const char *c_dest = destPath.string().c_str();
-    char buf[80];
+    //char buf[80];
+    int l_errno;
     
     int fd = ::open(c_dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
     {
-        logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to open %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+        l_errno = errno;
+        //logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to open %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+        errno = l_errno;
         return fd;
     }
 
@@ -128,8 +136,10 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
         err = ::write(fd, &data[count], len - count);
         if (err < 0)
         {
-            logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
+            l_errno = errno;
+            //logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
             close(fd);
+            errno = l_errno;
             return err;
         }
         count += err;

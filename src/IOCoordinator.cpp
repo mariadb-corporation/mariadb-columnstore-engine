@@ -579,16 +579,15 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
 
     Synchronizer *synchronizer = Synchronizer::get();
 
-    
-    // this is kind of ugly.  We need to lock on file relative to metaPath
-    string lockKey = file.string().substr(metaPath.string().length() + 1);
-    cout << "Deletemetafile locking on " << lockKey << endl;
-    ScopedWriteLock lock(this, lockKey);
-    
+    // this is kind of ugly.  We need to lock on 'file' relative to metaPath, and without the .meta extension
+    string pita = file.string();
+    pita = pita.substr(metaPath.string().length() + 1);
+    pita = pita.substr(0, pita.find_last_of('.'));
+    ScopedWriteLock lock(this, pita);
+        
     MetadataFile meta(file);
     replicator->remove(file);
-    lock.unlock();
-    
+        
     vector<metadataObject> objects = meta.metadataRead(0, meta.getLength());
     vector<string> deletedObjects;
     bf::path journal, obj;
@@ -1045,6 +1044,7 @@ void IOCoordinator::readLock(const string &filename)
 {
     boost::unique_lock<boost::mutex> s(lockMutex);
 
+    //cout << "read-locking " << filename << endl;
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();
@@ -1068,6 +1068,7 @@ void IOCoordinator::writeLock(const string &filename)
 {
     boost::unique_lock<boost::mutex> s(lockMutex);
     
+    //cout << "write-locking " << filename << endl;
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();

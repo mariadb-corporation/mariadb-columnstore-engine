@@ -1329,8 +1329,8 @@ void IOCCopyFile1()
     assert(err == 8192);
     assert(memcmp(buf1, buf2, 8192) == 0);
     
-    ioc->unlink("copyfile1");
-    ioc->unlink("copyfile2");
+    assert(ioc->unlink("copyfile1") == 0);
+    assert(ioc->unlink("copyfile2") == 0);
     assert(cache->getCurrentCacheSize() == 0);
     cout << "IOC copy file 1 OK" << endl;
 }
@@ -1390,8 +1390,8 @@ void IOCCopyFile3()
     assert(err == 8192);
     assert(memcmp(buf1, buf2, 8192) == 0);
     
-    ioc->unlink("copyfile3");
-    ioc->unlink("copyfile4");
+    assert(ioc->unlink("copyfile3") == 0);
+    assert(ioc->unlink("copyfile4") == 0);
     assert(cache->getCurrentCacheSize() == 0);
     cout << "IOC copy file 3 OK" << endl;
 }

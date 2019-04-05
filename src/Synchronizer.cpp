@@ -346,11 +346,29 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
         }
         err = ioc->mergeJournalInMem(data, &size, journalName.c_str());
-        assert(!err);
+        if (err)
+        {   
+            if (!bf::exists(journalName))
+                logger->log(LOG_DEBUG, "synchronizeWithJournal(): journal %s was deleted mid-operation, check locking",
+                    journalName.c_str());
+            else
+                logger->log(LOG_ERR, "synchronizeWithJournal(): unexpected error merging journal for %s", key.c_str());
+            return;
+        }
     }
     else
+    {
         data = ioc->mergeJournal(oldCachePath.string().c_str(), journalName.c_str(), 0, &size);
-    assert(data);
+        if (!data)
+        {
+            if (!bf::exists(journalName))
+                logger->log(LOG_DEBUG, "synchronizeWithJournal(): journal %s was deleted mid-operation, check locking",
+                    journalName.c_str());
+            else
+                logger->log(LOG_ERR, "synchronizeWithJournal(): unexpected error merging journal for %s", key.c_str());
+            return;
+        }
+    }
     
     // get a new key for the resolved version & upload it
     string newKey = MetadataFile::getNewKeyFromOldKey(key, size);
@@ -400,7 +418,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     replicator->updateMetadata(sourceFile.c_str(), md);
 
     rename(key, newKey);
-    ioc->renameObject(key, newKey);   
+    ioc->renameObject(key, newKey);
     s.unlock();
     
     // delete the old object & journal file
