@@ -578,7 +578,12 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     */
 
     Synchronizer *synchronizer = Synchronizer::get();
-    ScopedWriteLock lock(this, file.string());
+
+    
+    // this is kind of ugly.  We need to lock on file relative to metaPath
+    string lockKey = file.string().substr(metaPath.string().length() + 1);
+    cout << "Deletemetafile locking on " << lockKey << endl;
+    ScopedWriteLock lock(this, lockKey);
     
     MetadataFile meta(file);
     replicator->remove(file);
@@ -809,26 +814,6 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
     for (auto &jEntry : newJournalEntries)
         sync->newJournalEntry(jEntry);
     return 0;
-
-#if 0
-    SMLogging* logger = SMLogging::get();
-    int err = 0, l_errno;
-    try {
-        bf::copy_file(filename1, filename2);
-    }
-    catch (bf::filesystem_error &e) {
-        err = -1;
-        l_errno = e.code().value();   // why not.
-        // eh, not going to translate all of boost's errors into our errors for this.
-        // log the error
-        logger->log(LOG_ERR,"IOCoordinator::copy(): got %s",e.what());
-    }
-    catch (...) {
-        err = -1;
-        l_errno = EIO;
-    }
-    return err;
-#endif
 }
 
 const bf::path &IOCoordinator::getCachePath() const
@@ -1003,7 +988,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     ss << headertxt.get();
     boost::property_tree::ptree header;
     boost::property_tree::json_parser::read_json(ss, header);
-    assert(header.get<int>("version") == "1");
+    assert(header.get<int>("version") == 1);
     size_t maxJournalOffset = header.get<size_t>("max_offset"); 
     
     if (maxJournalOffset > *len)

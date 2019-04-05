@@ -1367,10 +1367,10 @@ void IOCCopyFile3()
     bf::path metaPath = ioc->getMetadataPath();
     bf::path journalPath = ioc->getJournalPath();
     bf::path cachePath = ioc->getCachePath();
-    bf::path sourcePath = metaPath/"copyfile1"/"source.meta";
-    bf::path destPath = metaPath/"copyfile2"/"dest.meta";
-    const char *l_sourceFile = "copyfile1/source";
-    const char *l_destFile = "copyfile2/dest";
+    bf::path sourcePath = metaPath/"copyfile3"/"source.meta";
+    bf::path destPath = metaPath/"copyfile4"/"dest.meta";
+    const char *l_sourceFile = "copyfile3/source";
+    const char *l_destFile = "copyfile4/dest";
     
     cache->reset();
     
@@ -1381,7 +1381,7 @@ void IOCCopyFile3()
     cache->newObject(testObjKey, bf::file_size(cachePath/testObjKey));
     cache->newJournalEntry(bf::file_size(journalPath/(string(testObjKey) + ".journal")));
     
-    int err = ioc->copyFile("copyfile1/source", "copyfile2/dest");
+    int err = ioc->copyFile("copyfile3/source", "copyfile4/dest");
     assert(!err);
     uint8_t buf1[8192], buf2[8192];
     err = ioc->read(l_sourceFile, buf1, 0, 8192);
@@ -1390,8 +1390,8 @@ void IOCCopyFile3()
     assert(err == 8192);
     assert(memcmp(buf1, buf2, 8192) == 0);
     
-    ioc->unlink("copyfile1");
-    ioc->unlink("copyfile2");
+    ioc->unlink("copyfile3");
+    ioc->unlink("copyfile4");
     assert(cache->getCurrentCacheSize() == 0);
     cout << "IOC copy file 3 OK" << endl;
 }

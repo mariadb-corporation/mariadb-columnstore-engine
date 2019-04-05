@@ -229,13 +229,17 @@ void Synchronizer::process(list<string>::iterator name, bool callerHoldsLock)
         mutex.unlock();
     
     bool success = false;
-    
-    // in testing, this seems to only run once when an exception is caught.  Not obvious why yet....  ??
     while (!success)
-    {
+    {    
         try {
-            /* Exceptions should only happen b/c of cloud service errors.  Rather than retry here endlessly,
-               probably a better idea to have cloudstorage classes do the retrying */
+            // Exceptions should only happen b/c of cloud service errors that can't be retried.
+            // This code is intentionally racy to avoid having to grab big locks.
+            // In particular, it's possible that by the time synchronize() runs,
+            // the file to sync has already been deleted.  When one of these functions
+            // encounters a state that doesn't make sense, such as being told to upload a file
+            // that doesn't exist, it will return silently under the assumption that
+            // things are working as they should upstream, and a syncDelete() call will be coming
+            // shortly.
             if (pending->opFlags & DELETE)
                 synchronizeDelete(sourceFile, name);
             else if (pending->opFlags & JOURNAL)
@@ -283,23 +287,25 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     if (exists)
         return;
 
-    // can this run after a delete op?
     exists = bf::exists(cachePath / key);
     if (!exists)
     {
-        logger->log(LOG_WARNING, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
+        logger->log(LOG_DEBUG, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
         return;
     }
 
     err = cs->putObject((cachePath / key).string(), key);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
-    replicator->remove(key.c_str(), Replicator::NO_LOCAL);
+    replicator->remove((cachePath/key).string().c_str(), Replicator::NO_LOCAL);
 }
 
 void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::iterator &it)
 {
-    ScopedWriteLock s(ioc, sourceFile);
+    /* Don't think it's necessary to lock here.  Sync is being told to delete a file on cloud storage.
+       Presumably the caller has removed it from metadata & the cache, so it is no longer referencable.  
+    */
+    //ScopedWriteLock s(ioc, sourceFile);
     cs->deleteObject(*it);
 }
 
@@ -313,8 +319,9 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     if (!bf::exists(journalName))
     {
-        logger->log(LOG_WARNING, "synchronizeWithJournal(): no journal file found for %s", key.c_str());
-        // I don't think this should happen, maybe throw a logic_error here
+        logger->log(LOG_DEBUG, "synchronizeWithJournal(): no journal file found for %s", key.c_str());
+        // I don't think this should happen, maybe throw a logic_error here.
+        // Revision ^^.  It can happen if the object was deleted after the op was latched but before it runs.
         return;
     }
 
@@ -330,7 +337,14 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     {
         err = cs->getObject(key, &data, &size);
         if (err)
+        {
+            if (errno == ENOENT)
+            {
+                logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in cache nor in cloud storage", key.c_str());
+                return;
+            }
             throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
+        }
         err = ioc->mergeJournalInMem(data, &size, journalName.c_str());
         assert(!err);
     }
@@ -342,7 +356,12 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     string newKey = MetadataFile::getNewKeyFromOldKey(key, size);
     err = cs->putObject(data, size, newKey);
     if (err)
+    {
+        // try to delete it in cloud storage... unlikely it is there in the first place, and if it is
+        // this probably won't work
+        cs->deleteObject(newKey);    
         throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(errno, buf, 80));
+    }
     
     // if the object was cached...
     //   write the new data to disk,
@@ -364,13 +383,15 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         {
             err = ::write(newFD, data.get(), size - count);
             if (err < 0)
+            {
+                ::unlink(newCachePath.string().c_str());
                 throw runtime_error(string("Synchronizer: Failed to write to a new object in local storage!  Got ") 
                   + strerror_r(errno, buf, 80));
+            }
             count += err;
         }
-        
         cache->rename(key, newKey, size - bf::file_size(oldCachePath));
-        replicator->remove(key.c_str());   // should this be the file to remove, or the key?
+        replicator->remove(oldCachePath.string().c_str());
     }
     
     // update the metadata for the source file

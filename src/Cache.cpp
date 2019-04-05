@@ -384,7 +384,12 @@ void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
     auto it = m_lru.find(oldKey);
-    assert(it != m_lru.end());
+    //assert(it != m_lru.end());
+    if (it == m_lru.end())
+    {
+        logger->log(LOG_ERR, "Cache: was told to rename %s, but it does not exist", oldKey.string().c_str());
+        assert(0);
+    }
     
     auto lit = it->lit;
     m_lru.erase(it);

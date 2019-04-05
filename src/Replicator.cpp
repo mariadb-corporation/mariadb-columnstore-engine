@@ -187,6 +187,9 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
 {
     int ret = 0;
     
+    if (flags & NO_LOCAL)
+        return 0;  // not implemented yet
+        
     try
     {
         boost::filesystem::remove_all(filename);
@@ -202,6 +205,9 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
 
 int Replicator::remove(const char *filename, Flags flags)
 {
+    if (flags & NO_LOCAL)
+        return 0;   // not implemented yet
+        
     boost::filesystem::path p(filename);
     return remove(p);
 }
