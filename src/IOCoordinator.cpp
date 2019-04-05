@@ -895,15 +895,15 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     ScopedCloser s2(journalFD);
     
     // grab the journal header, make sure the version is 1, and get the max offset
+
     boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);
     stringstream ss;
     ss << headertxt.get();
     boost::property_tree::ptree header;
     boost::property_tree::json_parser::read_json(ss, header);
-    assert(header.get<string>("version") == "1");
-    string stmp = header.get<string>("max_offset");
-    size_t maxJournalOffset = strtoul(stmp.c_str(), NULL, 0);
-    
+    assert(header.get<int>("version") == 1);
+    size_t maxJournalOffset = header.get<size_t>("max_offset");
+
     struct stat objStat;
     fstat(objFD, &objStat);
     
@@ -933,9 +933,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         {
             // at the EOF of the object.  The journal may contain entries that append to the data,
             // so 0-fill the remaining bytes.
-            #ifdef DEBUG
             memset(&ret[count], 0, *len-count);
-            #endif
             break;
         }
         count += err;
@@ -1005,14 +1003,14 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     ss << headertxt.get();
     boost::property_tree::ptree header;
     boost::property_tree::json_parser::read_json(ss, header);
-    assert(header.get<string>("version") == "1");
-    string stmp = header.get<string>("max_offset");
-    size_t maxJournalOffset = strtoul(stmp.c_str(), NULL, 0);    
+    assert(header.get<int>("version") == "1");
+    size_t maxJournalOffset = header.get<size_t>("max_offset"); 
     
     if (maxJournalOffset > *len)
     {
         uint8_t *newbuf = new uint8_t[maxJournalOffset];
         memcpy(newbuf, objData.get(), *len);
+        memset(&newbuf[*len], 0, maxJournalOffset - *len);
         objData.reset(newbuf);
         *len = maxJournalOffset;
     }
