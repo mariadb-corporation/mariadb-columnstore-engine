@@ -893,10 +893,10 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     if (*len == 0)
         // read to the end of the file
-        *len = max(maxJournalOffset, (size_t) objStat.st_size) - offset;
+        *len = max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset;
     else
         // make sure len is within the bounds of the data
-        *len = min(*len, (max(maxJournalOffset, (size_t) objStat.st_size) - offset));
+        *len = min(*len, (max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset));
     ret.reset(new uint8_t[*len]);
     
     // read the object into memory
@@ -992,11 +992,11 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     
     if (maxJournalOffset > *len)
     {
-        uint8_t *newbuf = new uint8_t[maxJournalOffset];
+        uint8_t *newbuf = new uint8_t[maxJournalOffset + 1];
         memcpy(newbuf, objData.get(), *len);
-        memset(&newbuf[*len], 0, maxJournalOffset - *len);
+        memset(&newbuf[*len], 0, maxJournalOffset - *len + 1);
         objData.reset(newbuf);
-        *len = maxJournalOffset;
+        *len = maxJournalOffset + 1;
     }
     
     // start processing the entries
