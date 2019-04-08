@@ -287,6 +287,43 @@ void metadataJournalTest(std::size_t size, off_t offset)
     assert(resp->returnCode == (int) size);
 }
 
+void metadataJournalTest_append(std::size_t size)
+{
+    // make an empty file to write to
+    const char *filename = "metadataJournalTest";
+    uint8_t buf[(sizeof(write_cmd)+std::strlen(filename)+size)];
+    uint64_t *data;
+
+    sm_msg_header *hdr = (sm_msg_header *) buf;
+    append_cmd *cmd = (append_cmd *) &hdr[1];
+    cmd->opcode = APPEND;
+    cmd->count = size;
+    cmd->flen = std::strlen(filename);
+    memcpy(&cmd->filename, filename, cmd->flen);
+    data = (uint64_t *) &cmd->filename[cmd->flen];
+    int count = 0;
+    for (uint64_t i = 0; i < (size/sizeof(uint64_t)); i++)
+    {
+        data[i] = i;
+        count++;
+    }
+    hdr->type = SM_MSG_START;
+    hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
+    AppendTask a(clientSock, hdr->payloadLen);
+    int err = ::write(sessionSock, cmd, hdr->payloadLen);
+
+    a.run();
+
+    // verify response
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(*resp));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == 4);
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == (int) size);
+}
+
 void metadataJournalTestCleanup(std::size_t size)
 {
     Config* config = Config::get();
@@ -1424,8 +1461,15 @@ int main()
     //Case 4 write starts object1 ends object3
     metadataJournalTest((10*sizeKB),(7*sizeKB));
     //Case 5 write starts in new object at offset >0
-    //TODO add zero padding to writes in this scenario
-    //metadataJournalTest((8*sizeKB),4*sizeKB);
+
+    //append test
+    // first one appends file to end of 8K object
+    metadataJournalTest_append((7*sizeKB));
+    // this apppends that starts on new object
+    metadataJournalTest_append((7*sizeKB));
+    // this starts in one object and crosses into new object
+    metadataJournalTest_append((7*sizeKB));
+
 
     //writetask();
     //appendtask();
