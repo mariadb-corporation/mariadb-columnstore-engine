@@ -258,7 +258,9 @@ void Synchronizer::process(list<string>::iterator name)
             success = false;
             sleep(1);
             s.lock();
-            pendingOps[key] = pending;
+            auto inserted = pendingOps.insert(pair<string, boost::shared_ptr<PendingOps> >(key, pending));
+            if (!inserted.second)
+                inserted.first->second->opFlags |= pending->opFlags;
             opsInProgress.erase(key);
             makeJob(key);
             objNames.erase(name);
