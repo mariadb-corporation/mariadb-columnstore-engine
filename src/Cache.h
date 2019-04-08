@@ -110,7 +110,7 @@ class Cache : public boost::noncopyable
         DNE_t doNotEvict;
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
-        mutable boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
+        mutable boost::recursive_mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
 };
 
 

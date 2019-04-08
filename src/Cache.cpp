@@ -167,7 +167,7 @@ void Cache::read(const vector<string> &keys)
     fetch keys that do not exist
     after fetching, move all keys from do-not-evict to the back of the LRU
 */
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     vector<const string *> keysToFetch;
     
     uint i;
@@ -270,20 +270,20 @@ const bf::path & Cache::getJournalPath()
 void Cache::exists(const vector<string> &keys, vector<bool> *out) const
 {
     out->resize(keys.size());
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     for (uint i = 0; i < keys.size(); i++)
         (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
 bool Cache::exists(const string &key) const
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     return m_lru.find(key) != m_lru.end();
 }
 
 void Cache::newObject(const string &key, size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     assert(m_lru.find(key) == m_lru.end());
     _makeSpace(size);
     lru.push_back(key);
@@ -294,21 +294,21 @@ void Cache::newObject(const string &key, size_t size)
 
 void Cache::newJournalEntry(size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     _makeSpace(size);
     currentCacheSize += size;
 }
 
 void Cache::deletedJournal(size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     currentCacheSize -= size;
 }
 
 void Cache::deletedObject(const string &key, size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());
@@ -320,7 +320,7 @@ void Cache::deletedObject(const string &key, size_t size)
 
 void Cache::setMaxCacheSize(size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     if (size < maxCacheSize)
         _makeSpace(maxCacheSize - size);
     maxCacheSize = size;
@@ -328,7 +328,7 @@ void Cache::setMaxCacheSize(size_t size)
 
 void Cache::makeSpace(size_t size)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     _makeSpace(size);
 }
 
@@ -358,7 +358,8 @@ void Cache::_makeSpace(size_t size)
         int err = stat(cachedFile.string().c_str(), &statbuf);
         if (err)
         {
-            logger->log(LOG_WARNING, "Cache::makeSpace(): There seems to be a cached file that couldn't be stat'ed: %s", cachedFile.string().c_str());
+            logger->log(LOG_WARNING, "Cache::makeSpace(): There seems to be a cached file that couldn't be stat'ed: %s", 
+                cachedFile.string().c_str());
             ++it;
             continue;
         }
@@ -382,7 +383,7 @@ void Cache::_makeSpace(size_t size)
 
 void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     auto it = m_lru.find(oldKey);
     //assert(it != m_lru.end());
     if (it == m_lru.end())
@@ -405,7 +406,7 @@ size_t Cache::getCurrentCacheSize() const
 
 void Cache::reset()
 {
-    boost::unique_lock<boost::mutex> s(lru_mutex);
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     m_lru.clear();
     lru.clear();
     

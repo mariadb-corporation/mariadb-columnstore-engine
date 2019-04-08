@@ -59,12 +59,12 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
 add_dependencies(StorageManager ms3)
-target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex ${S3API_DEPS})
+target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
 add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
 add_dependencies(unit_tests ms3)
-target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex ${S3API_DEPS})
+target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
