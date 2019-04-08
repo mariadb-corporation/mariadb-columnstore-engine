@@ -39,7 +39,7 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
-        void process(std::list<std::string>::iterator key, bool callerHoldsLock=false);
+        void process(std::list<std::string>::iterator key);
         void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeWithJournal(const std::string &sourceFile, std::list<std::string>::iterator &it);
@@ -53,8 +53,8 @@ class Synchronizer : public boost::noncopyable
             int opFlags;
             bool finished;
             boost::condition condvar;
-            void wait(boost::mutex *);
-            void notify(boost::mutex *);
+            void wait(boost::recursive_mutex *);
+            void notify(boost::recursive_mutex *);
         };
         
         struct Job : public ThreadPool::Job
@@ -84,7 +84,7 @@ class Synchronizer : public boost::noncopyable
         
         boost::filesystem::path cachePath;
         boost::filesystem::path journalPath;
-        boost::mutex mutex;
+        boost::recursive_mutex mutex;
 };
 
 }
