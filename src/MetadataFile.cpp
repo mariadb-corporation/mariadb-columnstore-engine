@@ -221,11 +221,18 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     vector<metadataObject> ret;
     size_t foundLen = 0;
     
+    if (mObjects.size() == 0)
+        return ret;
+    
+    uint64_t lastOffset = mObjects.rbegin()->offset;
     auto i = mObjects.begin();
     // find the first object in range
+    // Note, the last object in mObjects may not be full, compare the last one against its maximum
+    // size rather than its current size.
     while (i != mObjects.end())
     {
-        if ((uint64_t) offset <= (i->offset + i->length - 1))
+        if ((uint64_t) offset <= (i->offset + i->length - 1) ||
+          (i->offset == lastOffset && ((uint64_t) offset <= i->offset + mpConfig->mObjectSize - 1)))
             break;
         ++i;
     }
