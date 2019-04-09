@@ -456,18 +456,8 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 isNull = false;
                 return !ret;
             }
-#if 0   
-                if (isNull)
-                return false;
 
-            const std::string& val1 = lop->getStrVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
-#endif
-	    // MCOL-1559
+            // MCOL-1559
 	    std::string val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
