@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -25,6 +26,7 @@
 #include "calpontsystemcatalog.h"
 #include "hasher.h"
 #include "tuplejoiner.h"
+#include "threadnaming.h"
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <string>
@@ -450,6 +452,7 @@ private:
         HJRunner(TupleHashJoinStep* hj) : HJ(hj) { }
         void operator()()
         {
+            utils::setThreadName("HJSBigSide");
             HJ->hjRunner();
         }
         TupleHashJoinStep* HJ;
@@ -459,6 +462,7 @@ private:
         SmallRunner(TupleHashJoinStep* hj, uint32_t i) : HJ(hj), index(i) { }
         void operator()()
         {
+            utils::setThreadName("HJSSmallSide");
             HJ->smallRunnerFcn(index);
         }
         TupleHashJoinStep* HJ;

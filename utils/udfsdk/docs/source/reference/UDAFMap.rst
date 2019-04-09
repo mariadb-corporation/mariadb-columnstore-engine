@@ -34,3 +34,24 @@ The UDAFMap is where we tell the system about our function. For Columnstore 1.2,
     return fm;
  }
 
+An alternative method added for 1.2 is to put the following in your .cpp file.
+replace "median" with the name of your function:
+
+::
+
+ class Add_median_ToUDAFMap
+ {
+ public:
+     Add_median_ToUDAFMap()
+     {
+         UDAFMap::getMap()["median"] = new median();
+     }
+ };
+
+ static Add_median_ToUDAFMap addToMap;
+
+This defines an object whose constructor adds the entry to the UDAFMap. The 
+static declaration instatiates an object at runtime, thus adding the entry
+at startup. 
+
+

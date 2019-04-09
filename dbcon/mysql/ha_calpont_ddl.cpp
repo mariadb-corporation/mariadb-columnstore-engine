@@ -39,7 +39,6 @@
 #include <tr1/unordered_set>
 #endif
 #include <utility>
-//#define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -49,6 +48,7 @@ using namespace std;
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
+#include "ha_mcs_sysvars.h"
 #include "idb_mysql.h"
 
 #include "ha_calpont_impl_if.h"
@@ -198,6 +198,10 @@ uint32_t convertDataType(int dataType)
             calpontDataType = CalpontSystemCatalog::USMALLINT;
             break;
 
+        case ddlpackage::DDL_UNSIGNED_MEDINT:
+            calpontDataType = CalpontSystemCatalog::UMEDINT;
+            break;
+
         case ddlpackage::DDL_UNSIGNED_INT:
             calpontDataType = CalpontSystemCatalog::UINT;
             break;
@@ -323,17 +327,29 @@ bool validateNextValue( int type, int64_t value )
 
         case ddlpackage::DDL_INT:
         case ddlpackage::DDL_INTEGER:
-        case ddlpackage::DDL_MEDINT:
         {
             if (value > MAX_INT)
                 validValue = false;
         }
         break;
 
+        case ddlpackage::DDL_MEDINT:
+        {
+            if (value > MAX_MEDINT)
+                validValue = false;
+        }
+        break;
+
         case ddlpackage::DDL_UNSIGNED_INT:
-        case ddlpackage::DDL_UNSIGNED_MEDINT:
         {
             if (static_cast<uint64_t>(value) > MAX_UINT)
+                validValue = false;
+        }
+        break;
+
+        case ddlpackage::DDL_UNSIGNED_MEDINT:
+        {
+            if (static_cast<uint64_t>(value) > MAX_UMEDINT)
                 validValue = false;
         }
         break;
@@ -654,7 +670,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 {
     SqlParser parser;
     THD* thd = current_thd;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ProcessDDLStatement: " << schema << "." << table << ":" << ddlStatement << endl;
 #endif
 
@@ -663,10 +679,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     IDBCompressInterface idbCompress;
     parser.Parse(ddlStatement.c_str());
 
-    if (!thd->infinidb_vtable.cal_conn_info)
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (parser.Good())
     {
@@ -1599,7 +1615,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                 }
                 else if (ddlpackage::AtaRenameColumn* renameColumnsPtr = dynamic_cast<AtaRenameColumn*>(actionList[i]))
                 {
-                    //cout << "Rename a column" << endl;
                     uint64_t startValue = 1;
                     bool autoIncre  = false;
                     //@Bug 3746 Handle compression type
@@ -1798,7 +1813,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         stmt.fSql = ddlStatement;
         stmt.fOwner = schema;
         stmt.fTableWithAutoi = isAnyAutoincreCol;
-        //cout << "Sending to DDLProc" << endl;
         ByteStream bytestream;
         bytestream << stmt.fSessionID;
         stmt.serialize(bytestream);
@@ -1887,30 +1901,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     return rc;
 }
 
-// Fails with `/` sign in table name
-pair<string, string> parseTableName(const string& tn)
-{
-    string db;
-    string tb;
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-#ifdef _MSC_VER
-    boost::char_separator<char> sep("\\");
-#else
-    boost::char_separator<char> sep("/");
-#endif
-    tokenizer tokens(tn, sep);
-    tokenizer::iterator tok_iter = tokens.begin();
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    db = *tok_iter;
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    tb = *tok_iter;
-    ++tok_iter;
-    idbassert(tok_iter == tokens.end());
-    return make_pair(db, tb);
-}
-
 }
 
 //
@@ -1988,7 +1978,7 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
 
 int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ha_calpont_impl_create_: " << name << endl;
 #endif
     THD* thd = current_thd;
@@ -2060,7 +2050,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
 
         if (isCreate)
         {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
             cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
 #endif
             return 0;
@@ -2091,7 +2081,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     {
         ci.isAlter = true;
         ci.alterTableState = cal_connection_info::ALTER_FIRST_RENAME;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
         cout << "ha_calpont_impl_create_: now in state ALTER_FIRST_RENAME" << endl;
 #endif
     }
@@ -2128,7 +2118,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         return 1;
     }
 
-    int compressiontype = thd->variables.infinidb_compression_type;
+    int compressiontype = get_compression_type(thd);
 
     if (compressiontype == 1) compressiontype = 2;
 
@@ -2140,7 +2130,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     }
 
     if ( compressiontype == MAX_INT )
-        compressiontype = thd->variables.infinidb_compression_type;
+        compressiontype = get_compression_type(thd);
     else if ( compressiontype < 0 )
     {
         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE);
@@ -2269,7 +2259,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         //Bug 1705 reset the flag if error occurs
         ci.alterTableState = cal_connection_info::NOT_ALTER;
         ci.isAlter = false;
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
         cout << "ha_calpont_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
     }
@@ -2279,7 +2269,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
 
 int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connection_info& ci)
 {
-#ifdef INFINIDB_DEBUG
+#ifdef MCS_DEBUG
     cout << "ha_calpont_impl_delete_table: " << db << name << endl;
 #endif
     THD* thd = current_thd;
@@ -2295,7 +2285,6 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
 
     std::string stmt(query);
     algorithm::to_upper(stmt);
-//	cout << "ha_calpont_impl_delete_table: " << schema.c_str() << "." << tbl.c_str() << " " << stmt.c_str() << endl;
     // @bug 4158 allow table name with 'restrict' in it (but not by itself)
     std::string::size_type fpos;
     fpos = stmt.rfind(" RESTRICT");
@@ -2334,7 +2323,6 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
     stmt += ";";
     int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 
-//	cout << "ProcessDDLStatement rc=" << rc << endl;
     if (rc != 0)
     {
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
@@ -2342,6 +2330,7 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
 
     return rc;
 }
+
 
 /**
   @brief
@@ -2395,16 +2384,57 @@ void decode_table_name(char *buf, const char *path, size_t pathLen)
     }
 }
 
+/**
+  @brief
+  Parses the path to extract both database and table names.
+
+  @details
+  Parses the path to extract both database
+  and table names. This f() assumes the path format
+  ./test/d$
+  and f() produces a pair of strings 'test' and 'd$'.
+  This f() looks for a '/' symbols only twice to allow '/'
+  symbol in table names. The f() supports international
+  glyphs in db or table names.
+
+  Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
+*/
+pair<string, string> parseTableName(const char *path)
+{
+    const char *db_pnt = NULL, *tbl_pnt = NULL, *path_cursor = path;
+    string db, tb;
+    while (*path_cursor != '/')
+    {
+        path_cursor++;
+    }
+    path_cursor++;
+    db_pnt = path_cursor;
+    while (*path_cursor != '/')
+    {
+        path_cursor++;
+    }
+    path_cursor++;
+    tbl_pnt = path_cursor;
+    db.assign(db_pnt, tbl_pnt - 1 - db_pnt);
+    tb.assign(tbl_pnt, path + strlen(path) - tbl_pnt);
+
+    return make_pair(db, tb);
+}
 int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
     string emsg;
 
+    // to and from are rewritten after decode_table_name()
+    // so use a copy of pntrs
+    const char* from_cpy = from;
+    const char* to_cpy = to;
+
     pair<string, string> fromPair;
     pair<string, string> toPair;
     string stmt;
 
-    //this is replcated DDL, treat it just like SSO
+    //this is replicated DDL, treat it just like SSO
     if (thd->slave_thread)
         return 0;
 
@@ -2418,16 +2448,18 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     }
 
     // MCOL-1855 Decode the table name if it contains encoded symbols.
-    // This approach fails when `/` is used in the paths.
-    size_t pathLen = strlen(from);
-    char pathCopy[pathLen];
-    decode_table_name(pathCopy, from, pathLen);
+    size_t pathLen = strlen(from_cpy);
+    char pathCopy[FN_REFLEN];
+    decode_table_name(pathCopy, from_cpy, pathLen);
     fromPair = parseTableName(const_cast<const char*>(pathCopy));
 
-    pathLen = strlen(to);
-    decode_table_name(pathCopy, to, pathLen);
+    pathLen = strlen(to_cpy);
+    decode_table_name(pathCopy, to_cpy, pathLen);
+
     toPair = parseTableName(const_cast<const char*>(pathCopy));
 
+    // TBD The next two blocks must be removed to allow different dbnames
+    // in RENAME statement.
     if (fromPair.first != toPair.first)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
@@ -2473,12 +2505,12 @@ extern "C"
         if ( thd->db.length )
             db = thd->db.str;
 
-        int compressiontype = thd->variables.infinidb_compression_type;
+        int compressiontype = get_compression_type(thd);
 
         if (compressiontype == 1) compressiontype = 2;
 
         if ( compressiontype == MAX_INT )
-            compressiontype = thd->variables.infinidb_compression_type;
+            compressiontype = get_compression_type(thd);
 
         //hdfs
         if ((compressiontype == 0) && (useHdfs))

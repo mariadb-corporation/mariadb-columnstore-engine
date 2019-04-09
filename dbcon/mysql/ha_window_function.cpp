@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -28,6 +28,7 @@ using namespace std;
 
 #include "idb_mysql.h"
 #include "ha_calpont_impl_if.h"
+#include "ha_mcs_sysvars.h"
 
 #include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
@@ -93,10 +94,10 @@ WF_FRAME frame(Window_frame_bound::Bound_precedence_type bound, Item* offset)
 }
 ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     bool addOp = true;
     ReturnedColumn* rc = NULL;
@@ -337,10 +338,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     //String str;
     //item->print(&str, QT_INFINIDB_NO_QUOTE);
     //cout << str.c_ptr() << endl;
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     gwi.hasWindowFunc = true;
     Item_window_func* wf = (Item_window_func*)item;
@@ -897,12 +898,18 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
         return NULL;
     }
-
+#if 0
+    if (item_sum->sum_func() != Item_sum::UDF_SUM_FUNC &&
+        item_sum->sum_func() != Item_sum::SUM_FUNC && 
+        item_sum->sum_func() != Item_sum::SUM_DISTINCT_FUNC &&
+        item_sum->sum_func() != Item_sum::AVG_FUNC &&
+        item_sum->sum_func() != Item_sum::AVG_DISTINCT_FUNC)
+#endif
     if (item_sum->sum_func() != Item_sum::UDF_SUM_FUNC)
     {
         ac->resultType(colType_MysqlToIDB(item_sum));
         // bug5736. Make the result type double for some window functions when
-        // infinidb_double_for_decimal_math is set.
+        // plugin variable double_for_decimal_math is set.
         ac->adjustResultType();
     }
 

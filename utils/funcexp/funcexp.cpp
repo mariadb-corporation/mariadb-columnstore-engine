@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -435,6 +436,18 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
                     row.setIntField<4>(FLOATNULL, expression[i]->outputIndex());
                 else
                     row.setFloatField(val, expression[i]->outputIndex());
+
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                long double val = expression[i]->getLongDoubleVal(row, isNull);
+
+                if (isNull)
+                    row.setLongDoubleField(LONGDOUBLENULL, expression[i]->outputIndex());
+                else
+                    row.setLongDoubleField(val, expression[i]->outputIndex());
 
                 break;
             }

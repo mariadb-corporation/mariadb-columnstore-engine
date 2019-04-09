@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -69,9 +70,10 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     if ( count == 0 )
         return "";
 
-    size_t end = strlen(str.c_str());
+    // To avoid comparison b/w int64_t and size_t
+    int64_t end = strlen(str.c_str()) & 0x7fffffffffffffff;
 
-    if ( count > (int64_t) end )
+    if ( count >  end )
         return str;
 
     if (( count < 0 ) && ((count * -1) > end))
@@ -83,7 +85,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     {
         int pointer = 0;
 
-        for ( int i = 0 ; i < count ; i ++ )
+        for ( int64_t i = 0 ; i < count ; i ++ )
         {
             string::size_type pos = str.find(delim, pointer);
 
@@ -102,13 +104,13 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
         int pointer = end;
         int start = 0;
 
-        for ( int i = 0 ; i < count ; i ++ )
+        for ( int64_t i = 0 ; i < count ; i ++ )
         {
             string::size_type pos = str.rfind(delim, pointer);
 
             if (pos != string::npos)
             {
-                if ( count > (int64_t) end )
+                if ( count > end )
                     return "";
 
                 pointer = pos - 1;

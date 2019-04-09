@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -695,44 +695,13 @@ void updateAggregateColType(AggregateColumn* ac, const SRCP& srcp, int op, JobIn
     else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         ct = fc->resultType();
 
-    if (op == AggregateColumn::SUM || op == AggregateColumn::DISTINCT_SUM)
-    {
-        if (ct.colDataType == CalpontSystemCatalog::TINYINT ||
-                ct.colDataType == CalpontSystemCatalog::SMALLINT ||
-                ct.colDataType == CalpontSystemCatalog::MEDINT ||
-                ct.colDataType == CalpontSystemCatalog::INT ||
-                ct.colDataType == CalpontSystemCatalog::BIGINT ||
-                ct.colDataType == CalpontSystemCatalog::DECIMAL ||
-                ct.colDataType == CalpontSystemCatalog::UDECIMAL)
-        {
-            ct.colWidth = sizeof(int64_t);
-
-            if (ct.scale != 0)
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            else
-                ct.colDataType = CalpontSystemCatalog::BIGINT;
-
-            ct.precision = 19;
-        }
-
-        if (ct.colDataType == CalpontSystemCatalog::UTINYINT ||
-                ct.colDataType == CalpontSystemCatalog::USMALLINT ||
-                ct.colDataType == CalpontSystemCatalog::UMEDINT ||
-                ct.colDataType == CalpontSystemCatalog::UINT ||
-                ct.colDataType == CalpontSystemCatalog::UBIGINT)
-        {
-            ct.colWidth = sizeof(uint64_t);
-            ct.colDataType = CalpontSystemCatalog::UBIGINT;
-            ct.precision = 20;
-        }
-    }
-    else if (op == AggregateColumn::STDDEV_POP || op == AggregateColumn::STDDEV_SAMP ||
-             op == AggregateColumn::VAR_POP    || op == AggregateColumn::VAR_SAMP)
+    if (op == AggregateColumn::STDDEV_POP || op == AggregateColumn::STDDEV_SAMP ||
+        op == AggregateColumn::VAR_POP    || op == AggregateColumn::VAR_SAMP)
     {
         ct.colWidth = sizeof(double);
         ct.colDataType = CalpontSystemCatalog::DOUBLE;
         ct.scale = 0;
-        ct.precision = 0;
+        ct.precision = -1;
     }
     else if (op == AggregateColumn::UDAF)
     {
@@ -1059,7 +1028,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         // Set the col type based on the single parm.
                         // Changing col type based on a parm if multiple parms
                         // doesn't really make sense.
-                        updateAggregateColType(aggc, srcp, op, jobInfo);
+                        if (op != AggregateColumn::SUM && op != AggregateColumn::DISTINCT_SUM &&
+                            op != AggregateColumn::AVG && op != AggregateColumn::DISTINCT_AVG)
+                        {
+                            updateAggregateColType(aggc, srcp, op, jobInfo);
+                        }
                     }
 
                     aggCt = aggc->resultType();
@@ -1202,9 +1175,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
                     // remember the columns to be returned
                     jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
-
-                    if (op == AggregateColumn::AVG || op == AggregateColumn::DISTINCT_AVG)
-                        jobInfo.scaleOfAvg[tupleKey] = (ct.scale << 8) + aggCt.scale;
 
                     // bug 1499 distinct processing, save unique distinct columns
                     if (doDistinct &&
@@ -1353,9 +1323,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
             // remember the columns to be returned
             jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
-
-            if (op == AggregateColumn::AVG || op == AggregateColumn::DISTINCT_AVG)
-                jobInfo.scaleOfAvg[tupleKey] = (ct.scale << 8) + aggCt.scale;
 
             // bug 1499 distinct processing, save unique distinct columns
             if (doDistinct &&

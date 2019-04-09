@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -19,7 +20,6 @@
 
 
 #include <iostream>
-//#define NDEBUG
 #include <cassert>
 #include <string>
 #include <stack>
@@ -174,7 +174,6 @@ int DoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     return ret;
 }
 
-
 int FloatCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
@@ -196,6 +195,37 @@ int FloatCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     {
         float v1 = l->row1().getFloatField(fSpec.fIndex);
         float v2 = l->row2().getFloatField(fSpec.fIndex);
+
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int LongDoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    bool b1 = l->row1().isNullValue(fSpec.fIndex);
+    bool b2 = l->row2().isNullValue(fSpec.fIndex);
+
+    int ret = 0;
+
+    if (b1 == true || b2 == true)
+    {
+        if (b1 == false && b2 == true)
+            ret = fSpec.fNf;
+        else if (b1 == true && b2 == false)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        long double v1 = l->row1().getLongDoubleField(fSpec.fIndex);
+        long double v2 = l->row2().getLongDoubleField(fSpec.fIndex);
 
         if (v1 > v2)
             ret = fSpec.fAsc;
@@ -275,6 +305,13 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
             case CalpontSystemCatalog::UFLOAT:
             {
                 Compare* c = new FloatCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
+
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                Compare* c = new LongDoubleCompare(*i);
                 fCompares.push_back(c);
                 break;
             }
@@ -442,6 +479,12 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
                 break;
             }
 
+            case CalpontSystemCatalog::LONGDOUBLE:
+            {
+                eq = (fRow1.getLongDoubleField(*i) == fRow2.getLongDoubleField(*i));
+                break;
+            }
+
             default:
             {
                 eq = false;
@@ -463,7 +506,6 @@ uint64_t IdbOrderBy::Hasher::operator()(const Row::Pointer& p) const
     row.setPointer(p);
     // MCOL-1829 Row::h uses colcount as an array idx down a callstack.
     uint64_t ret = row.hash();
-    //cout << "hash(): returning " << ret << " for row: " << row.toString() << endl;
     return ret;
 }
 
@@ -472,11 +514,8 @@ bool IdbOrderBy::Eq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) 
     Row& r1 = ts->row1, &r2 = ts->row2;
     r1.setPointer(d1);
     r2.setPointer(d2);
-    // MCOL-1829 Row::equals uses 2nd argument as container size boundary
-    // so it must be column count - 1.
-    bool ret = r1.equals(r2, colCount - 1);
-    //cout << "equals(): returning " << (int) ret << " for r1: " << r1.toString() << " r2: " << r2.toString()
-    //	<< endl;
+    // MCOL-1829 Row::equals uses 2nd argument as key columns container size boundary
+    bool ret = r1.equals(r2, colCount);
 
     return ret;
 }

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -317,6 +318,10 @@ void PredicateOperator::setOpType(Type& l, Type& r)
                 fOperationType.colWidth = 8;
                 break;
 
+            case execplan::CalpontSystemCatalog::LONGDOUBLE:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
+                fOperationType.colWidth = sizeof(long double);
+                break;
             default:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
                 fOperationType.colWidth = 8;
@@ -369,6 +374,12 @@ void PredicateOperator::setOpType(Type& l, Type& r)
             fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
             fOperationType.colWidth = 255;
         }
+    }
+    else if (l.colDataType == execplan::CalpontSystemCatalog::LONGDOUBLE ||
+             r.colDataType == execplan::CalpontSystemCatalog::LONGDOUBLE)
+    {
+        fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
+        fOperationType.colWidth = sizeof(long double);
     }
     else
     {

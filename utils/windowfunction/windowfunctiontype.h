@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -223,6 +224,10 @@ protected:
     {
         return fRow.getDoubleField(i);
     }
+    long double  getLongDoubleValue(uint64_t i)
+    {
+        return fRow.getLongDoubleField(i);
+    }
     void    setIntValue(int64_t i, int64_t v)
     {
         fRow.setIntField(v, i);
@@ -231,7 +236,10 @@ protected:
     {
         fRow.setDoubleField(v, i);
     }
-
+    void    setLongDoubleValue(int64_t i, long double  v)
+    {
+        fRow.setLongDoubleField(v, i);
+    }
 
     // for string table
     rowgroup::Row::Pointer getPointer(joblist::RowPosition& r)

@@ -464,6 +464,10 @@ inline int convertDataType(int dataType)
             calpontDataType = CalpontSystemCatalog::USMALLINT;
             break;
 
+        case ddlpackage::DDL_UNSIGNED_MEDINT:
+            calpontDataType = CalpontSystemCatalog::UMEDINT;
+            break;
+
         case ddlpackage::DDL_UNSIGNED_INT:
             calpontDataType = CalpontSystemCatalog::UINT;
             break;

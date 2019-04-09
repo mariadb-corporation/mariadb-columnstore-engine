@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -58,6 +58,7 @@ using namespace logging;
 #include "idb_mysql.h"
 
 #include "ha_calpont_impl_if.h"
+#include "ha_mcs_sysvars.h"
 #include "ha_subquery.h"
 //#include "ha_view.h"
 using namespace cal_impl_if;
@@ -1442,10 +1443,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         }
     }
 
-    if (!(gwip->thd->infinidb_vtable.cal_conn_info))
-        gwip->thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwip->thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
 
     if (ifp->functype() == Item_func::BETWEEN)
@@ -2466,10 +2467,10 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
     thd->infinidb_vtable.override_largeside_estimate = false;
 
     // reset expressionID
-    if (!(thd->infinidb_vtable.cal_conn_info))
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     ci->expressionId = 0;
 }
 
@@ -3104,10 +3105,10 @@ ArithmeticColumn* buildArithmeticColumn(
     bool& nonSupport,
     bool pushdownHand)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     ArithmeticColumn* ac = new ArithmeticColumn();
     Item** sfitempp = item->arguments();
@@ -3275,7 +3276,7 @@ ArithmeticColumn* buildArithmeticColumn(
     //idbassert(pt->left() && pt->right() && pt->left()->data() && pt->right()->data());
     CalpontSystemCatalog::ColType mysql_type = colType_MysqlToIDB(item);
 
-    if (current_thd->variables.infinidb_double_for_decimal_math == 1)
+    if (get_double_for_decimal_math(current_thd) == true)
         aop->adjustResultType(mysql_type);
     else
         aop->resultType(mysql_type);
@@ -3329,10 +3330,10 @@ ReturnedColumn* buildFunctionColumn(
     bool& nonSupport,
     bool pushdownHand)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     string funcName = ifp->func_name();
     FuncExp* funcExp = FuncExp::instance();
@@ -3372,7 +3373,6 @@ ReturnedColumn* buildFunctionColumn(
         return ac;
     }
 
-    // comment out for now until case function is fully tested.
     else if (funcName == "case")
     {
         fc = buildCaseFunction(ifp, gwi, nonSupport);
@@ -3801,10 +3801,10 @@ ReturnedColumn* buildFunctionColumn(
 
 FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     FunctionColumn* fc = new FunctionColumn();
     FunctionParm funcParms;
@@ -4194,10 +4194,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
     bool bIsConst = false;
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     Item_sum* isp = reinterpret_cast<Item_sum*>(item);
     Item** sfitempp = isp->get_orig_args();
@@ -4499,41 +4499,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
-
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::DECIMAL;
-                        ct.colWidth = 8;
-                        ct.scale += 4;
-                        break;
-
-#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-#endif
-
-                    default:
-                        break;
-                }
-
+                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                ct.colWidth = sizeof(long double);
+                ct.scale += 4;
+                ct.precision = -1;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
@@ -4549,47 +4518,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                      isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
-
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                        ct.colDataType = CalpontSystemCatalog::BIGINT;
-
-                    // no break, let fall through
-
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                        ct.colWidth = 8;
-                        break;
-
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::UBIGINT;
-                        ct.colWidth = 8;
-                        break;
-
-#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-#endif
-
-                    default:
-                        break;
-                }
-
+                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                ct.colWidth = sizeof(long double);
+                ct.precision = -1;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||
@@ -5775,7 +5706,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         return ER_CHECK_NOT_IMPLEMENTED;
     }
 
-    gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
+    gwi.internalDecimalScale = (get_use_decimal_scale(gwi.thd) ? get_decimal_scale(gwi.thd) : -1);
+
     gwi.subSelectType = csep->subType();
 
     JOIN* join = select_lex.join;
@@ -5808,25 +5740,25 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     // @bug 2123. Override large table estimate if infinidb_ordered hint was used.
     // @bug 2404. Always override if the infinidb_ordered_only variable is turned on.
-    if (gwi.thd->infinidb_vtable.override_largeside_estimate || gwi.thd->variables.infinidb_ordered_only)
+    if (gwi.thd->infinidb_vtable.override_largeside_estimate || get_ordered_only(gwi.thd))
         csep->overrideLargeSideEstimate(true);
 
     // @bug 5741. Set a flag when in Local PM only query mode
-    csep->localQuery(gwi.thd->variables.infinidb_local_query);
+    csep->localQuery(get_local_query(gwi.thd));
 
     // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
-    csep->stringScanThreshold(gwi.thd->variables.infinidb_string_scan_threshold);
+    csep->stringScanThreshold(get_string_scan_threshold(gwi.thd));
 
-    csep->stringTableThreshold(gwi.thd->variables.infinidb_stringtable_threshold);
+    csep->stringTableThreshold(get_stringtable_threshold(gwi.thd));
 
-    csep->djsSmallSideLimit(gwi.thd->variables.infinidb_diskjoin_smallsidelimit * 1024ULL * 1024);
-    csep->djsLargeSideLimit(gwi.thd->variables.infinidb_diskjoin_largesidelimit * 1024ULL * 1024);
-    csep->djsPartitionSize(gwi.thd->variables.infinidb_diskjoin_bucketsize * 1024ULL * 1024);
+    csep->djsSmallSideLimit(get_diskjoin_smallsidelimit(gwi.thd) * 1024ULL * 1024);
+    csep->djsLargeSideLimit(get_diskjoin_largesidelimit(gwi.thd) * 1024ULL * 1024);
+    csep->djsPartitionSize(get_diskjoin_bucketsize(gwi.thd) * 1024ULL * 1024);
 
-    if (gwi.thd->variables.infinidb_um_mem_limit == 0)
+    if (get_um_mem_limit(gwi.thd) == 0)
         csep->umMemLimit(numeric_limits<int64_t>::max());
     else
-        csep->umMemLimit(gwi.thd->variables.infinidb_um_mem_limit * 1024ULL * 1024);
+        csep->umMemLimit(get_um_mem_limit(gwi.thd) * 1024ULL * 1024);
 
     // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
     // all tables on FROM list must have at least one col in colmap
@@ -8241,7 +8173,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
     csep->tableList(tblist);
 
     // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
-    csep->stringScanThreshold(gwi->thd->variables.infinidb_string_scan_threshold);
+    csep->stringScanThreshold(get_string_scan_threshold(gwi->thd));
 
     return 0;
 }
@@ -8339,7 +8271,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         return ER_CHECK_NOT_IMPLEMENTED;
     }
 
-    gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
+    gwi.internalDecimalScale = (get_use_decimal_scale(gwi.thd) ? get_decimal_scale(gwi.thd) : -1);
     gwi.subSelectType = csep->subType();
 
     JOIN* join = select_lex.join;
@@ -8356,25 +8288,25 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     // @bug 2123. Override large table estimate if infinidb_ordered hint was used.
     // @bug 2404. Always override if the infinidb_ordered_only variable is turned on.
-    if (gwi.thd->infinidb_vtable.override_largeside_estimate || gwi.thd->variables.infinidb_ordered_only)
+    if (gwi.thd->infinidb_vtable.override_largeside_estimate || get_ordered_only(gwi.thd))
         csep->overrideLargeSideEstimate(true);
 
     // @bug 5741. Set a flag when in Local PM only query mode
-    csep->localQuery(gwi.thd->variables.infinidb_local_query);
+    csep->localQuery(get_local_query(gwi.thd));
 
     // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
-    csep->stringScanThreshold(gwi.thd->variables.infinidb_string_scan_threshold);
+    csep->stringScanThreshold(get_string_scan_threshold(gwi.thd));
 
-    csep->stringTableThreshold(gwi.thd->variables.infinidb_stringtable_threshold);
+    csep->stringTableThreshold(get_stringtable_threshold(gwi.thd));
 
-    csep->djsSmallSideLimit(gwi.thd->variables.infinidb_diskjoin_smallsidelimit * 1024ULL * 1024);
-    csep->djsLargeSideLimit(gwi.thd->variables.infinidb_diskjoin_largesidelimit * 1024ULL * 1024);
-    csep->djsPartitionSize(gwi.thd->variables.infinidb_diskjoin_bucketsize * 1024ULL * 1024);
+    csep->djsSmallSideLimit(get_diskjoin_smallsidelimit(gwi.thd) * 1024ULL * 1024);
+    csep->djsLargeSideLimit(get_diskjoin_largesidelimit(gwi.thd) * 1024ULL * 1024);
+    csep->djsPartitionSize(get_diskjoin_bucketsize(gwi.thd) * 1024ULL * 1024);
 
-    if (gwi.thd->variables.infinidb_um_mem_limit == 0)
+    if (get_um_mem_limit(gwi.thd) == 0)
         csep->umMemLimit(numeric_limits<int64_t>::max());
     else
-        csep->umMemLimit(gwi.thd->variables.infinidb_um_mem_limit * 1024ULL * 1024);
+        csep->umMemLimit(get_um_mem_limit(gwi.thd) * 1024ULL * 1024);
 
     // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
     // all tables on FROM list must have at least one col in colmap

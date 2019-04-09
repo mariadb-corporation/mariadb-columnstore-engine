@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -589,6 +590,12 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         case CalpontSystemCatalog::UDOUBLE:
         {
             fResult.doubleVal = row.getDoubleField(fInputIndex);
+            break;
+        }
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            fResult.longDoubleVal = row.getLongDoubleField(fInputIndex);
             break;
         }
 

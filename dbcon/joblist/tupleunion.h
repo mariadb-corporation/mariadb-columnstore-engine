@@ -35,6 +35,7 @@
 #endif
 
 #include "stlpoolallocator.h"
+#include "threadnaming.h"
 
 #ifndef TUPLEUNION2_H_
 #define TUPLEUNION2_H_
@@ -155,6 +156,7 @@ private:
         Runner(TupleUnion* t, uint32_t in) : tu(t), index(in) { }
         void operator()()
         {
+            utils::setThreadName("TUSRunner");
             tu->readInput(index);
         }
     };

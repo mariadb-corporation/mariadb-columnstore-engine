@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -98,6 +99,26 @@ double Func_least::getDoubleVal(rowgroup::Row& row,
     }
 
     return (double) leastStr;
+}
+
+long double Func_least::getLongDoubleVal(rowgroup::Row& row,
+                                FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    long double str = fp[0]->data()->getLongDoubleVal(row, isNull);
+
+    long double leastStr = str;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        long double str1 = fp[i]->data()->getLongDoubleVal(row, isNull);
+
+        if ( leastStr > str1 )
+            leastStr = str1;
+    }
+
+    return leastStr;
 }
 
 std::string Func_least::getStrVal(rowgroup::Row& row,

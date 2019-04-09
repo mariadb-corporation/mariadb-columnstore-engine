@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -87,6 +88,12 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
         case CalpontSystemCatalog::UDOUBLE:
         {
             func.reset(new WF_lead_lag<double>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            func.reset(new WF_lead_lag<long double>(id, name));
             break;
         }
 

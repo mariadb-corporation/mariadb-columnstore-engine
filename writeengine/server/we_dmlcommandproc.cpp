@@ -3028,6 +3028,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::UBIGINT:
                         case CalpontSystemCatalog::INT:
                         case CalpontSystemCatalog::UINT:
+                        case CalpontSystemCatalog::MEDINT:
+                        case CalpontSystemCatalog::UMEDINT:
                         case CalpontSystemCatalog::SMALLINT:
                         case CalpontSystemCatalog::USMALLINT:
                         case CalpontSystemCatalog::TINYINT:
@@ -3363,6 +3365,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::UBIGINT:
                             case CalpontSystemCatalog::INT:
                             case CalpontSystemCatalog::UINT:
+                            case CalpontSystemCatalog::MEDINT:
+                            case CalpontSystemCatalog::UMEDINT:
                             case CalpontSystemCatalog::SMALLINT:
                             case CalpontSystemCatalog::USMALLINT:
                             case CalpontSystemCatalog::TINYINT:

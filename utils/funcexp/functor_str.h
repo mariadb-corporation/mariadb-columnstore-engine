@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -57,6 +58,14 @@ public:
         return strtod(getStrVal(row, fp, isNull, op_ct).c_str(), NULL);
     }
 
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return strtold(getStrVal(row, fp, isNull, op_ct).c_str(), NULL);
+    }
+
 #if 0
     std::string getStrVal(rowgroup::Row& row,
                           FunctionParm& fp,
@@ -105,12 +114,16 @@ protected:
         // Bug3788, use the shorter of fixed or scientific notation for floating point values.
         // [ the default format in treenode.h is fixed-point notation ]
         char buf[20];
-        double floatVal;
-        int exponent;
-        double base;
+        long double floatVal;
+        int64_t exponent;
+        long double base;
 
         switch (fp->data()->resultType().colDataType)
         {
+            case execplan::CalpontSystemCatalog::LONGDOUBLE:
+                floatVal = fp->data()->getLongDoubleVal(row, isNull);
+                break;
+
             case execplan::CalpontSystemCatalog::DOUBLE:
                 floatVal = fp->data()->getDoubleVal(row, isNull);
                 break;
@@ -125,19 +138,19 @@ protected:
                 break;
         }
 
-        exponent = (int)floor(log10( fabs(floatVal)));
+        exponent = (int)floor(log10( fabsl(floatVal)));
         base = floatVal * pow(10, -1.0 * exponent);
 
         if (isnan(exponent) || isnan(base))
         {
-            snprintf(buf, 20, "%f", floatVal);
+            snprintf(buf, 20, "%Lf", floatVal);
             fFloatStr = execplan::removeTrailing0(buf, 20);
         }
         else
         {
-            snprintf(buf, 20, "%.5f", base);
+            snprintf(buf, 20, "%.5Lf", base);
             fFloatStr = execplan::removeTrailing0(buf, 20);
-            snprintf(buf, 20, "e%02d", exponent);
+            snprintf(buf, 20, "e%02ld", exponent);
             fFloatStr += buf;
         }
 
@@ -312,6 +325,7 @@ public:
   */
 class Func_lpad : public Func_Str
 {
+    static const string fPad;
 public:
     Func_lpad() : Func_Str("lpad") {}
     virtual ~Func_lpad() {}
@@ -329,6 +343,7 @@ public:
   */
 class Func_rpad : public Func_Str
 {
+    static const string fPad;
 public:
     Func_rpad() : Func_Str("rpad") {}
     virtual ~Func_rpad() {}

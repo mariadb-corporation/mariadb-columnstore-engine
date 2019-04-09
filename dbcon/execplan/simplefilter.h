@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -212,6 +213,7 @@ public:
     inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull);
     inline virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull);
     inline virtual double getDoubleVal(rowgroup::Row& row, bool& isNull);
+    inline virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
 
     // get all simple columns involved in this column
     const std::vector<SimpleColumn*>& simpleColumnList();
@@ -249,6 +251,11 @@ inline int64_t SimpleFilter::getIntVal(rowgroup::Row& row, bool& isNull)
 }
 
 inline double SimpleFilter::getDoubleVal(rowgroup::Row& row, bool& isNull)
+{
+    return getIntVal(row, isNull);
+}
+
+inline long double SimpleFilter::getLongDoubleVal(rowgroup::Row& row, bool& isNull)
 {
     return getIntVal(row, isNull);
 }

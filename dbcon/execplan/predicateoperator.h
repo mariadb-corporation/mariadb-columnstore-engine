@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -254,6 +255,66 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return false;
 
             return numericCompare(val1, rop->getDoubleVal(row, isNull)) && !isNull;
+        }
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            if (fOp == OP_ISNULL)
+            {
+                lop->getLongDoubleVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return ret;
+            }
+
+            if (fOp == OP_ISNOTNULL)
+            {
+                lop->getLongDoubleVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return !ret;
+            }
+
+            if (isNull)
+                return false;
+
+            long double val1 = lop->getLongDoubleVal(row, isNull);
+            if (isNull)
+                return false;
+
+            long double val2 = rop->getLongDoubleVal(row, isNull);
+            if (isNull)
+                return false;
+
+            // In many case, rounding error will prevent an eq compare to work
+            // In these cases, use the largest scale of the two items.
+            if (fOp == execplan::OP_EQ)
+            {
+                // In case a val is a representation of a very large integer,
+                // we won't want to just multiply by scale, as it may move
+                // significant digits out of scope. So we break them apart
+                // and compare each separately 
+                int64_t scale = max(lop->resultType().scale, rop->resultType().scale);
+                if (scale)
+                {
+                    long double intpart1;
+                    long double fract1 = modfl(val1, &intpart1);
+                    long double intpart2;
+                    long double fract2 = modfl(val2, &intpart2);
+                    if (numericCompare(intpart1, intpart2))
+                    {
+                        double factor = pow(10.0, (double)scale);
+                        fract1 = roundl(fract1 * factor);
+                        fract2 = roundl(fract2 * factor);
+                        return numericCompare(fract1, fract2);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:

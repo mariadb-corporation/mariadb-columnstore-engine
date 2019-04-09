@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2017, MariaDB
    Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -330,6 +330,7 @@ public:
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
     inline int64_t getIntField(uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
+    inline bool equals(long double val, uint32_t colIndex) const;
     inline bool equals(const std::string& val, uint32_t colIndex) const;
 
     inline double getDoubleField(uint32_t colIndex) const;
@@ -614,6 +615,11 @@ inline bool Row::equals(uint64_t val, uint32_t colIndex) const
             idbassert(0);
             throw std::logic_error("Row::equals(): bad length.");
     }
+}
+
+inline bool Row::equals(long double val, uint32_t colIndex) const
+{
+    return *((long double*) &data[offsets[colIndex]]) == val;
 }
 
 inline bool Row::equals(const std::string& val, uint32_t colIndex) const
@@ -1030,6 +1036,11 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
 
 inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
 {
+    if (sizeof(long double) == 16)
+    {
+        // zero out the unused portion as there may be garbage there.
+        *((uint64_t*)&val+1) &= 0x000000000000FFFFULL;
+    }
     *((long double*) &data[offsets[colIndex]]) = val;
 }
 

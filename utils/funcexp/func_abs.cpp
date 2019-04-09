@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -76,6 +77,14 @@ double Func_abs::getDoubleVal(Row& row,
                               CalpontSystemCatalog::ColType&)
 {
     return fabs(parm[0]->data()->getDoubleVal(row, isNull));
+}
+
+long double Func_abs::getLongDoubleVal(Row& row,
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
+{
+    return fabsl(parm[0]->data()->getLongDoubleVal(row, isNull));
 }
 
 

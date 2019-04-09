@@ -197,10 +197,12 @@ ColumnInfo::ColumnInfo(Log*             logger,
         case WriteEngine::WR_SHORT:
         case WriteEngine::WR_BYTE:
         case WriteEngine::WR_LONGLONG:
+        case WriteEngine::WR_MEDINT:
         case WriteEngine::WR_INT:
         case WriteEngine::WR_USHORT:
         case WriteEngine::WR_UBYTE:
         case WriteEngine::WR_ULONGLONG:
+        case WriteEngine::WR_UMEDINT:
         case WriteEngine::WR_UINT:
         default:
         {

@@ -759,8 +759,11 @@ int processCommand(string* arguments)
             vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
             vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
             set<int>::iterator dbiter;
-
-            if (arguments[1] == "start")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "start", 5) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "start", 5) == 0)
+#endif
             {
                 // Get a list of all the configured dbroots in the xml file.
                 DBRootConfigList dbRootConfigList;
@@ -772,7 +775,11 @@ int processCommand(string* arguments)
 
                 // The user may choose to redistribute in such a way as to
                 // leave certain dbroots empty, presumably for later removal.
-                if (arguments[2] == "remove")
+#if _MSC_VER
+				if (_strnicmp(arguments[1].c_str(), "remove", 6) == 0))
+#else
+				if (strncasecmp(arguments[1].c_str(), "remove", 6) == 0)
+#endif
                 {
                     int dbroot;
                     bool error = false;
@@ -891,7 +898,11 @@ int processCommand(string* arguments)
 
                 SendToWES(oam, bs);
             }
-            else if (arguments[1] == "stop")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
+#endif
             {
                 ByteStream bs;
                 // message WES ID, sequence #, action id
@@ -901,7 +912,11 @@ int processCommand(string* arguments)
                 bs.append((const ByteStream::byte*) &header, sizeof(header));
                 SendToWES(oam, bs);
             }
-            else if (arguments[1] == "status")
+#if _MSC_VER
+			if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
+#else
+			if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
+#endif
             {
                 ByteStream bs;
                 // message WES ID, sequence #, action id
@@ -5389,7 +5404,14 @@ int processCommand(string* arguments)
 
                             for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
                             {
-                                string ipAddr = (*pt1).IPAddr;
+                                /* MCOL-1607.  IPAddr may be a host name here b/c it is read straight
+                                from the config file. */
+                                string tmphost = oam.getIPAddress(pt1->IPAddr);
+                                string ipAddr;
+                                if (tmphost.empty())
+                                    ipAddr = pt1->IPAddr;
+                                else
+                                    ipAddr = tmphost;
                                 string hostname = (*pt1).HostName;
                                 string nicID = oam.itoa((*pt1).NicID);
 

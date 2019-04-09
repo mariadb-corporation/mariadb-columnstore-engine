@@ -187,6 +187,7 @@ MEDIUMTEXT {return MEDIUMTEXT;}
 LONGTEXT {return LONGTEXT;}
 BOOL {return BOOL;}
 BOOLEAN {return BOOLEAN;}
+MEDIUMINT {return MEDIUMINT;}
 
 \n { lineno++;}
 

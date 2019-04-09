@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -139,6 +140,26 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (value > 0)
+                value += 0.5;
+            else if (value < 0)
+                value -= 0.5;
+
+            int64_t ret = (int64_t) value;
+
+            if (value > (long double) numeric_limits<int64_t>::max())
+                ret = numeric_limits<int64_t>::max();
+            else if (value < (long double) (numeric_limits<int64_t>::min() + 2))
+                ret = numeric_limits<int64_t>::min() + 2; // IDB min for bigint
+
+            return ret;
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -258,6 +279,26 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
             uint64_t ret = (uint64_t) value;
 
             if (value > (double) numeric_limits<uint64_t>::max() - 2)
+                ret = numeric_limits<int64_t>::max();
+            else if (value < 0)
+                ret = 0;
+
+            return ret;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+            if (value > 0)
+                value += 0.5;
+            else if (value < 0)
+                value -= 0.5;
+
+            uint64_t ret = (uint64_t) value;
+
+            if (value > (long double) numeric_limits<uint64_t>::max() - 2)
                 ret = numeric_limits<int64_t>::max();
             else if (value < 0)
                 ret = 0;
@@ -391,6 +432,12 @@ string Func_cast_char::getStrVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            return helpers::longDoubleToString(parm[0]->data()->getLongDoubleVal(row, isNull)).substr(0, length);
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
@@ -521,6 +568,17 @@ double Func_cast_date::getDoubleVal(Row& row,
                                     CalpontSystemCatalog::ColType& operationColType)
 {
     return (double) Func_cast_date::getDatetimeIntVal(row,
+            parm,
+            isNull,
+            operationColType);
+}
+
+long double Func_cast_date::getLongDoubleVal(Row& row,
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& operationColType)
+{
+    return (long double) Func_cast_date::getDatetimeIntVal(row,
             parm,
             isNull,
             operationColType);
@@ -790,6 +848,17 @@ double Func_cast_datetime::getDoubleVal(Row& row,
                                         CalpontSystemCatalog::ColType& operationColType)
 {
     return (double) Func_cast_datetime::getDatetimeIntVal(row,
+            parm,
+            isNull,
+            operationColType);
+}
+
+long double Func_cast_datetime::getLongDoubleVal(Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType& operationColType)
+{
+    return (long double) Func_cast_datetime::getDatetimeIntVal(row,
             parm,
             isNull,
             operationColType);
@@ -1082,6 +1151,26 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
             double value = parm[0]->data()->getDoubleVal(row, isNull);
+
+            if (value > 0)
+                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
+            else if (value < 0)
+                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] - 0.5);
+            else
+                decimal.value = 0;
+
+            decimal.scale = decimals;
+
+            if ( value > max_number_decimal )
+                decimal.value = max_number_decimal;
+            else if ( value < -max_number_decimal )
+                decimal.value = -max_number_decimal;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
             if (value > 0)
                 decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
@@ -1423,6 +1512,12 @@ double Func_cast_double::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
             dblval = parm[0]->data()->getDoubleVal(row, isNull);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            dblval = static_cast<double>(parm[0]->data()->getLongDoubleVal(row, isNull));
         }
         break;
 

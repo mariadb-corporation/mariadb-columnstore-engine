@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -201,6 +201,14 @@ double MCS_add::getDoubleVal(Row& row,
     return 0;
 }
 
+long double MCS_add::getLongDoubleVal(Row& row,
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType& op_ct)
+{
+    return getDoubleVal(row, parm, isNull, op_ct);
+}
+
 float MCS_add::getFloatVal(Row& row,
                            FunctionParm& parm,
                            bool& isNull,
@@ -345,6 +353,14 @@ double MCS_isnull::getDoubleVal(Row& row,
                                 FunctionParm& parm,
                                 bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
+{
+    return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
+}
+
+long double MCS_isnull::getLongDoubleVal(Row& row,
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType& op_ct)
 {
     return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }

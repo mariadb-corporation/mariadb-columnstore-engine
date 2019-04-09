@@ -261,6 +261,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
     switch (colType)
     {
         case WriteEngine::WR_INT :
+        case WriteEngine::WR_MEDINT :
             if (data.type() == typeid(int))
             {
                 int val = boost::any_cast<int>(data);
@@ -277,6 +278,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
             break;
 
         case WriteEngine::WR_UINT :
+        case WriteEngine::WR_UMEDINT :
         {
             uint32_t val = boost::any_cast<uint32_t>(data);
             size = sizeof(uint32_t);
@@ -410,6 +412,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
         switch (colType)
         {
             case WriteEngine::WR_INT :
+            case WriteEngine::WR_MEDINT :
                 if (data.type() == typeid(long))
                     ((int*)valArray)[pos] = static_cast<int>(boost::any_cast<long>(data));
                 else if (data.type() == typeid(int))
@@ -420,6 +423,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                 break;
 
             case WriteEngine::WR_UINT :
+            case WriteEngine::WR_UMEDINT :
                 ((uint32_t*)valArray)[pos] = boost::any_cast<uint32_t>(data);
                 break;
 
@@ -495,10 +499,12 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
         switch (colType)
         {
             case WriteEngine::WR_INT :
+            case WriteEngine::WR_MEDINT :
                 data = ((int*)valArray)[pos];
                 break;
 
             case WriteEngine::WR_UINT :
+            case WriteEngine::WR_UMEDINT :
                 data = ((uint64_t*)valArray)[pos];
                 break;
 
@@ -814,10 +820,12 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
                 switch (colStructs[i].colType)
                 {
                     case WriteEngine::WR_INT:
+                    case WriteEngine::WR_MEDINT:
                         valArray = (int*) calloc(sizeof(int), 1);
                         break;
 
                     case WriteEngine::WR_UINT:
+                    case WriteEngine::WR_UMEDINT:
                         valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
                         break;
 
@@ -4484,10 +4492,12 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
         switch (curColStruct.colType)
         {
             case WriteEngine::WR_INT:
+            case WriteEngine::WR_MEDINT:
                 valArray = (int*) calloc(sizeof(int), totalRow);
                 break;
 
             case WriteEngine::WR_UINT:
+            case WriteEngine::WR_UMEDINT:
                 valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow);
                 break;
 
@@ -4721,10 +4731,12 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 switch (colStructList[i].colType)
                 {
                     case WriteEngine::WR_INT:
+                    case WriteEngine::WR_MEDINT:
                         valArray = (int*) calloc(sizeof(int), totalRow1);
                         break;
 
                     case WriteEngine::WR_UINT:
+                    case WriteEngine::WR_UMEDINT:
                         valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
                         break;
 
@@ -4894,10 +4906,12 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             switch (newColStructList[i].colType)
             {
                 case WriteEngine::WR_INT:
+                case WriteEngine::WR_MEDINT:
                     valArray = (int*) calloc(sizeof(int), totalRow2);
                     break;
 
                 case WriteEngine::WR_UINT:
+                case WriteEngine::WR_UMEDINT:
                     valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow2);
                     break;
 
@@ -5065,10 +5079,12 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             switch (colStructList[i].colType)
             {
                 case WriteEngine::WR_INT:
+                case WriteEngine::WR_MEDINT:
                     valArray = (int*) calloc(sizeof(int), totalRow1);
                     break;
 
                 case WriteEngine::WR_UINT:
+                case WriteEngine::WR_UMEDINT:
                     valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
                     break;
 
@@ -5308,6 +5324,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
 
                     case WriteEngine::WR_INT:
                     case WriteEngine::WR_UINT:
+                    case WriteEngine::WR_MEDINT:
+                    case WriteEngine::WR_UMEDINT:
                     case WriteEngine::WR_FLOAT:
                         tmp32 = curValue;
                         ((uint32_t*)valArray)[j] = tmp32;
@@ -5449,6 +5467,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
 
                     case WriteEngine::WR_INT:
                     case WriteEngine::WR_UINT:
+                    case WriteEngine::WR_MEDINT:
+                    case WriteEngine::WR_UMEDINT:
                     case WriteEngine::WR_FLOAT:
                         tmp32 = curValue;
                         ((uint32_t*)valArray)[j] = tmp32;
@@ -5704,10 +5724,12 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
         switch (curColStruct.colType)
         {
             case WriteEngine::WR_INT:
+            case WriteEngine::WR_MEDINT:
                 valArray = (int*) calloc(sizeof(int), 1);
                 break;
 
             case WriteEngine::WR_UINT:
+            case WriteEngine::WR_UMEDINT:
                 valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
                 break;
 

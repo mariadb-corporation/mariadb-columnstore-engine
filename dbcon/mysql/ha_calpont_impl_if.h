@@ -319,9 +319,9 @@ struct cal_connection_info
     char delimiter;
     char enclosed_by;
     std::vector <execplan::CalpontSystemCatalog::ColType> columnTypes;
+    // MCOL-1101 remove compilation unit variable rmParms
+    std::vector <execplan::RMParam> rmParms;
 };
-
-typedef std::tr1::unordered_map<int, cal_connection_info> CalConnMap;
 
 const std::string infinidb_err_msg = "\nThe query includes syntax that is not supported by MariaDB Columnstore. Use 'show warnings;' to get more information. Review the MariaDB Columnstore Syntax guide for additional information on supported distributed syntax or consider changing the MariaDB Columnstore Operating Mode (infinidb_vtable_mode).";
 

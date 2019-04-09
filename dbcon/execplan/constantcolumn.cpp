@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -51,7 +52,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type) :
     fData(sql)
 {
     fResult.strVal = sql;
-
+    
     if (type == LITERAL && sql.length() < 9)
     {
         memcpy(tmp, sql.c_str(), sql.length());
@@ -67,6 +68,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type) :
 
     fResult.floatVal = atof(sql.c_str());
     fResult.doubleVal = atof(sql.c_str());
+    fResult.longDoubleVal = strtold(sql.c_str(), NULL);
 
     // decimal for constant should be constructed by the caller and call the decimal constructor
     fResult.decimalVal.value = fResult.intVal;
@@ -105,6 +107,27 @@ ConstantColumn::ConstantColumn(const string& sql, const double val) :
     fResult.intVal = (int64_t)val;
     fResult.uintVal = (uint64_t)val;
     fResult.floatVal = (float)val;
+    fResult.longDoubleVal = val;
+    // decimal for constant should be constructed by the caller and call the decimal constructor
+    fResult.decimalVal.value = fResult.intVal;
+    fResult.decimalVal.scale = 0;
+    fResult.decimalVal.precision = 18;
+    fResultType.colDataType = CalpontSystemCatalog::DOUBLE;
+    fResultType.colWidth = 8;
+}
+
+ConstantColumn::ConstantColumn(const string& sql, const long double val) :
+    ReturnedColumn(),
+    fConstval(sql),
+    fType(NUM),
+    fData(sql)
+{
+    fResult.strVal = sql;
+    fResult.doubleVal = (double)val;
+    fResult.intVal = (int64_t)val;
+    fResult.uintVal = (uint64_t)val;
+    fResult.floatVal = (float)val;
+    fResult.longDoubleVal = val;
     // decimal for constant should be constructed by the caller and call the decimal constructor
     fResult.decimalVal.value = fResult.intVal;
     fResult.decimalVal.scale = 0;
@@ -124,6 +147,7 @@ ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type) 
     fResult.uintVal = (uint64_t)fResult.intVal;
     fResult.floatVal = (float)fResult.intVal;
     fResult.doubleVal = (double)fResult.intVal;
+    fResult.longDoubleVal = (long double)fResult.intVal;
     fResult.decimalVal.value = fResult.intVal;
     fResult.decimalVal.scale = 0;
     fResultType.colDataType = CalpontSystemCatalog::BIGINT;
@@ -141,6 +165,7 @@ ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
     fResult.intVal = (int64_t)fResult.uintVal;
     fResult.floatVal = (float)fResult.uintVal;
     fResult.doubleVal = (double)fResult.uintVal;
+    fResult.longDoubleVal = (long double)fResult.uintVal;
     fResult.decimalVal.value = fResult.uintVal;
     fResult.decimalVal.scale = 0;
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
@@ -158,6 +183,7 @@ ConstantColumn::ConstantColumn(const string& sql, const IDB_Decimal& val) :
     fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
     fResult.floatVal = atof(sql.c_str());
     fResult.doubleVal = atof(sql.c_str());
+    fResult.longDoubleVal = strtold(sql.c_str(), NULL);
     fResult.decimalVal = val;
     fResultType.colDataType = CalpontSystemCatalog::DECIMAL;
     fResultType.colWidth = 8;
@@ -201,6 +227,7 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) :
     fResult.uintVal = (uint64_t)fResult.intVal;
     fResult.floatVal = (float)fResult.intVal;
     fResult.doubleVal = (double)fResult.intVal;
+    fResult.longDoubleVal = (long double)fResult.intVal;
     fResult.decimalVal.value = fResult.intVal;
     fResult.decimalVal.scale = 0;
     fResultType.colDataType = CalpontSystemCatalog::BIGINT;
@@ -220,6 +247,7 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
     fResult.uintVal = val;
     fResult.floatVal = (float)fResult.uintVal;
     fResult.doubleVal = (double)fResult.uintVal;
+    fResult.longDoubleVal = (long double)fResult.uintVal;
     fResult.decimalVal.value = fResult.uintVal;
     fResult.decimalVal.scale = 0;
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
@@ -281,8 +309,9 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
     b << static_cast<const ByteStream::doublebyte>(fReturnAll);
     b << (uint64_t)fResult.intVal;
     b << fResult.uintVal;
-    b << (*(uint64_t*)(&fResult.doubleVal));
-    b << (*(uint32_t*)(&fResult.floatVal));
+    b << fResult.doubleVal;
+    b << fResult.longDoubleVal;
+    b << fResult.floatVal;
     b << (uint8_t)fResult.boolVal;
     b << fResult.strVal;
     b << (uint64_t)fResult.decimalVal.value;
@@ -303,8 +332,9 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
     b >> reinterpret_cast< ByteStream::doublebyte&>(fReturnAll);
     b >> (uint64_t&)fResult.intVal;
     b >> fResult.uintVal;
-    b >> (uint64_t&)fResult.doubleVal;
-    b >> (uint32_t&)fResult.floatVal;
+    b >> fResult.doubleVal;
+    b >> fResult.longDoubleVal;
+    b >> fResult.floatVal;
     b >> (uint8_t&)fResult.boolVal;
     b >> fResult.strVal;
     b >> (uint64_t&)fResult.decimalVal.value;

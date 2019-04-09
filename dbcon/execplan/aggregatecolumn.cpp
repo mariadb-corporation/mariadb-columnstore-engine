@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -495,6 +496,14 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
                 isNull = true;
             else
                 fResult.doubleVal = row.getDoubleField(fInputIndex);
+
+            break;
+
+        case CalpontSystemCatalog::LONGDOUBLE:
+            if (row.equals(LONGDOUBLENULL, fInputIndex))
+                isNull = true;
+            else
+                fResult.longDoubleVal = row.getLongDoubleField(fInputIndex);
 
             break;
 
