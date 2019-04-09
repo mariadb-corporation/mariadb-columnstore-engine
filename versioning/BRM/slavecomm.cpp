@@ -143,7 +143,7 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         if (true || IDBPolicy::useHdfs())
         {
             journalh = IDBDataFile::open(
-                           IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "r+b", 0);
+                           IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);
         }
         else
         {
