@@ -127,15 +127,10 @@ void Cache::populate()
         const bf::path &p = dir->path();
         if (bf::is_regular_file(p))
         {
-            if (p.extension() == "")   // need to decide whether objects should have an extension
-            {
-                lru.push_back(p.filename().string());
-                auto last = lru.end();
-                m_lru.insert(--last);
-                currentCacheSize += bf::file_size(*dir);
-            }
-            else
-                logger->log(LOG_WARNING, "Cache: found a file in the cache that does not belong '%s'", p.string().c_str());
+            lru.push_back(p.filename().string());
+            auto last = lru.end();
+            m_lru.insert(--last);
+            currentCacheSize += bf::file_size(*dir);
         }
         else
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
