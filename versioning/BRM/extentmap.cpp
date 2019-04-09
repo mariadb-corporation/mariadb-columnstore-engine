@@ -1326,7 +1326,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
         throw;
     }
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile>  in(IDBDataFile::open(
@@ -1441,7 +1441,7 @@ void ExtentMap::save(const string& filename)
         throw runtime_error("ExtentMap::save(): got request to save an empty BRM");
     }
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         utmp = ::umask(0);
         const char* filename_p = filename.c_str();

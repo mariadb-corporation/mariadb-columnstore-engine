@@ -138,7 +138,7 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         const char* filename = journalName.c_str();
         uint32_t utmp = ::umask(0);
 
-        if (IDBPolicy::useHdfs())
+        if (true || IDBPolicy::useHdfs())
         {
             journalh = IDBDataFile::open(
                            IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "r+b", 0);
@@ -2007,11 +2007,11 @@ void SlaveComm::do_confirm()
     {
         const char* filename = tmp.c_str();
 
-        if (!IDBPolicy::useHdfs() && currentSaveFD < 0)
+        if (false && !IDBPolicy::useHdfs() && currentSaveFD < 0)
         {
             currentSaveFD = open(filename, O_WRONLY | O_CREAT, 0664);
         }
-        else if (IDBPolicy::useHdfs() && !currentSaveFile)
+        else if ((true || IDBPolicy::useHdfs()) && !currentSaveFile)
         {
             currentSaveFile = IDBDataFile::open(
                                   IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
@@ -2064,7 +2064,7 @@ void SlaveComm::do_confirm()
             delete journalh;
             journalh = IDBDataFile::open(
                            IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);
-            ::umask(utmp);
+            //::umask(utmp);
 
             if (!journalh)
                 throw runtime_error("Could not open the BRM journal for writing!");
@@ -2252,7 +2252,7 @@ int SlaveComm::replayJournal(string prefix)
 
     const char* filename = journalName.c_str();
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         IDBDataFile* journalf = IDBDataFile::open(
                                     IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0);
@@ -2362,7 +2362,7 @@ void SlaveComm::saveDelta()
     {
         uint32_t len = delta.length();
 
-        if (IDBPolicy::useHdfs())
+        if (true || IDBPolicy::useHdfs())
         {
             journalh->write((const char*) &len, sizeof(len));
             journalh->write((const char*) delta.buf(), delta.length());

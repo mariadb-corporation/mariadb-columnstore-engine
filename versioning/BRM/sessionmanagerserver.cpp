@@ -119,7 +119,7 @@ SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0), txnidfd
 
     txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 
-    if (!IDBPolicy::useHdfs())
+    if (false && !IDBPolicy::useHdfs())
     {
         txnidfd = open(txnidFilename.c_str(), O_RDWR | O_CREAT | O_BINARY, 0664);
 
@@ -178,7 +178,7 @@ again:
     // If we fail to read a full four bytes for any value, then the
     // value isn't in the file, and we start with the default.
 
-    if (!IDBPolicy::useHdfs())
+    if (false && !IDBPolicy::useHdfs())
     {
         // Last transaction id
         lseek(txnidfd, 0, SEEK_SET);
@@ -297,7 +297,7 @@ again:
 */
 void SessionManagerServer::saveSystemState()
 {
-    if (!IDBPolicy::useHdfs())
+    if (false && !IDBPolicy::useHdfs())
     {
         int err = 0;
         uint32_t lSystemState = systemState;
@@ -377,7 +377,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
     if (isDDL)
         ++_sysCatVerID;
 
-    if (!IDBPolicy::useHdfs())
+    if (false && !IDBPolicy::useHdfs())
     {
         int filedata[2];
         filedata[0] = _verID;

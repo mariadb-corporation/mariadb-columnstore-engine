@@ -1135,7 +1135,7 @@ void VBBM::save(string filename)
     mode_t utmp = ::umask(0);
     int var;
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile> out(IDBDataFile::open(
