@@ -96,6 +96,7 @@ bool IDBFactory::installPlugin(const std::string& plugin)
 
 IDBDataFile* IDBFactory::open(IDBDataFile::Types type, const char* fname, const char* mode, unsigned opts, unsigned colWidth)
 {
+    /* If this is a tmp file, ie opts & USE_TMPFILE, might want to force that to be a local file */
     if ( s_plugins.find(type) == s_plugins.end() )
     {
         ostringstream oss;

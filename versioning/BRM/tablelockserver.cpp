@@ -63,7 +63,7 @@ void TableLockServer::save()
 
     const char* filename_p = filename.c_str();
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         scoped_ptr<IDBDataFile> out(IDBDataFile::open(
                                         IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
@@ -109,7 +109,7 @@ void TableLockServer::load()
     TableLockInfo tli;
 
     /* Need to standardize the file error handling */
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile>  in(IDBDataFile::open(

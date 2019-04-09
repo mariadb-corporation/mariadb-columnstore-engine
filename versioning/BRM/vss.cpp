@@ -1295,7 +1295,7 @@ void VSS::save(string filename)
     struct Header header;
     mode_t utmp = ::umask(0);
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile> out(IDBDataFile::open(
