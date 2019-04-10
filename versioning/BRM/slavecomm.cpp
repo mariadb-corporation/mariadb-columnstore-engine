@@ -1929,7 +1929,8 @@ void SlaveComm::do_vbRollback2(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    takeSnapshot = true;
+    //takeSnapshot = true;
+    doSaveDelta = true;
 }
 
 void SlaveComm::do_vbCommit(ByteStream& msg)
@@ -1961,7 +1962,8 @@ void SlaveComm::do_vbCommit(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    takeSnapshot = true;
+    //takeSnapshot = true;
+    doSaveDelta = true;
 }
 
 void SlaveComm::do_undo()

@@ -3360,6 +3360,8 @@ vector<InlineLBIDRange> DBRM::getEMFreeListEntries() throw()
 
 int DBRM::takeSnapshot() throw ()
 {
+    return 0;   // don't know why, but we're calling this all the time.  Need to take most/all of those calls out, it's very wasteful.
+
     ByteStream command, response;
     uint8_t  err;
 
