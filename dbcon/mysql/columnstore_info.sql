@@ -98,4 +98,23 @@ BEGIN
 SELECT CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL), ':1') COMPRESSION_RATIO;
 END //
 
+create procedure columnstore_upgrade()
+`columnstore_upgrade`: BEGIN
+    DECLARE done INTEGER DEFAULT 0;
+    DECLARE schema_table VARCHAR(100) DEFAULT "";
+    DECLARE table_list CURSOR FOR select concat('`', table_schema,'`.`',table_name,'`') from information_schema.tables where engine='columnstore';
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    OPEN table_list;
+    tlist: LOOP
+        FETCH table_list INTO schema_table;
+        IF done = 1 THEN LEAVE tlist;
+        END IF;
+        SET @sql_query = concat('ALTER TABLE ', schema_table, ' COMMENT=\'\'');
+        PREPARE stmt FROM @sql_query;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END LOOP;
+END //
+delimiter ;
+
 DELIMITER ;
