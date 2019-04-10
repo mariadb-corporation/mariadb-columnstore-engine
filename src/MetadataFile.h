@@ -55,7 +55,7 @@ class MetadataFile
         void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const char *filename, size_t length);
         void removeEntry(off_t offset);
-
+        
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
         static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);
         static std::string getNewKey(std::string sourceName, size_t offset, size_t length);
@@ -64,6 +64,9 @@ class MetadataFile
         static size_t getLengthFromKey(const std::string &key);
         static void setOffsetInKey(std::string &key, off_t newOffset);
         static void setLengthInKey(std::string &key, size_t newLength);
+        
+        // breaks a key into its consitituent fields
+        static void breakout(const std::string &key, std::vector<std::string> &out);
         
         // this will be a singleton, which stores the config used
         // by all MetadataFile instances so we don't have to keep bothering Config.

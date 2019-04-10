@@ -9,7 +9,6 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
-#include <boost/algorithm/string.hpp>
 #include <unistd.h>
 
 #define max(x, y) (x > y ? x : y)
@@ -307,11 +306,26 @@ void MetadataFile::removeEntry(off_t offset)
     mObjects.erase(offset);
 }
 
+// There are more efficient ways to do it.  Optimize if necessary.
+void MetadataFile::breakout(const string &key, vector<string> &ret)
+{
+    int indexes[3];  // positions of each '_' delimiter
+    ret.clear();
+    indexes[0] = key.find_first_of('_');
+    indexes[1] = key.find_first_of('_', indexes[0] + 1);
+    indexes[2] = key.find_first_of('_', indexes[1] + 1);
+    ret.push_back(key.substr(0, indexes[0]));
+    ret.push_back(key.substr(indexes[0] + 1, indexes[1] - indexes[0] - 1));
+    ret.push_back(key.substr(indexes[1] + 1, indexes[2] - indexes[1] - 1));
+    ret.push_back(key.substr(indexes[2] + 1));
+}
+    
 string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 {
     boost::uuids::uuid u = boost::uuids::random_generator()();
+    
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     ostringstream oss;
     oss << u << "_" << split[1] << "_" << length << "_" << split[3];
     return oss.str();
@@ -337,14 +351,14 @@ string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
 off_t MetadataFile::getOffsetFromKey(const string &key)
 {
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     return stoll(split[1]);
 }
 
 string MetadataFile::getSourceFromKey(const string &key)
 {
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     
     // this is to convert the munged filenames back to regular filenames
     // for consistent use in IOC locks
@@ -358,7 +372,7 @@ string MetadataFile::getSourceFromKey(const string &key)
 size_t MetadataFile::getLengthFromKey(const string &key)
 {
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     return stoull(split[2]);
 }
 
@@ -366,7 +380,7 @@ size_t MetadataFile::getLengthFromKey(const string &key)
 void MetadataFile::setOffsetInKey(string &key, off_t newOffset)
 {
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     ostringstream oss;
     oss << split[0] << "_" << newOffset << "_" << split[2] << "_" << split[3];
     key = oss.str();
@@ -375,7 +389,7 @@ void MetadataFile::setOffsetInKey(string &key, off_t newOffset)
 void MetadataFile::setLengthInKey(string &key, size_t newLength)
 {
     vector<string> split;
-    boost::split(split, key, boost::is_any_of("_"));
+    breakout(key, split);
     ostringstream oss;
     oss << split[0] << "_" << split[1] << "_" << newLength << "_" << split[3];
     key = oss.str();
