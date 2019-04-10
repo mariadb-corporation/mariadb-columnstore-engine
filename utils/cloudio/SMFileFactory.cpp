@@ -23,6 +23,7 @@
 #include "SMComm.h"
 #include "BufferedFile.h"
 #include "IDBDataFile.h"
+<<<<<<< HEAD
 =======
 # copy licensing stuff here
 
@@ -30,6 +31,8 @@
 #include "SMFileFactory.h"
 #include "SMComm.h"
 >>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
+=======
+>>>>>>> dfc29fa8... Eventually found the problem with rename().  Was calling
 
 using namespace std;
 
