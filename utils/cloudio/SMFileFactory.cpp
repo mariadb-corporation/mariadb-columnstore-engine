@@ -20,6 +20,8 @@
 #include "SMFileFactory.h"
 #include "SMDataFile.h"
 #include "SMComm.h"
+#include "BufferedFile.h"
+#include "IDBDataFile.h"
 
 using namespace std;
 
@@ -28,6 +30,10 @@ namespace idbdatafile {
 
 IDBDataFile* SMFileFactory::open(const char *filename, const char *mode, unsigned opts, unsigned colWidth)
 {
+    // TODO, test whether this breaks anything.
+    //if (opts & IDBDataFile::USE_TMPFILE)
+    //    return new BufferedFile(filename, mode, opts);
+        
     bool _read = false;
     bool _write = false;
     bool create = false;

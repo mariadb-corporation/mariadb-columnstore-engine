@@ -68,7 +68,7 @@ int SMFileSystem::rename(const char *oldFile, const char *newFile)
     int err = copyFile(oldFile, newFile);
     if (err)
         return err;
-    err = unlink(oldFile);
+    err = this->remove(oldFile);
     return err;
 }
 

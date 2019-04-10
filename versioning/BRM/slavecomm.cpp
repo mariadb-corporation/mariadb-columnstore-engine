@@ -1889,7 +1889,8 @@ void SlaveComm::do_vbRollback1(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    takeSnapshot = true;
+    //takeSnapshot = true;
+    doSaveDelta = true;
 }
 
 void SlaveComm::do_vbRollback2(ByteStream& msg)
