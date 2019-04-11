@@ -144,8 +144,11 @@ int SessionManager::start()
                 if(fds[socketIncr].revents != POLLIN)
                 {
                     //logger->log(LOG_DEBUG,"Error! revents = %d", fds[socketIncr].revents,);
+                    if (fds[socketIncr].fd == -1)
+                        cout << "!= POLLIN, closing fd -1" << endl;
                     close(fds[socketIncr].fd);
                     fds[socketIncr].fd = -1;
+                    continue;
                 }
                 if (fds[socketIncr].fd == listenSockfd)
                 {
@@ -211,6 +214,8 @@ int SessionManager::start()
                             {
                                 if (fds[i].fd == socket)
                                 {
+                                    if (socket == -1)
+                                        cout << "REMOVEFD told to remove fd -1" << endl;
                                     close(socket);
                                     fds[i].fd = -1;
                                     break;
@@ -337,6 +342,8 @@ int SessionManager::start()
 
                     if (closeConn)
                     {
+                        if (fds[socketIncr].fd == -1)
+                            cout << "closeConn closing fd -1" << endl;
                         close(fds[socketIncr].fd);
                         fds[socketIncr].fd = -1;
                     }
@@ -351,16 +358,22 @@ int SessionManager::start()
         {
             throw std::exception();
         }
-        for (int i = 0; i < nfds; i++)
-        {
+        
+        /* get rid of fds == -1 */
+        int i, j;
+        for (i = 2; i < nfds; ++i)
             if (fds[i].fd == -1)
+                break;
+        for (j = i + 1; j < nfds; ++j)
+        {
+            if (fds[j].fd != -1)
             {
-                if (i < nfds - 1)
-                    memmove(&fds[i], &fds[i+1], sizeof(struct pollfd) * nfds);
-                i--;
-                nfds--;
+                fds[i].fd = fds[j].fd;
+                fds[i].events = fds[j].events;
+                ++i;
             }
         }
+        nfds = i;
     }
 
     return -1;
