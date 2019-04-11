@@ -579,7 +579,7 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
 
     // this is kind of ugly.  We need to lock on 'file' relative to metaPath, and without the .meta extension
     string pita = file.string();
-    pita = pita.substr(metaPath.string().length() + 1);
+    pita = pita.substr(metaPath.string().length());
     pita = pita.substr(0, pita.find_last_of('.'));
     ScopedWriteLock lock(this, pita);
         
@@ -1043,6 +1043,7 @@ void IOCoordinator::readLock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
 
     //cout << "read-locking " << filename << endl;
+    assert(filename[0] == '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();
@@ -1067,6 +1068,7 @@ void IOCoordinator::writeLock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
     
     //cout << "write-locking " << filename << endl;
+    assert(filename[0] == '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();
