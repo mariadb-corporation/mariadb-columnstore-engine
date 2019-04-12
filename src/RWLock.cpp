@@ -17,6 +17,7 @@ RWLock::~RWLock()
 
 bool RWLock::inUse()
 {
+    boost::unique_lock<boost::mutex> s(m);
     return readersWaiting || readersRunning || writersWaiting || writersRunning;
 }
 
