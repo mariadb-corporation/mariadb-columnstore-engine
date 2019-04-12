@@ -54,7 +54,7 @@ void ScopedWriteLock::unlock()
     }
 }
 
-ScopedCloser::ScopedCloser(int f) : fd(f) { }
+ScopedCloser::ScopedCloser(int f) : fd(f) { assert(f != -1); }
 ScopedCloser::~ScopedCloser() { 
     int s_errno = errno;
     ::close(fd);
@@ -64,6 +64,7 @@ ScopedCloser::~ScopedCloser() {
 SharedCloser::SharedCloser(int f)
 { 
     block = new CtrlBlock();
+    assert(f != -1);
     block->fd = f;
     block->refCount = 1;
 }
@@ -78,8 +79,10 @@ SharedCloser::~SharedCloser()
     block->refCount--;
     if (block->refCount == 0)
     {
+        int s_errno = errno;
         ::close(block->fd);
         delete block;
+        errno = s_errno;
     }
 }
     

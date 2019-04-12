@@ -3,6 +3,7 @@
 #include "IOCoordinator.h"
 #include "SMLogging.h"
 #include "Cache.h"
+#include "Utilities.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -84,21 +85,11 @@ Replicator * Replicator::get()
     return rep;
 }
 
-struct scoped_closer {
-    scoped_closer(int f) : fd(f) { }
-    ~scoped_closer() {
-        int s_errno = errno;
-        ::close(fd);
-        errno = s_errno;
-    }
-    int fd;
-};
-
 #define OPEN(name, mode) \
     fd = ::open(name, mode, 0600); \
     if (fd < 0) \
         return fd; \
-    scoped_closer sc(fd);
+    ScopedCloser sc(fd);
 
 int Replicator::newObject(const char *filename, const uint8_t *data, off_t offset, size_t length )
 {
@@ -132,20 +123,24 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     uint64_t thisEntryMaxOffset = (offset + length - 1);
     Cache *cache = Cache::get();  // need to init sync here to break circular dependency...
 
-    if (!boost::filesystem::exists(journalFilename))
+    bool exists = boost::filesystem::exists(journalFilename);
+    OPEN(journalFilename.c_str(), (exists ? O_RDWR : O_WRONLY | O_CREAT))
+    
+    if (!exists)
     {
         // create new journal file with header
-        OPEN(journalFilename.c_str(), O_WRONLY | O_CREAT);
+        //OPEN(journalFilename.c_str(), O_WRONLY | O_CREAT);
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
         cache->makeSpace(header.size());
         err = ::write(fd, header.c_str(), header.length() + 1);
+        assert((uint) err == header.length() + 1);
         if (err <= 0)
             return err;
     }
     else
     {
         // read the existing header and check if max_offset needs to be updated
-        OPEN(journalFilename.c_str(), O_RDWR);
+        //OPEN(journalFilename.c_str(), O_RDWR);
         boost::shared_array<char> headertxt = seekToEndOfHeader1(fd);
         stringstream ss;
         ss << headertxt.get();
@@ -157,21 +152,28 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         {
             string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
             err = ::pwrite(fd, header.c_str(), header.length() + 1,0);
+            assert((uint) err == header.length() + 1);
             if (err <= 0)
                 return err;
         }
     }
 
-    OPEN(journalFilename.c_str(), O_WRONLY | O_APPEND);
-
+    // XXXPAT: avoid closing and right away opening the file again when it's easy not to.  
+    // Just reposition the file pointer.
+    //OPEN(journalFilename.c_str(), O_WRONLY | O_APPEND);
+    ::lseek(fd, 0, SEEK_END);
+    
     err = ::write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
+    assert(err == JOURNAL_ENTRY_HEADER_SIZE);
     if (err <= 0)
         return err;
 
     while (count < length) {
         err = ::write(fd, &data[count], length - count);
-        if (err <= 0)
+        if (err < 0)
         {
+            /* XXXPAT: We can't return anything but success here, unless we also update the entry's
+               header */
             if (count > 0)   // return what was successfully written
                 return count;
             else

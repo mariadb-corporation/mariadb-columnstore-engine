@@ -257,6 +257,12 @@ void Synchronizer::process(list<string>::iterator name)
                 pending->opFlags, e.what());
             success = false;
             sleep(1);
+            continue;
+            /*  TODO:  Need to think this about this requeue logic again.  The potential problem is that
+                there may be threads waiting for this job to finish.  If the insert doesn't happen because
+                there is already a job in pendingOps for the same file, then the threads waiting on this
+                job never get woken, right??  Or, can that never happen for some reason?
+            */
             s.lock();
             auto inserted = pendingOps.insert(pair<string, boost::shared_ptr<PendingOps> >(key, pending));
             if (!inserted.second)

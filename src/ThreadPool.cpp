@@ -107,7 +107,7 @@ void ThreadPool::_processingLoop()
             threadsWaiting++;
             bool timedout = !jobAvailable.timed_wait<>(s, idleThreadTimeout);
             threadsWaiting--;
-            if (timedout)
+            if (timedout && jobs.empty())
                 return;
         }
         if (jobs.empty())

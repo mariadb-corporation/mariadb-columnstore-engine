@@ -368,6 +368,7 @@ void Cache::_makeSpace(size_t size)
         assert(currentCacheSize >= (size_t) statbuf.st_size);
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
+        logger->log(LOG_WARNING, "Cache:  flushing!  Try to avoid this, it may deadlock!");
         Synchronizer::get()->flushObject(*it);
         replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;

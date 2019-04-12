@@ -81,15 +81,8 @@ IOCoordinator * IOCoordinator::get()
 
 void IOCoordinator::willRead(const char *, off_t, size_t)
 {
-    // no cache yet
     // not sure we will implement this.
 }
-
-#define OPEN(name, mode) \
-    fd = ::open(filename, mode, 0660); \
-    if (fd < 0) \
-        return fd; \
-    ScopedCloser sc(fd);
 
 int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length) const
 {
@@ -243,6 +236,12 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
 
 int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset, size_t length)
 {
+    ScopedWriteLock lock(this, filename);
+    return _write(filename, data, offset, length);
+}
+
+int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length)
+{
     int err = 0;
     uint64_t count = 0;
     uint64_t writeLength = 0;
@@ -252,9 +251,12 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     vector<string> newObjectKeys;
     Synchronizer *synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
 
-    ScopedWriteLock lock(this, filename);
-
-    MetadataFile metadata = MetadataFile(filename);
+    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t());
+    if (!metadata.exists())
+    {
+        errno = EBADF;
+        return -1;
+    }
 
     //read metadata determine how many objects overlap
     objects = metadata.metadataRead(offset,length);
@@ -280,11 +282,14 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
                 objectOffset = 0;
             }
             cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
-
+            
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],objectOffset,writeLength);
-
+            assert((uint) err == writeLength);
+            
             if (err <= 0)
             {
+                // XXXPAT: Count hasn't been updated yet, so I'm not sure what we're trying to do here.
+                // There's another block below that looks similar.  Also similar blocks in append().
                 if ((count + objectOffset) > i->length)
                     metadata.updateEntryLength(i->offset, (count + objectOffset));
                 metadata.writeMetadata(filename);
@@ -304,7 +309,6 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     // there is no overlapping data, or data goes beyond end of last object
     while (dataRemaining > 0)
     {
-        cache->makeSpace(dataRemaining);
         metadataObject newObject = metadata.addMetadataObject(filename,0);
         if (count == 0 && (uint64_t) offset > newObject.offset)
         {
@@ -320,10 +324,12 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
             writeLength = min(objectSize,dataRemaining);
             objectOffset = 0;
         }
+        cache->makeSpace(writeLength);
         if ((writeLength + objectOffset) > newObject.length)
             metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
         // send to replicator
-        err = replicator->newObject(newObject.key.c_str(),data,objectOffset,writeLength);
+        err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
+        assert((uint) err == writeLength);
         if (err <= 0)
         {
             // update metadataObject length to reflect what awas actually written
@@ -345,14 +351,10 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
     synchronizer->newObjects(newObjectKeys);
 
     metadata.writeMetadata(filename);
-    
-    lock.unlock();
 
     return count;
 }
-//
-// Still fixing stuff here
-//
+
 int IOCoordinator::append(const char *filename, const uint8_t *data, size_t length)
 {
     int err;
@@ -365,8 +367,12 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
     
     ScopedWriteLock lock(this, filename);
 
-    MetadataFile metadata = MetadataFile(filename);
-
+    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t());
+    if (!metadata.exists())
+    {
+        errno = EBADF;
+        return -1;
+    }
     uint64_t offset = metadata.getLength();
 
     //read metadata determine if this fits in the last object
@@ -376,6 +382,8 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
     {
         std::vector<metadataObject>::const_iterator i = objects.begin();
 
+        // XXXPAT: Need to handle the case where objectSize has been reduced since i was created
+        // ie, i->length may be > objectSize here, so objectSize - i->length may be a huge positive #
         if ((objectSize - i->length) > 0) // if this is zero then we can't put anything else in this object
         {
             // figure out how much data to write to this object
@@ -384,6 +392,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
             cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],i->length,writeLength);
+            assert((uint) err == writeLength);
             if (err <= 0)
             {
                 metadata.updateEntryLength(i->offset, (count + i->length));
@@ -405,6 +414,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
     {
         //Something went wrong this shouldn't overlap objects
         logger->log(LOG_ERR,"IOCoordinator::append(): overlapping objects found on append.",count,length);
+        assert(0);
         return -1;
     }
     // append is starting or adding to a new object
@@ -418,7 +428,8 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
 
         // write the new object
-        err = replicator->newObject(newObject.key.c_str(),data,0,writeLength);
+        err = replicator->newObject(newObject.key.c_str(),&data[count],0,writeLength);
+        assert((uint) err == writeLength);
         if (err <= 0)
         {
             // update metadataObject length to reflect what awas actually written
@@ -519,7 +530,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     {
         lock.unlock();
         uint8_t zero = 0;
-        err = write(path, &zero, newSize - 1, 1);
+        err = _write(path, &zero, newSize - 1, 1);
         if (err < 0)
             return -1;
         return 0;
@@ -1043,7 +1054,7 @@ void IOCoordinator::readLock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
 
     //cout << "read-locking " << filename << endl;
-    assert(filename[0] == '/');
+    //assert(filename[0] == '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();
@@ -1068,7 +1079,7 @@ void IOCoordinator::writeLock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
     
     //cout << "write-locking " << filename << endl;
-    assert(filename[0] == '/');
+    //assert(filename[0] == '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();

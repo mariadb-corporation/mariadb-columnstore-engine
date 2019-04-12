@@ -591,10 +591,23 @@ bool IOCTruncate()
     bf::path cachedObjectPath = cachePath/testObjKey;
     makeTestMetadata(metadataFile.string().c_str());
     makeTestObject(objectPath.string().c_str());
+
     int err;
     uint8_t buf[1<<14];
+    int *buf32 = (int *) buf;
     
-    // Extending a file doesn't quite work yet, punting on that part of the test for now
+    /* Need to enable this later.
+    // Extend the test file to 10000 bytes
+    err = ioc->truncate(testFile, 10000);
+    assert(!err);
+    err = ioc->read(testFile, buf, 0, 10000);
+    assert(err == 10000);
+    // verity the data is what it should be
+    for (int i = 0; i < 2048; i++)
+        assert(buf32[i] == i);
+    for (int i = 2048; i < 2500; i++)
+        assert(buf32[i] == 0);
+    */
     
     err = ioc->truncate(testFile, 4000);
     assert(!err);
@@ -635,7 +648,6 @@ bool IOCTruncate()
     memset(buf, 0, 16384);
     err = ioc->read(testFile, buf, 0, 16384);
     assert(err == 16384);
-    int *buf32 = (int *) buf;
     for (int i = 0; i < 16384/4; i++)
         assert(buf32[i] == (i % 2048));
     assert(bf::exists(cachedSecondObject));
@@ -1451,6 +1463,8 @@ int main()
     
     opentask();
     //metadataUpdateTest();
+    // create the metadatafile to use
+    MetadataFile tmpfile("metadataJournalTest");
     // requires 8K object size to test boundries
     //Case 1 new write that spans full object
     metadataJournalTest((10*sizeKB),0);
