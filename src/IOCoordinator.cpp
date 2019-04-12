@@ -323,7 +323,7 @@ int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset
         if ((writeLength + objectOffset) > newObject.length)
             metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
         // send to replicator
-        err = replicator->newObject(newObject.key.c_str(),data,objectOffset,writeLength);
+        err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
         if (err <= 0)
         {
             // update metadataObject length to reflect what awas actually written
@@ -418,7 +418,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
 
         // write the new object
-        err = replicator->newObject(newObject.key.c_str(),data,0,writeLength);
+        err = replicator->newObject(newObject.key.c_str(),&data[count],0,writeLength);
         if (err <= 0)
         {
             // update metadataObject length to reflect what awas actually written
