@@ -301,6 +301,11 @@ int MetadataFile::writeMetadata(const char *filename)
     return error;
 }
 
+const metadataObject & MetadataFile::getEntry(off_t offset)
+{
+    return *(mObjects.find(offset));
+}
+
 void MetadataFile::removeEntry(off_t offset)
 {
     mObjects.erase(offset);

@@ -110,7 +110,7 @@ int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *jou
 {
     boost::shared_array<uint8_t> argh;
     
-    argh = mergeJournal(objFilename, journalFilename, offset, &length);
+    argh = mergeJournal(objFilename, journalFilename, offset, length);
     if (!argh)
         return -1;
     else
@@ -874,7 +874,7 @@ int IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t *buf, off_t of
 }
 
 boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, const char *journal, off_t offset,
-    size_t *len) const
+    size_t len) const
 {
     int objFD, journalFD;
     boost::shared_array<uint8_t> ret;
@@ -896,24 +896,28 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     boost::property_tree::ptree header;
     boost::property_tree::json_parser::read_json(ss, header);
     assert(header.get<int>("version") == 1);
-    size_t maxJournalOffset = header.get<size_t>("max_offset");
+    //size_t maxJournalOffset = header.get<size_t>("max_offset");
 
+    #if 0
     struct stat objStat;
     fstat(objFD, &objStat);
     
-    if (*len == 0)
+    if (len == 0)
         // read to the end of the file
-        *len = max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset;
+        len = max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset;
     else
         // make sure len is within the bounds of the data
-        *len = min(*len, (max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset));
+        len = min(*len, (max(maxJournalOffset + 1, (size_t) objStat.st_size) - offset));
     ret.reset(new uint8_t[*len]);
+    #endif
+    
+    ret.reset(new uint8_t[len]);
     
     // read the object into memory
     size_t count = 0;
     ::lseek(objFD, offset, SEEK_SET);
-    while (count < *len) {
-        int err = ::read(objFD, &ret[count], *len - count);
+    while (count < len) {
+        int err = ::read(objFD, &ret[count], len - count);
         if (err < 0)
         {
             char buf[80];
@@ -927,7 +931,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         {
             // at the EOF of the object.  The journal may contain entries that append to the data,
             // so 0-fill the remaining bytes.
-            memset(&ret[count], 0, *len-count);
+            memset(&ret[count], 0, len-count);
             break;
         }
         count += err;
@@ -943,7 +947,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         
         // if this entry overlaps, read the overlapping section
         uint64_t lastJournalOffset = offlen[0] + offlen[1];
-        uint64_t lastBufOffset = offset + *len;
+        uint64_t lastBufOffset = offset + len;
         if (offlen[0] <= lastBufOffset && lastJournalOffset >= (uint64_t) offset)
         {
             uint64_t startReadingAt = max(offlen[0], (uint64_t) offset);
@@ -984,7 +988,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
 }
 
 // MergeJournalInMem is a specialized version of mergeJournal().  TODO: refactor if possible.
-int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath) const
+int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath) const
 {
     int journalFD = ::open(journalPath, O_RDONLY);
     if (journalFD < 0)
@@ -998,8 +1002,9 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     boost::property_tree::ptree header;
     boost::property_tree::json_parser::read_json(ss, header);
     assert(header.get<int>("version") == 1);
-    size_t maxJournalOffset = header.get<size_t>("max_offset"); 
+    //size_t maxJournalOffset = header.get<size_t>("max_offset"); 
     
+    #if 0
     if (maxJournalOffset > *len)
     {
         uint8_t *newbuf = new uint8_t[maxJournalOffset + 1];
@@ -1008,6 +1013,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
         objData.reset(newbuf);
         *len = maxJournalOffset + 1;
     }
+    #endif
     
     // start processing the entries
     while (1)
@@ -1018,8 +1024,12 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
             break;
         
         uint64_t startReadingAt = offlen[0];
-        uint64_t lengthOfRead = offlen[1];
-            
+        uint64_t lengthOfRead;
+        if (offlen[0] + offlen[1] > len)
+            lengthOfRead = len - offlen[0];
+        else
+            lengthOfRead = offlen[1];
+
         uint count = 0;
         while (count < lengthOfRead)
         {

@@ -932,8 +932,8 @@ bool mergeJournalTest()
     
     int i;
     IOCoordinator *ioc = IOCoordinator::get();
-    size_t len = 0;
-    boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal", 0, &len);
+    size_t len = 8192;
+    boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal", 0, len);
     assert(data);
     int *idata = (int *) data.get();
     for (i = 0; i < 5; i++)
@@ -946,7 +946,7 @@ bool mergeJournalTest()
     // try different range parameters
     // read at the beginning of the change
     len = 40;
-    data = ioc->mergeJournal("test-object", "test-journal", 20, &len);
+    data = ioc->mergeJournal("test-object", "test-journal", 20, len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 5; i++)
@@ -956,7 +956,7 @@ bool mergeJournalTest()
     
     // read s.t. beginning of the change is in the middle of the range
     len = 24;
-    data = ioc->mergeJournal("test-object", "test-journal", 8, &len);
+    data = ioc->mergeJournal("test-object", "test-journal", 8, len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 3; i++)
@@ -966,7 +966,7 @@ bool mergeJournalTest()
     
     // read s.t. end of the change is in the middle of the range
     len = 20;
-    data = ioc->mergeJournal("test-object", "test-journal", 28, &len);
+    data = ioc->mergeJournal("test-object", "test-journal", 28, len);
     assert(data);
     idata = (int *) data.get();
     for (i = 0; i < 3; i++)

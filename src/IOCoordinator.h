@@ -42,12 +42,11 @@ class IOCoordinator : public boost::noncopyable
         int copyFile(const char *filename1, const char *filename2);
         
         // The shared logic for merging a journal file with its base file.
-        // *len should be set to the length of the data requested (0 means read the whole file),
-        // on return *len will be the actual length returned.
-        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, size_t *len) const;
+        // len should be set to the length of the data requested
+        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, size_t len) const;
         
         // this version modifies object data in memory, given the journal filename
-        int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t *len, const char *journalPath) const;
+        int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath) const;
         
         // this version takes already-open file descriptors, and an already-allocated buffer as input.
         // file descriptor are positioned, eh, best not to assume anything about their positions

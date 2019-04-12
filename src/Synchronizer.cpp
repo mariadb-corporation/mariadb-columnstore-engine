@@ -325,6 +325,14 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     ScopedWriteLock s(ioc, sourceFile);
     
     string &key = *lit;
+    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    if (!md.exists())
+    {
+        logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s", sourceFile.c_str());
+        return;
+    }
+    const metadataObject &mdEntry = md.getEntry(MetadataFile::getOffsetFromKey(key));
+    
     bf::path oldCachePath = cachePath / key;
     string journalName = (journalPath/ (key + ".journal")).string();
     
@@ -335,10 +343,10 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         // Revision ^^.  It can happen if the object was deleted after the op was latched but before it runs.
         return;
     }
-
+    
     int err;
     boost::shared_array<uint8_t> data;
-    size_t count = 0, size = 0;
+    size_t count = 0, size = mdEntry.length;
     char buf[80];
     bool oldObjIsCached = cache->exists(key);
     
@@ -356,7 +364,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             }
             throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
         }
-        err = ioc->mergeJournalInMem(data, &size, journalName.c_str());
+        err = ioc->mergeJournalInMem(data, size, journalName.c_str());
         if (err)
         {   
             if (!bf::exists(journalName))
@@ -369,7 +377,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     else
     {
-        data = ioc->mergeJournal(oldCachePath.string().c_str(), journalName.c_str(), 0, &size);
+        data = ioc->mergeJournal(oldCachePath.string().c_str(), journalName.c_str(), 0, size);
         if (!data)
         {
             if (!bf::exists(journalName))
@@ -424,7 +432,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     // update the metadata for the source file
-    MetadataFile md(sourceFile.c_str());
+    
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newKey, size);
     replicator->updateMetadata(sourceFile.c_str(), md);
 
