@@ -282,7 +282,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
                 objectOffset = 0;
             }
             cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
-            
+
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],objectOffset,writeLength);
             assert((uint) err == writeLength);
             
@@ -373,6 +373,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
         errno = EBADF;
         return -1;
     }
+
     uint64_t offset = metadata.getLength();
 
     //read metadata determine if this fits in the last object
