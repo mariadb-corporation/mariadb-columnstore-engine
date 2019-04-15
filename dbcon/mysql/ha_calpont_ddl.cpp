@@ -2078,8 +2078,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     if ( schemaSyncOnly && isCreate)
         return rc;
 
-    //this is replcated DDL, treat it just like SSO
-    if (thd->slave_thread)
+    if (thd->slave_thread && !ci.replicationEnabled)
         return rc;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
@@ -2277,8 +2276,7 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
         return 0;
     }
 
-    //this is replcated DDL, treat it just like SSO
-    if (thd->slave_thread)
+    if (thd->slave_thread && !ci.replicationEnabled)
         return 0;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
@@ -2417,8 +2415,7 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     pair<string, string> toPair;
     string stmt;
 
-    //this is replicated DDL, treat it just like SSO
-    if (thd->slave_thread)
+    if (thd->slave_thread && !ci.replicationEnabled)
         return 0;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
