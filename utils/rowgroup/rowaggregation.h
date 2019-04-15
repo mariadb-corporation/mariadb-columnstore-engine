@@ -630,7 +630,7 @@ protected:
         if (fAggMapPtr) fAggMapPtr->clear();
     }
 
-        void resetUDAF(RowUDAFFunctionCol* rowUDAF);
+    void resetUDAF(RowUDAFFunctionCol* rowUDAF);
 
     inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
     inline void makeAggFieldsNull(Row& row);
