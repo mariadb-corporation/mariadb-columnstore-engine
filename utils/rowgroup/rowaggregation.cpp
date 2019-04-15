@@ -218,7 +218,6 @@ inline string getStringNullValue()
 
 namespace rowgroup
 {
-
 const std::string typeStr("");
 const static_any::any& RowAggregation::charTypeId((char)1);
 const static_any::any& RowAggregation::scharTypeId((signed char)1);
@@ -590,7 +589,8 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 RowAggregation::RowAggregation() :
     fAggMapPtr(NULL), fRowGroupOut(NULL),
     fTotalRowCount(0), fMaxTotalRowCount(AGG_ROWGROUP_SIZE),
-    fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0)
+    fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0),
+    fOrigFunctionCols(NULL)
 {
 }
 
@@ -599,7 +599,8 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
                                const vector<SP_ROWAGG_FUNC_t>&  rowAggFunctionCols) :
     fAggMapPtr(NULL), fRowGroupOut(NULL),
     fTotalRowCount(0), fMaxTotalRowCount(AGG_ROWGROUP_SIZE),
-    fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0)
+    fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0),
+    fOrigFunctionCols(NULL)
 {
     fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
     fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
@@ -610,7 +611,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs):
     fAggMapPtr(NULL), fRowGroupOut(NULL),
     fTotalRowCount(0), fMaxTotalRowCount(AGG_ROWGROUP_SIZE),
     fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0),
-    fRGContext(rhs.fRGContext)
+    fRGContext(rhs.fRGContext), fOrigFunctionCols(NULL)
 {
     //fGroupByCols.clear();
     //fFunctionCols.clear();
