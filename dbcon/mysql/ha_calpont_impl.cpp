@@ -3969,10 +3969,16 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
 
     execplan::CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
 
-    if (get_fe_conn_info_ptr() == NULL)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    // MCOL-3247 Use THD::ha_data as a per-plugin per-session
+    // storage. Filled in external_lock when we remove a lock
+    // from vtable(lock_type = 2)
+    // An ugly way. I will use ha_data w/o external_lock.
+    // This in MCOL-2178
+    cal_connection_info* ci = NULL;
+    if(thd_get_ha_data(thd, hton))
+    {
+        ci = reinterpret_cast<cal_connection_info*>(thd_get_ha_data(thd, hton));
+    }
 
     if (!ci) return 0;
 
@@ -4195,6 +4201,9 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 ci->miniStats = ci->cal_conn_hndl->miniStats;
                 ci->queryState = 0;
                 thd->infinidb_vtable.override_largeside_estimate = false;
+                // MCOL-3247 Use THD::ha_data as a per-plugin per-session
+                // storage for cal_conn_hndl to use it later in close_connection 
+                thd_set_ha_data(thd, calpont_hton, get_fe_conn_info_ptr());
             }
         }
 
