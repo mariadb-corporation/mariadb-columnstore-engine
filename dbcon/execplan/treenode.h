@@ -608,7 +608,7 @@ inline const std::string& TreeNode::getStrVal()
                 int exponent  = (int)floor(log10( fabs(fResult.floatVal)));  // This will round down the exponent
                 double base   = fResult.floatVal * pow(10, -1.0 * exponent);
 
-                if (isnan(exponent) || isnan(base))
+                if (isnan(exponent) || std::isnan(base))
                 {
                     snprintf(tmp, 312, "%f", fResult.floatVal);
                     fResult.strVal = removeTrailing0(tmp, 312);
@@ -643,7 +643,7 @@ inline const std::string& TreeNode::getStrVal()
                 int exponent  = (int)floor(log10( fabs(fResult.doubleVal)));  // This will round down the exponent
                 double base   = fResult.doubleVal * pow(10, -1.0 * exponent);
 
-                if (isnan(exponent) || isnan(base))
+                if (isnan(exponent) || std::isnan(base))
                 {
                     snprintf(tmp, 312, "%f", fResult.doubleVal);
                     fResult.strVal = removeTrailing0(tmp, 312);
