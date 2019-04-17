@@ -35,7 +35,15 @@ IF(NOT CMAKE_BUILD_TYPE)
         "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-#set( CMAKE_VERBOSE_MAKEFILE on )
+SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+
+SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+SET(CMAKE_CXX_EXTENSIONS FALSE)
+SET(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 INCLUDE(columnstore_version.cmake)
 
@@ -83,14 +91,6 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-exec_program("git"
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ARGS "describe --match=NeVeRmAtCh --always --dirty"
-    OUTPUT_VARIABLE GIT_VERSION)
-
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
-
 INCLUDE(bison.cmake)
 
 FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
@@ -111,17 +111,6 @@ INCLUDE (FindSnappy.cmake)
 if (NOT SNAPPY_FOUND)
     MESSAGE(FATAL_ERROR "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
 endif()
-
-# Jemalloc has issues with SLES 12, so disable for now
-IF (EXISTS "/etc/SuSE-release")
-    SET(JEMALLOC_LIBRARIES "")
-ELSE ()
-    INCLUDE (FindJeMalloc.cmake)
-    if (NOT JEMALLOC_FOUND)
-        message(FATAL_ERROR "jemalloc not found!")
-        SET(JEMALLOC_LIBRARIES "")
-    endif()
-ENDIF ()
 
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
@@ -174,7 +163,7 @@ SET (ENGINE_LOCALDIR   "${INSTALL_ENGINE}/local")
 SET (ENGINE_MYSQLDIR   "${INSTALL_ENGINE}/mysql")
 SET (ENGINE_TOOLSDIR   "${INSTALL_ENGINE}/tools")
 
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${JEMALLOC_LIBRARIES})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client)
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
@@ -183,17 +172,13 @@ SET (ENGINE_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage 
 SET (ENGINE_COMMON_LDFLAGS  "")
 
 IF (SERVER_BUILD_INCLUDE_DIR)
-  IF (NOT IS_ABSOLUTE ${SERVER_BUILD_INCLUDE_DIR})
     SET (SERVER_BUILD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${SERVER_BUILD_INCLUDE_DIR})
-  ENDIF()
 ELSE()
     SET (SERVER_BUILD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/../include)
 ENDIF()
 
 IF (SERVER_SOURCE_ROOT_DIR)
-  IF (NOT IS_ABSOLUTE ${SERVER_SOURCE_ROOT_DIR})
     SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_BINARY_DIR}/${SERVER_SOURCE_ROOT_DIR})
-  ENDIF()
 ELSE()
     SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_BINARY_DIR}/..)
 ENDIF()

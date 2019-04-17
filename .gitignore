@@ -106,3 +106,4 @@ install_manifest_storage-engine.txt
 _CPack_Packages
 columnstoreversion.h
 .idea/
+.build
