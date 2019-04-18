@@ -168,7 +168,7 @@ extern "C"
             return 1;
         }
     
-        if (args->arg_type[1] == DECIMAL_RESULT)
+        if (initid->decimals != DECIMAL_NOT_SPECIFIED)
         {
             initid->decimals +=4;
         }
@@ -272,7 +272,7 @@ extern "C"
             return 1;
         }
 
-        if (args->arg_type[0] == DECIMAL_RESULT)
+        if (initid->decimals != DECIMAL_NOT_SPECIFIED)
         {
             initid->decimals +=4;
         }
