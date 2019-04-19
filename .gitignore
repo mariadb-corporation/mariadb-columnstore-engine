@@ -107,3 +107,4 @@ _CPack_Packages
 columnstoreversion.h
 .idea/
 .build
+/.vs
