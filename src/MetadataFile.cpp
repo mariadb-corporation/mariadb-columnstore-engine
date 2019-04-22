@@ -328,7 +328,9 @@ void MetadataFile::breakout(const string &key, vector<string> &ret)
     
 string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 {
+    mutex.lock();
     boost::uuids::uuid u = boost::uuids::random_generator()();
+    mutex.unlock();
     
     vector<string> split;
     breakout(key, split);
@@ -339,7 +341,9 @@ string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 
 string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
 {
+    mutex.lock();
     boost::uuids::uuid u = boost::uuids::random_generator()();
+    mutex.unlock();
     stringstream ss;
 
     for (uint i = 0; i < sourceName.length(); i++)
