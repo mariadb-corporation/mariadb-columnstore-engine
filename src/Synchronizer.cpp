@@ -364,6 +364,17 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             }
             throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
         }
+        //TODO!!  This sucks.  Need a way to pass in a larger array to cloud storage, and also have it not
+        // do any add'l alloc'ing or copying
+        if (size < mdEntry.length)
+        {
+            boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry.length]());
+            memcpy(tmp.get(), data.get(), size);
+            memset(tmp.get(), 0, mdEntry.length - size);   // prob not necessary outside of testing
+            data.swap(tmp);
+            size = mdEntry.length;
+        }
+        
         err = ioc->mergeJournalInMem(data, size, journalName.c_str());
         if (err)
         {   
