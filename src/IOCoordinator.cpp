@@ -1025,11 +1025,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
             break;
         
         uint64_t startReadingAt = offlen[0];
-        uint64_t lengthOfRead;
-        if (offlen[0] + offlen[1] > len)
-            lengthOfRead = len - offlen[0];
-        else
-            lengthOfRead = offlen[1];
+        uint64_t lengthOfRead = offlen[1];
 
         uint count = 0;
         while (count < lengthOfRead)
