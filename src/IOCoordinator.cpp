@@ -210,7 +210,7 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         
         // if this is the first object, the offset to start reading at is offset - object->offset
         off_t thisOffset = (count == 0 ? offset - object.offset : 0);
-        
+        assert(thisOffset >= 0 && thisOffset < (off_t) object.length);
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object - starting offset
         
@@ -466,6 +466,12 @@ int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
     
     if ((openmode & O_CREAT) && !meta.exists())
         replicator->updateMetadata(filename, meta);   // this will end up creating filename
+    if ((openmode & O_TRUNC) && meta.exists())
+    {
+        s.unlock();
+        truncate(filename, 0);
+        s.lock();
+    }
     return meta.stat(out);
 }
 
@@ -530,7 +536,6 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     // extend the file, going to make IOC::write() do it
     if (filesize < newSize)
     {
-        lock.unlock();
         uint8_t zero = 0;
         err = _write(path, &zero, newSize - 1, 1);
         if (err < 0)
@@ -943,8 +948,9 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     {
         uint64_t offlen[2];
         int err = ::read(journalFD, &offlen, 16);
-        if (err != 16)   // got EOF
+        if (err == 0)   // got EOF
             break;
+        assert(err == 16);
         
         //cout << "MJ: got offset " << offlen[0] << " length " << offlen[1] << endl;
         // if this entry overlaps, read the overlapping section
