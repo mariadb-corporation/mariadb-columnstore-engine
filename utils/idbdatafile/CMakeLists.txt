@@ -18,6 +18,8 @@ add_library(idbdatafile SHARED ${idbdatafile_LIB_SRCS})
 
 target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES})
 
+target_compile_definitions(idbdatafile PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
+
 set_target_properties(idbdatafile PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS idbdatafile DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
