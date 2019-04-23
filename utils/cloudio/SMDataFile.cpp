@@ -48,6 +48,8 @@ ssize_t SMDataFile::pread(void *buf, off64_t offset, size_t count)
 ssize_t SMDataFile::read(void *buf, size_t count)
 {
     ssize_t ret = comm->pread(name(), buf, count, position);
+    if (ret < 0)
+        return ret;
     position += ret;
     return ret;
 }
@@ -57,6 +59,8 @@ ssize_t SMDataFile::write(const void *buf, size_t count)
     if (openmode & O_APPEND)
         return comm->append(name(), buf, count);
     ssize_t ret = comm->pwrite(name(), buf, count, position);
+    if (ret < 0)
+        return ret;
     position += ret;
     return ret;
 }
