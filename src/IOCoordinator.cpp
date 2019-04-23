@@ -946,6 +946,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         if (err != 16)   // got EOF
             break;
         
+        //cout << "MJ: got offset " << offlen[0] << " length " << offlen[1] << endl;
         // if this entry overlaps, read the overlapping section
         uint64_t lastJournalOffset = offlen[0] + offlen[1];
         uint64_t lastBufOffset = offset + len;
@@ -954,6 +955,9 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
             uint64_t startReadingAt = max(offlen[0], (uint64_t) offset);
             uint64_t lengthOfRead = min(lastBufOffset, lastJournalOffset) - startReadingAt;
             
+            //cout << "MJ: startReadingAt = " << startReadingAt << " lengthOfRead = " << lengthOfRead << endl;
+            
+            // seek to the portion of the entry to start reading at
             if (startReadingAt != offlen[0])
                 ::lseek(journalFD, startReadingAt - offlen[0], SEEK_CUR);
                 
@@ -970,15 +974,17 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
                 }
                 else if (err == 0)
                 {
-                    logger->log(LOG_ERR, "mergeJournal: got early EOF");
+                    logger->log(LOG_ERR, "mergeJournal: got early EOF. offset=%ld, len=%ld, jOffset=%ld, jLen=%ld,"
+                        " startReadingAt=%ld, lengthOfRead=%ld", offset, len, offlen[0], offlen[1], startReadingAt, lengthOfRead);
                     ret.reset();
                     return ret;
                 }
                 count += err;
             }
             
-            if (lengthOfRead != offlen[1])
-                ::lseek(journalFD, offlen[1] - lengthOfRead, SEEK_CUR);
+            // advance the file pos if we didn't read to the end of the entry
+            if (startReadingAt - offlen[0] + lengthOfRead != offlen[1])
+                ::lseek(journalFD, offlen[1] - (lengthOfRead + startReadingAt - offlen[0]), SEEK_CUR);
         }
         else
             // skip over this journal entry

@@ -1452,9 +1452,33 @@ void IOCCopyFile()
     IOCCopyFile3();
 }
 
+/* Correctness was tested by inspecting debugging outputs in mergeJournal().  With a little more work
+   we could capture the merged output and use that to confirm the expected result.  Later.
+*/
+void bigMergeJournal1()
+{
+    const char *jName = "test_data/e7a81ca3-0af8-48cc-b224-0f59c187e0c1_0_3436_~home~patrick~"
+        "mariadb~columnstore~data1~systemFiles~dbrm~BRM_saves_em.journal";
+    const char *fName = "test_data/e7a81ca3-0af8-48cc-b224-0f59c187e0c1_0_3436_~home~patrick~"
+        "mariadb~columnstore~data1~systemFiles~dbrm~BRM_saves_em";
+        
+    IOCoordinator *ioc = IOCoordinator::get();
+    boost::shared_array<uint8_t> buf;
+    buf = ioc->mergeJournal(fName, jName, 0, 68332);
+    assert(buf);
+    buf = ioc->mergeJournal(fName, jName, 100, 68232);
+    assert(buf);
+    buf = ioc->mergeJournal(fName, jName, 0, 68232);
+    assert(buf);
+    buf = ioc->mergeJournal(fName, jName, 100, 68132);
+    assert(buf);
+    buf = ioc->mergeJournal(fName, jName, 100, 10);
+    assert(buf);
+}
+    
+
 int main()
 {
-
     std::size_t sizeKB = 1024;
     cout << "connecting" << endl;
     makeConnection();
@@ -1505,7 +1529,12 @@ int main()
     IOCTruncate();
     IOCUnlink();
     IOCCopyFile();
-
+    
+    // For the moment, this next one just verifies no error happens as reported by the fcns called.
+    // It doesn't verify the result yet.
+    bigMergeJournal1();
+    
+    
     sleep(5); // sometimes this deletes them before syncwithjournal is called
     metadataJournalTestCleanup(17*sizeKB);
 

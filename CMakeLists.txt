@@ -62,8 +62,13 @@ add_dependencies(StorageManager ms3)
 target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
+# There's probably a better way to do this, but this works, so moving on
+# for now.
+add_custom_target(test_files
+    mkdir -p ${CMAKE_BINARY_DIR}/test_data && cp -R ${CMAKE_SOURCE_DIR}/test_data/* ${CMAKE_BINARY_DIR}/test_data
+)
 add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
-add_dependencies(unit_tests ms3)
+add_dependencies(unit_tests ms3 test_files)
 target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 
