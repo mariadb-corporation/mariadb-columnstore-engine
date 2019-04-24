@@ -18,7 +18,6 @@
 //  $Id: we_fileop.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 
 #include "config.h"
-
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -63,7 +62,6 @@ namespace WriteEngine
 /*static*/ boost::mutex               FileOp::m_createDbRootMutexes;
 /*static*/ boost::mutex               FileOp::m_mkdirMutex;
 /*static*/ std::map<int, boost::mutex*> FileOp::m_DbRootAddExtentMutexes;
-const int MAX_NBLOCKS = 8192; // max number of blocks written to an extent
 // in 1 call to fwrite(), during initialization
 
 //StopWatch timer;
@@ -541,7 +539,9 @@ bool FileOp::existsOIDDir( FID fid ) const
  *    the applicable column segment file does not exist, it is created.
  *    If this is the very first file for the specified DBRoot, then the
  *    partition and segment number must be specified, else the selected
- *    partition and segment numbers are returned.
+ *    partition and segment numbers are returned. This method tries to
+ *    optimize full extents creation skiping disk space
+ *    preallocation(if activated).
  * PARAMETERS:
  *    oid       - OID of the column to be extended
  *    emptyVal  - Empty value to be used for oid
@@ -827,6 +827,7 @@ int FileOp::extendFile(
         return rc;
 
     // Initialize the contents of the extent.
+    // MCOL-498 optimize full extent creation.
     rc = initColumnExtent( pFile,
                            dbRoot,
                            allocSize,
@@ -834,7 +835,8 @@ int FileOp::extendFile(
                            width,
                            newFile, // new or existing file
                            false,   // don't expand; new extent
-                           false ); // add full (not abbreviated) extent
+                           false,   // add full (not abbreviated) extent
+                           true);   // try to optimize extent creation
 
     return rc;
 }
@@ -982,6 +984,8 @@ int FileOp::addExtentExactFile(
         return rc;
 
     // Initialize the contents of the extent.
+    // CS doesn't optimize file operations to have a valid
+    // segment files with empty magics
     rc = initColumnExtent( pFile,
                            dbRoot,
                            allocSize,
@@ -1006,6 +1010,9 @@ int FileOp::addExtentExactFile(
  *    This function can be used to initialize an entirely new extent, or
  *    to finish initializing an extent that has already been started.
  *    nBlocks controls how many 8192-byte blocks are to be written out.
+ *    If bOptExtension is set then method first checks config for
+ *    DBRootX.Prealloc. If it is disabled then it skips disk space
+ *    preallocation.
  * PARAMETERS:
  *    pFile   (in) - IDBDataFile* of column segment file to be written to
  *    dbRoot  (in) - DBRoot of pFile
@@ -1016,6 +1023,7 @@ int FileOp::addExtentExactFile(
  *                   headers will be included "if" it is a compressed file.
  *    bExpandExtent (in) - Expand existing extent, or initialize a new one
  *    bAbbrevExtent(in) - if creating new extent, is it an abbreviated extent
+ *    bOptExtension(in) - skip full extent preallocation.
  * RETURN:
  *    returns ERR_FILE_WRITE if an error occurs,
  *    else returns NO_ERROR.
@@ -1028,7 +1036,8 @@ int FileOp::initColumnExtent(
     int      width,
     bool     bNewFile,
     bool     bExpandExtent,
-    bool     bAbbrevExtent )
+    bool     bAbbrevExtent,
+    bool     bOptExtension)
 {
     if ((bNewFile) && (m_compressionType))
     {
@@ -1061,6 +1070,19 @@ int FileOp::initColumnExtent(
         // Create vector of mutexes used to serialize extent access per DBRoot
         initDbRootExtentMutexes( );
 
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
+        if ( bOptExtension )
+        {
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+                ? bOptExtension : false;
+        }
+        // Reduce number of blocks allocated for abbreviated extents thus
+        // CS writes less when creates a new table. This couldn't be zero
+        // b/c Snappy compressed file format doesn't tolerate empty files.
+        int realNBlocks = ( bOptExtension && nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK ) ? 3 : nBlocks;
+
         // Determine the number of blocks in each call to fwrite(), and the
         // number of fwrite() calls to make, based on this.  In other words,
         // we put a cap on the "writeSize" so that we don't allocate and write
@@ -1068,15 +1090,15 @@ int FileOp::initColumnExtent(
         // expanding an abbreviated 64M extent, we may not have an even
         // multiple of MAX_NBLOCKS to write; remWriteSize is the number of
         // blocks above and beyond loopCount*MAX_NBLOCKS.
-        int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
+        int writeSize = realNBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
 
-        if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
+        if (realNBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
-            loopCount = nBlocks / MAX_NBLOCKS;
-            remWriteSize = nBlocks - (loopCount * MAX_NBLOCKS);
+            loopCount = realNBlocks / MAX_NBLOCKS;
+            remWriteSize = realNBlocks - (loopCount * MAX_NBLOCKS);
         }
 
         // Allocate a buffer, initialize it, and use it to create the extent
@@ -1096,69 +1118,77 @@ int FileOp::initColumnExtent(
             Stats::stopParseEvent(WE_STATS_WAIT_TO_EXPAND_COL_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
-
-        Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);
 #endif
-
-        // Allocate buffer, and store in scoped_array to insure it's deletion.
-        // Create scope {...} to manage deletion of writeBuf.
+        // Skip space preallocation if configured so
+        // fallback to sequential write otherwise.
+        // Couldn't avoid preallocation for full extents,
+        // e.g. ADD COLUMN DDL b/c CS has to fill the file
+        // with empty magics.
+        if ( !bOptExtension )
         {
-            unsigned char* writeBuf = new unsigned char[writeSize];
-            boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
+#ifdef PROFILE
+            Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);
+#endif
+            // Allocate buffer, store it in scoped_array to insure it's deletion.
+            // Create scope {...} to manage deletion of writeBuf.
+            {
 
-            setEmptyBuf( writeBuf, writeSize, emptyVal, width );
+                unsigned char* writeBuf = new unsigned char[writeSize];
+                boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
+
+                setEmptyBuf( writeBuf, writeSize, emptyVal, width );
+
+    #ifdef PROFILE
+                Stats::stopParseEvent(WE_STATS_INIT_COL_EXTENT);
+
+                if (bExpandExtent)
+                    Stats::startParseEvent(WE_STATS_EXPAND_COL_EXTENT);
+                else
+                    Stats::startParseEvent(WE_STATS_CREATE_COL_EXTENT);
+
+    #endif
+
+                //std::ostringstream oss;
+                //oss << "initColExtent: width-" << width <<
+                //"; loopCount-" << loopCount <<
+                //"; writeSize-" << writeSize;
+                //std::cout << oss.str() << std::endl;
+                if (remWriteSize > 0)
+                {
+                    if ( pFile->write( writeBuf, remWriteSize ) != remWriteSize )
+                    {
+                        return ERR_FILE_WRITE;
+                    }
+                }
+
+                for (int j = 0; j < loopCount; j++)
+                {
+                    if ( pFile->write( writeBuf, writeSize ) != writeSize )
+                    {
+                        return ERR_FILE_WRITE;
+                    }
+                }
+            }
+
+            //@Bug 3219. update the compression header after the extent is expanded.
+            if ((!bNewFile) && (m_compressionType) && (bExpandExtent))
+            {
+                updateColumnExtent(pFile, nBlocks);
+            }
+
+            // @bug 2378. Synchronize here to avoid write buffer pile up too much,
+            // which could cause controllernode to timeout later when it needs to
+            // save a snapshot.
+            pFile->flush();
 
 #ifdef PROFILE
-            Stats::stopParseEvent(WE_STATS_INIT_COL_EXTENT);
-
             if (bExpandExtent)
-                Stats::startParseEvent(WE_STATS_EXPAND_COL_EXTENT);
+                Stats::stopParseEvent(WE_STATS_EXPAND_COL_EXTENT);
             else
-                Stats::startParseEvent(WE_STATS_CREATE_COL_EXTENT);
-
+                Stats::stopParseEvent(WE_STATS_CREATE_COL_EXTENT);
 #endif
 
-            //std::ostringstream oss;
-            //oss << "initColExtent: width-" << width <<
-            //"; loopCount-" << loopCount <<
-            //"; writeSize-" << writeSize;
-            //std::cout << oss.str() << std::endl;
-            if (remWriteSize > 0)
-            {
-                if ( pFile->write( writeBuf, remWriteSize ) != remWriteSize )
-                {
-                    return ERR_FILE_WRITE;
-                }
-            }
-
-            for (int j = 0; j < loopCount; j++)
-            {
-                if ( pFile->write( writeBuf, writeSize ) != writeSize )
-                {
-                    return ERR_FILE_WRITE;
-                }
-            }
         }
-
-        //@Bug 3219. update the compression header after the extent is expanded.
-        if ((!bNewFile) && (m_compressionType) && (bExpandExtent))
-        {
-            updateColumnExtent(pFile, nBlocks);
-        }
-
-        // @bug 2378. Synchronize here to avoid write buffer pile up too much,
-        // which could cause controllernode to timeout later when it needs to
-        // save a snapshot.
-        pFile->flush();
-
-#ifdef PROFILE
-
-        if (bExpandExtent)
-            Stats::stopParseEvent(WE_STATS_EXPAND_COL_EXTENT);
-        else
-            Stats::stopParseEvent(WE_STATS_CREATE_COL_EXTENT);
-
-#endif
     }
 
     return NO_ERROR;
@@ -1185,7 +1215,7 @@ int FileOp::initAbbrevCompColumnExtent(
     uint64_t emptyVal,
     int      width)
 {
-    // Reserve disk space for full abbreviated extent
+    // Reserve disk space for optimized abbreviated extent
     int rc = initColumnExtent( pFile,
                                dbRoot,
                                nBlocks,
@@ -1193,8 +1223,8 @@ int FileOp::initAbbrevCompColumnExtent(
                                width,
                                true,   // new file
                                false,  // don't expand; add new extent
-                               true ); // add abbreviated extent
-
+                               true,   // add abbreviated extent
+                               true); // optimize the initial extent
     if (rc != NO_ERROR)
     {
         return rc;
@@ -1767,6 +1797,9 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr,
  *    This function can be used to initialize an entirely new extent, or
  *    to finish initializing an extent that has already been started.
  *    nBlocks controls how many 8192-byte blocks are to be written out.
+ *    If bOptExtension is set then method first checks config for
+ *    DBRootX.Prealloc. If it is disabled then it skips disk space
+ *    preallocation.
  * PARAMETERS:
  *    pFile   (in) - IDBDataFile* of column segment file to be written to
  *    dbRoot  (in) - DBRoot of pFile
@@ -1774,6 +1807,7 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr,
  *    blockHdrInit(in) - data used to initialize each block
  *    blockHdrInitSize(in) - number of bytes in blockHdrInit
  *    bExpandExtent (in) - Expand existing extent, or initialize a new one
+ *    bOptExtension(in) - skip full extent preallocation.
  * RETURN:
  *    returns ERR_FILE_WRITE if an error occurs,
  *    else returns NO_ERROR.
@@ -1784,7 +1818,8 @@ int FileOp::initDctnryExtent(
     int            nBlocks,
     unsigned char* blockHdrInit,
     int            blockHdrInitSize,
-    bool           bExpandExtent )
+    bool           bExpandExtent,
+    bool           bOptExtension )
 {
     // @bug5769 Don't initialize extents or truncate db files on HDFS
     if (idbdatafile::IDBPolicy::useHdfs())
@@ -1801,6 +1836,21 @@ int FileOp::initDctnryExtent(
         // Create vector of mutexes used to serialize extent access per DBRoot
         initDbRootExtentMutexes( );
 
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
+        // CS uses non-compressed dict files for its system catalog so
+        // CS doesn't optimize non-compressed dict creation.
+        if ( bOptExtension )
+        {
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot)
+                && m_compressionType) ? bOptExtension : false;
+        }
+        // Reduce number of blocks allocated for abbreviated extents thus
+        // CS writes less when creates a new table. This couldn't be zero
+        // b/c Snappy compressed file format doesn't tolerate empty files.
+        int realNBlocks = ( bOptExtension && nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK ) ? 1 : nBlocks;
+
         // Determine the number of blocks in each call to fwrite(), and the
         // number of fwrite() calls to make, based on this.  In other words,
         // we put a cap on the "writeSize" so that we don't allocate and write
@@ -1808,99 +1858,101 @@ int FileOp::initDctnryExtent(
         // expanding an abbreviated 64M extent, we may not have an even
         // multiple of MAX_NBLOCKS to write; remWriteSize is the number of
         // blocks above and beyond loopCount*MAX_NBLOCKS.
-        int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
+        int writeSize = realNBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
 
-        if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
+        if (realNBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
-            loopCount = nBlocks / MAX_NBLOCKS;
-            remWriteSize = nBlocks - (loopCount * MAX_NBLOCKS);
+            loopCount = realNBlocks / MAX_NBLOCKS;
+            remWriteSize = realNBlocks - (loopCount * MAX_NBLOCKS);
         }
 
         // Allocate a buffer, initialize it, and use it to create the extent
         idbassert(dbRoot > 0);
-#ifdef PROFILE
 
+#ifdef PROFILE
         if (bExpandExtent)
             Stats::startParseEvent(WE_STATS_WAIT_TO_EXPAND_DCT_EXTENT);
         else
             Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
-
 #endif
-        boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
-#ifdef PROFILE
 
+        boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
+
+#ifdef PROFILE
         if (bExpandExtent)
             Stats::stopParseEvent(WE_STATS_WAIT_TO_EXPAND_DCT_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
-
-        Stats::startParseEvent(WE_STATS_INIT_DCT_EXTENT);
 #endif
-
-        // Allocate buffer, and store in scoped_array to insure it's deletion.
-        // Create scope {...} to manage deletion of writeBuf.
+        // Skip space preallocation if configured so
+        // fallback to sequential write otherwise.
+        // Couldn't avoid preallocation for full extents,
+        // e.g. ADD COLUMN DDL b/c CS has to fill the file
+        // with empty magics.
+        if ( !bOptExtension )
         {
-            unsigned char* writeBuf = new unsigned char[writeSize];
-            boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
-
-            memset(writeBuf, 0, writeSize);
-
-            for (int i = 0; i < nBlocks; i++)
+            // Allocate buffer, and store in scoped_array to insure it's deletion.
+            // Create scope {...} to manage deletion of writeBuf.
             {
-                memcpy( writeBuf + (i * BYTE_PER_BLOCK),
-                        blockHdrInit,
-                        blockHdrInitSize );
-            }
-
 #ifdef PROFILE
-            Stats::stopParseEvent(WE_STATS_INIT_DCT_EXTENT);
-
-            if (bExpandExtent)
-                Stats::startParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
-            else
-                Stats::startParseEvent(WE_STATS_CREATE_DCT_EXTENT);
-
+                Stats::startParseEvent(WE_STATS_INIT_DCT_EXTENT);
 #endif
 
-            //std::ostringstream oss;
-            //oss << "initDctnryExtent: width-8(assumed)" <<
-            //"; loopCount-" << loopCount <<
-            //"; writeSize-" << writeSize;
-            //std::cout << oss.str() << std::endl;
-            if (remWriteSize > 0)
-            {
-                if (pFile->write( writeBuf, remWriteSize ) != remWriteSize)
-                {
-                    return ERR_FILE_WRITE;
-                }
-            }
+                unsigned char* writeBuf = new unsigned char[writeSize];
+                boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
 
-            for (int j = 0; j < loopCount; j++)
-            {
-                if (pFile->write( writeBuf, writeSize ) != writeSize)
-                {
-                    return ERR_FILE_WRITE;
-                }
-            }
-        }
+                memset(writeBuf, 0, writeSize);
 
-        if (m_compressionType)
+                for (int i = 0; i < realNBlocks; i++)
+                {
+                    memcpy( writeBuf + (i * BYTE_PER_BLOCK),
+                            blockHdrInit,
+                            blockHdrInitSize );
+                }
+
+#ifdef PROFILE
+                Stats::stopParseEvent(WE_STATS_INIT_DCT_EXTENT);
+
+                if (bExpandExtent)
+                    Stats::startParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
+                else
+                    Stats::startParseEvent(WE_STATS_CREATE_DCT_EXTENT);
+#endif
+
+               if (remWriteSize > 0)
+                {
+                    if (pFile->write( writeBuf, remWriteSize ) != remWriteSize)
+                    {
+                        return ERR_FILE_WRITE;
+                    }
+                }
+
+                for (int j = 0; j < loopCount; j++)
+                {
+                    if (pFile->write( writeBuf, writeSize ) != writeSize)
+                    {
+                        return ERR_FILE_WRITE;
+                    }
+                }
+                // CS doesn't account flush timings.
+#ifdef PROFILE
+                if (bExpandExtent)
+                    Stats::stopParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
+                else
+                    Stats::stopParseEvent(WE_STATS_CREATE_DCT_EXTENT);
+#endif
+            }
+        } // preallocation fallback end
+
+        // MCOL-498 CS has to set a number of blocs in the chunk header
+        if ( m_compressionType )
+        {
             updateDctnryExtent(pFile, nBlocks);
-
-        // Synchronize to avoid write buffer pile up too much, which could cause
-        // controllernode to timeout later when it needs to save a snapshot.
+        }
         pFile->flush();
-#ifdef PROFILE
-
-        if (bExpandExtent)
-            Stats::stopParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
-        else
-            Stats::stopParseEvent(WE_STATS_CREATE_DCT_EXTENT);
-
-#endif
     }
 
     return NO_ERROR;
@@ -2221,6 +2273,15 @@ int FileOp::oid2FileName( FID fid,
         return NO_ERROR;
     }
 
+#endif
+
+// Need this stub to use ColumnOp::writeRow in the unit tests
+#ifdef WITH_UNIT_TESTS
+    if (fid == 42)
+    {
+        sprintf(fullFileName, "./versionbuffer");
+        return NO_ERROR;
+    }
 #endif
 
     /* If is a version buffer file, the format is different. */
@@ -2790,7 +2851,8 @@ int FileOp::expandAbbrevColumnExtent(
     int rc = FileOp::initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
                                       false,   // existing file
                                       true,    // expand existing extent
-                                      false);  // n/a since not adding new extent
+                                      false,  // n/a since not adding new extent
+                                      true);  // optimize segment file extension
 
     return rc;
 }
