@@ -267,6 +267,31 @@ void S3Storage::deleteObject(const string &key)
 
 int S3Storage::copyObject(const string &sourceKey, const string &destKey)
 {
+    uint8_t s3err;
+    ms3_st *creds = getConnection();
+    ScopedConnection sc(this, creds);
+    
+    do 
+    {
+        s3err = ms3_copy(creds, bucket.c_str(), sourceKey.c_str(), bucket.c_str(), destKey.c_str());
+        if (s3err && retryable_error(s3err))
+        {
+            logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, key = %s.  Retrying...",
+                s3err_msgs[s3err], bucket.c_str(), key.c_str());
+            sleep(5);
+        }
+    } while (s3err && retryable_error(s3err));
+    
+    if (s3err) 
+    {
+        logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, key = %s.", 
+            s3err_msgs[s3err], bucket.c_str(), key.c_str());
+        errno = s3err_to_errno[s3err];
+        return -1;
+    }
+    return 0;
+    
+#if 0
     // no s3-s3 copy yet.  get & put for now.
     
     int err;
@@ -276,6 +301,7 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
     if (err)
         return err;
     return putObject(data, len, destKey);
+#endif
 }
 
 int S3Storage::exists(const string &key, bool *out)
