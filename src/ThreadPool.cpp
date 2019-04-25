@@ -13,6 +13,7 @@ ThreadPool::ThreadPool() : maxThreads(1000), die(false), threadsWaiting(0)
     // context it's used in.  In the CRP class for example, the # of active threads would be 
     // naturally limited by the # of concurrent operations.
     logger = SMLogging::get();
+    pruner = boost::thread([this] { this->prune(); } );
 }
 
 ThreadPool::ThreadPool(uint num_threads, bool _processQueueOnExit) : maxThreads(num_threads), die(false), 
@@ -62,8 +63,9 @@ void ThreadPool::prune()
     {
         while (pruneable.empty() && !die)
             somethingToPrune.wait(s);
+            
         if (die)
-            return;
+            break;
         
         for (auto &id : pruneable)
         {
@@ -81,6 +83,12 @@ void ThreadPool::setMaxThreads(uint newMax)
 {
     boost::unique_lock<boost::mutex> s(mutex);
     maxThreads = newMax;
+}
+
+int ThreadPool::currentQueueSize() const
+{
+    boost::unique_lock<boost::mutex> s(mutex);
+    return jobs.size();
 }
 
 void ThreadPool::processingLoop()

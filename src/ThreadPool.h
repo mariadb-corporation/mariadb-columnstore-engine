@@ -27,6 +27,7 @@ class ThreadPool : public boost::noncopyable
         
         void addJob(const boost::shared_ptr<Job> &j);
         void setMaxThreads(uint newMax);
+        int currentQueueSize() const;
 
     private:
         void processingLoop();   // the fcn run by each thread
@@ -57,7 +58,7 @@ class ThreadPool : public boost::noncopyable
         
         boost::condition jobAvailable;
         std::deque<boost::shared_ptr<Job> > jobs;
-        boost::mutex mutex;
+        mutable boost::mutex mutex;
         
         const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
         boost::thread pruner;
