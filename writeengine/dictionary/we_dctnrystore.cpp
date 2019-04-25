@@ -133,7 +133,7 @@ const int  DctnryStore::updateDctnryStore(unsigned char* sigValue,
         sig.signature = new unsigned char[sigSize];
         memcpy (sig.signature, sigValue, sigSize);
         sig.token = token;
-        m_dctnry.m_sigArray[m_dctnry.m_arraySize] = sig;
+        m_dctnry.m_sigArray.insert(sig) = sig;
         m_dctnry.m_arraySize++;
     }
 

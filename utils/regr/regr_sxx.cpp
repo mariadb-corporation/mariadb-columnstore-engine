@@ -132,7 +132,7 @@ mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any
         long double sumx2 = data->sumx2;
 
         long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-        valOut = static_cast<double>(data->cnt * var_popx);
+        valOut = static_cast<double>(N * var_popx);
     }
     return mcsv1_UDAF::SUCCESS;
 }

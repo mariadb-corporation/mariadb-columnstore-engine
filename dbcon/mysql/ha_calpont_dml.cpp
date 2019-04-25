@@ -2080,7 +2080,8 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
             thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE )
         return rc;
 
-    if (thd->slave_thread) return 0;
+    if (thd->slave_thread && !ci.replicationEnabled)
+        return 0;
 
     std::string command("COMMIT");
 #ifdef INFINIDB_DEBUG
