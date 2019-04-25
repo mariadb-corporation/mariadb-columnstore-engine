@@ -1012,7 +1012,6 @@ uint32_t doUpdateDelete(THD* thd)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    //@bug 5660. Error out DDL/DML on slave node, or on local query node
     if (ci->isSlaveNode && !thd->slave_thread)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
@@ -1034,7 +1033,14 @@ uint32_t doUpdateDelete(THD* thd)
     // stats start
     ci->stats.reset();
     ci->stats.setStartTime();
-    ci->stats.fUser = thd->main_security_ctx.user;
+    if (thd->main_security_ctx.user)
+    {
+        ci->stats.fUser = thd->main_security_ctx.user;
+    }
+    else
+    {
+        ci->stats.fUser = "";
+    }
 
     if (thd->main_security_ctx.host)
         ci->stats.fHost = thd->main_security_ctx.host;
@@ -2129,8 +2135,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2184,7 +2191,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     idbassert(ci != 0);
 
     // MySQL sometimes calls rnd_init multiple times, plan should only be
@@ -2296,7 +2302,14 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         {
             ci->stats.reset(); // reset query stats
             ci->stats.setStartTime();
-            ci->stats.fUser = thd->main_security_ctx.user;
+            if (thd->main_security_ctx.user)
+            {
+                ci->stats.fUser = thd->main_security_ctx.user;
+            }
+            else
+            {
+                ci->stats.fUser = "";
+            }
 
             if (thd->main_security_ctx.host)
                 ci->stats.fHost = thd->main_security_ctx.host;
@@ -2661,8 +2674,9 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2672,7 +2686,6 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
-
 
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
@@ -2703,7 +2716,6 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -2767,8 +2779,17 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     int rc = 0;
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
+    bool replicationEnabled = false;
 
-    if (thd->slave_thread && (
+    if (thd->infinidb_vtable.cal_conn_info)
+        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+
+    if (ci && ci->replicationEnabled)
+    {
+        replicationEnabled = true;
+    }
+
+    if (thd->slave_thread && !replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2783,7 +2804,6 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
     {
         thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;	// flip back to normal state
@@ -3042,9 +3062,8 @@ int ha_calpont_impl_write_row(uchar* buf, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread) return 0;
-
-
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return 0;
 
     if (ci->alterTableState > 0) return 0;
 
@@ -3129,7 +3148,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
     if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
         thd->infinidb_vtable.isInfiniDBDML = true;
 
-    if (thd->slave_thread) return;
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return;
 
     //@bug 5660. Error out DDL/DML on slave node, or on local query node
     if (ci->isSlaveNode && thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
@@ -3568,7 +3588,14 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
         // query stats. only collect execution time and rows inserted for insert/load_data_infile
         ci->stats.reset();
         ci->stats.setStartTime();
-        ci->stats.fUser = thd->main_security_ctx.user;
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
 
         if (thd->main_security_ctx.host)
             ci->stats.fHost = thd->main_security_ctx.host;
@@ -3654,7 +3681,8 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread) return 0;
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return 0;
 
     int rc = 0;
 
@@ -4317,7 +4345,14 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     {
         ci->stats.reset(); // reset query stats
         ci->stats.setStartTime();
-        ci->stats.fUser = thd->main_security_ctx.user;
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
 
         if (thd->main_security_ctx.host)
             ci->stats.fHost = thd->main_security_ctx.host;
@@ -4736,19 +4771,6 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
 {
     THD* thd = current_thd;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
-
-
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
 
@@ -4773,6 +4795,17 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+        return 0;
 
     // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
@@ -4839,7 +4872,19 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
 
-    if (thd->slave_thread && (
+    thd->infinidb_vtable.isNewQuery = true;
+    thd->infinidb_vtable.isUnion = false;
+
+    if (get_fe_conn_info_ptr() != NULL)
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (!ci)
+    {
+        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    }
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -4849,12 +4894,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
-
-    thd->infinidb_vtable.isNewQuery = true;
-    thd->infinidb_vtable.isUnion = false;
-
-    if (get_fe_conn_info_ptr() != NULL)
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
    if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )

@@ -25,8 +25,7 @@
  * Columnstore interface for for the covar_samp function
  *
  *
- *    CREATE AGGREGATE FUNCTION covar_samp returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION covar_samp returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_covar_samp

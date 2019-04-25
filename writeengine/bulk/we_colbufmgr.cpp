@@ -45,7 +45,7 @@ namespace
 {
 // Minimum time to wait for a condition, so as to periodically wake up and
 // check the global job status, to see if the job needs to terminate.
-const int COND_WAIT_SECONDS = 3;
+const int COND_WAIT_SECONDS = 1;
 }
 
 namespace WriteEngine
