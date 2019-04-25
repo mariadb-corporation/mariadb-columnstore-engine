@@ -179,6 +179,82 @@ inline uint32_t tid2sid(const uint32_t tid)
     return CalpontSystemCatalog::idb_tid2sid(tid);
 }
 
+
+/**
+  @brief
+  Wrapper around logging facility.
+
+  @details
+  Reduces the boiler plate code.
+
+  Called from number of places(mostly DML) in
+  ha_calpont_impl.cpp().
+*/
+void log_this(THD *thd, const char *message,
+    logging::LOG_TYPE log_type, unsigned sid)
+{
+    // corresponds with dbcon in SubsystemID vector
+    // in messagelog.cpp
+    unsigned int subSystemId = 24;
+    logging::LoggingID logid( subSystemId, sid, 0);
+    logging::Message::Args args1;
+    logging::Message msg(1);
+    args1.add(message);
+    msg.format( args1 );
+    Logger logger(logid.fSubsysID);
+    logger.logMessage(log_type, msg, logid);
+}
+
+/**
+  @brief
+  Forcely close a FEP connection.
+
+  @details
+  Plugin code opens network connection with ExMgr to
+  get:
+    the result of meta-data queries
+    the result of DML or DQL query in any mode
+    statistics
+  This code allows to explicitly close the connection
+  if any error happens using a non-existing protocol
+  code 0. This causes ExeMgr loop to drop the
+  connection.
+
+  Called from many places in ha_calpont_impl.cpp().
+*/
+void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc = false)
+{
+    if (!ci->cal_conn_hndl)
+    {
+        return;
+    }
+
+    if(check_prev_rc && !ci->rc)
+    {
+        return;
+    }
+
+    // send ExeMgr an unknown signal to force him to close
+    // the connection
+    ByteStream msg;
+    ByteStream::quadbyte qb = 0;
+    msg << qb;
+
+    try
+    {
+        ci->cal_conn_hndl->exeMgr->write(msg);
+    }
+    catch (...)
+    {
+        // Add details into the message.
+        log_this(thd, "Exception in force_close_fep_conn().",
+            logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+    }
+
+    sm::sm_cleanup(ci->cal_conn_hndl);
+    ci->cal_conn_hndl = 0;
+}
+
 void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& ct)
 {
     // unset null bit first
@@ -936,7 +1012,6 @@ uint32_t doUpdateDelete(THD* thd)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    //@bug 5660. Error out DDL/DML on slave node, or on local query node
     if (ci->isSlaveNode && !thd->slave_thread)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
@@ -958,7 +1033,14 @@ uint32_t doUpdateDelete(THD* thd)
     // stats start
     ci->stats.reset();
     ci->stats.setStartTime();
-    ci->stats.fUser = thd->main_security_ctx.user;
+    if (thd->main_security_ctx.user)
+    {
+        ci->stats.fUser = thd->main_security_ctx.user;
+    }
+    else
+    {
+        ci->stats.fUser = "";
+    }
 
     if (thd->main_security_ctx.host)
         ci->stats.fHost = thd->main_security_ctx.host;
@@ -2053,8 +2135,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2107,8 +2190,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     idbassert(ci != 0);
 
     // MySQL sometimes calls rnd_init multiple times, plan should only be
@@ -2119,26 +2200,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // canceling query. ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
+        force_close_fep_conn(thd, ci);
         return 0;
     }
 
@@ -2239,7 +2301,14 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         {
             ci->stats.reset(); // reset query stats
             ci->stats.setStartTime();
-            ci->stats.fUser = thd->main_security_ctx.user;
+            if (thd->main_security_ctx.user)
+            {
+                ci->stats.fUser = thd->main_security_ctx.user;
+            }
+            else
+            {
+                ci->stats.fUser = "";
+            }
 
             if (thd->main_security_ctx.host)
                 ci->stats.fHost = thd->main_security_ctx.host;
@@ -2604,8 +2673,9 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2615,7 +2685,6 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
-
 
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
@@ -2645,31 +2714,10 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before cloing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // cancel query. ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
+        force_close_fep_conn(thd, ci);
         return 0;
     }
 
@@ -2729,8 +2777,17 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     int rc = 0;
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
+    bool replicationEnabled = false;
 
-    if (thd->slave_thread && (
+    if (thd->infinidb_vtable.cal_conn_info)
+        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+
+    if (ci && ci->replicationEnabled)
+    {
+        replicationEnabled = true;
+    }
+
+    if (thd->slave_thread && !replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2745,7 +2802,6 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
     {
         thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;	// flip back to normal state
@@ -2767,27 +2823,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
-        // @bug 4022. error handling for select part of dml
-        if (ci->cal_conn_hndl && ci->rc)
-        {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // this is error handling, so ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-            return rc;
-        }
+       force_close_fep_conn(thd, ci, true); // checking prev command rc
     }
 
     if (!ci)
@@ -2802,29 +2838,9 @@ int ha_calpont_impl_rnd_end(TABLE* table)
              (thd->lex)->sql_command != SQLCOM_INSERT_SELECT &&
              thd->variables.select_limit != (uint64_t) - 1))
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // this is the end of query. Ignore the exception if exemgr connection failed
-                // for whatever reason.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-            // clear querystats because no query stats available for cancelled query
-            ci->queryStats = "";
-        }
-
+        force_close_fep_conn(thd, ci);
+        // clear querystats because no query stats available for cancelled query
+        ci->queryStats = "";
         return 0;
     }
 
@@ -2906,6 +2922,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     ci->warningMsg.clear();
     // reset expressionId just in case
     ci->expressionId = 0;
+
     return rc;
 }
 
@@ -3043,9 +3060,8 @@ int ha_calpont_impl_write_row(uchar* buf, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread) return 0;
-
-
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return 0;
 
     if (ci->alterTableState > 0) return 0;
 
@@ -3130,7 +3146,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
     if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
         thd->infinidb_vtable.isInfiniDBDML = true;
 
-    if (thd->slave_thread) return;
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return;
 
     //@bug 5660. Error out DDL/DML on slave node, or on local query node
     if (ci->isSlaveNode && thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
@@ -3243,16 +3260,11 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             }
 
             //Log the statement to debug.log
-            LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-            logging::Message::Args args1;
-            logging::Message msg(1);
-            args1.add("Start SQL statement: ");
-            ostringstream oss;
-            oss << idb_mysql_query_str(thd) << "; |" << table->s->db.str << "|";
-            args1.add(oss.str());
-            msg.format( args1 );
-            Logger logger(logid.fSubsysID);
-            logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+            {
+                ostringstream oss;
+                oss << "Start SQL statement: " << idb_mysql_query_str(thd) << "; |" << table->s->db.str << "|";
+                log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+            }
 
             //start process cpimport mode 1
             ci->mysqld_pid = getpid();
@@ -3290,13 +3302,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 {
                     setError(current_thd, ER_INTERNAL_ERROR, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
                     ci->singleInsert = true;
-                    LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                    logging::Message::Args args1;
-                    logging::Message msg(1);
-                    args1.add("End SQL statement");
-                    msg.format( args1 );
-                    Logger logger(logid.fSubsysID);
-                    logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                    log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
+                    tid2sid(thd->thread_id));
                     return;
                 }
                 else
@@ -3470,16 +3477,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                     errnum << "); " << errmsg;
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                logging::Message::Args args1, args2;
-                logging::Message emsg(1), msg(1);
-                args1.add(oss.str());
-                emsg.format( args1 );
-                Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_ERROR, emsg, logid);
-                args2.add("End SQL statement");
-                msg.format( args2 );
-                logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                log_this(thd, oss.str(), logging::LOG_TYPE_ERROR, tid2sid(thd->thread_id));
+                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
 
@@ -3500,13 +3499,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                     errnum << "); " << strerror(errnum);
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                logging::Message::Args args1;
-                logging::Message msg(1);
-                args1.add("End SQL statement");
-                msg.format( args1 );
-                Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
 
@@ -3522,13 +3515,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                     errnum << "); " << strerror(errnum);
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                logging::Message::Args args1;
-                logging::Message msg(1);
-                args1.add("End SQL statement");
-                msg.format( args1 );
-                Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
             else if (aChPid == 0) // we are in child
@@ -3565,13 +3552,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 
                 setError(current_thd, ER_INTERNAL_ERROR, "Forking process cpimport failed.");
                 ci->singleInsert = true;
-                LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                logging::Message::Args args1;
-                logging::Message msg(1);
-                args1.add("End SQL statement");
-                msg.format( args1 );
-                Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
+                tid2sid(thd->thread_id));
                 exit(1);
             }
             else	// parent
@@ -3604,7 +3586,14 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
         // query stats. only collect execution time and rows inserted for insert/load_data_infile
         ci->stats.reset();
         ci->stats.setStartTime();
-        ci->stats.fUser = thd->main_security_ctx.user;
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
 
         if (thd->main_security_ctx.host)
             ci->stats.fHost = thd->main_security_ctx.host;
@@ -3690,7 +3679,8 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread) return 0;
+    if (thd->slave_thread && !ci->replicationEnabled)
+        return 0;
 
     int rc = 0;
 
@@ -3736,13 +3726,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
                     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errnum, 0, errmsg, 512, NULL);
                     ostringstream oss;
                     oss << "GenerateConsoleCtrlEvent: (errno-" << errnum << "); " << errmsg;
-                    LoggingID logid( 24, 0, 0);
-                    logging::Message::Args args1;
-                    logging::Message msg(1);
-                    args1.add(oss.str());
-                    msg.format( args1 );
-                    Logger logger(logid.fSubsysID);
-                    logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+                    log_this(thd, oss.str(), logging::LOG_TYPE_DEBUG,0);
                 }
 
                 // Close handles to the cpimport process and its primary thread.
@@ -3846,18 +3830,15 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
                 }
 
 #endif
-                LoggingID logid( 24, tid2sid(thd->thread_id), 0);
-                logging::Message::Args args1;
-                logging::Message msg(1);
-
                 if ( rc == 0)
-                    args1.add("End SQL statement");
+                {
+                    log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                }
                 else
-                    args1.add("End SQL statement with error");
+                {
+                    log_this(thd, "End SQL statement with error", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                }
 
-                msg.format( args1 );
-                Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
                 ci->columnTypes.clear();
                 //get extra warning count if any
                 ifstream dmlFile;
@@ -4014,10 +3995,16 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
 
     execplan::CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
 
-    if (get_fe_conn_info_ptr() == NULL)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    // MCOL-3247 Use THD::ha_data as a per-plugin per-session
+    // storage. Filled in external_lock when we remove a lock
+    // from vtable(lock_type = 2)
+    // An ugly way. I will use ha_data w/o external_lock.
+    // This in MCOL-2178
+    cal_connection_info* ci = NULL;
+    if(thd_get_ha_data(thd, hton))
+    {
+        ci = reinterpret_cast<cal_connection_info*>(thd_get_ha_data(thd, hton));
+    }
 
     if (!ci) return 0;
 
@@ -4183,26 +4170,7 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before cloing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // this is the end of the query. Ignore connetion failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
+        force_close_fep_conn(thd, ci);
         return 0;
     }
 
@@ -4259,6 +4227,9 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 ci->miniStats = ci->cal_conn_hndl->miniStats;
                 ci->queryState = 0;
                 thd->infinidb_vtable.override_largeside_estimate = false;
+                // MCOL-3247 Use THD::ha_data as a per-plugin per-session
+                // storage for cal_conn_hndl to use it later in close_connection 
+                thd_set_ha_data(thd, calpont_hton, get_fe_conn_info_ptr());
             }
         }
 
@@ -4357,26 +4328,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // canceling query. ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
+        force_close_fep_conn(thd, ci);
         return 0;
     }
 
@@ -4391,7 +4343,14 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     {
         ci->stats.reset(); // reset query stats
         ci->stats.setStartTime();
-        ci->stats.fUser = thd->main_security_ctx.user;
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
 
         if (thd->main_security_ctx.host)
             ci->stats.fHost = thd->main_security_ctx.host;
@@ -4810,19 +4769,6 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
 {
     THD* thd = current_thd;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
-
-
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
 
@@ -4848,29 +4794,21 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
+    if (thd->slave_thread && !ci->replicationEnabled && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+        return 0;
+
     // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before cloing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // cancel query. ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
+        force_close_fep_conn(thd, ci);
         return 0;
     }
 
@@ -4932,8 +4870,19 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
 
+    thd->infinidb_vtable.isNewQuery = true;
+    thd->infinidb_vtable.isUnion = false;
 
-    if (thd->slave_thread && (
+    if (get_fe_conn_info_ptr() != NULL)
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (!ci)
+    {
+        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    }
+
+    if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -4944,43 +4893,11 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    thd->infinidb_vtable.isNewQuery = true;
-    thd->infinidb_vtable.isUnion = false;
-
-    if (get_fe_conn_info_ptr() != NULL)
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-    // MCOL-1052
-    //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
-    //{
-    //    thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;// flip back to normal state
-    //    return rc;
-    //}
-
-    if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
+   if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
-        // @bug 4022. error handling for select part of dml
-        if (ci->cal_conn_hndl && ci->rc)
-        {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // this is error handling, so ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-            return rc;
-        }
+        force_close_fep_conn(thd, ci, true); // with checking prev command rc
+        return rc;
     }
 
     if (!ci)
@@ -4995,33 +4912,15 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
              (thd->lex)->sql_command != SQLCOM_INSERT_SELECT &&
              thd->variables.select_limit != (uint64_t) - 1))
     {
-        if (ci->cal_conn_hndl)
+        force_close_fep_conn(thd, ci);
+        // clear querystats because no query stats available for cancelled query
+        ci->queryStats = "";
+        // Poping next ExeMgr connection out of the stack
+        if ( ci->cal_conn_hndl_st.size() )
         {
-            // send ExeMgr a signal before closing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // this is the end of query. Ignore the exception if exemgr connection failed
-                // for whatever reason.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-            // clear querystats because no query stats available for cancelled query
-            ci->queryStats = "";
+            ci->cal_conn_hndl_st.pop();
             if ( ci->cal_conn_hndl_st.size() )
-            {
-                ci->cal_conn_hndl_st.pop();
-                if ( ci->cal_conn_hndl_st.size() )
-                    ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
-            }
+                ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
         }
 
         return 0;

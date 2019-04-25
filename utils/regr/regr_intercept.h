@@ -25,8 +25,7 @@
  * Columnstore interface for for the regr_intercept function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_intercept returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_intercept returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_regr_intercept

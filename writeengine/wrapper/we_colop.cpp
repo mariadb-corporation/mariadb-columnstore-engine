@@ -35,6 +35,7 @@ using namespace std;
 #include "idbcompress.h"
 #include "writeengine.h"
 #include "cacheutils.h"
+#include "we_fileop.h"
 
 using namespace execplan;
 
@@ -470,6 +471,15 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 
             if ( rc != NO_ERROR)
                 return rc;
+
+            // MCOL-498 This must be a first block in a new extent so
+            // fill the block up to its boundary with empties. Otherwise
+            // there could be fantom values.
+            {
+                uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+                setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, column.colWidth);
+            }
+
 
             for (j = 0; j < totalRowPerBlock; j++)
             {
@@ -1519,6 +1529,8 @@ void ColumnOp::setColParam(Column& column,
  *    rowIdArray - the array of row id, for performance purpose, I am assuming the rowIdArray is sorted
  *    valArray - the array of row values
  *    oldValArray - the array of old value
+ *    bDelete - yet. The flag must be useless b/c writeRows
+ *                   is used for deletion.
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/
@@ -1533,12 +1545,16 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     char     charTmpBuf[8];
     uint64_t  emptyVal;
     int rc = NO_ERROR;
+    bool fillUpWEmptyVals = false;
+    bool firstRowInBlock = false;
+    bool lastRowInBlock = false;
+    uint16_t rowsInBlock = BYTE_PER_BLOCK / curCol.colWidth;
 
     while (!bExit)
     {
         curRowId = rowIdArray[i];
 
-        calculateRowId(curRowId, BYTE_PER_BLOCK / curCol.colWidth, curCol.colWidth, dataFbo, dataBio);
+        calculateRowId(curRowId, rowsInBlock, curCol.colWidth, dataFbo, dataBio);
 
         // load another data block if necessary
         if (curDataFbo != dataFbo)
@@ -1551,7 +1567,17 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                     return rc;
 
                 bDataDirty = false;
+                // MCOL-498 We got into the next block, so the row is first in that block
+                // - fill the block up with empty magics.
+                if ( curDataFbo != -1 && !bDelete )
+                    fillUpWEmptyVals = true;
             }
+
+            // MCOL-498 CS hasn't touched any block yet,
+            // but the row filled will be the first in the block.
+            firstRowInBlock = ( !(curRowId % (rowsInBlock)) ) ? true : false;
+            if( firstRowInBlock && !bDelete )
+                fillUpWEmptyVals = true;
 
             curDataFbo = dataFbo;
             rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
@@ -1562,7 +1588,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             bDataDirty = true;
         }
 
-        // This is a awkward way to convert void* and get ith element, I just don't have a good solution for that
+        // This is a awkward way to convert void* and get its element, I just don't have a good solution for that
         // How about pVal = valArray + i*curCol.colWidth?
         switch (curCol.colType)
         {
@@ -1676,8 +1702,54 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
 
     // take care of the cleanup
     if (bDataDirty && curDataFbo >= 0)
+    {
+        if ( fillUpWEmptyVals )
+        {
+            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+            int writeSize = BYTE_PER_BLOCK - ( dataBio + curCol.colWidth );
+            // MCOL-498 Add the check though this is unlikely at the moment of writing.
+            if ( writeSize )
+                setEmptyBuf( dataBuf + dataBio + curCol.colWidth, writeSize,
+                            emptyVal, curCol.colWidth );
+        }
+
         rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
 
+        if ( rc != NO_ERROR)
+            return rc;
+
+        // MCOL-498 If it was the last row in a block fill the next block with
+        // empty vals, otherwise next ColumnOp::allocRowId()
+        // will fail on the next block.
+        lastRowInBlock = ( rowsInBlock - ( curRowId % rowsInBlock ) == 1 ) ? true : false;
+        if ( lastRowInBlock )
+        {
+            if( !fillUpWEmptyVals )
+                emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+            // MCOL-498 Skip if this is the last block in an extent.
+            if ( curDataFbo % MAX_NBLOCKS !=  MAX_NBLOCKS - 1 )
+            {
+                rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
+                if ( rc != NO_ERROR)
+                    return rc;
+
+                curDataFbo += 1;
+                rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
+                if ( rc != NO_ERROR)
+                    return rc;
+
+                unsigned char zeroSubBlock[BYTE_PER_SUBBLOCK];
+                std::memset(zeroSubBlock, 0, BYTE_PER_SUBBLOCK);
+                // The first subblock is made of 0 - fill the block with empty vals.
+                if ( !std::memcmp(dataBuf, zeroSubBlock, BYTE_PER_SUBBLOCK) )
+                {
+                    setEmptyBuf(dataBuf, BYTE_PER_BLOCK, emptyVal, curCol.colWidth);
+                    rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
+                }
+            }
+        }
+
+    }
     return rc;
 }
 

@@ -1636,7 +1636,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         string constval(cc->constval());
 
-
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
         const PseudoColumn* pc = dynamic_cast<const PseudoColumn*>(sc);

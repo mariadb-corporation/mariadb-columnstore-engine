@@ -19,6 +19,7 @@
 #define IDBPOLICY_H_
 
 #include <string>
+#include <vector>
 #include <stdint.h>
 
 #include <boost/thread/mutex.hpp>
@@ -84,7 +85,12 @@ public:
      * Accessor method that returns whether or not cloud IO is enabled
      */
     static bool useCloud();
-    
+
+    /**
+     * Checks for disk space preallocation feature status for a dbroot
+     */
+    static bool PreallocSpace(uint16_t dbRoot);
+
     /**
      * Accessor method that returns whether to use HDFS memory buffers
      */
@@ -128,6 +134,10 @@ public:
     static int listDirectory(const char* pathname, std::list<std::string>& contents);
     static bool isDir(const char* pathname);
     static int copyFile(const char* srcPath, const char* destPath);
+    /**
+    * This is used in WE shared components Unit Tests
+    */
+    static void setPreallocSpace(uint16_t dbRoot);
 
 private:
     /**
@@ -140,6 +150,7 @@ private:
 
     static bool s_usehdfs;
     static bool s_usecloud;
+    static std::vector<uint16_t> s_PreallocSpace;
     static bool s_bUseRdwrMemBuffer;
     static std::string s_hdfsRdwrScratch;
     static int64_t s_hdfsRdwrBufferMaxSize;
@@ -163,6 +174,15 @@ inline
 bool IDBPolicy::useCloud()
 {
     return s_usecloud;
+}
+
+// MCOL-498 Looking for dbRoot in the List set in configIDBPolicy.
+inline
+bool IDBPolicy::PreallocSpace(uint16_t dbRoot)
+{
+    std::vector<uint16_t>::iterator dbRootIter =
+        find(s_PreallocSpace.begin(), s_PreallocSpace.end(), dbRoot);
+    return dbRootIter != s_PreallocSpace.end();
 }
 
 inline

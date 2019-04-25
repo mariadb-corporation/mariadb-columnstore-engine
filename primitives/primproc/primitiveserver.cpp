@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include <boost/algorithm/string/trim.hpp>
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
@@ -1804,6 +1805,7 @@ private:
         for (i = 0; i < count; i++)
         {
             *bs >> str;
+            boost::trim_right_if(str, boost::is_any_of(" "));
             filter->insert(str);
         }
 

@@ -630,7 +630,7 @@ protected:
         if (fAggMapPtr) fAggMapPtr->clear();
     }
 
-    void resetUDAF(uint64_t funcColID);
+    void resetUDAF(RowUDAFFunctionCol* rowUDAF);
 
     inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
     inline void makeAggFieldsNull(Row& row);
@@ -710,6 +710,9 @@ protected:
     static const static_any::any& doubleTypeId;
     static const static_any::any& longdoubleTypeId;
     static const static_any::any& strTypeId;
+
+    // For UDAF along with with multiple distinct columns
+    vector<SP_ROWAGG_FUNC_t>* fOrigFunctionCols;
 };
 
 //------------------------------------------------------------------------------

@@ -29,18 +29,28 @@ using namespace boost;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <we_dbfileop.h>
-#include <we_type.h>
-#include <we_semop.h>
-#include <we_log.h>
-#include <we_convertor.h>
-#include <we_brm.h>
-#include <we_cache.h>
+#include "we_dbfileop.h"
+#include "we_type.h"
+#include "we_log.h"
+#include "we_convertor.h"
+#include "we_brm.h"
+#include "we_cache.h"
+#include "we_colop.h"
+#include "IDBDataFile.h"
+#include "BufferedFile.h"
+#include "IDBPolicy.h"
+#include "IDBFileSystem.h"
+#include "idbcompress.h"
+#include "calpontsystemcatalog.h"
+#include "we_colopcompress.h"
+#include "we_dctnrycompress.h"
 
+using namespace compress;
+using namespace idbdatafile;
 using namespace WriteEngine;
 using namespace BRM;
 
-int compare (const void* a, const void* b)
+/*int compare (const void* a, const void* b)
 {
     return ( *(uint32_t*)a - * (uint32_t*)b );
 }
@@ -49,51 +59,55 @@ int compare1(const void* a, const void* b)
 {
     return ( (*(SortTuple*)a).key - (*(SortTuple*)b).key );
 }
-
+*/
 
 class SharedTest : public CppUnit::TestFixture
 {
 
-    CPPUNIT_TEST_SUITE( SharedTest );
+      CPPUNIT_TEST_SUITE( SharedTest );
 
-//CPPUNIT_TEST(setUp);
+CPPUNIT_TEST(setUp);
 //CPPUNIT_TEST( test1 );
 
 // File operation testing
-    CPPUNIT_TEST( testFileNameOp );
-    CPPUNIT_TEST( testFileHandleOp );
+//    CPPUNIT_TEST( testFileNameOp );
+//    CPPUNIT_TEST( testFileHandleOp );
     CPPUNIT_TEST( testDirBasic );
+    CPPUNIT_TEST( testCreateDeleteFile );
 
 // Data block related testing
-    CPPUNIT_TEST( testCalculateRowIdBitmap );
-    CPPUNIT_TEST( testBlockBuffer );
-    CPPUNIT_TEST( testBitBasic );
-    CPPUNIT_TEST( testBufferBit );
-    CPPUNIT_TEST( testBitShift );
-    CPPUNIT_TEST( testEmptyRowValue );
-    CPPUNIT_TEST( testCorrectRowWidth );
+//    CPPUNIT_TEST( testCalculateRowIdBitmap );
+//    CPPUNIT_TEST( testBlockBuffer );
+//    CPPUNIT_TEST( testBitBasic );
+//    CPPUNIT_TEST( testBufferBit );
+//    CPPUNIT_TEST( testBitShift );
+//    CPPUNIT_TEST( testEmptyRowValue );
+//    CPPUNIT_TEST( testCorrectRowWidth );
 // DB File Block related testing
-    CPPUNIT_TEST( testDbBlock );
+//    CPPUNIT_TEST( testDbBlock );
 
-    CPPUNIT_TEST( testCopyDbFile );
+//    CPPUNIT_TEST( testCopyDbFile );
 
+// Extent & dict related testing
+    CPPUNIT_TEST( testExtensionWOPrealloc );
+    CPPUNIT_TEST( testDictExtensionWOPrealloc );
 // Semaphore related testing
-    CPPUNIT_TEST( testSem );
+//    CPPUNIT_TEST( testSem );
 
 // Log related testing
     CPPUNIT_TEST( testLog );
 
 // Version Buffer related testing
-    CPPUNIT_TEST( testHWM );
-    CPPUNIT_TEST( testVB );
+//    CPPUNIT_TEST( testHWM );
+//    CPPUNIT_TEST( testVB );
 
 // Disk manager related testing
-    CPPUNIT_TEST( testDM );
-    CPPUNIT_TEST( tearDown );
+//    CPPUNIT_TEST( testDM );
+//    CPPUNIT_TEST( tearDown );
 
 // Cache related testing
-    CPPUNIT_TEST( testCacheBasic );
-    CPPUNIT_TEST( testCacheReadWrite );
+//    CPPUNIT_TEST( testCacheBasic );
+//    CPPUNIT_TEST( testCacheReadWrite );
 
     CPPUNIT_TEST( testCleanup );   // NEVER COMMENT OUT THIS LINE
     CPPUNIT_TEST_SUITE_END();
@@ -113,8 +127,6 @@ public:
 
     void test1()
     {
-        //m_wrapper.test();
-//      int numOfBlock = 10240;
         int numOfBlock = 1024;
         FILE*          pFile;
         unsigned char  writeBuf[BYTE_PER_BLOCK * 10];
@@ -139,7 +151,7 @@ public:
             }
         }
     }
-
+/*
     void testFileNameOp()
     {
         FileOp   fileOp;
@@ -342,23 +354,74 @@ public:
 
     }
 
+*/
     void testDirBasic()
     {
         FileOp   fileOp;
         char     dirName[30];
         int      rc;
 
-        strcpy( dirName, "testdir" );
-        fileOp.removeDir( dirName );
+        printf("\nRunning testDirBasic \n");
+        idbdatafile::IDBPolicy::init(true, false, "", 0);
+        IDBFileSystem& fs = IDBPolicy::getFs( "/tmp" );
+        strcpy( dirName, "/tmp/testdir42" );
+        fs.remove( dirName );
         CPPUNIT_ASSERT( fileOp.isDir( dirName ) == false );
 
         rc = fileOp.createDir( dirName );
         CPPUNIT_ASSERT( rc == NO_ERROR );
         CPPUNIT_ASSERT( fileOp.isDir( dirName ) == true );
 
-        fileOp.removeDir( dirName );
+        fs.remove( dirName );
     }
 
+    void testCreateDeleteFile()
+    {
+        IDBDataFile* pFile = NULL;
+        FileOp   fileOp;
+        BlockOp   blockOp;
+        char     fileName[20];
+        int      rc;
+        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+
+        printf("\nRunning testCreateDeleteFile \n");
+        idbdatafile::IDBPolicy::init(true, false, "", 0);
+        // Set to versionbuffer to satisfy IDBPolicy::getType
+        strcpy( fileName, "versionbuffer" );
+        fileOp.compressionType(1);
+
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT( fileOp.exists( fileName ) == false );
+
+        int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
+        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
+        // under the hood
+        // bigint column file
+        rc = fileOp.createFile( fileName,
+            nBlocks, // number of blocks
+            emptyVal, // NULL value
+            width, // width
+            1 ); // dbroot
+        CPPUNIT_ASSERT( rc == NO_ERROR );
+
+        fileOp.closeFile(pFile);
+
+        pFile = IDBDataFile::open(IDBPolicy::getType(fileName,
+            IDBPolicy::WRITEENG), fileName, "rb", 1);
+
+        rc = pFile->seek(0, 0);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        rc = fileOp.readHeaders(pFile, hdrs);
+        CPPUNIT_ASSERT( rc == NO_ERROR );
+        // Couldn't use IDBDataFile->close() here w/o excplicit cast
+        fileOp.closeFile(pFile);
+
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT( fileOp.exists( fileName ) == false );
+    }
+/*
     void testCalculateRowIdBitmap()
     {
         BlockOp blockOp;
@@ -374,23 +437,23 @@ public:
         CPPUNIT_ASSERT( bio == 16 );
 
         // Assuming 2048 per data block, 4 byte width
-        /*      rowId = 2049;
-              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 2048, 4, fbo, bio ) == true );
-              CPPUNIT_ASSERT( fbo == 1 );
-              CPPUNIT_ASSERT( bio == 16 );
-
-              // Assuming 4096 per data block, 2 byte width
-              rowId = 2049;
-              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 4096, 2, fbo, bio ) == true );
-              CPPUNIT_ASSERT( fbo == 1 );
-              CPPUNIT_ASSERT( bio == 16 );
-
-              // Assuming 8192 per data block, 1 byte width
-              rowId = 2049;
-              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 8192, 1, fbo, bio ) == true );
-              CPPUNIT_ASSERT( fbo == 1 );
-              CPPUNIT_ASSERT( bio == 16 );
-        */
+//              rowId = 2049;
+//              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 2048, 4, fbo, bio ) == true );
+//              CPPUNIT_ASSERT( fbo == 1 );
+//              CPPUNIT_ASSERT( bio == 16 );
+//
+//              // Assuming 4096 per data block, 2 byte width
+//              rowId = 2049;
+//              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 4096, 2, fbo, bio ) == true );
+//              CPPUNIT_ASSERT( fbo == 1 );
+//              CPPUNIT_ASSERT( bio == 16 );
+//
+//              // Assuming 8192 per data block, 1 byte width
+//              rowId = 2049;
+//              CPPUNIT_ASSERT( blockOp.calculateRowId( rowId, 8192, 1, fbo, bio ) == true );
+//              CPPUNIT_ASSERT( fbo == 1 );
+//              CPPUNIT_ASSERT( bio == 16 );
+//        
         rowId = 65546;
         CPPUNIT_ASSERT( blockOp.calculateRowBitmap( rowId, BYTE_PER_BLOCK * 8, fbo, bio, bbo ) == true );
         CPPUNIT_ASSERT( fbo == 1 );
@@ -550,19 +613,19 @@ public:
 
         curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 8 );
         CPPUNIT_ASSERT( curVal == 0x8000000000000001LL );
-        /*
-              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 9 );
-              CPPUNIT_ASSERT( curVal == 0x80000001 );
-
-              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 10 );
-              CPPUNIT_ASSERT( curVal == 0x8000000000000001LL );
-
-              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 12 );
-              CPPUNIT_ASSERT( curVal == 0x8000000000000001LL );
-
-              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 19 );
-              CPPUNIT_ASSERT( curVal == 0xFFFFFFFFFFFFFFFFLL );
-        */
+        
+//              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 9 );
+//              CPPUNIT_ASSERT( curVal == 0x80000001 );
+//
+//              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 10 );
+//              CPPUNIT_ASSERT( curVal == 0x8000000000000001LL );
+//
+//              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 12 );
+//              CPPUNIT_ASSERT( curVal == 0x8000000000000001LL );
+//
+//              curVal = blockOp.getEmptyRowValue( WriteEngine::DECIMAL, 19 );
+//              CPPUNIT_ASSERT( curVal == 0xFFFFFFFFFFFFFFFFLL );
+//        
         curVal = blockOp.getEmptyRowValue( WriteEngine::DATE, 4 );
         CPPUNIT_ASSERT( curVal == 0xFFFFFFFF );
 
@@ -645,18 +708,18 @@ public:
         curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 8 );
         CPPUNIT_ASSERT( curVal == 8 );
 
-        /*      curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 9 );
-              CPPUNIT_ASSERT( curVal == 4 );
-
-              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 10 );
-              CPPUNIT_ASSERT( curVal == 8 );
-
-              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 12 );
-              CPPUNIT_ASSERT( curVal == 8 );
-
-              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 19 );
-              CPPUNIT_ASSERT( curVal == 8 );
-        */
+//              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 9 );
+//              CPPUNIT_ASSERT( curVal == 4 );
+//
+//              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 10 );
+//              CPPUNIT_ASSERT( curVal == 8 );
+//
+//              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 12 );
+//              CPPUNIT_ASSERT( curVal == 8 );
+//
+//              curVal = blockOp.getCorrectRowWidth( WriteEngine::DECIMAL, 19 );
+//              CPPUNIT_ASSERT( curVal == 8 );
+//        
         curVal = blockOp.getCorrectRowWidth( WriteEngine::DATE, 8 );
         CPPUNIT_ASSERT( curVal == 4 );
 
@@ -892,125 +955,228 @@ public:
         dbFileOp.closeFile( pTargetFile );
 
     }
+*/
 
-    void testSem()
+    void testExtensionWOPrealloc()
     {
-        SemOp    semOp;
+        IDBDataFile* pFile = NULL;
         FileOp   fileOp;
+        BlockOp   blockOp;
+        char     fileName[20];
         int      rc;
-        bool     bSuccess;
-        key_t    key;
-        int      sid, totalNum = 5;
-        char     fileName[100];
+        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        int dbRoot = 1;
 
-        semOp.setMaxSemVal( 3 );
+        printf("\nRunning testExtensionWOPrealloc \n");
+        idbdatafile::IDBPolicy::init(true, false, "", 0);
+        // Set to versionbuffer to satisfy IDBPolicy::getType
+        strcpy( fileName, "versionbuffer" );
+        fileOp.compressionType(1);
 
-        bSuccess = semOp.getKey( NULL, key );
-        CPPUNIT_ASSERT( bSuccess == false );
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT( fileOp.exists( fileName ) == false );
 
-        rc = fileOp.getFileName( 9991, fileName );
+        int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
+        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
+        // under the hood
+        // bigint column file
+        rc = fileOp.createFile( fileName,
+            nBlocks, // number of blocks
+            emptyVal, // NULL value
+            width, // width
+            dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
-        bSuccess = semOp.getKey( fileName, key );
-        CPPUNIT_ASSERT( bSuccess == false );
+        // open created compressed file and check its header
+        pFile = IDBDataFile::open(IDBPolicy::getType(fileName,
+            IDBPolicy::WRITEENG), fileName, "rb", dbRoot);
 
-        rc = fileOp.getFileName( 999, fileName );
+        rc = pFile->seek(0, 0);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        rc = fileOp.readHeaders(pFile, hdrs);
         CPPUNIT_ASSERT( rc == NO_ERROR );
-        bSuccess = semOp.getKey( fileName, key );
-        printf( "\nkey=%d", key );
-        CPPUNIT_ASSERT( bSuccess == true );
+        // Couldn't use IDBDataFile->close() here w/o excplicit cast
+        fileOp.closeFile(pFile);
 
-        if ( semOp.existSem( sid, key ) )
-            semOp.deleteSem( sid );
+        // Extend the extent up to 64MB
+        // first run w preallocation
+        idbdatafile::BufferedFile* bFile = new idbdatafile::BufferedFile(fileName, "r+b", 0);
+        pFile = dynamic_cast<IDBDataFile*>(bFile);
+ 
+        rc = fileOp.initColumnExtent(pFile,
+           dbRoot,
+           BYTE_PER_BLOCK, // number of blocks
+           emptyVal,
+           width,
+           false, // use existing file
+           true,  // expand the extent
+           false, // add full (not abbreviated) extent
+           false); // don't optimize extention
 
-        rc = semOp.createSem( sid, key, 1000 );
-        CPPUNIT_ASSERT( rc == ERR_MAX_SEM );
 
-        rc = semOp.createSem( sid, key, totalNum );
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        CPPUNIT_ASSERT(bFile->size() == 67108864);
+        fileOp.closeFile(pFile);
+        // file has been extended delete the file before
+        // the second run
+
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
+
+        // second run with disabled preallocation
+        rc = fileOp.createFile( fileName,
+            nBlocks, // number of blocks
+            emptyVal, // NULL value
+            width, // width
+            dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
-        rc = semOp.createSem( sid, key, totalNum );
-        CPPUNIT_ASSERT( rc == ERR_SEM_EXIST );
+        // open created compressed file and check its header
+        pFile = IDBDataFile::open(IDBPolicy::getType(fileName,
+            IDBPolicy::WRITEENG), fileName, "rb", dbRoot);
 
-        rc = semOp.openSem( sid, key );
+        rc = pFile->seek(0, 0);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        rc = fileOp.readHeaders(pFile, hdrs);
         CPPUNIT_ASSERT( rc == NO_ERROR );
-        semOp.printAllVal( sid );
+        fileOp.closeFile(pFile);
 
-        // lock
-        printf( "\nlock one in 2" );
-        rc = semOp.lockSem( sid, 2 );
-        CPPUNIT_ASSERT( rc == NO_ERROR );
-        CPPUNIT_ASSERT( semOp.getVal( sid, 2 ) == 2 );
-        semOp.printAllVal( sid );
-
-        printf( "\nlock one in 2" );
-        rc = semOp.lockSem( sid, 2 );
-        CPPUNIT_ASSERT( rc == NO_ERROR );
-        CPPUNIT_ASSERT( semOp.getVal( sid, 2 ) == 1 );
-        semOp.printAllVal( sid );
-
-        printf( "\nlock one in 2" );
-        rc = semOp.lockSem( sid, 2 );
-        CPPUNIT_ASSERT( rc == NO_ERROR );
-        CPPUNIT_ASSERT( semOp.getVal( sid, 2 ) == 0 );
-        semOp.printAllVal( sid );
-
-        rc = semOp.lockSem( sid, 2 );
-        CPPUNIT_ASSERT( rc == ERR_NO_SEM_RESOURCE );
-        CPPUNIT_ASSERT( semOp.getVal( sid, 2 ) == 0 );
-
-        rc = semOp.lockSem( sid, -2 );
-        CPPUNIT_ASSERT( rc == ERR_VALUE_OUTOFRANGE );
-
-        rc = semOp.lockSem( sid + 1, 1 );
-        CPPUNIT_ASSERT( rc == ERR_LOCK_FAIL );
-
-        // unlock
-        rc = semOp.unlockSem( sid, -2 );
-        CPPUNIT_ASSERT( rc == ERR_VALUE_OUTOFRANGE );
-
-        rc = semOp.unlockSem( sid, 1 );
-        CPPUNIT_ASSERT( rc == ERR_NO_SEM_LOCK );
-
-        rc = semOp.unlockSem( sid + 1, 2 );
-        CPPUNIT_ASSERT( rc == ERR_UNLOCK_FAIL );
-
-        printf( "\nunlock one in 2" );
-        rc = semOp.unlockSem( sid, 2 );
-        CPPUNIT_ASSERT( rc == NO_ERROR );
-        CPPUNIT_ASSERT( semOp.getVal( sid, 2 ) == 1 );
-        semOp.printAllVal( sid );
-
-        semOp.deleteSem( sid );
-        CPPUNIT_ASSERT(  semOp.existSem( sid, key ) == false );
-
-        CPPUNIT_ASSERT( semOp.getSemCount( sid + 1 ) == 0 );
+        bFile = new idbdatafile::BufferedFile(fileName, "r+b", 0);
+        pFile = dynamic_cast<IDBDataFile*>(bFile);
+ 
+        // disable disk space preallocation and extend
+        idbdatafile::IDBPolicy::setPreallocSpace(dbRoot);
+        rc = fileOp.initColumnExtent(pFile,
+           dbRoot,
+           BYTE_PER_BLOCK, // number of blocks
+           emptyVal,
+           width,
+           false, // use existing file
+           true,  // expand the extent
+           false, // add full (not abbreviated) extent
+           true); // optimize extention
 
 
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        CPPUNIT_ASSERT(bFile->size() == 2105344);
+        fileOp.closeFile(pFile);
+        // file has been extended
+
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
     }
+
+    // Create a dict file. Extend it w and w/o preallocation.
+    // Check the file sizes.
+    void testDictExtensionWOPrealloc()
+    {
+        FileOp   fileOp;
+        BlockOp   blockOp;
+        char     fileName[20];
+        int      rc;
+        int dbRoot = 1;
+        int colWidth = 65535;
+
+        DctnryCompress1 m_Dctnry;
+        // This is the magic for the stub in FileOp::oid2FileName
+        int oId = 42;
+
+        printf("\nRunning testDictExtensionWOPrealloc ");
+        printf("There could be InetStreamSocket::connect errors \n");
+        m_Dctnry.setDebugLevel( DEBUG_3 );
+
+        idbdatafile::IDBPolicy::init(true, false, "", 0);
+        // Set to versionbuffer to satisfy IDBPolicy::getType
+        strcpy( fileName, "versionbuffer" );
+
+        rc = m_Dctnry.dropDctnry(oId);
+        // FileOp::oid2FileName is called under the hood
+        // Dctnry::createDctnry could be used with running CS
+        // createDctnryFile also uses DBRM under the hood it works though.
+        IDBDataFile* m_dFile = m_Dctnry.createDctnryFileUnit(fileName,
+            colWidth,
+            "w+b",
+            DEFAULT_BUFSIZ);
+
+        idbdatafile::BufferedFile* bFile = (idbdatafile::BufferedFile*)m_dFile;
+        CPPUNIT_ASSERT(m_dFile != NULL);
+
+        const int m_totalHdrBytes = HDR_UNIT_SIZE + NEXT_PTR_BYTES + HDR_UNIT_SIZE + HDR_UNIT_SIZE;
+
+        m_Dctnry.compressionType(1);
+        rc = m_Dctnry.initDctnryExtent( m_dFile,
+            dbRoot,
+            BYTE_PER_BLOCK, // 8192
+            const_cast<unsigned char*>(m_Dctnry.getDctnryHeader2()),
+            m_totalHdrBytes,
+            false,
+            false ); //enable preallocation
+        // Check the file size and remove the file
+        CPPUNIT_ASSERT(bFile->size() == 67379200);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        fileOp.deleteFile( fileName );
+        CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
+
+        // Create a Dictionary for the second time
+        m_dFile = m_Dctnry.createDctnryFileUnit(fileName,
+            colWidth,
+            "w+b",
+            DEFAULT_BUFSIZ);
+
+        // Get the file size later 
+        bFile = (idbdatafile::BufferedFile*)m_dFile;
+        CPPUNIT_ASSERT(m_dFile != NULL);
+
+        // disable preallocation and create a Dictionary
+        idbdatafile::IDBPolicy::setPreallocSpace(dbRoot);
+        m_Dctnry.compressionType(1);
+        rc = m_Dctnry.initDctnryExtent( m_dFile,
+            dbRoot,
+            BYTE_PER_BLOCK,
+            const_cast<unsigned char*>(m_Dctnry.getDctnryHeader2()),
+            m_totalHdrBytes,
+            false,
+            true ); //skip preallocation
+
+        // Check the size and remove the file.
+        CPPUNIT_ASSERT(bFile->size() == 483328);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        fileOp.deleteFile(fileName);
+        CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
+    }
+
+
+
+
 
     void testLog()
     {
         Log   log;
+        FileOp fileOp;
         string msg;
         int    iVal = 3;
-        float  fVal = 2.0;
+        char logFile[] = "test1.log";
+        char logErrFile[] = "test1err.log";
 
-        log.setLogFileName( "test1.log", "test1err.log" );
+        log.setLogFileName( logFile, logErrFile );
 
         msg = Convertor::int2Str( iVal );
-        log.logMsg( msg + " this is a info message", INFO );
+        log.logMsg( msg + " this is a info message", MSGLVL_INFO1 );
         msg = Convertor::getTimeStr();
-        log.logMsg( Convertor::float2Str( fVal ) + " this is a warning message", WARNING );
-        log.logMsg( "this is an error message ", 1011, ERROR );
-        log.logMsg( "this is a critical message", 1211, CRITICAL );
-
-        //...Test formatting an unsigned 64 bit integer.
-        uint64_t i64Value(UINT64_MAX);
-        msg = Convertor::i64ToStr( i64Value );
-        CPPUNIT_ASSERT( (msg == "18446744073709551615") );
-        log.logMsg( msg + " this is an info message with the max uint64_t integer value", INFO );
+        log.logMsg( " this is a warning message", MSGLVL_WARNING );
+        log.logMsg( "this is an error message ", 1011, MSGLVL_ERROR );
+        log.logMsg( "this is a critical message", 1211, MSGLVL_CRITICAL );
+        CPPUNIT_ASSERT( fileOp.exists( logFile ) == true );
+        CPPUNIT_ASSERT( fileOp.exists( logErrFile ) == true );
+        fileOp.deleteFile( logFile );
+        fileOp.deleteFile( logErrFile );
+        CPPUNIT_ASSERT( fileOp.exists( logFile ) == false );
+        CPPUNIT_ASSERT( fileOp.exists( logErrFile ) == false );
     }
+
+/*
 
     void testHWM()
     {
@@ -1375,6 +1541,7 @@ public:
         }
 
     }
+*/
 
     void testCleanup()
     {

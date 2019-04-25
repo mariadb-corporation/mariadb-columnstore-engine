@@ -2069,7 +2069,8 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
     }
     else
     {
-        throw std::runtime_error("Invalid table comment");
+        // Generic table comment, we don't need to do anything
+        return;
     }
 
     // Get the OID for autoinc (if exists)

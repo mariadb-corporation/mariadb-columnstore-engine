@@ -11,7 +11,6 @@ ADD_CUSTOM_COMMAND(
 ADD_CUSTOM_TARGET(ddl-lexer DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp)
 ADD_CUSTOM_TARGET(ddl-parser DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp)
 # Parser puts extra info to stderr.
-INCLUDE(../../check_compiler_flag.cmake)
 MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG=1" DEBUG)
 
 ########### next target ###############

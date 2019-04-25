@@ -443,7 +443,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 {
                     memcpy(&dVal, field, sizeof(dVal));
 
-                    if ( isnan(dVal) )
+                    if ( std::isnan(dVal) )
                     {
                         if (signbit(dVal))
                             dVal = column.fMinDblSat;

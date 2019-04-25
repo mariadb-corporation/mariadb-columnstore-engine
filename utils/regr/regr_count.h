@@ -25,8 +25,7 @@
  * Columnstore interface for for the regr_count function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_count returns INTEGER
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_count returns INTEGER soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_regr_count
