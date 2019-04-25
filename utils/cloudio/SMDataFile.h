@@ -36,6 +36,7 @@ class SMDataFile : public IDBDataFile
         ssize_t write(const void* ptr, size_t count);
         int seek(off64_t offset, int whence);
         int truncate(off64_t length);
+        int fallocate(int mode, off64_t offset, off64_t length);
         off64_t size();
         off64_t tell();
         int flush();

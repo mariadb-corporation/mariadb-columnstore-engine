@@ -95,6 +95,12 @@ int SMDataFile::truncate(off64_t length)
     return comm->truncate(name(), length);
 }
 
+int SMDataFile::fallocate(int mode, off64_t offset, off64_t length)
+{
+    idbassert_s(mode == 0, "SMDataFile::fallocate() does not support mode != 0 right now.");
+    return comm->truncate(name(), offset + length);
+}
+
 off64_t SMDataFile::size()
 {
     struct stat _stat;
