@@ -7,6 +7,7 @@
 #include <deque>
 #include <boost/utility.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/chrono.hpp>
 
 #include "SMLogging.h"
 #include "Replicator.h"
@@ -75,6 +76,13 @@ class Synchronizer : public boost::noncopyable
         // some consolidation should be possible between this and the two maps above, tbd.
         // in general the code got kludgier b/c of renaming, needs a cleanup pass.
         std::list<std::string> objNames;
+        
+        // this thread will start jobs for entries in pendingOps every 10 seconds
+        bool die;
+        boost::thread syncThread;
+        const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
+        void periodicSync();
+        
         
         SMLogging *logger;
         Cache *cache;
