@@ -34,6 +34,7 @@ static int calpont_commit(handlerton* hton, THD* thd, bool all);
 static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
 handlerton* calpont_hton;
+handlerton* mcs_hton;
 
 // handlers creation function for hton.
 // Look into ha_mcs_pushdown.* for more details.
@@ -79,6 +80,7 @@ static uchar* calpont_get_key(INFINIDB_SHARE* share, size_t* length,
     return (uchar*) share->table_name;
 }
 
+// This one is unused
 int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
     DBUG_ENTER("calpont_discover");
@@ -105,6 +107,7 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
     DBUG_RETURN(my_errno);
 }
 
+// This f() is also unused
 int calpont_discover_existence(handlerton* hton, const char* db,
                                const char* table_name)
 {
@@ -127,24 +130,24 @@ static int columnstore_init_func(void* p)
 
     fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
-    calpont_hton = (handlerton*)p;
+    mcs_hton = (handlerton*)p;
 #ifndef _MSC_VER
     (void) pthread_mutex_init(&calpont_mutex, MY_MUTEX_INIT_FAST);
 #endif
     (void) my_hash_init(&calpont_open_tables, system_charset_info, 32, 0, 0,
                         (my_hash_get_key) calpont_get_key, 0, 0);
 
-    calpont_hton->state =   SHOW_OPTION_YES;
-    calpont_hton->create =  calpont_create_handler;
-    calpont_hton->flags =   HTON_CAN_RECREATE;
-//  calpont_hton->discover_table= calpont_discover;
-//  calpont_hton->discover_table_existence= calpont_discover_existence;
-    calpont_hton->commit = calpont_commit;
-    calpont_hton->rollback = calpont_rollback;
-    calpont_hton->close_connection = calpont_close_connection;
-    calpont_hton->create_group_by = create_calpont_group_by_handler;
-    calpont_hton->create_derived = create_columnstore_derived_handler;
-    calpont_hton->create_select = create_columnstore_select_handler;
+    mcs_hton->state =   SHOW_OPTION_YES;
+    mcs_hton->create =  calpont_create_handler;
+    mcs_hton->flags =   HTON_CAN_RECREATE;
+//  mcs_hton->discover_table= calpont_discover;
+//  mcs_hton->discover_table_existence= calpont_discover_existence;
+    mcs_hton->commit = calpont_commit;
+    mcs_hton->rollback = calpont_rollback;
+    mcs_hton->close_connection = calpont_close_connection;
+    mcs_hton->create_group_by = create_calpont_group_by_handler;
+    mcs_hton->create_derived = create_columnstore_derived_handler;
+    mcs_hton->create_select = create_columnstore_select_handler;
     DBUG_RETURN(0);
 }
 
@@ -282,10 +285,6 @@ int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
 {
     DBUG_ENTER("ha_calpont::open");
 
-    //if (!(share = get_share(name, table)))
-    //  DBUG_RETURN(1);
-    //thr_lock_data_init(&share->lock,&lock,NULL);
-
     int rc = ha_calpont_impl_open(name, mode, test_if_locked);
 
     DBUG_RETURN(rc);
@@ -311,7 +310,6 @@ int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
 int ha_calpont::close(void)
 {
     DBUG_ENTER("ha_calpont::close");
-    //DBUG_RETURN(free_share(share));
 
     int rc = ha_calpont_impl_close();
 

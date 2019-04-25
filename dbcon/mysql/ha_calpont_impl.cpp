@@ -577,10 +577,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                      * At a later date we should set this more intelligently
                      * based on the result set.
                      */
-                    /* MCOL-683: UTF-8 datetime no msecs is 57, this sometimes happens! */
-//                    if (((*f)->field_length > 19) && ((*f)->field_length != 57))
-//                        (*f)->field_length = strlen(tmp);
-
                     Field_varstring* f2 = (Field_varstring*)*f;
                     f2->store(tmp, strlen(tmp), f2->charset());
                     break;
@@ -742,19 +738,11 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     if (dl == std::numeric_limits<float>::infinity())
                         continue;
 
-                    //int64_t* icvp = (int64_t*)&dl;
-                    //intColVal = *icvp;
                     Field_float* f2 = (Field_float*)*f;
                     // bug 3485, reserve enough space for the longest float value
                     // -3.402823466E+38 to -1.175494351E-38, 0, and
                     // 1.175494351E-38 to 3.402823466E+38.
                     (*f)->field_length = 40;
-
-                    //float float_val = *(float*)(&value);
-                    //f2->store(float_val);
-                    // WIP MCOL-2178
-                    //if (f2->decimals() < (uint32_t)row.getScale(s))
-                        //f2->dec = (uint32_t)row.getScale(s);
 
                     f2->store(dl);
 
@@ -762,9 +750,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     break;
-
-                    //storeNumericField(f, intColVal, colType);
-                    //break;
                 }
 
                 case CalpontSystemCatalog::DOUBLE:
@@ -781,30 +766,12 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
                     (*f)->field_length = 40;
 
-                    //double double_val = *(double*)(&value);
-                    //f2->store(double_val);
-
-                    
-                    // WIP MCOL-2178
-                    /*
-                    if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                            || f2->decimals() < row.getScale(s))
-                    {
-                        f2->dec = row.getScale(s);
-                    }*/
-
                     f2->store(dl);
 
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     break;
-
-
-                    //int64_t* icvp = (int64_t*)&dl;
-                    //intColVal = *icvp;
-                    //storeNumericField(f, intColVal, colType);
-                    //break;
                 }
 
                 case CalpontSystemCatalog::LONGDOUBLE:
@@ -821,12 +788,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         {
                             char buf[310];
                             Field_new_decimal* f2 = (Field_new_decimal*)*f;
-                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                                    || f2->decimals() < row.getScale(s))
-                            {
-                                f2->dec = row.getScale(s);
-                            }
-//                            dl /= pow(10.0, (double)f2->dec);
                             snprintf(buf, 310, "%.20Lg", dl);
                             f2->store(buf, strlen(buf), f2->charset());
                             if ((*f)->null_ptr)
@@ -841,12 +802,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                             // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                             // 2.2250738585072014E-308 to 1.7976931348623157E+308.
                             (*f)->field_length = 310;
-
-                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                                    || f2->decimals() < row.getScale(s))
-                            {
-                                f2->dec = row.getScale(s);
-                            }
 
                             f2->store(static_cast<double>(dl));
                             if ((*f)->null_ptr)
@@ -1425,7 +1380,7 @@ uint32_t doUpdateDelete(THD* thd)
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
-            // WIP MCOL-2178 
+            // WIP MCOL-2178
             /*else if ( value->type() ==  Item::VARBIN_ITEM )
             {
                 String val, *str;
@@ -2368,8 +2323,15 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
-
 #endif
+
+    // Set this to close all outstanding FEP connections on
+    // client disconnect in handlerton::closecon_handlerton().
+    if ( !thd_get_ha_data(thd, mcs_hton))
+    {
+        thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
+    }
+
     // prevent "create table as select" from running on slave
     MIGR::infinidb_vtable.hasInfiniDBTable = true;
 
@@ -2533,9 +2495,10 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     }
     // vtable mode
     else
+    // The whole section must be useless now.
     {
-        //if (!ci->cal_conn_hndl || MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
-        if ( MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
+        if ( !ci->cal_conn_hndl ||
+            MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
         {
             ci->stats.reset(); // reset query stats
             ci->stats.setStartTime();
@@ -2886,14 +2849,14 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     return 0;
 
 error:
-
+    // CS doesn't need to close the actual sockets
+    // b/c it tries to reuse it running next query.
     if (ci->cal_conn_hndl)
     {
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
 
-    // do we need to close all connection handle of the table map?
     return ER_INTERNAL_ERROR;
 
 internal_error:
@@ -3038,6 +3001,7 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 
     MIGR::infinidb_vtable.isNewQuery = true;
 
+    // WIP MCOL-2178
     // Workaround because CS doesn't reset isUnion in a normal way.
     if (is_pushdown_hand)
     {
@@ -3046,14 +3010,12 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    // WIP MCOL-2178. Won't see this state anymore.
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ORDER_BY )
     {
         MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_SELECT_VTABLE;	// flip back to normal state
         return rc;
     }
-
-//	if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_REDO_PHASE1)
-//		return rc;
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
@@ -3166,6 +3128,8 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     ci->warningMsg.clear();
     // reset expressionId just in case
     ci->expressionId = 0;
+
+    thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(ci));
 
     return rc;
 }
@@ -4465,7 +4429,7 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 ci->queryState = 0;
                 MIGR::infinidb_vtable.override_largeside_estimate = false;
                 // MCOL-3247 Use THD::ha_data as a per-plugin per-session
-                // storage for cal_conn_hndl to use it later in close_connection 
+                // storage for cal_conn_hndl to use it later in close_connection
                 thd_set_ha_data(thd, calpont_hton, get_fe_conn_info_ptr());
             }
         }
@@ -5272,12 +5236,10 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
  * Execute the query and saves derived table query.
  * There is an extra handler argument so I ended up with a
  * new init function. The code is a copy of
- * ha_calpont_impl_rnd_init() mostly. We should come up with
- * a semi-universal structure that allows to save any
- * extra data.
+ * ha_calpont_impl_rnd_init() mostly. 
  * PARAMETERS:
- * void* handler either select_ or derived_handler
- * TABLE* table - table where to save the results
+ * mcs_handler_info* pnt to an envelope struct 
+ * TABLE* table - dest table to put the results into
  * RETURN:
  *    rc as int
  ***********************************************************/
@@ -5325,8 +5287,15 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
         MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
-
 #endif
+
+    // Set this to close all outstanding FEP connections on
+    // client disconnect in handlerton::closecon_handlerton().
+    if ( !thd_get_ha_data(thd, mcs_hton))
+    {
+        thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
+    }
+
     // prevent "create table as select" from running on slave
     MIGR::infinidb_vtable.hasInfiniDBTable = true;
 

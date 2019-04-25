@@ -22,6 +22,7 @@
 #include "ha_mcs_sysvars.h"
 
 extern handlerton* calpont_hton;
+extern handlerton* mcs_hton;
 
 /** @brief
   INFINIDB_SHARE is a structure that will be shared among all open handlers.
