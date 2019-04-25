@@ -2135,7 +2135,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -2190,7 +2190,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     idbassert(ci != 0);
 
     // MySQL sometimes calls rnd_init multiple times, plan should only be
@@ -2674,7 +2673,7 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -2715,7 +2714,6 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
