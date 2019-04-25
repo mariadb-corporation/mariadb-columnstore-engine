@@ -25,8 +25,7 @@
  * Columnstore interface for for the regr_slope function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_slope returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_slope returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_regr_slope
