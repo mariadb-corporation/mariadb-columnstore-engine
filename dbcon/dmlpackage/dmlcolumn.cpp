@@ -40,10 +40,6 @@ DMLColumn::DMLColumn(std::string name, std::string value, bool isFromCol, uint32
 {
     fName = name;
     fData = value;
-    if (( strcasecmp(value.c_str(), "NULL") == 0) || (value.length() == 0) )
-    {
-          isNULL = true;
-    } 
     fisNULL = isNULL;
 	fIsFromCol = isFromCol;
 	fFuncScale = funcScale;

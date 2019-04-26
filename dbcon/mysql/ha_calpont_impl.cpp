@@ -1044,8 +1044,9 @@ uint32_t doUpdateDelete(THD *thd)
             else if ( value->type() ==  Item::NULL_ITEM )
             {
 //                dmlStmt += "NULL";
-                columnAssignmentPtr->fScalarExpression = "NULL";
+                columnAssignmentPtr->fScalarExpression = "";
                 columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr->fIsNull = true;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {

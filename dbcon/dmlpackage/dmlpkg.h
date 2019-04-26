@@ -409,8 +409,9 @@ public:
     std::string fColumn;
     std::string fOperator;
     std::string fScalarExpression;
-	bool fFromCol;
-	uint32_t fFuncScale;
+    bool fFromCol;
+    uint32_t fFuncScale;
+    bool fIsNull = false;
 };
 
 /** @brief Stores a value list or a query specification
