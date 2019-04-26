@@ -15,7 +15,7 @@ set(loggingcpp_LIB_SRCS
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h
-    COMMAND ./genMsgAndErrId.sh
+    COMMAND /bin/sh genMsgAndErrId.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS genMsgId.pl genErrId.pl
     )
