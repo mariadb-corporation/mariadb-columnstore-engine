@@ -18,7 +18,7 @@
 /*
 * $Id: viewtablelock.cpp 2101 2013-01-21 14:12:52Z rdempsey $
 */
-#include <future> //cxx11test
+
 
 #include <ctime>
 #include <iostream>

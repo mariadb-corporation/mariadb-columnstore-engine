@@ -21,7 +21,7 @@
  *
  *   Author: David Hill
  ***************************************************************************/
-#include <future> //cxx11test
+
 
 #include "serverMonitor.h"
 #include "installdir.h"

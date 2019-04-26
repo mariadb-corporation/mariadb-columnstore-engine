@@ -20,7 +20,6 @@
 *
 *
 ***********************************************************************/
-#include <future> //cxx11test
 #include <unistd.h>
 #include <signal.h>
 #include <string>

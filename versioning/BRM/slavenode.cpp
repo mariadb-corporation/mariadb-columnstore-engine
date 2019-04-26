@@ -19,7 +19,7 @@
  * $Id: slavenode.cpp 1931 2013-07-08 16:53:02Z bpaul $
  *
  ****************************************************************************/
-#include <future> //cxx11test
+
 
 #include <iostream>
 #include <signal.h>
