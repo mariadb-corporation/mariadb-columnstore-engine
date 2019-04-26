@@ -3,16 +3,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 
 ########### next target ###############
-
-set(loggingcpp_LIB_SRCS
-    message.cpp
-    messagelog.cpp
-    logger.cpp
-    errorcodes.cpp
-    sqllogger.cpp
-    stopwatch.cpp
-    idberrorinfo.cpp)
-
+#TODO: put generated files in binary dir
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h
     COMMAND /bin/sh genMsgAndErrId.sh
@@ -20,11 +11,20 @@ ADD_CUSTOM_COMMAND(
     DEPENDS genMsgId.pl genErrId.pl
     )
     
-ADD_CUSTOM_TARGET(genMsgAndErrId DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h)
     
-add_library(loggingcpp SHARED ${loggingcpp_LIB_SRCS})
+add_library(loggingcpp SHARED
+    message.cpp
+    messagelog.cpp
+    logger.cpp
+    errorcodes.cpp
+    sqllogger.cpp
+    stopwatch.cpp
+    idberrorinfo.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/messageids.h
+	${CMAKE_CURRENT_SOURCE_DIR}/errorids.h
+	)
 
-add_dependencies(loggingcpp genMsgAndErrId)
+
 
 set_target_properties(loggingcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
