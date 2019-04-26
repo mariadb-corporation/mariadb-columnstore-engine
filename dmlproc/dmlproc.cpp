@@ -20,7 +20,7 @@
 *
 *
 ***********************************************************************/
-
+#include <future> //cxx11test
 #include <unistd.h>
 #include <signal.h>
 #include <string>
@@ -632,7 +632,7 @@ int main(int argc, char* argv[])
     if (rm->getDMLJlThreadPoolDebug() == "Y" || rm->getDMLJlThreadPoolDebug() == "y")
     {
         JobStep::jobstepThreadPool.setDebug(true);
-        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+        JobStep::jobstepThreadPool.invoke(threadpool::ThreadPoolMonitor(&JobStep::jobstepThreadPool));
     }
 
     //set ACTIVE state

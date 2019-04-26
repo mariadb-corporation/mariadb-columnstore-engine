@@ -24,6 +24,17 @@ ENDIF()
 
 MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 
+OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
+if(NOT USE_CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
+else()
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
+endif()
 # Distinguish between community and non-community builds, with the
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to

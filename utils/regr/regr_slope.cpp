@@ -64,7 +64,7 @@ mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
     context->setUserDataSize(sizeof(regr_slope_data));
-    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(DECIMAL_NOT_SPECIFIED);
     context->setPrecision(0);

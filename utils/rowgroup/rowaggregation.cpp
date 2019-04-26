@@ -1903,7 +1903,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     // The vector of parameters to be sent to the UDAF
     mcsv1sdk::ColumnDatum valsIn[paramCount];
     uint32_t dataFlags[paramCount];
-    ConstantColumn* cc;
+    execplan::ConstantColumn* cc;
     bool bIsNull = false;
     execplan::CalpontSystemCatalog::ColDataType colDataType;
 
@@ -1919,10 +1919,10 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
         if (fFunctionCols[funcColsIdx]->fpConstCol)
         {
-            cc = dynamic_cast<ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
+            cc = dynamic_cast<execplan::ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
         }
 
-        if ((cc && cc->type() == ConstantColumn::NULLDATA)
+        if ((cc && cc->type() == execplan::ConstantColumn::NULLDATA)
                 ||  (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
         {
             if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
@@ -3680,7 +3680,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
             // Create a datum item for sending to UDAF
             mcsv1sdk::ColumnDatum& datum = valsIn[0];
-            datum.dataType = (CalpontSystemCatalog::ColDataType)colDataType;
+            datum.dataType = (execplan::CalpontSystemCatalog::ColDataType)colDataType;
 
             switch (colDataType)
             {

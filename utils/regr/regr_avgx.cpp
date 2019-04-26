@@ -72,7 +72,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::init(mcsv1Context* context,
     }
 
     context->setUserDataSize(sizeof(regr_avgx_data));
-    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(colTypes[1].scale + 4);
     context->setPrecision(19);

@@ -23,6 +23,7 @@
 /*
  * The executable source that runs a Master DBRM Node.
  */
+#include <future> //cxx11test
 
 #include "masterdbrmnode.h"
 #include "liboamcpp.h"

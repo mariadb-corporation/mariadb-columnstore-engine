@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 // $Id: main.cpp 2101 2013-01-21 14:12:52Z rdempsey $
+#include <future> //cxx11test
 
 #include "config.h"
 
@@ -46,7 +47,7 @@ namespace
 
 bool vFlg;
 bool nFlg;
-mutex coutMutex;
+std::mutex coutMutex;
 
 void shmDoit(key_t shm_key, const string& label)
 {
@@ -61,7 +62,7 @@ void shmDoit(key_t shm_key, const string& label)
                                             bi::read_only);
             bi::offset_t memSize = 0;
             memObj.get_size(memSize);
-            mutex::scoped_lock lk(coutMutex);
+            std::lock_guard<std::mutex> lk(coutMutex);
             cout << label << ": shm_key: " << shm_key <<
                  "; key_name: " << key_name <<
                  "; size: " << memSize << endl;
@@ -102,7 +103,7 @@ void semDoit(key_t sem_key, const string& label)
                                             bi::read_only);
             bi::offset_t memSize = 0;
             memObj.get_size(memSize);
-            mutex::scoped_lock lk(coutMutex);
+            std::lock_guard<std::mutex> lk(coutMutex);
             cout << label << ": sem_key: " << sem_key <<
                  "; key_name: " << key_name <<
                  "; size: " << memSize << endl;

@@ -28,7 +28,6 @@
 
 #include "brmtypes.h"
 #include "calpontsystemcatalog.h"
-using namespace execplan;
 /** @file
  * class BRMReporter
  */
@@ -107,7 +106,7 @@ public:
      */
     void reportTotals(uint64_t totalReadRows,
                       uint64_t totalInsertedRows,
-                      const std::vector<boost::tuple<CalpontSystemCatalog::ColDataType,
+                      const std::vector<boost::tuple<execplan::CalpontSystemCatalog::ColDataType,
                       uint64_t, uint64_t> >& satCounts);
 
     /** @brief Generate report for job that exceeds error limit

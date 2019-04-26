@@ -51,11 +51,7 @@
 #define EXPORT
 #endif
 
-using namespace std;
-using namespace execplan;
-
 #include <boost/algorithm/string/case_conv.hpp>
-using namespace boost::algorithm;
 
 template <class T>
 bool from_string(T& t,
@@ -72,7 +68,7 @@ struct DDLColumn
 {
     execplan::CalpontSystemCatalog::OID oid;
     execplan::CalpontSystemCatalog::ColType colType;
-    execplan:: CalpontSystemCatalog::TableColName tableColName;
+    execplan::CalpontSystemCatalog::TableColName tableColName;
 };
 
 typedef std::vector<DDLColumn> ColumnList;
@@ -104,23 +100,23 @@ inline void  getColumnsForTable(uint32_t sessionID, std::string schema, std::str
                                 ColumnList& colList)
 {
 
-    CalpontSystemCatalog::TableName tableName;
+  execplan::CalpontSystemCatalog::TableName tableName;
     tableName.schema = schema;
     tableName.table = table;
     std::string err;
 
     try
     {
-        boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
-        systemCatalogPtr->identity(CalpontSystemCatalog::EC);
+        boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr = execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+        systemCatalogPtr->identity(execplan::CalpontSystemCatalog::EC);
 
-        const CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(tableName);
+        const execplan::CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(tableName);
 
-        CalpontSystemCatalog::RIDList::const_iterator rid_iterator = ridList.begin();
+        execplan::CalpontSystemCatalog::RIDList::const_iterator rid_iterator = ridList.begin();
 
         while (rid_iterator != ridList.end())
         {
-            CalpontSystemCatalog::ROPair roPair = *rid_iterator;
+          execplan::CalpontSystemCatalog::ROPair roPair = *rid_iterator;
 
             DDLColumn column;
             column.oid = roPair.objnum;
@@ -381,112 +377,112 @@ inline int convertDataType(int dataType)
     switch (dataType)
     {
         case ddlpackage::DDL_CHAR:
-            calpontDataType = CalpontSystemCatalog::CHAR;
+            calpontDataType = execplan::CalpontSystemCatalog::CHAR;
             break;
 
         case ddlpackage::DDL_VARCHAR:
-            calpontDataType = CalpontSystemCatalog::VARCHAR;
+            calpontDataType = execplan::CalpontSystemCatalog::VARCHAR;
             break;
 
         case ddlpackage::DDL_VARBINARY:
-            calpontDataType = CalpontSystemCatalog::VARBINARY;
+            calpontDataType = execplan::CalpontSystemCatalog::VARBINARY;
             break;
 
         case ddlpackage::DDL_BIT:
-            calpontDataType = CalpontSystemCatalog::BIT;
+            calpontDataType = execplan::CalpontSystemCatalog::BIT;
             break;
 
         case ddlpackage::DDL_REAL:
         case ddlpackage::DDL_DECIMAL:
         case ddlpackage::DDL_NUMERIC:
         case ddlpackage::DDL_NUMBER:
-            calpontDataType = CalpontSystemCatalog::DECIMAL;
+            calpontDataType = execplan::CalpontSystemCatalog::DECIMAL;
             break;
 
         case ddlpackage::DDL_FLOAT:
-            calpontDataType = CalpontSystemCatalog::FLOAT;
+            calpontDataType = execplan::CalpontSystemCatalog::FLOAT;
             break;
 
         case ddlpackage::DDL_DOUBLE:
-            calpontDataType = CalpontSystemCatalog::DOUBLE;
+            calpontDataType = execplan::CalpontSystemCatalog::DOUBLE;
             break;
 
         case ddlpackage::DDL_INT:
         case ddlpackage::DDL_INTEGER:
-            calpontDataType = CalpontSystemCatalog::INT;
+            calpontDataType = execplan::CalpontSystemCatalog::INT;
             break;
 
         case ddlpackage::DDL_BIGINT:
-            calpontDataType = CalpontSystemCatalog::BIGINT;
+            calpontDataType = execplan::CalpontSystemCatalog::BIGINT;
             break;
 
         case ddlpackage::DDL_MEDINT:
-            calpontDataType = CalpontSystemCatalog::MEDINT;
+            calpontDataType = execplan::CalpontSystemCatalog::MEDINT;
             break;
 
         case ddlpackage::DDL_SMALLINT:
-            calpontDataType = CalpontSystemCatalog::SMALLINT;
+            calpontDataType = execplan::CalpontSystemCatalog::SMALLINT;
             break;
 
         case ddlpackage::DDL_TINYINT:
-            calpontDataType = CalpontSystemCatalog::TINYINT;
+            calpontDataType = execplan::CalpontSystemCatalog::TINYINT;
             break;
 
         case ddlpackage::DDL_DATE:
-            calpontDataType = CalpontSystemCatalog::DATE;
+            calpontDataType = execplan::CalpontSystemCatalog::DATE;
             break;
 
         case ddlpackage::DDL_DATETIME:
-            calpontDataType = CalpontSystemCatalog::DATETIME;
+            calpontDataType = execplan::CalpontSystemCatalog::DATETIME;
             break;
 
         case ddlpackage::DDL_TIME:
-            calpontDataType = CalpontSystemCatalog::TIME;
+            calpontDataType = execplan::CalpontSystemCatalog::TIME;
             break;
 
         case ddlpackage::DDL_CLOB:
-            calpontDataType = CalpontSystemCatalog::CLOB;
+            calpontDataType = execplan::CalpontSystemCatalog::CLOB;
             break;
 
         case ddlpackage::DDL_BLOB:
-            calpontDataType = CalpontSystemCatalog::BLOB;
+            calpontDataType = execplan::CalpontSystemCatalog::BLOB;
             break;
 
         case ddlpackage::DDL_TEXT:
-            calpontDataType = CalpontSystemCatalog::TEXT;
+            calpontDataType = execplan::CalpontSystemCatalog::TEXT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_TINYINT:
-            calpontDataType = CalpontSystemCatalog::UTINYINT;
+            calpontDataType = execplan::CalpontSystemCatalog::UTINYINT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_SMALLINT:
-            calpontDataType = CalpontSystemCatalog::USMALLINT;
+            calpontDataType = execplan::CalpontSystemCatalog::USMALLINT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_MEDINT:
-            calpontDataType = CalpontSystemCatalog::UMEDINT;
+            calpontDataType = execplan::CalpontSystemCatalog::UMEDINT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_INT:
-            calpontDataType = CalpontSystemCatalog::UINT;
+            calpontDataType = execplan::CalpontSystemCatalog::UINT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_BIGINT:
-            calpontDataType = CalpontSystemCatalog::UBIGINT;
+            calpontDataType = execplan::CalpontSystemCatalog::UBIGINT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_DECIMAL:
         case ddlpackage::DDL_UNSIGNED_NUMERIC:
-            calpontDataType = CalpontSystemCatalog::UDECIMAL;
+            calpontDataType = execplan::CalpontSystemCatalog::UDECIMAL;
             break;
 
         case ddlpackage::DDL_UNSIGNED_FLOAT:
-            calpontDataType = CalpontSystemCatalog::UFLOAT;
+            calpontDataType = execplan::CalpontSystemCatalog::UFLOAT;
             break;
 
         case ddlpackage::DDL_UNSIGNED_DOUBLE:
-            calpontDataType = CalpontSystemCatalog::UDOUBLE;
+            calpontDataType = execplan::CalpontSystemCatalog::UDOUBLE;
             break;
 
         default:

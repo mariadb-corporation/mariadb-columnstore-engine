@@ -138,7 +138,7 @@ private:
     int64_t* values;
     boost::scoped_array<std::string>* strValues;
     int compressionType;
-    ByteStream filterString;
+    messageqcpp::ByteStream filterString;
     uint32_t filterCount;
     uint32_t bufferSize;
     uint16_t inputRidCount;

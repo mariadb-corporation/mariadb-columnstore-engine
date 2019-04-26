@@ -49,7 +49,7 @@ mcsv1_UDAF::ReturnCode avg_mode::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(context->getScale() * 2);
     context->setPrecision(19);

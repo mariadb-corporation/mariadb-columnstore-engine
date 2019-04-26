@@ -54,7 +54,7 @@ mcsv1_UDAF::ReturnCode regr_count::init(mcsv1Context* context,
     }
 
     context->setUserDataSize(sizeof(regr_count_data));
-    context->setResultType(CalpontSystemCatalog::BIGINT);
+    context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
     context->setColWidth(8);
     context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
     return mcsv1_UDAF::SUCCESS;

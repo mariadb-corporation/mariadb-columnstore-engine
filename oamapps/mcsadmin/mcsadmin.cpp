@@ -21,6 +21,7 @@
  * $Id: mcsadmin.cpp 3110 2013-06-20 18:09:12Z dhill $
  *
  ******************************************************************************************/
+#include <future> //cxx11test
 
 #include <clocale>
 #include <netdb.h>

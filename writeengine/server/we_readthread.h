@@ -27,7 +27,6 @@
 #include "messagequeue.h"
 #include "threadpool.h"
 #include "we_ddlcommandproc.h"
-using namespace threadpool;
 
 #include "we_ddlcommandproc.h"
 #include "we_dmlcommandproc.h"
@@ -149,7 +148,7 @@ public:
     virtual ~ReadThreadFactory() {}
 
 public:
-    static void CreateReadThread(ThreadPool& Tp, IOSocket& ios, BRM::DBRM& dbrm);
+    static void CreateReadThread(threadpool::ThreadPool& Tp, IOSocket& ios, BRM::DBRM& dbrm);
 
 
 };

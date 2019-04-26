@@ -282,7 +282,7 @@ void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveproce
     ism.Status =  logging::primitiveServerErr;
     ph.UniqueID = id;
     ph.StepID = step;
-    ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    messageqcpp::ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
     msg.append((uint8_t*) &ism, sizeof(ism));
     msg.append((uint8_t*) &ph, sizeof(ph));
 

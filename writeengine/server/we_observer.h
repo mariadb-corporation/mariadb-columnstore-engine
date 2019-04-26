@@ -31,7 +31,6 @@
 #define OBSERVER_H_
 
 #include <list>
-using namespace std;
 
 
 namespace WriteEngine
