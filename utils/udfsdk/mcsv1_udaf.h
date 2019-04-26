@@ -78,8 +78,6 @@
 #include "wf_frame.h"
 #include "my_decimal_limits.h"
 
-using namespace execplan;
-
 #if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
@@ -282,7 +280,7 @@ public:
     EXPORT bool isParamConstant(int paramIdx);
 
     // For getting the result type.
-    EXPORT CalpontSystemCatalog::ColDataType getResultType() const;
+    EXPORT execplan::CalpontSystemCatalog::ColDataType getResultType() const;
 
     // For getting the decimal characteristics for the return type.
     // These will be set to the default before init().
@@ -291,7 +289,7 @@ public:
 
     // If you want to change the result type
     // valid in init()
-    EXPORT bool setResultType(CalpontSystemCatalog::ColDataType resultType);
+    EXPORT bool setResultType(execplan::CalpontSystemCatalog::ColDataType resultType);
 
     // For setting the decimal characteristics for the return value.
     // This only makes sense if the return type is decimal, but should be set
@@ -339,14 +337,14 @@ public:
     // If WF_PRECEEdING and/or WF_FOLLOWING, a start or end constant should
     // be included to say how many preceeding or following is the default
     // Set this during init()
-    EXPORT bool  setDefaultWindowFrame(WF_FRAME defaultStartFrame,
-                                       WF_FRAME defaultEndFrame,
+    EXPORT bool  setDefaultWindowFrame(execplan::WF_FRAME defaultStartFrame,
+                                      execplan::WF_FRAME defaultEndFrame,
                                        int32_t startConstant = 0, // For WF_PRECEEDING or WF_FOLLOWING
                                        int32_t endConstant = 0);  // For WF_PRECEEDING or WF_FOLLOWING
 
     // There may be times you want to know the actual frame set by the caller
-    EXPORT void  getStartFrame(WF_FRAME& startFrame, int32_t& startConstant) const;
-    EXPORT void  getEndFrame(WF_FRAME& endFrame, int32_t& endConstant) const;
+    EXPORT void  getStartFrame(execplan::WF_FRAME& startFrame, int32_t& startConstant) const;
+    EXPORT void  getEndFrame(execplan::WF_FRAME& endFrame, int32_t& endConstant) const;
 
     // Deep Equivalence
     bool operator==(const mcsv1Context& c) const;
@@ -367,15 +365,15 @@ private:
     uint64_t fContextFlags;   // Set by the framework to define this specific call.
     int32_t fUserDataSize;
     boost::shared_ptr<UserData> fUserData;
-    CalpontSystemCatalog::ColDataType fResultType;
+    execplan::CalpontSystemCatalog::ColDataType fResultType;
     int32_t  fColWidth;       // The length in bytes of the return type
     int32_t  fResultscale;    // For scale, the number of digits to the right of the decimal
     int32_t  fResultPrecision; // The max number of digits allowed in the decimal value
     std::string errorMsg;
     uint32_t* dataFlags;      // an integer array wirh one entry for each parameter
     bool*    bInterrupted;    // Gets set to true by the Framework if something happens
-    WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
-    WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
+    execplan::WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
+    execplan::WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
     int32_t  fStartConstant;  // for start frame WF_PRECEEDIMG or WF_FOLLOWING
     int32_t  fEndConstant;    // for end frame WF_PRECEEDIMG or WF_FOLLOWING
     std::string functionName;
@@ -422,12 +420,12 @@ public:
 // For char, varchar, text, varbinary and blob types, columnData will be std::string.
 struct ColumnDatum
 {
-    CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
+  execplan::CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
     static_any::any  columnData;  // Not valid in init()
     uint32_t    scale;     // If dataType is a DECIMAL type
     uint32_t    precision; // If dataType is a DECIMAL type
     std::string alias;     // Only filled in for init()
-    ColumnDatum() : dataType(CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1) {};
+    ColumnDatum() : dataType(execplan::CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1) {};
 };
 
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
@@ -636,14 +634,14 @@ inline mcsv1Context::mcsv1Context() :
     fRunFlags(UDAF_OVER_ALLOWED | UDAF_ORDER_ALLOWED | UDAF_WINDOWFRAME_ALLOWED),
     fContextFlags(0),
     fUserDataSize(0),
-    fResultType(CalpontSystemCatalog::UNDEFINED),
+    fResultType(execplan::CalpontSystemCatalog::UNDEFINED),
     fColWidth(0),
     fResultscale(0),
     fResultPrecision(18),
     dataFlags(NULL),
     bInterrupted(NULL),
-    fStartFrame(WF_UNBOUNDED_PRECEDING),
-    fEndFrame(WF_CURRENT_ROW),
+    fStartFrame(execplan::WF_UNBOUNDED_PRECEDING),
+    fEndFrame(execplan::WF_CURRENT_ROW),
     fStartConstant(0),
     fEndConstant(0),
     func(NULL),
@@ -774,12 +772,12 @@ inline bool mcsv1Context::isParamConstant(int paramIdx)
     return false;
 }
 
-inline CalpontSystemCatalog::ColDataType mcsv1Context::getResultType() const
+inline execplan::CalpontSystemCatalog::ColDataType mcsv1Context::getResultType() const
 {
     return fResultType;
 }
 
-inline bool mcsv1Context::setResultType(CalpontSystemCatalog::ColDataType resultType)
+inline bool mcsv1Context::setResultType(execplan::CalpontSystemCatalog::ColDataType resultType)
 {
     fResultType = resultType;
     return true;  // We may want to sanity check here.
@@ -878,8 +876,8 @@ inline void mcsv1Context::setUserData(UserData* userData)
     }
 }
 
-inline bool mcsv1Context::setDefaultWindowFrame(WF_FRAME defaultStartFrame,
-        WF_FRAME defaultEndFrame,
+inline bool mcsv1Context::setDefaultWindowFrame(execplan::WF_FRAME defaultStartFrame,
+        execplan::WF_FRAME defaultEndFrame,
         int32_t startConstant,
         int32_t endConstant)
 {
@@ -891,13 +889,13 @@ inline bool mcsv1Context::setDefaultWindowFrame(WF_FRAME defaultStartFrame,
     return true;
 }
 
-inline void mcsv1Context::getStartFrame(WF_FRAME& startFrame, int32_t& startConstant) const
+inline void mcsv1Context::getStartFrame(execplan::WF_FRAME& startFrame, int32_t& startConstant) const
 {
     startFrame = fStartFrame;
     startConstant = fStartConstant;
 }
 
-inline void mcsv1Context::getEndFrame(WF_FRAME& endFrame, int32_t& endConstant) const
+inline void mcsv1Context::getEndFrame(execplan::WF_FRAME& endFrame, int32_t& endConstant) const
 {
     endFrame = fEndFrame;
     endConstant = fEndConstant;

@@ -25,6 +25,7 @@
  *
  * More detailed description
  */
+#include <future> //cxx11test
 
 #include <unistd.h>
 #include <iostream>

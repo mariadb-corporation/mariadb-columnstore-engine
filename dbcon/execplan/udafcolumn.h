@@ -30,7 +30,6 @@ namespace messageqcpp
 class ByteStream;
 }
 
-using namespace mcsv1sdk;
 /**
  * Namespace
  */
@@ -78,7 +77,7 @@ public:
     /**
      * Accessors and Mutators
      */
-    mcsv1Context& getContext()
+    mcsv1sdk::mcsv1Context& getContext()
     {
         return context;
     }
@@ -122,7 +121,7 @@ public:
     virtual bool operator!=(const UDAFColumn& t) const;
 
 private:
-    mcsv1Context context;
+    mcsv1sdk::mcsv1Context context;
 };
 
 /**

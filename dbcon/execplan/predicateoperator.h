@@ -295,7 +295,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 // we won't want to just multiply by scale, as it may move
                 // significant digits out of scope. So we break them apart
                 // and compare each separately 
-                int64_t scale = max(lop->resultType().scale, rop->resultType().scale);
+                int64_t scale = std::max(lop->resultType().scale, rop->resultType().scale);
                 if (scale)
                 {
                     long double intpart1;

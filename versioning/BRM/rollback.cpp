@@ -28,6 +28,7 @@
  * 		rollback -p   (to get the transaction(s) that need to be rolled back)
  * 		rollback -r transID  	(for each one to roll them back)
  */
+#include <future> //cxx11test
 
 #include "dbrm.h"
 

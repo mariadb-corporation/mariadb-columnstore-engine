@@ -18,6 +18,7 @@
 /*
 * $Id: cleartablelock.cpp 2336 2013-06-25 19:11:36Z rdempsey $
 */
+#include <future> //cxx11test
 
 #include <cstdlib>
 #include <iostream>

@@ -233,7 +233,7 @@ public:
         fWeSplClients[PmId]->setRowsUploadInfo(RowsRead, RowsInserted);
     }
     void add2ColOutOfRangeInfo(int PmId, int ColNum,
-                               CalpontSystemCatalog::ColDataType ColType,
+            execplan::CalpontSystemCatalog::ColDataType ColType,
                                std::string&  ColName, int NoOfOors)
     {
         fWeSplClients[PmId]->add2ColOutOfRangeInfo(ColNum, ColType, ColName, NoOfOors);
@@ -326,7 +326,7 @@ private:
         {
             fRowsIns += Rows;
         }
-        void updateColOutOfRangeInfo(int aColNum, CalpontSystemCatalog::ColDataType aColType,
+        void updateColOutOfRangeInfo(int aColNum, execplan::CalpontSystemCatalog::ColDataType aColType,
                                      std::string aColName, int aNoOfOors)
         {
             WEColOorVec::iterator aIt = fColOorVec.begin();

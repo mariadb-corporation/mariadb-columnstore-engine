@@ -453,7 +453,7 @@ void WESplClient::setRowsUploadInfo(int64_t RowsRead, int64_t RowsInserted)
 //------------------------------------------------------------------------------
 
 void WESplClient::add2ColOutOfRangeInfo(int ColNum,
-                                        CalpontSystemCatalog::ColDataType ColType,
+  execplan::CalpontSystemCatalog::ColDataType ColType,
                                         std::string&  ColName, int NoOfOors)
 {
     WEColOORInfo aColOorInfo;

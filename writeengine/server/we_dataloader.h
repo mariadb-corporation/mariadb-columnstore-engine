@@ -67,7 +67,7 @@ public:
     void str2Argv(std::string CmdLine, std::vector<char*>& V);
     std::string getCalpontHome();
     std::string getPrgmPath(std::string& PrgmName);
-    void updateCmdLineWithPath(string& CmdLine);
+    void updateCmdLineWithPath(std::string& CmdLine);
 
 
 public:
@@ -179,8 +179,8 @@ private:
     SplitterReadThread& fRef;
 
     int fMode;
-    ofstream fDataDumpFile;
-    ofstream fJobFile;
+    std::ofstream fDataDumpFile;
+    std::ofstream fJobFile;
     unsigned int fTxBytes;
     unsigned int fRxBytes;
     char fPmId;

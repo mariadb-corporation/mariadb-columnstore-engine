@@ -35,7 +35,6 @@
 
 #include "we_messages.h"
 #include "calpontsystemcatalog.h"
-using namespace execplan;
 
 namespace WriteEngine
 {
@@ -47,11 +46,11 @@ class WESplClient;			//forward decleration
 class WEColOORInfo		// Column Out-Of-Range Info
 {
 public:
-    WEColOORInfo(): fColNum(0), fColType(CalpontSystemCatalog::INT), fNoOfOORs(0) {}
+    WEColOORInfo(): fColNum(0), fColType(execplan::CalpontSystemCatalog::INT), fNoOfOORs(0) {}
     ~WEColOORInfo() {}
 public:
     int fColNum;
-    CalpontSystemCatalog::ColDataType fColType;
+    execplan::CalpontSystemCatalog::ColDataType fColType;
     std::string fColName;
     int fNoOfOORs;
 };
@@ -390,8 +389,7 @@ private:
     std::string fErrInfoFile;
 
     void setRowsUploadInfo(int64_t RowsRead, int64_t RowsInserted);
-    void add2ColOutOfRangeInfo(int ColNum,
-                               CalpontSystemCatalog::ColDataType ColType,
+    void add2ColOutOfRangeInfo(int ColNum, execplan::CalpontSystemCatalog::ColDataType ColType,
                                std::string&  ColName, int NoOfOors);
     void setBadDataFile(const std::string& BadDataFile);
     void setErrInfoFile(const std::string& ErrInfoFile);

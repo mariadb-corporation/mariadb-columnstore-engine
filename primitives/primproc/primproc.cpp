@@ -21,6 +21,8 @@
  *
  *
  ***********************************************************************/
+#include <future> //cxx11test
+
 #include <unistd.h>
 #include <string>
 #include <iostream>

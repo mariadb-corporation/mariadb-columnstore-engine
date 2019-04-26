@@ -651,7 +651,7 @@ void SplitterReadThread::operator()()
         catch (...)
         {
             fIbs.restart();     //setting length=0, get out of loop
-            cout << "Broken Pipe" << endl;
+            std::cout << "Broken Pipe" << std::endl;
 
             logging::LoggingID logid(19, 0, 0);
             logging::Message::Args args;
@@ -889,7 +889,7 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
     }
     catch (std::exception& ex)
     {
-        cout << "Handled : " << ex.what() << endl;
+      std::cout << "Handled : " << ex.what() << std::endl;
         logging::LoggingID logid(19, 0, 0);
         logging::Message::Args args;
         logging::Message msg(1);
