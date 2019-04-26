@@ -41,9 +41,8 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
-                <Exec CmdLine="make -fMakefile"/>
+                RunFromDir="%rw">
+                <Exec CmdLine="make"/>
             </Target>
             <Target
                 Name="Rebuild"
@@ -51,9 +50,8 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
-                <Exec CmdLine="make -fMakefile clean; make -fMakefile"/>
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
             </Target>
             <Target
                 Name="Debug"
@@ -62,7 +60,7 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveNone"
-                RunFromDir="%rw"
+                RunFromDir="%wp"
                 ClearProcessBuffer="1">
                 <Exec CmdLine='vsdebugio -prog "%o"'/>
             </Target>
@@ -70,11 +68,11 @@
                 Name="Execute"
                 MenuCaption="E&amp;xecute"
                 Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
+                RunFromDir="%rw">
                 <Exec CmdLine='"%o"'/>
             </Target>
             <Target
@@ -136,9 +134,8 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
-                <Exec CmdLine="make -fMakefile"/>
+                RunFromDir="%rw">
+                <Exec CmdLine="make"/>
             </Target>
             <Target
                 Name="Rebuild"
@@ -146,9 +143,8 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
-                <Exec CmdLine="make -fMakefile clean; make -fMakefile"/>
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
             </Target>
             <Target
                 Name="Debug"
@@ -157,7 +153,7 @@
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveNone"
-                RunFromDir="%rw"
+                RunFromDir="%wp"
                 ClearProcessBuffer="1">
                 <Exec CmdLine='vsdebugio -prog "%o"'/>
             </Target>
@@ -165,11 +161,11 @@
                 Name="Execute"
                 MenuCaption="E&amp;xecute"
                 Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
                 CaptureOutputWith="ProcessBuffer"
                 Deletable="0"
                 SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw"
-                ClearProcessBuffer="1">
+                RunFromDir="%rw">
                 <Exec CmdLine='"%o"'/>
             </Target>
             <Target
@@ -200,14 +196,17 @@
             Name="Source Files"
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
             <F N="activestatementcounter.cpp"/>
+            <F N="ExeMgr.cpp"/>
             <F N="femsghandler.cpp"/>
             <F N="main.cpp"/>
+            <F N="procstat.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
             <F N="activestatementcounter.h"/>
             <F N="femsghandler.h"/>
+            <F N="procstat.h"/>
         </Folder>
         <Folder
             Name="Resource Files"
