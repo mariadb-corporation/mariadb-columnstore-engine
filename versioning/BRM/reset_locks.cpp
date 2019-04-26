@@ -17,7 +17,7 @@
 
 // $Id: reset_locks.cpp 1823 2013-01-21 14:13:09Z rdempsey $
 //
-#include <future> //cxx11test
+
 
 #include <unistd.h>
 #include <iostream>

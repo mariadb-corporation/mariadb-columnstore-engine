@@ -19,7 +19,7 @@
  * $Id: load_brm.cpp 1905 2013-06-14 18:42:28Z rdempsey $
  *
  ****************************************************************************/
-#include <future> //cxx11test
+
 #include <unistd.h>
 #include <iostream>
 #include <string>

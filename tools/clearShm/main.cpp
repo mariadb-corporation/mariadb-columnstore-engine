@@ -16,7 +16,7 @@
    MA 02110-1301, USA. */
 
 // $Id: main.cpp 2101 2013-01-21 14:12:52Z rdempsey $
-#include <future> //cxx11test
+
 
 #include "config.h"
 
@@ -30,6 +30,7 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <mutex>
 using namespace std;
 
 #include <boost/interprocess/shared_memory_object.hpp>
