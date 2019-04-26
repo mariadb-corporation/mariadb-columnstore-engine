@@ -207,7 +207,7 @@ struct RowAggFunctionCol
     // The first will be a RowUDAFFunctionCol. Subsequent ones will be RowAggFunctionCol
     // with fAggFunction == ROWAGG_MULTI_PARM. Order is important.
     // If this parameter is constant, that value is here.
-    SRCP fpConstCol;
+    execplan::SRCP fpConstCol;
 };
 
 
@@ -272,7 +272,7 @@ inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
 
     if (t)
     {
-        fpConstCol.reset(new ConstantColumn);
+        fpConstCol.reset(new execplan::ConstantColumn);
         fpConstCol.get()->unserialize(bs);
     }
 }

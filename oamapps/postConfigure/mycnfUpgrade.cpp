@@ -25,6 +25,7 @@
 /**
  * @file
  */
+#include <future> //cxx11test
 
 #include <unistd.h>
 #include <iterator>

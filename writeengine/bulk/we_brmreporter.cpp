@@ -321,7 +321,7 @@ void BRMReporter::sendCPToFile( )
 void BRMReporter::reportTotals(
     uint64_t totalReadRows,
     uint64_t totalInsertedRows,
-    const std::vector<boost::tuple<CalpontSystemCatalog::ColDataType, uint64_t, uint64_t> >& satCounts)
+    const std::vector<boost::tuple<execplan::CalpontSystemCatalog::ColDataType, uint64_t, uint64_t> >& satCounts)
 {
     if (fRptFile.is_open())
     {

@@ -59,8 +59,8 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
              month = 0,
              day = 0;
 
-    DateTime aDateTime;
-    Time     aTime;
+    dataconvert::DateTime aDateTime;
+    dataconvert::Time     aTime;
 
     switch (type)
     {
@@ -89,7 +89,7 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::TIME:
         {
             int64_t val;
-            aDateTime = static_cast<DateTime>(nowDatetime());
+            aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
             aDateTime.hour = 0;
             aDateTime.minute = 0;

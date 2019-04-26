@@ -39,82 +39,53 @@
  * on the Front-End Processor where it is returned to the DBMS
  * front-end.
  */
+
+
+
+#include <mutex>
+#include <experimental/filesystem>
 #include <iostream>
-#include <map>
-#include <string>
-#include <stdexcept>
+
+#include <cstdint>
 #include <csignal>
-#include <unistd.h>
-#include <sys/time.h>
-#ifndef _MSC_VER
+
 #include <sys/resource.h>
-#else
-#include <io.h>
-#include <direct.h>
-#endif
-//#define NDEBUG
-#include <cassert>
-#include <clocale>
-#include <ctime>
-using namespace std;
 
-#include <boost/thread.hpp>
-#include <boost/tokenizer.hpp>
-#include <boost/scoped_ptr.hpp>
-using namespace boost;
-
-#include "config.h"
-#include "configcpp.h"
-using namespace config;
-#include "messagequeue.h"
-#include "iosocket.h"
-#include "bytestream.h"
-using namespace messageqcpp;
 #include "calpontselectexecutionplan.h"
-#include "calpontsystemcatalog.h"
-#include "simplecolumn.h"
-using namespace execplan;
-#include "joblist.h"
-#include "joblistfactory.h"
+#include "activestatementcounter.h"
 #include "distributedenginecomm.h"
 #include "resourcemanager.h"
-using namespace joblist;
-#include "liboamcpp.h"
-using namespace oam;
-#include "logger.h"
-#include "sqllogger.h"
-#include "idberrorinfo.h"
-using namespace logging;
-#include "querystats.h"
-using namespace querystats;
-#include "MonitorProcMem.h"
-#include "querytele.h"
-using namespace querytele;
+#include "configcpp.h"
+#include "queryteleserverparms.h"
+#include "iosocket.h"
+#include "joblist.h"
+#include "joblistfactory.h"
 #include "oamcache.h"
-
-#include "activestatementcounter.h"
+#include "simplecolumn.h"
+#include "bytestream.h"
+#include "telestats.h"
+#include "messageobj.h"
+#include "messagelog.h"
+#include "sqllogger.h"
 #include "femsghandler.h"
-
-#include "utils_utf8.h"
-#include "boost/filesystem.hpp"
-
-#include "threadpool.h"
+#include "idberrorinfo.h"
+#include "MonitorProcMem.h"
+#include "liboamcpp.h"
 #include "crashtrace.h"
+#include "utils_utf8.h"
 
 #if defined(SKIP_OAM_INIT)
 #include "dbrm.h"
 #endif
 
 
-#include "installdir.h"
-
 namespace
 {
 
 //If any flags other than the table mode flags are set, produce output to screeen
 const uint32_t flagsWantOutput = (0xffffffff &
-                                  ~CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
-                                  ~CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
+                                  ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
+                                  ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
 
 int gDebug;
 
@@ -129,32 +100,32 @@ const unsigned logExeMgrExcpt          = logging::M0055;
 
 logging::Logger msgLog(16);
 
-typedef map<uint32_t, size_t> SessionMemMap_t;
+typedef std::map<uint32_t, size_t> SessionMemMap_t;
 SessionMemMap_t sessionMemMap; // track memory% usage during a query
-mutex sessionMemMapMutex;
+std::mutex sessionMemMapMutex;
 
 //...The FrontEnd may establish more than 1 connection (which results in
 //   more than 1 ExeMgr thread) per session.  These threads will share
 //   the same CalpontSystemCatalog object for that session.  Here, we
-//   define a map to track how many threads are sharing each session, so
+//   define a std::map to track how many threads are sharing each session, so
 //   that we know when we can safely delete a CalpontSystemCatalog object
 //   shared by multiple threads per session.
-typedef map<uint32_t, uint32_t> ThreadCntPerSessionMap_t;
+typedef std::map<uint32_t, uint32_t> ThreadCntPerSessionMap_t;
 ThreadCntPerSessionMap_t        threadCntPerSessionMap;
-mutex threadCntPerSessionMapMutex;
+std::mutex threadCntPerSessionMapMutex;
 
 //This var is only accessed using thread-safe inc/dec calls
 ActiveStatementCounter* statementsRunningCount;
 
-DistributedEngineComm* ec;
+joblist::DistributedEngineComm* ec;
 
-ResourceManager* rm = ResourceManager::instance(true);
+auto rm = joblist::ResourceManager::instance(true);
 
 int toInt(const string& val)
 {
     if (val.length() == 0) return -1;
 
-    return static_cast<int>(Config::fromText(val));
+    return static_cast<int>(config::Config::fromText(val));
 }
 
 const string ExeMgr("ExeMgr1");
@@ -216,7 +187,7 @@ const string prettyPrintMiniInfo(const string& in)
         lineparts.push_back(parts);
     }
 
-    ostringstream oss;
+    std::ostringstream oss;
 
     vector<vector<string> >::iterator iter1 = lineparts.begin();
     vector<vector<string> >::iterator end1 = lineparts.end();
@@ -265,13 +236,13 @@ const string timeNow()
     return buf;
 }
 
-QueryTeleServerParms gTeleServerParms;
+querytele::QueryTeleServerParms gTeleServerParms;
 
 class SessionThread
 {
 public:
 
-    SessionThread(const IOSocket& ios, DistributedEngineComm* ec, ResourceManager* rm) :
+    SessionThread(const messageqcpp::IOSocket& ios, joblist::DistributedEngineComm* ec, joblist::ResourceManager* rm) :
         fIos(ios), fEc(ec),
         fRm(rm),
         fStatsRetrieved(false),
@@ -282,15 +253,15 @@ public:
 
 private:
 
-    IOSocket fIos;
-    DistributedEngineComm* fEc;
-    ResourceManager*  fRm;
+    messageqcpp::IOSocket fIos;
+    joblist::DistributedEngineComm* fEc;
+    joblist::ResourceManager*  fRm;
     querystats::QueryStats fStats;
 
     // Variables used to store return stats
     bool       fStatsRetrieved;
 
-    QueryTeleClient fTeleClient;
+    querytele::QueryTeleClient fTeleClient;
 
     oam::OamCache* fOamCachePtr;	//this ptr is copyable...
 
@@ -314,7 +285,7 @@ private:
 
         if ( sessionId < 0x80000000 )
         {
-            mutex::scoped_lock lk(sessionMemMapMutex);
+            std::lock_guard<std::mutex> lk(sessionMemMapMutex);
             SessionMemMap_t::iterator mapIter =
                 sessionMemMap.find( sessionId );
 
@@ -333,7 +304,7 @@ private:
     {
         if ( sessionId < 0x80000000 )
         {
-            mutex::scoped_lock lk(sessionMemMapMutex);
+            std::lock_guard<std::mutex> lk(sessionMemMapMutex);
             SessionMemMap_t::iterator mapIter =
                 sessionMemMap.find( sessionId );
 
@@ -346,14 +317,14 @@ private:
 
     //...Get and log query stats to specified output stream
     const string formatQueryStats (
-        SJLP&    jl,			// joblist associated with query
+        joblist::SJLP&    jl,			// joblist associated with query
         const    string& label, // header label to print in front of log output
         bool     includeNewLine,//include line breaks in query stats string
         bool     vtableModeOn,
         bool     wantExtendedStats,
         uint64_t rowsReturned)
     {
-        ostringstream os;
+        std::ostringstream os;
 
         // Get stats if not already acquired for current query
         if ( !fStatsRetrieved )
@@ -405,7 +376,7 @@ private:
     //...Increment the number of threads using the specified sessionId
     static void incThreadCntPerSession(uint32_t sessionId)
     {
-        mutex::scoped_lock lk(threadCntPerSessionMapMutex);
+        std::lock_guard<std::mutex> lk(threadCntPerSessionMapMutex);
         ThreadCntPerSessionMap_t::iterator mapIter =
             threadCntPerSessionMap.find(sessionId);
 
@@ -425,7 +396,7 @@ private:
     //...debugging/stats purpose, such as result graph, etc.
     static void decThreadCntPerSession(uint32_t sessionId)
     {
-        mutex::scoped_lock lk(threadCntPerSessionMapMutex);
+        std::lock_guard<std::mutex> lk(threadCntPerSessionMapMutex);
         ThreadCntPerSessionMap_t::iterator mapIter =
             threadCntPerSessionMap.find(sessionId);
 
@@ -434,8 +405,8 @@ private:
             if (--mapIter->second == 0)
             {
                 threadCntPerSessionMap.erase(mapIter);
-                CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
-                CalpontSystemCatalog::removeCalpontSystemCatalog((sessionId ^ 0x80000000));
+                execplan::CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+                execplan::CalpontSystemCatalog::removeCalpontSystemCatalog((sessionId ^ 0x80000000));
             }
         }
     }
@@ -447,7 +418,7 @@ private:
         if ( sessionId < 0x80000000 )
         {
             // cout << "Setting pct to 0 for session " << sessionId << endl;
-            mutex::scoped_lock lk(sessionMemMapMutex);
+            std::lock_guard<std::mutex> lk(sessionMemMapMutex);
             SessionMemMap_t::iterator mapIter = sessionMemMap.find( sessionId );
 
             if ( mapIter == sessionMemMap.end() )
@@ -478,7 +449,7 @@ private:
         if (up)
             roundedValue++;
 
-        ostringstream oss;
+        std::ostringstream oss;
         oss << roundedValue << units[i];
         return oss.str();
     }
@@ -494,20 +465,20 @@ private:
         return roundedValue;
     }
 
-    void setRMParms ( const CalpontSelectExecutionPlan::RMParmVec& parms )
+    void setRMParms ( const execplan::CalpontSelectExecutionPlan::RMParmVec& parms )
     {
-        for (CalpontSelectExecutionPlan::RMParmVec::const_iterator it = parms.begin();
+        for (execplan::CalpontSelectExecutionPlan::RMParmVec::const_iterator it = parms.begin();
                 it != parms.end(); ++it)
         {
             switch (it->id)
             {
-                case PMSMALLSIDEMEMORY:
+                case execplan::PMSMALLSIDEMEMORY:
                 {
                     fRm->addHJPmMaxSmallSideMap(it->sessionId, it->value);
                     break;
                 }
 
-                case UMSMALLSIDEMEMORY:
+                case execplan::UMSMALLSIDEMEMORY:
                 {
                     fRm->addHJUmMaxSmallSideMap(it->sessionId, it->value);
                     break;
@@ -519,22 +490,22 @@ private:
         }
     }
 
-    void buildSysCache(const CalpontSelectExecutionPlan& csep, boost::shared_ptr<CalpontSystemCatalog> csc)
+    void buildSysCache(const execplan::CalpontSelectExecutionPlan& csep, boost::shared_ptr<execplan::CalpontSystemCatalog> csc)
     {
-        const CalpontSelectExecutionPlan::ColumnMap& colMap = csep.columnMap();
-        CalpontSelectExecutionPlan::ColumnMap::const_iterator it;
+        const execplan::CalpontSelectExecutionPlan::ColumnMap& colMap = csep.columnMap();
+        execplan::CalpontSelectExecutionPlan::ColumnMap::const_iterator it;
         string schemaName;
 
         for (it = colMap.begin(); it != colMap.end(); ++it)
         {
-            SimpleColumn* sc = dynamic_cast<SimpleColumn*>((it->second).get());
+            const auto sc = dynamic_cast<execplan::SimpleColumn*>((it->second).get());
 
             if (sc)
             {
                 schemaName = sc->schemaName();
 
                 // only the first time a schema is got will actually query
-                // system catalog. System catalog keeps a schema name map.
+                // system catalog. System catalog keeps a schema name std::map.
                 // if a schema exists, the call getSchemaInfo returns without
                 // doing anything.
                 if (!schemaName.empty())
@@ -542,11 +513,11 @@ private:
             }
         }
 
-        CalpontSelectExecutionPlan::SelectList::const_iterator subIt;
+        execplan::CalpontSelectExecutionPlan::SelectList::const_iterator subIt;
 
         for (subIt = csep.derivedTableList().begin(); subIt != csep.derivedTableList().end(); ++ subIt)
         {
-            buildSysCache(*(dynamic_cast<CalpontSelectExecutionPlan*>(subIt->get())), csc);
+            buildSysCache(*(dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subIt->get())), csc);
         }
     }
 
@@ -554,10 +525,10 @@ public:
 
     void operator()()
     {
-        ByteStream bs, inbs;
-        CalpontSelectExecutionPlan csep;
+        messageqcpp::ByteStream bs, inbs;
+        execplan::CalpontSelectExecutionPlan csep;
         csep.sessionID(0);
-        SJLP jl;
+        joblist::SJLP jl;
         bool incSessionThreadCnt = true;
 
         bool selfJoin = false;
@@ -596,7 +567,7 @@ public:
                 }
                 else if (bs.length() == 4) //possible tuple flag
                 {
-                    ByteStream::quadbyte qb;
+                    messageqcpp::ByteStream::quadbyte qb;
                     bs >> qb;
 
                     if (qb == 4) //UM wants new tuple i/f
@@ -632,14 +603,14 @@ public:
 new_plan:
                 csep.unserialize(bs);
 
-                QueryTeleStats qts;
+                querytele::QueryTeleStats qts;
 
                 if ( !csep.isInternal() &&
                         (csep.queryType() == "SELECT" || csep.queryType() == "INSERT_SELECT") )
                 {
                     qts.query_uuid = csep.uuid();
-                    qts.msg_type = QueryTeleStats::QT_START;
-                    qts.start_time = QueryTeleClient::timeNowms();
+                    qts.msg_type = querytele::QueryTeleStats::QT_START;
+                    qts.start_time = querytele::QueryTeleClient::timeNowms();
                     qts.query = csep.data();
                     qts.session_id = csep.sessionID();
                     qts.query_type = csep.queryType();
@@ -659,8 +630,8 @@ new_plan:
                 // skip system catalog queries.
                 if (!csep.isInternal())
                 {
-                    boost::shared_ptr<CalpontSystemCatalog> csc =
-                        CalpontSystemCatalog::makeCalpontSystemCatalog(csep.sessionID());
+                    boost::shared_ptr<execplan::CalpontSystemCatalog> csc =
+                      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(csep.sessionID());
                     buildSysCache(csep, csc);
                 }
 
@@ -674,9 +645,9 @@ new_plan:
                 }
 
                 bool needDbProfEndStatementMsg = false;
-                Message::Args args;
+                logging::Message::Args args;
                 string sqlText = csep.data();
-                LoggingID li(16, csep.sessionID(), csep.txnID());
+                logging::LoggingID li(16, csep.sessionID(), csep.txnID());
 
                 // Initialize stats for this query, including
                 // init sessionMemMap entry for this session to 0 memory %.
@@ -694,7 +665,7 @@ new_plan:
                     args.add((int)csep.statementID());
                     args.add((int)csep.verID().currentScn);
                     args.add(sqlText);
-                    msgLog.logMessage(LOG_TYPE_DEBUG,
+                    msgLog.logMessage(logging::LOG_TYPE_DEBUG,
                                       logDbProfStartStatement,
                                       args,
                                       li);
@@ -705,9 +676,9 @@ new_plan:
                 if (selfJoin)
                     sqlText = "";
 
-                ostringstream oss;
+                std::ostringstream oss;
                 oss << sqlText << "; |" << csep.schemaName() << "|";
-                SQLLogger sqlLog(oss.str(), li);
+                logging::SQLLogger sqlLog(oss.str(), li);
 
                 statementsRunningCount->incr(stmtCounted);
 
@@ -716,13 +687,13 @@ new_plan:
                     try // @bug2244: try/catch around fIos.write() calls responding to makeTupleList
                     {
                         string emsg("NOERROR");
-                        ByteStream emsgBs;
-                        ByteStream::quadbyte tflg = 0;
-                        jl = JobListFactory::makeJobList(&csep, fRm, true, true);
+                        messageqcpp::ByteStream emsgBs;
+                        messageqcpp::ByteStream::quadbyte tflg = 0;
+                        jl = joblist::JobListFactory::makeJobList(&csep, fRm, true, true);
                         // assign query stats
                         jl->queryStats(fStats);
 
-                        ByteStream tbs;
+                        messageqcpp::ByteStream tbs;
 
                         if ((jl->status()) == 0 && (jl->putEngineComm(fEc) == 0))
                         {
@@ -734,7 +705,7 @@ new_plan:
                             emsgBs.reset();
                             emsgBs << emsg;
                             fIos.write(emsgBs);
-                            TupleJobList* tjlp = dynamic_cast<TupleJobList*>(jl.get());
+                            auto tjlp = dynamic_cast<joblist::TupleJobList*>(jl.get());
                             assert(tjlp);
                             tbs.restart();
                             tbs << tjlp->getOutputRowGroup();
@@ -756,14 +727,14 @@ new_plan:
                     }
                     catch (std::exception& ex)
                     {
-                        ostringstream errMsg;
+                        std::ostringstream errMsg;
                         errMsg << "ExeMgr: error writing makeJoblist "
                                "response; " <<  ex.what();
                         throw runtime_error( errMsg.str() );
                     }
                     catch (...)
                     {
-                        ostringstream errMsg;
+                        std::ostringstream errMsg;
                         errMsg << "ExeMgr: unknown error writing makeJoblist "
                                "response; ";
                         throw runtime_error( errMsg.str() );
@@ -783,7 +754,7 @@ new_plan:
                 else
                 {
                     usingTuples = false;
-                    jl = JobListFactory::makeJobList(&csep, fRm, false, true);
+                    jl = joblist::JobListFactory::makeJobList(&csep, fRm, false, true);
 
                     if (jl->status() == 0)
                     {
@@ -801,9 +772,9 @@ new_plan:
 
                 jl->doQuery();
 
-                CalpontSystemCatalog::OID tableOID;
+                execplan::CalpontSystemCatalog::OID tableOID;
                 bool swallowRows = false;
-                DeliveredTableMap tm;
+                joblist::DeliveredTableMap tm;
                 uint64_t totalBytesSent = 0;
                 uint64_t totalRowCount = 0;
 
@@ -835,7 +806,7 @@ new_plan:
 
                     assert(bs.length() == 4);
 
-                    ByteStream::quadbyte qb;
+                    messageqcpp::ByteStream::quadbyte qb;
 
                     try // @bug2244: try/catch around fIos.write() calls responding to qb command
                     {
@@ -861,7 +832,7 @@ new_plan:
                         {
                             // UM just wants any table
                             assert(swallowRows);
-                            DeliveredTableMap::iterator iter = tm.begin();
+                            auto iter = tm.begin();
 
                             if (iter == tm.end())
                             {
@@ -869,7 +840,7 @@ new_plan:
                                     cout << "### For session id " << csep.sessionID() << ", returning end flag" << endl;
 
                                 bs.restart();
-                                bs << (ByteStream::byte)1;
+                                bs << (messageqcpp::ByteStream::byte)1;
                                 fIos.write(bs);
                                 continue;
                             }
@@ -885,15 +856,15 @@ new_plan:
                                               jl,
                                               "Query Stats",
                                               false,
-                                              !(csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_TUPLE_OFF),
-                                              (csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_LOG),
+                                              !(csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF),
+                                              (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG),
                                               totalRowCount
                                           );
 
                             bs.restart();
                             bs << statsString;
 
-                            if ((csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_LOG) != 0)
+                            if ((csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG) != 0)
                             {
                                 bs << jl->extendedInfo();
                                 bs << prettyPrintMiniInfo(jl->miniInfo());
@@ -920,12 +891,12 @@ new_plan:
                         else // (qb > 3)
                         {
                             //Return table bands for the requested tableOID
-                            tableOID = static_cast<CalpontSystemCatalog::OID>(qb);
+                            tableOID = static_cast<execplan::CalpontSystemCatalog::OID>(qb);
                         }
                     }
                     catch (std::exception& ex)
                     {
-                        ostringstream errMsg;
+                        std::ostringstream errMsg;
                         errMsg << "ExeMgr: error writing qb response "
                                "for qb cmd " << qb <<
                                "; " <<  ex.what();
@@ -933,7 +904,7 @@ new_plan:
                     }
                     catch (...)
                     {
-                        ostringstream errMsg;
+                        std::ostringstream errMsg;
                         errMsg << "ExeMgr: unknown error writing qb response "
                                "for qb cmd " << qb;
                         throw runtime_error( errMsg.str() );
@@ -957,7 +928,7 @@ new_plan:
 
                         if (jl->status())
                         {
-                            IDBErrorInfo* errInfo = IDBErrorInfo::instance();
+                            const auto errInfo = logging::IDBErrorInfo::instance();
 
                             if (jl->errMsg().length() != 0)
                                 bs << jl->errMsg();
@@ -967,7 +938,7 @@ new_plan:
 
                         try // @bug2244: try/catch around fIos.write() calls projecting rows
                         {
-                            if (csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
+                            if (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
                             {
                                 // Skip the write to the front end until the last empty band.  Used to time queries
                                 // through without any front end waiting.
@@ -982,7 +953,7 @@ new_plan:
                         catch (std::exception& ex)
                         {
                             msgHandler.stop();
-                            ostringstream errMsg;
+                            std::ostringstream errMsg;
                             errMsg << "ExeMgr: error projecting rows "
                                    "for tableOID: " << tableOID <<
                                    "; rowCnt: " << rowCount <<
@@ -1009,7 +980,7 @@ new_plan:
                         }
                         catch (...)
                         {
-                            ostringstream errMsg;
+                            std::ostringstream errMsg;
                             msgHandler.stop();
                             errMsg << "ExeMgr: unknown error projecting rows "
                                    "for tableOID: " <<
@@ -1052,7 +1023,7 @@ new_plan:
                 if (needDbProfEndStatementMsg)
                 {
                     string ss;
-                    ostringstream prefix;
+                    std::ostringstream prefix;
                     prefix << "ses:" << csep.sessionID() << " Query Totals";
 
                     //Log stats string to standard out
@@ -1060,8 +1031,8 @@ new_plan:
                              jl,
                              prefix.str(),
                              true,
-                             !(csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_TUPLE_OFF),
-                             (csep.traceFlags() & CalpontSelectExecutionPlan::TRACE_LOG),
+                             !(csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF),
+                             (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG),
                              totalRowCount);
                     //@Bug 1306. Added timing info for real time tracking.
                     cout << ss << " at " << timeNow() << endl;
@@ -1078,7 +1049,7 @@ new_plan:
                     args.add(fStats.fMsgBytesIn);
                     args.add(fStats.fMsgBytesOut);
                     args.add(fStats.fCPBlocksSkipped);
-                    msgLog.logMessage(LOG_TYPE_DEBUG,
+                    msgLog.logMessage(logging::LOG_TYPE_DEBUG,
                                       logDbProfQueryStats,
                                       args,
                                       li);
@@ -1092,7 +1063,7 @@ new_plan:
                     jl.reset();
                     args.reset();
                     args.add((int)csep.statementID());
-                    msgLog.logMessage(LOG_TYPE_DEBUG,
+                    msgLog.logMessage(logging::LOG_TYPE_DEBUG,
                                       logDbProfEndStatement,
                                       args,
                                       li);
@@ -1113,7 +1084,7 @@ new_plan:
                     // $FIFO_SINK compiler definition in pColStep.
                     // This option consumes rows in the project steps.
                     if (csep.traceFlags() &
-                            CalpontSelectExecutionPlan::TRACE_NO_ROWS4)
+                      execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS4)
                     {
                         cout << endl;
                         cout << "**** No data returned to DM.  Rows consumed "
@@ -1122,7 +1093,7 @@ new_plan:
                         cout << endl;
                     }
                     else if (csep.traceFlags() &
-                             CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
+                      execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
                     {
                         cout << endl;
                         cout << "**** No data returned to DM - caltrace(8) is "
@@ -1136,7 +1107,7 @@ new_plan:
                 if ( !csep.isInternal() &&
                         (csep.queryType() == "SELECT" || csep.queryType() == "INSERT_SELECT") )
                 {
-                    qts.msg_type = QueryTeleStats::QT_SUMMARY;
+                    qts.msg_type = querytele::QueryTeleStats::QT_SUMMARY;
                     qts.max_mem_pct = fStats.fMaxMemPct;
                     qts.num_files = fStats.fNumFiles;
                     qts.phy_io = fStats.fPhyIO;
@@ -1146,7 +1117,7 @@ new_plan:
                     qts.msg_bytes_in = fStats.fMsgBytesIn;
                     qts.msg_bytes_out = fStats.fMsgBytesOut;
                     qts.rows = totalRowCount;
-                    qts.end_time = QueryTeleClient::timeNowms();
+                    qts.end_time = querytele::QueryTeleClient::timeNowms();
                     qts.session_id = csep.sessionID();
                     qts.query_type = csep.queryType();
                     qts.query = csep.data();
@@ -1169,10 +1140,10 @@ new_plan:
             decThreadCntPerSession( csep.sessionID() | 0x80000000 );
             statementsRunningCount->decr(stmtCounted);
             cerr << "### ExeMgr ses:" << csep.sessionID() << " caught: " << ex.what() << endl;
-            Message::Args args;
-            LoggingID li(16, csep.sessionID(), csep.txnID());
+            logging::Message::Args args;
+            logging::LoggingID li(16, csep.sessionID(), csep.txnID());
             args.add(ex.what());
-            msgLog.logMessage(LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
+            msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
             fIos.close();
         }
         catch (...)
@@ -1180,10 +1151,10 @@ new_plan:
             decThreadCntPerSession( csep.sessionID() | 0x80000000 );
             statementsRunningCount->decr(stmtCounted);
             cerr << "### Exception caught!" << endl;
-            Message::Args args;
-            LoggingID li(16, csep.sessionID(), csep.txnID());
+            logging::Message::Args args;
+            logging::LoggingID li(16, csep.sessionID(), csep.txnID());
             args.add("ExeMgr caught unknown exception");
-            msgLog.logMessage(LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
+            msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
             fIos.close();
         }
     }
@@ -1209,20 +1180,20 @@ public:
                 if (fMaxPct >= 95)
                 {
                     cerr << "Too much memory allocated!" << endl;
-                    Message::Args args;
+                    logging::Message::Args args;
                     args.add((int)pct);
                     args.add((int)fMaxPct);
-                    msgLog.logMessage(LOG_TYPE_CRITICAL, logRssTooBig, args, LoggingID(16));
+                    msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logRssTooBig, args, logging::LoggingID(16));
                     exit(1);
                 }
 
                 if (statementsRunningCount->cur() == 0)
                 {
                     cerr << "Too much memory allocated!" << endl;
-                    Message::Args args;
+                    logging::Message::Args args;
                     args.add((int)pct);
                     args.add((int)fMaxPct);
-                    msgLog.logMessage(LOG_TYPE_WARNING, logRssTooBig, args, LoggingID(16));
+                    msgLog.logMessage(logging::LOG_TYPE_WARNING, logRssTooBig, args, logging::LoggingID(16));
                     exit(1);
                 }
 
@@ -1230,19 +1201,20 @@ public:
             }
 
             // Update sessionMemMap entries lower than current mem % use
-            mutex::scoped_lock lk(sessionMemMapMutex);
-
-            for ( SessionMemMap_t::iterator mapIter = sessionMemMap.begin();
-                    mapIter != sessionMemMap.end();
-                    ++mapIter )
             {
-                if ( pct > mapIter->second )
-                {
-                    mapIter->second = pct;
-                }
-            }
+                std::lock_guard<std::mutex> lk(sessionMemMapMutex);
 
-            lk.unlock();
+                for (SessionMemMap_t::iterator mapIter = sessionMemMap.begin();
+                    mapIter != sessionMemMap.end();
+                    ++mapIter)
+                {
+                    if (pct > mapIter->second)
+                    {
+                        mapIter->second = pct;
+                    }
+                }
+
+            }
 
             pause_();
         }
@@ -1270,7 +1242,7 @@ void added_a_pm(int)
     if (ec)
     {
         //set BUSY_INIT state while processing the add pm configuration change
-        Oam oam;
+        oam::Oam oam;
 
         try
         {
@@ -1296,7 +1268,7 @@ void added_a_pm(int)
 void printTotalUmMemory(int sig)
 {
     int64_t num = rm->availableMemory();
-    cout << "Total UM memory available: " << num << endl;
+    std::cout << "Total UM memory available: " << num << std::endl;
 }
 
 void setupSignalHandlers()
@@ -1325,7 +1297,7 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(ResourceManager* rm)
+void setupCwd(joblist::ResourceManager* rm)
 {
     string workdir = rm->getScWorkingDir();
     (void)chdir(workdir.c_str());
@@ -1376,7 +1348,7 @@ int setupResources()
 
 void cleanTempDir()
 {
-    config::Config* config = config::Config::makeConfig();
+    const auto config = config::Config::makeConfig();
     string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
     string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
 
@@ -1393,31 +1365,31 @@ void cleanTempDir()
     /* This is quite scary as ExeMgr usually runs as root */
     try
     {
-    	boost::filesystem::remove_all(tmpPrefix);
-    	boost::filesystem::create_directories(tmpPrefix);
+        std::experimental::filesystem::remove_all(tmpPrefix);
+        std::experimental::filesystem::create_directories(tmpPrefix);
     }
-    catch (std::exception& ex)
+    catch (const std::exception& ex)
     {
-        cerr << ex.what() << endl;
-        LoggingID logid(16, 0, 0);
-        Message::Args args;
-        Message message(8);
+        std::cerr << ex.what() << endl;
+        logging::LoggingID logid(16, 0, 0);
+        logging::Message::Args args;
+        logging::Message message(8);
         args.add("Execption whilst cleaning tmpdir: ");
         args.add(ex.what());
         message.format( args );
         logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_WARNING, message, logid);
+        logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
     }
     catch (...)
     {
         cerr << "Caught unknown exception during tmpdir cleanup" << endl;
-        LoggingID logid(16, 0, 0);
-        Message::Args args;
-        Message message(8);
+        logging::LoggingID logid(16, 0, 0);
+        logging::Message::Args args;
+        logging::Message message(8);
         args.add("Unknown execption whilst cleaning tmpdir");
         message.format( args );
         logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_WARNING, message, logid);
+        logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
     }
 }
 
@@ -1455,7 +1427,7 @@ int main(int argc, char* argv[])
 
     //set BUSY_INIT state
     {
-        Oam oam;
+        oam::Oam oam;
 
         try
         {
@@ -1502,7 +1474,7 @@ int main(int argc, char* argv[])
 
     if (err < 0)
     {
-        Oam oam;
+        oam::Oam oam;
         logging::Message::Args args;
         logging::Message message;
         args.add( errMsg );
@@ -1528,23 +1500,23 @@ int main(int argc, char* argv[])
 
     cleanTempDir();
 
-    MsgMap msgMap;
-    msgMap[logDefaultMsg]           = Message(logDefaultMsg);
-    msgMap[logDbProfStartStatement] = Message(logDbProfStartStatement);
-    msgMap[logDbProfEndStatement]   = Message(logDbProfEndStatement);
-    msgMap[logStartSql]             = Message(logStartSql);
-    msgMap[logEndSql]               = Message(logEndSql);
-    msgMap[logRssTooBig]            = Message(logRssTooBig);
-    msgMap[logDbProfQueryStats]     = Message(logDbProfQueryStats);
-    msgMap[logExeMgrExcpt]          = Message(logExeMgrExcpt);
+    logging::MsgMap msgMap;
+    msgMap[logDefaultMsg]           = logging::Message(logDefaultMsg);
+    msgMap[logDbProfStartStatement] = logging::Message(logDbProfStartStatement);
+    msgMap[logDbProfEndStatement]   = logging::Message(logDbProfEndStatement);
+    msgMap[logStartSql]             = logging::Message(logStartSql);
+    msgMap[logEndSql]               = logging::Message(logEndSql);
+    msgMap[logRssTooBig]            = logging::Message(logRssTooBig);
+    msgMap[logDbProfQueryStats]     = logging::Message(logDbProfQueryStats);
+    msgMap[logExeMgrExcpt]          = logging::Message(logExeMgrExcpt);
     msgLog.msgMap(msgMap);
 
-    ec = DistributedEngineComm::instance(rm, true);
+    ec = joblist::DistributedEngineComm::instance(rm, true);
     ec->Open();
 
     bool tellUser = true;
 
-    MessageQueueServer* mqs;
+    messageqcpp::MessageQueueServer* mqs;
 
     statementsRunningCount = new ActiveStatementCounter(rm->getEmExecQueueSize());
 
@@ -1552,7 +1524,7 @@ int main(int argc, char* argv[])
     {
         try
         {
-            mqs = new MessageQueueServer(ExeMgr, rm->getConfig(), ByteStream::BlockSize, 64);
+            mqs = new messageqcpp::MessageQueueServer(ExeMgr, rm->getConfig(), messageqcpp::ByteStream::BlockSize, 64);
             break;
         }
         catch (runtime_error& re)
@@ -1581,13 +1553,13 @@ int main(int argc, char* argv[])
     // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton).
     // From  the pools perspective, it has no idea if it is ExeMgr doing the
     // creation, so it has no idea which way to set the flag. So we set the max here.
-    JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
-    JobStep::jobstepThreadPool.setName("ExeMgrJobList");
+    joblist::JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+    joblist::JobStep::jobstepThreadPool.setName("ExeMgrJobList");
 
     if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
     {
-        JobStep::jobstepThreadPool.setDebug(true);
-        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+      joblist::JobStep::jobstepThreadPool.setDebug(true);
+      joblist::JobStep::jobstepThreadPool.invoke(threadpool::ThreadPoolMonitor(&joblist::JobStep::jobstepThreadPool));
     }
 
     int serverThreads = rm->getEmServerThreads();
@@ -1605,7 +1577,7 @@ int main(int argc, char* argv[])
     setpriority(PRIO_PROCESS, 0, priority);
 #endif
 
-    string teleServerHost(rm->getConfig()->getConfig("QueryTele", "Host"));
+    std::string teleServerHost(rm->getConfig()->getConfig("QueryTele", "Host"));
 
     if (!teleServerHost.empty())
     {
@@ -1618,13 +1590,13 @@ int main(int argc, char* argv[])
         }
     }
 
-    cout << "Starting ExeMgr: st = " << serverThreads <<
+    std::cout << "Starting ExeMgr: st = " << serverThreads <<
          ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
          rm->getConfig()->configFile() << endl;
 
     //set ACTIVE state
     {
-        Oam oam;
+        oam::Oam oam;
 
         try
         {
@@ -1646,12 +1618,12 @@ int main(int argc, char* argv[])
     if (rm->getExeMgrThreadPoolDebug() == "Y" || rm->getExeMgrThreadPoolDebug() == "y")
     {
         exeMgrThreadPool.setDebug(true);
-        exeMgrThreadPool.invoke(ThreadPoolMonitor(&exeMgrThreadPool));
+        exeMgrThreadPool.invoke(threadpool::ThreadPoolMonitor(&exeMgrThreadPool));
     }
 
     for (;;)
     {
-        IOSocket ios;
+        messageqcpp::IOSocket ios;
         ios = mqs->accept();
         exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
     }

@@ -108,3 +108,4 @@ columnstoreversion.h
 .idea/
 .build
 /.vs
+/CMakeSettings.json

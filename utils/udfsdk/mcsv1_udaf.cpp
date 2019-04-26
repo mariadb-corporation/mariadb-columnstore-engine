@@ -75,41 +75,41 @@ int32_t mcsv1Context::getColWidth()
     // JIT initialization for types that have a defined size.
     switch (fResultType)
     {
-        case CalpontSystemCatalog::BIT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::UTINYINT:
-        case CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::BIT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::CHAR:
             fColWidth = 1;
             break;
 
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::USMALLINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
             fColWidth = 2;
             break;
 
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::UMEDINT:
-        case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::UFLOAT:
-        case CalpontSystemCatalog::DATE:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+        case execplan::CalpontSystemCatalog::DATE:
             fColWidth = 4;
             break;
 
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::UDOUBLE:
-        case CalpontSystemCatalog::DATETIME:
-        case CalpontSystemCatalog::TIME:
-        case CalpontSystemCatalog::STRINT:
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+        case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIME:
+        case execplan::CalpontSystemCatalog::STRINT:
             fColWidth = 8;
             break;
 
-        case CalpontSystemCatalog::LONGDOUBLE:
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
             fColWidth = sizeof(long double);
             break;
 
@@ -212,7 +212,7 @@ void mcsv1Context::createUserData()
 void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
 {
     b.needAtLeast(sizeof(mcsv1Context));
-    b << (ObjectReader::id_t) ObjectReader::MCSV1_CONTEXT;
+    b << (execplan::ObjectReader::id_t) execplan::ObjectReader::MCSV1_CONTEXT;
     b << functionName;
     b << fRunFlags;
     // Dont send context flags, These are set for each call
@@ -232,21 +232,21 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
 
 void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::MCSV1_CONTEXT);
+    execplan::ObjectReader::checkType(b, execplan::ObjectReader::MCSV1_CONTEXT);
     b >> functionName;
     b >> fRunFlags;
     b >> fUserDataSize;
     uint32_t iResultType;
     b >> iResultType;
-    fResultType = (CalpontSystemCatalog::ColDataType)iResultType;
+    fResultType = (execplan::CalpontSystemCatalog::ColDataType)iResultType;
     b >> fResultscale;
     b >> fResultPrecision;
     b >> errorMsg;
     uint32_t frame;
     b >> frame;
-    fStartFrame = (WF_FRAME)frame;
+    fStartFrame = (execplan::WF_FRAME)frame;
     b >> frame;
-    fEndFrame = (WF_FRAME)frame;
+    fEndFrame = (execplan::WF_FRAME)frame;
     b >> fStartConstant;
     b >> fEndConstant;
     b >> fParamCount;

@@ -88,6 +88,7 @@ using namespace logging;
 #include "rowgroup.h"
 using namespace rowgroup;
 
+#include "mcsv1_udaf.h"
 
 namespace
 {
@@ -709,7 +710,7 @@ void updateAggregateColType(AggregateColumn* ac, const SRCP& srcp, int op, JobIn
 
         if (udafc)
         {
-            mcsv1Context& udafContext = udafc->getContext();
+            mcsv1sdk::mcsv1Context& udafContext = udafc->getContext();
             ct.colDataType = udafContext.getResultType();
             ct.colWidth = udafContext.getColWidth();
             ct.scale = udafContext.getScale();

@@ -20,7 +20,7 @@
  *
  *
  ***********************************************************************/
-
+#include <future> //cxx11test
 #include <map>
 #include <boost/scoped_ptr.hpp>
 using namespace std;

@@ -28,6 +28,7 @@
 /**
  * @file
  */
+#include <future> //cxx11test
 
 #include <iostream>
 #include <cstdlib>

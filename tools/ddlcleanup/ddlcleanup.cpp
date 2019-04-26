@@ -18,6 +18,7 @@
 /*
 * $Id: ddlcleanup.cpp 967 2009-10-15 13:57:29Z rdempsey $
 */
+#include <future> //cxx11test
 
 #include <iostream>
 #include <fstream>

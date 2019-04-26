@@ -243,7 +243,7 @@ UmSocketSelector::addConnection(
 // ioSock (in) - socket/port connection to be deleted
 //------------------------------------------------------------------------------
 void
-UmSocketSelector::delConnection( const IOSocket& ios )
+UmSocketSelector::delConnection( const messageqcpp::IOSocket& ios )
 {
     sockaddr sa = ios.sa();
     const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
@@ -271,7 +271,7 @@ UmSocketSelector::delConnection( const IOSocket& ios )
 //------------------------------------------------------------------------------
 bool
 UmSocketSelector::nextIOSocket(
-    const IOSocket& ios,
+    const messageqcpp::IOSocket& ios,
     SP_UM_IOSOCK&   outIos,
     SP_UM_MUTEX&    writeLock )
 {
@@ -405,7 +405,7 @@ UmModuleIPs::addSocketConn(
 // ioSock (in) - socket/port connection to be deleted
 //------------------------------------------------------------------------------
 void
-UmModuleIPs::delSocketConn( const IOSocket& ioSock )
+UmModuleIPs::delSocketConn( const messageqcpp::IOSocket& ioSock )
 {
     boost::mutex::scoped_lock lock( fUmModuleMutex );
 
@@ -565,7 +565,7 @@ UmIPSocketConns::addSocketConn(
 // can benefit from quick random access.
 //------------------------------------------------------------------------------
 void
-UmIPSocketConns::delSocketConn( const IOSocket& ioSock )
+UmIPSocketConns::delSocketConn( const messageqcpp::IOSocket& ioSock )
 {
     for (unsigned int i = 0; i < fIOSockets.size(); ++i)
     {

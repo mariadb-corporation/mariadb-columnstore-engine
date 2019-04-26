@@ -3374,7 +3374,7 @@ namespace joblist
 // conversion performed by the functions in this file.
 // @bug6131, pre-order traversing
 /* static */ void
-JLF_ExecPlanToJobList::walkTree(ParseTree* n, JobInfo& jobInfo)
+JLF_ExecPlanToJobList::walkTree(execplan::ParseTree* n, JobInfo& jobInfo)
 {
     TreeNode* tn = n->data();
     JobStepVector jsv;

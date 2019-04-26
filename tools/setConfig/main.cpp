@@ -19,6 +19,7 @@
 * $Id: main.cpp 210 2007-06-08 17:08:26Z rdempsey $
 *
 *****************************************************************************/
+#include <future> //cxx11test
 #include <unistd.h>
 #include <iostream>
 #include <cassert>

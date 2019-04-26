@@ -52,8 +52,8 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row,
     uint32_t day = 0;
     int64_t val = 0;
 
-    DateTime aDateTime;
-    Time     aTime;
+    dataconvert::DateTime aDateTime;
+    dataconvert::Time     aTime;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -73,7 +73,7 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row,
 
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
-            aDateTime = static_cast<DateTime>(nowDatetime());
+            aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
             aTime.day = 0;
             val = addTime(aDateTime, aTime);
