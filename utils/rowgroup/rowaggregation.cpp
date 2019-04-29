@@ -47,7 +47,7 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-#include "utils_utf8.h"
+//#include "utils_utf8.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
@@ -56,6 +56,15 @@
 using namespace std;
 using namespace boost;
 using namespace dataconvert;
+
+namespace funcexp
+{
+  namespace utf8
+  {
+    int idb_strcoll(const char*, const char*);
+  }
+}
+
 
 // inlines of RowAggregation that used only in this file
 namespace
@@ -377,6 +386,7 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
     else if (minMax(val1, val2, func))
         fRow.setFloatField(val1, col);
 }
+
 
 
 #define STRCOLL_ENH__
