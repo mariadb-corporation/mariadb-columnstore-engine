@@ -121,25 +121,25 @@ joblist::DistributedEngineComm* ec;
 
 auto rm = joblist::ResourceManager::instance(true);
 
-int toInt(const string& val)
+int toInt(const std::string& val)
 {
     if (val.length() == 0) return -1;
 
     return static_cast<int>(config::Config::fromText(val));
 }
 
-const string ExeMgr("ExeMgr1");
+const std::string ExeMgr("ExeMgr1");
 
-const string prettyPrintMiniInfo(const string& in)
+const std::string prettyPrintMiniInfo(const std::string& in)
 {
-    //1. take the string and tok it by '\n'
+    //1. take the std::string and tok it by '\n'
     //2. for each part in each line calc the longest part
     //3. padding to each longest value, output a header and the lines
     typedef boost::tokenizer<boost::char_separator<char> > my_tokenizer;
     boost::char_separator<char> sep1("\n");
     my_tokenizer tok1(in, sep1);
-    vector<string> lines;
-    string header = "Desc Mode Table TableOID ReferencedColumns PIO LIO PBE Elapsed Rows";
+    std::vector<std::string> lines;
+    std::string header = "Desc Mode Table TableOID ReferencedColumns PIO LIO PBE Elapsed Rows";
     const int header_parts = 10;
     lines.push_back(header);
 
@@ -149,13 +149,13 @@ const string prettyPrintMiniInfo(const string& in)
             lines.push_back(*iter1);
     }
 
-    vector<unsigned> lens;
+    std::vector<unsigned> lens;
 
     for (int i = 0; i < header_parts; i++)
         lens.push_back(0);
 
-    vector<vector<string> > lineparts;
-    vector<string>::iterator iter2;
+    std::vector<std::vector<std::string> > lineparts;
+    std::vector<std::string>::iterator iter2;
     int j;
 
     for (iter2 = lines.begin(), j = 0; iter2 != lines.end(); ++iter2, j++)
@@ -163,14 +163,14 @@ const string prettyPrintMiniInfo(const string& in)
         boost::char_separator<char> sep2(" ");
         my_tokenizer tok2(*iter2, sep2);
         int i;
-        vector<string> parts;
+        std::vector<std::string> parts;
         my_tokenizer::iterator iter3;
 
         for (iter3 = tok2.begin(), i = 0; iter3 != tok2.end(); ++iter3, i++)
         {
             if (i >= header_parts) break;
 
-            string part(*iter3);
+            std::string part(*iter3);
 
             if (j != 0 && i == 8)
                 part.resize(part.size() - 3);
@@ -189,22 +189,22 @@ const string prettyPrintMiniInfo(const string& in)
 
     std::ostringstream oss;
 
-    vector<vector<string> >::iterator iter1 = lineparts.begin();
-    vector<vector<string> >::iterator end1 = lineparts.end();
+    std::vector<std::vector<std::string> >::iterator iter1 = lineparts.begin();
+    std::vector<std::vector<std::string> >::iterator end1 = lineparts.end();
 
     oss << "\n";
 
     while (iter1 != end1)
     {
-        vector<string>::iterator iter2 = iter1->begin();
-        vector<string>::iterator end2 = iter1->end();
+        std::vector<std::string>::iterator iter2 = iter1->begin();
+        std::vector<std::string>::iterator end2 = iter1->end();
         assert(distance(iter2, end2) == header_parts);
         int i = 0;
 
         while (iter2 != end2)
         {
             assert(i < header_parts);
-            oss << setw(lens[i]) << left << *iter2 << " ";
+            oss << std::setw(lens[i]) << std::left << *iter2 << " ";
             ++iter2;
             i++;
         }
@@ -216,7 +216,7 @@ const string prettyPrintMiniInfo(const string& in)
     return oss.str();
 }
 
-const string timeNow()
+const std::string timeNow()
 {
     time_t outputTime = time(0);
     struct tm ltm;
@@ -266,7 +266,7 @@ private:
     oam::OamCache* fOamCachePtr;	//this ptr is copyable...
 
     //...Reinitialize stats for start of a new query
-    void initStats ( uint32_t sessionId, string& sqlText )
+    void initStats ( uint32_t sessionId, std::string& sqlText )
     {
         initMaxMemPct ( sessionId );
 
@@ -316,10 +316,10 @@ private:
     }
 
     //...Get and log query stats to specified output stream
-    const string formatQueryStats (
+    const std::string formatQueryStats (
         joblist::SJLP&    jl,			// joblist associated with query
-        const    string& label, // header label to print in front of log output
-        bool     includeNewLine,//include line breaks in query stats string
+        const    std::string& label, // header label to print in front of log output
+        bool     includeNewLine,//include line breaks in query stats std::string
         bool     vtableModeOn,
         bool     wantExtendedStats,
         uint64_t rowsReturned)
@@ -348,7 +348,7 @@ private:
             fStatsRetrieved = true;
         }
 
-        string queryMode;
+        std::string queryMode;
         queryMode = (vtableModeOn ? "Distributed" : "Standard");
 
         // Log stats to specified output stream
@@ -361,7 +361,7 @@ private:
            "; BlocksTouched-" << fStats.fMsgRcvCnt;
 
         if ( includeNewLine )
-            os << endl << "      ";	// insert line break
+            os << std::endl << "      ";	// insert line break
         else
             os << "; ";				// continue without line break
 
@@ -417,7 +417,7 @@ private:
     {
         if ( sessionId < 0x80000000 )
         {
-            // cout << "Setting pct to 0 for session " << sessionId << endl;
+            // std::cout << "Setting pct to 0 for session " << sessionId << std::endl;
             std::lock_guard<std::mutex> lk(sessionMemMapMutex);
             SessionMemMap_t::iterator mapIter = sessionMemMap.find( sessionId );
 
@@ -433,7 +433,7 @@ private:
     }
 
     //... Round off to human readable format (KB, MB, or GB).
-    const string roundBytes(uint64_t value) const
+    const std::string roundBytes(uint64_t value) const
     {
         const char* units[] = {"B", "KB", "MB", "GB", "TB"};
         uint64_t i = 0, up = 0;
@@ -494,7 +494,7 @@ private:
     {
         const execplan::CalpontSelectExecutionPlan::ColumnMap& colMap = csep.columnMap();
         execplan::CalpontSelectExecutionPlan::ColumnMap::const_iterator it;
-        string schemaName;
+        std::string schemaName;
 
         for (it = colMap.begin(); it != colMap.end(); ++it)
         {
@@ -550,7 +550,7 @@ public:
                 if (bs.length() == 0)
                 {
                     if (gDebug > 1 || (gDebug && !csep.isInternal()))
-                        cout << "### Got a close(1) for session id " << csep.sessionID() << endl;
+                        std::cout << "### Got a close(1) for session id " << csep.sessionID() << std::endl;
 
                     // connection closed by client
                     fIos.close();
@@ -559,8 +559,8 @@ public:
                 else if (bs.length() < 4) //Not a CalpontSelectExecutionPlan
                 {
                     if (gDebug)
-                        cout << "### Got a not-a-plan for session id " << csep.sessionID()
-                             << " with length " << bs.length() <<  endl;
+                        std::cout << "### Got a not-a-plan for session id " << csep.sessionID()
+                             << " with length " << bs.length() <<  std::endl;
 
                     fIos.close();
                     break;
@@ -573,7 +573,7 @@ public:
                     if (qb == 4) //UM wants new tuple i/f
                     {
                         if (gDebug)
-                            cout << "### UM wants tuples" << endl;
+                            std::cout << "### UM wants tuples" << std::endl;
 
                         tryTuples = true;
                         // now wait for the CSEP...
@@ -593,7 +593,7 @@ public:
                     else
                     {
                         if (gDebug)
-                            cout << "### Got a not-a-plan value " << qb << endl;
+                            std::cout << "### Got a not-a-plan value " << qb << std::endl;
 
                         fIos.close();
                         break;
@@ -622,7 +622,7 @@ new_plan:
                 }
 
                 if (gDebug > 1 || (gDebug && !csep.isInternal()))
-                    cout << "### For session id " << csep.sessionID() << ", got a CSEP" << endl;
+                    std::cout << "### For session id " << csep.sessionID() << ", got a CSEP" << std::endl;
 
                 setRMParms(csep.rmParms());
 
@@ -646,7 +646,7 @@ new_plan:
 
                 bool needDbProfEndStatementMsg = false;
                 logging::Message::Args args;
-                string sqlText = csep.data();
+                std::string sqlText = csep.data();
                 logging::LoggingID li(16, csep.sessionID(), csep.txnID());
 
                 // Initialize stats for this query, including
@@ -686,7 +686,7 @@ new_plan:
                 {
                     try // @bug2244: try/catch around fIos.write() calls responding to makeTupleList
                     {
-                        string emsg("NOERROR");
+                        std::string emsg("NOERROR");
                         messageqcpp::ByteStream emsgBs;
                         messageqcpp::ByteStream::quadbyte tflg = 0;
                         jl = joblist::JobListFactory::makeJobList(&csep, fRm, true, true);
@@ -721,7 +721,7 @@ new_plan:
                             emsgBs.reset();
                             emsgBs << emsg;
                             fIos.write(emsgBs);
-                            cerr << "ExeMgr: could not build a tuple joblist: " << emsg << endl;
+                            std::cerr << "ExeMgr: could not build a tuple joblist: " << emsg << std::endl;
                             continue;
                         }
                     }
@@ -730,25 +730,25 @@ new_plan:
                         std::ostringstream errMsg;
                         errMsg << "ExeMgr: error writing makeJoblist "
                                "response; " <<  ex.what();
-                        throw runtime_error( errMsg.str() );
+                        throw std::runtime_error( errMsg.str() );
                     }
                     catch (...)
                     {
                         std::ostringstream errMsg;
                         errMsg << "ExeMgr: unknown error writing makeJoblist "
                                "response; ";
-                        throw runtime_error( errMsg.str() );
+                        throw std::runtime_error( errMsg.str() );
                     }
 
                     if (!usingTuples)
                     {
                         if (gDebug)
-                            cout << "### UM wanted tuples but it didn't work out :-(" << endl;
+                            std::cout << "### UM wanted tuples but it didn't work out :-(" << std::endl;
                     }
                     else
                     {
                         if (gDebug)
-                            cout << "### UM wanted tuples and we'll do our best;-)" << endl;
+                            std::cout << "### UM wanted tuples and we'll do our best;-)" << std::endl;
                     }
                 }
                 else
@@ -758,14 +758,14 @@ new_plan:
 
                     if (jl->status() == 0)
                     {
-                        string emsg;
+                        std::string emsg;
 
                         if (jl->putEngineComm(fEc) != 0)
-                            throw runtime_error(jl->errMsg());
+                            throw std::runtime_error(jl->errMsg());
                     }
                     else
                     {
-                        throw runtime_error("ExeMgr: could not build a JobList!");
+                        throw std::runtime_error("ExeMgr: could not build a JobList!");
                     }
                 }
 
@@ -786,14 +786,14 @@ new_plan:
                     if (bs.length() == 0)
                     {
                         if (gDebug > 1 || (gDebug && !csep.isInternal()))
-                            cout << "### Got a close(2) for session id " << csep.sessionID() << endl;
+                            std::cout << "### Got a close(2) for session id " << csep.sessionID() << std::endl;
 
                         break;
                     }
 
                     if (gDebug && bs.length() > 4)
-                        cout << "### For session id " << csep.sessionID() << ", got too many bytes = " <<
-                             bs.length() << endl;
+                        std::cout << "### For session id " << csep.sessionID() << ", got too many bytes = " <<
+                             bs.length() << std::endl;
 
                     //TODO: Holy crud! Can this be right?
                     //@bug 1444 Yes, if there is a self-join
@@ -813,7 +813,7 @@ new_plan:
                         bs >> qb;
 
                         if (gDebug > 1 || (gDebug && !csep.isInternal()))
-                            cout << "### For session id " << csep.sessionID() << ", got a command = " << qb << endl;
+                            std::cout << "### For session id " << csep.sessionID() << ", got a command = " << qb << std::endl;
 
                         if (qb == 0)
                         {
@@ -837,7 +837,7 @@ new_plan:
                             if (iter == tm.end())
                             {
                                 if (gDebug > 1 || (gDebug && !csep.isInternal()))
-                                    cout << "### For session id " << csep.sessionID() << ", returning end flag" << endl;
+                                    std::cout << "### For session id " << csep.sessionID() << ", returning end flag" << std::endl;
 
                                 bs.restart();
                                 bs << (messageqcpp::ByteStream::byte)1;
@@ -847,11 +847,11 @@ new_plan:
 
                             tableOID = iter->first;
                         }
-                        else if (qb == 3) //special option-UM wants job stats string
+                        else if (qb == 3) //special option-UM wants job stats std::string
                         {
-                            string statsString;
+                            std::string statsString;
 
-                            //Log stats string to be sent back to front end
+                            //Log stats std::string to be sent back to front end
                             statsString = formatQueryStats(
                                               jl,
                                               "Query Stats",
@@ -871,7 +871,7 @@ new_plan:
                             }
                             else
                             {
-                                string empty;
+                                std::string empty;
                                 bs << empty;
                                 bs << empty;
                             }
@@ -900,14 +900,14 @@ new_plan:
                         errMsg << "ExeMgr: error writing qb response "
                                "for qb cmd " << qb <<
                                "; " <<  ex.what();
-                        throw runtime_error( errMsg.str() );
+                        throw std::runtime_error( errMsg.str() );
                     }
                     catch (...)
                     {
                         std::ostringstream errMsg;
                         errMsg << "ExeMgr: unknown error writing qb response "
                                "for qb cmd " << qb;
-                        throw runtime_error( errMsg.str() );
+                        throw std::runtime_error( errMsg.str() );
                     }
 
                     if (swallowRows) tm.erase(tableOID);
@@ -975,8 +975,8 @@ new_plan:
                                 return;
                             }
 
-                            //cout << "connection drop\n";
-                            throw runtime_error( errMsg.str() );
+                            //std::cout << "connection drop\n";
+                            throw std::runtime_error( errMsg.str() );
                         }
                         catch (...)
                         {
@@ -991,7 +991,7 @@ new_plan:
                             while (rowCount)
                                 rowCount = jl->projectTable(tableOID, bs);
 
-                            throw runtime_error( errMsg.str() );
+                            throw std::runtime_error( errMsg.str() );
                         }
 
                         totalRowCount += rowCount;
@@ -1022,11 +1022,11 @@ new_plan:
 
                 if (needDbProfEndStatementMsg)
                 {
-                    string ss;
+                    std::string ss;
                     std::ostringstream prefix;
                     prefix << "ses:" << csep.sessionID() << " Query Totals";
 
-                    //Log stats string to standard out
+                    //Log stats std::string to standard out
                     ss = formatQueryStats(
                              jl,
                              prefix.str(),
@@ -1035,7 +1035,7 @@ new_plan:
                              (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG),
                              totalRowCount);
                     //@Bug 1306. Added timing info for real time tracking.
-                    cout << ss << " at " << timeNow() << endl;
+                    std::cout << ss << " at " << timeNow() << std::endl;
 
                     // log query status to debug log file
                     args.reset();
@@ -1072,13 +1072,13 @@ new_plan:
                     // delete sessionMemMap entry for this session's memory % use
                     deleteMaxMemPct( csep.sessionID() );
 
-                string endtime(timeNow());
+                std::string endtime(timeNow());
 
                 if ((csep.traceFlags() & flagsWantOutput) && (csep.sessionID() < 0x80000000))
                 {
-                    cout << "For session " << csep.sessionID() << ": " <<
+                    std::cout << "For session " << csep.sessionID() << ": " <<
                          totalBytesSent <<
-                         " bytes sent back at " << endtime << endl;
+                         " bytes sent back at " << endtime << std::endl;
 
                     // @bug 663 - Implemented caltraceon(16) to replace the
                     // $FIFO_SINK compiler definition in pColStep.
@@ -1086,19 +1086,19 @@ new_plan:
                     if (csep.traceFlags() &
                       execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS4)
                     {
-                        cout << endl;
-                        cout << "**** No data returned to DM.  Rows consumed "
+                        std::cout << std::endl;
+                        std::cout << "**** No data returned to DM.  Rows consumed "
                              "in ProjectSteps - caltrace(16) is on (FIFO_SINK)."
-                             " ****" << endl;
-                        cout << endl;
+                             " ****" << std::endl;
+                        std::cout << std::endl;
                     }
                     else if (csep.traceFlags() &
                       execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
                     {
-                        cout << endl;
-                        cout << "**** No data returned to DM - caltrace(8) is "
-                             "on (SWALLOW_ROWS_EXEMGR). ****" << endl;
-                        cout << endl;
+                        std::cout << std::endl;
+                        std::cout << "**** No data returned to DM - caltrace(8) is "
+                             "on (SWALLOW_ROWS_EXEMGR). ****" << std::endl;
+                        std::cout << std::endl;
                     }
                 }
 
@@ -1139,7 +1139,7 @@ new_plan:
         {
             decThreadCntPerSession( csep.sessionID() | 0x80000000 );
             statementsRunningCount->decr(stmtCounted);
-            cerr << "### ExeMgr ses:" << csep.sessionID() << " caught: " << ex.what() << endl;
+            std::cerr << "### ExeMgr ses:" << csep.sessionID() << " caught: " << ex.what() << std::endl;
             logging::Message::Args args;
             logging::LoggingID li(16, csep.sessionID(), csep.txnID());
             args.add(ex.what());
@@ -1150,7 +1150,7 @@ new_plan:
         {
             decThreadCntPerSession( csep.sessionID() | 0x80000000 );
             statementsRunningCount->decr(stmtCounted);
-            cerr << "### Exception caught!" << endl;
+            std::cerr << "### Exception caught!" << std::endl;
             logging::Message::Args args;
             logging::LoggingID li(16, csep.sessionID(), csep.txnID());
             args.add("ExeMgr caught unknown exception");
@@ -1179,7 +1179,7 @@ public:
             {
                 if (fMaxPct >= 95)
                 {
-                    cerr << "Too much memory allocated!" << endl;
+                    std::cerr << "Too much memory allocated!" << std::endl;
                     logging::Message::Args args;
                     args.add((int)pct);
                     args.add((int)fMaxPct);
@@ -1189,7 +1189,7 @@ public:
 
                 if (statementsRunningCount->cur() == 0)
                 {
-                    cerr << "Too much memory allocated!" << endl;
+                    std::cerr << "Too much memory allocated!" << std::endl;
                     logging::Message::Args args;
                     args.add((int)pct);
                     args.add((int)fMaxPct);
@@ -1197,7 +1197,7 @@ public:
                     exit(1);
                 }
 
-                cerr << "Too much memory allocated, but stmts running" << endl;
+                std::cerr << "Too much memory allocated, but stmts running" << std::endl;
             }
 
             // Update sessionMemMap entries lower than current mem % use
@@ -1235,7 +1235,7 @@ void added_a_pm(int)
     logging::Message msg(1);
     args1.add("exeMgr caught SIGHUP. Resetting connections");
     msg.format( args1 );
-    cout << msg.msg().c_str() << endl;
+    std::cout << msg.msg().c_str() << std::endl;
     logging::Logger logger(logid.fSubsysID);
     logger.logMessage(logging::LOG_TYPE_DEBUG, msg, logid);
 
@@ -1299,7 +1299,7 @@ void setupSignalHandlers()
 
 void setupCwd(joblist::ResourceManager* rm)
 {
-    string workdir = rm->getScWorkingDir();
+    std::string workdir = rm->getScWorkingDir();
     (void)chdir(workdir.c_str());
 
     if (access(".", W_OK) != 0)
@@ -1349,8 +1349,8 @@ int setupResources()
 void cleanTempDir()
 {
     const auto config = config::Config::makeConfig();
-    string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
-    string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
+    std::string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
+    std::string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
 
     if (allowDJS == "N" || allowDJS == "n")
         return;
@@ -1370,7 +1370,7 @@ void cleanTempDir()
     }
     catch (const std::exception& ex)
     {
-        std::cerr << ex.what() << endl;
+        std::cerr << ex.what() << std::endl;
         logging::LoggingID logid(16, 0, 0);
         logging::Message::Args args;
         logging::Message message(8);
@@ -1382,7 +1382,7 @@ void cleanTempDir()
     }
     catch (...)
     {
-        cerr << "Caught unknown exception during tmpdir cleanup" << endl;
+        std::cerr << "Caught unknown exception during tmpdir cleanup" << std::endl;
         logging::LoggingID logid(16, 0, 0);
         logging::Message::Args args;
         logging::Message message(8);
@@ -1397,7 +1397,7 @@ void cleanTempDir()
 int main(int argc, char* argv[])
 {
     // get and set locale language
-    string systemLang = "C";
+    std::string systemLang = "C";
     systemLang = funcexp::utf8::idb_setlocale();
 
     // This is unset due to the way we start it
@@ -1451,7 +1451,7 @@ int main(int argc, char* argv[])
     int err = 0;
     if (!gDebug)
         err = setupResources();
-    string errMsg;
+    std::string errMsg;
 
     switch (err)
     {
@@ -1482,7 +1482,7 @@ int main(int argc, char* argv[])
         logging::LoggingID lid(16);
         logging::MessageLog ml(lid);
         ml.logCriticalMessage( message );
-        cerr << errMsg << endl;
+        std::cerr << errMsg << std::endl;
 
         try
         {
@@ -1527,15 +1527,15 @@ int main(int argc, char* argv[])
             mqs = new messageqcpp::MessageQueueServer(ExeMgr, rm->getConfig(), messageqcpp::ByteStream::BlockSize, 64);
             break;
         }
-        catch (runtime_error& re)
+        catch (std::runtime_error& re)
         {
-            string what = re.what();
+            std::string what = re.what();
 
-            if (what.find("Address already in use") != string::npos)
+            if (what.find("Address already in use") != std::string::npos)
             {
                 if (tellUser)
                 {
-                    cerr << "Address already in use, retrying..." << endl;
+                    std::cerr << "Address already in use, retrying..." << std::endl;
                     tellUser = false;
                 }
 
@@ -1592,7 +1592,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Starting ExeMgr: st = " << serverThreads <<
          ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
-         rm->getConfig()->configFile() << endl;
+         rm->getConfig()->configFile() << std::endl;
 
     //set ACTIVE state
     {

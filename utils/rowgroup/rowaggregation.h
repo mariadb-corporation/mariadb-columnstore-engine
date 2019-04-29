@@ -712,7 +712,7 @@ protected:
     static const static_any::any& strTypeId;
 
     // For UDAF along with with multiple distinct columns
-    vector<SP_ROWAGG_FUNC_t>* fOrigFunctionCols;
+    std::vector<SP_ROWAGG_FUNC_t>* fOrigFunctionCols;
 };
 
 //------------------------------------------------------------------------------
