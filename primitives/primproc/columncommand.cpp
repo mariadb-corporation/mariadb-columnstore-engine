@@ -51,17 +51,6 @@ using namespace logging;
 #define llabs labs
 #endif
 
-namespace
-{
-using namespace primitiveprocessor;
-
-double cotangent(double in)
-{
-    return (1.0 / tan(in));
-}
-
-}
-
 namespace primitiveprocessor
 {
 

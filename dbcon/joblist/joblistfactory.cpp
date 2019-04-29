@@ -94,36 +94,6 @@ namespace
 using namespace joblist;
 
 
-bool checkCombinable(JobStep* jobStepPtr)
-{
-    if (typeid(*(jobStepPtr)) == typeid(pColScanStep))
-    {
-        return true;
-    }
-    else if (typeid(*(jobStepPtr)) == typeid(PseudoColStep))
-    {
-        return true;
-    }
-    else if (typeid(*(jobStepPtr)) == typeid(pColStep))
-    {
-        return true;
-    }
-    else if (typeid(*(jobStepPtr)) == typeid(pDictionaryStep))
-    {
-        return true;
-    }
-    else if (typeid(*(jobStepPtr)) == typeid(PassThruStep))
-    {
-        return true;
-    }
-    else if (typeid(*(jobStepPtr)) == typeid(FilterStep))
-    {
-        return true;
-    }
-
-    return false;
-}
-
 void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jobInfo)
 {
     if (sc == NULL)

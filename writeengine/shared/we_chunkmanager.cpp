@@ -1923,10 +1923,14 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
         struct tm ltm;
         localtime_r(reinterpret_cast<time_t*>(&tv.tv_sec), &ltm);
         char tmText[24];
+    // this snprintf call causes a compiler warning b/c buffer size is less
+    // then maximum string size.
+#pragma GCC diagnostic ignored "-Wformat-truncation="
         snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                  ltm.tm_year + 1900, ltm.tm_mon + 1,
                  ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                  ltm.tm_sec, tv.tv_usec);
+#pragma GCC diagnostic pop
         string dbgFileName(rlcFileName + tmText);
 
         ostringstream oss;
@@ -2106,10 +2110,14 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
             struct tm ltm;
             localtime_r(reinterpret_cast<time_t*>(&tv.tv_sec), &ltm);
             char tmText[24];
+    // this snprintf call causes a compiler warning b/c buffer size is less
+    // then maximum string size.
+#pragma GCC diagnostic ignored "-Wformat-truncation="
             snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                      ltm.tm_year + 1900, ltm.tm_mon + 1,
                      ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                      ltm.tm_sec, tv.tv_usec);
+#pragma GCC diagnostic pop
             string dbgFileName(rlcFileName + tmText);
 
             ostringstream oss;

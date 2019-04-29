@@ -80,6 +80,7 @@ struct QStats
 
 QStats fQStats;
 
+#ifdef QUERY_TELE_DEBUG
 string get_trace_file()
 {
     ostringstream oss;
@@ -94,7 +95,6 @@ string get_trace_file()
     return oss.str();
 }
 
-#ifdef QUERY_TELE_DEBUG
 void log_query(const querytele::QueryTele& qtdata)
 {
     ofstream trace(get_trace_file().c_str(), ios::out | ios::app);

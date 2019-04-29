@@ -90,7 +90,7 @@ public:
 
     /** @brief Generate Job XML file name
      */
-    //EXPORT std::string genJobXMLFileName( ) const;
+    EXPORT std::string genJobXMLFileName( ) const;
 
     /** @brief Write xml file document to the destination Job XML file.
      *

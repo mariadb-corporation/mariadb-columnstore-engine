@@ -46,7 +46,10 @@ int main(int argc, char** argv)
 #ifdef _MSC_VER
     //FIXME
 #else
+#pragma GCC diagnostic ignored "-Wunused-result"
     setuid( 0 ); // set effective ID to root; ignore return status
+    // Why should we raise privileges if we don't care?
+#pragma GCC diagnostic pop
 #endif
     setlocale(LC_ALL, "");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings

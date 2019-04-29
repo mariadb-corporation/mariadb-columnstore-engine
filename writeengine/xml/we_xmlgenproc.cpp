@@ -38,9 +38,9 @@ namespace
 {
 const char*  DICT_TYPE("D");
 const char*  ENCODING("UTF-8");
-const char*  JOBNAME("Job_");
 const char*  LOGNAME("Jobxml_");
 const std::string LOGDIR("/log/");
+const char*  JOBNAME("Job_");
 }
 
 namespace WriteEngine
@@ -438,13 +438,11 @@ void XMLGenProc::getColumnsForTable(
         throw std::runtime_error( oss.str() );
     }
 }
-
+
 //------------------------------------------------------------------------------
 // Generate Job XML File Name
 //------------------------------------------------------------------------------
 
-// This isn't used currently, commenting it out
-#if 0
 std::string XMLGenProc::genJobXMLFileName( ) const
 {
     std::string xmlFileName;
@@ -471,7 +469,7 @@ std::string XMLGenProc::genJobXMLFileName( ) const
         char *buf;
         buf = getcwd(cwdPath, sizeof(cwdPath));
         if (buf == NULL)
-            throw runtime_error("Failed to get the current working directory!");
+            throw std::runtime_error("Failed to get the current working directory!");
         boost::filesystem::path p2(cwdPath);
         p2 /= p;
         xmlFileName = p2.string();
@@ -485,9 +483,7 @@ std::string XMLGenProc::genJobXMLFileName( ) const
 
     return xmlFileName;
 }
-#endif
 
-
 //------------------------------------------------------------------------------
 // writeXMLFile
 //------------------------------------------------------------------------------

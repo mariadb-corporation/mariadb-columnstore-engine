@@ -830,10 +830,11 @@ void printInputSource(
         if (alternateImportDir == IMPORT_PATH_CWD)
         {
             char cwdBuf[4096];
-            ::getcwd(cwdBuf, sizeof(cwdBuf));
+            char *bufPtr = &cwdBuf[0];
+            bufPtr = ::getcwd(cwdBuf, sizeof(cwdBuf));
 
             if (!(BulkLoad::disableConsoleOutput()))
-                cout << "Input file(s) will be read from : " << cwdBuf << endl;
+                cout << "Input file(s) will be read from : " << bufPtr << endl;
         }
         else
         {
@@ -1021,7 +1022,9 @@ int main(int argc, char** argv)
 #ifdef _MSC_VER
     _setmaxstdio(2048);
 #else
+#pragma GCC diagnostic ignored "-Wunused-result"
     setuid( 0 ); // set effective ID to root; ignore return status
+#pragma GCC diagnostic pop
 #endif
     setupSignalHandlers();
 
