@@ -37,8 +37,6 @@
 
 #include <clocale>
 
-#include "ALARMManager.h"
-
 #include "liboamcpp.h"
 
 /** @file */
