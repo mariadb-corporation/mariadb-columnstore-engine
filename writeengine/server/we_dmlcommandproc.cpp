@@ -2847,16 +2847,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
                 uint32_t colWidth = (colTypes[j].colWidth > 8 ? 8 : colTypes[j].colWidth);
-
-                // populate stats.blocksChanged
-                for (unsigned int k = 0; k < columnsUpdated.size(); k++)
+		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth)
+                // populate stats.blocksChanged 
+		if (rrid > preBlkNums[j])
                 {
-                    if ((int)(relativeRID / (BYTE_PER_BLOCK / colWidth)) > preBlkNums[j])
-                    {
+			preBlkNums[j] = rrid ;
                         blocksChanged++;
-                        preBlkNums[j] = relativeRID / (BYTE_PER_BLOCK / colWidth);
-                    }
-                }
+		}
+
             }
 
             ridsFetched = true;
