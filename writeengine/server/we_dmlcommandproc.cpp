@@ -2847,7 +2847,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
                 uint32_t colWidth = (colTypes[j].colWidth > 8 ? 8 : colTypes[j].colWidth);
-		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth)
+		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
                 // populate stats.blocksChanged 
 		if (rrid > preBlkNums[j])
                 {
