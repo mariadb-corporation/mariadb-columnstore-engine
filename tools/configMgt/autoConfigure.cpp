@@ -66,6 +66,7 @@ typedef std::vector<PerformanceModule> PerformanceModuleList;
 int main(int argc, char *argv[])
 {
 	setenv("CALPONT_HOME", "./", 1);
+    std::cout << "autoConfigure : main() *************" << std::endl;
 
     Oam oam;
 	string systemParentOAMModuleName;
@@ -326,7 +327,19 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	//setup System Language
+    // WaitPeriod
+    try
+    {
+        string waitPeriod = sysConfigOld->getConfig(SystemSection, "WaitPeriod");
+        if (waitPeriod.length() > 0)
+        {
+            sysConfigNew->setConfig(SystemSection, "WaitPeriod", waitPeriod);
+        }
+    }
+    catch (...)
+    { }
+                          
+                          	//setup System Language
 	string systemLang = "C";
 	try {
 		systemLang = sysConfigOld->getConfig(SystemSection, "SystemLang");
