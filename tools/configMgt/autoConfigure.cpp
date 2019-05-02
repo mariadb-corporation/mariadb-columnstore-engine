@@ -66,7 +66,6 @@ typedef std::vector<PerformanceModule> PerformanceModuleList;
 int main(int argc, char *argv[])
 {
 	setenv("CALPONT_HOME", "./", 1);
-    std::cout << "autoConfigure : main() *************" << std::endl;
 
     Oam oam;
 	string systemParentOAMModuleName;
