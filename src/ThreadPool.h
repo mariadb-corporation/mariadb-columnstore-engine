@@ -28,6 +28,7 @@ class ThreadPool : public boost::noncopyable
         void addJob(const boost::shared_ptr<Job> &j);
         void setMaxThreads(uint newMax);
         int currentQueueSize() const;
+        void setName(const std::string &);   // set the name of this threadpool (for debugging)
 
     private:
         void processingLoop();   // the fcn run by each thread
@@ -38,6 +39,7 @@ class ThreadPool : public boost::noncopyable
         bool die;
         bool processQueueOnExit;
         int threadsWaiting;
+        std::string name;
         boost::thread_group threads;
         
         // the set s_threads below is intended to make pruning idle threads efficient.

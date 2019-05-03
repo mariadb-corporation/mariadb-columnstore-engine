@@ -38,6 +38,11 @@ ThreadPool::~ThreadPool()
     pruner.join();
 }
 
+void ThreadPool::setName(const string &_name)
+{
+    name = _name;
+}
+
 void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
 {
     boost::unique_lock<boost::mutex> s(mutex);
@@ -49,6 +54,9 @@ void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
     if (threadsWaiting == 0 && (threads.size() - pruneable.size()) < maxThreads) {
         boost::thread *thread = threads.create_thread([this] { this->processingLoop(); });
         s_threads.insert(thread);
+        //if (name == "Downloader")
+        //    cout << "Threadpool (" << name << "): created a new thread.  live threads = " <<
+        //        threads.size() - pruneable.size() << " job count = " << jobs.size() << endl;
     }
     else
         jobAvailable.notify_one();
@@ -104,6 +112,9 @@ void ThreadPool::processingLoop()
     
     pruneable.push_back(boost::this_thread::get_id());
     somethingToPrune.notify_one();
+    //if (name == "Downloader")
+    //    cout << "threadpool " << name << " thread exiting.  jobs = " << jobs.size() << 
+    //      " live thread count = " << threads.size() - pruneable.size() << endl;
 }
 
 void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
@@ -131,11 +142,11 @@ void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
         }
         catch (exception &e)
         {
-            logger->log(LOG_CRIT, "ThreadPool: caught '%s' from a job", e.what());
+            logger->log(LOG_CRIT, "ThreadPool (%s): caught '%s' from a job", name.c_str(), e.what());
         }
         s.lock();
     }
-    //cout << "threadpool thread exiting" << endl;
+    
 }
 
 inline bool ThreadPool::id_compare::operator()(const ID_Thread &t1, const ID_Thread &t2) const
