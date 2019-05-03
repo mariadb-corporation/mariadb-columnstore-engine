@@ -91,6 +91,7 @@ Cache::Cache() : currentCacheSize(0)
     //cout << "Cache got prefix " << prefix << endl;
     
     downloader.setDownloadPath(prefix.string());
+    downloader.useThisLock(&lru_mutex);
     
     stmp = conf->getValue("ObjectStorage", "journal_path");
     if (stmp.empty())
@@ -155,6 +156,9 @@ void Cache::populate()
     }
 }
 
+#if 0
+/*  Need to simplify this, we keep running into sneaky problems, and I just spotted a couple more.
+    Just going to rewrite it.  We can revisit later if the simplified version needs improvement */
 void Cache::read(const vector<string> &keys)
 {
 /*
@@ -178,19 +182,21 @@ void Cache::read(const vector<string> &keys)
             // not in the cache, put it in the list to download
             keysToFetch.push_back(&key);
     }    
-    s.unlock();
+    //s.unlock();
     
     // start downloading the keys to fetch
+    // TODO: there should be a path for the common case, which is that there is nothing
+    // to download.
     vector<int> dl_errnos;
     vector<size_t> sizes;
     if (!keysToFetch.empty())
-        downloader.download(keysToFetch, &dl_errnos, &sizes);
+        downloader.download(keysToFetch, &dl_errnos, &sizes, lru_mutex);
     
     size_t sum_sizes = 0;
     for (size_t &size : sizes)
         sum_sizes += size;
     
-    s.lock();
+    //s.lock();
     // do makespace() before downloading.  Problem is, until the download is finished, this fcn can't tell which
     // downloads it was responsible for.  Need Downloader to make the call...?
     _makeSpace(sum_sizes);      
@@ -209,8 +215,8 @@ void Cache::read(const vector<string> &keys)
         else if (dl_errnos[i] == 0)   // successful download
         {
             lru.push_back(keys[i]);
-            LRU_t::iterator it = lru.end();
-            m_lru.insert(M_LRU_element_t(--it));
+            LRU_t::iterator lit = lru.end();
+            m_lru.insert(M_LRU_element_t(--lit));
         }
         else
         {
@@ -222,6 +228,58 @@ void Cache::read(const vector<string> &keys)
             */
         }
     }
+}
+#endif
+
+// new simplified version
+void Cache::read(const vector<string> &keys)
+{
+    /*  Move existing keys to the back of the LRU, start downloading nonexistant keys.
+        Going to skip the do-not-evict set in this version, and will assume that the cache
+        is large enough that an entry at the back of the LRU won't be evicted before the
+        caller can open the corresponding file 
+    */
+    vector<const string *> keysToFetch;
+    vector<int> dlErrnos;
+    vector<size_t> dlSizes;
+    
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    
+    M_LRU_t::iterator mit;
+    for (const string &key : keys)
+    {
+        mit = m_lru.find(key);
+        if (mit != m_lru.end())
+            lru.splice(lru.end(), lru, mit->lit);
+        else
+            keysToFetch.push_back(&key);
+    }
+    if (keysToFetch.empty())
+        return;
+        
+    assert(s.owns_lock());
+    downloader.download(keysToFetch, &dlErrnos, &dlSizes);
+    assert(s.owns_lock());
+    
+    size_t sum_sizes = 0;
+    for (uint i = 0; i < keysToFetch.size(); ++i)
+    {
+        // downloads with size 0 didn't actually happen, either because it
+        // was a preexisting download (another read() call owns it), or because
+        // there was an error downloading it.  Use size == 0 as an indication of
+        // what to add to the cache
+        if (dlSizes[i] != 0)
+        {
+            sum_sizes += dlSizes[i];
+            lru.push_back(*keysToFetch[i]);
+            LRU_t::iterator lit = lru.end();
+            m_lru.insert(M_LRU_element_t(--lit));  // I dislike this way of grabbing the last iterator in a list.
+        }
+    }
+    
+    // fix cache size
+    _makeSpace(sum_sizes);
+    currentCacheSize += sum_sizes;
 }
 
 Cache::DNEElement::DNEElement(const LRU_t::iterator &k) : key(k), refCount(1)
@@ -235,7 +293,7 @@ void Cache::addToDNE(const LRU_t::iterator &key)
     if (it != doNotEvict.end())
     {
         DNEElement &dnee = const_cast<DNEElement &>(*it);
-        ++dnee.refCount;
+        ++(dnee.refCount);
     }
     else
         doNotEvict.insert(e);
@@ -248,7 +306,7 @@ void Cache::removeFromDNE(const LRU_t::iterator &key)
     if (it == doNotEvict.end())
         return;
     DNEElement &dnee = const_cast<DNEElement &>(*it);
-    if (--dnee.refCount == 0)
+    if (--(dnee.refCount) == 0)
         doNotEvict.erase(it);
 }
     
@@ -368,7 +426,7 @@ void Cache::_makeSpace(size_t size)
         assert(currentCacheSize >= (size_t) statbuf.st_size);
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
-        logger->log(LOG_WARNING, "Cache:  flushing!  Try to avoid this, it may deadlock!");
+        //logger->log(LOG_WARNING, "Cache:  flushing!  Try to avoid this, it may deadlock!");
         Synchronizer::get()->flushObject(*it);
         replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;

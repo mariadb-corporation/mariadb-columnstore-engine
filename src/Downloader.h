@@ -12,6 +12,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace storagemanager
 {
@@ -26,33 +27,38 @@ class Downloader
         // errors are reported through errnos
         void download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
         void setDownloadPath(const std::string &path);
-        const std::string & getDownloadPath() const;
+        void useThisLock(boost::recursive_mutex *);
         
     private:
         uint maxDownloads;
         std::string downloadPath;
+        boost::recursive_mutex *lock;
     
         class DownloadListener
         {
         public:
-            DownloadListener(uint *counter, boost::condition *condvar, boost::mutex *m);
-            //DownloadListener(volatile uint *counter, boost::condition *condvar, boost::mutex *m);
+            DownloadListener(uint *counter, boost::condition *condvar);
             void downloadFinished();
         private:
-            uint *count;
-            //volatile uint *count;
+            uint *counter;
             boost::condition *cond;
-            boost::mutex *mutex;
         };
     
+        /* Possible optimization.  Downloads used to use pointers to strings to avoid an extra copy.
+           Out of paranoid during debugging, I made it copy the strings instead for a clearer lifecycle.
+           However, it _should_ be safe to do.
+        */
         struct Download : public ThreadPool::Job
         {
-            Download(const std::string *source, Downloader *);
+            Download(const std::string &source, const std::string &_dlPath, boost::recursive_mutex *_lock);
+            ~Download();
             void operator()();
-            Downloader *dler;
-            const std::string *key;
+            boost::filesystem::path dlPath;
+            const std::string key;
             int dl_errno;   // to propagate errors from the download job to the caller
             size_t size;
+            boost::recursive_mutex *lock;
+            bool finished, itRan;
             std::vector<DownloadListener *> listeners;
         };
     
@@ -68,8 +74,11 @@ class Downloader
     
         typedef std::unordered_set<boost::shared_ptr<Download>, DLHasher, DLEquals> Downloads_t;
         Downloads_t downloads;
-        boost::mutex download_mutex;
-        boost::mutex &getDownloadMutex();
+        
+        // something is not working right with this lock design, need to simplify.
+        // for now, download will use Cache's lock for everything.
+        //boost::mutex download_mutex;
+        //boost::mutex *getDownloadMutex();
         ThreadPool workers;
         CloudStorage *storage;
         SMLogging *logger;
