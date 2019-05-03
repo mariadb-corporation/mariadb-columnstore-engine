@@ -7,7 +7,7 @@ using namespace std;
 namespace storagemanager
 {
 
-ThreadPool::ThreadPool() : maxThreads(1000), die(false), threadsWaiting(0)
+ThreadPool::ThreadPool() : maxThreads(1000), die(false), processQueueOnExit(false), threadsWaiting(0)
 {
     // Using this ctor effectively limits the # of threads here to the natural limit of the 
     // context it's used in.  In the CRP class for example, the # of active threads would be 
@@ -46,7 +46,7 @@ void ThreadPool::addJob(const boost::shared_ptr<Job> &j)
     
     jobs.push_back(j);
     // Start another thread if necessary
-    if (threadsWaiting == 0 && threads.size() < maxThreads) {
+    if (threadsWaiting == 0 && (threads.size() - pruneable.size()) < maxThreads) {
         boost::thread *thread = threads.create_thread([this] { this->processingLoop(); });
         s_threads.insert(thread);
     }
@@ -93,22 +93,23 @@ int ThreadPool::currentQueueSize() const
 
 void ThreadPool::processingLoop()
 {
+    boost::unique_lock<boost::mutex> s(mutex);
     try
     {
-        _processingLoop();
+        _processingLoop(s);
     }
     catch (...)
     {}
-    boost::unique_lock<boost::mutex> s(mutex);
+    //  _processingLoop returns with the lock held
+    
     pruneable.push_back(boost::this_thread::get_id());
     somethingToPrune.notify_one();
 }
 
-void ThreadPool::_processingLoop()
+void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
 {
-    boost::unique_lock<boost::mutex> s(mutex);
-    
-    while (threads.size() - pruneable.size() < maxThreads)  // this is the scale-down mechanism when maxThreads is changed
+
+    while (threads.size() - pruneable.size() <= maxThreads)  // this is the scale-down mechanism when maxThreads is changed
     {
         while (jobs.empty() && !die) 
         {
@@ -118,7 +119,7 @@ void ThreadPool::_processingLoop()
             if (timedout && jobs.empty())
                 return;
         }
-        if (jobs.empty())
+        if (jobs.empty())  // die was set, and there are no jobs left to process
             return;
         boost::shared_ptr<Job> job = jobs.front();
         jobs.pop_front();

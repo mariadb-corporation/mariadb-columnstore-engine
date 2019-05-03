@@ -31,7 +31,7 @@ class ThreadPool : public boost::noncopyable
 
     private:
         void processingLoop();   // the fcn run by each thread
-        void _processingLoop();  // processingLoop() wraps _processingLoop() with thread management stuff.
+        void _processingLoop(boost::unique_lock<boost::mutex> &);  // processingLoop() wraps _processingLoop() with thread management stuff.
     
         SMLogging *logger;
         uint maxThreads;
