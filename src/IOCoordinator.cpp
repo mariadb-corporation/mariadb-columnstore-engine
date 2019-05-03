@@ -562,7 +562,6 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     vector<string> deletedObjects;
     while (i < objects.size())
     {
-        bf::path cached = cachePath / objects[i].key;
         bf::path journal = journalPath / (objects[i].key + ".journal");
         if (bf::exists(journal))
         {
@@ -570,10 +569,14 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
             replicator->remove(journal);
             cache->deletedJournal(jsize);
         }
-            
-        size_t fsize = bf::file_size(cached);
-        replicator->remove(cached);
-        cache->deletedObject(objects[i].key, fsize);
+        
+        if (cache->exists(objects[i].key))
+        {
+            bf::path cached = cachePath / objects[i].key;
+            size_t fsize = bf::file_size(cached);
+            replicator->remove(cached);
+            cache->deletedObject(objects[i].key, fsize);
+        }
         deletedObjects.push_back(objects[i].key);
         ++i;
     }
