@@ -240,7 +240,7 @@ void diskMonitor()
 	
 					blksize = buf.f_bsize; 
 					blocks = buf.f_blocks; 
-					freeblks = buf.f_bfree; 
+					freeblks = buf.f_bavail; 
 	
 					totalBlocks = blocks * blksize;
 					free = freeblks * blksize; 
@@ -359,7 +359,7 @@ void diskMonitor()
 			
 							blksize = buf.f_bsize; 
 							blocks = buf.f_blocks; 
-							freeblks = buf.f_bfree; 
+							freeblks = buf.f_bavail; 
 			
 							totalBlocks = blocks * blksize;
 							free = freeblks * blksize; 
