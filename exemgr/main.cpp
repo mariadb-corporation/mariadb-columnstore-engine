@@ -43,13 +43,13 @@
 
 
 #include <mutex>
-#include <experimental/filesystem>
 #include <iostream>
-
 #include <cstdint>
 #include <csignal>
 
 #include <sys/resource.h>
+
+#include <boost/filesystem.hpp>
 
 #include "calpontselectexecutionplan.h"
 #include "activestatementcounter.h"
@@ -1365,8 +1365,8 @@ void cleanTempDir()
     /* This is quite scary as ExeMgr usually runs as root */
     try
     {
-        std::experimental::filesystem::remove_all(tmpPrefix);
-        std::experimental::filesystem::create_directories(tmpPrefix);
+        boost::filesystem::remove_all(tmpPrefix);
+        boost::filesystem::create_directories(tmpPrefix);
     }
     catch (const std::exception& ex)
     {

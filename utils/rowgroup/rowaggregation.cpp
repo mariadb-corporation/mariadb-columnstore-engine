@@ -29,6 +29,8 @@
 #include <stdexcept>
 #include <limits>
 #include <typeinfo>
+#include <cassert>
+
 #include "joblisttypes.h"
 #include "resourcemanager.h"
 #include "groupconcat.h"
@@ -51,19 +53,12 @@
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
-#include <cassert>
+#include "funcexp/utils_utf8.h"
+
 
 using namespace std;
 using namespace boost;
 using namespace dataconvert;
-
-namespace funcexp
-{
-  namespace utf8
-  {
-    int idb_strcoll(const char*, const char*);
-  }
-}
 
 
 // inlines of RowAggregation that used only in this file

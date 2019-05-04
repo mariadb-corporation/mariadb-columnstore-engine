@@ -63,6 +63,7 @@ if(SERVER_BUILD_DIR)
 endif()
 
 INCLUDE(ExternalProject)
+INCLUDE(CheckCXXSourceCompiles)
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -76,8 +77,12 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
-find_package(BISON REQUIRED)
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
+FIND_PACKAGE(BISON REQUIRED)
+
+check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
+check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
+
 INCLUDE(columnstore_version)
 
 SET (PACKAGE columnstore)
