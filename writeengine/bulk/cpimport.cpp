@@ -1022,9 +1022,11 @@ int main(int argc, char** argv)
 #ifdef _MSC_VER
     _setmaxstdio(2048);
 #else
-#pragma GCC diagnostic ignored "-Wunused-result"
-    setuid( 0 ); // set effective ID to root; ignore return status
-#pragma GCC diagnostic pop
+    // set effective ID to root
+    if( setuid( 0 ) < 0 )
+    {
+        std::cerr << " cpimport: setuid failed " << std::endl;
+    } 
 #endif
     setupSignalHandlers();
 

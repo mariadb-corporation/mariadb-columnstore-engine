@@ -106,8 +106,16 @@ int main(int argc, char* argv[])
 
     if ( setupCwd() < 0 )
     {
-        std::cerr << "Could not set working directory" << std::endl;
+        LoggingID logid(23, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(9);
+        args1.add("DDLProc could not set working directory ");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
     }
+
 
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DDLPROC );
 #ifdef _MSC_VER

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -604,10 +605,13 @@ void WESplitterApp::updateWithJobFile(int aIdx)
 int main(int argc, char** argv)
 {
     std::string err;
-#pragma GCC diagnostic ignored "-Wunused-result"
     // Why do we need this if we don't care about f()'s rc ?
-    setuid(0);		//@BUG 4343 set effective userid to root.
-#pragma GCC diagnostic pop
+    // @BUG4343
+    if( setuid( 0 ) < 0 )
+    {
+        std::cerr << " we_splitterapp: setuid failed " << std::endl;
+    }
+
     std::cin.sync_with_stdio(false);
 
     try

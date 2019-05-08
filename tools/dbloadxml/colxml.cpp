@@ -43,14 +43,11 @@ using namespace bulkloadxml;
 int main(int argc, char** argv)
 {
     const int DEBUG_LVL_TO_DUMP_SYSCAT_RPT = 4;
-#ifdef _MSC_VER
-    //FIXME
-#else
-#pragma GCC diagnostic ignored "-Wunused-result"
-    setuid( 0 ); // set effective ID to root; ignore return status
-    // Why should we raise privileges if we don't care?
-#pragma GCC diagnostic pop
-#endif
+    // set effective ID to root
+    if( setuid( 0 ) < 0 )
+    {
+        std::cerr << " colxml: setuid failed " << std::endl;
+    }
     setlocale(LC_ALL, "");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings
 

@@ -2429,9 +2429,12 @@ int64_t DataConvert::intToDate(int64_t data)
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
     // into 15 bytes, however, that appears to be intentional.
-    #pragma GCC diagnostic ignored "-Wformat-truncation="
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
     string year, month, day, hour, min, sec, msec;
     int64_t y = 0, m = 0, d = 0, h = 0, minute = 0, s = 0, ms = 0;
@@ -2560,9 +2563,12 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
     // into 15 bytes, however, that appears to be intentional.
-    #pragma GCC diagnostic ignored "-Wformat-truncation="
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
     //string date = buf;
     string year, month, day, hour, min, sec, msec;
@@ -2693,9 +2699,12 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
     // into 15 bytes, however, that appears to be intentional.
-    #pragma GCC diagnostic ignored "-Wformat-truncation="
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
     //string date = buf;
     string hour, min, sec, msec;

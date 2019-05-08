@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1925,12 +1926,15 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
         char tmText[24];
     // this snprintf call causes a compiler warning b/c buffer size is less
     // then maximum string size.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
         snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                  ltm.tm_year + 1900, ltm.tm_mon + 1,
                  ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                  ltm.tm_sec, tv.tv_usec);
 #pragma GCC diagnostic pop
+#endif
         string dbgFileName(rlcFileName + tmText);
 
         ostringstream oss;
@@ -2112,12 +2116,15 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
             char tmText[24];
     // this snprintf call causes a compiler warning b/c buffer size is less
     // then maximum string size.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
             snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                      ltm.tm_year + 1900, ltm.tm_mon + 1,
                      ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                      ltm.tm_sec, tv.tv_usec);
 #pragma GCC diagnostic pop
+#endif
             string dbgFileName(rlcFileName + tmText);
 
             ostringstream oss;

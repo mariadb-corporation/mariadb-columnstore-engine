@@ -675,6 +675,8 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
     }
     // this snprintf call causes a compiler warning b/c buffer size is less
     // then maximum string size.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, buflen, "%02d%02d%02d",
               hour,
@@ -682,6 +684,7 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
               (unsigned)((timevalue >> 14) & 0xff)
             );
 #pragma GCC diagnostic pop
+#endif
 }
 
 inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType)
