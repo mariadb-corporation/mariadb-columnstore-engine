@@ -102,7 +102,7 @@ private:
     int  executeRedistributePlan();
 
     int  connectToWes(int);
-    void dumpPlanToFile(uint64_t, vector<PartitionInfo>&, int);
+    void dumpPlanToFile(uint64_t, std::vector<PartitionInfo>&, int);
     void displayPlan();
 
     uint32_t                      fAction;

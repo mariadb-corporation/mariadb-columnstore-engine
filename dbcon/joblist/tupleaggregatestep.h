@@ -199,7 +199,7 @@ private:
     std::vector<rowgroup::RGData > fRowGroupDatas;
     std::vector<rowgroup::SP_ROWAGG_UM_t> fAggregators;
     std::vector<rowgroup::RowGroup> fRowGroupIns;
-    vector<rowgroup::RowGroup> fRowGroupOuts;
+    std::vector<rowgroup::RowGroup> fRowGroupOuts;
     std::vector<std::vector<rowgroup::RGData> > fRowGroupsDeliveredData;
     bool fIsMultiThread;
     int fInputIter; // iterator

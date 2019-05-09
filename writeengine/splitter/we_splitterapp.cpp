@@ -249,8 +249,8 @@ void WESplitterApp::processMessages()
     {
         try
         {
-            aBs << (ByteStream::byte) WE_CLT_SRV_MODE;
-            aBs << (ByteStream::quadbyte) fCmdArgs.getMode();
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_MODE;
+            aBs << (messageqcpp::ByteStream::quadbyte) fCmdArgs.getMode();
             fDh.send2Pm(aBs);
 
             std::string aJobId = fCmdArgs.getJobId();
@@ -268,7 +268,7 @@ void WESplitterApp::processMessages()
             if (fDh.getDebugLvl())
                 cout << "CPImport cmd line - " << aCpImpCmd << endl;
 
-            aBs << (ByteStream::byte) WE_CLT_SRV_CMDLINEARGS;
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_CMDLINEARGS;
             aBs << aCpImpCmd;
             fDh.send2Pm(aBs);
 
@@ -278,7 +278,7 @@ void WESplitterApp::processMessages()
             if (fDh.getDebugLvl())
                 cout << "BrmReport FileName - " << aBrmRpt << endl;
 
-            aBs << (ByteStream::byte) WE_CLT_SRV_BRMRPT;
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_BRMRPT;
             aBs << aBrmRpt;
             fDh.send2Pm(aBs);
 
@@ -297,8 +297,8 @@ void WESplitterApp::processMessages()
         {
             // In this mode we ignore almost all cmd lines args which
             // are usually send to cpimport
-            aBs << (ByteStream::byte) WE_CLT_SRV_MODE;
-            aBs << (ByteStream::quadbyte) fCmdArgs.getMode();
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_MODE;
+            aBs << (messageqcpp::ByteStream::quadbyte) fCmdArgs.getMode();
             fDh.send2Pm(aBs);
 
             std::string aJobId = fCmdArgs.getJobId();
@@ -323,7 +323,7 @@ void WESplitterApp::processMessages()
             if (fDh.getDebugLvl())
                 cout << "CPImport cmd line - " << aCpImpCmd << endl;
 
-            aBs << (ByteStream::byte) WE_CLT_SRV_CMDLINEARGS;
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_CMDLINEARGS;
             aBs << aCpImpCmd;
             fDh.send2Pm(aBs);
 
@@ -333,7 +333,7 @@ void WESplitterApp::processMessages()
             if (fDh.getDebugLvl())
                 cout << "BrmReport FileName - " << aBrmRpt << endl;
 
-            aBs << (ByteStream::byte) WE_CLT_SRV_BRMRPT;
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_BRMRPT;
             aBs << aBrmRpt;
             fDh.send2Pm(aBs);
 
@@ -352,8 +352,8 @@ void WESplitterApp::processMessages()
         {
             // In this mode we ignore almost all cmd lines args which
             // are usually send to cpimport
-            aBs << (ByteStream::byte) WE_CLT_SRV_MODE;
-            aBs << (ByteStream::quadbyte) fCmdArgs.getMode();
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_MODE;
+            aBs << (messageqcpp::ByteStream::quadbyte) fCmdArgs.getMode();
             fDh.send2Pm(aBs);
 
             aBs.restart();
@@ -373,7 +373,7 @@ void WESplitterApp::processMessages()
             if (fDh.getDebugLvl())
                 cout << "CPImport FileName - " << aCpImpFileName << endl;
 
-            aBs << (ByteStream::byte) WE_CLT_SRV_IMPFILENAME;
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_IMPFILENAME;
             aBs << aCpImpFileName;
             fDh.send2Pm(aBs);
         }
@@ -450,8 +450,8 @@ void WESplitterApp::processMessages()
             if (aNoSec < 10) aNoSec++;		//progressively go up to 10Sec interval
 
             aBs.restart();
-            aBs << (ByteStream::byte) WE_CLT_SRV_KEEPALIVE;
-            mutex::scoped_lock aLock(fDh.fSendMutex);
+            aBs << (messageqcpp::ByteStream::byte) WE_CLT_SRV_KEEPALIVE;
+            boost::mutex::scoped_lock aLock(fDh.fSendMutex);
             fDh.send2Pm(aBs);
             aLock.unlock();
             //fDh.sendHeartbeats();
@@ -633,7 +633,7 @@ int main(int argc, char** argv)
                     errMsgArgs.add(err);
                     aWESplitterApp.fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
                     SPLTR_EXIT_STATUS = 1;
-                    aWESplitterApp.fDh.fLog.logMsg( err, MSGLVL_ERROR );
+                    aWESplitterApp.fDh.fLog.logMsg( err, WriteEngine::MSGLVL_ERROR );
                     aWESplitterApp.fContinue = false;
                     //throw runtime_error(err); BUG 4298
                 }

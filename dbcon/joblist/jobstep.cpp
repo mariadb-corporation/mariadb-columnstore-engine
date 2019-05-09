@@ -57,7 +57,7 @@ namespace joblist
 {
 boost::mutex JobStep::fLogMutex; //=PTHREAD_MUTEX_INITIALIZER;
 
-ThreadPool JobStep::jobstepThreadPool(defaultJLThreadPoolSize, 0);
+threadpool::ThreadPool JobStep::jobstepThreadPool(defaultJLThreadPoolSize, 0);
 
 ostream& operator<<(ostream& os, const JobStep* rhs)
 {

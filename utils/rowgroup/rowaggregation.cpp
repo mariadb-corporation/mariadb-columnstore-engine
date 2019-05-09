@@ -29,6 +29,8 @@
 #include <stdexcept>
 #include <limits>
 #include <typeinfo>
+#include <cassert>
+
 #include "joblisttypes.h"
 #include "resourcemanager.h"
 #include "groupconcat.h"
@@ -47,15 +49,17 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-#include "utils_utf8.h"
+//#include "utils_utf8.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
-#include <cassert>
+#include "funcexp/utils_utf8.h"
+
 
 using namespace std;
 using namespace boost;
 using namespace dataconvert;
+
 
 // inlines of RowAggregation that used only in this file
 namespace
@@ -377,6 +381,7 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
     else if (minMax(val1, val2, func))
         fRow.setFloatField(val1, col);
 }
+
 
 
 #define STRCOLL_ENH__
@@ -1929,7 +1934,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     // The vector of parameters to be sent to the UDAF
     mcsv1sdk::ColumnDatum valsIn[paramCount];
     uint32_t dataFlags[paramCount];
-    ConstantColumn* cc;
+    execplan::ConstantColumn* cc;
     bool bIsNull = false;
     execplan::CalpontSystemCatalog::ColDataType colDataType;
 
@@ -1945,10 +1950,10 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
         if (fFunctionCols[funcColsIdx]->fpConstCol)
         {
-            cc = dynamic_cast<ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
+            cc = dynamic_cast<execplan::ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
         }
 
-        if ((cc && cc->type() == ConstantColumn::NULLDATA)
+        if ((cc && cc->type() == execplan::ConstantColumn::NULLDATA)
                 ||  (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
         {
             if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
@@ -3706,7 +3711,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
             // Create a datum item for sending to UDAF
             mcsv1sdk::ColumnDatum& datum = valsIn[0];
-            datum.dataType = (CalpontSystemCatalog::ColDataType)colDataType;
+            datum.dataType = (execplan::CalpontSystemCatalog::ColDataType)colDataType;
 
             switch (colDataType)
             {

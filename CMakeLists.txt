@@ -24,6 +24,17 @@ ENDIF()
 
 MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 
+OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
+if(NOT USE_CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
+else()
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
+endif()
 # Distinguish between community and non-community builds, with the
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to
@@ -52,6 +63,7 @@ if(SERVER_BUILD_DIR)
 endif()
 
 INCLUDE(ExternalProject)
+INCLUDE(CheckCXXSourceCompiles)
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -65,8 +77,12 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
-find_package(BISON REQUIRED)
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
+FIND_PACKAGE(BISON REQUIRED)
+
+check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
+check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
+
 INCLUDE(columnstore_version)
 
 SET (PACKAGE columnstore)

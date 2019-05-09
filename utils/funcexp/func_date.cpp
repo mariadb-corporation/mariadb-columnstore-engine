@@ -56,8 +56,8 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
 
     string value = "";
 
-    DateTime aDateTime;
-    Time     aTime;
+    dataconvert::DateTime aDateTime;
+    dataconvert::Time     aTime;
 
     switch (type)
     {
@@ -79,7 +79,7 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::TIME:
         {
             int64_t val;
-            aDateTime = static_cast<DateTime>(nowDatetime());
+            aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
             aTime.day = 0;
             aDateTime.hour = 0;

@@ -58,7 +58,7 @@ extern "C"
     const char* invalidParmSizeMessage(uint64_t size, size_t& len)
     {
         static char str[sizeof(InvalidParmSize) + 12] = {0};
-        ostringstream os;
+        std::ostringstream os;
         os << InvalidParmSize << size;
         len = os.str().length();
         strcpy(str, os.str().c_str());
@@ -86,13 +86,13 @@ extern "C"
         uint64_t value = Config::uFromText(valuestr);
 
         THD* thd = current_thd;
-        uint32_t sessionID = CalpontSystemCatalog::idb_tid2sid(thd->thread_id);
+        uint32_t sessionID = execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id);
 
         const char* msg = SetParmsError;
         size_t mlen = Elen;
         bool includeInput = true;
 
-        string pstr(parameter);
+        std::string pstr(parameter);
         boost::algorithm::to_lower(pstr);
 
         if (get_fe_conn_info_ptr() == NULL)
@@ -107,7 +107,7 @@ extern "C"
 
             if (rm->getHjTotalUmMaxMemorySmallSide() >= value)
             {
-                ci->rmParms.push_back(RMParam(sessionID, execplan::PMSMALLSIDEMEMORY, value));
+                ci->rmParms.push_back(execplan::RMParam(sessionID, execplan::PMSMALLSIDEMEMORY, value));
 
                 msg = SetParmsPrelude;
                 mlen = Plen;
@@ -254,8 +254,8 @@ extern "C"
         long long oldTrace = ci->traceFlags;
         ci->traceFlags = (uint32_t)(*((long long*)args->args[0]));
         // keep the vtablemode bit
-        ci->traceFlags |= (oldTrace & CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
-        ci->traceFlags |= (oldTrace & CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH);
+        ci->traceFlags |= (oldTrace & execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
+        ci->traceFlags |= (oldTrace & execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH);
         return oldTrace;
     }
 
@@ -381,8 +381,8 @@ extern "C"
     {
         long long rtn = 0;
         Oam oam;
-        string PrimaryUMModuleName;
-        string localModule;
+        std::string PrimaryUMModuleName;
+        std::string localModule;
         oamModuleInfo_t st;
 
         try
@@ -396,7 +396,7 @@ extern "C"
             if (PrimaryUMModuleName == "unassigned")
                 rtn = 1;
         }
-        catch (runtime_error& e)
+        catch (std::runtime_error& e)
         {
             // It's difficult to return an error message from a numerical UDF
             //string msg = string("ERROR: Problem getting Primary UM Module Name. ") + e.what();
@@ -469,7 +469,7 @@ extern "C"
             set_fe_conn_info_ptr((void*)new cal_connection_info());
 
         cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-        CalpontSystemCatalog::TableName tableName;
+        execplan::CalpontSystemCatalog::TableName tableName;
 
         if ( args->arg_count == 2 )
         {
@@ -484,7 +484,7 @@ extern "C"
                 tableName.schema = thd->db.str;
             else
             {
-                string msg("No schema information provided");
+              std::string msg("No schema information provided");
                 memcpy(result, msg.c_str(), msg.length());
                 *length = msg.length();
                 return result;
@@ -497,7 +497,7 @@ extern "C"
             //cout << "viewtablelock starts a new client " << ci->dmlProc << " for session " << thd->thread_id << endl;
         }
 
-        string lockinfo = ha_calpont_impl_viewtablelock(*ci, tableName);
+        std::string lockinfo = ha_calpont_impl_viewtablelock(*ci, tableName);
 
         memcpy(result, lockinfo.c_str(), lockinfo.length());
         *length = lockinfo.length();
@@ -550,7 +550,7 @@ extern "C"
         }
 
         unsigned long long uLockID = lockID;
-        string lockinfo = ha_calpont_impl_cleartablelock(*ci, uLockID);
+        std::string lockinfo = ha_calpont_impl_cleartablelock(*ci, uLockID);
 
         memcpy(result, lockinfo.c_str(), lockinfo.length());
         *length = lockinfo.length();
@@ -604,7 +604,7 @@ extern "C"
     {
         THD* thd = current_thd;
 
-        CalpontSystemCatalog::TableName tableName;
+        execplan::CalpontSystemCatalog::TableName tableName;
         uint64_t nextVal = 0;
 
         if ( args->arg_count == 2 )
@@ -624,9 +624,9 @@ extern "C"
             }
         }
 
-        boost::shared_ptr<CalpontSystemCatalog> csc =
-            CalpontSystemCatalog::makeCalpontSystemCatalog(
-                CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
+        boost::shared_ptr<execplan::CalpontSystemCatalog> csc =
+            execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(
+                execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
         csc->identity(execplan::CalpontSystemCatalog::FE);
 
         try
@@ -635,7 +635,7 @@ extern "C"
         }
         catch (std::exception&)
         {
-            string msg("No such table found during autincrement");
+          std::string msg("No such table found during autincrement");
             setError(thd, ER_INTERNAL_ERROR, msg);
             return nextVal;
         }
@@ -649,7 +649,7 @@ extern "C"
         //@Bug 3559. Return a message for table without autoincrement column.
         if (nextVal == 0)
         {
-            string msg("Autoincrement does not exist for this table.");
+          std::string msg("Autoincrement does not exist for this table.");
             setError(thd, ER_INTERNAL_ERROR, msg);
             return nextVal;
         }
@@ -705,7 +705,7 @@ extern "C"
                             char* result, unsigned long* length,
                             char* is_null, char* error)
     {
-        const string* msgp;
+        const std::string* msgp;
         int flags = 0;
 
         if (args->arg_count > 0)
@@ -776,7 +776,7 @@ extern "C"
                               char* result, unsigned long* length,
                               char* is_null, char* error)
     {
-        string version(columnstore_version);
+      std::string version(columnstore_version);
         *length = version.size();
         memcpy(result, version.c_str(), *length);
         return result;

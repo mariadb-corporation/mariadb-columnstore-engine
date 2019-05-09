@@ -348,8 +348,8 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
         std::cerr << exc.what() << std::endl;
     }
 
-    ByteStream msg;
-    ByteStream::byte requestID = RUNUPGRADE;
+    messageqcpp::ByteStream msg;
+    messageqcpp::ByteStream::byte requestID = RUNUPGRADE;
 
     msg << requestID;
 
@@ -484,8 +484,8 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
                         if ( (*pt).DeviceName == masterModule )
                         {
                             // set for Master MySQL DB distrubution to slaves
-                            ByteStream msg1;
-                            ByteStream::byte requestID = oam::MASTERDIST;
+                            messageqcpp::ByteStream msg1;
+                            messageqcpp::ByteStream::byte requestID = oam::MASTERDIST;
                             msg1 << requestID;
                             msg1 << password;
                             msg1 << "all";	// dist to all slave modules
@@ -499,7 +499,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
                             }
 
                             // set for master repl request
-                            ByteStream msg;
+                            messageqcpp::ByteStream msg;
                             requestID = oam::MASTERREP;
                             msg << requestID;
 
@@ -527,8 +527,8 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
                                 continue;
                             }
 
-                            ByteStream msg;
-                            ByteStream::byte requestID = oam::SLAVEREP;
+                            messageqcpp::ByteStream msg;
+                            messageqcpp::ByteStream::byte requestID = oam::SLAVEREP;
                             msg << requestID;
 
                             if ( masterLogFile == oam::UnassignedName ||
@@ -574,7 +574,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 * purpose:	Sends a Msg to ProcMon
 *
 ******************************************************************************************/
-int sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeout )
+int sendMsgProcMon( std::string module, messageqcpp::ByteStream msg, int requestID, int timeout )
 {
     string msgPort = module + "_ProcessMonitor";
     int returnStatus = API_FAILURE;
@@ -602,16 +602,16 @@ int sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeo
 
     try
     {
-        MessageQueueClient mqRequest(msgPort);
+        messageqcpp::MessageQueueClient mqRequest(msgPort);
         mqRequest.write(msg);
 
         if ( timeout > 0 )
         {
             // wait for response
-            ByteStream::byte returnACK;
-            ByteStream::byte returnRequestID;
-            ByteStream::byte requestStatus;
-            ByteStream receivedMSG;
+            messageqcpp::ByteStream::byte returnACK;
+            messageqcpp::ByteStream::byte returnRequestID;
+            messageqcpp::ByteStream::byte requestStatus;
+            messageqcpp::ByteStream receivedMSG;
 
             struct timespec ts = { timeout, 0 };
 

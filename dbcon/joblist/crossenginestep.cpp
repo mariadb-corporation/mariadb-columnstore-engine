@@ -63,9 +63,9 @@ namespace joblist
 {
 
 CrossEngineStep::CrossEngineStep(
-    const string& schema,
-    const string& table,
-    const string& alias,
+    const std::string& schema,
+    const std::string& table,
+    const std::string& alias,
     const JobInfo& jobInfo) :
     BatchPrimitive(jobInfo),
     fRowsRetrieved(0),
@@ -113,7 +113,7 @@ bool CrossEngineStep::deliverStringTableRowGroup() const
 }
 
 
-void CrossEngineStep::addFcnJoinExp(const vector<execplan::SRCP>& fe)
+void CrossEngineStep::addFcnJoinExp(const std::vector<execplan::SRCP>& fe)
 {
     fFeFcnJoin = fe;
 }
@@ -131,7 +131,7 @@ void CrossEngineStep::setFE1Input(const rowgroup::RowGroup& rg)
 }
 
 
-void CrossEngineStep::setFcnExpGroup3(const vector<execplan::SRCP>& fe)
+void CrossEngineStep::setFcnExpGroup3(const std::vector<execplan::SRCP>& fe)
 {
     fFeSelects = fe;
 }
@@ -336,7 +336,7 @@ int64_t CrossEngineStep::convertValueNum(
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::CLOB:
         {
-            string i = boost::any_cast<string>(anyVal);
+            std::string i = boost::any_cast<std::string>(anyVal);
             // bug 1932, pad nulls up to the size of v
             i.resize(sizeof(rv), 0);
             rv = *((uint64_t*) i.data());
@@ -435,7 +435,7 @@ void CrossEngineStep::execute()
         if (ret != 0)
             mysql->handleMySqlError(mysql->getError().c_str(), ret);
 
-        string query(makeQuery());
+        std::string query(makeQuery());
         fLogger->logMessage(logging::LOG_TYPE_INFO, "QUERY to foreign engine: " + query);
 
         if (traceOn())
@@ -651,7 +651,7 @@ void CrossEngineStep::setBPP(JobStep* jobStep)
     pDictionaryStep* pds = NULL;
     pDictionaryScan* pdss = NULL;
     FilterStep* fs = NULL;
-    string bop = " AND ";
+    std::string bop = " AND ";
 
     if (pcs != 0)
     {
@@ -690,12 +690,12 @@ void CrossEngineStep::setBPP(JobStep* jobStep)
     }
 }
 
-void CrossEngineStep::addFilterStr(const vector<const Filter*>& f, const string& bop)
+void CrossEngineStep::addFilterStr(const std::vector<const Filter*>& f, const std::string& bop)
 {
     if (f.size() == 0)
         return;
 
-    string filterStr;
+    std::string filterStr;
 
     for (uint64_t i = 0; i < f.size(); i++)
     {
@@ -731,7 +731,7 @@ void CrossEngineStep::setProjectBPP(JobStep* jobStep1, JobStep*)
 }
 
 
-string CrossEngineStep::makeQuery()
+std::string CrossEngineStep::makeQuery()
 {
     ostringstream oss;
     oss << fSelectClause << " FROM " << fTable;
@@ -742,7 +742,7 @@ string CrossEngineStep::makeQuery()
     if (!fWhereClause.empty())
         oss << fWhereClause;
 
-    // the string must consist of a single SQL statement without a terminating semicolon ; or \g.
+    // the std::string must consist of a single SQL statement without a terminating semicolon ; or \g.
     // oss << ";";
     return oss.str();
 }
@@ -832,7 +832,7 @@ uint32_t CrossEngineStep::nextBand(messageqcpp::ByteStream& bs)
 }
 
 
-const string CrossEngineStep::toString() const
+const std::string CrossEngineStep::toString() const
 {
     ostringstream oss;
     oss << "CrossEngineStep ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;

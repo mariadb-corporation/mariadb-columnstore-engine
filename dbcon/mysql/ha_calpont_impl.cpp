@@ -3295,7 +3295,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 
             if (get_local_query(thd))
             {
-                OamCache* oamcache = OamCache::makeOamCache();
+                const auto oamcache = oam::OamCache::makeOamCache();
                 int localModuleId = oamcache->getLocalPMId();
 
                 if (localModuleId == 0)

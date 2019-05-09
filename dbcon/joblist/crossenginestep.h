@@ -30,8 +30,6 @@
 #include "primitivestep.h"
 #include "threadnaming.h"
 
-using namespace std;
-
 // forward reference
 namespace utils
 {
@@ -60,9 +58,9 @@ public:
     /** @brief CrossEngineStep constructor
      */
     CrossEngineStep(
-        const string& schema,
-        const string& table,
-        const string& alias,
+        const std::string& schema,
+        const std::string& table,
+        const std::string& alias,
         const JobInfo& jobInfo);
 
     /** @brief CrossEngineStep destructor
@@ -124,15 +122,15 @@ public:
     {
         return fRowsReturned;
     }
-    const string& schemaName() const
+    const std::string& schemaName() const
     {
         return fSchema;
     }
-    const string& tableName() const
+    const std::string& tableName() const
     {
         return fTable;
     }
-    const string& tableAlias() const
+    const std::string& tableAlias() const
     {
         return fAlias;
     }
@@ -149,10 +147,10 @@ public:
     bool  deliverStringTableRowGroup() const;
     uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-    void addFcnJoinExp(const vector<execplan::SRCP>&);
+    void addFcnJoinExp(const std::vector<execplan::SRCP>&);
     void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>&);
     void setFE1Input(const rowgroup::RowGroup&);
-    void setFcnExpGroup3(const vector<execplan::SRCP>&);
+    void setFcnExpGroup3(const std::vector<execplan::SRCP>&);
     void setFE23Output(const rowgroup::RowGroup&);
 
     void addFilter(JobStep* jobStep);

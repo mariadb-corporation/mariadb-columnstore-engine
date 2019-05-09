@@ -512,13 +512,13 @@ bool WEBrmUpdater::prepareRowsInsertedInfo(std::string Entry,
 
 bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry,
         int& ColNum,
-        CalpontSystemCatalog::ColDataType& ColType,
+        execplan::CalpontSystemCatalog::ColDataType& ColType,
         std::string& ColName,
         int& OorValues)
 {
     bool aFound = false;
-    boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-        CalpontSystemCatalog::makeCalpontSystemCatalog();
+    boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog();
 
     //DATA: 3 1
     if ((!Entry.empty()) && (Entry.at(0) == 'D'))
@@ -553,7 +553,7 @@ bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry,
 
         if (pTok)
         {
-            ColType = (CalpontSystemCatalog::ColDataType)atoi(pTok);
+            ColType = (execplan::CalpontSystemCatalog::ColDataType)atoi(pTok);
         }
         else
         {
@@ -566,7 +566,7 @@ bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry,
         if (pTok)
         {
             uint64_t columnOid = strtol(pTok, NULL, 10);
-            CalpontSystemCatalog::TableColName colname = systemCatalogPtr->colName(columnOid);
+            execplan::CalpontSystemCatalog::TableColName colname = systemCatalogPtr->colName(columnOid);
             ColName = colname.schema + "." + colname.table + "." + colname.column;
         }
         else

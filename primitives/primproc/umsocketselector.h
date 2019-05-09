@@ -52,8 +52,6 @@ typedef uint32_t in_addr_t;
 
 #include "iosocket.h"
 
-using namespace messageqcpp;
-
 namespace primitiveprocessor
 {
 class UmModuleIPs;
@@ -61,7 +59,7 @@ class UmIPSocketConns;
 
 typedef boost::shared_ptr<UmModuleIPs>     SP_UM_MODIPS;
 typedef boost::shared_ptr<UmIPSocketConns> SP_UM_IPCONNS;
-typedef boost::shared_ptr<IOSocket>		   SP_UM_IOSOCK;
+typedef boost::shared_ptr<messageqcpp::IOSocket>		   SP_UM_IOSOCK;
 typedef boost::shared_ptr<boost::mutex>	   SP_UM_MUTEX;
 
 //------------------------------------------------------------------------------
@@ -116,7 +114,7 @@ public:
      *
      * @param ios (in) socket/port connection to be removed.
      */
-    void delConnection( const IOSocket& ios );
+    void delConnection( const messageqcpp::IOSocket& ios );
 
     /** @brief Get the next output IOSocket to use for the specified ios.
      *
@@ -125,7 +123,7 @@ public:
      * @param writeLock (out) mutex to use when writing to outIos.
      * @return boolean indicating if operation was successful.
      */
-    bool nextIOSocket( const IOSocket& ios, SP_UM_IOSOCK& outIos,
+    bool nextIOSocket( const messageqcpp::IOSocket& ios, SP_UM_IOSOCK& outIos,
                        SP_UM_MUTEX& writeLock );
 
     /** @brief toString method used in logging, debugging, etc.
@@ -217,7 +215,7 @@ public:
      *
      * @param ioSock (in) socket/port to delete from the connection list.
      */
-    void delSocketConn ( const IOSocket& ioSock );
+    void delSocketConn ( const messageqcpp::IOSocket& ioSock );
 
     /** @brief Get the "next" available socket/port for this UM module.
      *
@@ -311,7 +309,7 @@ public:
      *
      * @param ioSock (in) socket/port to delete from the connection list.
      */
-    void delSocketConn ( const IOSocket& ioSock );
+    void delSocketConn ( const messageqcpp::IOSocket& ioSock );
 
     /** @brief Get the "next" available socket/port for this IP address.
      *

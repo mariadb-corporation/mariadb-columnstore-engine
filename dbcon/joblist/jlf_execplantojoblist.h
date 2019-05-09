@@ -30,7 +30,7 @@
 #include "calpontexecutionplan.h"
 #include "calpontselectexecutionplan.h"
 #include "calpontsystemcatalog.h"
-using namespace execplan;
+
 
 #include "jlf_common.h"
 
@@ -50,7 +50,7 @@ public:
      * @param ParseTree (in) is CEP to be translated to a joblist
      * @param JobInfo&  (in/out) is the JobInfo reference that is loaded
      */
-    static void walkTree(ParseTree* n, JobInfo& jobInfo);
+    static void walkTree(execplan::ParseTree* n, JobInfo& jobInfo);
 
     /** @brief This function add new job steps to the job step vector in JobInfo
      *
