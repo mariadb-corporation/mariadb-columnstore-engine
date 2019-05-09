@@ -413,7 +413,6 @@ int PackageHandler::releaseTableAccess()
 	boost::lock_guard<boost::mutex> lock(tableOidMutex);
 	if (fTableOid == 0 || (it=tableOidMap.find(fTableOid)) == tableOidMap.end())
 	{
-		// This will happen for DML_COMMAND, as we never got the tableoid or called synchTableAccess
 		return 2;  // For now, return codes are not used
 	}
 	PackageHandler::tableAccessQueue_t& tableOidQueue = it->second;
@@ -433,7 +432,8 @@ int PackageHandler::releaseTableAccess()
 	}
 	else
 	{
-		tableOidQueue.pop();  // Get off the waiting list.
+        if (!tableOidQueue.empty())
+            tableOidQueue.pop();  // Get off the waiting list.
 		if (tableOidQueue.empty())
 		{
 			// remove the queue from the map.
@@ -447,7 +447,7 @@ int PackageHandler::releaseTableAccess()
 
 int PackageHandler::forceReleaseTableAccess()
 {
-	// By removing the tcnid from the queue, the logic after the wait in
+	// By removing the txnid from the queue, the logic after the wait in
 	// synchTableAccess() will release the thread and clean up if needed.
 	std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
 	boost::lock_guard<boost::mutex> lock(tableOidMutex);
@@ -481,7 +481,8 @@ void PackageHandler::run()
 	std::string stmt;
 	unsigned DMLLoggingId = 21;
 	oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-
+    SynchTable synchTable;
+	
 	try
 	{
 		switch( fPackageType )
@@ -508,7 +509,7 @@ void PackageHandler::run()
 							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
 							fTableOid = roPair.objnum;
 						}
-						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+                        synchTable.setPackage(this);  // Blocks if another DML thread is using this fTableOid
 					}
 #endif
 					QueryTeleStats qts;
@@ -870,7 +871,7 @@ void PackageHandler::run()
 							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
 							fTableOid = roPair.objnum;
 						}
-						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+                        synchTable.setPackage(this);  // Blocks if another DML thread is using this fTableOid
 					}
 #endif
                     updatePkg->set_TxnID(fTxnid);
@@ -926,7 +927,7 @@ void PackageHandler::run()
 							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
 							fTableOid = roPair.objnum;
 						}
-						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+                        synchTable.setPackage(this);  // Blocks if another DML thread is using this fTableOid
 					}
 #endif
 					deletePkg->set_TxnID(fTxnid);
@@ -989,13 +990,6 @@ void PackageHandler::run()
 				}
 				break;
 		}
-#ifdef MCOL_140
-		if (fConcurrentSupport) 
-		{
-			// MCOL-140 We're done. release the next waiting txn for this fTableOid
-			releaseTableAccess();
-		}
-#endif
 		//Log errors
 		if (   (result.result != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR) 
 			&& (result.result != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) 
@@ -1017,13 +1011,6 @@ void PackageHandler::run()
 	}
     catch(std::exception& e)
     {
-#ifdef MCOL_140
-		if (fConcurrentSupport) 
-		{
-			// MCOL-140 We're done. release the next waiting txn for this fTableOid
-			releaseTableAccess();
-		}
-#endif
         cout << "dmlprocessor.cpp PackageHandler::run() package type(" 
             << fPackageType << ") exception: " << e.what() << endl;
         logging::LoggingID lid(21);
@@ -1040,13 +1027,6 @@ void PackageHandler::run()
     }
 	catch(...)
 	{
-#ifdef MCOL_140
-		if (fConcurrentSupport) 
-		{
-			// MCOL-140 We're done. release the next waiting txn for this fTableOid
-			releaseTableAccess();
-		}
-#endif
         logging::LoggingID lid(21);
         logging::MessageLog ml(lid);
         logging::Message::Args args;

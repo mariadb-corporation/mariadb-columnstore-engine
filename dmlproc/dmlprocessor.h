@@ -120,15 +120,16 @@ private:
 	DMLServer(const DMLServer& rhs);
 	DMLServer& operator=(const DMLServer& rhs);
 
-    /** @brief the thread pool for processing dml packages
-      */
-    threadpool::ThreadPool fDmlPackagepool;
-
     int fPackageMaxThreads;    /** @brief max number of threads to process dml packages */
     int fPackageWorkQueueSize; /** @brief max number of packages waiting in the work queue */
 
     boost::scoped_ptr<messageqcpp::MessageQueueServer> fMqServer;
 	BRM::DBRM* fDbrm;
+
+public:
+    /** @brief the thread pool for processing dml packages
+     */
+    static threadpool::ThreadPool fDmlPackagepool;
 };
 
 /** @brief Thread to process a single dml package.
@@ -184,6 +185,35 @@ private:
     static boost::mutex tableOidMutex;
 public:
 	static int clearTableAccess();
+
+    // MCOL-3296 Add a class to call synchTableAccess on creation and
+    // releaseTableAccess on destuction for exception safeness.
+    class SynchTable
+    {
+    public:
+        SynchTable() : fphp(NULL) {};
+        SynchTable(PackageHandler* php)
+        {
+            setPackage(php);
+        }
+        ~SynchTable()
+        {
+            if (fphp)
+                fphp->releaseTableAccess();
+        }
+        bool setPackage(PackageHandler* php)
+        {   
+            if (fphp)
+                fphp->releaseTableAccess();
+            fphp = php;
+            if (fphp)
+                fphp->synchTableAccess();
+            return true;
+        }
+    private:
+        PackageHandler* fphp;
+    };
+
 };
 
 /** @brief processes dml packages as they arrive
