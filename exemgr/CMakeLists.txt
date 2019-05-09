@@ -12,8 +12,6 @@ target_link_libraries(ExeMgr ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIB
 
 target_include_directories(ExeMgr PRIVATE ${Boost_INCLUDE_DIRS})
 
-target_compile_features(ExeMgr PRIVATE )
-
 install(TARGETS ExeMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
