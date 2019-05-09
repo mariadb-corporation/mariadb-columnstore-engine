@@ -966,12 +966,15 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
         char buf = '\0';
         (void)::recv(socketParms().sd(), &buf, 1, 0);
 #else
-#if defined(__GNUC__) && __GNUC__ >= 5
+#if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
         char buf = '\0';
-        ssize_t bytes = ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
+        ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
 #pragma GCC diagnostic pop
+#else
+        char buf = '\0';
+        ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
 #endif // pragma
 #endif
         return;

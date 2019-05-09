@@ -3348,15 +3348,14 @@ int processCommand(string* arguments)
 
             for (i = alarmList.begin(); i != alarmList.end(); ++i)
             {
-                switch (i->second.getState())
+                // SET = 1, CLEAR = 0
+                if (i->second.getState() == true)
                 {
-                    case SET:
-                        cout << "SET" << endl;
-                        break;
-
-                    case CLEAR:
-                        cout << "CLEAR" << endl;
-                        break;
+                    cout << "SET" << endl;
+                }
+                else
+                {
+                    cout << "CLEAR" << endl;
                 }
 
                 cout << "AlarmID           = " << i->second.getAlarmID() << endl;
