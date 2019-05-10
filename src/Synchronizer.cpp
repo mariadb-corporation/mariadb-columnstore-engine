@@ -425,8 +425,9 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     {
         // try to delete it in cloud storage... unlikely it is there in the first place, and if it is
         // this probably won't work
+        int l_errno = errno;
         cs->deleteObject(newKey);    
-        throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(errno, buf, 80));
+        throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(l_errno, buf, 80));
     }
     
     // if the object was cached...
