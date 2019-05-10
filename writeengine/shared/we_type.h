@@ -487,7 +487,7 @@ struct CacheControl                     /** @brief Cache control structure */
     int            checkInterval;       /** @brief A check point interval in seconds */
     CacheControl()
     {
-        totalBlock = pctFree = checkInterval;    /** @brief constructor */
+        totalBlock = pctFree = checkInterval = 0;    /** @brief constructor */
     }
 };
 

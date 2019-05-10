@@ -58,11 +58,11 @@ int setUp()
 {
 #ifndef _MSC_VER
 	string cmd = "/bin/rm -f " + logFile + " >/dev/null 2>&1";
-    (void)system(cmd.c_str());
+    int rc = system(cmd.c_str());
     cmd = "/bin/touch -f " + logFile + " >/dev/null 2>&1";
-    (void)system(cmd.c_str());
+    rc = system(cmd.c_str());
 #endif
-    return 0;
+    return rc;
 }
 
 int checkNotThere(WriteEngine::FID fid)
@@ -70,12 +70,6 @@ int checkNotThere(WriteEngine::FID fid)
     WriteEngine::FileOp fileOp;
 
     return (fileOp.existsOIDDir(fid) ? -1 : 0);
-}
-
-void tearDown()
-{
-	string file = tmpDir + "/oidbitmap";
-    unlink(file.c_str());
 }
 
 void usage()
@@ -130,6 +124,7 @@ int main(int argc, char* argv[])
     std::string schema("tpch");
     Oam oam;
     bool fFlg = false;
+    int rc = 0;
 
     opterr = 0;
 
@@ -193,7 +188,10 @@ int main(int argc, char* argv[])
 
     if ( buildOption == SYSCATALOG_ONLY )
     {
-        setUp();
+        if ( setUp() )
+        {
+            cerr << "setUp() call error " << endl;
+        }
 
         bool canWrite = true;
 
@@ -209,9 +207,13 @@ int main(int argc, char* argv[])
                              "' > " + logFile;
 
                 if (canWrite)
-                    (void)system(cmd.c_str());
+                {
+                    rc = system(cmd.c_str());
+                }
                 else
+                {
                     cerr << cmd << endl;
+                }
 
                 errorHandler(sysCatalogErr,
                              "Build system catalog",
@@ -243,7 +245,7 @@ int main(int argc, char* argv[])
                 string cmd(string("echo 'FAILED: ") + ex.what() + "' > " + logFile);
 
                 if (canWrite)
-                    (void)system(cmd.c_str());
+                    rc = system(cmd.c_str());
                 else
                     cerr << cmd << endl;
 
@@ -255,7 +257,7 @@ int main(int argc, char* argv[])
                 string cmd = "echo 'FAILED:  HDFS checking.' > " + logFile;
 
                 if (canWrite)
-                    (void)system(cmd.c_str());
+                    rc = system(cmd.c_str());
                 else
                     cerr << cmd << endl;
 
@@ -274,7 +276,7 @@ int main(int argc, char* argv[])
             std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
-                (void)system(cmd.c_str());
+                rc = system(cmd.c_str());
             else
 #ifdef _MSC_VER
                 (void)0;
@@ -287,11 +289,9 @@ int main(int argc, char* argv[])
 
             if (canWrite)
             {
-                int err;
+                rc = system(cmd.c_str());
 
-                err = system(cmd.c_str());
-
-                if (err != 0)
+                if (rc != 0)
                 {
                     ostringstream os;
                     os << "Warning: running " << cmd << " failed.  This is usually non-fatal.";
@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
             string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
-                (void)system(cmd.c_str());
+                rc = system(cmd.c_str());
             else
                 cerr << cmd << endl;
 
@@ -320,7 +320,7 @@ int main(int argc, char* argv[])
             string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
-                (void)system(cmd.c_str());
+                rc = system(cmd.c_str());
             else
                 cerr << cmd << endl;
 

@@ -8,6 +8,8 @@ set(postConfigure_SRCS postConfigure.cpp helpers.cpp)
 
 add_executable(postConfigure ${postConfigure_SRCS})
 
+target_compile_options(postConfigure PRIVATE -Wno-unused-result)
+
 target_link_libraries(postConfigure ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
@@ -18,6 +20,8 @@ install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 set(installer_SRCS installer.cpp helpers.cpp)
 
 add_executable(installer ${installer_SRCS})
+
+target_compile_options(installer PRIVATE -Wno-unused-result)
 
 target_link_libraries(installer ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
@@ -51,6 +55,8 @@ install(TARGETS getMySQLpw DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 set(mycnfUpgrade_SRCS mycnfUpgrade.cpp)
 
 add_executable(mycnfUpgrade ${mycnfUpgrade_SRCS})
+
+target_compile_options(mycnfUpgrade PRIVATE -Wno-unused-result)
 
 target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 

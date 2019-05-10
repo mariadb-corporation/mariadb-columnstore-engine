@@ -803,7 +803,8 @@ int Dctnry::insertDctnry(const char* buf,
     while (startPos < totalRow)
     {
         found = false;
-        memset(&curSig, 0, sizeof(curSig));
+        void *curSigPtr = static_cast<void*>(&curSig);
+        memset(curSigPtr, 0, sizeof(curSig));
         curSig.size = pos[startPos][col].offset;
 
         // Strip trailing null bytes '\0' (by adjusting curSig.size) if import-
@@ -1317,7 +1318,8 @@ void  Dctnry::preLoadStringCache( const DataBlock& fileBlock )
 
     int op = 1; // ordinal position of the string within the block
     Signature aSig;
-    memset( &aSig, 0, sizeof(Signature));
+    void *aSigPtr = static_cast<void*>(&aSig);
+    memset(aSigPtr, 0, sizeof(aSig));
 
     while ((offBeg != DCTNRY_END_HEADER) &&
             (op     <= MAX_STRING_CACHE_SIZE))
@@ -1361,8 +1363,10 @@ void  Dctnry::preLoadStringCache( const DataBlock& fileBlock )
  ******************************************************************************/
 void  Dctnry::addToStringCache( const Signature& newSig )
 {
+    // We better add constructors that sets everything to 0;
     Signature asig;
-    memset(&asig, 0, sizeof(Signature));
+    void *aSigPtr = static_cast<void*>(&asig);
+    memset(aSigPtr, 0, sizeof(asig));
     asig.signature = new unsigned char[newSig.size];
     memcpy(asig.signature, newSig.signature, newSig.size );
     asig.size      = newSig.size;

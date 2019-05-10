@@ -93,7 +93,7 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row,
 
     for ( int i = 0 ; i < count ; i ++ )
     {
-        if (strcat(result, str.c_str()) == NULL)
+        if (strcat(result, str.c_str()) == NULL) //questionable check
             return "";
     }
 

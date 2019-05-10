@@ -1029,6 +1029,10 @@ inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
     {
         val = valIn.cast<double>();
     }
+    else
+    {
+        throw runtime_error("mcsv1_UDAF::convertAnyTo(): input param has unrecognized type");
+    }
     return val;
 }
 

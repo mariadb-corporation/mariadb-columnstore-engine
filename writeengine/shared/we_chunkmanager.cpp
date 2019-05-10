@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -64,6 +65,8 @@ namespace WriteEngine
 
 extern int NUM_BLOCKS_PER_INITIAL_EXTENT; // defined in we_dctnry.cpp
 extern WErrorCodes ec;                    // defined in we_log.cpp
+
+const int COMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::maxCompressedSize(UNCOMPRESSED_CHUNK_SIZE) + 64 + 3 + 8 * 1024;
 
 //------------------------------------------------------------------------------
 // Search for the specified chunk in fChunkList.
@@ -1923,10 +1926,22 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
         struct tm ltm;
         localtime_r(reinterpret_cast<time_t*>(&tv.tv_sec), &ltm);
         char tmText[24];
+    // this snprintf call causes a compiler warning b/c buffer size is less
+    // then maximum string size.
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
         snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                  ltm.tm_year + 1900, ltm.tm_mon + 1,
                  ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                  ltm.tm_sec, tv.tv_usec);
+#pragma GCC diagnostic pop
+#else
+       snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
+                 ltm.tm_year + 1900, ltm.tm_mon + 1,
+                 ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
+                 ltm.tm_sec, tv.tv_usec);
+#endif
         string dbgFileName(rlcFileName + tmText);
 
         ostringstream oss;
@@ -2106,10 +2121,22 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
             struct tm ltm;
             localtime_r(reinterpret_cast<time_t*>(&tv.tv_sec), &ltm);
             char tmText[24];
+    // this snprintf call causes a compiler warning b/c buffer size is less
+    // then maximum string size.
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
             snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
                      ltm.tm_year + 1900, ltm.tm_mon + 1,
                      ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
                      ltm.tm_sec, tv.tv_usec);
+#pragma GCC diagnostic pop
+#else
+           snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
+                     ltm.tm_year + 1900, ltm.tm_mon + 1,
+                     ltm.tm_mday, ltm.tm_hour, ltm.tm_min,
+                     ltm.tm_sec, tv.tv_usec);
+#endif
             string dbgFileName(rlcFileName + tmText);
 
             ostringstream oss;

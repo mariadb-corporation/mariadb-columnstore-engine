@@ -483,7 +483,8 @@ void pDictionaryScan::sendAPrimitiveMessage(
 )
 {
     DictTokenByScanRequestHeader hdr;
-    memset(&hdr, 0, sizeof(hdr));
+    void *hdrp = static_cast<void*>(&hdr);
+    memset(hdrp, 0, sizeof(hdr));
 
     hdr.ism.Interleave    = pm;
     hdr.ism.Flags         = planFlagsToPrimFlags(fTraceFlags);
@@ -913,7 +914,8 @@ void pDictionaryScan::serializeEqualityFilter()
     uint32_t i;
     vector<string> empty;
 
-    memset(&ism, 0, sizeof(ISMPacketHeader));
+    void *ismp = static_cast<void*>(&ism);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
     ism.Command  = DICT_CREATE_EQUALITY_FILTER;
     msg.load((uint8_t*) &ism, sizeof(ISMPacketHeader));
     msg << uniqueID;
@@ -954,7 +956,8 @@ void pDictionaryScan::destroyEqualityFilter()
     ByteStream msg;
     ISMPacketHeader ism;
 
-    memset(&ism, 0, sizeof(ISMPacketHeader));
+    void *ismp = static_cast<void*>(&ism);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
     ism.Command  = DICT_DESTROY_EQUALITY_FILTER;
     msg.load((uint8_t*) &ism, sizeof(ISMPacketHeader));
     msg << uniqueID;

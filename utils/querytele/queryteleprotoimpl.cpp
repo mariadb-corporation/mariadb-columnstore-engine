@@ -80,6 +80,7 @@ struct QStats
 
 QStats fQStats;
 
+#ifdef QUERY_TELE_DEBUG
 string get_trace_file()
 {
     ostringstream oss;
@@ -125,7 +126,9 @@ void log_query(const querytele::QueryTele& qtdata)
     trace << endl;
     trace.close();
 }
+#endif
 
+#ifdef QUERY_TELE_DEBUG
 const string st2str(enum querytele::StepType::type t)
 {
     switch (t)
@@ -172,7 +175,9 @@ const string st2str(enum querytele::StepType::type t)
 
     return "INV";
 }
+#endif
 
+#ifdef QUERY_TELE_DEBUG
 void log_step(const querytele::StepTele& stdata)
 {
     ofstream trace(get_trace_file().c_str(), ios::out | ios::app);
@@ -207,6 +212,7 @@ void log_step(const querytele::StepTele& stdata)
     trace << endl;
     trace.close();
 }
+#endif
 
 void TeleConsumer()
 {

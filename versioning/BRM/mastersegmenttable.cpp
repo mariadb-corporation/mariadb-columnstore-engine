@@ -189,7 +189,8 @@ void MasterSegmentTable::makeMSTSegment()
 
 void MasterSegmentTable::initMSTData()
 {
-    memset(fShmDescriptors, 0, MSTshmsize);
+    void *dp = static_cast<void*>(&fShmDescriptors);
+    memset(dp, 0, MSTshmsize);
 }
 
 MSTEntry* MasterSegmentTable::getTable_read(int num, bool block) const

@@ -151,7 +151,7 @@ HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(const char* fname, const char* mode, unsi
 
 // This constructor is for use by HdfsRdwrMemBuffer to create a file buffer when we
 // run out of memory.
-HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) throw (std::exception) :
+HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) :
     IDBDataFile(pMemBuffer->name().c_str()),
     m_buffer(NULL),
     m_dirty(false)

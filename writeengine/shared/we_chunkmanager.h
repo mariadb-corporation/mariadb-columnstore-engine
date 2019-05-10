@@ -68,7 +68,6 @@ const int UNCOMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::UNCOMPRESSED
 const int COMPRESSED_FILE_HEADER_UNIT = compress::IDBCompressInterface::HDR_BUF_LEN;
 
 // assume UNCOMPRESSED_CHUNK_SIZE > 0xBFFF (49151), 8 * 1024 bytes padding
-const int COMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::maxCompressedSize(UNCOMPRESSED_CHUNK_SIZE) + 64 + 3 + 8 * 1024;
 
 const int BLOCKS_IN_CHUNK = UNCOMPRESSED_CHUNK_SIZE / BYTE_PER_BLOCK;
 const int MAXOFFSET_PER_CHUNK = 511 * BYTE_PER_BLOCK;
