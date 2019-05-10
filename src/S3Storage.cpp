@@ -304,11 +304,11 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
         if (s3err && retryable_error(s3err))
         {
             if (s3err == MS3_ERR_SERVER)
-                logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, key = %s."
-                    "  Retrying...", ms3_server_error(creds), bucket.c_str(), key.c_str());
+                logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
+                    "destkey = %s.  Retrying...", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             else
-                logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, key = %s.  Retrying...",
-                    s3err_msgs[s3err], bucket.c_str(), key.c_str());
+                logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
+                    " destkey = %s.  Retrying...", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             sleep(5);
         }
     } while (s3err && retryable_error(s3err));
@@ -316,11 +316,11 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
     if (s3err) 
     {
         if (s3err == MS3_ERR_SERVER)
-            logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, key = %s.",
-                ms3_server_error(creds), bucket.c_str(), key.c_str());
+            logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
+                "destkey = %s.", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         else
-            logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, key = %s.", 
-                s3err_msgs[s3err], bucket.c_str(), key.c_str());
+            logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
+                "destkey = %s/", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         errno = s3err_to_errno[s3err];
         return -1;
     }
