@@ -171,12 +171,12 @@ private:
     // Used to serialize operations because the VSS can't handle inserts
     // or updates on the same block.
     // When an Insert, Update or Delete command arrives, we look here
-    // for the table oid. If found, wait until it is no onger here.
+    // for the table oid. If found, wait until it is no longer here.
     // If this transactionID (SCN) is < the transactionID in the table, don't delay
     // and hope for the best, as we're already out of order.
     // When the VSS is engineered to handle transactions out of order, all MCOL-140 
     // code is to be removed.
-	int synchTableAccess();
+	int synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage);
 	int releaseTableAccess();
 	int forceReleaseTableAccess();
 	typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
@@ -192,22 +192,22 @@ public:
     {
     public:
         SynchTable() : fphp(NULL) {};
-        SynchTable(PackageHandler* php)
+        SynchTable(PackageHandler* php, dmlpackage::CalpontDMLPackage* dmlPackage)
         {
-            setPackage(php);
+            setPackage(php, dmlPackage);
         }
         ~SynchTable()
         {
             if (fphp)
                 fphp->releaseTableAccess();
         }
-        bool setPackage(PackageHandler* php)
+        bool setPackage(PackageHandler* php, dmlpackage::CalpontDMLPackage* dmlPackage)
         {   
             if (fphp)
                 fphp->releaseTableAccess();
             fphp = php;
             if (fphp)
-                fphp->synchTableAccess();
+                fphp->synchTableAccess(dmlPackage);
             return true;
         }
     private:
