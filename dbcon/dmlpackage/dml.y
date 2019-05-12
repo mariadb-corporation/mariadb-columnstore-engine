@@ -566,17 +566,11 @@ assignment_commalist:
 assignment:
 		column COMPARISON scalar_exp
 		{
-		   $$ = new ColumnAssignment();
-		   $$->fColumn = $1; 
-		   $$->fOperator = $2;
-		   $$->fScalarExpression = $3;
+		   $$ = new ColumnAssignment($1, $2, $3);
 		}
 	|	column COMPARISON NULLX
 		{
-		   $$ = new ColumnAssignment();
-		   $$->fColumn = $1;
-		   $$->fOperator = $2;
-		   $$->fScalarExpression = $3;
+		   $$ = new ColumnAssignment($1, $2, $3);
 		}
 	;
 

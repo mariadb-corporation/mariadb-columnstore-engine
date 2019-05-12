@@ -928,10 +928,7 @@ uint32_t doUpdateDelete(THD *thd)
             else
                 schemaName = string(item->db_name);
 
-            columnAssignmentPtr = new ColumnAssignment();
-            columnAssignmentPtr->fColumn = string(item->name);
-            columnAssignmentPtr->fOperator = "=";
-            columnAssignmentPtr->fFuncScale = 0;
+            columnAssignmentPtr = new ColumnAssignment(item->name, "=", "");
             Item *value= value_it++;
             if (value->type() ==  Item::STRING_ITEM)
             {
@@ -1044,8 +1041,9 @@ uint32_t doUpdateDelete(THD *thd)
             else if ( value->type() ==  Item::NULL_ITEM )
             {
 //                dmlStmt += "NULL";
-                columnAssignmentPtr->fScalarExpression = "NULL";
+                columnAssignmentPtr->fScalarExpression = "";
                 columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr->fIsNull = true;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {

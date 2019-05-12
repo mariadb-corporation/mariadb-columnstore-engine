@@ -397,6 +397,14 @@ public:
 class ColumnAssignment
 {
 public:
+    explicit ColumnAssignment(
+        std::string const& column,
+        std::string const& op = "=",
+        std::string const& expr = "") :
+        fColumn(column), fOperator(op), fScalarExpression(expr),
+        fFromCol(false), fFuncScale(0), fIsNull(false)
+        {};
+
     /** @brief dump to stdout
      */
     std::ostream& put(std::ostream &os) const;
@@ -409,8 +417,9 @@ public:
     std::string fColumn;
     std::string fOperator;
     std::string fScalarExpression;
-	bool fFromCol;
-	uint32_t fFuncScale;
+    bool fFromCol;
+    uint32_t fFuncScale;
+    bool fIsNull;
 };
 
 /** @brief Stores a value list or a query specification
