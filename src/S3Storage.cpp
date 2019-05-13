@@ -320,7 +320,7 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
                 "destkey = %s.", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         else
             logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
-                "destkey = %s/", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
+                "destkey = %s.", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         errno = s3err_to_errno[s3err];
         return -1;
     }
