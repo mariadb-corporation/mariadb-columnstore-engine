@@ -51,11 +51,13 @@ class Synchronizer : public boost::noncopyable
         struct PendingOps
         {
             PendingOps(int flags);
+            ~PendingOps();
             int opFlags;
+            int waiters;
             bool finished;
             boost::condition condvar;
             void wait(boost::recursive_mutex *);
-            void notify(boost::recursive_mutex *);
+            void notify();
         };
         
         struct Job : public ThreadPool::Job
