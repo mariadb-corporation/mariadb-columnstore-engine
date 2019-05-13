@@ -767,6 +767,8 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
             bf::path journalFile = journalPath/(object.key + ".journal");
             metadataObject newObj = meta2.addMetadataObject(filename2, object.length);
             assert(newObj.offset == object.offset);
+            // TODO: failure here makes a lot of noise in the log file
+            // even though it's less efficient, we need to add an existence check, and copy on existence instead.
             err = cs->copyObject(object.key, newObj.key);
             if (err)
             {
