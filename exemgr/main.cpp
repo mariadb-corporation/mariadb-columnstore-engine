@@ -73,6 +73,7 @@
 #include "liboamcpp.h"
 #include "crashtrace.h"
 #include "utils_utf8.h"
+#include "config.h"
 
 #if defined(SKIP_OAM_INIT)
 #include "dbrm.h"
