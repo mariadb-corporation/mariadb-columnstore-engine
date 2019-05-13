@@ -1184,6 +1184,10 @@ void s3storageTest1()
         assert(exists);
         s3.deleteObject(testFile);
         s3.deleteObject(testFile2);
+        
+        err = s3.copyObject("this-does-not-exist", testFile2);
+        assert(err < 0);
+        assert(errno == ENOENT);
     }
     catch(exception &e)
     {
@@ -1523,7 +1527,7 @@ int main()
     mergeJournalTest();
     replicatorTest();
     syncTest1();
-    
+
     s3storageTest1();
     IOCReadTest1();
     IOCTruncate();
