@@ -1095,7 +1095,7 @@ uint32_t doUpdateDelete(THD* thd)
             else
                 schemaName = string(item->db_name);
 
-            columnAssignmentPtr = new ColumnAssignment(item->name, "=", "");
+            columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             Item* value = value_it++;
 
             if (value->type() ==  Item::STRING_ITEM)
