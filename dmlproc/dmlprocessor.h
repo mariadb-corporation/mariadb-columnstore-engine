@@ -120,15 +120,16 @@ private:
 	DMLServer(const DMLServer& rhs);
 	DMLServer& operator=(const DMLServer& rhs);
 
-    /** @brief the thread pool for processing dml packages
-      */
-    threadpool::ThreadPool fDmlPackagepool;
-
     int fPackageMaxThreads;    /** @brief max number of threads to process dml packages */
     int fPackageWorkQueueSize; /** @brief max number of packages waiting in the work queue */
 
     boost::scoped_ptr<messageqcpp::MessageQueueServer> fMqServer;
 	BRM::DBRM* fDbrm;
+
+public:
+    /** @brief the thread pool for processing dml packages
+     */
+    static threadpool::ThreadPool fDmlPackagepool;
 };
 
 /** @brief Thread to process a single dml package.
@@ -170,12 +171,12 @@ private:
     // Used to serialize operations because the VSS can't handle inserts
     // or updates on the same block.
     // When an Insert, Update or Delete command arrives, we look here
-    // for the table oid. If found, wait until it is no onger here.
+    // for the table oid. If found, wait until it is no longer here.
     // If this transactionID (SCN) is < the transactionID in the table, don't delay
     // and hope for the best, as we're already out of order.
     // When the VSS is engineered to handle transactions out of order, all MCOL-140 
     // code is to be removed.
-	int synchTableAccess();
+	int synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage);
 	int releaseTableAccess();
 	int forceReleaseTableAccess();
 	typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
@@ -184,6 +185,35 @@ private:
     static boost::mutex tableOidMutex;
 public:
 	static int clearTableAccess();
+
+    // MCOL-3296 Add a class to call synchTableAccess on creation and
+    // releaseTableAccess on destuction for exception safeness.
+    class SynchTable
+    {
+    public:
+        SynchTable() : fphp(NULL) {};
+        SynchTable(PackageHandler* php, dmlpackage::CalpontDMLPackage* dmlPackage)
+        {
+            setPackage(php, dmlPackage);
+        }
+        ~SynchTable()
+        {
+            if (fphp)
+                fphp->releaseTableAccess();
+        }
+        bool setPackage(PackageHandler* php, dmlpackage::CalpontDMLPackage* dmlPackage)
+        {   
+            if (fphp)
+                fphp->releaseTableAccess();
+            fphp = php;
+            if (fphp)
+                fphp->synchTableAccess(dmlPackage);
+            return true;
+        }
+    private:
+        PackageHandler* fphp;
+    };
+
 };
 
 /** @brief processes dml packages as they arrive

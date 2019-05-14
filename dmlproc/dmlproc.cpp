@@ -86,6 +86,8 @@ using namespace joblist;
 
 namespace fs = boost::filesystem;
 
+ThreadPool DMLServer::fDmlPackagepool(10, 0);
+
 namespace
 {
 DistributedEngineComm *Dec;
@@ -551,16 +553,16 @@ int main(int argc, char* argv[])
 
 	int temp;
 	int serverThreads = 10;
-	int serverQueueSize = 50;
+	int serverQueueSize = 0;
 	const string DMLProc("DMLProc");
 	
 	temp = toInt(cf->getConfig(DMLProc, "ServerThreads"));
 	if (temp > 0)
 			serverThreads = temp;
 
-	temp = toInt(cf->getConfig(DMLProc, "ServerQueueSize"));
-	if (temp > 0)
-			serverQueueSize = temp;
+//	temp = toInt(cf->getConfig(DMLProc, "ServerQueueSize"));
+//	if (temp > 0)
+//			serverQueueSize = temp;
 
 
     bool rootUser = true;
@@ -599,6 +601,8 @@ int main(int argc, char* argv[])
     {
         JobStep::jobstepThreadPool.setDebug(true);
         JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+        DMLServer::fDmlPackagepool.setDebug(true);
+        DMLServer::fDmlPackagepool.invoke(ThreadPoolMonitor(&DMLServer::fDmlPackagepool));
     }
 
     //set ACTIVE state
