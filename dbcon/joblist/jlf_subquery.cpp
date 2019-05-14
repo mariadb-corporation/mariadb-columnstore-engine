@@ -336,7 +336,8 @@ bool isNotInSubquery(JobStepVector& jsv)
     return notIn;
 }
 
-
+// This fcn is currently unused.  Will keep it in the code for now.
+#if 0
 void alterCsepInExistsFilter(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
     // This is for window function in IN/EXISTS sub-query.
@@ -364,7 +365,7 @@ void alterCsepInExistsFilter(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     if (wcs.size() > 1)
         retCols.insert(retCols.end(), wcs.begin() + 1, wcs.end());
 }
-
+#endif
 
 void doCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
 {

@@ -1460,9 +1460,11 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
 
             if (!p.has_root_path())
             {
+                // We could fail here having fixed size buffer
                 char cwdPath[4096];
-                getcwd(cwdPath, sizeof(cwdPath));
-                boost::filesystem::path rejectFileName2( cwdPath );
+                char* buffPtr = &cwdPath[0];
+                buffPtr = getcwd(cwdPath, sizeof(cwdPath));
+                boost::filesystem::path rejectFileName2( buffPtr );
                 rejectFileName2 /= fRejectDataFileName;
                 fBadFiles.push_back( rejectFileName2.string() );
 
@@ -1567,8 +1569,9 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
             if (!p.has_root_path())
             {
                 char cwdPath[4096];
-                getcwd(cwdPath, sizeof(cwdPath));
-                boost::filesystem::path errFileName2( cwdPath );
+                char* buffPtr = &cwdPath[0];
+                buffPtr = getcwd(cwdPath, sizeof(cwdPath));
+                boost::filesystem::path errFileName2( buffPtr );
                 errFileName2 /= fRejectErrFileName;
                 fErrFiles.push_back( errFileName2.string() );
 

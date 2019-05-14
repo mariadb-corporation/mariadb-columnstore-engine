@@ -283,71 +283,6 @@ FdCacheType_t fdcache;
 boost::mutex fdMapMutex;
 rwlock::RWLock_local localLock;
 
-void pause_(unsigned secs)
-{
-    struct timespec req;
-    struct timespec rem;
-
-    req.tv_sec = secs;
-    req.tv_nsec = 0;
-
-    rem.tv_sec = 0;
-    rem.tv_nsec = 0;
-
-#ifdef _MSC_VER
-    Sleep(req.tv_sec * 1000);
-#else
-again:
-
-    if (nanosleep(&req, &rem) != 0)
-        if (rem.tv_sec > 0 || rem.tv_nsec > 0)
-        {
-            req = rem;
-            goto again;
-        }
-
-#endif
-}
-
-const vector<pair<string, string> > getDBRootList()
-{
-    vector<pair<string, string> > ret;
-    Config* config;
-    uint32_t dbrootCount, i;
-    string stmp, devname, mountpoint;
-    char devkey[80], mountkey[80];
-
-    config = Config::makeConfig();
-
-    stmp = config->getConfig("SystemConfig", "DBRootCount");
-
-    if (stmp.empty())
-    {
-        Message::Args args;
-        args.add("getDBRootList: Configuration error. No DBRootCount");
-        primitiveprocessor::mlp->logMessage(logging::M0006, args, true);
-        throw runtime_error("getDBRootList: Configuration error. No DBRootCount");
-    }
-
-    dbrootCount = config->uFromText(stmp);
-
-    for (i = 1; i <= dbrootCount; i++)
-    {
-        snprintf(mountkey, 80, "DBRoot%d", i);
-        snprintf(devkey, 80, "DBRootStorageLoc%d", i);
-        mountpoint = config->getConfig("SystemConfig", string(mountkey));
-        devname = config->getConfig("Installation", string(devkey));
-
-        if (mountpoint == "" || devname == "")
-            throw runtime_error("getDBRootList: Configuration error. Don't know where DBRoots are mounted");
-
-        ret.push_back(pair<string, string>(devname, mountpoint));
-// 		cout << "I see " << devname << " should be mounted at " << mountpoint << endl;
-    }
-
-    return ret;
-}
-
 char* alignTo(const char* in, int av)
 {
     ptrdiff_t inx = reinterpret_cast<ptrdiff_t>(in);
@@ -769,7 +704,7 @@ void* thr_popper(ioManager* arg)
             int opts = primitiveprocessor::directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
             fp = NULL;
             uint32_t openRetries = 0;
-            int saveErrno;
+            int saveErrno = 0;
 
             while (fp == NULL && openRetries++ < 5)
             {

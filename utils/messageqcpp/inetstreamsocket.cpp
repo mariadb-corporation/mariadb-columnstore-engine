@@ -945,7 +945,6 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
     /* read a byte to artificially synchronize with accept() on the remote */
     int ret = -1;
     int e = EBADF;
-    char buf = '\0';
     struct pollfd pfd;
 
     long msecs = fConnectionTimeout.tv_sec * 1000 + fConnectionTimeout.tv_nsec / 1000000;
@@ -964,9 +963,19 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
     if (ret == 1)
     {
 #ifdef _MSC_VER
+        char buf = '\0';
         (void)::recv(socketParms().sd(), &buf, 1, 0);
 #else
-        (void)::read(socketParms().sd(), &buf, 1);
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+        char buf = '\0';
+        ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
+#pragma GCC diagnostic pop
+#else
+        char buf = '\0';
+        ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
+#endif // pragma
 #endif
         return;
     }

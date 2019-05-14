@@ -722,6 +722,10 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         }
     }
 
+    // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
+
     return rc;
 }
 
@@ -1361,7 +1365,9 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
         }
     }
 
-    //cout << "Batch insert return code " << rc << endl;
+    // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
     return rc;
 }
 
@@ -2087,18 +2093,11 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
         args.add(cols);
         err = IDBErrorInfo::instance()->errorMsg(WARN_DATA_TRUNC, args);
 
-        // Strict mode enabled, so rollback on warning
-        // NOTE: This doesn't seem to be a possible code path yet
-        /*if (insertPkg.get_isWarnToError())
-        {
-        		string applName ("BatchInsert");
-        		fWEWrapper.bulkRollback(tblOid,txnid.id,tableName.toString(),
-        			applName, false, err);
-        		BulkRollbackMgr::deleteMetaFile( tblOid );
-        }*/
-    }
+   }
 
-    //cout << "Batch insert return code " << rc << endl;
+    // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
     return rc;
 }
 
@@ -2240,6 +2239,9 @@ uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::s
         fWEWrapper.getDictMap().erase(txnID);
     }
 
+    // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
     return rc;
 }
 
@@ -2847,16 +2849,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
                 uint32_t colWidth = (colTypes[j].colWidth > 8 ? 8 : colTypes[j].colWidth);
-
-                // populate stats.blocksChanged
-                for (unsigned int k = 0; k < columnsUpdated.size(); k++)
+		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
+                // populate stats.blocksChanged 
+		if (rrid > preBlkNums[j])
                 {
-                    if ((int)(relativeRID / (BYTE_PER_BLOCK / colWidth)) > preBlkNums[j])
-                    {
+			preBlkNums[j] = rrid ;
                         blocksChanged++;
-                        preBlkNums[j] = relativeRID / (BYTE_PER_BLOCK / colWidth);
-                    }
-                }
+		}
+
             }
 
             ridsFetched = true;
@@ -3778,7 +3778,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         err = IDBErrorInfo::instance()->errorMsg(WARN_DATA_TRUNC, args);
     }
 
-    //cout << "finished update" << endl;
     return rc;
 }
 
@@ -3961,6 +3960,10 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
     //if (idbdatafile::IDBPolicy::useHdfs())
     //		cacheutils::dropPrimProcFdCache();
     TableMetaData::removeTableMetaData(tableOid);
+
+    // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+    CalpontSystemCatalog::removeCalpontSystemCatalog(txnId);
+    CalpontSystemCatalog::removeCalpontSystemCatalog(txnId | 0x80000000);
     return rc;
 }
 
@@ -4136,7 +4139,6 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
         }
     }
 
-    //cout << "WES return rc " << (int)rc << " with msg " << err << endl;
     return rc;
 }
 

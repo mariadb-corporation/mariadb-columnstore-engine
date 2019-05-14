@@ -1097,33 +1097,6 @@ namespace
 {
 using namespace primitiveprocessor;
 
-void pause_(unsigned delay)
-{
-    struct timespec req;
-    struct timespec rem;
-
-    req.tv_sec = delay;
-    req.tv_nsec = 0;
-
-    rem.tv_sec = 0;
-    rem.tv_nsec = 0;
-#ifdef _MSC_VER
-    Sleep(req.tv_sec * 1000);
-#else
-again:
-
-    if (nanosleep(&req, &rem) != 0)
-    {
-        if (rem.tv_sec > 0 || rem.tv_nsec > 0)
-        {
-            req = rem;
-            goto again;
-        }
-    }
-
-#endif
-}
-
 /** @brief The job type to process a dictionary scan (pDictionaryScan class on the UM)
  * TODO: Move this & the impl into different files
  */

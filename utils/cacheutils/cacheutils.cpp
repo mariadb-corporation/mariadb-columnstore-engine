@@ -258,7 +258,8 @@ int flushOIDsFromCache(const vector<BRM::OID_t>& oids)
     ISMPacketHeader ism;
     uint32_t i;
 
-    memset(&ism, 0, sizeof(ISMPacketHeader));
+    void *ismp = static_cast<void*>(&ism);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
     ism.Command = CACHE_FLUSH_BY_OID;
     bs.load((uint8_t*) &ism, sizeof(ISMPacketHeader));
     bs << (uint32_t) oids.size();
@@ -285,7 +286,8 @@ int flushPartition(const std::vector<BRM::OID_t>& oids, set<BRM::LogicalPartitio
     ByteStream bs;
     ISMPacketHeader ism;
 
-    memset(&ism, 0, sizeof(ISMPacketHeader));
+    void *ismp = static_cast<void*>(&ism);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
     ism.Command = CACHE_FLUSH_PARTITION;
     bs.load((uint8_t*) &ism, sizeof(ISMPacketHeader));
     serializeSet<BRM::LogicalPartition>(bs, partitionNums);

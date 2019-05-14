@@ -44,6 +44,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
+#include <memory>
+
 #if defined(_MSC_VER) && defined(xxxTHREADPOOL_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
@@ -75,8 +77,13 @@ public:
     boost::thread* create_thread(F threadfunc)
     {
         boost::lock_guard<boost::shared_mutex> guard(m);
-        threads.push_back(new boost::thread(threadfunc));
-        return threads.back();
+#if defined(__GNUC__) && __GNUC__ >= 7
+        std::unique_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
+#else
+        std::auto_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
+#endif
+        threads.push_back(new_thread.get());
+        return new_thread.release();
     }
 
     void add_thread(boost::thread* thrd)
