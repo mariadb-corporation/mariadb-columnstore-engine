@@ -1298,7 +1298,7 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(joblist::ResourceManager* rm)
+int8_t setupCwd(joblist::ResourceManager* rm)
 {
     std::string workdir = rm->getScWorkingDir();
     int8_t rc = chdir(workdir.c_str());

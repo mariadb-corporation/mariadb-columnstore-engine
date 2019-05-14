@@ -1029,7 +1029,7 @@ inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
     }
     else
     {
-        throw runtime_error("mcsv1_UDAF::convertAnyTo(): input param has unrecognized type");
+        throw std::runtime_error("mcsv1_UDAF::convertAnyTo(): input param has unrecognized type");
     }
     return val;
 }
