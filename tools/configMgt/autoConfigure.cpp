@@ -359,7 +359,19 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    //setup System Language
+    // WaitPeriod
+    try
+    {
+        string waitPeriod = sysConfigOld->getConfig(SystemSection, "WaitPeriod");
+        if (waitPeriod.length() > 0)
+        {
+            sysConfigNew->setConfig(SystemSection, "WaitPeriod", waitPeriod);
+        }
+    }
+    catch (...)
+    { }
+                          
+                          	//setup System Language
     string systemLang = "C";
 
     try
