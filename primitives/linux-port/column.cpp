@@ -1425,7 +1425,8 @@ namespace primitives
 void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
                                unsigned outSize, unsigned* written)
 {
-    memcpy(out, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    void *outp = static_cast<void*>(out);
+    memcpy(outp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
     out->NVALS = 0;
     out->LBID = in->LBID;
     out->ism.Command = COL_RESULTS;

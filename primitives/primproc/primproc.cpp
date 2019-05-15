@@ -148,17 +148,19 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(Config* cf)
+int8_t setupCwd(Config* cf)
 {
     string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";
 
-    (void)chdir(workdir.c_str());
+    int8_t rc = chdir(workdir.c_str());
 
-    if (access(".", W_OK) != 0)
-        (void)chdir("/tmp");
+    if (rc < 0 || access(".", W_OK) != 0)
+        rc = chdir("/tmp");
+    
+    return rc;
 }
 
 int setupResources()
@@ -344,11 +346,11 @@ int main(int argc, char* argv[])
 
     setupSignalHandlers();
 
-    setupCwd(cf);
+    int err = 0;
+    err = setupCwd(cf);
 
     mlp = new primitiveprocessor::Logger();
 
-    int err = 0;
     if (!gDebug)
         err = setupResources();
     string errMsg;
@@ -366,6 +368,10 @@ int main(int argc, char* argv[])
 
         case -4:
             errMsg = "Could not install file limits to required value, please see non-root install documentation";
+            break;
+
+        case -5:
+            errMsg = "Could not change into working directory";
             break;
 
         default:

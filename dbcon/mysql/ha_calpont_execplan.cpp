@@ -4686,7 +4686,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             }
         }
     }
-    catch (std::logic_error e)
+    catch (std::logic_error &e)
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = "error building Aggregate Function: ";

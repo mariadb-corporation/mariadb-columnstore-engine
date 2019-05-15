@@ -356,7 +356,7 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
         //char aBuff[1024*1024];			// TODO May have to change it later
         //char*pStart = aBuff;
         unsigned int aIdx = 0;
-        unsigned int aLen = 0;
+        int aLen = 0;
         *Sbs << (ByteStream::byte)(WE_CLT_SRV_DATA);
 
         while ((!fInFile.eof()) && (aIdx < getBatchQty()))

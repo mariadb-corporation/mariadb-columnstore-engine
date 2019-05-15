@@ -569,7 +569,8 @@ void ServerMonitor::getCPUdata()
     while (oldFile.getline(line, 400))
     {
         string buf = line;
-        string::size_type pos = buf.find ('id,', 0);
+        // Questionable replacement
+        string::size_type pos = buf.find("id,", 0);
         if (pos == string::npos)
         {
             systemIdle = systemIdle + atol(buf.substr(0, pos - 1).c_str());

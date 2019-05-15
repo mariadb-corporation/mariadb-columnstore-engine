@@ -1377,7 +1377,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     // all transactions to finish or rollback as commanded. This is only set if
                     // there are, in fact, transactions active (or cpimport).
 
-                    int retStatus = oam::API_SUCCESS;
+                    //int retStatus = oam::API_SUCCESS;
 
                     if (HDFS)
                     {
@@ -1458,7 +1458,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                                 if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
                                     continue;
 
-                                retStatus = processManager.shutdownModule((*pt).DeviceName, graceful, manualFlag, 0);
+                                processManager.shutdownModule((*pt).DeviceName, graceful, manualFlag, 0);
                             }
                         }
                     }
@@ -3735,8 +3735,9 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 
     //Update DBRM section of Columnstore.xml
     if ( updateWorkerNodeconfig() != API_SUCCESS )
+    {
         return API_FAILURE;
-
+    }
 	processManager.recycleProcess(target);
 
 	//check for SIMPLEX Processes on mate might need to be started
@@ -5144,7 +5145,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 					string loginTmp = tmpLogDir + "/login_test.log";
                     string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
-                    int rtnCode = system(cmd.c_str());
+                    system(cmd.c_str());
 
 					if (!oam.checkLogStatus(loginTmp, "README")) {
                         //check for RSA KEY ISSUE and fix
@@ -7728,7 +7729,8 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 				sleep(2);
 		}
 
-        if ( rtn = oam::ACTIVE )
+        // This was logical error and possible source of many problems. 
+        if ( rtn == oam::ACTIVE )
 			//set query system state not ready
 			processManager.setQuerySystemState(true);
 
@@ -7869,8 +7871,8 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
     SystemModuleTypeConfig systemmoduletypeconfig;
     ALARMManager aManager;
     int status = API_SUCCESS;
-    bool exitThread = false;
-    int exitThreadStatus = oam::API_SUCCESS;
+    //bool exitThread = false;
+    //int exitThreadStatus = oam::API_SUCCESS;
 
     pthread_t ThreadId;
     ThreadId = pthread_self();
@@ -7887,16 +7889,16 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
         log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
         stopsystemthreadStatus = oam::API_FAILURE;
         processManager.setSystemState(oam::FAILED);
-        exitThread = true;
-        exitThreadStatus = oam::API_FAILURE;
+        //exitThread = true;
+        //exitThreadStatus = oam::API_FAILURE;
     }
     catch (...)
     {
         log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
         stopsystemthreadStatus = oam::API_FAILURE;
         processManager.setSystemState(oam::FAILED);
-        exitThread = true;
-        exitThreadStatus = oam::API_FAILURE;
+        //exitThread = true;
+        //exitThreadStatus = oam::API_FAILURE;
     }
 
     if ( devicenetworklist.size() != 0 )
@@ -7920,7 +7922,7 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
             try
             {
                 int opState;
-                bool degraded = oam::ACTIVE;
+                bool degraded;
                 oam.getModuleStatus(moduleName, opState, degraded);
 
                 if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)

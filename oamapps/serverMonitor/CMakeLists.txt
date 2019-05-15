@@ -18,6 +18,8 @@ set(ServerMonitor_SRCS
 
 add_executable(ServerMonitor ${ServerMonitor_SRCS})
 
+target_compile_options(ServerMonitor PRIVATE -Wno-unused-result)
+
 target_link_libraries(ServerMonitor ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

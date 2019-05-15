@@ -393,7 +393,7 @@ struct IdxMultiColKey
         curMask.reset();
         curLevel = maxLevel = 0;
         totalBit = 0;
-        memset( testbitArray, 0, IDX_MAX_MULTI_COL_IDX_LEVEL);
+        memset( testbitArray, 0, IDX_MAX_MULTI_COL_IDX_LEVEL * sizeof(testbitArray[0]));
         memset( keyBuf, 0, IDX_MAX_MULTI_COL_BIT / 8 );
         curMask = 0x1F;
         curMask = curMask << (IDX_MAX_MULTI_COL_BIT - 5);

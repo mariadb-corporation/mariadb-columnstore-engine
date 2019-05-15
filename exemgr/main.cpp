@@ -1298,13 +1298,15 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(joblist::ResourceManager* rm)
+int8_t setupCwd(joblist::ResourceManager* rm)
 {
     std::string workdir = rm->getScWorkingDir();
-    (void)chdir(workdir.c_str());
+    int8_t rc = chdir(workdir.c_str());
 
-    if (access(".", W_OK) != 0)
-        (void)chdir("/tmp");
+    if (rc < 0 || access(".", W_OK) != 0)
+        rc = chdir("/tmp");
+    
+    return (rc < 0) ? -5 : rc;
 }
 
 void startRssMon(size_t maxPct, int pauseSeconds)
@@ -1470,8 +1472,11 @@ int main(int argc, char* argv[])
             break;
 
         default:
+            errMsg = "Couldn't change working directory or unknown error";
             break;
     }
+
+    err = setupCwd(rm);
 
     if (err < 0)
     {
@@ -1495,9 +1500,6 @@ int main(int argc, char* argv[])
 
         return 2;
     }
-
-
-    setupCwd(rm);
 
     cleanTempDir();
 
