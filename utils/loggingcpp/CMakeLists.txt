@@ -11,20 +11,19 @@ set(loggingcpp_LIB_SRCS
     errorcodes.cpp
     sqllogger.cpp
     stopwatch.cpp
-    idberrorinfo.cpp)
+    idberrorinfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h 
+    ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h)
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h
-    COMMAND ./genMsgAndErrId.sh
+    COMMAND /bin/sh ./genMsgAndErrId.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS genMsgId.pl genErrId.pl
     )
     
-ADD_CUSTOM_TARGET(genMsgAndErrId DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/messageids.h ${CMAKE_CURRENT_SOURCE_DIR}/errorids.h)
     
 add_library(loggingcpp SHARED ${loggingcpp_LIB_SRCS})
-
-add_dependencies(loggingcpp genMsgAndErrId)
 
 set_target_properties(loggingcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
