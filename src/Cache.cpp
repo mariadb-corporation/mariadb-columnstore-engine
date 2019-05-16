@@ -364,7 +364,7 @@ void Cache::deletedObject(const string &key, size_t size)
     boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
-    assert(mit != m_lru.end());
+    assert(mit != m_lru.end());          // TODO: 5/16/19 - got this assertion using S3 by running test000, then test000 again.
     assert(doNotEvict.find(mit->lit) == doNotEvict.end());
     lru.erase(mit->lit);
     m_lru.erase(mit);

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
 #include <iostream>
+#include "Utilities.h"
 
 using namespace std;
 
@@ -105,6 +106,7 @@ S3Storage::~S3Storage()
 {
     for (auto &conn : freeConns)
         ms3_deinit(conn.conn);
+    ms3_library_deinit();
 }
 
 int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t *size)
@@ -120,6 +122,7 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     fd = ::open(destFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
         return err;
+    ScopedCloser s(fd);
     while (count < len)
     {
         err = ::write(fd, &data[count], len - count);
@@ -150,7 +153,7 @@ int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *
         err = ms3_get(creds, bucket.c_str(), sourceKey.c_str(), &_data, &len);
         if (err && retryable_error(err))
         { 
-            if (err == MS3_ERR_SERVER)
+            if (ms3_server_error(creds))
                 logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str());
             else 
@@ -161,7 +164,7 @@ int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *
     } while (err && retryable_error(err));
     if (err)
     {
-        if (err == MS3_ERR_SERVER)
+        if (ms3_server_error(creds))
             logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s.", 
                 ms3_server_error(creds), bucket.c_str(), sourceKey.c_str());
         else
@@ -203,6 +206,7 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
         errno = l_errno;
         return -1;
     }
+    ScopedCloser s(fd);
     while (count < len)
     {
         err = ::read(fd, &data[count], len - count);
@@ -238,7 +242,7 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
         s3err = ms3_put(creds, bucket.c_str(), destKey.c_str(), data.get(), len);
         if (s3err && retryable_error(s3err))
         {
-            if (s3err == MS3_ERR_SERVER)
+            if (ms3_server_error(creds))
                 logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), destKey.c_str());
             else
@@ -249,7 +253,7 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     } while (s3err && retryable_error(s3err));
     if (s3err)
     {
-        if (s3err == MS3_ERR_SERVER)
+        if (ms3_server_error(creds))
             logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s.", 
                 ms3_server_error(creds), bucket.c_str(), destKey.c_str());
         else
@@ -271,7 +275,7 @@ void S3Storage::deleteObject(const string &key)
         s3err = ms3_delete(creds, bucket.c_str(), key.c_str());
         if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
-            if (s3err == MS3_ERR_SERVER)
+            if (ms3_server_error(creds))
                 logger->log(LOG_WARNING, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), key.c_str());
             else
@@ -283,7 +287,7 @@ void S3Storage::deleteObject(const string &key)
     
     if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
     {
-        if (s3err == MS3_ERR_SERVER)
+        if (ms3_server_error(creds))
             logger->log(LOG_WARNING, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), key.c_str());
         else
@@ -303,7 +307,7 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
         s3err = ms3_copy(creds, bucket.c_str(), sourceKey.c_str(), bucket.c_str(), destKey.c_str());
         if (s3err && retryable_error(s3err))
         {
-            if (s3err == MS3_ERR_SERVER)
+            if (ms3_server_error(creds))
                 logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
                     "destkey = %s.  Retrying...", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             else
@@ -315,10 +319,11 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
     
     if (s3err) 
     {
-        if (s3err == MS3_ERR_SERVER)
+        // added the add'l check MS3_ERR_NOT_FOUND to suppress error msgs for a legitimate case in IOC::copyFile()
+        if (ms3_server_error(creds) && s3err != MS3_ERR_NOT_FOUND)
             logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
                 "destkey = %s.", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
-        else
+        else if (s3err != MS3_ERR_NOT_FOUND)
             logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
                 "destkey = %s.", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         errno = s3err_to_errno[s3err];
@@ -350,7 +355,7 @@ int S3Storage::exists(const string &key, bool *out)
         s3err = ms3_status(creds, bucket.c_str(), key.c_str(), &status);
         if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
-            if (s3err == MS3_ERR_SERVER)
+            if (ms3_server_error(creds))
                 logger->log(LOG_WARNING, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), key.c_str());
             else
@@ -362,7 +367,7 @@ int S3Storage::exists(const string &key, bool *out)
     
     if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
     {
-        if (s3err == MS3_ERR_SERVER)
+        if (ms3_server_error(creds))
             logger->log(LOG_WARNING, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), key.c_str());
         else    
@@ -380,17 +385,38 @@ ms3_st * S3Storage::getConnection()
 {
     boost::unique_lock<boost::mutex> s(connMutex);
     
+    // prune the list.  Most-idle connections are at the back.
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+    while (!freeConns.empty())
+    {
+        Connection &back = freeConns.back();
+        if (back.idleSince.tv_sec + maxIdleSecs <= now.tv_sec)
+        {
+            ms3_deinit(back.conn);
+            //connMutexes.erase(back.conn);
+            back.conn = NULL;
+            freeConns.pop_back();
+        }
+        else
+            break;  // everything in front of this entry will not have been idle long enough
+    }
+            
+    // get a connection
     ms3_st *ret = NULL;
     if (freeConns.empty())
     {
-        s.unlock();
-        ret = ms3_thread_init(key.c_str(), secret.c_str(), region.c_str(), (endpoint.empty() ? NULL : endpoint.c_str()));
+        ret = ms3_init(key.c_str(), secret.c_str(), region.c_str(), (endpoint.empty() ? NULL : endpoint.c_str()));
         if (ret == NULL)
-            logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_thread_init returned NULL, no specific info to report");
+            logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_init returned NULL, no specific info to report");
+        //assert(connMutexes[ret].try_lock());
+        s.unlock();
         return ret;
     }
+    assert(freeConns.front().idleSince.tv_sec + maxIdleSecs > now.tv_sec);
     ret = freeConns.front().conn;
     freeConns.pop_front();
+    //assert(connMutexes[ret].try_lock());
     return ret;
 }
 
@@ -402,19 +428,8 @@ void S3Storage::returnConnection(ms3_st *ms3)
     clock_gettime(CLOCK_MONOTONIC_COARSE, &conn.idleSince);
     
     boost::unique_lock<boost::mutex> s(connMutex);
-    // prune the list
-    while (!freeConns.empty())
-    {
-        Connection &back = freeConns.back();
-        if (back.idleSince.tv_sec + maxIdleSecs <= back.idleSince.tv_sec)
-        {
-            ms3_deinit(back.conn);
-            freeConns.pop_back();
-        }
-        else
-            break;  // everything in front of this entry will not have been idle enough
-    }
     freeConns.push_front(conn);
+    //connMutexes[ms3].unlock();
 }
 
 }

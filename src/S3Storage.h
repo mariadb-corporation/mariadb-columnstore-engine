@@ -3,6 +3,7 @@
 #define S3STORAGE_H_
 
 #include <string>
+#include <map>
 #include "CloudStorage.h"
 extern "C"
 {
@@ -49,9 +50,12 @@ class S3Storage : public CloudStorage
             ms3_st *conn;
         };
         
+        // for sanity checking
+        //std::map<ms3_st *, boost::mutex> connMutexes;
+        
         boost::mutex connMutex;
         std::deque<Connection> freeConns;   // using this as a stack to keep lru objects together
-        const time_t maxIdleSecs = 120;
+        const time_t maxIdleSecs = 30;
 };
 
 
