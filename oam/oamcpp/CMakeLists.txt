@@ -10,6 +10,8 @@ add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
 
 target_link_libraries(oamcpp PUBLIC loggingcpp)
 
+target_compile_options(oamcpp PRIVATE -Wno-unused-result)
+
 set_target_properties(oamcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

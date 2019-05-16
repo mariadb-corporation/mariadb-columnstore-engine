@@ -239,21 +239,6 @@ struct PartitionInfo
 
 typedef map<LogicalPartition, PartitionInfo> PartitionMap;
 
-const string charcolToString(int64_t v)
-{
-    ostringstream oss;
-    char c;
-
-    for (int i = 0; i < 8; i++)
-    {
-        c = v & 0xff;
-        oss << c;
-        v >>= 8;
-    }
-
-    return oss.str();
-}
-
 const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
 {
     ostringstream oss;

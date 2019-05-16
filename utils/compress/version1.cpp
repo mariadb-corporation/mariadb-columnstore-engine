@@ -90,6 +90,8 @@ namespace
 {
 short DSPort = 9199;
 
+// this isn't currently used but could be in the future.
+#if 0
 void log(const string& s)
 {
     logging::MessageLog logger((logging::LoggingID()));
@@ -100,6 +102,7 @@ void log(const string& s)
     message.format(args);
     logger.logErrorMessage(message);
 }
+#endif
 
 struct ScopedCleaner
 {

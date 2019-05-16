@@ -81,21 +81,6 @@ using namespace joblist;
 namespace
 {
 
-string keyName(uint64_t i, uint32_t key, const joblist::JobInfo& jobInfo)
-{
-    string name = jobInfo.projectionCols[i]->alias();
-
-    if (name.empty())
-    {
-        name = jobInfo.keyInfo->tupleKeyToName[key];
-
-        if (jobInfo.keyInfo->tupleKeyVec[key].fId < 100)
-            name = "Expression/Function";
-    }
-
-    return name = "'" + name + "'";
-}
-
 
 uint64_t getColumnIndex(const SRCP& c, const map<uint64_t, uint64_t>& m, JobInfo& jobInfo)
 {

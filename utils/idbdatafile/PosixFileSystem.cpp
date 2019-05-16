@@ -261,7 +261,7 @@ int PosixFileSystem::listDirectory(const char* pathname, std::list<std::string>&
             contents.push_back( itr->path().filename().generic_string() );
         }
     }
-    catch (std::exception)
+    catch (std::exception &)
     {
         ret = -1;
     }

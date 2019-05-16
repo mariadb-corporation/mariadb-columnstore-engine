@@ -25,8 +25,7 @@
  * Columnstore interface for for the regr_syy function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_syy returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_syy returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_regr_syy

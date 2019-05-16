@@ -332,12 +332,15 @@ int FileOp::deleteFile( FID fid ) const
     std::vector<std::string> dbRootPathList;
     Config::getDBRootPathList( dbRootPathList );
 
+    int rc;
+
     for (unsigned i = 0; i < dbRootPathList.size(); i++)
     {
         char rootOidDirName[FILE_NAME_SIZE];
-        sprintf(rootOidDirName, "%s/%s", dbRootPathList[i].c_str(), oidDirName);
+        rc = snprintf(rootOidDirName, FILE_NAME_SIZE, "%s/%s",
+            dbRootPathList[i].c_str(), oidDirName);
 
-        if ( IDBPolicy::remove( rootOidDirName ) != 0 )
+        if ( rc == FILE_NAME_SIZE || IDBPolicy::remove( rootOidDirName ) != 0 )
         {
             ostringstream oss;
             oss << "Unable to remove " << rootOidDirName;
@@ -365,6 +368,7 @@ int FileOp::deleteFiles( const std::vector<int32_t>& fids ) const
     char dbDir       [MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
     std::vector<std::string> dbRootPathList;
     Config::getDBRootPathList( dbRootPathList );
+    int rc;
 
     for ( unsigned n = 0; n < fids.size(); n++ )
     {
@@ -378,10 +382,10 @@ int FileOp::deleteFiles( const std::vector<int32_t>& fids ) const
         for (unsigned i = 0; i < dbRootPathList.size(); i++)
         {
             char rootOidDirName[FILE_NAME_SIZE];
-            sprintf(rootOidDirName, "%s/%s", dbRootPathList[i].c_str(),
+            rc = snprintf(rootOidDirName, FILE_NAME_SIZE, "%s/%s", dbRootPathList[i].c_str(),
                     oidDirName);
 
-            if ( IDBPolicy::remove( rootOidDirName ) != 0 )
+            if ( rc == FILE_NAME_SIZE || IDBPolicy::remove( rootOidDirName ) != 0 )
             {
                 ostringstream oss;
                 oss << "Unable to remove " << rootOidDirName;
@@ -412,6 +416,7 @@ int FileOp::deletePartitions( const std::vector<OID>& fids,
     char dbDir       [MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
     char rootOidDirName[FILE_NAME_SIZE];
     char partitionDirName[FILE_NAME_SIZE];
+    int rcd, rcp;
 
     for (uint32_t i = 0; i < partitions.size(); i++)
     {
@@ -422,12 +427,13 @@ int FileOp::deletePartitions( const std::vector<OID>& fids,
                 dbDir[0], dbDir[1], dbDir[2], dbDir[3], dbDir[4]);
         // config expects dbroot starting from 0
         std::string rt( Config::getDBRootByNum(partitions[i].lp.dbroot) );
-        sprintf(rootOidDirName, "%s/%s",
+        rcd = snprintf(rootOidDirName, FILE_NAME_SIZE, "%s/%s",
                 rt.c_str(), tempFileName);
-        sprintf(partitionDirName, "%s/%s",
+        rcp = snprintf(partitionDirName, FILE_NAME_SIZE, "%s/%s",
                 rt.c_str(), oidDirName);
 
-        if ( IDBPolicy::remove( rootOidDirName ) != 0 )
+        if ( rcd == FILE_NAME_SIZE || rcp == FILE_NAME_SIZE
+            || IDBPolicy::remove( rootOidDirName ) != 0 )
         {
             ostringstream oss;
             oss << "Unable to remove " << rootOidDirName;

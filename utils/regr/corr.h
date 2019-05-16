@@ -25,8 +25,7 @@
  * Columnstore interface for for the corr function
  *
  *
- *    CREATE AGGREGATE FUNCTION corr returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION corr returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_corr

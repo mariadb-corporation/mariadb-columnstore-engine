@@ -4684,7 +4684,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             }
         }
     }
-    catch (std::logic_error e)
+    catch (std::logic_error &e)
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = "error building Aggregate Function: ";
@@ -7138,7 +7138,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
         // for subquery, order+limit by will be supported in infinidb. build order by columns
         // @todo union order by and limit support
-        if (gwi.hasWindowFunc || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
+        if (gwi.hasWindowFunc
+            || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT
+            || ( isUnion && ordercol ))
         {
             for (; ordercol; ordercol = ordercol->next)
             {

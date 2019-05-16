@@ -899,9 +899,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
+			else if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
+			else if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
 #endif
             {
                 ByteStream bs;
@@ -913,9 +913,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
+			else if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
+			else if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
 #endif
             {
                 ByteStream bs;
@@ -3348,15 +3348,14 @@ int processCommand(string* arguments)
 
             for (i = alarmList.begin(); i != alarmList.end(); ++i)
             {
-                switch (i->second.getState())
+                // SET = 1, CLEAR = 0
+                if (i->second.getState() == true)
                 {
-                    case SET:
-                        cout << "SET" << endl;
-                        break;
-
-                    case CLEAR:
-                        cout << "CLEAR" << endl;
-                        break;
+                    cout << "SET" << endl;
+                }
+                else
+                {
+                    cout << "CLEAR" << endl;
                 }
 
                 cout << "AlarmID           = " << i->second.getAlarmID() << endl;
@@ -5904,7 +5903,6 @@ int processCommand(string* arguments)
 
             int moduleID = 1;
             inputNames::const_iterator listPT1 = inputnames.begin();
-            umStorageNames::const_iterator listPT2 = umstoragenames.begin();
 
             for ( int i = 0 ; i < moduleCount ; i++ )
             {

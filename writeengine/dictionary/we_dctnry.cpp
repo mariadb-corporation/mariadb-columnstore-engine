@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <set>
 #include <sstream>
 #include <inttypes.h>
 #include <iostream>
@@ -108,7 +109,6 @@ Dctnry::Dctnry() :
            &m_endHeader,  HDR_UNIT_SIZE);
     m_curFbo  = INVALID_NUM;
     m_curLbid = INVALID_LBID;
-    memset(m_sigArray, 0, MAX_STRING_CACHE_SIZE * sizeof(Signature));
     m_arraySize = 0;
 
     clear();//files
@@ -130,14 +130,16 @@ Dctnry::~Dctnry()
  ******************************************************************************/
 void Dctnry::freeStringCache( )
 {
-    for (int i = 0; i < m_arraySize; i++)
+    std::set<Signature,sig_compare>::iterator it;
+    for (it=m_sigArray.begin(); it!=m_sigArray.end(); it++)
     {
-        delete [] m_sigArray[i].signature;
-        m_sigArray[i].signature = 0;
+	Signature sig  = *it;
+        delete [] sig.signature;
+        sig.signature = 0;
     }
 
-    memset(m_sigArray, 0, MAX_STRING_CACHE_SIZE * sizeof(Signature));
     m_arraySize = 0;
+    m_sigArray.clear();
 }
 
 /*******************************************************************************
@@ -161,7 +163,6 @@ int  Dctnry::init()
     m_curOp = 0;
     memset( m_curBlock.data, 0, sizeof(m_curBlock.data));
     m_curBlock.lbid = INVALID_LBID;
-    memset(m_sigArray, 0, MAX_STRING_CACHE_SIZE * sizeof(Signature));
     m_arraySize = 0;
 
     return NO_ERROR;
@@ -623,19 +624,17 @@ int Dctnry::openDctnry(const OID& dctnryOID,
  ******************************************************************************/
 bool Dctnry::getTokenFromArray(Signature& sig)
 {
-    for (int i = 0; i < (int)m_arraySize ; i++ )
-    {
-        if (sig.size == m_sigArray[i].size)
-        {
-            if (!memcmp(sig.signature, m_sigArray[i].signature, sig.size))
-            {
-                sig.token = m_sigArray[i].token;
-                return true;
-            }//endif sig compare
-        }//endif size compare
-    }
+	std::set<Signature,sig_compare>::iterator it;
+	it = m_sigArray.find(sig);
+	if ( it  == m_sigArray.end()){
+		return false;
+	}else{
+		Signature sigfound  = *it;
+		sig.token = sigfound.token;
+		return true;
+	}
 
-    return false;
+	return false;
 }
 
 /*******************************************************************************
@@ -804,7 +803,8 @@ int Dctnry::insertDctnry(const char* buf,
     while (startPos < totalRow)
     {
         found = false;
-        memset(&curSig, 0, sizeof(curSig));
+        void *curSigPtr = static_cast<void*>(&curSig);
+        memset(curSigPtr, 0, sizeof(curSig));
         curSig.size = pos[startPos][col].offset;
 
         // Strip trailing null bytes '\0' (by adjusting curSig.size) if import-
@@ -1318,7 +1318,8 @@ void  Dctnry::preLoadStringCache( const DataBlock& fileBlock )
 
     int op = 1; // ordinal position of the string within the block
     Signature aSig;
-    memset( &aSig, 0, sizeof(Signature));
+    void *aSigPtr = static_cast<void*>(&aSig);
+    memset(aSigPtr, 0, sizeof(aSig));
 
     while ((offBeg != DCTNRY_END_HEADER) &&
             (op     <= MAX_STRING_CACHE_SIZE))
@@ -1329,7 +1330,7 @@ void  Dctnry::preLoadStringCache( const DataBlock& fileBlock )
         memcpy(aSig.signature, &fileBlock.data[offBeg], len);
         aSig.token.op    = op;
         aSig.token.fbo   = m_curLbid;
-        m_sigArray[op - 1] = aSig;
+        m_sigArray.insert(aSig);
 
         offEnd           = offBeg;
         hdrOffsetBeg    += HDR_UNIT_SIZE;
@@ -1362,13 +1363,15 @@ void  Dctnry::preLoadStringCache( const DataBlock& fileBlock )
  ******************************************************************************/
 void  Dctnry::addToStringCache( const Signature& newSig )
 {
+    // We better add constructors that sets everything to 0;
     Signature asig;
-    memset(&asig, 0, sizeof(Signature));
+    void *aSigPtr = static_cast<void*>(&asig);
+    memset(aSigPtr, 0, sizeof(asig));
     asig.signature = new unsigned char[newSig.size];
     memcpy(asig.signature, newSig.signature, newSig.size );
     asig.size      = newSig.size;
     asig.token     = newSig.token;
-    m_sigArray[m_arraySize] = asig;
+    m_sigArray.insert(asig);
     m_arraySize++;
 }
 
@@ -1461,7 +1464,7 @@ int  Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize,
         sig.signature = new unsigned char[sigSize];
         memcpy (sig.signature, sigValue, sigSize);
         sig.token = token;
-        m_sigArray[m_arraySize] = sig;
+        m_sigArray.insert(sig);
         m_arraySize++;
     }
 

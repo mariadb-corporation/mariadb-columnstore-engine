@@ -71,14 +71,15 @@ namespace
 {
 DistributedEngineComm* Dec;
 
-void setupCwd()
+int8_t setupCwd()
 {
     string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";
 
-    (void)chdir(workdir.c_str());
+    int8_t rc = chdir(workdir.c_str());
+    return rc;
 }
 
 void added_a_pm(int)
@@ -103,7 +104,18 @@ int main(int argc, char* argv[])
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DDLProc");
 
-    setupCwd();
+    if ( setupCwd() < 0 )
+    {
+        LoggingID logid(23, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(9);
+        args1.add("DDLProc could not set working directory ");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
+    }
+
 
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DDLPROC );
 #ifdef _MSC_VER
