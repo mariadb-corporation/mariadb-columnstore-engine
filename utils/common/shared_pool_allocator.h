@@ -126,7 +126,7 @@ namespace utils {
         ptr pThis = get();
         for (size_t i = 0; i < pThis->_prealloc; i += alloc_node_size) {
           void * pVoid = NULL;
-          if (posix_memalign(&pVoid, sizeof(void*), alloc_node_size) && pVoid) pThis->push(pVoid);
+          if (!posix_memalign(&pVoid, sizeof(void*), alloc_node_size) && pVoid) pThis->push(pVoid);
         }
       }
       boost::atomic <node_type*> _root;
