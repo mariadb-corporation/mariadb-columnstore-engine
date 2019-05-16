@@ -35,10 +35,10 @@
 #else
 #include <tr1/unordered_set>
 #endif
+#include "shared_pool_allocator.h"
 
 #include "rowgroup.h"
 #include "hasher.h"
-#include "stlpoolallocator.h"
 
 
 // forward reference
@@ -245,7 +245,7 @@ protected:
 	};
 
 	typedef std::tr1::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
-	            utils::STLPoolAllocator<rowgroup::Row::Pointer> > DistinctMap_t;
+	            utils::shared_pool_allocator<rowgroup::Row::Pointer> > DistinctMap_t;
 	boost::scoped_ptr<DistinctMap_t>    fDistinctMap;
 	rowgroup::Row row1, row2;  // scratch space for Hasher & Eq
 

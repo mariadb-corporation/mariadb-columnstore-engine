@@ -35,8 +35,20 @@
 #include "fixedallocator.h"
 #include "joblisttypes.h"
 #include "../funcexp/funcexpwrapper.h"
+#include "shared_pool_allocator.h"
 #include "stlpoolallocator.h"
 #include "hasher.h"
+
+
+#if !defined(EXPERIMENTAL_ALLOCATOR)
+	#define EXPERIMENTAL_ALLOCATOR 1
+#endif
+
+#if EXPERIMENTAL_ALLOCATOR
+	#define stl_allocator_type shared_pool_allocator
+#else
+	#define stl_allocator_type STLPoolAllocator
+#endif
 
 namespace joiner
 {
@@ -198,11 +210,11 @@ public:
 
 private:
 	typedef std::tr1::unordered_multimap<int64_t, uint8_t *, hasher, std::equal_to<int64_t>,
-	  utils::STLPoolAllocator<std::pair<const int64_t, uint8_t *> > > hash_t;
+	  utils::stl_allocator_type<std::pair<const int64_t, uint8_t *> > > hash_t;
 	typedef std::tr1::unordered_multimap<int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-	  utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > > sthash_t;
+	  utils::stl_allocator_type<std::pair<const int64_t, rowgroup::Row::Pointer> > > sthash_t;
 	typedef std::tr1::unordered_multimap<TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
-	  utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > > typelesshash_t;
+	  utils::stl_allocator_type<std::pair<const TypelessData, rowgroup::Row::Pointer> > > typelesshash_t;
 
 	typedef hash_t::iterator iterator;
 	typedef typelesshash_t::iterator thIterator;
@@ -240,7 +252,11 @@ private:
 	};
 	JoinAlg joinAlg;
 	joblist::JoinType joinType;
-	boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
+	#if (EXPERIMENTAL_ALLOCATOR)
+		utils::iAllocMemUse * _pool;
+	#else
+		boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
+	#endif
 	uint32_t threadCount;
 	std::string tableName;
 

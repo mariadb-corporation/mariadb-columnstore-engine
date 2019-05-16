@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "tuplejoiner.h"
 #include <algorithm>
 #include <vector>
 #include <limits>
@@ -24,6 +23,7 @@
 #else
 #include <tr1/unordered_set>
 #endif
+#include "tuplejoiner.h"
 #include "hasher.h"
 #include "lbidlist.h"
 
@@ -45,15 +45,13 @@ TupleJoiner::TupleJoiner(
 	threadCount(1), typelessJoin(false), bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
 	if (smallRG.usesStringTable()) {
-		STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc(64*1024*1024 + 1);
+		stl_allocator_type<pair<const int64_t, Row::Pointer> > alloc(64*1024*1024 + 1);
 		_pool = alloc.getPoolAllocator();
-
 		sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
 	}
 	else {
-		STLPoolAllocator<pair<const int64_t, uint8_t *> > alloc(64*1024*1024 + 1);
+		stl_allocator_type<pair<const int64_t, uint8_t *> > alloc(64*1024*1024 + 1);
 		_pool = alloc.getPoolAllocator();
-
 		h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
 	}
 
@@ -95,9 +93,8 @@ TupleJoiner::TupleJoiner(
 	smallKeyColumns(smallJoinColumns), largeKeyColumns(largeJoinColumns),
 	bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
-	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
-	_pool = alloc.getPoolAllocator();
-
+	stl_allocator_type<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
+  _pool = alloc.getPoolAllocator();
 	ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
 	smallRG.initRow(&smallNullRow);
 	if (smallOuterJoin() || largeOuterJoin() || semiJoin() || antiJoin()) {
@@ -526,12 +523,17 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer> *out)
 
 uint64_t TupleJoiner::getMemUsage() const
 {
-	if (inUM() && typelessJoin)
-		return _pool->getMemUsage() + storedKeyAlloc.getMemUsage();
-	else if (inUM())
-		return _pool->getMemUsage();
-	else
+
+  if (inUM() && typelessJoin)
+  {      
+    return _pool->getMemUsage() + storedKeyAlloc.getMemUsage();
+  }
+  else if (inUM())
+  {      
+    return _pool->getMemUsage();
+  }else
 		return (rows.size() * sizeof(Row::Pointer));
+
 }
 
 void TupleJoiner::setFcnExpFilter(boost::shared_ptr<funcexp::FuncExpWrapper> pt)
@@ -799,7 +801,7 @@ void TupleJoiner::setTableName(const string &tname)
 
 void TupleJoiner::clearData()
 {
-	STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
+	stl_allocator_type<pair<const TypelessData, Row::Pointer> > alloc(64*1024*1024 + 1);
 	_pool = alloc.getPoolAllocator();
 
 	if (typelessJoin)

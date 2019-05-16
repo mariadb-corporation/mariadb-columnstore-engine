@@ -3,8 +3,8 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
-    COMMAND ./ddl-gram.sh ${BISON_EXECUTABLE}
-    COMMAND ./ddl-scan.sh ${LEX_EXECUTABLE}
+    COMMAND /bin/sh ./ddl-gram.sh ${BISON_EXECUTABLE}
+    COMMAND /bin/sh ./ddl-scan.sh ${LEX_EXECUTABLE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ddl.y ddl.l
 )
