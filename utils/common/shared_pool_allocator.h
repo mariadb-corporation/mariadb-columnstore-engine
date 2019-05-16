@@ -76,7 +76,7 @@ namespace utils {
           node_type * pRet = _root.load();
           if (!pRet) {
             void * pVoid = NULL;
-            if (posix_memalign(&pVoid, sizeof(void*), std::max(sizeof(void*), _bufflen)) || pVoid) throw std::bad_alloc();
+            if (posix_memalign(&pVoid, sizeof(void*), std::max(sizeof(void*), _bufflen)) || !pVoid) throw std::bad_alloc();
             pRet = reinterpret_cast<node_type*>(pVoid);
             ++_live_count;
             return pRet;
@@ -112,7 +112,7 @@ namespace utils {
         _root.store(NULL);
         _live_count.store(0);
       }
-      boost::atomic < node_type*> _root;
+      boost::atomic <node_type*> _root;
 			boost::atomic<size_t> _live_count;
     };
 
