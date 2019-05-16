@@ -64,7 +64,7 @@ ScopedCloser::~ScopedCloser() {
 SharedCloser::SharedCloser(int f)
 { 
     block = new CtrlBlock();
-    assert(f != -1);
+    assert(f >= 0);
     block->fd = f;
     block->refCount = 1;
 }
