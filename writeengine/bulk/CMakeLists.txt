@@ -25,7 +25,10 @@ set(we_bulk_STAT_SRCS
     we_workers.cpp)
 
 ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
+
 add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
+
+target_link_libraries(we_bulk PUBLIC loggingcpp)
 
 target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
 

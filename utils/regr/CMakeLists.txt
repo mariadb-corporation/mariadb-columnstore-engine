@@ -10,6 +10,8 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(regr SHARED ${regr_LIB_SRCS} )
 
+target_link_libraries(regr PUBLIC loggingcpp)
+
 set_target_properties(regr PROPERTIES VERSION 1.1.0 SOVERSION 1)
 
 install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
@@ -19,6 +21,8 @@ install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 set(regr_mysql_LIB_SRCS regrmysql.cpp)
 
 add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
+
+target_link_libraries(regr_mysql PUBLIC loggingcpp)
 
 set_target_properties(regr_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

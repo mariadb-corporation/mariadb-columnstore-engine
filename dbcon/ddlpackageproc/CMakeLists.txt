@@ -14,6 +14,8 @@ set(ddlpackageproc_LIB_SRCS
 
 add_library(ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
 
+target_link_libraries(ddlpackageproc PUBLIC loggingcpp)
+
 target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
 
 set_target_properties(ddlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)

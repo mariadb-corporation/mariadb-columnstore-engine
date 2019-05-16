@@ -32,6 +32,8 @@ set(brm_LIB_SRCS
 
 add_library(brm SHARED ${brm_LIB_SRCS})
 
+target_link_libraries(brm PUBLIC loggingcpp)
+
 set_target_properties(brm PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

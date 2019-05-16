@@ -8,6 +8,8 @@ set(threadpool_LIB_SRCS weightedthreadpool.cpp threadpool.cpp prioritythreadpool
 
 add_library(threadpool SHARED ${threadpool_LIB_SRCS})
 
+target_link_libraries(threadpool PUBLIC loggingcpp)
+
 set_target_properties(threadpool PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS threadpool DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

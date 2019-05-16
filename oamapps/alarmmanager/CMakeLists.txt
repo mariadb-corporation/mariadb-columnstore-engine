@@ -8,6 +8,8 @@ set(alarmmanager_LIB_SRCS alarmmanager.cpp alarm.cpp)
 
 add_library(alarmmanager SHARED ${alarmmanager_LIB_SRCS})
 
+target_link_libraries(alarmmanager PUBLIC loggingcpp)
+
 set_target_properties(alarmmanager PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS alarmmanager DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

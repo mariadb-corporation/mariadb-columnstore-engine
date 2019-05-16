@@ -7,6 +7,8 @@ set(dbload_STAT_SRCS inputmgr.cpp)
 
 add_library(dbload STATIC ${dbload_STAT_SRCS})
 
+target_link_libraries(dbload PUBLIC loggingcpp)
+
 ########### next target ###############
 
 set(colxml_SRCS colxml.cpp)

@@ -14,6 +14,8 @@ set(messageqcpp_LIB_SRCS
 
 add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
 
+target_link_libraries(messageqcpp PUBLIC loggingcpp)
+
 set_target_properties(messageqcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

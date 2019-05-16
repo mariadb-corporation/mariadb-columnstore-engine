@@ -7,6 +7,8 @@ set(configcpp_LIB_SRCS configcpp.cpp xmlparser.cpp configstream.cpp)
 
 add_library(configcpp SHARED ${configcpp_LIB_SRCS})
 
+target_link_libraries(configcpp PUBLIC loggingcpp)
+
 set_target_properties(configcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

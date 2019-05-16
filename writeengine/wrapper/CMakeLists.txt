@@ -39,6 +39,8 @@ add_definitions(-D_FILE_OFFSET_BITS=64)
 
 add_library(writeengine SHARED ${writeengine_LIB_SRCS})
 
+target_link_libraries(writeengine PUBLIC loggingcpp)
+
 target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
 
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)

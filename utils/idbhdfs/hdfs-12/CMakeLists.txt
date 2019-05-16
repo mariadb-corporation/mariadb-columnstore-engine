@@ -14,6 +14,8 @@ set(hdfs-12_LIB_SRCS
 
 add_library(hdfs-12 SHARED ${hdfs-12_LIB_SRCS})
 
+target_link_libraries(hdfs-12 PUBLIC loggingcpp)
+
 set_target_properties(hdfs-12 PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS hdfs-12 DESTINATION ${ENGINE_LIBDIR})

@@ -14,5 +14,7 @@ add_definitions(-D_FILE_OFFSET_BITS=64)
 
 add_library(we_xml STATIC ${we_xml_STAT_SRCS})
 
+target_link_libraries(we_xml PUBLIC loggingcpp)
+
 INSTALL(TARGETS we_xml DESTINATION ${ENGINE_LIBDIR})
 

@@ -16,6 +16,8 @@ add_definitions(-DCDH4)
 
 add_library(hdfs-20 SHARED ${hdfs-20_LIB_SRCS})
 
+target_link_libraries(hdfs-20 PUBLIC loggingcpp)
+
 set_target_properties(hdfs-20 PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS hdfs-20 DESTINATION ${ENGINE_LIBDIR})
