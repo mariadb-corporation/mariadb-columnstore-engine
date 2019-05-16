@@ -138,7 +138,7 @@ void Synchronizer::flushObject(const string &key)
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
         // find the object name and call process() to start it right away
-        for (auto name = objNames.begin(); name != objNames.end(); ++it)
+        for (auto name = objNames.begin(); name != objNames.end(); ++name)
         {
             if (*name == key)
             {
