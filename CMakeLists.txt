@@ -49,7 +49,7 @@ set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
 include(ExternalProject)
 ExternalProject_Add(ms3
     SOURCE_DIR ${S3API_DIR}
-    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && LIBS=-lm ${S3API_DIR}/configure --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
+    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
     INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}
