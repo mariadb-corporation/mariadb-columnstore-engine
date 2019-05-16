@@ -21,9 +21,11 @@ MA 02110-1301, USA. */
 #pragma once
 
 #include <stdlib.h>
+#include <algorithm>
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/atomic.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
 
@@ -54,18 +56,23 @@ namespace utils {
       uint8_t _buff[_len];
     };
 
+    
     template <size_t _bufflen>
       struct alloc_stack : iAllocMemUse {
       typedef boost::shared_ptr<alloc_stack> ptr;
       typedef alloc_node <_bufflen> node_type;
-  
-      static ptr get() {
+      static const size_t alloc_node_size = (sizeof(void*) > _bufflen ? sizeof(void*) : _bufflen);
+
+        /** returns a shared_ptr<alloc_stack> but maintains a weak_ptr<alloc_stack>
+         ** so consecutive callers will recieve the same instance until all callers are finished
+         ***/
+      static ptr get(size_t prealloc=0) {
         static boost::weak_ptr<alloc_stack> oStack;
         static boost::mutex mux;
         boost::lock_guard<boost::mutex> oLock(mux);
         ptr oRet = oStack.lock();
         if (!oRet){
-          oRet.reset(new alloc_stack);
+          oRet.reset(new alloc_stack(prealloc));
           oStack = oRet;
         }
         return oRet;
@@ -76,7 +83,7 @@ namespace utils {
           node_type * pRet = _root.load();
           if (!pRet) {
             void * pVoid = NULL;
-            if (posix_memalign(&pVoid, sizeof(void*), std::max(sizeof(void*), _bufflen)) || !pVoid) throw std::bad_alloc();
+            if (posix_memalign(&pVoid, sizeof(void*), alloc_node_size) || !pVoid) throw std::bad_alloc();
             pRet = reinterpret_cast<node_type*>(pVoid);
             ++_live_count;
             return pRet;
@@ -103,17 +110,28 @@ namespace utils {
         }
       }
 
-			virtual size_t getMemUsage() const { return _live_count.load() * std::max(sizeof(void*), _bufflen); }
+			virtual size_t getMemUsage() const { return _live_count.load() * alloc_node_size; }
 
 
     private:
-      alloc_stack() {}
-      alloc_stack(alloc_stack&){
+      alloc_stack(size_t prealloc = 0) : _prealloc(prealloc) {
         _root.store(NULL);
         _live_count.store(0);
+        if (prealloc){
+          boost::thread(prepopulate).detach();
+        }
+      }
+      alloc_stack(alloc_stack&){}
+      static void prepopulate(){
+        ptr pThis = get();
+        for (size_t i = 0; i < pThis->_prealloc; i += alloc_node_size) {
+          void * pVoid = NULL;
+          if (posix_memalign(&pVoid, sizeof(void*), alloc_node_size) && pVoid) pThis->push(pVoid);
+        }
       }
       boost::atomic <node_type*> _root;
 			boost::atomic<size_t> _live_count;
+      size_t _prealloc;
     };
 
   }
@@ -135,7 +153,7 @@ namespace utils {
       template<class U> struct rebind { typedef shared_pool_allocator<U> other; };
 
       shared_pool_allocator() throw() : _stack(alloc_stack_type::get()) {}
-      shared_pool_allocator(int /*ignored*/) throw() : _stack(alloc_stack_type::get()) {}
+      shared_pool_allocator(size_t prealloc) throw() : _stack(alloc_stack_type::get(prealloc)) {}
       shared_pool_allocator(const shared_pool_allocator & src) throw() : _stack(src._stack) {}
       template<class U> shared_pool_allocator(const shared_pool_allocator<U> & src) throw() : _stack(alloc_stack_type::get()) {}
       ~shared_pool_allocator() {}
