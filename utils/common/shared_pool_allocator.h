@@ -99,7 +99,7 @@ namespace utils {
           node_type * pNode = _root.load();
           if (!pNode) return;
           if (!_root.compare_exchange_strong(pNode, pNode->_next)) continue;
-          delete pNode;
+          free(pNode);
         }
       }
 
