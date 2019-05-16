@@ -75,7 +75,7 @@ namespace utils {
         for (;;) {                  
           node_type * pRet = _root.load();
           if (!pRet) {
-            pRet = reinterpret_cast<node_type*>(aligned_alloc(sizeof(void*), std::max(sizeof(void*), _bufflen)));
+            pRet = reinterpret_cast<node_type*>(memalign(sizeof(void*), std::max(sizeof(void*), _bufflen)));
             if (!pRet) throw std::bad_alloc();
             ++_live_count;
             return pRet;
