@@ -2325,8 +2325,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
 				}
 				functionVec2[i]->fAuxColumnIndex = lastCol++;
-				oidsAggDist.push_back(oidsAggDist[j]); // Dummy?
-				keysAggDist.push_back(keysAggDist[j]); // Dummy?
+				oidsAggDist.push_back(oidsAgg[j]); // Dummy?
+				keysAggDist.push_back(keysAgg[j]); // Dummy?
 				scaleAggDist.push_back(0);
 				precisionAggDist.push_back(0);
 				typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
@@ -2340,8 +2340,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 			functionVec2[i]->fAuxColumnIndex = lastCol;
 
 			// sum(x)
-			oidsAggDist.push_back(oidsAggDist[j]);
-			keysAggDist.push_back(keysAggDist[j]);
+			oidsAggDist.push_back(oidsAgg[j]);
+			keysAggDist.push_back(keysAgg[j]);
 			scaleAggDist.push_back(0);
 			precisionAggDist.push_back(0);
 			typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -2349,8 +2349,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 			++lastCol;
 
 			// sum(x**2)
-			oidsAggDist.push_back(oidsAggDist[j]);
-			keysAggDist.push_back(keysAggDist[j]);
+			oidsAggDist.push_back(oidsAgg[j]);
+			keysAggDist.push_back(keysAgg[j]);
 			scaleAggDist.push_back(0);
 			precisionAggDist.push_back(0);
 			typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -3258,8 +3258,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 					throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
 				}
 				functionVecUm[i]->fAuxColumnIndex = lastCol++;
-				oidsAggUm.push_back(oidsAggUm[j]); // Dummy?
-				keysAggUm.push_back(keysAggUm[j]); // Dummy?
+				oidsAggUm.push_back(oidsAggPm[j]); // Dummy?
+				keysAggUm.push_back(keysAggPm[j]); // Dummy?
 				scaleAggUm.push_back(0);
 				precisionAggUm.push_back(0);
 				typeAggUm.push_back(CalpontSystemCatalog::UBIGINT);
@@ -3273,8 +3273,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 			functionVecUm[i]->fAuxColumnIndex = lastCol;
 
 			// sum(x)
-			oidsAggUm.push_back(oidsAggUm[j]);
-			keysAggUm.push_back(keysAggUm[j]);
+			oidsAggUm.push_back(oidsAggPm[j]);
+			keysAggUm.push_back(keysAggPm[j]);
 			scaleAggUm.push_back(0);
 			precisionAggUm.push_back(0);
 			typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -3282,8 +3282,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 			++lastCol;
 
 			// sum(x**2)
-			oidsAggUm.push_back(oidsAggUm[j]);
-			keysAggUm.push_back(keysAggUm[j]);
+			oidsAggUm.push_back(oidsAggPm[j]);
+			keysAggUm.push_back(keysAggPm[j]);
 			scaleAggUm.push_back(0);
 			precisionAggUm.push_back(0);
 			typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -4189,8 +4189,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
 				}
 				functionVecUm[i]->fAuxColumnIndex = lastCol++;
-				oidsAggDist.push_back(oidsAggUm[j]); // Dummy?
-				keysAggDist.push_back(keysAggUm[j]); // Dummy?
+				oidsAggDist.push_back(oidsAggPm[j]); // Dummy?
+				keysAggDist.push_back(keysAggPm[j]); // Dummy?
 				scaleAggDist.push_back(0);
 				precisionAggDist.push_back(0);
 				typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
@@ -4203,8 +4203,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			functionVecUm[i]->fAuxColumnIndex = lastCol;
 
 			// sum(x)
-			oidsAggDist.push_back(oidsAggDist[j]);
-			keysAggDist.push_back(keysAggDist[j]);
+			oidsAggDist.push_back(oidsAggPm[j]);
+			keysAggDist.push_back(keysAggPm[j]);
 			scaleAggDist.push_back(0);
 			precisionAggDist.push_back(0);
 			typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -4212,8 +4212,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			++lastCol;
 
 			// sum(x**2)
-			oidsAggDist.push_back(oidsAggDist[j]);
-			keysAggDist.push_back(keysAggDist[j]);
+			oidsAggDist.push_back(oidsAggPm[j]);
+			keysAggDist.push_back(keysAggPm[j]);
 			scaleAggDist.push_back(0);
 			precisionAggDist.push_back(0);
 			typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
