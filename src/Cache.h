@@ -34,6 +34,10 @@ class Cache : public boost::noncopyable
         void deletedObject(const std::string &key, size_t size);
         void deletedJournal(size_t size);
         
+        // an 'atomic' existence check & delete.  Covers the object and journal.  Does not delete the files.
+        // returns 0 if it didn't exist, 1 if the object exists, 2 if the journal exists, and 3 (1 | 2) if both exist
+        int ifExistsThenDelete(const std::string &key);   
+        
         // rename is used when an old obj gets merged with its journal file
         // the size will change in that process; sizediff is by how much
         void rename(const std::string &oldKey, const std::string &newKey, ssize_t sizediff);

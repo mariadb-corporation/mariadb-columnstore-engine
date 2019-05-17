@@ -453,6 +453,34 @@ void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
     currentCacheSize += sizediff;
 }
 
+int Cache::ifExistsThenDelete(const string &key)
+{
+    bf::path cachedPath = prefix / key;
+    bf::path journalPath = journalPrefix / (key + ".journal");
+
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    bool objectExists = false;
+    bool journalExists = bf::exists(journalPath);
+    
+    auto it = m_lru.find(key);
+    if (it != m_lru.end())
+    {
+        objectExists = true;
+        lru.erase(it->lit);
+        m_lru.erase(it);
+    }
+    assert(objectExists == bf::exists(cachedPath));
+    
+    size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
+    //size_t objectSize = (objectExists ? MetadataFile::getLengthFromKey(key) : 0);
+    size_t journalSize = (journalExists ? bf::file_size(journalPath) : 0);
+    currentCacheSize -= (objectSize + journalSize);
+    
+    //assert(!objectExists || objectSize == bf::file_size(cachedPath));
+    
+    return (objectExists ? 1 : 0) | (journalExists ? 2 : 0);
+}
+
 size_t Cache::getCurrentCacheSize() const
 {
     return currentCacheSize;

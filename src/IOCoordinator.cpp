@@ -342,7 +342,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             //log error and abort
         }
 
-        cache->newObject(newObject.key,(writeLength + objectOffset));
+        cache->newObject(newObject.key,writeLength);
         newObjectKeys.push_back(newObject.key);
 
         count += writeLength;
@@ -560,25 +560,14 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     
     uint i = (newSize == objects[0].offset ? 0 : 1);
     vector<string> deletedObjects;
-    while (i < objects.size())
+    for (; i < objects.size(); ++i)
     {
-        bf::path journal = journalPath / (objects[i].key + ".journal");
-        if (bf::exists(journal))
-        {
-            size_t jsize = bf::file_size(journal);
-            replicator->remove(journal);
-            cache->deletedJournal(jsize);
-        }
-        
-        if (cache->exists(objects[i].key))
-        {
-            bf::path cached = cachePath / objects[i].key;
-            size_t fsize = bf::file_size(cached);
-            replicator->remove(cached);
-            cache->deletedObject(objects[i].key, fsize);
-        }
+        int result = cache->ifExistsThenDelete(objects[i].key);
+        if (result & 0x1)
+            replicator->remove(cachePath / objects[i].key);
+        if (result & 0x2)
+            replicator->remove(journalPath / (objects[i].key + ".journal"));
         deletedObjects.push_back(objects[i].key);
-        ++i;
     }
     if (!deletedObjects.empty())
         synchronizer->deletedObjects(deletedObjects);
@@ -609,24 +598,13 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
         
     vector<metadataObject> objects = meta.metadataRead(0, meta.getLength());
     vector<string> deletedObjects;
-    bf::path journal, obj;
-    size_t size;
     for (auto &object : objects)
     {
-        obj = cachePath/object.key;
-        if (bf::exists(obj))
-        {
-            size = bf::file_size(obj);
-            replicator->remove(obj);
-            cache->deletedObject(object.key, size);
-        }
-        journal = journalPath/(object.key + ".journal");
-        if (bf::exists(journal))
-        {
-            size = bf::file_size(journal);
-            replicator->remove(journal);
-            cache->deletedJournal(size);
-        }
+        int result = cache->ifExistsThenDelete(object.key);
+        if (result & 0x1)
+            replicator->remove(cachePath/object.key);
+        if (result & 0x2)
+            replicator->remove(journalPath/(object.key + ".journal"));
         deletedObjects.push_back(object.key);
     }
     synchronizer->deletedObjects(deletedObjects);
