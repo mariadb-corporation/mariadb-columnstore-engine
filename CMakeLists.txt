@@ -35,6 +35,9 @@ IF(NOT CMAKE_BUILD_TYPE)
         "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE TRUE)
+
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
 INCLUDE(columnstore_version.cmake)
@@ -80,7 +83,7 @@ INCLUDE (configureEngine.cmake)
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_BINARY_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 exec_program("git"
