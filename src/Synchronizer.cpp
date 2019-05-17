@@ -350,7 +350,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     ScopedWriteLock s(ioc, sourceFile);
     
     char buf[80];
-    string &key = *lit;
+    string key = *lit;
     MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
     
     if (!md.exists())
