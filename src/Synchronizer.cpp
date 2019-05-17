@@ -129,23 +129,18 @@ void Synchronizer::flushObject(const string &key)
 {
     boost::unique_lock<boost::recursive_mutex> s(mutex);
 
-    // if there is something to do on key, it should be in the objNames list
-    // and either in pendingOps or opsInProgress.
+    // if there is something to do on key, it should be either in pendingOps or opsInProgress
+    // if it is is pending ops, start the job now.  If it is in progress, wait for it to finish.
     // The sanity check at the end was intended for debugging / development
     // I'm inclined to make it permanent.  An existence check on S3 is quick.
 
     bool noExistingJob = false;
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
-        // find the object name and call process() to start it right away
-        for (auto name = objNames.begin(); name != objNames.end(); ++name)
-        {
-            if (*name == key)
-            {
-                process(name);
-                break;
-            }
-        }
+    {
+        objNames.push_front(key);
+        process(objNames.begin());
+    }
     else
     {
         auto op = opsInProgress.find(key);
@@ -241,11 +236,15 @@ void Synchronizer::process(list<string>::iterator name)
         {
             boost::shared_ptr<PendingOps> tmp = op->second;
             tmp->wait(&mutex);
+            objNames.erase(name);
             return;
         }
         else
+        {
             // it's not in pending or opsinprogress, nothing to do
+            objNames.erase(name);
             return;
+        }
     }
     
     boost::shared_ptr<PendingOps> pending = it->second;
@@ -340,14 +339,20 @@ void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::ite
 {
     ScopedWriteLock s(ioc, sourceFile);
     cs->deleteObject(*it);
+    
+    // delete any pending jobs for *it.
+    boost::unique_lock<boost::recursive_mutex> sc(mutex);
+    pendingOps.erase(*it);
 }
 
 void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>::iterator &lit)
 {
     ScopedWriteLock s(ioc, sourceFile);
     
+    char buf[80];
     string &key = *lit;
     MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    
     if (!md.exists())
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s", sourceFile.c_str());
@@ -361,15 +366,38 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     if (!bf::exists(journalName))
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): no journal file found for %s", key.c_str());
-        // I don't think this should happen, maybe throw a logic_error here.
-        // Revision ^^.  It can happen if the object was deleted after the op was latched but before it runs.
+        
+        // sanity check + add'l info.  Test whether the object exists in cloud storage.  If so, complain,
+        // and run synchronize() instead.
+        bool existsOnCloud;
+        int err = cs->exists(key, &existsOnCloud);
+        if (err)
+            throw runtime_error(string("Synchronizer: cs->exists() failed: ") + strerror_r(errno, buf, 80));
+        if (!existsOnCloud)
+        {
+            if (bf::exists(oldCachePath))
+            {
+                logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal and does not exist in the cloud, calling "
+                    "synchronize() instead.  Need to explain how this happens.", key.c_str());
+                s.unlock();
+                synchronize(sourceFile, lit);
+            }
+            else
+                logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal, and does not exist in the cloud or in "
+                    " the local cache.  Need to explain how this happens.", key.c_str());
+            return;
+        }
+        else
+            logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal, but it does exist in the cloud. "
+                " This indicates that an overlapping syncWithJournal() call handled it properly.", key.c_str());
+
         return;
     }
     
     int err;
     boost::shared_array<uint8_t> data;
     size_t count = 0, size = mdEntry.length;
-    char buf[80];
+    
     bool oldObjIsCached = cache->exists(key);
     
     // get the base object if it is not already cached
@@ -449,7 +477,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         if (newFD < 0)
             throw runtime_error(string("Synchronizer: Failed to open a new object in local storage!  Got ") 
               + strerror_r(errno, buf, 80));
-        ScopedCloser s(newFD);
+        ScopedCloser scloser(newFD);
         
         while (count < size)
         {
@@ -473,7 +501,6 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
 
     rename(key, newKey);
     ioc->renameObject(key, newKey);
-    s.unlock();
     
     // delete the old object & journal file
     cache->deletedJournal(bf::file_size(journalName));
