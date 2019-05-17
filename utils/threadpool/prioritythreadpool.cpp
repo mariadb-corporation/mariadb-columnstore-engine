@@ -139,8 +139,8 @@ PriorityThreadPool::Priority PriorityThreadPool::pickAQueue(Priority preference)
 
 void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 {
-    Priority queue;
-    uint32_t weight, i;
+    Priority queue = LOW;
+    uint32_t weight, i = 0;
     vector<Job> runList;
     vector<bool> reschedule;
     uint32_t rescheduleCount;
@@ -282,7 +282,7 @@ void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveproce
     ism.Status =  logging::primitiveServerErr;
     ph.UniqueID = id;
     ph.StepID = step;
-    ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    messageqcpp::ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
     msg.append((uint8_t*) &ism, sizeof(ism));
     msg.append((uint8_t*) &ph, sizeof(ph));
 

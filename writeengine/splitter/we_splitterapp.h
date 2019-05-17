@@ -32,15 +32,12 @@
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
-using namespace boost;
 
 #include "bytestream.h"
-using namespace messageqcpp;
 
 #include "we_cmdargs.h"
 #include "we_sdhandler.h"
 #include "we_simplesyslog.h"
-using namespace WriteEngine;
 
 namespace WriteEngine
 {

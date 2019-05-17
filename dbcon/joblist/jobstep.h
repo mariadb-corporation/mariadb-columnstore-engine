@@ -53,8 +53,6 @@
 #  endif
 #endif
 
-using namespace threadpool;
-
 namespace joblist
 {
 
@@ -423,7 +421,7 @@ public:
         fOnClauseFilter = b;
     }
 
-    static ThreadPool jobstepThreadPool;
+    static threadpool::ThreadPool jobstepThreadPool;
 protected:
 
     //@bug6088, for telemetry posting

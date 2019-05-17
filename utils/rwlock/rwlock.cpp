@@ -32,7 +32,9 @@
 #include <tr1/unordered_map>
 #endif
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <cassert>
 using namespace std;
 

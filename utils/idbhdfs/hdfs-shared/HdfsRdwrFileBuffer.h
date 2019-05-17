@@ -50,7 +50,7 @@ class HdfsRdwrFileBuffer: public IDBDataFile, boost::noncopyable
 {
 public:
     HdfsRdwrFileBuffer(const char* fname, const char* mode, unsigned opts);
-    HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) throw (std::exception);
+    HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer);
     /* virtual */ ~HdfsRdwrFileBuffer();
 
     /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);

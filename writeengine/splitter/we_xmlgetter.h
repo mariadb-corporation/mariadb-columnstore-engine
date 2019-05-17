@@ -43,15 +43,15 @@ public:
 
 public:
     //..Public methods
-    std::string getValue(const vector<string>& section) const;
-    std::string getAttribute(const std::vector<string>& sections,
+    std::string getValue(const std::vector<std::string>& section) const;
+    std::string getAttribute(const std::vector<std::string>& sections,
                              const std::string& Tag) const;
     void getConfig(const std::string& section,
                    const std::string& name, std::vector<std::string>& values ) const;
     void getAttributeListForAllChildren(
-        const vector<string>& sections,
-        const string& attributeTag,
-        vector<string>& attributeValues);
+        const std::vector<std::string>& sections,
+        const std::string& attributeTag,
+      std::vector<std::string>& attributeValues);
 
 private:
     //..Private methods

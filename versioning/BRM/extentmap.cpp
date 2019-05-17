@@ -1141,7 +1141,8 @@ void ExtentMap::loadVersion4(ifstream& in)
     in.read((char*) &flNumElements, sizeof(int));
     idbassert(emNumElements > 0);
 
-    memset(fExtentMap, 0, fEMShminfo->allocdSize);
+    void *fExtentMapPtr = static_cast<void*>(fExtentMap);
+    memset(fExtentMapPtr, 0, fEMShminfo->allocdSize);
     fEMShminfo->currentSize = 0;
 
     // init the free list
@@ -1226,7 +1227,8 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
     }
 
-    memset(fExtentMap, 0, fEMShminfo->allocdSize);
+    void *fExtentMapPtr = static_cast<void*>(fExtentMap);
+    memset(fExtentMapPtr, 0, fEMShminfo->allocdSize);
     fEMShminfo->currentSize = 0;
 
     // init the free list

@@ -20,7 +20,6 @@
 *
 *
 ***********************************************************************/
-
 #include <unistd.h>
 #include <signal.h>
 #include <string>
@@ -492,17 +491,19 @@ void rollbackAll(DBRM* dbrm)
     dbrm->setSystemReady(true);
 }
 
-void setupCwd()
+int8_t setupCwd()
 {
     string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";
 
-    (void)chdir(workdir.c_str());
+    int8_t rc = chdir(workdir.c_str());
 
-    if (access(".", W_OK) != 0)
-        (void)chdir("/tmp");
+    if (rc < 0 || access(".", W_OK) != 0)
+        rc = chdir("/tmp");
+
+    return rc;
 }
 }	// Namewspace
 
@@ -521,7 +522,18 @@ int main(int argc, char* argv[])
 
     Config* cf = Config::makeConfig();
 
-    setupCwd();
+    if ( setupCwd() )
+    {
+        LoggingID logid(21, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(1);
+        args1.add("DMLProc couldn't cwd.");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
+    }
+
 
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DMLPROC );
 #ifdef _MSC_VER
@@ -610,9 +622,20 @@ int main(int argc, char* argv[])
     try
     {
         string port = cf->getConfig(DMLProc, "Port");
-	string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
+        string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
+    // Couldn't check the return code b/c
+    // fuser returns 1 for unused port.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
         (void)::system(cmd.c_str());
+#pragma GCC diagnostic pop
+#else
+        (void)::system(cmd.c_str());
+#endif
+  
+  
     }
     catch (...)
     {
@@ -632,7 +655,7 @@ int main(int argc, char* argv[])
     if (rm->getDMLJlThreadPoolDebug() == "Y" || rm->getDMLJlThreadPoolDebug() == "y")
     {
         JobStep::jobstepThreadPool.setDebug(true);
-        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+        JobStep::jobstepThreadPool.invoke(threadpool::ThreadPoolMonitor(&JobStep::jobstepThreadPool));
     }
 
     //set ACTIVE state

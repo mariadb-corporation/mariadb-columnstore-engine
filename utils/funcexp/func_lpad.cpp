@@ -103,8 +103,6 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
                 value += 0.5;
             else if (value < 0)
                 value -= 0.5;
-            else if (value < 0)
-                value -= 0.5;
 
             int64_t ret = (int64_t) value;
 

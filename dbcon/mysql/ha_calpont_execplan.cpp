@@ -44,6 +44,7 @@
 #include <limits>
 
 #include <string.h>
+#include "mcsv1_udaf.h"
 
 using namespace std;
 
@@ -4610,7 +4611,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
             if (udafc)
             {
-                mcsv1Context& context = udafc->getContext();
+                mcsv1sdk::mcsv1Context& context = udafc->getContext();
                 context.setName(isp->func_name());
 
                 // Set up the return type defaults for the call to init()
@@ -4620,8 +4621,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 context.setPrecision(udafc->resultType().precision);
 
                 context.setParamCount(udafc->aggParms().size());
-                ColumnDatum colType;
-                ColumnDatum colTypes[udafc->aggParms().size()];
+                mcsv1sdk::ColumnDatum colType;
+                mcsv1sdk::ColumnDatum colTypes[udafc->aggParms().size()];
 
                 // Build the column type vector.
                 // Modified for MCOL-1201 multi-argument aggregate
@@ -4649,7 +4650,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     return NULL;
                 }
 
-                if (udaf->init(&context, colTypes) == mcsv1_UDAF::ERROR)
+                if (udaf->init(&context, colTypes) == mcsv1sdk::mcsv1_UDAF::ERROR)
                 {
                     gwi.fatalParseError = true;
                     gwi.parseErrorText = udafc->getContext().getErrorMessage();
@@ -4662,7 +4663,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
                 // UDAF_OVER_REQUIRED means that this function is for Window
                 // Function only. Reject it here in aggregate land.
-                if (udafc->getContext().getRunFlag(UDAF_OVER_REQUIRED))
+                if (udafc->getContext().getRunFlag(mcsv1sdk::UDAF_OVER_REQUIRED))
                 {
                     gwi.fatalParseError = true;
                     gwi.parseErrorText =
@@ -4685,7 +4686,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             }
         }
     }
-    catch (std::logic_error e)
+    catch (std::logic_error &e)
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = "error building Aggregate Function: ";

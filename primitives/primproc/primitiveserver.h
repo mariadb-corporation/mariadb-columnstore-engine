@@ -58,7 +58,7 @@ extern boost::mutex bppLock;
 extern uint32_t highPriorityThreads, medPriorityThreads, lowPriorityThreads;
 
 #ifdef PRIMPROC_STOPWATCH
-extern map<pthread_t, logging::StopWatch*> stopwatchMap;
+extern std::map<pthread_t, logging::StopWatch*> stopwatchMap;
 extern pthread_mutex_t stopwatchMapMutex;
 extern bool stopwatchThreadCreated;
 

@@ -41,9 +41,6 @@
 #include "exceptclasses.h"
 #include "dataconvert.h"
 
-// Workaround for my_global.h #define of isnan(X) causing a std::std namespace
-using namespace std;
-
 namespace messageqcpp
 {
 class ByteStream;
@@ -608,7 +605,7 @@ inline const std::string& TreeNode::getStrVal()
                 int exponent  = (int)floor(log10( fabs(fResult.floatVal)));  // This will round down the exponent
                 double base   = fResult.floatVal * pow(10, -1.0 * exponent);
 
-                if (isnan(exponent) || std::isnan(base))
+                if (std::isnan(exponent) || std::isnan(base))
                 {
                     snprintf(tmp, 312, "%f", fResult.floatVal);
                     fResult.strVal = removeTrailing0(tmp, 312);
@@ -643,7 +640,7 @@ inline const std::string& TreeNode::getStrVal()
                 int exponent  = (int)floor(log10( fabs(fResult.doubleVal)));  // This will round down the exponent
                 double base   = fResult.doubleVal * pow(10, -1.0 * exponent);
 
-                if (isnan(exponent) || std::isnan(base))
+                if (std::isnan(exponent) || std::isnan(base))
                 {
                     snprintf(tmp, 312, "%f", fResult.doubleVal);
                     fResult.strVal = removeTrailing0(tmp, 312);
@@ -677,7 +674,7 @@ inline const std::string& TreeNode::getStrVal()
                 int exponent  = (int)floorl(log10( fabsl(fResult.longDoubleVal)));  // This will round down the exponent
                 long double base   = fResult.longDoubleVal * pow(10, -1.0 * exponent);
 
-                if (isnan(exponent) || isnan(base))
+                if (std::isnan(exponent) || std::isnan(base))
                 {
                     snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
                     fResult.strVal = removeTrailing0(tmp, 312);
@@ -1139,7 +1136,9 @@ inline int64_t TreeNode::getDatetimeIntVal()
         dataconvert::Time tt;
         int day = 0;
 
-        memcpy(&tt, &fResult.intVal, 8);
+        void *ttp = static_cast<void*>(&tt);
+        
+        memcpy(ttp, &fResult.intVal, 8);
 
         // Note, this should probably be current date +/- time
         if ((tt.hour > 23) && (!tt.is_neg))
@@ -1169,7 +1168,7 @@ inline int64_t TreeNode::getTimeIntVal()
     {
         dataconvert::DateTime dt;
 
-        memcpy(&dt, &fResult.intVal, 8);
+        memcpy((int64_t*)(&dt), &fResult.intVal, 8);
         dataconvert::Time tt(0, dt.hour, dt.minute, dt.second, dt.msecond, false);
         memcpy(&fResult.intVal, &tt, 8);
         return fResult.intVal;

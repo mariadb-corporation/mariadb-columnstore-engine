@@ -51,12 +51,14 @@ using namespace idbdatafile;
 
 namespace
 {
+#ifdef USE_VERY_COMPLEX_DROP_CACHES
 void timespec_sub(const struct timespec& tv1,
                   const struct timespec& tv2,
                   double& tm)
 {
     tm = (double)(tv2.tv_sec - tv1.tv_sec) + 1.e-9 * (tv2.tv_nsec - tv1.tv_nsec);
 }
+#endif
 }
 
 namespace BRM
@@ -2179,8 +2181,12 @@ void SlaveComm::do_flushInodeCache()
 
     if ((fd = open("/proc/sys/vm/drop_caches", O_WRONLY)) >= 0)
     {
-        write(fd, "3\n", 2);
-        close(fd);
+        ssize_t written = write(fd, "3\n", 2);
+        int rc = close(fd);
+        if ( !written || rc )
+        {
+            std::cerr << "Could not write into or close /proc/sys/vm/drop_caches" << std::endl;
+        }
     }
 
 #endif

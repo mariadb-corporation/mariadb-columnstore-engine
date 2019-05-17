@@ -24,6 +24,17 @@ ENDIF()
 
 MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 
+OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
+if(NOT USE_CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
+else()
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
+endif()
 # Distinguish between community and non-community builds, with the
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to
@@ -36,7 +47,23 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
+if(SERVER_BUILD_DIR)
+    if (NOT IS_ABSOLUTE ${SERVER_BUILD_DIR})
+      set(SERVER_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${SERVER_BUILD_DIR})
+    endif()
+    if(NOT EXISTS ${SERVER_BUILD_DIR}/CMakeCache.txt)
+        message(FATAL_ERROR "SERVER_BUILD_DIR parameter supplied but CMakeCache.txt not found in ${SERVER_BUILD_DIR}")
+    endif()
+    load_cache("${SERVER_BUILD_DIR}" READ_WITH_PREFIX SERVER_ MySQL_SOURCE_DIR MySQL_BINARY_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX)
+
+    set(SERVER_BUILD_INCLUDE_DIR "${SERVER_MySQL_BINARY_DIR}/include" CACHE PATH "Location of server build include folder" FORCE)
+    set(SERVER_SOURCE_ROOT_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
+    set(CMAKE_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
+    set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
+endif()
+
 INCLUDE(ExternalProject)
+INCLUDE(CheckCXXSourceCompiles)
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -50,8 +77,12 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
-find_package(BISON REQUIRED)
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
+FIND_PACKAGE(BISON REQUIRED)
+
+check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
+check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
+
 INCLUDE(columnstore_version)
 
 SET (PACKAGE columnstore)
