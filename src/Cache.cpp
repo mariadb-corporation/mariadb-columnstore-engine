@@ -428,7 +428,8 @@ void Cache::_makeSpace(size_t size)
         thisMuch -= statbuf.st_size;
         //logger->log(LOG_WARNING, "Cache:  flushing!  Try to avoid this, it may deadlock!");
         Synchronizer::get()->flushObject(*it);
-        replicator->remove(cachedFile.string().c_str(), Replicator::LOCAL_ONLY);
+        cachedFile = prefix / *it;   // it might have been renamed by the flush
+        replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
         m_lru.erase(*toRemove);
         lru.erase(toRemove);
