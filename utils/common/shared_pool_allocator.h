@@ -69,13 +69,22 @@ namespace utils {
       static ptr get(size_t prealloc=0) {
         static boost::weak_ptr<alloc_stack> oStack;
         static boost::mutex mux;
-        boost::lock_guard<boost::mutex> oLock(mux);
-        ptr oRet = oStack.lock();
-        if (!oRet){
-          oRet.reset(new alloc_stack(prealloc));
-          oStack = oRet;
+        ptr oRet;
+        bool bCreated = false;
+        {
+          boost::lock_guard<boost::mutex> oLock(mux);
+          oRet = oStack.lock();
+          if (!oRet) {
+            oRet = ptr(new alloc_stack(prealloc));
+            oStack = oRet;
+            bCreated = true;
+          }
+        }       
+        if (bCreated && prealloc) {
+          boost::thread(prepopulate).detach();
         }
         return oRet;
+
       }
 
       void * pop(){
@@ -117,9 +126,6 @@ namespace utils {
       alloc_stack(size_t prealloc = 0) : _prealloc(prealloc) {
         _root.store(NULL);
         _live_count.store(0);
-        if (prealloc){
-          boost::thread(prepopulate).detach();
-        }
       }
       alloc_stack(alloc_stack&){}
       static void prepopulate(){
@@ -156,12 +162,21 @@ namespace utils {
       shared_pool_allocator(size_t prealloc) throw() : _stack(alloc_stack_type::get(prealloc)) {}
       shared_pool_allocator(const shared_pool_allocator & src) throw() : _stack(src._stack) {}
       template<class U> shared_pool_allocator(const shared_pool_allocator<U> & src) throw() : _stack(alloc_stack_type::get()) {}
-      ~shared_pool_allocator() {}
+      ~shared_pool_allocator() { }
 
-      shared_pool_allocator<T>& operator=(const shared_pool_allocator<T> & src){ _stack = src._stack; return *this; }
+      shared_pool_allocator<T>& operator=(const shared_pool_allocator<T> & src){
+        _stack = src._stack;
+        return *this;
+      }
 
-      pointer allocate(size_type, const void *hint = 0) { return reinterpret_cast<pointer>(_stack->pop()); }
-      void deallocate(pointer p, size_type n) { _stack->push(p); }
+      pointer allocate(size_type, const void *hint = 0) {
+        void * pRet = _stack->pop();
+        return reinterpret_cast<pointer>(pRet);
+      }
+      void deallocate(pointer p, size_type n) {
+        _stack->push(p);
+        bool bBreak = false;
+      }
       size_type max_size() const throw() { return (sizeof(void*) * std::numeric_limits<uint8_t>::max()); }
 
 
