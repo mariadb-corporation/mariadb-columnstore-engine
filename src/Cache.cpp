@@ -428,6 +428,7 @@ void Cache::_makeSpace(size_t size)
         thisMuch -= statbuf.st_size;
         //logger->log(LOG_WARNING, "Cache:  flushing!");
         Synchronizer::get()->flushObject(*it);
+        cachedFile = prefix / *it;    // Sync may have renamed it
         #ifndef NDEBUG
             assert(replicator->remove(cachedFile, Replicator::LOCAL_ONLY) == 0);
         #else
