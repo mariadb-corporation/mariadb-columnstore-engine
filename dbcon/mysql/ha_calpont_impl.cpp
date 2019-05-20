@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+ /* Copyright (C) 2014 InfiniDB, Inc.
    Copyright (C) 2019 MariaDB Corporaton
 
    This program is free software; you can redistribute it and/or
@@ -4203,7 +4203,7 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
     // An ugly way. I will use ha_data w/o external_lock.
     // This in MCOL-2178
     cal_connection_info* ci = NULL;
-    if(thd_get_ha_data(thd, hton))
+    if(thd_get_ha_data(thd, hton) != (void*)0x42) // 0x42 is the magic CS sets when setup hton
     {
         ci = reinterpret_cast<cal_connection_info*>(thd_get_ha_data(thd, hton));
     }
