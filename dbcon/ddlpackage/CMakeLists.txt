@@ -9,6 +9,11 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ddl.y ddl.l
 )
 
+
+get_source_file_property(compileOps ddl-scan.cpp COMPILE_OPTIONS)
+set(compileOps ${compileOps} -Wno-sign-compare)
+set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_OPTIONS ${compileOps})
+
 # Parser puts extra info to stderr.
 MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG=1" DEBUG)
 

@@ -3097,9 +3097,6 @@ int ha_calpont_impl_write_row(uchar* buf, TABLE* table)
 
 int ha_calpont_impl_update_row()
 {
-    //@Bug 2540. Return the correct error code.
-    THD* thd = current_thd;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -3114,9 +3111,6 @@ int ha_calpont_impl_update_row()
 
 int ha_calpont_impl_delete_row()
 {
-    //@Bug 2540. Return the correct error code.
-    THD* thd = current_thd;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 

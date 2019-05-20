@@ -11,6 +11,10 @@ ADD_CUSTOM_COMMAND(
 )
 
 
+get_source_file_property(compileOps dml-scan.cpp COMPILE_OPTIONS)
+set(compileOps ${compileOps} -Wno-sign-compare)
+set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_OPTIONS ${compileOps})
+
 ########### next target ###############
 
 ADD_LIBRARY(dmlpackage SHARED

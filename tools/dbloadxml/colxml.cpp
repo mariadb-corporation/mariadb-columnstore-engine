@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     // set effective ID to root
     if( setuid( 0 ) < 0 )
     {
-        std::cerr << " colxml: setuid failed " << std::endl;
+        std::cerr << " colxml: couldn't set uid " << std::endl;
     }
     setlocale(LC_ALL, "");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings
