@@ -195,10 +195,18 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
         
     try
     {
-        boost::filesystem::remove_all(filename);
+        #ifndef NDEBUG
+            assert(boost::filesystem::remove_all(filename) > 0);
+        #else
+            boost::filesystem::remove_all(filename);
+        #endif
     }
     catch(boost::filesystem::filesystem_error &e)
     {
+        #ifndef NDEBUG
+            cout << "Replicator::remove(): caught an execption: " << e.what() << endl;
+            assert(0);
+        #endif
         errno = e.code().value();
         ret = -1;
     }

@@ -584,7 +584,8 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
         tell cache they were deleted
         tell synchronizer to delete them in cloud storage
     */
-
+    //cout << "deleteMetaFile called on " << file << endl;
+    
     Synchronizer *synchronizer = Synchronizer::get();
 
     // this is kind of ugly.  We need to lock on 'file' relative to metaPath, and without the .meta extension
@@ -600,6 +601,7 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     vector<string> deletedObjects;
     for (auto &object : objects)
     {
+        //cout << "deleting " << object.key << endl;
         int result = cache->ifExistsThenDelete(object.key);
         if (result & 0x1)
             replicator->remove(cachePath/object.key);
@@ -622,7 +624,12 @@ void IOCoordinator::remove(const bf::path &p)
             remove(*entry);     
             ++entry;
         }
-        bf::remove(p);
+        //cout << "removing dir " << p << endl;
+        #ifndef NDEBUG
+            assert(replicator->remove(p) == 0);
+        #else
+            replicator->remove(p);
+        #endif
         return;
     }
     
@@ -635,8 +642,12 @@ void IOCoordinator::remove(const bf::path &p)
         bf::path possibleMetaFile = p.string() + ".meta";
         if (bf::is_regular_file(possibleMetaFile))
             deleteMetaFile(possibleMetaFile);
-        else
-            bf::remove(p);   // if p.meta doesn't exist, and it's not a dir, then just throw it out
+        else if (bf::exists(p))
+            #ifndef NDEBUG
+                assert(replicator->remove(p) == 0);   // if p.meta doesn't exist, and it's not a dir, then just throw it out
+            #else
+                replicator->remove(p);
+            #endif
     }
     
 }
