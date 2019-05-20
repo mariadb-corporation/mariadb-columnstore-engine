@@ -426,10 +426,13 @@ void Cache::_makeSpace(size_t size)
         assert(currentCacheSize >= (size_t) statbuf.st_size);
         currentCacheSize -= statbuf.st_size;
         thisMuch -= statbuf.st_size;
-        //logger->log(LOG_WARNING, "Cache:  flushing!  Try to avoid this, it may deadlock!");
+        //logger->log(LOG_WARNING, "Cache:  flushing!");
         Synchronizer::get()->flushObject(*it);
-        cachedFile = prefix / *it;   // it might have been renamed by the flush
-        replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
+        #ifndef NDEBUG
+            assert(replicator->remove(cachedFile, Replicator::LOCAL_ONLY) == 0);
+        #else
+            replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
+        #endif
         LRU_t::iterator toRemove = it++;
         m_lru.erase(*toRemove);
         lru.erase(toRemove);
