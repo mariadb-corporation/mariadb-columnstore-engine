@@ -1025,7 +1025,7 @@ int main(int argc, char** argv)
     // set effective ID to root
     if( setuid( 0 ) < 0 )
     {
-        std::cerr << " cpimport: setuid failed " << std::endl;
+        std::cerr << " cpimport: couldn't set uid " << std::endl;
     } 
 #endif
     setupSignalHandlers();
