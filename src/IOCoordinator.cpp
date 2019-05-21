@@ -297,8 +297,11 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
                 logger->log(LOG_ERR,"IOCoordinator::write(): object failed to complete write, %u of %u bytes written.",count,length);
                 return count;
             }
+
             if ((writeLength + objectOffset) > i->length)
                 metadata.updateEntryLength(i->offset, (writeLength + objectOffset));
+
+            assert(objectOffset >= 0 && objectOffset < (off_t) i->length);
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -311,6 +314,9 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     while (dataRemaining > 0)
     {
         metadataObject newObject = metadata.addMetadataObject(filename,0);
+        // count is 0 so first write is beyond current end of file.
+        // offset is > than newObject.offset so we need to adjust offset for object
+        // unless offset is beyond newObject.offset + objectSize then we need to write null data to this object
         if (count == 0 && (uint64_t) offset > newObject.offset)
         {
             //this is starting beyond last object in metadata
@@ -325,9 +331,15 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             writeLength = min(objectSize,dataRemaining);
             objectOffset = 0;
         }
-        cache->makeSpace(writeLength);
+        // writeLength is the data length passed to write()
+        // objectOffset is 0 unless the write starts beyond the end of data
+        // in that case need to add the null data to cachespace
+        cache->makeSpace(writeLength + objectOffset);
         if ((writeLength + objectOffset) > newObject.length)
             metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
+
+        assert(objectOffset >= 0 && objectOffset < (off_t) newObject.length);
+
         // send to replicator
         err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
         assert((uint) err == writeLength);
@@ -403,6 +415,8 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
                 return count;
             }
             metadata.updateEntryLength(i->offset, (writeLength + i->length));
+
+            assert(i->offset >= 0 && i->offset < (off_t) (writeLength + i->length));
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -549,7 +563,10 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     if (newSize == objects[0].offset)
         meta.removeEntry(objects[0].offset);
     else
+    {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
+        assert(objects[0].offset >= 0 && objects[0].offset < (off_t) (newSize - objects[0].offset));
+    }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
     
