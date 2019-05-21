@@ -16,12 +16,21 @@ using namespace std;
 
 using namespace storagemanager;
 
+#include "Cache.h"
+void printCacheUsage(int sig)
+{
+    cout << "Current cache size = " << Cache::get()->getCurrentCacheSize() << endl;
+}
+
 int main(int argc, char** argv)
 {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sa, NULL);
+ 
+    sa.sa_handler = printCacheUsage;
+    sigaction(SIGUSR1, &sa, NULL);
     
     int ret = 0;
 

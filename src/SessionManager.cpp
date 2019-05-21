@@ -128,11 +128,13 @@ int SessionManager::start()
                 //logger->log(LOG_DEBUG,"polling %i fds %i", nfds,fds);
                 //cout << "polling " << nfds << " fds" << endl;
             rc = ::poll(fds, nfds, pollTimeout);
-            if (rc < 0)
+            if (rc < 0 && errno != EINTR)
             {
                 logger->log(LOG_CRIT,"poll() failed: %s", strerror(errno));
                 break;
             }
+            else if (rc < 0)
+                continue;
             current_size = nfds;
             for (socketIncr = 0; socketIncr < current_size; socketIncr++)
             {
