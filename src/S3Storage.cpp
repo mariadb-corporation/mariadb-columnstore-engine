@@ -114,6 +114,7 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     int fd, err;
     boost::shared_array<uint8_t> data;
     size_t len, count = 0;
+    char buf[80];
     
     err = getObject(sourceKey, &data, &len);
     if (err)
@@ -121,14 +122,19 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     
     fd = ::open(destFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
+    {
+        int l_errno = errno;
+        logger->log(LOG_ERR, "S3Storage::getObject(): Failed to open %s, got %s", destFile.c_str(), 
+            strerror_r(l_errno, buf, 80));
+        errno = l_errno;
         return err;
+    }
     ScopedCloser s(fd);
     while (count < len)
     {
         err = ::write(fd, &data[count], len - count);
         if (err < 0)
         {
-            char buf[80];
             int l_errno = errno;
             logger->log(LOG_ERR, "S3Storage::getObject(): Failed to write to %s, got %s", destFile.c_str(), 
               strerror_r(errno, buf, 80));
