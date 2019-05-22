@@ -1,0 +1,2 @@
+
+add_gtest(shared_pool_allocator_test shared_pool_allocator_test.cpp)

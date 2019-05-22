@@ -227,8 +227,11 @@ ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
-ADD_SUBDIRECTORY(test)
 
+option(BUILD_UNIT_TESTS "Build unit tests" TRUE)
+if(BUILD_UNIT_TESTS)
+  ADD_SUBDIRECTORY(test)
+endif()
 
 
 INCLUDE(cpackEngineRPM.cmake)
