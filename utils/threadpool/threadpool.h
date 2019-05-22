@@ -77,7 +77,7 @@ public:
     boost::thread* create_thread(F threadfunc)
     {
         boost::lock_guard<boost::shared_mutex> guard(m);
-#if defined(__GNUC__) && __GNUC__ >= 7
+#if __cplusplus >= 201103L
         std::unique_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
 #else
         std::auto_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
