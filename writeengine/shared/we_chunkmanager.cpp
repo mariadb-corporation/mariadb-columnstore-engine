@@ -1928,7 +1928,7 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
         char tmText[24];
     // this snprintf call causes a compiler warning b/c buffer size is less
     // then maximum string size.
-#if defined(__GNUC__) && __GNUC__ >= 6
+#if defined(__GNUC__) && __GNUC__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
         snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",
@@ -2123,7 +2123,7 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
             char tmText[24];
     // this snprintf call causes a compiler warning b/c buffer size is less
     // then maximum string size.
-#if defined(__GNUC__) && __GNUC__ >= 6
+#if defined(__GNUC__) && __GNUC__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
             snprintf(tmText, sizeof(tmText), ".%04d%02d%02d%02d%02d%02d%06ld",

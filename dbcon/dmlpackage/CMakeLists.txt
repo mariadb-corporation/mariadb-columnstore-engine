@@ -10,6 +10,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS dml.y dml.l
 )
 
+set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 ########### next target ###############
 
