@@ -1636,7 +1636,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         string constval(cc->constval());
-//        boost::trim_right_if(constval, boost::is_any_of(" "));
+        boost::trim_right_if(constval, boost::is_any_of(" "));
 
 
         CalpontSystemCatalog::OID dictOid = 0;

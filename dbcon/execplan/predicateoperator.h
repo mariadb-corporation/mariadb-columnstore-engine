@@ -456,19 +456,11 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 isNull = false;
                 return !ret;
             }
-#if 0   
-                if (isNull)
-                return false;
-
-            const std::string& val1 = lop->getStrVal(row, isNull);
 
             if (isNull)
                 return false;
 
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
-#endif
-	    // MCOL-1559
-	    std::string val1 = lop->getStrVal(row, isNull);
+            std::string val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
@@ -480,7 +472,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
             boost::trim_right_if(val2, boost::is_any_of(" "));
 
             return strCompare(val1, val2);
-	}
+        }
 
         //FIXME: ???
         case execplan::CalpontSystemCatalog::VARBINARY:
