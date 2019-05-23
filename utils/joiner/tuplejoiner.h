@@ -253,7 +253,7 @@ private:
 	JoinAlg joinAlg;
 	joblist::JoinType joinType;
 	#if (EXPERIMENTAL_ALLOCATOR)
-		utils::iAllocMemUse * _pool;
+    boost::shared_ptr<utils::iAllocMemUse> _pool;
 	#else
 		boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
 	#endif

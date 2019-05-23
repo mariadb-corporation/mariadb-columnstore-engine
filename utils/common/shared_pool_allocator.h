@@ -212,7 +212,7 @@ namespace utils {
       void construct(pointer p, const T& val){  new((void *)p) T(val); }
       void destroy(pointer p) { p->T::~T(); }
 
-      iAllocMemUse * getPoolAllocator() const { return alloc_stack_type::get().get(); }
+      boost::shared_ptr<iAllocMemUse> getPoolAllocator() const { return alloc_stack_type::get(); }
       template<class U> bool operator==(const shared_pool_allocator<U>&) const { return true; }
       template<class U> bool operator!=(const shared_pool_allocator<U>&) const { return false; }
 
