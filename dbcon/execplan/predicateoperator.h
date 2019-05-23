@@ -114,6 +114,8 @@ private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strCompare(const std::string& op1, const std::string& op2);
+    // MCOL-1559
+    inline bool strTrimCompare(const std::string& op1, const std::string& op2);
 };
 
 inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
@@ -457,20 +459,16 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return !ret;
             }
 
-            // MCOL-1559
-	    std::string val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            std::string val2 = rop->getStrVal(row, isNull);
+            const std::string& val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            boost::trim_right_if(val1, boost::is_any_of(" "));
-            boost::trim_right_if(val2, boost::is_any_of(" "));
+            return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
 
-            return strCompare(val1, val2);
-	}
+        }
 
         //FIXME: ???
         case execplan::CalpontSystemCatalog::VARBINARY:
@@ -543,6 +541,37 @@ inline bool PredicateOperator::strCompare(const std::string& op1, const std::str
 
         case OP_LE:
             return funcexp::utf8::idb_strcoll(op1.c_str(), op2.c_str()) <= 0;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "Non support predicate operation: " << fOp;
+            throw logging::InvalidOperationExcept(oss.str());
+        }
+    }
+}
+
+inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)
+{
+    switch (fOp)
+    {
+        case OP_EQ:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) == 0;
+
+        case OP_NE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) != 0;
+
+        case OP_GT:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) > 0;
+
+        case OP_GE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) >= 0;
+
+        case OP_LT:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) < 0;
+
+        case OP_LE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) <= 0;
 
         default:
         {
