@@ -1636,6 +1636,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         string constval(cc->constval());
+//        boost::trim_right_if(constval, boost::is_any_of(" "));
+
 
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
@@ -1674,8 +1676,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                 pds->cardinality(sc->cardinality());
 
                 //Add the filter
-                // MCOL-1559 trim before adding.
-                boost::trim_right_if(constval, boost::is_any_of(" "));
                 pds->addFilter(cop, constval);
 
                 // data list for pcolstep output
