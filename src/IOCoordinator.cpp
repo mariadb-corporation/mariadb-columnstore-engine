@@ -198,7 +198,12 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         objectFDs[key] = fd;
         fdMinders.push_back(SharedCloser(fd));
     }
-    fileLock.unlock();
+    //fileLock.unlock();
+    
+    // ^^^ TODO:  The original version unlocked the file at the above position.  On second glance,
+    // I'm not sure how we can guarantee the journal files won't be modified during the loads below.
+    // If we do have a guarantee, and I'm just not seeing it now, add the explanation here and uncomment
+    // the unlock() call above.  For now I will let this hold the read lock for the duration.
     
     // copy data from each object + journal into the returned data
     size_t count = 0;
@@ -301,7 +306,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             if ((writeLength + objectOffset) > i->length)
                 metadata.updateEntryLength(i->offset, (writeLength + objectOffset));
 
-            assert(objectOffset >= 0 && objectOffset < i->length);
+            //assert(objectOffset >= 0 && objectOffset < i->length);
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -338,7 +343,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
         if ((writeLength + objectOffset) > newObject.length)
             metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
 
-        assert(objectOffset >= 0 && objectOffset < newObject.length);
+        //assert(objectOffset >= 0 && objectOffset < newObject.length);
 
         // send to replicator
         err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
@@ -354,7 +359,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             //log error and abort
         }
 
-        cache->newObject(newObject.key,writeLength);
+        cache->newObject(newObject.key,writeLength + objectOffset);
         newObjectKeys.push_back(newObject.key);
 
         count += writeLength;
@@ -416,7 +421,7 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
             }
             metadata.updateEntryLength(i->offset, (writeLength + i->length));
 
-            assert(i->offset >= 0 && i->offset < (writeLength + i->length));
+            //assert(i->offset >= 0 && i->offset < (writeLength + i->length));
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -565,7 +570,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        assert(objects[0].offset >= 0 && objects[0].offset < (newSize - objects[0].offset));
+        //assert(objects[0].offset >= 0 && objects[0].offset < (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
