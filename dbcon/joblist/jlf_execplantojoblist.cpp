@@ -1674,6 +1674,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                 pds->cardinality(sc->cardinality());
 
                 //Add the filter
+                // MCOL-1559 trim before adding.
+                boost::trim_right_if(constval, boost::is_any_of(" "));
                 pds->addFilter(cop, constval);
 
                 // data list for pcolstep output
