@@ -36,6 +36,7 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 namespace ba = boost::algorithm;
 
 #include "calpontexecutionplan.h"
