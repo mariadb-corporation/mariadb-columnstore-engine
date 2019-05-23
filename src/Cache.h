@@ -44,6 +44,7 @@ class Cache : public boost::noncopyable
         void setMaxCacheSize(size_t size);
         void makeSpace(size_t size);
         size_t getCurrentCacheSize() const;
+        size_t getCurrentCacheElementCount() const;
         size_t getMaxCacheSize() const;
         
         // test helpers

@@ -256,7 +256,7 @@ void Cache::read(const vector<string> &keys)
     }
     if (keysToFetch.empty())
         return;
-        
+    
     assert(s.owns_lock());
     downloader.download(keysToFetch, &dlErrnos, &dlSizes);
     assert(s.owns_lock());
@@ -429,11 +429,7 @@ void Cache::_makeSpace(size_t size)
         //logger->log(LOG_WARNING, "Cache:  flushing!");
         Synchronizer::get()->flushObject(*it);
         cachedFile = prefix / *it;    // Sync may have renamed it
-        #ifndef NDEBUG
-            assert(replicator->remove(cachedFile, Replicator::LOCAL_ONLY) == 0);
-        #else
-            replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
-        #endif
+        replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
         LRU_t::iterator toRemove = it++;
         m_lru.erase(*toRemove);
         lru.erase(toRemove);
@@ -489,6 +485,13 @@ int Cache::ifExistsThenDelete(const string &key)
 size_t Cache::getCurrentCacheSize() const
 {
     return currentCacheSize;
+}
+
+size_t Cache::getCurrentCacheElementCount() const
+{
+    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    assert(m_lru.size() == lru.size());
+    return m_lru.size();
 }
 
 void Cache::reset()
