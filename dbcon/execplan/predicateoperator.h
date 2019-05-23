@@ -460,11 +460,11 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
             if (isNull)
                 return false;
 
-            std::string val1 = lop->getStrVal(row, isNull);
+            const std::string& val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            std::string val2 = rop->getStrVal(row, isNull);
+            const std::string& val2 = rop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
