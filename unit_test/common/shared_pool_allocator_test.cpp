@@ -13,26 +13,25 @@
 
 namespace{
 
-  boost::atomic<bool> MTSmallObjectsQuit;
+  boost::atomic<bool> STLPoolMTSmallObjectsQuit;
 
-#if 1
-  void MTSmallObjectsThread() {
+  void STLPoolMTSmallObjectsThread() {
     typedef std::vector<size_t, utils::STLPoolAllocator<size_t>> vector_type;
     utils::STLPoolAllocator<size_t> oAllocator(0);
     vector_type oVector(oAllocator);
-    while (!MTSmallObjectsQuit.load()) {
+    while (!STLPoolMTSmallObjectsQuit.load()) {
       for (int i = 0; i < 50; ++i) oVector.push_back(0);
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
 
   }
 
-  TEST(SimpleAllocatorTest, MTSmallObjects) {
+  TEST(STLPoolAllocatorTest, MTSmallObjects) {
     typedef std::vector<size_t, utils::STLPoolAllocator<size_t>> vector_type;
-    MTSmallObjectsQuit.store(false);
+    STLPoolMTSmallObjectsQuit.store(false);
     std::vector<boost::thread> oThreads;
     for (int i = 0; i < 7; ++i) {
-      oThreads.push_back(boost::thread(MTSmallObjectsThread));
+      oThreads.push_back(boost::thread(STLPoolMTSmallObjectsThread));
     }
     
     utils::STLPoolAllocator<size_t> oAllocator(0);
@@ -42,22 +41,22 @@ namespace{
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
 
-    MTSmallObjectsQuit.store(true);
+    STLPoolMTSmallObjectsQuit.store(true);
     for (auto& oThread : oThreads) {
       oThread.join();
     }
   }
 
-#endif
 
-    
-#if 0
-  void MTSmallObjectsThread() {
+  boost::atomic<bool> SimpleMTSmallObjectsQuit;
+
+
+  void SimpleMTSmallObjectsThread() {
     typedef std::vector<size_t, utils::SimpleAllocator<size_t>> vector_type;
     boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
     utils::SimpleAllocator<size_t> oAllocator(oPool);
     vector_type oVector(oAllocator);
-    while (!MTSmallObjectsQuit.load()) {
+    while (!SimpleMTSmallObjectsQuit.load()) {
       for (int i = 0; i < 50; ++i) oVector.push_back(0);
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
@@ -66,10 +65,10 @@ namespace{
 
   TEST(SimpleAllocatorTest, MTSmallObjects) {
     typedef std::vector<size_t, utils::SimpleAllocator<size_t>> vector_type;
-    MTSmallObjectsQuit.store(false);
+    SimpleMTSmallObjectsQuit.store(false);
     std::vector<boost::thread> oThreads;
     for (int i = 0; i < 7; ++i) {
-      oThreads.push_back(boost::thread(MTSmallObjectsThread));
+      oThreads.push_back(boost::thread(SimpleMTSmallObjectsThread));
     }
     
     boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
@@ -80,29 +79,29 @@ namespace{
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
 
-    MTSmallObjectsQuit.store(true);
+    SimpleMTSmallObjectsQuit.store(true);
     for (auto& oThread : oThreads) {
       oThread.join();
     }
   }
 
-#endif
 
-    
-#if 0
+  boost::atomic<bool> shared_pool_MTSmallObjectsQuit;
+
+
   void MTSmallObjectsThread2() {
     typedef std::vector<size_t, utils::shared_pool_allocator<size_t>> vector_type;
     vector_type oVector;
-    while (!MTSmallObjectsQuit.load()) {
+    while (!shared_pool_MTSmallObjectsQuit.load()) {
       for (int i = 0; i < 50; ++i) oVector.push_back(0);
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
 
   }
 
-  TEST(SimpleAllocatorTest, MTSmallObjects) {
+  TEST(shared_pool_allocator_test, MTSmallObjects) {
     typedef std::vector<size_t, utils::shared_pool_allocator<size_t>> vector_type;
-    MTSmallObjectsQuit.store(false);
+    shared_pool_MTSmallObjectsQuit.store(false);
     std::vector<boost::thread> oThreads;
     for (int i = 0; i < 7; ++i) {
       oThreads.push_back(boost::thread(MTSmallObjectsThread2));
@@ -113,16 +112,14 @@ namespace{
       for (int i = 0; i < 50; ++i) oVector.pop_back();
     }
 
-    MTSmallObjectsQuit.store(true);
+    shared_pool_MTSmallObjectsQuit.store(true);
     for (auto& oThread : oThreads) {
       oThread.join();
     }
   }
 
-#endif
 
-#if 0
-  TEST(SimpleAllocatorTest, STSmallObjects) {
+  TEST(STLPoolAllocatorTest, STSmallObjects) {
     typedef std::vector<size_t, utils::STLPoolAllocator<size_t>> vector_type;
     utils::STLPoolAllocator<size_t> oAllocator(0);
     vector_type oVector(oAllocator);
@@ -132,10 +129,8 @@ namespace{
     }
 
   }
-#endif
 
-#if 0
-  TEST(SimpleAllocatorTest, STSmallObjects) {
+	TEST(SimpleAllocatorTest, STSmallObjects) {
     typedef std::vector<size_t, utils::SimpleAllocator<size_t>> vector_type;
     boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
     utils::SimpleAllocator<size_t> oAllocator(oPool);
@@ -146,8 +141,6 @@ namespace{
     }
 
   }
-#endif
-#if 0
 
   TEST(shared_pool_allocator_test, STSmallObjects) {
     typedef std::vector<size_t, utils::shared_pool_allocator<size_t>> vector_type;
@@ -157,31 +150,27 @@ namespace{
       oVector.pop_back();
     }
   }
-#endif
 
-#if 0
+
   TEST(STLPoolAllocator, container_construction) {
     typedef std::vector<size_t, utils::STLPoolAllocator<size_t>> vector_type;
-    utils::STLPoolAllocator<size_t> oAllocator(0);
     for (size_t i = 0; i < 10000000; ++i) {
-      vector_type oVector(oAllocator);
+      utils::STLPoolAllocator<size_t> oAllocator(0);
+	    vector_type oVector(oAllocator);
     }
 
   }
-#endif
 
-#if 0
   TEST(SimpleAllocatorTest, container_construction) {
       typedef std::vector<size_t, utils::SimpleAllocator<size_t>> vector_type;
-	    boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
-      utils::SimpleAllocator<size_t> oAllocator(oPool);
       for (size_t i = 0; i < 10000000; ++i) {
+        boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
+        utils::SimpleAllocator<size_t> oAllocator(oPool);
         vector_type oVector(oAllocator);
       }
 
     }
-#endif
-#if 0
+
 
   TEST(shared_pool_allocator_test, container_construction) {
     typedef std::vector<size_t, utils::shared_pool_allocator<size_t>> vector_type;
@@ -189,43 +178,7 @@ namespace{
       vector_type oVector;
     }
   }
-#endif
 
 
-#if 0
-	boost::atomic<bool> QuitFlag;
-
-  typedef std::vector<size_t, utils::SimpleAllocator<size_t>> vector_type;
-
-	void push_and_pop_thread() {
-  	boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
-  	utils::SimpleAllocator<size_t> oAllocator(oPool);
-    while (!QuitFlag.load()){
-      vector_type oVector(oAllocator);
-	    for (int i = 0; i < 500; ++i) oVector.push_back(i);
-      for (int i = 0; i < 500; ++i) oVector.pop_back();
-      boost::this_thread::yield();
-    }
-	}
-
-	TEST(shared_pool_allocator_test, permits_concurrent_access){
-		QuitFlag.store(false);
-  	std::vector<boost::thread> oThreads;
-    for (int i=0 ; i< 7 ; ++i) {
-      oThreads.push_back(boost::thread(push_and_pop_thread));
-    }
-    
-  	boost::shared_ptr<utils::SimplePool> oPool(new utils::SimplePool);
-  	utils::SimpleAllocator<size_t> oAllocator(oPool);
-  	vector_type oVector(oAllocator);
-		for (size_t i=0  ; i<100000000 ; ++i) {
-		    oVector.push_back(i);
-		}
-
-    QuitFlag.store(true);
-  	for (int i = 0; i < 7; ++i) {
-    	oThreads[i].join();
-  	}
-	}
-#endif
+  
 }
