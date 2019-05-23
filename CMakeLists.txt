@@ -230,7 +230,8 @@ ADD_SUBDIRECTORY(writeengine/splitter)
 
 option(BUILD_UNIT_TESTS "Build unit tests" TRUE)
 if(BUILD_UNIT_TESTS)
-  ADD_SUBDIRECTORY(test)
+  enable_testing()
+  ADD_SUBDIRECTORY(unit_test)
 endif()
 
 

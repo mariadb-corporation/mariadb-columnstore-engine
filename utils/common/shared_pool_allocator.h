@@ -56,11 +56,31 @@ namespace utils {
       uint8_t _buff[_len];
     };
 
+    template <size_t> struct alloc_stack;
+    
+    template <> struct alloc_stack<0x8000000000000000>{
+      void * pop(size_t){
+        throw std::bad_alloc();
+      }
+      void push(void*, size_t){
+        throw std::bad_alloc();
+      }
+      size_t getMemUsage() const{ return 0; }
+      
+      typedef boost::shared_ptr<alloc_stack> ptr;
+    
+      static ptr get() {
+        static ptr oRet(new alloc_stack);
+        return oRet;
+      }
+    };
     
     template <size_t _bufflen>
       struct alloc_stack : iAllocMemUse {
       typedef boost::shared_ptr<alloc_stack> ptr;
       typedef alloc_node <_bufflen> node_type;
+      typedef alloc_stack<_bufflen * 2> next_stack_type;
+      typedef boost::shared_ptr<next_stack_type> next_stack_ptr_type;
       static const size_t alloc_node_size = (sizeof(void*) > _bufflen ? sizeof(void*) : _bufflen);
 
         /** returns a shared_ptr<alloc_stack> but maintains a weak_ptr<alloc_stack>
@@ -87,7 +107,8 @@ namespace utils {
 
       }
 
-      void * pop(){
+      void * pop(size_t len) {
+        if (len > alloc_node_size) return next_stack()->pop(len);
         for (;;) {                  
           node_type * pRet = _root.load();
           if (!pRet) {
@@ -101,8 +122,9 @@ namespace utils {
         }
       }
 
-      void push(void* pBuff)
-      {
+      void push(void* pBuff, size_t len){
+        if (len > alloc_node_size){ next_stack()->push(pBuff, len); return; }
+
         node_type * pNode = reinterpret_cast<node_type*>(pBuff);
         for (;;){
           pNode->_next = _root.load();
@@ -119,25 +141,33 @@ namespace utils {
         }
       }
 
-			virtual size_t getMemUsage() const { return _live_count.load() * alloc_node_size; }
+			virtual size_t getMemUsage() const { return (_live_count.load() * alloc_node_size) + (_next_stack_ptr ? _next_stack_ptr->getMemUsage() : 0); }
 
 
     private:
+      template <size_t> friend struct alloc_stack;
+      next_stack_ptr_type _next_stack_ptr;
       alloc_stack(size_t prealloc = 0) : _prealloc(prealloc) {
         _root.store(NULL);
         _live_count.store(0);
       }
       alloc_stack(alloc_stack&){}
+        
+      next_stack_ptr_type& next_stack(){
+        if(!_next_stack_ptr) _next_stack_ptr = next_stack_type::get();
+        return _next_stack_ptr;
+      }
       static void prepopulate(){
         ptr pThis = get();
         for (size_t i = 0; i < pThis->_prealloc; i += alloc_node_size) {
           void * pVoid = NULL;
-          if (!posix_memalign(&pVoid, sizeof(void*), alloc_node_size) && pVoid) pThis->push(pVoid);
+          if (!posix_memalign(&pVoid, sizeof(void*), alloc_node_size) && pVoid) pThis->push(pVoid, alloc_node_size);
         }
       }
       boost::atomic <node_type*> _root;
 			boost::atomic<size_t> _live_count;
       size_t _prealloc;
+      
     };
 
   }
@@ -169,21 +199,22 @@ namespace utils {
         return *this;
       }
 
-      pointer allocate(size_type, const void *hint = 0) {
-        void * pRet = _stack->pop();
+      pointer allocate(size_type size, const void *hint = 0) {
+        void * pRet = _stack->pop((size * sizeof(T)));
         return reinterpret_cast<pointer>(pRet);
       }
       void deallocate(pointer p, size_type n) {
-        _stack->push(p);
-        bool bBreak = false;
+        _stack->push(p, (n * sizeof(T)));
       }
-      size_type max_size() const throw() { return (sizeof(void*) * std::numeric_limits<uint8_t>::max()); }
+      size_type max_size() const throw() { return -1; }
 
 
       void construct(pointer p, const T& val){  new((void *)p) T(val); }
       void destroy(pointer p) { p->T::~T(); }
 
       iAllocMemUse * getPoolAllocator() const { return alloc_stack_type::get().get(); }
+      template<class U> bool operator==(const shared_pool_allocator<U>&) const { return true; }
+      template<class U> bool operator!=(const shared_pool_allocator<U>&) const { return false; }
 
   	private:
       typename alloc_stack_type::ptr _stack;
