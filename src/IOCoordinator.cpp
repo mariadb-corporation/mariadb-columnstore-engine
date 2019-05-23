@@ -306,7 +306,6 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             if ((writeLength + objectOffset) > i->length)
                 metadata.updateEntryLength(i->offset, (writeLength + objectOffset));
 
-            //assert(objectOffset >= 0 && objectOffset < i->length);
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -342,8 +341,6 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
         cache->makeSpace(writeLength + objectOffset);
         if ((writeLength + objectOffset) > newObject.length)
             metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
-
-        //assert(objectOffset >= 0 && objectOffset < newObject.length);
 
         // send to replicator
         err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
@@ -420,8 +417,6 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
                 return count;
             }
             metadata.updateEntryLength(i->offset, (writeLength + i->length));
-
-            //assert(i->offset >= 0 && i->offset < (writeLength + i->length));
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -570,7 +565,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        //assert(objects[0].offset >= 0 && objects[0].offset < (newSize - objects[0].offset));
+        assert(objects[0].offset >= 0 && objects[0].offset < (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
