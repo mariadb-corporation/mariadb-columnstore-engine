@@ -119,7 +119,7 @@ void ThreadPool::processingLoop()
 
 void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
 {
-
+    //cout << "Thread started" << endl;
     while (threads.size() - pruneable.size() <= maxThreads)  // this is the scale-down mechanism when maxThreads is changed
     {
         while (jobs.empty() && !die) 
@@ -128,10 +128,15 @@ void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
             bool timedout = !jobAvailable.timed_wait<>(s, idleThreadTimeout);
             threadsWaiting--;
             if (timedout && jobs.empty())
+            {
+                //cout << "Thread exiting b/c of timeout" << endl;
                 return;
+            }
         }
-        if (jobs.empty())  // die was set, and there are no jobs left to process
+        if (jobs.empty()) { // die was set, and there are no jobs left to process
+            //cout << "Thread exiting b/c of die (?)" << endl;
             return;
+        }
         boost::shared_ptr<Job> job = jobs.front();
         jobs.pop_front();
         
@@ -146,7 +151,7 @@ void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex> &s)
         }
         s.lock();
     }
-    
+    //cout << "Thread exiting b/c of pruning logic" << endl;
 }
 
 inline bool ThreadPool::id_compare::operator()(const ID_Thread &t1, const ID_Thread &t2) const
