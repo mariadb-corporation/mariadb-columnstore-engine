@@ -565,7 +565,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        assert(objects[0].offset >= 0 && objects[0].offset < (newSize - objects[0].offset));
+        assert(objects[0].offset >= 0 && objects[0].length > (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);

@@ -93,7 +93,7 @@ class Cache : public boost::noncopyable
         typedef std::unordered_set<M_LRU_element_t, KeyHasher, KeyEquals> M_LRU_t;
         M_LRU_t m_lru;   // the LRU entries as a hash table
         
-        /* The do-not-evict list stuff */
+        /* The do-not-evict list stuff.  Unused at the moment for simplicity. */
         struct DNEElement
         {
             DNEElement(const LRU_t::iterator &);
@@ -115,7 +115,21 @@ class Cache : public boost::noncopyable
         DNE_t doNotEvict;
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
-        mutable boost::recursive_mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
+        
+        // the to-be-deleted set.  Elements removed from the LRU but not yet deleted will be here.
+        // Elements are inserted and removed by makeSpace().  If read() references a file that is in this,
+        // it will remove it, signalling to makeSpace that it should not be deleted
+        struct TBDLess
+        {
+            bool operator()(const LRU_t::iterator &, const LRU_t::iterator &) const;
+        };
+
+        typedef std::set<LRU_t::iterator, TBDLess> TBD_t;
+        TBD_t toBeDeleted;
+        
+        
+        
+        mutable boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
 };
 
 

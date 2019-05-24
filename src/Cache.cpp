@@ -166,7 +166,7 @@ void Cache::read(const vector<string> &keys)
     fetch keys that do not exist
     after fetching, move all keys from do-not-evict to the back of the LRU
 */
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     vector<const string *> keysToFetch;
     
     uint i;
@@ -243,14 +243,23 @@ void Cache::read(const vector<string> &keys)
     vector<int> dlErrnos;
     vector<size_t> dlSizes;
     
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     
     M_LRU_t::iterator mit;
     for (const string &key : keys)
     {
         mit = m_lru.find(key);
         if (mit != m_lru.end())
+        {
             lru.splice(lru.end(), lru, mit->lit);
+            // if it's about to be deleted, stop that
+            TBD_t::iterator tbd_it = toBeDeleted.find(mit->lit);
+            if (tbd_it != toBeDeleted.end())
+            {
+                cout << "Saved one from being deleted" << endl;
+                toBeDeleted.erase(tbd_it);
+            }
+        }
         else
             keysToFetch.push_back(&key);
     }
@@ -323,20 +332,20 @@ const bf::path & Cache::getJournalPath()
 void Cache::exists(const vector<string> &keys, vector<bool> *out) const
 {
     out->resize(keys.size());
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     for (uint i = 0; i < keys.size(); i++)
         (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
 bool Cache::exists(const string &key) const
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     return m_lru.find(key) != m_lru.end();
 }
 
 void Cache::newObject(const string &key, size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(m_lru.find(key) == m_lru.end());
     _makeSpace(size);
     lru.push_back(key);
@@ -347,21 +356,21 @@ void Cache::newObject(const string &key, size_t size)
 
 void Cache::newJournalEntry(size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     _makeSpace(size);
     currentCacheSize += size;
 }
 
 void Cache::deletedJournal(size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     currentCacheSize -= size;
 }
 
 void Cache::deletedObject(const string &key, size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());          // TODO: 5/16/19 - got this assertion using S3 by running test000, then test000 again.
@@ -373,7 +382,7 @@ void Cache::deletedObject(const string &key, size_t size)
 
 void Cache::setMaxCacheSize(size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     if (size < maxCacheSize)
         _makeSpace(maxCacheSize - size);
     maxCacheSize = size;
@@ -381,7 +390,7 @@ void Cache::setMaxCacheSize(size_t size)
 
 void Cache::makeSpace(size_t size)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     _makeSpace(size);
 }
 
@@ -397,55 +406,69 @@ void Cache::_makeSpace(size_t size)
     if (thisMuch <= 0)
         return;
 
-    struct stat statbuf;
-    LRU_t::iterator it = lru.begin();
-    while (it != lru.end() && thisMuch > 0)
+    LRU_t::iterator it;
+    while (thisMuch > 0 && !lru.empty())
     {
-        if (doNotEvict.find(it) != doNotEvict.end())
+        it = lru.begin();
+        // find the first element not being either read() right now or being processed by another
+        // makeSpace() call.
+        while (it != lru.end())
         {
+            if ((doNotEvict.find(it) == doNotEvict.end()) && (toBeDeleted.find(it) == toBeDeleted.end()))
+                break;
             ++it;
-            continue;   // it's in the do-not-evict list
         }
         
         bf::path cachedFile = prefix / *it;
-        int err = stat(cachedFile.string().c_str(), &statbuf);
-        if (err)
-        {
-            logger->log(LOG_WARNING, "Cache::makeSpace(): There seems to be a cached file that couldn't be stat'ed: %s", 
-                cachedFile.string().c_str());
-            ++it;
-            continue;
-        }
-        
+        assert(bf::exists(cachedFile));
         /* 
             tell Synchronizer that this key will be evicted
             delete the file
             remove it from our structs
             update current size
         */
-        assert(currentCacheSize >= (size_t) statbuf.st_size);
-        currentCacheSize -= statbuf.st_size;
-        thisMuch -= statbuf.st_size;
+
         //logger->log(LOG_WARNING, "Cache:  flushing!");
-        Synchronizer::get()->flushObject(*it);
-        cachedFile = prefix / *it;    // Sync may have renamed it
-        replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
-        LRU_t::iterator toRemove = it++;
-        m_lru.erase(*toRemove);
-        lru.erase(toRemove);
+        toBeDeleted.insert(it);
+
+        lru_mutex.unlock();
+        try 
+        {
+            Synchronizer::get()->flushObject(*it);
+        }
+        catch (...)
+        {
+            // it gets logged by Sync
+            lru_mutex.lock();
+            toBeDeleted.erase(it);
+            continue;
+        }
+        lru_mutex.lock();
+        
+        TBD_t::iterator tbd_it = toBeDeleted.find(it);
+        if (tbd_it != toBeDeleted.end())
+        {
+            // if it's still in toBeDeleted then it is safe to delete.
+            // if read() happened to access it while it was flushing, it will not 
+            // be in that set.
+            cachedFile = prefix / *it;
+            toBeDeleted.erase(tbd_it);
+            m_lru.erase(*it);
+            lru.erase(it);
+            size_t newSize = bf::file_size(cachedFile);
+            replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
+            currentCacheSize -= newSize;
+            thisMuch -= newSize;
+        }
     }
 }
 
 void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     auto it = m_lru.find(oldKey);
-    //assert(it != m_lru.end());
     if (it == m_lru.end())
-    {
-        logger->log(LOG_WARNING, "Cache: was told to rename %s, but it is not in the cache", oldKey.c_str());
         return;
-    }
     
     auto lit = it->lit;
     m_lru.erase(it);
@@ -459,7 +482,7 @@ int Cache::ifExistsThenDelete(const string &key)
     bf::path cachedPath = prefix / key;
     bf::path journalPath = journalPrefix / (key + ".journal");
 
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     bool objectExists = false;
     bool journalExists = bf::exists(journalPath);
     
@@ -489,14 +512,14 @@ size_t Cache::getCurrentCacheSize() const
 
 size_t Cache::getCurrentCacheElementCount() const
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(m_lru.size() == lru.size());
     return m_lru.size();
 }
 
 void Cache::reset()
 {
-    boost::unique_lock<boost::recursive_mutex> s(lru_mutex);
+    boost::unique_lock<boost::mutex> s(lru_mutex);
     m_lru.clear();
     lru.clear();
     
@@ -539,6 +562,11 @@ inline size_t Cache::DNEHasher::operator()(const DNEElement &l) const
 inline bool Cache::DNEEquals::operator()(const DNEElement &l1, const DNEElement &l2) const
 {
     return (*(l1.key) == *(l2.key));
+}
+
+inline bool Cache::TBDLess::operator()(const LRU_t::iterator &i1, const LRU_t::iterator &i2) const
+{
+    return *i1 < *i2;
 }
 
 }

@@ -56,7 +56,7 @@ class Synchronizer : public boost::noncopyable
             int waiters;
             bool finished;
             boost::condition condvar;
-            void wait(boost::recursive_mutex *);
+            void wait(boost::mutex *);
             void notify();
         };
         
@@ -94,7 +94,7 @@ class Synchronizer : public boost::noncopyable
         
         boost::filesystem::path cachePath;
         boost::filesystem::path journalPath;
-        boost::recursive_mutex mutex;
+        boost::mutex mutex;
 };
 
 }

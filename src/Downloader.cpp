@@ -33,7 +33,7 @@ Downloader::~Downloader()
 {
 }
 
-void Downloader::useThisLock(boost::recursive_mutex *mutex)
+void Downloader::useThisLock(boost::mutex *mutex)
 {
     lock = mutex;
 }
@@ -192,7 +192,7 @@ void Downloader::setDownloadPath(const string &path)
 }
            
 /* The helper fcns */
-Downloader::Download::Download(const string &source, const string &_dlPath, boost::recursive_mutex *_lock) : 
+Downloader::Download::Download(const string &source, const string &_dlPath, boost::mutex *_lock) : 
                 dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false)
 {
 }

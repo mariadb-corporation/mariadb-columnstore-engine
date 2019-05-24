@@ -67,7 +67,7 @@ Synchronizer::~Synchronizer()
         or save the list it's working on.....
         For milestone 2, this will do the safe thing and finish working first.
         Later we can get fancy. */
-    boost::unique_lock<boost::recursive_mutex> lock(mutex);
+    boost::unique_lock<boost::mutex> lock(mutex);
     die = true;
     syncThread.interrupt();
     lock.unlock();
@@ -84,7 +84,7 @@ enum OpFlags
 
 void Synchronizer::newJournalEntry(const string &key)
 {
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
     
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
@@ -98,7 +98,7 @@ void Synchronizer::newJournalEntry(const string &key)
 
 void Synchronizer::newObjects(const vector<string> &keys)
 {
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
 
     for (const string &key : keys)
     {
@@ -110,7 +110,7 @@ void Synchronizer::newObjects(const vector<string> &keys)
 
 void Synchronizer::deletedObjects(const vector<string> &keys)
 {
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
 
     for (const string &key : keys)
     {
@@ -127,7 +127,7 @@ void Synchronizer::deletedObjects(const vector<string> &keys)
 
 void Synchronizer::flushObject(const string &key)
 {
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
 
     // if there is something to do on key, it should be either in pendingOps or opsInProgress
     // if it is is pending ops, start the job now.  If it is in progress, wait for it to finish.
@@ -139,7 +139,10 @@ void Synchronizer::flushObject(const string &key)
     if (it != pendingOps.end())
     {
         objNames.push_front(key);
-        process(objNames.begin());
+        auto nameIt = objNames.begin();
+        s.unlock();
+        process(nameIt);
+        s.lock();
     }
     else
     {
@@ -193,7 +196,7 @@ void Synchronizer::flushObject(const string &key)
 
 void Synchronizer::periodicSync()
 {
-    boost::unique_lock<boost::recursive_mutex> lock(mutex);
+    boost::unique_lock<boost::mutex> lock(mutex);
     while (!die)
     {
         lock.unlock();
@@ -224,7 +227,7 @@ void Synchronizer::process(list<string>::iterator name)
             if not, return
     */
 
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
     
     string &key = *name;
     auto it = pendingOps.find(key);
@@ -258,7 +261,8 @@ void Synchronizer::process(list<string>::iterator name)
     
     bool success = false;
     while (!success)
-    {    
+    {
+        assert(!s.owns_lock());
         try {
             // Exceptions should only happen b/c of cloud service errors that can't be retried.
             // This code is intentionally racy to avoid having to grab big locks.
@@ -341,7 +345,7 @@ void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::ite
     cs->deleteObject(*it);
     
     // delete any pending jobs for *it.  There shouldn't be any, this is out of pure paranoia.
-    boost::unique_lock<boost::recursive_mutex> sc(mutex);
+    boost::unique_lock<boost::mutex> sc(mutex);
     pendingOps.erase(*it);
 }
 
@@ -518,7 +522,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
 
 void Synchronizer::rename(const string &oldKey, const string &newKey)
 {
-    boost::unique_lock<boost::recursive_mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mutex);
 
     auto it = pendingOps.find(oldKey);
     if (it == pendingOps.end())
@@ -558,7 +562,7 @@ void Synchronizer::PendingOps::notify()
     condvar.notify_all();
 }
 
-void Synchronizer::PendingOps::wait(boost::recursive_mutex *m)
+void Synchronizer::PendingOps::wait(boost::mutex *m)
 {
     while (!finished)
     {

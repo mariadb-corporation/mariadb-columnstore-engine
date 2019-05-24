@@ -27,12 +27,12 @@ class Downloader
         // errors are reported through errnos
         void download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
         void setDownloadPath(const std::string &path);
-        void useThisLock(boost::recursive_mutex *);
+        void useThisLock(boost::mutex *);
         
     private:
         uint maxDownloads;
         std::string downloadPath;
-        boost::recursive_mutex *lock;
+        boost::mutex *lock;
     
         class DownloadListener
         {
@@ -50,14 +50,14 @@ class Downloader
         */
         struct Download : public ThreadPool::Job
         {
-            Download(const std::string &source, const std::string &_dlPath, boost::recursive_mutex *_lock);
+            Download(const std::string &source, const std::string &_dlPath, boost::mutex *_lock);
             ~Download();
             void operator()();
             boost::filesystem::path dlPath;
             const std::string key;
             int dl_errno;   // to propagate errors from the download job to the caller
             size_t size;
-            boost::recursive_mutex *lock;
+            boost::mutex *lock;
             bool finished, itRan;
             std::vector<DownloadListener *> listeners;
         };
