@@ -107,6 +107,18 @@ static MYSQL_THDVAR_BOOL(
     0
 );
 
+static MYSQL_THDVAR_UINT(
+    orderby_threads,
+    PLUGIN_VAR_RQCMDARG,
+    "Number of parallel threads used by ORDER BY. (default to 16)",
+    NULL,
+    NULL,
+    16,
+    0,
+    2048,    
+    1
+);
+
 // legacy system variables
 static MYSQL_THDVAR_ULONG(
     decimal_scale,
@@ -294,6 +306,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(derived_handler),
   MYSQL_SYSVAR(processing_handlers_fallback),
   MYSQL_SYSVAR(group_by_handler),
+  MYSQL_SYSVAR(orderby_threads),
   MYSQL_SYSVAR(decimal_scale),
   MYSQL_SYSVAR(use_decimal_scale),
   MYSQL_SYSVAR(ordered_only),
@@ -395,6 +408,16 @@ void set_fallback_knob(THD* thd, bool value)
 mcs_compression_type_t get_compression_type(THD* thd) {
     return (mcs_compression_type_t) THDVAR(thd, compression_type);
 }
+
+uint get_orderby_threads(THD* thd)
+{
+    return ( thd == NULL ) ? 0 : THDVAR(thd, orderby_threads);
+}
+void set_orderby_threads(THD* thd, uint value)
+{
+    THDVAR(thd, orderby_threads) = value;
+}
+
 
 bool get_use_decimal_scale(THD* thd)
 {

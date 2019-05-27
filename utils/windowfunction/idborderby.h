@@ -41,7 +41,6 @@
 #include "hasher.h"
 #include "stlpoolallocator.h"
 
-
 // forward reference
 namespace joblist
 {
@@ -52,9 +51,27 @@ class  ResourceManager;
 namespace ordering
 {
 
+template<typename _Tp, typename _Sequence = vector<_Tp>,
+    typename _Compare  = less<typename _Sequence::value_type> >
+class reservablePQ: private std::priority_queue<_Tp, _Sequence, _Compare>
+{
+public:
+    typedef typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type size_type;
+    reservablePQ(size_type capacity = 0) { reserve(capacity); };
+    void reserve(size_type capacity) { this->c.reserve(capacity); } 
+    size_type capacity() const { return this->c.capacity(); } 
+    using std::priority_queue<_Tp, _Sequence, _Compare>::size;
+    using std::priority_queue<_Tp, _Sequence, _Compare>::top;
+    using std::priority_queue<_Tp, _Sequence, _Compare>::pop;
+    using std::priority_queue<_Tp, _Sequence, _Compare>::push;
+    using std::priority_queue<_Tp, _Sequence, _Compare>::empty;
+};
 
 // forward reference
 class  IdbCompare;
+class OrderByRow;
+
+typedef reservablePQ<OrderByRow> SortingPQ;
 
 // order by specification
 struct IdbSortSpec
@@ -101,17 +118,46 @@ public:
             loc = localloc;
         }
         if (fLocale.find("ja_JP") != std::string::npos)
+        {
             JPcodePoint = true;
+        }
+        else
+        {
+            JPcodePoint = false;
+        }
     }
     virtual ~Compare() {}
 
     virtual int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer) = 0;
+    void revertSortSpec()
+    {
+        fSpec.fAsc = -fSpec.fAsc;
+    }
 
 protected:
     IdbSortSpec fSpec;
     std::string fLocale;
     std::locale loc;
     bool JPcodePoint; // code point ordering (Japanese UTF) flag
+};
+
+// Comparators for signed types
+
+class TinyIntCompare : public Compare
+{
+public:
+    TinyIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+
+class SmallIntCompare : public Compare
+{
+public:
+    SmallIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
 
@@ -124,23 +170,55 @@ public:
 };
 
 
-class UintCompare : public Compare
+class BigIntCompare : public Compare
 {
 public:
-    UintCompare(const IdbSortSpec& spec) : Compare(spec) {}
+    BigIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+// End of comparators for signed types
+// Comparators for unsigned types
+
+class UTinyIntCompare : public Compare
+{
+public:
+    UTinyIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
 
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
 
-class StringCompare : public Compare
+class USmallIntCompare : public Compare
 {
 public:
-    StringCompare(const IdbSortSpec& spec) : Compare(spec) {}
+    USmallIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
 
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
+
+class UIntCompare : public Compare
+{
+public:
+    UIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+
+class UBigIntCompare : public Compare
+{
+public:
+    UBigIntCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+// end of comparators for unsigned types
+
+// Comparators for float types
 
 class DoubleCompare : public Compare
 {
@@ -149,6 +227,7 @@ public:
 
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
+
 
 class LongDoubleCompare : public Compare
 {
@@ -167,6 +246,48 @@ public:
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
+// End of comparators for float types
+// Comparators for temporal types
+
+class DateCompare : public Compare
+{
+public:
+    DateCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+
+class DatetimeCompare : public Compare
+{
+public:
+    DatetimeCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+
+class TimeCompare : public Compare
+{
+public:
+    TimeCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+// End of comparators for temporal types
+
+// Comparators for non-fixed size types
+
+class StringCompare : public Compare
+{
+public:
+    StringCompare(const IdbSortSpec& spec) : Compare(spec) {}
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
+// End of comparators for variable sized types
 
 class TimeCompare : public Compare
 {
@@ -186,6 +307,7 @@ public:
     bool less(rowgroup::Row::Pointer r1, rowgroup::Row::Pointer r2);
 
     void compileRules(const std::vector<IdbSortSpec>&, const rowgroup::RowGroup&);
+    void revertRules();
 
     std::vector<Compare*>           fCompares;
     IdbCompare*                     fIdbCompare;
@@ -227,7 +349,7 @@ public:
         return fRule->less(fData, rhs.fData);
     }
 
-    rowgroup::Row::Pointer                        fData;
+    rowgroup::Row::Pointer          fData;
     CompareRule*                    fRule;
 };
 
@@ -246,7 +368,6 @@ public:
 
     bool operator()(rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 
-//protected:
     std::vector<uint64_t>           fIndex;
 };
 
@@ -293,10 +414,18 @@ public:
     {
         return fDistinct;
     }
+    SortingPQ& getQueue()
+    {
+        return fOrderByQueue;
+    }
+    CompareRule &getRule()
+    {
+        return fRule;
+    }
 
+    SortingPQ                           fOrderByQueue;
 protected:
     std::vector<IdbSortSpec>            fOrderByCond;
-    std::priority_queue<OrderByRow>     fOrderByQueue;
     rowgroup::Row                       fRow0;
     CompareRule                         fRule;
 

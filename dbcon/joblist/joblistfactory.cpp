@@ -1727,14 +1727,12 @@ void makeVtableModeSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
     {
         jobInfo.limitCount = (uint64_t) - 1;
     }
-
     // support order by and limit in sub-query/union or
     // GROUP BY handler processed outer query order
     else if (csep->orderByCols().size() > 0)
     {
         addOrderByAndLimit(csep, jobInfo);
     }
-
     // limit without order by in any query
     else
     {

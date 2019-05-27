@@ -769,6 +769,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
     jobInfo.limitStart = csep->limitStart();
     jobInfo.limitCount = csep->limitNum();
+    jobInfo.orderByThreads = csep->orderByThreads();
 
     CalpontSelectExecutionPlan::OrderByColumnList& orderByCols = csep->orderByCols();
 

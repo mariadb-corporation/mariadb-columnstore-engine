@@ -7807,6 +7807,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 // To activate LimitedOrderBy
                 if(isPushdownHand)
                 {
+                    csep->orderByThreads(get_orderby_threads(gwi.thd));
                     csep->specHandlerProcessed(true);
                 }
             }
@@ -7844,6 +7845,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 {
                     Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
                     csep->limitNum(select->val_int());
+                    // MCOL-894 Activate parallel ORDER BY
+                    csep->orderByThreads(get_orderby_threads(gwi.thd));
                 }
             }
         }
@@ -9840,6 +9843,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             {
                 csep->hasOrderBy(true);
                 csep->specHandlerProcessed(true);
+                csep->orderByThreads(get_orderby_threads(gwi.thd));
             }
         }
 
