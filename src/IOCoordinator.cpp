@@ -215,7 +215,9 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         
         // if this is the first object, the offset to start reading at is offset - object->offset
         off_t thisOffset = (count == 0 ? offset - object.offset : 0);
-        assert(thisOffset >= 0 && thisOffset < (off_t) object.length);
+        // This checks and returns if the read is starting past EOF
+        if (thisOffset >= (off_t) object.length)
+            return count;
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object - starting offset
         
@@ -565,7 +567,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        assert(objects[0].offset >= 0 && objects[0].length > (newSize - objects[0].offset));
+        assert(objects[0].offset >= 0 && objectSize > (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);

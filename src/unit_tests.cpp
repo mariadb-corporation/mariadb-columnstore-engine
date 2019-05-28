@@ -552,6 +552,7 @@ bool IOCTruncate()
 
     IOCoordinator *ioc = IOCoordinator::get();
     CloudStorage *cs = CloudStorage::get();
+    Synchronizer *sync = Synchronizer::get();
     LocalStorage *ls = dynamic_cast<LocalStorage *>(cs);
     if (!ls)
     {
@@ -619,6 +620,8 @@ bool IOCTruncate()
     assert(err == 4000);
     err = ioc->read(testFile, buf, 4000, 1);
     assert(err == 0);
+    err = ioc->read(testFile, buf, 4005, 1);
+    assert(err == 0);
     assert(bf::exists(objectPath));
     
     // truncate to 0 bytes, make sure everything is consistent with that, and the object no longer exists
@@ -630,6 +633,7 @@ bool IOCTruncate()
     assert(err == 0);
     err = ioc->read(testFile, buf, 4000, 1);
     assert(err == 0);
+    sync->forceFlush();
     sleep(1);  // give Sync a chance to delete the object from the cloud
     assert(!bf::exists(objectPath));
     
@@ -671,6 +675,7 @@ bool IOCTruncate()
     assert(meta.getLength() == 6000);
     err = ioc->read(testFile, buf, 0, 8192);
     assert(err == 6000);
+    sync->forceFlush();
     sleep(1);   // give Synchronizer a chance to delete the file from the 'cloud'
     assert(!bf::exists(secondObjectPath));
     assert(!bf::exists(cachedSecondObject));
@@ -687,6 +692,7 @@ bool truncatetask()
 {
     IOCoordinator *ioc = IOCoordinator::get();
     Cache *cache = Cache::get();
+
     bf::path metaPath = ioc->getMetadataPath();
     
     const char *filename = "trunctest1";
@@ -1025,6 +1031,7 @@ bool syncTest1()
     vObj.push_back(key);
     
     sync->newObjects(vObj);
+    sync->forceFlush();
     sleep(1);  // wait for the job to run
     
     // make sure that it made it to the cloud
@@ -1034,6 +1041,7 @@ bool syncTest1()
     assert(exists);
     
     sync->newJournalEntry(key);
+    sync->forceFlush();
     sleep(1);  // let it do what it does
     
     // check that the original objects no longer exist
@@ -1072,6 +1080,7 @@ bool syncTest1()
     makeTestJournal((journalPath / (newKey + ".journal")).string().c_str());
     cache->newJournalEntry(bf::file_size(journalPath / (newKey + ".journal")));
     sync->newJournalEntry(newKey);
+    sync->forceFlush();
     sleep(1);
     
     // verify that newkey is no longer in cloud storage, and that another permutation is
@@ -1093,6 +1102,8 @@ bool syncTest1()
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
         keys.push_back(dir->path().filename().string());
     sync->deletedObjects(keys);
+    sync->forceFlush();
+    sleep(1);
     ::unlink((metaPath/"test-file.meta").string().c_str());
     
     cout << "Sync test 1 OK" << endl;
@@ -1312,6 +1323,7 @@ void IOCUnlink()
     keys.push_back(cachedObjPath.filename().string());
     sync->newObjects(keys);
     //sync->newJournalEntry(keys[0]);    don't want to end up renaming it
+    sync->forceFlush();
     sleep(1);
     
     // ok, they should be fully 'in the system' now.
@@ -1329,6 +1341,7 @@ void IOCUnlink()
     assert(!bf::exists(metaPath/basedir));
     assert(!bf::exists(cachedObjPath));
     assert(!bf::exists(cachedJournalPath));
+    sync->forceFlush();
     sleep(1);   // stall for sync
     cs->exists(cachedObjPath.filename().string(), &exists);
     assert(!exists);

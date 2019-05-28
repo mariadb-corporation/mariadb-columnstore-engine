@@ -33,6 +33,7 @@ class Synchronizer : public boost::noncopyable
         void newObjects(const std::vector<std::string> &keys);
         void deletedObjects(const std::vector<std::string> &keys);        
         void flushObject(const std::string &key);
+        void forceFlush();
         
         // for testing primarily
         boost::filesystem::path getJournalPath();

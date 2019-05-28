@@ -205,13 +205,27 @@ void Synchronizer::periodicSync()
     while (!die)
     {
         lock.unlock();
-        boost::this_thread::sleep_for(syncInterval);
+        try
+        {
+            boost::this_thread::sleep_for(syncInterval);
+        }
+        catch (const boost::thread_interrupted)
+        {
+            //logger->log(LOG_DEBUG,"Synchronizer Force Flush.");
+        }
         lock.lock();
         //cout << "Sync'ing " << pendingOps.size() << " objects" << " queue size is " << 
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
             makeJob(job.first);
     }
+}
+
+void Synchronizer::forceFlush()
+{
+    boost::unique_lock<boost::mutex> lock(mutex);
+    syncThread.interrupt();
+    lock.unlock();
 }
 
 void Synchronizer::makeJob(const string &key)
