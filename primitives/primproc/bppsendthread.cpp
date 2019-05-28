@@ -51,8 +51,8 @@ BPPSendThread::BPPSendThread(uint32_t initMsgsLeft) : die(false), gotException(f
 
 BPPSendThread::~BPPSendThread()
 {
-    mutex::scoped_lock sl(msgQueueLock);
-    mutex::scoped_lock sl2(ackLock);
+    boost::mutex::scoped_lock sl(msgQueueLock);
+    boost::mutex::scoped_lock sl2(ackLock);
     die = true;
     queueNotEmpty.notify_one();
     okToSend.notify_one();
@@ -74,7 +74,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     if (die)
         return;
 
-    mutex::scoped_lock sl(msgQueueLock);
+    boost::mutex::scoped_lock sl(msgQueueLock);
 
     if (gotException)
         throw runtime_error(exceptionString);
@@ -108,7 +108,7 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
     if (die)
         return;
 
-    mutex::scoped_lock sl(msgQueueLock);
+    boost::mutex::scoped_lock sl(msgQueueLock);
 
     if (gotException)
         throw runtime_error(exceptionString);
@@ -143,7 +143,7 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
 
 void BPPSendThread::sendMore(int num)
 {
-    mutex::scoped_lock sl(ackLock);
+    boost::mutex::scoped_lock sl(ackLock);
 
 //	cout << "got an ACK for " << num << " msgsLeft=" << msgsLeft << endl;
     if (num == -1)
@@ -178,7 +178,7 @@ void BPPSendThread::mainLoop()
 
     while (!die)
     {
-        mutex::scoped_lock sl(msgQueueLock);
+        boost::mutex::scoped_lock sl(msgQueueLock);
 
         if (msgQueue.empty() && !die)
         {
@@ -209,7 +209,7 @@ void BPPSendThread::mainLoop()
 
             if (msgsLeft <= 0 && fcEnabled && !die)
             {
-                mutex::scoped_lock sl2(ackLock);
+                boost::mutex::scoped_lock sl2(ackLock);
 
                 while (msgsLeft <= 0 && fcEnabled && !die)
                 {
@@ -238,7 +238,7 @@ void BPPSendThread::mainLoop()
 
                 try
                 {
-                    mutex::scoped_lock sl2(*lock);
+                    boost::mutex::scoped_lock sl2(*lock);
                     sock->write(*msg[msgsSent].msg);
                     //cout << "sent 1 msg\n";
                 }
@@ -260,8 +260,8 @@ void BPPSendThread::mainLoop()
 
 void BPPSendThread::abort()
 {
-    mutex::scoped_lock sl(msgQueueLock);
-    mutex::scoped_lock sl2(ackLock);
+    boost::mutex::scoped_lock sl(msgQueueLock);
+    boost::mutex::scoped_lock sl2(ackLock);
     die = true;
     queueNotEmpty.notify_one();
     okToSend.notify_one();

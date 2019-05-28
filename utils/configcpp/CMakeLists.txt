@@ -1,15 +1,22 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(configcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
+cs_add_library(configcpp STATIC 
+  configcpp.cpp 
+  xmlparser.cpp 
+  configstream.cpp
+  )
 
-set(configcpp_LIB_SRCS configcpp.cpp xmlparser.cpp configstream.cpp)
+target_compile_definitions(configcpp PRIVATE BOOST_NO_CXX11_SCOPED_ENUMS)
 
-add_library(configcpp SHARED ${configcpp_LIB_SRCS})
-
-set_target_properties(configcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-target_compile_definitions(configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-
-install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+target_link_libraries(configcpp 
+  INTERFACE configcpp_h
+  PUBLIC 
+    messageqcpp_h
+    LibXml2::LibXml2
+  PRIVATE 
+    Boost::filesystem
+    idbboot_h
+    loggingcpp_h
+)
 

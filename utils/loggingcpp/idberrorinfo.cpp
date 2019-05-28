@@ -34,8 +34,6 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
-#include "configcpp.h"
-using namespace config;
 #include "loggingid.h"
 #include "logger.h"
 #include "idberrorinfo.h"
@@ -46,11 +44,11 @@ namespace logging
 {
 
 IDBErrorInfo* IDBErrorInfo::fInstance = 0;
-mutex mx;
+boost::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-    mutex::scoped_lock lk(mx);
+    boost::mutex::scoped_lock lk(mx);
 
     if (!fInstance)
         fInstance = new IDBErrorInfo();
@@ -60,11 +58,7 @@ IDBErrorInfo* IDBErrorInfo::instance()
 
 IDBErrorInfo::IDBErrorInfo()
 {
-    Config* cf = Config::makeConfig();
-    string configFile(cf->getConfig("SystemConfig", "ErrorMessageFile"));
-
-    if (configFile.length() == 0)
-        configFile = startup::StartUp::installDir() + "/etc/ErrorMessage.txt";
+     auto   configFile = startup::StartUp::installDir() + "/etc/ErrorMessage.txt";
 
     ifstream msgFile(configFile.c_str());
 

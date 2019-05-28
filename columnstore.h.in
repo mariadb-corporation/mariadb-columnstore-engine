@@ -1,0 +1,232 @@
+#pragma once
+
+#if 0
+#include <algorithm>
+#include <bitset>
+#include <deque>
+#include <exception>
+#include <fstream>
+#include <functional>
+#include <iomanip>
+#include <ios>
+#include <iosfwd>
+#include <iostream>
+#include <istream>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <numeric>
+#include <ostream>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
+#include <typeinfo>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <climits>
+#include <climits>
+#include <clocale>
+#include <cmath>
+#include <csignal>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstring>
+#include <ctime>
+#include <ctime>
+#include <cwctype>
+
+
+
+#include <sys/ioctl.h>
+#include <sys/ipc.h>
+#include <sys/resource.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netdb.h>
+#include <netinet/tcp.h>
+
+
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/any.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/format.hpp>
+#include <boost/function.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
+#include <boost/progress.hpp>
+#include <boost/regex.hpp>
+#include <boost/scoped_array.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/condition.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/timer.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/utility.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/version.hpp>
+#endif
+
+#if 0
+#include <readline/history.h>
+#include <readline/readline.h>
+
+#if (@BUILD_TESTING@)
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
+#include <cppunit/ui/text/TestRunner.h>
+#endif
+
+#include <libxml/parser.h>
+#include <libxml/xmlmemory.h>
+#endif
+
+#include <string>
+
+const std::string columnstore_version("@PROJECT_VERSION@");
+const std::string columnstore_release("@RELEASE_VERSION@");
+const std::string columnstore_githash("@GIT_HASH@");
+
+
+// cmake can use any of the following boolean values
+#pragma push_macro("ON")
+#pragma push_macro("OFF")
+#pragma push_macro("YES")
+#pragma push_macro("NO")
+#pragma push_macro("TRUE")
+#pragma push_macro("FALSE")
+
+#if defined(ON)
+  #undef ON
+#endif
+
+#if defined(OFF)
+  #undef OFF
+#endif
+
+#if defined(YES)
+  #undef YES
+#endif
+
+#if defined(NO)
+  #undef NO
+#endif
+
+#if defined(TRUE)
+  #undef TRUE
+#endif
+
+#if defined(FALSE)
+  #undef FALSE
+#endif
+
+#define ON    1
+#define OFF   0
+#define YES   1
+#define NO    0
+#define TRUE  1
+#define FALSE 0
+
+#if defined(NDEBUG)
+  #if !defined(D_)
+    #define D_(...)
+  #endif
+  #if !defined(R_)
+    #define R_(...) __VA_ARGS__
+  #endif
+#else
+  #if !defined(D_)
+    #define D_(...) __VA_ARGS__
+  #endif
+  #if !defined(R_)
+    #define R_(...)
+  #endif
+#endif
+
+#if !defined(QUOTE2_)
+    #define QUOTE2_( x ) # x
+#endif
+#if !defined(QUOTE)
+    #define QUOTE( x ) QUOTE2_( x )
+#endif
+
+#if !defined(CONCAT2_)
+    #define CONCAT2_(x, y) x ## y
+#endif
+#if !defined(CONCAT)
+    #define CONCAT(x, y) CONCAT2_(x,y)
+#endif
+
+#if defined(__COUNTER__)
+  #define UNIQUE_IDENTIFIER(_prefix) CONCAT(_prefix, __COUNTER__)
+#else
+  #define UNIQUE_IDENTIFIER(_prefix) CONCAT(_prefix, __LINE__)
+#endif
+
+#if !defined(PRAGMA_)
+    #define PRAGMA_(x) _Pragma( #x )
+#endif
+
+
+#if (@CMAKE_COLOR_MAKEFILE@)
+  #define WARNING( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[31mWARNING : " x "\e[0m" ))
+  #define NOTE( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[32mNOTE : " x  "\e[0m"))
+  #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[33mTODO: " x  "\e[0m"))
+#else
+  #define WARNING( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : WARNING : " x ))
+  #define NOTE( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : NOTE : " x ))
+  #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : TODO : " x ))
+#endif
+
+
+
+#pragma pop_macro("ON")
+#pragma pop_macro("OFF")
+#pragma pop_macro("YES")
+#pragma pop_macro("NO")
+#pragma pop_macro("TRUE")
+#pragma pop_macro("FALSE")

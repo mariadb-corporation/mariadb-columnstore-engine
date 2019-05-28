@@ -46,7 +46,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "alarmmanager.h"

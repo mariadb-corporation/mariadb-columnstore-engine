@@ -1,9 +1,7 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(ddlpackageproc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
-
-set(ddlpackageproc_LIB_SRCS
+cs_add_library(ddlpackageproc SHARED 
     ddlpackageprocessor.cpp
     createtableprocessor.cpp
     altertableprocessor.cpp
@@ -12,11 +10,23 @@ set(ddlpackageproc_LIB_SRCS
     restorepartitionprocessor.cpp
     droppartitionprocessor.cpp)
 
-add_library(ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
 
-target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
+target_link_libraries(ddlpackageproc 
+  INTERFACE ddlpackageproc_h 
+  PRIVATE
+    ddlpackage
+    writeengine_h
+    we_shared_h
+    mariadb
+    we_server_h
+    writeengineclient_h
+    Boost::regex
+  PUBLIC
+    brm
+)
 
 set_target_properties(ddlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+
+install(TARGETS ddlpackageproc DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

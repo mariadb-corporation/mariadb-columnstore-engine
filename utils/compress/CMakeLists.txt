@@ -1,19 +1,23 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ${SNAPPY_INCLUDE_DIR} )
+target_include_directories(compress_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
-
-set(compress_LIB_SRCS
+cs_add_library(compress STATIC 
     idbcompress.cpp
-    version1.cpp)
+    version1.cpp
+	)
 
-add_definitions(-DNDEBUG)
-
-add_library(compress SHARED ${compress_LIB_SRCS})
-
-target_link_libraries(compress ${SNAPPY_LIBRARIES})
-
-set_target_properties(compress PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-install(TARGETS compress DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+target_link_libraries(compress 
+  INTERFACE compress_h
+  PUBLIC
+  PRIVATE
+	  brm_h 
+    common_h 
+    loggingcpp_h
+    idbboot
+    columnstore_h
+    Threads::Threads
+    Snappy::Snappy
+    rt
+    configcpp
+	)
 

@@ -1,19 +1,26 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(messageqcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
-
-set(messageqcpp_LIB_SRCS
+cs_add_library(messageqcpp STATIC 
     messagequeue.cpp
     messagequeuepool.cpp
     bytestream.cpp
     socketparms.cpp
     inetstreamsocket.cpp
     iosocket.cpp
-    compressed_iss.cpp)
+    compressed_iss.cpp
+	)
 
-add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
+target_link_libraries(messageqcpp 
+	INTERFACE messageqcpp_h
+  PUBLIC    
+  PRIVATE
+    columnstore_h
+    configcpp_h
+    loggingcpp_h
+    compress_h
+  )
 
-set_target_properties(messageqcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+
+

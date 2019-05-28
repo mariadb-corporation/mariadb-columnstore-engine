@@ -1,16 +1,19 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(setConfig main.cpp)
 
+target_link_libraries(setConfig 
+  PRIVATE 
+    Boost::thread
+    Boost::system
+    configcpp
+    brm
+    common_h
+    joblist_h
+    configcpp
+    oamcpp
+  )
 
-########### next target ###############
+install(TARGETS setConfig DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
-set(setConfig_SRCS main.cpp)
-
-add_executable(setConfig ${setConfig_SRCS})
-
-target_link_libraries(setConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS setConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
-install(PROGRAMS configxml.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(PROGRAMS configxml.sh DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

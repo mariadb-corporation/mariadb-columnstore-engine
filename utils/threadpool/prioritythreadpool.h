@@ -35,8 +35,8 @@
 #include <boost/thread/condition.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
-#include "../winport/winport.h"
-#include "primitives/primproc/umsocketselector.h"
+//#include "winport.h"
+#include "umsocketselector.h"
 
 namespace threadpool
 {

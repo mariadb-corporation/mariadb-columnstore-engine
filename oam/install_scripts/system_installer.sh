@@ -129,7 +129,7 @@ if { $INSTALLTYPE == "initial"} {
 	# copy over InfiniDB OS files
 	#
 	send_user "Copy InfiniDB OS files to Module                 "
-	send "scp /usr/local/mariadb/columnstore/local/etc/$MODULE/*  $USERNAME@$SERVER:/usr/local/mariadb/columnstore/local/.\n"
+	send "scp @CMAKE_INSTALL_PREFIX@/local/etc/$MODULE/*  $USERNAME@$SERVER:@CMAKE_INSTALL_PREFIX@/local/.\n"
 	expect "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -144,7 +144,7 @@ if { $INSTALLTYPE == "initial"} {
 	# Start module installer to setup Customer OS files
 	#
 	send_user "Run Module Installer                            "
-	send "ssh $USERNAME@$SERVER '/usr/local/mariadb/columnstore/bin/module_installer.sh'\n"
+	send "ssh $USERNAME@$SERVER '@CMAKE_INSTALL_PREFIX@/bin/module_installer.sh'\n"
 	expect "word: "
 	# send the password
 	send "$PASSWORD\n"

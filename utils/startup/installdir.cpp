@@ -22,10 +22,7 @@
 ******************************************************************************************/
 #include <unistd.h>
 #include <string>
-using namespace std;
-
 #include <boost/thread/mutex.hpp>
-using namespace boost;
 
 #ifdef _MSC_VER
 #include "idbregistry.h"
@@ -37,19 +34,18 @@ using namespace config;
 
 #include <iostream> 
    
-using namespace std;
 
 namespace startup
 {
 /* static */
-mutex StartUp::fInstallDirLock;
+boost::mutex StartUp::fInstallDirLock;
 /* static */
-string* StartUp::fInstallDirp = 0;
+std::string* StartUp::fInstallDirp = 0;
 
 /* static */
-const string StartUp::installDir()
+const std::string StartUp::installDir()
 {
-    mutex::scoped_lock lk(fInstallDirLock);
+    boost::mutex::scoped_lock lk(fInstallDirLock);
 
     if (fInstallDirp)
         return *fInstallDirp;
@@ -62,7 +58,7 @@ const string StartUp::installDir()
         *fInstallDirp = cfStr;
 
 #else
-    fInstallDirp = new string("/usr/local/mariadb/columnstore");
+    fInstallDirp = new std::string("/usr/local/mariadb/columnstore");
     //See if we can figure out the install dir in Linux...
     //1. env var COLUMNSTORE_INSTALL_DIR
     const char* p = 0;
@@ -79,14 +75,14 @@ const string StartUp::installDir()
 }
 
 /* static */
-mutex StartUp::fTmpDirLock;
+boost::mutex StartUp::fTmpDirLock;
 /* static */
-string* StartUp::fTmpDirp = 0;
+std::string* StartUp::fTmpDirp = 0;
 
 /* static */
-const string StartUp::tmpDir()
+const std::string StartUp::tmpDir()
 {
-    mutex::scoped_lock lk(fTmpDirLock);
+    boost::mutex::scoped_lock lk(fTmpDirLock);
 
     if (fTmpDirp)
         return *fTmpDirp;
@@ -133,7 +129,7 @@ const string StartUp::tmpDir()
 */
 	Config* sysConfig = Config::makeConfig();
 
-	string TempFileDir;
+	std::string TempFileDir;
 
 	try
 	{

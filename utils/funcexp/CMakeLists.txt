@@ -1,10 +1,6 @@
+target_include_directories(funcexp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(funcexp_LIB_SRCS
+cs_add_library(funcexp SHARED
     functor.cpp
     funcexp.cpp
     funcexpwrapper.cpp
@@ -104,14 +100,31 @@ set(funcexp_LIB_SRCS
     func_week.cpp
     func_weekday.cpp
     func_year.cpp
-    func_yearweek.cpp)
+    func_yearweek.cpp
+)
 
-add_library(funcexp SHARED ${funcexp_LIB_SRCS})
-
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES})
+target_link_libraries(funcexp 
+  INTERFACE funcexp_h
+  PUBLIC
+  PRIVATE
+    Boost::system
+    execplan_h
+    messageqcpp_h
+    joblist_h
+    loggingcpp_h
+    dataconvert_h
+    oamcpp_h
+    configcpp_h
+    alarmmanager_h
+    rowgroup_h
+    brm_h
+    rwlock_h
+    common_h
+    udfsdk
+    mariadb    
+    )
 
 set_target_properties(funcexp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
-
+install(TARGETS funcexp DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)

@@ -1,14 +1,13 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(editem editem.cpp)
 
+target_link_libraries(editem 
+  PRIVATE 
+    brm
+    common_h
+    dataconvert
+    joblist
+  )
 
-########### next target ###############
-
-set(editem_SRCS editem.cpp)
-
-add_executable(editem ${editem_SRCS})
-
-target_link_libraries(editem ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS editem DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

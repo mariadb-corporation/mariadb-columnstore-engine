@@ -1,19 +1,19 @@
+target_include_directories(oamcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_library(oamcpp STATIC liboamcpp.cpp oamcache.cpp)
 
-
-########### next target ###############
-
-set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
-
-add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
-
-target_link_libraries(oamcpp )
-
-target_compile_options(oamcpp PRIVATE -Wno-unused-result)
-
-set_target_properties(oamcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
-
-
+target_link_libraries(oamcpp 
+  INTERFACE oamcpp_h
+  PRIVATE
+    messageqcpp
+    configcpp_h
+    alarmmanager
+    brm_h
+    execplan_h
+    joblist_h
+    loggingcpp_h
+    rwlock_h
+    common_h
+    idbboot_h
+    idbdatafile_h
+  )

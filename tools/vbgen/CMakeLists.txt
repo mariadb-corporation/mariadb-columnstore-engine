@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(vbgen_SRCS vbgen.cpp myrand.cpp)
 
 kde4_add_executable(vbgen ${vbgen_SRCS})
 
-target_link_libraries(vbgen ${KDE4_KDECORE_LIBS})
+#target_link_libraries(vbgen ${KDE4_KDECORE_LIBS})
 
 install(TARGETS vbgen ${INSTALL_TARGETS_DEFAULT_ARGS})
 

@@ -96,7 +96,7 @@ void WECpiFeederThread::add2MsgQueue(ByteStream& Ibs)
     //TODO creating copy is NOT good; later read from socket using a SBS
     messageqcpp::SBS aSbs(new messageqcpp::ByteStream(Ibs));
     Ibs.reset();	//forcefully clearing it
-    mutex::scoped_lock aLock(fMsgQMutex);
+    boost::mutex::scoped_lock aLock(fMsgQMutex);
     //cout << "pushing to the MsgQueue" << endl;
     fMsgQueue.push(aSbs);
     fFeederCond.notify_one();	// as per preference of Damon
@@ -111,7 +111,7 @@ void WECpiFeederThread::feedData2Cpi()
     while (isContinue())
     {
 
-        mutex::scoped_lock aLock(fMsgQMutex);
+        boost::mutex::scoped_lock aLock(fMsgQMutex);
 
         if (fMsgQueue.empty())
         {
@@ -163,7 +163,7 @@ void WECpiFeederThread::feedData2Cpi()
 bool WECpiFeederThread::isMsgQueueEmpty()
 {
     bool aRet = false;
-    mutex::scoped_lock aLock(fMsgQMutex);
+    boost::mutex::scoped_lock aLock(fMsgQMutex);
     aRet = fMsgQueue.empty();
     aLock.unlock();
     return aRet;
@@ -173,7 +173,7 @@ bool WECpiFeederThread::isMsgQueueEmpty()
 
 void WECpiFeederThread::stopThread()
 {
-    mutex::scoped_lock aCondLock(fContMutex);
+    boost::mutex::scoped_lock aCondLock(fContMutex);
     fContinue = false;
     aCondLock.unlock();
     fFeederCond.notify_all();
@@ -184,7 +184,7 @@ void WECpiFeederThread::stopThread()
 
 bool WECpiFeederThread::isContinue()
 {
-    mutex::scoped_lock aCondLock(fContMutex);
+    boost::mutex::scoped_lock aCondLock(fContMutex);
     return fContinue;
 }
 

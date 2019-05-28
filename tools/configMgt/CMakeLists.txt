@@ -1,26 +1,25 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# autoInstaller 
+
+cs_add_executable(autoInstaller autoInstaller.cpp)
+
+target_link_libraries(autoInstaller 
+  PRIVATE 
+    brm
+    Readline::Readline
+  )
+
+install(TARGETS autoInstaller DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
-########### next target ###############
 
-set(autoInstaller_SRCS autoInstaller.cpp)
+# autoConfigure
 
-add_executable(autoInstaller ${autoInstaller_SRCS})
+cs_add_executable(autoConfigure autoConfigure.cpp)
 
-target_compile_options(autoInstaller PRIVATE -Wno-unused-result)
-
-target_link_libraries(autoInstaller ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} readline ncurses)
-
-install(TARGETS autoInstaller DESTINATION ${ENGINE_BINDIR})
-
-
-########### next target ###############
-
-set(autoConfigure_SRCS autoConfigure.cpp)
-
-add_executable(autoConfigure ${autoConfigure_SRCS})
-
-target_link_libraries(autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+target_link_libraries(autoConfigure 
+  PRIVATE 
+    brm
+  )
+install(TARGETS autoConfigure DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
+                                                                                                                 

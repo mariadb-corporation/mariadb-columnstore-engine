@@ -618,6 +618,7 @@ void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 *			date = MM/DD/YY format
 *
 *****************************************************************************************/
+#if 1
 void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 {
 
@@ -720,7 +721,7 @@ void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
         }
     }
 }
-
+#endif
 } //namespace alarmmanager
 // vim:ts=4 sw=4:
 

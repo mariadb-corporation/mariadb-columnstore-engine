@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(cfread_SRCS cfread.cpp)
 
 kde4_add_executable(cfread ${cfread_SRCS})
 
-target_link_libraries(cfread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
+#target_link_libraries(cfread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
 
 install(TARGETS cfread ${INSTALL_TARGETS_DEFAULT_ARGS})
 
@@ -19,7 +19,7 @@ set(mtread_SRCS mtread.cpp)
 
 kde4_add_executable(mtread ${mtread_SRCS})
 
-target_link_libraries(mtread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
+#target_link_libraries(mtread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
 
 install(TARGETS mtread ${INSTALL_TARGETS_DEFAULT_ARGS})
 

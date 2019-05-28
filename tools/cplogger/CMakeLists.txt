@@ -1,14 +1,10 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(cplogger main.cpp)
 
+target_link_libraries(cplogger 
+  PRIVATE 
+			brm
+		  )
 
-########### next target ###############
-
-set(cplogger_SRCS main.cpp)
-
-add_executable(cplogger ${cplogger_SRCS})
-
-target_link_libraries(cplogger ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS cplogger DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cplogger DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

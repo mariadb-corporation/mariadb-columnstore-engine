@@ -177,7 +177,7 @@ uint64_t BatchInsertProc::grabTableLock(int32_t sessionId)
 
 BatchInsertProc::SP_PKG  BatchInsertProc::getInsertQueue()
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     return fInsertPkgQueue;
 }
 
@@ -187,7 +187,7 @@ void BatchInsertProc::setLastPkg (bool lastPkg)
 }
 void BatchInsertProc::addPkg(messageqcpp::ByteStream& insertBs)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     fInsertPkgQueue->push(insertBs);
 
 }
@@ -195,7 +195,7 @@ void BatchInsertProc::addPkg(messageqcpp::ByteStream& insertBs)
 messageqcpp::ByteStream BatchInsertProc::getPkg()
 {
     messageqcpp::ByteStream bs;
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     bs = fInsertPkgQueue->front();
     fInsertPkgQueue->pop();
     return bs;
@@ -535,13 +535,13 @@ void BatchInsertProc::setHwm()
 
 void BatchInsertProc::setError(int errorCode, std::string errMsg)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     fErrorCode = errorCode;
     fErrMsg = errMsg;
 }
 void BatchInsertProc::getError(int& errorCode, std::string& errMsg)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     errorCode = fErrorCode;
     errMsg = fErrMsg;
 }

@@ -1,10 +1,7 @@
+target_include_directories(we_server_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
 
-
-########### next target ###############
-
-set(WriteEngineServer_SRCS
+cs_add_executable(WriteEngineServer 
     we_server.cpp
     we_readthread.cpp
     we_ddlcommandproc.cpp
@@ -15,11 +12,42 @@ set(WriteEngineServer_SRCS
     we_cleartablelockcmd.cpp
     we_cpifeederthread.cpp
     we_getfilesizes.cpp
-    ../../utils/common/crashtrace.cpp)
+    )
 
-add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
-target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
+target_link_libraries(WriteEngineServer
+  PRIVATE
+    dmlpackageproc
+    brm_h
+    columnstore_h
+    we_server_h
+    loggingcpp_h
+    messageqcpp_h
+    threadpool_h
+    execplan_h
+    joblist_h
+    rwlock_h
+    common_h
+    configcpp_h
+    dmlpackage_h
+    idbdatafile_h
+    ddlpackage_h
+    compress_h
+    oamcpp_h
+    dataconvert_h
+    alarmmanager_h
+    idbboot_h
+    querystats_h
+    rowgroup_h
+    udfsdk_h
+    querytele_h
+    funcexp_h
+    cacheutils_h
+    dmlpackageproc_h
+    we_shared_h
+    crashtrace
+    mariadb
+    Boost::thread
+          )
 
-install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
+install(TARGETS WriteEngineServer DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)

@@ -1,26 +1,53 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES}
-                     ../../dbcon/mysql )
-                     
-########### next target ###############
+target_include_directories(udfsdk_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(udfsdk_LIB_SRCS udfsdk.cpp mcsv1_udaf.cpp allnull.cpp ssq.cpp avg_mode.cpp avgx.cpp distinct_count.cpp)
 
-add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
+# udfsdk
+cs_add_library(udfsdk STATIC
+  udfsdk.cpp 
+  mcsv1_udaf.cpp 
+  allnull.cpp 
+  ssq.cpp 
+  avg_mode.cpp 
+  avgx.cpp 
+  distinct_count.cpp
+  )
 
-add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
+target_link_libraries(udfsdk
+  INTERFACE udfsdk_h
+  PUBLIC
+  PRIVATE
+    funcexp_h
+    common_h
+    rowgroup_h
+    execplan_h
+    messageqcpp_h
+    joblist_h
+    loggingcpp_h
+    dataconvert_h
+    mariadb
+          )
+
+target_compile_definitions(udfsdk PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 set_target_properties(udfsdk PROPERTIES VERSION 1.1.0 SOVERSION 1)
 
-install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+
+install(TARGETS udfsdk DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 
+# udf_mysql
 
-set(udf_mysql_LIB_SRCS udfmysql.cpp)
-
-add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
+cs_add_library(udf_mysql SHARED udfmysql.cpp)
 
 set_target_properties(udf_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS udf_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+target_link_libraries(udf_mysql 
+  PRIVATE 
+    calmysql_h 
+    mariadb 
+    PCRE::PCRE
+  )
+
+install(TARGETS udf_mysql DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)
 

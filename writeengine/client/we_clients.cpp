@@ -382,7 +382,7 @@ void WEClients::Listen ( boost::shared_ptr<MessageQueueClient> client, uint32_t 
 Error:
     // error condition! push 0 length bs to messagequeuemap and
     // eventually let jobstep error out.
-    mutex::scoped_lock lk(fMlock);
+    boost::mutex::scoped_lock lk(fMlock);
 
     MessageQueueMap::iterator map_tok;
     sbs.reset(new ByteStream(0));
@@ -398,7 +398,7 @@ Error:
 
     // reset the pmconnection map
     {
-        mutex::scoped_lock onErrLock(fOnErrMutex);
+        boost::mutex::scoped_lock onErrLock(fOnErrMutex);
         string moduleName = client->moduleName();
         ClientList::iterator itor = fPmConnections.begin();
 
@@ -430,13 +430,13 @@ void WEClients::addQueue(uint32_t key)
 {
     bool b;
 
-    mutex* lock = new mutex();
+    boost::mutex* lock = new boost::mutex();
     condition* cond = new condition();
     boost::shared_ptr<MQE> mqe(new MQE(pmCount));
 
     mqe->queue = WESMsgQueue(lock, cond);
 
-    mutex::scoped_lock lk ( fMlock );
+    boost::mutex::scoped_lock lk ( fMlock );
     b = fSessionMessages.insert(pair<uint32_t, boost::shared_ptr<MQE> >(key, mqe)).second;
 
     if (!b)
@@ -449,7 +449,7 @@ void WEClients::addQueue(uint32_t key)
 
 void WEClients::removeQueue(uint32_t key)
 {
-    mutex::scoped_lock lk(fMlock);
+    boost::mutex::scoped_lock lk(fMlock);
     MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
     if (map_tok == fSessionMessages.end())
@@ -462,7 +462,7 @@ void WEClients::removeQueue(uint32_t key)
 
 void WEClients::shutdownQueue(uint32_t key)
 {
-    mutex::scoped_lock lk(fMlock);
+    boost::mutex::scoped_lock lk(fMlock);
     MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
     if (map_tok == fSessionMessages.end())
@@ -477,7 +477,7 @@ void WEClients::read(uint32_t key, SBS& bs)
     boost::shared_ptr<MQE> mqe;
 
     //Find the StepMsgQueueList for this session
-    mutex::scoped_lock lk(fMlock);
+    boost::mutex::scoped_lock lk(fMlock);
     MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
     if (map_tok == fSessionMessages.end())
@@ -557,7 +557,7 @@ void WEClients::addDataToOutput(SBS sbs, uint32_t connIndex)
     *sbs >> uniqueId;
     boost::shared_ptr<MQE> mqe;
 
-    mutex::scoped_lock lk(fMlock);
+    boost::mutex::scoped_lock lk(fMlock);
     MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
 
     if (map_tok == fSessionMessages.end())

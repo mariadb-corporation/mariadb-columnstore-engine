@@ -19,14 +19,14 @@ SET(CMAKE_CXX_FLAGS_DEBUG
 SET(CMAKE_C_FLAGS_DEBUG 
     "${CMAKE_C_FLAGS_DEBUG} -DSAFEMALLOC -DSAFE_MUTEX -DUSE_SYMDIR /Zi")
 SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /MAP /MAPINFO:EXPORTS") 
-
+#[[
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include 
                     ${CMAKE_SOURCE_DIR}/extra/yassl/include 
                     ${CMAKE_SOURCE_DIR}/sql 
                     ${CMAKE_SOURCE_DIR}/regex 
                     ${CMAKE_SOURCE_DIR}/zlib
 )
-
+]]
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/sql/sql_yacc.h 
                             ${CMAKE_SOURCE_DIR}/sql/sql_yacc.cc
                             ${CMAKE_SOURCE_DIR}/include/mysql_version.h

@@ -13,7 +13,7 @@ set PACKAGE " "
 set CONFIGFILE " "
 set DEBUG 0
 set NODEPS "-h"
-set INSTALLDIR "/usr/local/mariadb/columnstore"
+set INSTALLDIR "@CMAKE_INSTALL_PREFIX@"
 
 spawn -noecho /bin/bash
 

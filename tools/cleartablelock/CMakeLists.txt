@@ -1,14 +1,17 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# cleartablelock 
+
+cs_add_executable(cleartablelock cleartablelock.cpp cleartablelockthread.cpp)
+
+target_link_libraries(cleartablelock 
+  PRIVATE 
+    brm
+    writeengine_h
+    we_shared_h
+    we_server_h
+    Boost::thread
+    )
 
 
-########### next target ###############
-
-set(cleartablelock_SRCS cleartablelock.cpp cleartablelockthread.cpp)
-
-add_executable(cleartablelock ${cleartablelock_SRCS})
-
-target_link_libraries(cleartablelock ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS})
-
-install(TARGETS cleartablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cleartablelock DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

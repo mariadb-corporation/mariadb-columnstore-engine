@@ -1,10 +1,12 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(idbboot_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-ADD_DEFINITIONS(-fPIC -DPIC)
+cs_add_library(idbboot STATIC installdir.cpp)
 
-add_library(idbboot STATIC installdir.cpp)
-
-INSTALL(TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})
-
+target_link_libraries(idbboot 
+	INTERFACE idbboot_h   
+  PUBLIC
+	PRIVATE
+		configcpp_h
+  )
 

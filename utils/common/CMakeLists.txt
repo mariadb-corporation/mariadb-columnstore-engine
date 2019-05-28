@@ -1,22 +1,31 @@
+target_include_directories(common_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(crashtrace_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-########### next target ###############
-
-set(common_LIB_SRCS
+cs_add_library(common STATIC 
     fixedallocator.cpp
     poolallocator.cpp
     cgroupconfigurator.cpp
     MonitorProcMem.cpp
-    nullvaluemanip.cpp
-    threadnaming.cpp)
-
-add_library(common SHARED ${common_LIB_SRCS})
-
-add_dependencies(common loggingcpp)
+    threadnaming.cpp
+    nullvaluemanip.h
+)
 
 
-set_target_properties(common PROPERTIES VERSION 1.0.0 SOVERSION 1)
+target_link_libraries(common 
+  INTERFACE common_h
+  PUBLIC
+  PRIVATE
+    configcpp_h
+    loggingcpp_h
+)
 
-install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
+
+
+cs_add_library(crashtrace STATIC
+  crashtrace.cpp
+)
+
+target_link_libraries(crashtrace
+  INTERFACE crashtrace_h
+)

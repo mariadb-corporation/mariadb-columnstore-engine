@@ -30,11 +30,16 @@
 #include <vector>
 #include <stdint.h>
 #include <boost/thread.hpp>
-
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <sys/types.h>
-#include <libxml/parser.h>
 
-#include "xmlparser.h"
+
+//#include <libxml/parser.h>
+//#include "xmlparser.h"
+
+typedef struct _xmlDoc xmlDoc;
+typedef xmlDoc *xmlDocPtr;
+
 
 namespace messageqcpp
 
@@ -44,7 +49,7 @@ class ByteStream;
 
 }
 
-#if defined(_MSC_VER) && defined(LIBCONFIG_DLLEXPORT)
+#if defined(_MSC_VER) && defined(configcpp_EXPORTS)
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT
@@ -52,6 +57,7 @@ class ByteStream;
 
 namespace config
 {
+  class XMLParser;
 
 /** @brief a config file I/F class
  *
@@ -232,7 +238,7 @@ private:
     time_t fMtime;
     mutable boost::mutex fLock;
     const std::string fInstallDir;
-    XMLParser fParser;
+    boost::shared_ptr<XMLParser> fParser;
 
 };
 

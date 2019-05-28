@@ -31,7 +31,7 @@
 #include <iomanip>
 #include <boost/any.hpp>
 #include "calpontdmlpackage.h"
-#include "calpontsystemcatalog.h"
+//#include "calpontsystemcatalog.h"
 #include "we_type.h"
 #include "writeengine.h"
 #include "messageobj.h"
