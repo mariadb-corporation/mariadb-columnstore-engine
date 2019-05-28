@@ -131,8 +131,9 @@ void Synchronizer::flushObject(const string &key)
 
     // if there is something to do on key, it should be either in pendingOps or opsInProgress
     // if it is is pending ops, start the job now.  If it is in progress, wait for it to finish.
-    // The sanity check at the end was intended for debugging / development
-    // I'm inclined to make it permanent.  An existence check on S3 is quick.
+    // If there are no jobs to do on key, it will verify it exists in cloud storage.
+    // The existence check is currently necessary on a startup where the cache is populated but
+    // synchronizer isn't.
 
     bool noExistingJob = false;
     auto it = pendingOps.find(key);
@@ -182,7 +183,9 @@ void Synchronizer::flushObject(const string &key)
             "and there is no job for it.  Merging & uploading now.", key.c_str());
         pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(JOURNAL));
         objNames.push_front(key);
-        process(objNames.begin());
+        auto nameIt = objNames.begin();
+        s.unlock();
+        process(nameIt);
     }
     else if (!keyExists)
     {
@@ -190,7 +193,9 @@ void Synchronizer::flushObject(const string &key)
             "and there is no job for it.  Uploading it now.", key.c_str());
         pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(NEW_OBJECT));
         objNames.push_front(key);
-        process(objNames.begin());
+        auto nameIt = objNames.begin();
+        s.unlock();
+        process(nameIt);
     }
 }
 
