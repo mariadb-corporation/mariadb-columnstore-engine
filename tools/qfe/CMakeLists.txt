@@ -19,6 +19,8 @@ kde4_add_executable(QFE ${QFE_SRCS})
 
 target_link_libraries(QFE ${KDE4_KDECORE_LIBS})
 
+target_pch(QFE)
+
 install(TARGETS QFE ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 

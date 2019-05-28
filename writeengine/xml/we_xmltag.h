@@ -23,7 +23,6 @@
 
 #ifndef _WE_XMLTAG_H_
 #define _WE_XMLTAG_H_
-#include <libxml/parser.h>
 
 /** Namespace WriteEngine */
 namespace WriteEngine

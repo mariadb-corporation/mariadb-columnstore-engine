@@ -1,16 +1,25 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
 
+add_executable(mcsadmin mcsadmin.cpp)
 
-########### next target ###############
-
-set(mcsadmin_SRCS mcsadmin.cpp)
-
-add_executable(mcsadmin ${mcsadmin_SRCS})
-
-target_compile_options(mcsadmin PRIVATE -Wno-unused-result)
-
-target_link_libraries(mcsadmin ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_WRITE_LIBS})
+target_link_libraries(mcsadmin 
+  PRIVATE alarmmanager_h
+          Boost::system
+          Boost::thread
+          brm_h
+          columnstore_h
+          common_h
+          compress_h
+          configcpp_h
+          execplan_h
+          idbboot_h
+          idbdatafile_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          we_server_h
+          we_shared_h)
 
 install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

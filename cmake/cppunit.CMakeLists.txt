@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+include(ExternalProject)
+
+ExternalProject_Add(cppunit
+	GIT_REPOSITORY https://github.com/Ultimaker/CppUnit.git
+	INSTALL_DIR @CPPUNIT_DIR@
+	UPDATE_COMMAND ""
+	PATCH_COMMAND ""
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=@CPPUNIT_DIR@
+)
+

@@ -97,9 +97,9 @@ namespace
 	string tmpDir = startup::StartUp::tmpDir() + "/csc.log";
 	std::ofstream csclog(tmpDir, std::ios::app);
 }
-#define DEBUG csclog
+#define DODBGLOG csclog
 #else
-#define DEBUG if (false) cerr
+#define DODBGLOG if (false) cerr
 #endif
 
 namespace execplan
@@ -420,7 +420,7 @@ const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const Table
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter tableInfo: " << tablename.schema << "|" << tablename.table << endl;
+        DODBGLOG << "Enter tableInfo: " << tablename.schema << "|" << tablename.table << endl;
 
     // select objectid from systable where schema = tableName.schema and tablename = tableName.table;
     CalpontSelectExecutionPlan csep;
@@ -518,7 +518,7 @@ const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColNa
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter lookupOID: " << tableColName.schema << "|" << tableColName.table
+        DODBGLOG << "Enter lookupOID: " << tableColName.schema << "|" << tableColName.table
               << "|" << tableColName.column << endl;
 
     //Check whether cache needs to be flushed
@@ -869,7 +869,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep,
         NJLSysDataList& sysDataList,
         const string& sysTableName)
 {
-    DEBUG << "Enter getSysData_EC " << fSessionID << endl;
+    DODBGLOG << "Enter getSysData_EC " << fSessionID << endl;
 
     uint32_t tableOID = IDB_VTABLE_ID;
     ByteStream bs;
@@ -940,7 +940,7 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
         NJLSysDataList& sysDataList,
         const string& sysTableName)
 {
-    DEBUG << "Enter getSysData_FE " << fSessionID << endl;
+    DODBGLOG << "Enter getSysData_FE " << fSessionID << endl;
 
     ByteStream msg;
 
@@ -1052,7 +1052,7 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
 const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid)
 {
     if ( Oid >= 3000)
-        DEBUG << "Enter colType: " << Oid << endl;
+        DODBGLOG << "Enter colType: " << Oid << endl;
 
     ColType ct;
 
@@ -1283,7 +1283,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 const CalpontSystemCatalog::ColType CalpontSystemCatalog::colTypeDct(const OID& dictOid)
 {
     if ( dictOid >= 3000)
-        DEBUG << "Enter colType: " << dictOid << endl;
+        DODBGLOG << "Enter colType: " << dictOid << endl;
 
     ColType ct;
 
@@ -1372,7 +1372,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colTypeDct(const OID& 
 const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID& oid)
 {
     if (oid >= 3000)
-        DEBUG << "Enter colName: " << oid;
+        DODBGLOG << "Enter colName: " << oid;
 
     TableColName tableColName;
 
@@ -1395,7 +1395,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
         if (oid == (*iter).second )
         {
             tableColName = (*iter).first;
-            DEBUG << "|in cache|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
+            DODBGLOG << "|in cache|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
             return tableColName;
         }
 
@@ -1474,7 +1474,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
     }
 
     if (oid > 3000)
-        DEBUG << "|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
+        DODBGLOG << "|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
 
 #if BOOST_VERSION < 103800
 
@@ -1492,7 +1492,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
 const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const OID& oid)
 {
     if (oid >= 3000)
-        DEBUG << "Enter dictColName: " << oid;
+        DODBGLOG << "Enter dictColName: " << oid;
 
     TableColName tableColName;
 
@@ -1572,7 +1572,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
     }
 
     if (oid > 3000)
-        DEBUG << "|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
+        DODBGLOG << "|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
 
     return tableColName;
 }
@@ -1868,12 +1868,12 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::nextAutoIncrRid ( const
 const CalpontSystemCatalog::OID CalpontSystemCatalog::colBitmap(const OID& oid) const
 {
     return oid;
-    DEBUG << "Enter colBitmap: Not implemented" << endl;
+    DODBGLOG << "Enter colBitmap: Not implemented" << endl;
 }
 
 const CalpontSystemCatalog::SCN CalpontSystemCatalog::scn(void) const
 {
-    DEBUG << "Enter scn: Not implemented" << endl;
+    DODBGLOG << "Enter scn: Not implemented" << endl;
     SCN scn;
     scn = 1;
     return scn;
@@ -1929,7 +1929,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
     boost::mutex::scoped_lock lock(map_mutex);
-    DEBUG << "remove calpont system catalog for session " << sessionID << endl;
+    DODBGLOG << "remove calpont system catalog for session " << sessionID << endl;
     fCatalogMap.erase(sessionID);
     /*
         CatalogMap::iterator it = fCatalogMap.find(sessionID);
@@ -2015,7 +2015,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexRIDs(const TableN
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
 
     RIDList rl;
     CalpontSelectExecutionPlan csep;
@@ -2094,7 +2094,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRIDs(const Tab
     transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter indexColRIDs: " << tableName.schema << "|"
+        DODBGLOG << "Enter indexColRIDs: " << tableName.schema << "|"
               << tableName.table << endl;
 
     CalpontSelectExecutionPlan csep;
@@ -2173,7 +2173,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRIDs(const Ind
     transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter indexColRIDs: " << aIndexName.schema << "|"
+        DODBGLOG << "Enter indexColRIDs: " << aIndexName.schema << "|"
               << aIndexName.table << aIndexName.index << endl;
 
     CalpontSelectExecutionPlan csep;
@@ -2246,7 +2246,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintRIDs(const T
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
 
     RIDList rl;
     CalpontSelectExecutionPlan csep;
@@ -2343,7 +2343,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
     }
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter colValueSysconstraint: " << tableColName.schema << "|"
+        DODBGLOG << "Enter colValueSysconstraint: " << tableColName.schema << "|"
               << tableColName.table << "|"
               << tableColName.column << endl;
 
@@ -2422,7 +2422,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
 // TODO: should take index name as parameter and filter on schema name and table name also
 const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintRID(const std::string constraintName)
 {
-    DEBUG << "Enter constraintRID: " << constraintName << endl;
+    DODBGLOG << "Enter constraintRID: " << constraintName << endl;
 
     /* SQL statement: select constraintname from sysconstraint where constraintname=constraintName;
      */
@@ -2477,7 +2477,7 @@ const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintRID(const std::s
 
 const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintColRID(const std::string constraintName)
 {
-    DEBUG << "Enter constraintColRID: " << constraintName << endl;
+    DODBGLOG << "Enter constraintColRID: " << constraintName << endl;
     /* SQL statement: select constraintname from sysconstraintcol where constraintname=constraintName;
      */
     RIDList ridlist;
@@ -2548,7 +2548,7 @@ const std::string CalpontSystemCatalog::colValueSysconstraintCol (const TableCol
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter colValueSysconstraintCol: " << tableColName.schema << "|"
+        DODBGLOG << "Enter colValueSysconstraintCol: " << tableColName.schema << "|"
               << tableColName.table << "|"
               << tableColName.column << endl;
 
@@ -2628,7 +2628,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintColRIDs(cons
     transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter constraintColRIDs: " << tableName.schema << "|"
+        DODBGLOG << "Enter constraintColRIDs: " << tableName.schema << "|"
               << tableName.table << endl;
 
     CalpontSelectExecutionPlan csep;
@@ -2707,7 +2707,7 @@ const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintColRID(const Tab
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter constraintColRID: " << tableColName.schema << "|"
+        DODBGLOG << "Enter constraintColRID: " << tableColName.schema << "|"
               << tableColName.table << "|"
               << tableColName.column << "(note: rowid not fully implemented)" << endl;
 
@@ -2790,7 +2790,7 @@ const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >
         return tables;
     }
 
-    DEBUG << "Enter getTables" << endl;
+    DODBGLOG << "Enter getTables" << endl;
     // SQL statement: select tablename from systable where schemaname = schema;
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -2894,7 +2894,7 @@ const int CalpontSystemCatalog::getTableCount ()
 {
     int tableCnt = 0;
 
-    DEBUG << "Enter getTableCount" << endl;
+    DODBGLOG << "Enter getTableCount" << endl;
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
     CalpontSelectExecutionPlan::ColumnMap colMap;
@@ -2941,7 +2941,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableCo
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter columnRID: " << tableColName.schema << "|" << tableColName.table
+        DODBGLOG << "Enter columnRID: " << tableColName.schema << "|" << tableColName.table
               << "|" << tableColName.column << endl;
 
     //Check whether cache needs to be flushed
@@ -2975,7 +2975,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
         throw runtime_error("ColumnRIDs: Invalid table name");
 
     if (aTableName.schema != CALPONT_SCHEMA)
-        DEBUG << "Enter columnRIDs: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter columnRIDs: " << tableName.schema << "|" << tableName.table << endl;
 
     RIDList rl;
 
@@ -3008,7 +3008,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
         lk2.lock();
 
         if (aTableName.schema != CALPONT_SCHEMA)
-            DEBUG << "for " << aTableName << ", searching " << fOIDmap.size() << " oids" << endl;
+            DODBGLOG << "for " << aTableName << ", searching " << fOIDmap.size() << " oids" << endl;
 
         OIDmap::const_iterator iter = fOIDmap.begin();
 
@@ -3042,7 +3042,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
         }
 
         if (aTableName.schema != CALPONT_SCHEMA)
-            DEBUG << aTableName << " was cached: " << rl.size() << " rows" << endl;
+            DODBGLOG << aTableName << " was cached: " << rl.size() << " rows" << endl;
 
         return rl;
     }
@@ -3051,7 +3051,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     lk3.unlock();
 
     if (aTableName.schema != CALPONT_SCHEMA)
-        DEBUG << aTableName << " was not cached, fetching..." << endl;
+        DODBGLOG << aTableName << " was not cached, fetching..." << endl;
 
     // get real data from system catalog for all user tables. don't check cache
     // because cache may not have complete columns for this table
@@ -3182,7 +3182,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     {
         if ((*it)->ColumnOID() == oid[1]) // objectid
         {
-            DEBUG << "column count: " << (*it)->dataCount() << endl;
+            DODBGLOG << "column count: " << (*it)->dataCount() << endl;
             // populate tableinfo cache for numOfCols
             ti.numOfCols = (*it)->dataCount();
 //			ti.tablewithautoincr = NO_AUTOINCRCOL;
@@ -3198,14 +3198,14 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                 if (fIdentity == EC)
                     rp.rid = (*it)->GetRid(i);
 
-                DEBUG << rp.rid << " ";
+                DODBGLOG << rp.rid << " ";
                 rl.push_back(rp);
                 ColType ct;
                 ct.columnOID = rp.objnum;
                 ctList[i] = ct;
             }
 
-            DEBUG << endl;
+            DODBGLOG << endl;
         }
         else if ((*it)->ColumnOID() == oid[15]) //autoincrement
         {
@@ -3493,7 +3493,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter tableRID: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter tableRID: " << tableName.schema << "|" << tableName.table << endl;
 
     // look up cache first for system table and cached table
     ROPair rp;
@@ -3629,7 +3629,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
 #if 0
 const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::indexNames(const TableName& tableName)
 {
-    DEBUG << "Enter indexNames: " << tableName.schema << "|" << tableName.table << endl;
+    DODBGLOG << "Enter indexNames: " << tableName.schema << "|" << tableName.table << endl;
     IndexNameList indexlist;
 
     TableName aTableName;
@@ -3732,7 +3732,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::indexNames(const
 
 const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::indexColNames ( const IndexName& indexName)
 {
-    DEBUG << "Enter indexColNames: " << indexName.schema << "|" << indexName.table << "|" << indexName.index << endl;
+    DODBGLOG << "Enter indexColNames: " << indexName.schema << "|" << indexName.table << "|" << indexName.index << endl;
 
     // not cached yet
     CalpontSystemCatalog::TableColNameList tableColNameList;
@@ -3847,7 +3847,7 @@ const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::indexColNames
 
 const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::constraintColNames ( const std::string constraintName)
 {
-    DEBUG << "Enter constraintColNames: " << constraintName << endl;
+    DODBGLOG << "Enter constraintColNames: " << constraintName << endl;
 
     std::string aConstraintName( constraintName );
 
@@ -3947,7 +3947,7 @@ const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::constraintCol
 
 const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexRID(const IndexName& indexName)
 {
-    DEBUG << "Enter indexRID: " << indexName.schema << "|" << indexName.table << indexName.index << endl;
+    DODBGLOG << "Enter indexRID: " << indexName.schema << "|" << indexName.table << indexName.index << endl;
     ROPair rp;
 
     IndexName aIndexName;
@@ -4015,7 +4015,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexRID(const IndexNam
 
 const int CalpontSystemCatalog::colNumbers(const TableName& tableName)
 {
-    DEBUG << "Enter colNumbers: " << tableName.schema << "|" << tableName.table << endl;
+    DODBGLOG << "Enter colNumbers: " << tableName.schema << "|" << tableName.table << endl;
 
     TableInfo ti = tableInfo(tableName);
 
@@ -4035,7 +4035,7 @@ const std::string CalpontSystemCatalog::colValueSysindex (const TableColName& ta
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter colValueSysindex: " << tableColName.schema << "|"
+        DODBGLOG << "Enter colValueSysindex: " << tableColName.schema << "|"
               << tableColName.table << "|"
               << tableColName.column << endl;
 
@@ -4129,7 +4129,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRID(const Inde
     transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter indexColRID: " << aIndexName.schema << "|"
+        DODBGLOG << "Enter indexColRID: " << aIndexName.schema << "|"
               << aIndexName.table << "|" << aIndexName.index << endl;
 
     CalpontSelectExecutionPlan csep;
@@ -4209,7 +4209,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexColRID(const Table
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter indexColRID: " << tableColName.schema << "|"
+        DODBGLOG << "Enter indexColRID: " << tableColName.schema << "|"
               << tableColName.table << "|" << tableColName.column << endl;
 
     CalpontSelectExecutionPlan csep;
@@ -4295,7 +4295,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysindex
     return indexNameList;  //so colxml can run when indexes are not made
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter colValueSysindexCol: " << tableColName.schema << "|"
+        DODBGLOG << "Enter colValueSysindexCol: " << tableColName.schema << "|"
               << tableColName.table << "|"
               << tableColName.column << endl;
 
@@ -4370,7 +4370,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysindex
 
 const CalpontSystemCatalog::TableName CalpontSystemCatalog::lookupTableForIndex(const std::string indexName, const std::string schema)
 {
-    DEBUG << "Enter lookupTableForIndex" << endl;
+    DODBGLOG << "Enter lookupTableForIndex" << endl;
     CalpontSystemCatalog::TableName tablename;
     //select tablename from sysindex where indexname = indexName and schema = schema;
     std::string aIndexName( indexName );
@@ -4447,7 +4447,7 @@ const CalpontSystemCatalog::IndexOID CalpontSystemCatalog::lookupIndexNbr(const 
     transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter lookupIndexNbr: " << indexName.schema << "|" << indexName.table
+        DODBGLOG << "Enter lookupIndexNbr: " << indexName.schema << "|" << indexName.table
               << "|" << indexName.index << endl;
 
     // return pre-defined indexoid for system catalog index. currently no index
@@ -4560,7 +4560,7 @@ const CalpontSystemCatalog::IndexOID CalpontSystemCatalog::lookupIndexNbr(const 
     transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter lookupIndexNbr: " << tableColName.schema << "|" << tableColName.table
+        DODBGLOG << "Enter lookupIndexNbr: " << tableColName.schema << "|" << tableColName.table
               << "|" << tableColName.column << endl;
 
     index.schema = tableColName.schema;
@@ -4652,7 +4652,7 @@ const CalpontSystemCatalog::IndexOIDList CalpontSystemCatalog::indexOIDs( const 
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter indexOIDs: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter indexOIDs: " << tableName.schema << "|" << tableName.table << endl;
 
     // return pre-defined indexoid for system catalog index. currently no index
     // created for system catalog, return invalid(default) indexoid.
@@ -4763,7 +4763,7 @@ const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs( const Ta
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter dictOIDs: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter dictOIDs: " << tableName.schema << "|" << tableName.table << endl;
 
     // return pre-defined indexoid for system catalog index. currently no index
     // created for system catalog, return invalid(default) indexoid.
@@ -4886,7 +4886,7 @@ void CalpontSystemCatalog::updateColInfo(void)
 
 const int CalpontSystemCatalog::colPosition (const OID& oid)
 {
-    DEBUG << "Enter colPosition: " << oid << endl;
+    DODBGLOG << "Enter colPosition: " << oid << endl;
     ColType col = colType (oid);
     return col.colPosition;
 }
@@ -4900,7 +4900,7 @@ const CalpontSystemCatalog::TableInfo CalpontSystemCatalog::tableInfo (const Tab
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter tableInfo: " << tb.schema << "|" << tb.table << endl;
+        DODBGLOG << "Enter tableInfo: " << tb.schema << "|" << tb.table << endl;
 
     // look up cache first
     TableInfo ti;
@@ -4951,7 +4951,7 @@ const CalpontSystemCatalog::ConstraintInfo CalpontSystemCatalog::constraintInfo 
     transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter constraintInfo: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
+        DODBGLOG << "Enter constraintInfo: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
 
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -5107,7 +5107,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::referenceConstra
     transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter referenceConstraints: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
+        DODBGLOG << "Enter referenceConstraints: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
 
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -5228,7 +5228,7 @@ const string CalpontSystemCatalog::primaryKeyName (const TableName& tableName )
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (tableName.schema.compare(CALPONT_SCHEMA) != 0)
-        DEBUG << "Enter primaryKeyName: " << tableName.schema << "|" << tableName.table << endl;
+        DODBGLOG << "Enter primaryKeyName: " << tableName.schema << "|" << tableName.table << endl;
 
     string primaryKeyName = "";
     CalpontSelectExecutionPlan csep;
@@ -5302,7 +5302,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
     if (schema == CALPONT_SCHEMA)
         return;
     else
-        DEBUG << "Enter getSchemaInfo: " << schema << endl;
+        DODBGLOG << "Enter getSchemaInfo: " << schema << endl;
 
     //Check whether cache needs to be flushed
     checkSysCatVer();
@@ -5312,7 +5312,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
 
     if (setIt != fSchemaCache.end())
     {
-        DEBUG << "getSchemaInfo Cached" << endl;
+        DODBGLOG << "getSchemaInfo Cached" << endl;
         return;
     }
 
@@ -5458,14 +5458,14 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
                 if (fIdentity == EC)
                     rp.rid = (*it)->GetRid(i);
 
-                //DEBUG << rp.rid << " ";
+                //DODBGLOG << rp.rid << " ";
                 rl.push_back(rp);
                 ColType ct;
                 ct.columnOID = rp.objnum;
                 ctList.push_back(ct);
             }
 
-            DEBUG << endl;
+            DODBGLOG << endl;
         }
         // table name
         else if ((*it)->ColumnOID() == oid[11])
@@ -5621,7 +5621,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
         //ti.numOfCols = (tbIter->second).numOfCols;
         //ti.tablewithautoincr = (tbIter->second).withAutoInc;
         fTableInfoMap[tn] = tbIter->second;
-        DEBUG << tbIter->first << " " << tbIter->second.numOfCols << " " << (tbIter->second).tablewithautoincr << endl;
+        DODBGLOG << tbIter->first << " " << tbIter->second.numOfCols << " " << (tbIter->second).tablewithautoincr << endl;
     }
 
     //delete col[9];

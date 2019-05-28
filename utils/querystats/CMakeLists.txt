@@ -1,13 +1,23 @@
+target_include_directories(querystats_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-########### next target ###############
-
-set(querystats_LIB_SRCS querystats.cpp)
-
-add_library(querystats SHARED ${querystats_LIB_SRCS})
+add_library(querystats SHARED querystats.cpp)
 
 set_target_properties(querystats PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_link_libraries(querystats 
+  PUBLIC querystats_h
+  PRIVATE mariadb 
+          messageqcpp_h
+          joblist_h
+          execplan_h 
+          brm_h 
+          compress_h
+          libmysql_client_h
+          configcpp_h
+          loggingcpp_h
+          dataconvert_h
+          idbboot_h
+          common_h)
 
 install(TARGETS querystats DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

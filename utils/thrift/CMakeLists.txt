@@ -1,10 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(thrift_LIB_SRCS
+add_library(thrift SHARED 
     thrift/Thrift.cpp
     thrift/server/TSimpleServer.cpp
     thrift/transport/TSocket.cpp
@@ -12,11 +7,13 @@ set(thrift_LIB_SRCS
     thrift/transport/TBufferTransports.cpp
     thrift/TApplicationException.cpp)
 
-add_definitions(-DTHRIFT_SQUELCH_CONSOLE_OUTPUT)
-
-add_library(thrift SHARED ${thrift_LIB_SRCS})
+target_compile_definitions(thrift PRIVATE THRIFT_SQUELCH_CONSOLE_OUTPUT)
 
 set_target_properties(thrift PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_include_directories(thrift INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_pch(thrift)
 
 install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

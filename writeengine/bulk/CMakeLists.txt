@@ -1,10 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(we_bulk_STAT_SRCS
+add_library(we_bulk STATIC 
     we_brmreporter.cpp
     we_bulkload.cpp
     we_bulkloadbuffer.cpp
@@ -24,20 +19,49 @@ set(we_bulk_STAT_SRCS
     we_tempxmlgendata.cpp
     we_workers.cpp)
 
-ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
-add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
+target_link_libraries(we_bulk 
+  PUBLIC we_wrapper_h
+  PRIVATE alarmmanager_h
+          brm_h 
+          cacheutils_h
+          common_h
+          compress_h
+          configcpp_h
+          dataconvert_h
+          funcexp_h
+          idbboot_h
+          idbdatafile_h 
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          querytele_h
+          threadpool_h
+          we_client_h
+          we_server_h
+          we_shared_h
+          we_xml_h)
 
-target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
+target_compile_definitions(we_bulk PRIVATE _FILE_OFFSET_BITS=64)
 
-REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 
-########### next target ###############
+# cpimport.bin
 
-set(cpimport.bin_SRCS cpimport.cpp)
+add_executable(cpimport.bin cpimport.cpp)
 
-add_executable(cpimport.bin ${cpimport.bin_SRCS})
-
-target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} we_bulk we_xml)
-
+target_link_libraries(cpimport.bin
+  PRIVATE we_bulk)
+#[[
+  PRIVATE idbdatafile_h 
+          messageqcpp_h 
+          we_shared_h 
+          execplan_h 
+          we_wrapper_h 
+          brm_h 
+          compress_h 
+          we_xml_h 
+          querytele_h 
+          oamcpp_h
+          funcexp_h)
+]]
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-

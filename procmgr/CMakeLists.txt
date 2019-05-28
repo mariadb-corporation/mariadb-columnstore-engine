@@ -1,16 +1,21 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(ProcMgr main.cpp processmanager.cpp ../utils/common/crashtrace.cpp)
 
-
-########### next target ###############
-
-set(ProcMgr_SRCS main.cpp processmanager.cpp ../utils/common/crashtrace.cpp)
-
-add_executable(ProcMgr ${ProcMgr_SRCS})
-
-target_compile_options(ProcMgr PRIVATE -Wno-unused-result)
-
-target_link_libraries(ProcMgr ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(ProcMgr 
+  PRIVATE alarmmanager_h
+          brm_h
+          cacheutils_h
+          columnstore_h
+          common_h
+          configcpp_h
+          ddlcleanuputil_h
+          funcexp_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          threadpool_h)
 
 install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -1,2 +1,7 @@
 
-install(PROGRAMS  MCSInstanceCmds.sh MCSVolumeCmds.sh MCSgetCredentials.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(
+  PROGRAMS MCSInstanceCmds.sh 
+           MCSVolumeCmds.sh 
+           MCSgetCredentials.sh 
+  DESTINATION ${ENGINE_BINDIR} 
+  COMPONENT platform)

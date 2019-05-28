@@ -42,7 +42,7 @@
 #include "socket.h"
 #include "socketparms.h"
 #include "bytestream.h"
-
+#include "exceptclasses.h"
 class MessageQTestSuite;
 
 #if defined(_MSC_VER) && defined(xxxIOSOCKET_DLLEXPORT)

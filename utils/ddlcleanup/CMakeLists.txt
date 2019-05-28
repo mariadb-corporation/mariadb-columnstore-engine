@@ -1,14 +1,29 @@
+target_include_directories(ddlcleanuputil_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_library(ddlcleanuputil SHARED ddlcleanuputil.cpp)
 
-
-########### next target ###############
-
-set(ddlcleanuputil_LIB_SRCS ddlcleanuputil.cpp)
-
-add_library(ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
-
-target_link_libraries(ddlcleanuputil ${NETSNMP_LIBRARIES})
+target_link_libraries(ddlcleanuputil
+  PUBLIC ddlcleanuputil_h
+  PRIVATE alarmmanager_h
+          brm_h 
+          cacheutils_h
+          common_h
+          compress_h
+          configcpp_h
+          dataconvert_h
+          ddlpackage_h 
+          ddlpackageproc_h 
+          execplan_h 
+          idbboot_h
+          idbdatafile_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h 
+          oamcpp_h 
+          rwlock_h 
+          we_client_h 
+          we_shared_h 
+          we_wrapper_h )
 
 set_target_properties(ddlcleanuputil PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

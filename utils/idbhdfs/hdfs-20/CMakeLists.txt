@@ -1,22 +1,27 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+
+add_library(hdfs-20 SHARED     
+    ../hdfs-shared/HdfsFile.cpp
+    ../hdfs-shared/HdfsFileSystem.cpp
+    ../hdfs-shared/HdfsFsCache.cpp
+    ../hdfs-shared/HdfsRdwrFileBuffer.cpp
+    ../hdfs-shared/HdfsRdwrMemBuffer.cpp
+    ../hdfs-shared/HdfsPlugin.cpp)
 
 
-########### next target ###############
+target_compile_definitions(hdfs-20 PRIVATE CDH4)
 
-set(hdfs-20_LIB_SRCS 
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsFile.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsFileSystem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsFsCache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsRdwrFileBuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsRdwrMemBuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hdfs-shared/HdfsPlugin.cpp)
-
-add_definitions(-DCDH4)
-
-add_library(hdfs-20 SHARED ${hdfs-20_LIB_SRCS})
+target_link_libraries(hdfs-20 
+  PRIVATE idbdatafile_h
+          messageqcpp_h
+          compress_h
+          loggingcpp_h
+          common_h
+          configcpp_h)
 
 set_target_properties(hdfs-20 PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_pch(hdfs-20)
 
 install(TARGETS hdfs-20 DESTINATION ${ENGINE_LIBDIR})
 

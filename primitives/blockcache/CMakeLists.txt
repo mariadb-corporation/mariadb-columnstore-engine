@@ -1,9 +1,7 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ../primproc)
+target_include_directories(dbbc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
-
-set(dbbc_STAT_SRCS
+add_library(dbbc STATIC 
     blockcacheclient.cpp
     blockrequestprocessor.cpp
     fileblockrequestqueue.cpp
@@ -14,10 +12,25 @@ set(dbbc_STAT_SRCS
     stats.cpp
     fsutils.cpp)
 
-#libdbbc_a_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
-add_library(dbbc STATIC ${dbbc_STAT_SRCS})
+target_link_libraries(dbbc
+  PUBLIC dbbc_h
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          compress_h
+          configcpp_h
+          idbdatafile_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h 
+          oamcpp_h
+          primproc_h
+          we_shared_h
+          we_wrapper_h)
 
-target_link_libraries(dbbc ${NETSNMP_LIBRARIES})
+target_include_directories(dbbc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_pch(dbbc)
 
 INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})

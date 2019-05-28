@@ -1,19 +1,32 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# dbload
 
-########### next target ###############
+add_library(dbload STATIC inputmgr.cpp)
 
-set(dbload_STAT_SRCS inputmgr.cpp)
+target_link_libraries(dbload 
+  PRIVATE execplan_h
+          joblist_h
+          messageqcpp_h
+          we_shared_h          
+          we_xml_h)
 
-add_library(dbload STATIC ${dbload_STAT_SRCS})
 
-########### next target ###############
+# colxml
 
-set(colxml_SRCS colxml.cpp)
+add_executable(colxml colxml.cpp)
 
-add_executable(colxml ${colxml_SRCS})
-
-target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS})
+target_link_libraries(colxml 
+  PRIVATE brm_h
+          common_h
+          configcpp_h
+          execplan_h
+          idbdatafile_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          we_xml_h
+          we_shared_h
+          LibXml2::LibXml2)
 
 install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -1,14 +1,17 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(editem editem.cpp)
 
-
-########### next target ###############
-
-set(editem_SRCS editem.cpp)
-
-add_executable(editem ${editem_SRCS})
-
-target_link_libraries(editem ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(editem 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          dataconvert_h
+          execplan_h 
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h 
+          oamcpp_h)
 
 install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

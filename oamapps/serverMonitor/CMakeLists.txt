@@ -1,10 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(ServerMonitor_SRCS
+add_executable(ServerMonitor 
     main.cpp
     serverMonitor.cpp
     cpuMonitor.cpp
@@ -16,11 +11,18 @@ set(ServerMonitor_SRCS
     UMAutoSync.cpp
     ../../utils/common/crashtrace.cpp)
 
-add_executable(ServerMonitor ${ServerMonitor_SRCS})
+target_link_libraries(ServerMonitor 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          idbdatafile_h 
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h )
 
-target_compile_options(ServerMonitor PRIVATE -Wno-unused-result)
-
-target_link_libraries(ServerMonitor ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_pch(ServerMonitor)
 
 install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

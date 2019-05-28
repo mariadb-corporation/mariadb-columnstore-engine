@@ -448,7 +448,7 @@ ELSE()
 SET (RETSIGTYPE void)
 ENDIF()
 
-#IF(NOT LSTAT_FOLLOWS_SLASHED_SYMLINK)
+#[[
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.sym conftest.file
     COMMAND touch conftest.file
@@ -469,7 +469,7 @@ struct stat sbuf;
   ;
   return 0;
 }" LSTAT_FOLLOWS_SLASHED_SYMLINK)
-
+]]
 
 
 SET (SELECT_INCLUDES ${TEST_INCLUDES})
@@ -720,7 +720,9 @@ IF($ENV{SKIP_OAM_INIT})
     set(SKIP_OAM_INIT 1 CACHE BOOL "Skip OAM initialization" FORCE)
 ENDIF()
 
+#[[
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
+]]

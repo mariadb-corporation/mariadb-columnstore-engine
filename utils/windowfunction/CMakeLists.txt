@@ -1,10 +1,6 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
 
-
-########### next target ###############
-
-set(windowfunction_LIB_SRCS
+add_library(windowfunction SHARED 
     framebound.cpp
     frameboundrange.cpp
     frameboundrow.cpp
@@ -24,9 +20,27 @@ set(windowfunction_LIB_SRCS
     wf_sum_avg.cpp
     wf_udaf.cpp)
 
-add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
 set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_pch(windowfunction)
+
+target_link_libraries(windowfunction 
+  PRIVATE brm_h
+          common_h
+          configcpp_h
+          dataconvert_h
+          execplan_h
+          funcexp_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          mariadb
+          messageqcpp_h
+          querytele_h 
+          rowgroup_h
+          threadpool_h
+          udfsdk_h)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

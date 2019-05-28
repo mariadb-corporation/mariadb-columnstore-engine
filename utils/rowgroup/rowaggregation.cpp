@@ -53,7 +53,7 @@
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
-#include "funcexp/utils_utf8.h"
+#include "utils_utf8.h"
 
 
 using namespace std;

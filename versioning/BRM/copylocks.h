@@ -44,6 +44,8 @@
 
 #include "brmshmimpl.h"
 
+#include "exceptclasses.h"
+
 /* Should load these from a config file */
 #define CL_INITIAL_SIZE (50*sizeof(CopyLockEntry))
 #define CL_INCREMENT (50*sizeof(CopyLockEntry))

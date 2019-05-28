@@ -1,20 +1,32 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(ExeMgr main.cpp activestatementcounter.cpp femsghandler.cpp ../utils/common/crashtrace.cpp)
 
+target_link_libraries(ExeMgr 
+  PRIVATE Boost::filesystem
+          Boost::system
+          Boost::thread
+          mariadb
+          alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          dataconvert_h
+          execplan_h
+          funcexp_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          querystats_h
+          querytele_h
+          rowgroup_h
+          threadpool_h
+          udfsdk_h)
 
-########### next target ###############
-
-set(ExeMgr_SRCS main.cpp activestatementcounter.cpp femsghandler.cpp ../utils/common/crashtrace.cpp)
-
-add_executable(ExeMgr ${ExeMgr_SRCS})
-
-target_link_libraries(ExeMgr ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} cacheutils threadpool)
-
-target_include_directories(ExeMgr PRIVATE ${Boost_INCLUDE_DIRS})
-
-install(TARGETS ExeMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+target_pch(ExeMgr)
 
 
 ########### install files ###############
 
-
+install(TARGETS ExeMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

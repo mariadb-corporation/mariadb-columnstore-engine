@@ -27,20 +27,21 @@
 #include <stdexcept>
 using namespace std;
 
-#include "bytestream.h"
-using namespace messageqcpp;
+//#include "bytestream.h"
+//using namespace messageqcpp;
 
 #include "configstream.h"
 
 namespace config
 {
+#if 0
 
 ConfigStream::ConfigStream(const ByteStream& bs, const string& installDir) :
     fParser(installDir)
 {
     init(reinterpret_cast<const xmlChar*>(bs.buf()));
 }
-
+#endif
 ConfigStream::ConfigStream(const string& str, const string& installDir) :
     fParser(installDir)
 {
