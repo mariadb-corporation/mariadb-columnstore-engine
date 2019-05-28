@@ -138,7 +138,10 @@ def main():
     sys.exit(0)
 
 
+if sys.version_info < (3, 5):
+    print("Please use python version 3.5 or greater")
+    sys.exit(1)
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
     main()
 
