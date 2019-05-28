@@ -12,5 +12,5 @@ stop on runlevel 5
 stop on runlevel 6
 
 respawn
-exec /usr/local/mariadb/columnstore/bin/ProcMon
+exec @CMAKE_INSTALL_PREFIX@/bin/ProcMon
 

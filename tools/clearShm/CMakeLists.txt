@@ -1,14 +1,11 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(clearShm main.cpp)
 
+target_link_libraries(clearShm 
+  PRIVATE
+    Boost::thread
+    brm
+    )
 
-########### next target ###############
-
-set(clearShm_SRCS main.cpp)
-
-add_executable(clearShm ${clearShm_SRCS})
-
-target_link_libraries(clearShm ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS clearShm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS clearShm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

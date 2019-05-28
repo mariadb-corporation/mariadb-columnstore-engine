@@ -39,6 +39,8 @@
 #include "undoable.h"
 #include "mastersegmenttable.h"
 
+#include "exceptclasses.h"
+
 // These config parameters need to be loaded
 
 //will get a small hash function performance boost by using powers of 2

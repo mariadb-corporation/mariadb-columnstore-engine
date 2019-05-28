@@ -1,20 +1,30 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
 
+cs_add_executable(columnstoreSupport columnstoreSupport.cpp)
 
-########### next target ###############
+target_link_libraries(columnstoreSupport 
+  PRIVATE alarmmanager_h
+          brm
+          common_h
+          idbboot
+          joblist_h
+          Readline::Readline
+          Boost::system
+          Boost::filesystem
+          Threads::Threads
+          )
 
-set(columnstoreSupport_SRCS columnstoreSupport.cpp)
+install(TARGETS columnstoreSupport DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
-add_executable(columnstoreSupport ${columnstoreSupport_SRCS})
-
-target_compile_options(columnstoreSupport PRIVATE -Wno-unused-result)
-
-target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses  ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
-install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh hadoopReport.sh 
-    hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
-    DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(
+  PROGRAMS alarmReport.sh 
+          bulklogReport.sh 
+          configReport.sh 
+          hadoopReport.sh 
+          hardwareReport.sh 
+          logReport.sh 
+          resourceReport.sh 
+          softwareReport.sh 
+  DESTINATION ${CMAKE_INSTALL_BINDIR} 
+  COMPONENT platform)
               

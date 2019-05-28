@@ -179,7 +179,7 @@ typedef map<uint32_t, TraceFileInfo> TraceFileMap_t;
 
 TraceFileMap_t traceFileMap;
 //map mutex
-mutex traceFileMapMutex;
+boost::mutex traceFileMapMutex;
 
 class StatMon
 {
@@ -198,7 +198,7 @@ public:
     void operator()() const
     {
         //struct timespec ts = { 60 * 1, 0 };
-        mutex::scoped_lock lk(traceFileMapMutex);
+        boost::mutex::scoped_lock lk(traceFileMapMutex);
         TraceFileMap_t::iterator iter;
         TraceFileMap_t::iterator end;
 
@@ -259,7 +259,7 @@ void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
 {
     if (lbid < 0 || session == 0) return;
 
-    mutex::scoped_lock lk(traceFileMapMutex);
+    boost::mutex::scoped_lock lk(traceFileMapMutex);
     TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
     if (iter == traceFileMap.end())
@@ -276,7 +276,7 @@ void Stats::markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t
 {
     if (lbid < 0 || session == 0) return;
 
-    mutex::scoped_lock lk(traceFileMapMutex);
+    boost::mutex::scoped_lock lk(traceFileMapMutex);
     TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
     if (iter == traceFileMap.end())

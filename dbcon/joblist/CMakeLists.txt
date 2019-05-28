@@ -1,10 +1,6 @@
+target_include_directories(joblist_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(joblist_LIB_SRCS
+cs_add_library(joblist SHARED 
     anydatalist.cpp
     batchprimitiveprocessor-jl.cpp
     columncommand-jl.cpp
@@ -57,12 +53,39 @@ set(joblist_LIB_SRCS
     virtualtable.cpp
     windowfunctionstep.cpp)
 
-#libjoblist_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
-
-add_library(joblist SHARED ${joblist_LIB_SRCS})
+target_link_libraries(joblist
+  INTERFACE joblist_h
+  
+  PRIVATE
+    rowgroup_h
+    messageqcpp_h
+    execplan_h
+    udfsdk_h
+    dataconvert_h
+    brm_h
+    mariadb
+    rwlock_h
+    configcpp_h
+    funcexp_h
+    oamcpp_h
+    idbboot_h
+    compress_h          
+    primproc_h 
+  PUBLIC
+    loggingcpp
+    querytele
+    windowfunction
+    threadpool
+    alarmmanager
+    joiner
+    common
+    udfsdk
+    querystats
+    mysql_client
+    )
 
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
+install(TARGETS joblist DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

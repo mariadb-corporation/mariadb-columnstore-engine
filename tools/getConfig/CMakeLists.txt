@@ -1,14 +1,17 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
 
+cs_add_executable(getConfig main.cpp)
 
-########### next target ###############
+target_link_libraries(getConfig 
+  PRIVATE brm
+          configcpp
+          loggingcpp
+          messageqcpp_h
+          idbboot
+          Boost::system
+          Boost::filesystem
+          rt
+          )
 
-set(getConfig_SRCS main.cpp)
-
-add_executable(getConfig ${getConfig_SRCS})
-
-target_link_libraries(getConfig ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS getConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS getConfig DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

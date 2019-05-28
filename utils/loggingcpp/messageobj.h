@@ -152,7 +152,6 @@ private:
 
     MessageID fMsgID;	/// the msgID
     std::string fMsg;	/// the formated or unformated message
-    config::Config* fConfig; /// config file ptr
 };
 
 }//namespace logging

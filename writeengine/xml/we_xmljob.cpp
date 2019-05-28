@@ -44,6 +44,8 @@
 using namespace std;
 using namespace execplan;
 
+#include <libxml/parser.h>
+
 
 namespace WriteEngine
 {

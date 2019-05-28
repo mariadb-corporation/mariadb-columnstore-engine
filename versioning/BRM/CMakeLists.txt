@@ -1,10 +1,8 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(brm_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-########### next target ###############
-
-set(brm_LIB_SRCS
+cs_add_library(brm SHARED 
     autoincrementmanager.cpp
     blockresolutionmanager.cpp
     brmshmimpl.cpp
@@ -30,86 +28,154 @@ set(brm_LIB_SRCS
     vbbm.cpp
     vss.cpp)
 
-add_library(brm SHARED ${brm_LIB_SRCS})
+target_link_libraries(brm 
+  INTERFACE brm_h 
+  PRIVATE
+    alarmmanager_h         
+    Boost::system
+    common_h
+    dataconvert_h
+    idbboot_h
+    joblist_h
+    Snappy::Snappy
+  PUBLIC
+    rt
+    loggingcpp
+    configcpp
+    compress
+    messageqcpp
+    rwlock
+    oamcpp
+    idbdatafile
+    execplan
+    alarmmanager
+    cacheutils
+    )
+  
 
 set_target_properties(brm PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS brm DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 
-########### next target ###############
+# controllernode
 
-set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
+cs_add_executable(controllernode 
+  masternode.cpp 
+  masterdbrmnode.cpp 
+  )
 
-add_executable(controllernode ${controllernode_SRCS})
+target_link_libraries(controllernode
+  PUBLIC 
+  PRIVATE
+    Boost::system
+    Boost::thread
+    brm
+    common_h
+    funcexp_h
+    joblist_h
+    crashtrace
+    )
 
-target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} )
-
-install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
-
-########### next target ###############
-
-set(workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
-
-add_executable(workernode ${workernode_SRCS})
-
-target_link_libraries(workernode ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
-
-########### next target ###############
-
-set(dbrmctl_SRCS dbrmctl.cpp)
-
-add_executable(dbrmctl ${dbrmctl_SRCS})
-
-target_link_libraries(dbrmctl ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS controllernode DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
-########### next target ###############
+# workernode
 
-set(reset_locks_SRCS reset_locks.cpp)
+cs_add_executable(workernode slavenode.cpp)
 
-add_executable(reset_locks ${reset_locks_SRCS})
+target_link_libraries(workernode 
+  PUBLIC 
+  PRIVATE
+    brm
+    common_h
+    crashtrace
+    funcexp_h
+    joblist_h
+    Boost::thread
+    )
 
-target_link_libraries(reset_locks ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
-
-########### next target ###############
-
-set(rollback_SRCS rollback.cpp)
-
-add_executable(rollback ${rollback_SRCS})
-
-target_link_libraries(rollback ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS workernode DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
-########### next target ###############
+# dbrmctl
 
-set(save_brm_SRCS save_brm.cpp)
+cs_add_executable(dbrmctl dbrmctl.cpp)
 
-add_executable(save_brm ${save_brm_SRCS})
+target_link_libraries(dbrmctl
+  PUBLIC 
+  PRIVATE
+		brm
+    common_h          
+    joblist_h
+    )
 
-target_link_libraries(save_brm ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS dbrmctl DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
-########### next target ###############
+# reset_locks
 
-set(load_brm_SRCS load_brm.cpp)
+cs_add_executable(reset_locks reset_locks.cpp)
 
-add_executable(load_brm ${load_brm_SRCS})
+target_link_libraries(reset_locks 
+  PUBLIC 
+  PRIVATE
+    brm
+    common_h
+    configcpp_h
+    execplan_h 
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    rwlock_h)
 
-target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS reset_locks DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
-install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
+# rollback
+
+cs_add_executable(rollback rollback.cpp)
+
+target_link_libraries(rollback 
+  PUBLIC 
+  PRIVATE
+    Boost::thread
+    brm
+    loggingcpp_h
+    messageqcpp_h)
+
+install(TARGETS rollback DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
+
+
+# save_brm 
+
+cs_add_executable(save_brm save_brm.cpp)
+
+target_link_libraries(save_brm 
+  PUBLIC 
+  PRIVATE
+    brm
+    messageqcpp_h
+    loggingcpp_h)
+
+install(TARGETS save_brm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
+
+
+# load_brm
+
+cs_add_executable(load_brm load_brm.cpp)
+
+target_link_libraries(load_brm 
+  PUBLIC 
+  PRIVATE
+    brm
+    common_h
+    configcpp_h
+    execplan_h
+    idbdatafile_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    rwlock_h)
+
+install(TARGETS load_brm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)

@@ -1,13 +1,18 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(mysql_client_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
+cs_add_library(mysql_client SHARED libmysql_client.cpp)
 
-set(libmysql_client_LIB_SRCS libmysql_client.cpp)
+set_target_properties(mysql_client PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-add_library(libmysql_client SHARED ${libmysql_client_LIB_SRCS})
+target_link_libraries(mysql_client 
+  INTERFACE mysql_client_h 
+  PRIVATE
+    messageqcpp_h
+    loggingcpp_h
+    configcpp_h
+    mariadb
+    )
 
-set_target_properties(libmysql_client PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-install(TARGETS libmysql_client DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS mysql_client DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

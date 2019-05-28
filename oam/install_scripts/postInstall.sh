@@ -13,7 +13,7 @@ set PASSWORD " "
 set CONFIGFILE " "
 set DEBUG 0
 set USERNAME "root"
-set INSTALLDIR "/usr/local/mariadb/columnstore"
+set INSTALLDIR "@CMAKE_INSTALL_PREFIX@"
 
 spawn -noecho /bin/bash
 

@@ -1,10 +1,12 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ../blockcache ../linux-port)
+target_include_directories(primproc_h 
+  INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}     
+  #  messageqcpp_h
+  )
 
 
-########### next target ###############
-
-set(PrimProc_SRCS
+cs_add_executable(PrimProc 
     primproc.cpp
     batchprimitiveprocessor.cpp
     bppseeder.cpp
@@ -19,14 +21,33 @@ set(PrimProc_SRCS
     pseudocc.cpp
     rtscommand.cpp
     umsocketselector.cpp
-    ../../utils/common/crashtrace.cpp)
+    )
 
-#PrimProc_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
+target_link_libraries(PrimProc 
+  PRIVATE 
+    primproc_h
+    Boost::system
+    Boost::thread
+    brm
+    common_h
+    dataconvert_h
+    dbbc
+    funcexp
+    idbboot_h
+    joblist
+    joiner_h
+    mariadb
+    processor
+    rowgroup_h
+    threadpool_h
+    udfsdk_h
+    writeengineclient_h
+    writeengine
+    crashtrace
+    we_shared_h
+    )
 
-add_executable(PrimProc ${PrimProc_SRCS})
 
-target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
-
-install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS PrimProc DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 

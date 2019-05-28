@@ -23,7 +23,7 @@ find_path(SNAPPY_ROOT_DIR
 
 find_library(SNAPPY_LIBRARIES
     NAMES snappy
-    HINTS ${SNAPPY_ROOT_DIR}/lib
+    HINTS ${SNAPPY_ROOT_DIR}/lib64 ${SNAPPY_ROOT_DIR}/lib
 )
 
 find_path(SNAPPY_INCLUDE_DIR
@@ -32,9 +32,9 @@ find_path(SNAPPY_INCLUDE_DIR
 )
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Snappy DEFAULT_MSG
-    SNAPPY_LIBRARIES
-    SNAPPY_INCLUDE_DIR
+
+find_package_handle_standard_args(Snappy
+    REQUIRED_VARS SNAPPY_LIBRARIES SNAPPY_INCLUDE_DIR
 )
 
 mark_as_advanced(
@@ -42,3 +42,11 @@ mark_as_advanced(
     SNAPPY_LIBRARIES
     SNAPPY_INCLUDE_DIR
 )
+
+add_library(Snappy::Snappy UNKNOWN IMPORTED)
+
+set_target_properties(Snappy::Snappy PROPERTIES 
+  IMPORTED_LOCATION ${SNAPPY_LIBRARIES}
+  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+  INTERFACE_INCLUDE_DIRECTORIES ${SNAPPY_INCLUDE_DIR}
+  )

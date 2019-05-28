@@ -38,6 +38,8 @@ namespace bi = boost::interprocess;
 
 #include "installdir.h"
 
+#include "exceptclasses.h"
+
 namespace BRM
 {
 

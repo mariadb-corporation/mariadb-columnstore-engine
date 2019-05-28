@@ -34,8 +34,6 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
-#include "configcpp.h"
-using namespace config;
 #include "messageobj.h"
 
 #include "installdir.h"
@@ -43,7 +41,7 @@ using namespace config;
 namespace
 {
 
-mutex mx;
+boost::mutex mx;
 bool catalogLoaded = false;
 
 typedef map<int, string> CatMap;
@@ -52,11 +50,7 @@ CatMap catmap;
 
 void loadCatalog()
 {
-    Config* cf = Config::makeConfig();
-    string configFile(cf->getConfig("MessageLog", "MessageLogFile"));
-
-    if (configFile.length() == 0)
-        configFile = startup::StartUp::installDir() + "/etc/MessageFile.txt";
+        auto configFile = startup::StartUp::installDir() + "/etc/MessageFile.txt";
 
     ifstream msgFile(configFile.c_str());
 
@@ -102,12 +96,12 @@ namespace logging
 {
 
 Message::Message(const MessageID msgid) :
-    fMsgID(msgid), fMsg(lookupMessage(msgid)), fConfig(Config::makeConfig())
+    fMsgID(msgid), fMsg(lookupMessage(msgid))
 {
 }
 
 Message::Message(const string msg):
-    fMsgID(0), fMsg(msg), fConfig(Config::makeConfig())
+    fMsgID(0), fMsg(msg)
 {
 }
 
@@ -115,7 +109,6 @@ void Message::swap(Message& rhs)
 {
     std::swap(fMsgID, rhs.fMsgID);
     std::swap(fMsg, rhs.fMsg);
-    std::swap(fConfig, rhs.fConfig);
 }
 
 void Message::Args::add(int i)
@@ -189,7 +182,7 @@ const string Message::lookupMessage(const MessageID& msgid)
 {
     if (!catalogLoaded)
     {
-        mutex::scoped_lock lock(mx);
+        boost::mutex::scoped_lock lock(mx);
 
         if (!catalogLoaded)
         {

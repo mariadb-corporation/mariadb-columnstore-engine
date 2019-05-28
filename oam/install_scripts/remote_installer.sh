@@ -86,7 +86,7 @@ send_user "\n"
 # copy over custom OS files
 #
 send_user "Copy Custom OS files to Module"
-send "scp /usr/local/mariadb/columnstore/local/etc/$MODULE/*  $USERNAME@$SERVER:/etc/.\n"
+send "scp @CMAKE_INSTALL_PREFIX@/local/etc/$MODULE/*  $USERNAME@$SERVER:/etc/.\n"
 expect -re "word: "
 # send the password
 send "$PASSWORD\n"

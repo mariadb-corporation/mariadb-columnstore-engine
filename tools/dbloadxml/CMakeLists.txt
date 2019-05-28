@@ -1,19 +1,35 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# dbload
 
-########### next target ###############
+cs_add_library(dbload STATIC inputmgr.cpp)
 
-set(dbload_STAT_SRCS inputmgr.cpp)
+target_link_libraries(dbload 
+  PRIVATE 
+    execplan_h
+    joblist_h
+    messageqcpp_h
+    we_xml_h
+    we_shared_h
+  )
 
-add_library(dbload STATIC ${dbload_STAT_SRCS})
 
-########### next target ###############
+# colxml
 
-set(colxml_SRCS colxml.cpp)
+cs_add_executable(colxml colxml.cpp)
 
-add_executable(colxml ${colxml_SRCS})
+target_link_libraries(colxml 
+  PRIVATE 
+    Boost::filesystem
+    brm
+    common_h
+    dbload
+    joblist_h
+    we_xml
+    writeengine
+    we_shared_h
+    LibXml2::LibXml2
+    Boost::date_time
+  )
 
-target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS})
-
-install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS colxml DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

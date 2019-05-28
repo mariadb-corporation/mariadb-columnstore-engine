@@ -1,16 +1,18 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(ProcMon main.cpp processmonitor.cpp)
+
+target_link_libraries(ProcMon 
+  PRIVATE 
+    brm
+    columnstore_h
+    common_h
+    crashtrace
+    ddlcleanuputil_h
+    idbboot
+    joblist_h
+    Boost::thread
+    )
 
 
-########### next target ###############
-
-set(ProcMon_SRCS main.cpp processmonitor.cpp ../utils/common/crashtrace.cpp)
-
-add_executable(ProcMon ${ProcMon_SRCS})
-
-target_compile_options(ProcMon PRIVATE -Wno-unused-result)
-
-target_link_libraries(ProcMon ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS ProcMon DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ProcMon DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

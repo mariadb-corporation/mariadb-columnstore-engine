@@ -927,7 +927,7 @@ void TupleBPS::prepCasualPartitioning()
 {
     uint32_t i;
     int64_t min, max, seq;
-    mutex::scoped_lock lk(cpMutex);
+    boost::mutex::scoped_lock lk(cpMutex);
 
     for (i = 0; i < scannedExtents.size(); i++)
     {
@@ -3318,7 +3318,7 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
-    boost::mutex::scoped_lock scoped(mutex);
+    boost::mutex::scoped_lock scoped(boost::mutex);
     abort_nolock();
 }
 

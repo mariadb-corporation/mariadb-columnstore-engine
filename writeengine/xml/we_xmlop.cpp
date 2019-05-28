@@ -25,6 +25,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <libxml/parser.h>
+
 #include "we_xmlop.h"
 
 namespace WriteEngine
@@ -198,6 +200,13 @@ bool XMLOp::getNodeContentStr( const xmlNode* pNode, std::string& strVal)
 
     return bFound;
 }
+  
+bool XMLOp::isTag(const xmlNode* pNode, const xmlTag tag)
+{
+  return !xmlStrcmp(pNode->name, (const xmlChar*)xmlTagTable[tag]);
+}
+
+
 
 //------------------------------------------------------------------------------
 // Parse the document

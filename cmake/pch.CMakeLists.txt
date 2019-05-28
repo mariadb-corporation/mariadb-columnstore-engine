@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+include(ExternalProject)
+
+ExternalProject_Add(cotire
+	SOURCE_DIR @COTIRE_DIR@
+	GIT_REPOSITORY https://github.com/sakra/cotire.git
+	UPDATE_COMMAND ""
+	PATCH_COMMAND ""
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND ""
+)

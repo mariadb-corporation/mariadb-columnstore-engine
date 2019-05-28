@@ -56,7 +56,7 @@ struct hash<long long unsigned int>
 #endif
 
 #define NO_DATALISTS
-#include "../joblist/elementtype.h"
+#include "elementtype.h"
 #undef NO_DATALISTS
 
 

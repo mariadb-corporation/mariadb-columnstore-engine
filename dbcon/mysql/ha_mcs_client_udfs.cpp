@@ -39,7 +39,6 @@ using namespace logging;
 
 //#include "resourcemanager.h"
 
-#include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
 
 extern "C"

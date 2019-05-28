@@ -1646,7 +1646,7 @@ void ExtentMap::save(const string& filename)
 /* always returns holding the EM lock, and with the EM seg mapped */
 void ExtentMap::grabEMEntryTable(OPS op)
 {
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     if (op == READ)
         fEMShminfo = fMST.getTable_read(MasterSegmentTable::EMTable);
@@ -1703,7 +1703,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
 /* always returns holding the FL lock */
 void ExtentMap::grabFreeList(OPS op)
 {
-    mutex::scoped_lock lk(mutex, defer_lock);
+    boost::mutex::scoped_lock lk(mutex, boost::defer_lock);
 
     if (op == READ)
     {

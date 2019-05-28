@@ -1690,7 +1690,7 @@ void DMLProcessor::operator()()
                                                           fConcurrentSupport, maxDeleteRows, sessionID, txnid.id, fDbrm, fQtc, csc));
                     // We put the packageHandler into a map so that if we receive a
                     // message to affect the previous command, we can find it.
-                    boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, defer_lock);
+                    boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
                     lk2.lock();
                     packageHandlerMap[sessionID] = php;
@@ -1732,7 +1732,7 @@ void DMLProcessor::operator()()
                                                       fConcurrentSupport, maxDeleteRows, sessionID, 0, fDbrm, fQtc, csc));
                 // We put the packageHandler into a map so that if we receive a
                 // message to affect the previous command, we can find it.
-                boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, defer_lock);
+                boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
                 lk2.lock();
                 packageHandlerMap[sessionID] = php;

@@ -1,0 +1,17 @@
+# MariaDB Columnstore Alias Commands
+#
+alias mcsmysql='@SERVER_INSTALL_PREFIX@/bin/mysql --defaults-extra-file=@SERVER_INSTALL_PREFIX@/my.cnf -u root'
+alias ma=@CMAKE_INSTALL_PREFIX@/bin/mcsadmin
+alias mcsadmin=@CMAKE_INSTALL_PREFIX@/bin/mcsadmin
+alias cpimport=@CMAKE_INSTALL_PREFIX@/bin/cpimport
+alias mcshome='cd @CMAKE_INSTALL_PREFIX@'
+alias log='cd /var/log/mariadb/columnstore/'
+alias core='cd /var/log/mariadb/columnstore/corefiles'
+alias tmsg='tail -f /var/log/messages'
+alias tdebug='tail -f /var/log/mariadb/columnstore/debug.log'
+alias tinfo='tail -f /var/log/mariadb/columnstore/info.log'
+alias terror='tail -f /var/log/mariadb/columnstore/err.log'
+alias twarning='tail -f /var/log/mariadb/columnstore/warning.log'
+alias tcrit='tail -f /var/log/mariadb/columnstore/crit.log'
+alias dbrm='cd @CMAKE_INSTALL_PREFIX@/data1/systemFiles/dbrm'
+alias mcsmodule='cat @CMAKE_INSTALL_PREFIX@/local/module'

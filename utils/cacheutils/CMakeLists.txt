@@ -1,14 +1,23 @@
+target_include_directories(cacheutils_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_library(cacheutils SHARED cacheutils.cpp)
 
-
-########### next target ###############
-
-set(cacheutils_LIB_SRCS cacheutils.cpp)
-
-add_library(cacheutils SHARED ${cacheutils_LIB_SRCS})
+target_link_libraries(cacheutils
+  PRIVATE 
+    cacheutils_h
+    brm_h
+    configcpp_h
+    common_h
+    execplan_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    Boost::thread
+    )
 
 set_target_properties(cacheutils PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS cacheutils DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+target_include_directories(cacheutils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(TARGETS cacheutils DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

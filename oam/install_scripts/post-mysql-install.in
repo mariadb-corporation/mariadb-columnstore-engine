@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+# $Id: post-mysql-install 3661 2013-06-25 22:04:33Z dhill $
+#
+# Post-install steps for calpont-mysql install
+
+# check log for error
+checkForError() {
+	# check for password error
+	grep "ERROR 1045" ${tmpdir}/mysql_install.log > ${tmpdir}/error.check
+	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
+		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
+		  rm -f ${tmpdir}/error.check
+		  $installdir/mysql/mysql-Columnstore stop
+		  sleep 2
+		  exit 2;
+	fi
+
+	rm -f ${tmpdir}/error.check
+
+        #---------------------------------------------------------------------------
+        # See if engine columnstore exist
+        #---------------------------------------------------------------------------
+        echo "checking for engine columnstore..."
+        $installdir/mysql/bin/mysql \
+                --defaults-extra-file=$installdir/mysql/my.cnf \
+                --user=root \
+                --execute='show engines;' \
+                calpontsys | grep -i columnstore
+
+        #
+        # Add compressiontype column to SYSCOLUMN if applicable
+        #
+        if [ $? -ne 0 ]; then
+                echo "columnstore doesn't exist"
+                exit 1
+        fi
+
+        echo "columnstore exist"
+
+	return 0;
+}
+
+prefix=/usr/local
+installdir=$prefix/mariadb/columnstore
+rpmmode=install
+tmpdir="/tmp"
+
+for arg in "$@"; do
+	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
+		prefix="$(echo $arg | awk -F= '{print $2}')"
+		installdir=$prefix/mariadb/columnstore
+	elif [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
+		rpmmode="$(echo $arg | awk -F= '{print $2}')"
+	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
+		installdir="$(echo $arg | awk -F= '{print $2}')"
+		prefix=$(dirname $installdir)
+	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
+		tmpdir="$(echo $arg | awk -F= '{print $2}')"
+	else
+		echo "ignoring unknown argument: $arg" 1>&2
+	fi
+done
+
+USER=`whoami 2>/dev/null`
+if [ $USER != "root" ]; then
+	ldconfig >/dev/null 2>&1
+	export COLUMNSTORE_INSTALL_DIR=$installdir
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
+else
+	ldconfig
+fi
+
+if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
+	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
+	libudfsdk=$installdir/lib/libudf_mysql.so.1.0.0
+	libregrsdk=$installdir/lib/libregr_mysql.so.1.0.0
+elif [ -f $installdir/lib/libcalmysql.so.1 ]; then
+	libcalmysql=$installdir/lib/libcalmysql.so.1
+	libudfsdk=$installdir/lib/libudf_mysql.so.1
+	libregrsdk=$installdir/lib/libregr_mysql.so.1
+else
+	libcalmysql=
+fi
+
+if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
+	cd $installdir/mysql/lib64/mysql/plugin
+	ln -sf $libcalmysql libcalmysql.so
+        ln -sf $libcalmysql libcalmysqlent.so
+	ln -sf $libudfsdk libudf_mysql.so
+	ln -sf $libregrsdk libregr_mysql.so
+fi
+
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
+	sed -i -e s@@CMAKE_INSTALL_PREFIX@@$installdir@g $installdir/mysql/my.cnf
+fi
+
+if [ -x $installdir/mysql/mysql-Columnstore ]; then
+
+	# Restart in the same way that mysqld will be started normally.
+	$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
+	sleep 2
+	$installdir/mysql/mysql-Columnstore start
+
+	sleep 5
+	
+	# Install various Calpont stuff...
+	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
+	checkForError
+	if [ $? -ne 0 ]; then
+	# retry
+		$installdir/mysql/install_calpont_mysql.sh --installdir=$installdir --tmpdir=$tmpdir
+		checkForError
+		if [ $? -ne 0 ]; then
+			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+			$installdir/mysql/mysql-Columnstore stop
+			sleep 2
+			exit 2;
+		fi
+	fi
+
+	$installdir/mysql/mysql-Columnstore stop
+fi
+
+exit 0
+

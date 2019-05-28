@@ -1,14 +1,13 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+cs_add_executable(columnstoreDBWrite columnstoreDB.cpp)
 
+target_link_libraries(columnstoreDBWrite 
+  PRIVATE 
+    brm
+    common_h
+    idbboot_h
+    joblist_h
+    )
 
-########### next target ###############
-
-set(columnstoreDBWrite_SRCS columnstoreDB.cpp)
-
-add_executable(columnstoreDBWrite ${columnstoreDBWrite_SRCS})
-
-target_link_libraries(columnstoreDBWrite ${ENGINE_LDFLAGS} readline ncurses  ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS columnstoreDBWrite DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS columnstoreDBWrite DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

@@ -1,9 +1,0 @@
-#!/bin/bash
-# Copy this file to /etc/default and rename it to 'columnstore'.
-
-# Change this line to your MariaDB Columnstore installation directory
-COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
-
-LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH

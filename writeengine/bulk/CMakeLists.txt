@@ -1,10 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-
-set(we_bulk_STAT_SRCS
+cs_add_library(we_bulk STATIC 
     we_brmreporter.cpp
     we_bulkload.cpp
     we_bulkloadbuffer.cpp
@@ -24,20 +19,55 @@ set(we_bulk_STAT_SRCS
     we_tempxmlgendata.cpp
     we_workers.cpp)
 
-ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
-add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
+target_link_libraries(we_bulk 
+  PUBLIC 
+  PRIVATE
+    alarmmanager_h
+    brm_h 
+    cacheutils_h
+    common_h
+    compress_h
+    configcpp_h
+    dataconvert_h
+    execplan_h
+    funcexp_h
+    idbboot_h
+    idbdatafile_h 
+    joblist_h
+    LibXml2::LibXml2
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp_h
+    querytele_h
+    rwlock_h
+    threadpool_h
+    writeengineclient_h
+    writeengine_h
+    we_server_h
+    we_shared_h
+    we_xml_h
+    writeengine_h
+    )
 
-target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
+target_compile_definitions(we_bulk PRIVATE _FILE_OFFSET_BITS=64)
 
-REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 
-########### next target ###############
+# cpimport.bin
 
-set(cpimport.bin_SRCS cpimport.cpp)
+cs_add_executable(cpimport.bin cpimport.cpp)
 
-add_executable(cpimport.bin ${cpimport.bin_SRCS})
+target_link_libraries(cpimport.bin
+  PUBLIC 
+  PRIVATE
+    we_bulk
+    we_shared_h
+    writeengine
+    brm
+    we_xml_h
+    LibXml2::LibXml2
+    Boost::thread
+    Boost::filesystem
+    )
 
-target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} we_bulk we_xml)
 
-install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-
+install(TARGETS cpimport.bin DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
