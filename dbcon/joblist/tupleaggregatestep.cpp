@@ -1406,7 +1406,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
                 typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
                 precisionAgg.push_back(-1);
                 widthAgg.push_back(sizeof(long double));
-                scaleAgg.push_back(scaleProj[colProj]);
+                scaleAgg.push_back(0);
             }
             break;
 
@@ -1935,7 +1935,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     precisionAgg.push_back(-1);
                     widthAgg.push_back(sizeof(long double));
-                    scaleAgg.push_back(scaleProj[colProj]);
+                    scaleAgg.push_back(0);
                     colAgg++;
 
                 // has distinct step, put the count column for avg next to the sum
@@ -2255,7 +2255,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     precisionAggDist.push_back(-1);
                     widthAggDist.push_back(sizeof(long double));
-                    scaleAggDist.push_back(scaleProj[colAgg]);
+                    scaleAggDist.push_back(0);
                 }
                 break;
 
@@ -2327,10 +2327,10 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                                 {
                                     oidsAggDist.push_back(oidsAgg[colAgg]);
                                     keysAggDist.push_back(retKey);
-                                    scaleAggDist.push_back(scaleAgg[colAgg] >> 8);
-                                    precisionAggDist.push_back(precisionAgg[colAgg]);
-                                    typeAggDist.push_back(typeAgg[colAgg]);
-                                    widthAggDist.push_back(widthAgg[colAgg]);
+                                    scaleAggDist.push_back(0);
+                                    typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                                    precisionAggDist.push_back(-1);
+                                    widthAggDist.push_back(sizeof(long double));
                                 }
                                 else
                                 {
@@ -3173,7 +3173,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
-                    scaleAggPm.push_back(scaleProj[colProj]);
+                    scaleAggPm.push_back(0);
                     precisionAggPm.push_back(-1);
                     widthAggPm.push_back(sizeof(long double));
                     colAggPm++;
@@ -3449,10 +3449,10 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         {
                             oidsAggUm.push_back(oidsAggPm[colPm]);
                             keysAggUm.push_back(retKey);
-                            scaleAggUm.push_back(scaleAggPm[colPm] >> 8);
-                            precisionAggUm.push_back(precisionAggPm[colPm]);
-                            typeAggUm.push_back(typeAggPm[colPm]);
-                            widthAggUm.push_back(widthAggPm[colPm]);
+                            scaleAggUm.push_back(0);
+                            typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                            precisionAggUm.push_back(-1);
+                            widthAggUm.push_back(sizeof(long double));
                         }
                         else
                         {
@@ -4027,7 +4027,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     precisionAggPm.push_back(-1);
                     widthAggPm.push_back(sizeof(long double));
-                    scaleAggPm.push_back(scaleProj[colProj]);
+                    scaleAggPm.push_back(0);
                     colAggPm++;
                 }
 
@@ -4394,7 +4394,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
                         precisionAggDist.push_back(-1);
                         widthAggDist.push_back(sizeof(long double));
-                        scaleAggDist.push_back(scaleAggUm[colUm]);
+                        scaleAggDist.push_back(0);
                     }
                     // PM: put the count column for avg next to the sum
                     // let fall through to add a count column for average function
@@ -4456,10 +4456,10 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             {
                                 oidsAggDist.push_back(oidsAggUm[colUm]);
                                 keysAggDist.push_back(retKey);
-                                scaleAggDist.push_back(scaleAggUm[colUm] >> 8);
-                                precisionAggDist.push_back(precisionAggUm[colUm]);
-                                typeAggDist.push_back(typeAggUm[colUm]);
-                                widthAggDist.push_back(widthAggUm[colUm]);
+                                scaleAggDist.push_back(0);
+                                typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                                precisionAggDist.push_back(-1);
+                                widthAggDist.push_back(sizeof(long double));
                             }
                             else
                             {
