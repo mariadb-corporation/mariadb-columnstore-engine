@@ -495,11 +495,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             count += err;
         }
         cache->rename(key, newKey, size - bf::file_size(oldCachePath));
-        #ifndef NDEBUG
-            assert(replicator->remove(oldCachePath) == 0);
-        #else
-            replicator->remove(oldCachePath);
-        #endif
+        replicator->remove(oldCachePath);
     }
     
     // update the metadata for the source file
@@ -512,11 +508,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     // delete the old object & journal file
     cache->deletedJournal(bf::file_size(journalName));
-    #ifndef NDEBUG
-        assert(replicator->remove(journalName) == 0);
-    #else
-        replicator->remove(journalName);
-    #endif
+    replicator->remove(journalName);
     cs->deleteObject(key);
 }
 

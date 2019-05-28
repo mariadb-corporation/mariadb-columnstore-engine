@@ -195,11 +195,11 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
         
     try
     {
-        #ifndef NDEBUG
-            assert(boost::filesystem::remove_all(filename) > 0);
-        #else
+        //#ifndef NDEBUG
+        //    assert(boost::filesystem::remove_all(filename) > 0);
+        //#else
             boost::filesystem::remove_all(filename);
-        #endif
+        //#endif
     }
     catch(boost::filesystem::filesystem_error &e)
     {

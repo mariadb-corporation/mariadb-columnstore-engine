@@ -642,11 +642,7 @@ void IOCoordinator::remove(const bf::path &p)
             ++entry;
         }
         //cout << "removing dir " << p << endl;
-        #ifndef NDEBUG
-            assert(replicator->remove(p) == 0);
-        #else
-            replicator->remove(p);
-        #endif
+        replicator->remove(p);
         return;
     }
     
@@ -660,11 +656,7 @@ void IOCoordinator::remove(const bf::path &p)
         if (bf::is_regular_file(possibleMetaFile))
             deleteMetaFile(possibleMetaFile);
         else if (bf::exists(p))
-            #ifndef NDEBUG
-                assert(replicator->remove(p) == 0);   // if p.meta doesn't exist, and it's not a dir, then just throw it out
-            #else
-                replicator->remove(p);
-            #endif
+            replicator->remove(p);  // if p.meta doesn't exist, and it's not a dir, then just throw it out
     }
     
 }

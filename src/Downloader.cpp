@@ -212,11 +212,7 @@ void Downloader::Download::operator()()
     if (err != 0)
     {
         dl_errno = errno;
-        #ifndef NDEBUG
-            assert(boost::filesystem::remove(dlPath / key));
-        #else
-            boost::filesystem::remove(dlPath / key);
-        #endif
+        boost::filesystem::remove(dlPath / key);
         size = 0;
     }
     
