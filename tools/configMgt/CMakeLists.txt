@@ -1,26 +1,39 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# autoInstaller 
 
+add_executable(autoInstaller autoInstaller.cpp)
 
-########### next target ###############
-
-set(autoInstaller_SRCS autoInstaller.cpp)
-
-add_executable(autoInstaller ${autoInstaller_SRCS})
-
-target_compile_options(autoInstaller PRIVATE -Wno-unused-result)
-
-target_link_libraries(autoInstaller ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} readline ncurses)
+target_link_libraries(autoInstaller 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          Boost::system
+          )
 
 install(TARGETS autoInstaller DESTINATION ${ENGINE_BINDIR})
 
 
-########### next target ###############
 
-set(autoConfigure_SRCS autoConfigure.cpp)
+# autoConfigure
 
-add_executable(autoConfigure ${autoConfigure_SRCS})
+add_executable(autoConfigure autoConfigure.cpp)
 
-target_link_libraries(autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(autoConfigure 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h
+          oamcpp_h
+          Boost::system)
 
 install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

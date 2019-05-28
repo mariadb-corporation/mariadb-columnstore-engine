@@ -28,7 +28,7 @@
 #include <string>
 #include <libxml/parser.h>
 
-#include "bytestream.h"
+//#include "bytestream.h"
 
 #include "xmlparser.h"
 
@@ -41,7 +41,7 @@ namespace config
 class ConfigStream
 {
 public:
-    ConfigStream(const messageqcpp::ByteStream& bs, const std::string& installDir);
+//    ConfigStream(const messageqcpp::ByteStream& bs, const std::string& installDir);
     ConfigStream(const std::string& str, const std::string& installDir);
     ConfigStream(const char* cptr, const std::string& installDir);
     ~ConfigStream();

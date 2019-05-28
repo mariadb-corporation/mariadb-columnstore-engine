@@ -10,6 +10,8 @@ kde4_add_executable(brmtest ${brmtest_SRCS})
 
 target_link_libraries(brmtest ${KDE4_KDECORE_LIBS} execplan joblist rowgroup dataconvert loggingcpp @boost_thread_lib@ brm messageqcpp rwlock configcpp xml2 joiner oamcpp snmpmanager @boost_filesystem_lib@ @boost_date_time_lib@ multicast funcexp)
 
+target_pch(brmtest)
+
 install(TARGETS brmtest ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 

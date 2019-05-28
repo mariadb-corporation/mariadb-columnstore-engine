@@ -1,10 +1,6 @@
+target_include_directories(execplan_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_UDFSDK_INCLUDE} )
-
-
-########### next target ###############
-
-set(execplan_LIB_SRCS
+add_library(execplan SHARED 
     calpontsystemcatalog.cpp
     aggregatecolumn.cpp
     arithmeticcolumn.cpp
@@ -44,11 +40,29 @@ set(execplan_LIB_SRCS
     windowfunctioncolumn.cpp
     udafcolumn.cpp)
 
-add_library(execplan SHARED ${execplan_LIB_SRCS})
-
-target_link_libraries(execplan ${NETSNMP_LIBRARIES})
+target_link_libraries(execplan PUBLIC execplan_h 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          dataconvert_h
+          ddlpackage_h 
+          funcexp_h 
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          mariadb
+          messageqcpp_h
+          oamcpp_h
+          querystats_h 
+          querytele_h
+          rowgroup_h
+          threadpool_h
+          udfsdk_h)
 
 set_target_properties(execplan PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_pch(execplan)
 
 install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

@@ -1,18 +1,25 @@
-INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
-#TODO: put generated files in the binary directory
+target_include_directories(ddlpackage_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/ddl.y ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/ddl.l ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.sh ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.sh ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND /bin/sh ./ddl-gram.sh ${BISON_EXECUTABLE}
     COMMAND /bin/sh ./ddl-scan.sh ${LEX_EXECUTABLE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ddl.y ddl.l
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ddl.y ddl.l ddl-gram.sh ddl-scan.sh
 )
 
-set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
+add_custom_target(ddlpackage_gen DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp)
+
+add_dependencies(ddlpackage_h ddlpackage_gen)
+
+#set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 # Parser puts extra info to stderr.
-MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG=1" DEBUG)
 
 ########### next target ###############
 
@@ -34,9 +41,22 @@ ADD_LIBRARY(ddlpackage SHARED
     markpartition.cpp
     restorepartition.cpp
     droppartition.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.cpp 
+    ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp
     )
+
+target_compile_definitions(ddlpackage PRIVATE $<$<CONFIG:Debug>:YYDEBUG=1>)
+
+target_link_libraries(ddlpackage 
+  PUBLIC ddlpackage_h 
+  PRIVATE brm_h 
+          messageqcpp_h
+          joblist_h
+          loggingcpp_h
+          oamcpp_h
+          brm_h)
+
+target_pch(ddlpackage)
 
 SET_TARGET_PROPERTIES(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

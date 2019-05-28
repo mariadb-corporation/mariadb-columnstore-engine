@@ -30,11 +30,16 @@
 #include <vector>
 #include <stdint.h>
 #include <boost/thread.hpp>
-
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <sys/types.h>
-#include <libxml/parser.h>
 
-#include "xmlparser.h"
+
+//#include <libxml/parser.h>
+//#include "xmlparser.h"
+
+typedef struct _xmlDoc xmlDoc;
+typedef xmlDoc *xmlDocPtr;
+
 
 namespace messageqcpp
 
@@ -52,6 +57,7 @@ class ByteStream;
 
 namespace config
 {
+  class XMLParser;
 
 /** @brief a config file I/F class
  *
@@ -133,7 +139,7 @@ public:
     * write a stream copy of config file to disk. used to distributed mass updates to system nodes
     *
     */
-    EXPORT void writeConfigFile(messageqcpp::ByteStream msg) const;
+    //EXPORT void writeConfigFile(messageqcpp::ByteStream msg) const;
 
     /** @brief return the name of this config file
     *
@@ -232,7 +238,7 @@ private:
     time_t fMtime;
     mutable boost::mutex fLock;
     const std::string fInstallDir;
-    XMLParser fParser;
+    boost::shared_ptr<XMLParser> fParser;
 
 };
 

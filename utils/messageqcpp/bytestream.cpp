@@ -38,6 +38,8 @@ using namespace boost;
 #include "bytestream.h"
 #undef BYTESTREAM_DLLEXPORT
 
+#include "exceptclasses.h"
+
 #define DEBUG_DUMP_STRINGS_LESS_THAN 0
 
 namespace messageqcpp
@@ -235,7 +237,7 @@ ByteStream& ByteStream::operator<<(const uint64_t o)
     return *this;
 }
 
-ByteStream& ByteStream::operator<<(const string& s)
+  ByteStream& ByteStream::operator<<(const std::string& s)
 {
     int32_t len = s.size();
 
@@ -319,7 +321,7 @@ ByteStream& ByteStream::operator>>(uint64_t& o)
     return *this;
 }
 
-ByteStream& ByteStream::operator>>(string& s)
+ByteStream& ByteStream::operator>>(std::string& s)
 {
     peek(s);
     fCurOutPtr += 4 + s.length();
@@ -399,7 +401,7 @@ void ByteStream::peek(uint64_t& o) const
     o = *((uint64_t*) fCurOutPtr);
 }
 
-void ByteStream::peek(string& s) const
+  void ByteStream::peek(std::string& s) const
 {
     int32_t len;
 

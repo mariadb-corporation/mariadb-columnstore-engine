@@ -1,9 +1,6 @@
+target_include_directories(common_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-########### next target ###############
-
-set(common_LIB_SRCS
+add_library(common SHARED 
     fixedallocator.cpp
     poolallocator.cpp
     cgroupconfigurator.cpp
@@ -11,12 +8,20 @@ set(common_LIB_SRCS
     nullvaluemanip.cpp
     threadnaming.cpp)
 
-add_library(common SHARED ${common_LIB_SRCS})
-
-add_dependencies(common loggingcpp)
-
+target_include_directories(common PUBLIC common_h)
 
 set_target_properties(common PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_link_libraries(common 
+  PUBLIC common_h
+  PRIVATE configcpp_h 
+          execplan_h 
+          joblist_h
+          loggingcpp_h 
+          messageqcpp_h 
+          )
+
+target_pch(common pch.h)
 
 install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

@@ -24,6 +24,14 @@
 #ifndef _WE_XMLOP_H_
 #define _WE_XMLOP_H_
 
+struct _xmlNode;
+typedef struct _xmlNode xmlNode;
+
+struct _xmlDoc;
+typedef struct _xmlDoc xmlDoc;
+typedef xmlDoc *xmlDocPtr;
+
+
 #include "we_xmltag.h"
 #include "we_type.h"
 
@@ -89,11 +97,7 @@ protected:
     /**
      * @brief Check whether it is certain tag
      */
-    bool isTag( const xmlNode* pNode, const xmlTag tag )
-    {
-        return !xmlStrcmp( pNode->name, (const xmlChar*)xmlTagTable[tag] );
-    }
-
+    bool isTag( const xmlNode* pNode, const xmlTag tag );
     /**
      * @brief Parse xml document
      */

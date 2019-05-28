@@ -51,6 +51,8 @@ using namespace execplan;
 #include "configcpp.h"
 #include "atomicops.h"
 
+#include "exceptclasses.h"
+
 #define SESSIONMANAGERSERVER_DLLEXPORT
 #include "sessionmanagerserver.h"
 #undef SESSIONMANAGERSERVER_DLLEXPORT

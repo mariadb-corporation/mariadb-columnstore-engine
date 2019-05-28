@@ -60,7 +60,8 @@ namespace fs = boost::filesystem;
 #include "idbregistry.h"
 #endif
 
-#include "bytestream.h"
+//#include "bytestream.h"
+#include "xmlparser.h"
 
 namespace
 {
@@ -133,7 +134,7 @@ Config* Config::makeConfig(const char* cf)
 }
 
 Config::Config(const string& configFile, const string& installDir) :
-    fDoc(0), fConfigFile(configFile), fMtime(0), fInstallDir(installDir), fParser(fInstallDir)
+    fDoc(0), fConfigFile(configFile), fMtime(0), fInstallDir(installDir), fParser(new XMLParser(fInstallDir))
 {
     for ( int i = 0 ; i < 20 ; i++ )
     {
@@ -261,7 +262,7 @@ const string Config::getConfig(const string& section, const string& name)
         }
     }
 
-    return fParser.getConfig(fDoc, section, name);
+    return fParser->getConfig(fDoc, section, name);
 }
 
 void Config::getConfig(const string& section, const string& name, vector<string>& values)
@@ -286,7 +287,7 @@ void Config::getConfig(const string& section, const string& name, vector<string>
         }
     }
 
-    fParser.getConfig(fDoc, section, name, values);
+    fParser->getConfig(fDoc, section, name, values);
 }
 
 void Config::setConfig(const string& section, const string& name, const string& value)
@@ -315,7 +316,7 @@ void Config::setConfig(const string& section, const string& name, const string& 
         }
     }
 
-    fParser.setConfig(fDoc, section, name, value);
+    fParser->setConfig(fDoc, section, name, value);
     return;
 }
 
@@ -343,7 +344,7 @@ void Config::delConfig(const string& section, const string& name)
         }
     }
 
-    fParser.delConfig(fDoc, section, name);
+    fParser->delConfig(fDoc, section, name);
     return;
 }
 
@@ -519,6 +520,7 @@ void Config::write(const string& configFile) const
     }
 }
 
+#if 0
 void Config::writeConfigFile(messageqcpp::ByteStream msg) const
 {
     struct flock fl;
@@ -556,7 +558,7 @@ void Config::writeConfigFile(messageqcpp::ByteStream msg) const
         out << msg;
     }
 }
-
+#endif
 
 /* static */
 void Config::deleteInstanceMap()
@@ -654,7 +656,7 @@ const vector<string> Config::enumConfig()
         }
     }
 
-    return fParser.enumConfig(fDoc);
+    return fParser->enumConfig(fDoc);
 }
 
 const vector<string> Config::enumSection(const string& section)
@@ -678,7 +680,7 @@ const vector<string> Config::enumSection(const string& section)
         }
     }
 
-    return fParser.enumSection(fDoc, section);
+    return fParser->enumSection(fDoc, section);
 }
 
 } //namespace config

@@ -1,10 +1,7 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+target_include_directories(we_wrapper_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-
-########### next target ###############
-
-set(writeengine_LIB_SRCS
+add_library(writeengine SHARED 
     writeengine.cpp
     we_colop.cpp
     we_colopcompress.cpp
@@ -35,12 +32,31 @@ set(writeengine_LIB_SRCS
     ../xml/we_xmlgendata.cpp
     ../xml/we_xmlgenproc.cpp)
 
-add_definitions(-D_FILE_OFFSET_BITS=64)
 
-add_library(writeengine SHARED ${writeengine_LIB_SRCS})
 
-target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
+target_link_libraries(writeengine 
+  PUBLIC we_wrapper_h 
+  PRIVATE LibXml2::LibXml2
+          joblist_h 
+          we_shared_h 
+          messageqcpp_h 
+          brm_h 
+          idbdatafile_h 
+          compress_h 
+          cacheutils_h
+          loggingcpp_h
+          common_h
+          configcpp_h
+          oamcpp_h
+          alarmmanager_h
+          idbboot_h
+          funcexp_h
+          dataconvert_h
+          )
 
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_compile_definitions(writeengine PRIVATE _FILE_OFFSET_BITS=64)
+
 
 install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

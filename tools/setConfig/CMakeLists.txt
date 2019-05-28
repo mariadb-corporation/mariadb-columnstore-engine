@@ -1,14 +1,15 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(setConfig main.cpp)
 
-
-########### next target ###############
-
-set(setConfig_SRCS main.cpp)
-
-add_executable(setConfig ${setConfig_SRCS})
-
-target_link_libraries(setConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(setConfig 
+  PRIVATE alarmmanager_h
+          brm_h
+          common_h
+          configcpp_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h 
+          oamcpp_h)
 
 install(TARGETS setConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

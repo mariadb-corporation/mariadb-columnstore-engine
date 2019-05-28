@@ -1,14 +1,16 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(viewtablelock viewtablelock.cpp)
 
+target_link_libraries(viewtablelock 
+  PRIVATE brm_h
+          common_h
+          configcpp_h
+          execplan_h
+          idbboot_h
+          joblist_h
+          loggingcpp_h
+          messageqcpp_h)
 
-########### next target ###############
-
-set(viewtablelock_SRCS viewtablelock.cpp)
-
-add_executable(viewtablelock ${viewtablelock_SRCS})
-
-target_link_libraries(viewtablelock ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS viewtablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

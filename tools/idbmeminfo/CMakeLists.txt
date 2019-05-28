@@ -1,14 +1,8 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_executable(idbmeminfo idbmeminfo.cpp)
 
-
-########### next target ###############
-
-set(idbmeminfo_SRCS idbmeminfo.cpp)
-
-add_executable(idbmeminfo ${idbmeminfo_SRCS})
-
-target_link_libraries(idbmeminfo ${ENGINE_LDFLAGS})
+target_link_libraries(idbmeminfo 
+  PRIVATE messageqcpp_h)
 
 install(TARGETS idbmeminfo DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

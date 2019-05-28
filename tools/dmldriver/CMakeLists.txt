@@ -10,6 +10,8 @@ kde4_add_executable(dmldriver ${dmldriver_SRCS})
 
 target_link_libraries(dmldriver ${KDE4_KDECORE_LIBS})
 
+target_pch(dmldriver)
+
 install(TARGETS dmldriver ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 

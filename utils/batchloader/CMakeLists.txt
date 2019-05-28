@@ -1,14 +1,17 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+add_library(batchloader SHARED batchloader.cpp)
 
+target_include_directories(batchloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-########### next target ###############
-
-set(batchloader_LIB_SRCS batchloader.cpp)
-
-add_library(batchloader SHARED ${batchloader_LIB_SRCS})
-
-target_link_libraries(batchloader ${NETSNMP_LIBRARIES})
+target_link_libraries(batchloader 
+  PRIVATE alarmmanager_h 
+          brm_h
+          common_h 
+          configcpp_h
+          joblist_h
+          loggingcpp_h 
+          messageqcpp_h 
+          oamcpp_h )
 
 set_target_properties(batchloader PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
