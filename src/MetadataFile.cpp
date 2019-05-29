@@ -445,6 +445,18 @@ void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
     updateObj->length = newLength;
 }
 
+off_t MetadataFile::getMetadataNewObjectOffset()
+{
+    off_t newObjectOffset = 0;
+    if (!mObjects.empty())
+    {
+        std::set<metadataObject>::reverse_iterator iLastObject = mObjects.rbegin();
+        newObjectOffset = iLastObject->offset + iLastObject->length;
+    }
+
+    return newObjectOffset;
+}
+
 metadataObject::metadataObject()
 {}
 

@@ -69,6 +69,7 @@ class MetadataFile
         // breaks a key into its consitituent fields
         static void breakout(const std::string &key, std::vector<std::string> &out);
         
+        off_t getMetadataNewObjectOffset();
         // this will be a singleton, which stores the config used
         // by all MetadataFile instances so we don't have to keep bothering Config.
         // members are public b/c i don't want to write accessors right now.  Also who cares.

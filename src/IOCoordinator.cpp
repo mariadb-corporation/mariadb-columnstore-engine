@@ -319,15 +319,15 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     // there is no overlapping data, or data goes beyond end of last object
     while (dataRemaining > 0)
     {
-        metadataObject newObject = metadata.addMetadataObject(filename,0);
+        off_t newObjectOffset = metadata.getMetadataNewObjectOffset();
         // count is 0 so first write is beyond current end of file.
         // offset is > than newObject.offset so we need to adjust offset for object
         // unless offset is beyond newObject.offset + objectSize then we need to write null data to this object
-        if (count == 0 && (uint64_t) offset > newObject.offset)
+        if (count == 0 && offset > newObjectOffset)
         {
             //this is starting beyond last object in metadata
             //figure out if the offset is in this object
-            objectOffset = offset - newObject.offset;
+            objectOffset = offset - newObjectOffset;
             writeLength = min((objectSize - objectOffset),dataRemaining);
         }
         else
@@ -341,8 +341,8 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
         // objectOffset is 0 unless the write starts beyond the end of data
         // in that case need to add the null data to cachespace
         cache->makeSpace(writeLength + objectOffset);
-        if ((writeLength + objectOffset) > newObject.length)
-            metadata.updateEntryLength(newObject.offset, (writeLength + objectOffset));
+
+        metadataObject newObject = metadata.addMetadataObject(filename,(writeLength + objectOffset));
 
         // send to replicator
         err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
