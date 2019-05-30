@@ -233,19 +233,23 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     {
         if ((uint64_t) offset <= (i->offset + i->length - 1) ||
           (i->offset == lastOffset && ((uint64_t) offset <= i->offset + mpConfig->mObjectSize - 1)))
-            break;
+            {
+                foundLen = (i->offset == lastOffset ? mpConfig->mObjectSize : i->length) - (offset - i->offset);
+                ret.push_back(*i);
+                ++i;
+                break;
+            }
         ++i;
     }
-    // append objects until foundLen >= length or EOF
-    // first time thrus foundLen should be adjusted based on offset
-    off_t foundOffset = offset - i->offset;
+    
     while (i != mObjects.end() && foundLen < length)
     {
         ret.push_back(*i);
-        foundLen += (i->length - foundOffset);
-        foundOffset = 0; //zero on every other time thru this loop
+        foundLen += i->length;
         ++i;
     }
+    
+    assert(!(offset == 0 && length == getLength()) || (ret.size() == mObjects.size()));
     return ret;
 }
 
@@ -302,13 +306,23 @@ int MetadataFile::writeMetadata(const char *filename)
     return error;
 }
 
-const metadataObject & MetadataFile::getEntry(off_t offset)
+bool MetadataFile::getEntry(off_t offset, const metadataObject **out) const
 {
-    return *(mObjects.find(offset));
+    const auto &it = mObjects.find(offset);
+    if (it != mObjects.end())
+    {
+        *out = &(*it);
+        return true;
+    }
+    else
+        return false;
 }
 
 void MetadataFile::removeEntry(off_t offset)
 {
+    const auto &it = mObjects.find(offset);
+    assert(it != mObjects.end());
+    
     mObjects.erase(offset);
 }
 

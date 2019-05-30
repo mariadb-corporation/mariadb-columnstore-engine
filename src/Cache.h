@@ -36,6 +36,7 @@ class Cache : public boost::noncopyable
         
         // an 'atomic' existence check & delete.  Covers the object and journal.  Does not delete the files.
         // returns 0 if it didn't exist, 1 if the object exists, 2 if the journal exists, and 3 (1 | 2) if both exist
+        // This should be called while holding the file lock for key because it touches the journal file.
         int ifExistsThenDelete(const std::string &key);   
         
         // rename is used when an old obj gets merged with its journal file

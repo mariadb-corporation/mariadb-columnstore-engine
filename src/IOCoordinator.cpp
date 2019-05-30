@@ -119,7 +119,7 @@ int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *jou
     return 0;
 }
 
-int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_t length)
+int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size_t length)
 {
     /*
         This is a bit complex and verbose, so for the first cut, it will only return a partial
@@ -135,6 +135,8 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
         release read lock
         put together the response in data
     */
+    bf::path p(_filename);
+    const char *filename = p.string().c_str();
     
     ScopedReadLock fileLock(this, filename);
     MetadataFile meta(filename, MetadataFile::no_create_t());
@@ -242,8 +244,11 @@ int IOCoordinator::read(const char *filename, uint8_t *data, off_t offset, size_
     return count;
 }
 
-int IOCoordinator::write(const char *filename, const uint8_t *data, off_t offset, size_t length)
+int IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
 {
+    bf::path p(_filename);
+    const char *filename = p.string().c_str();
+    
     ScopedWriteLock lock(this, filename);
     return _write(filename, data, offset, length);
 }
@@ -372,8 +377,11 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     return count;
 }
 
-int IOCoordinator::append(const char *filename, const uint8_t *data, size_t length)
+int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t length)
 {
+    bf::path p(_filename);
+    const char *filename = p.string().c_str();
+
     int err;
     size_t count = 0;
     uint64_t writeLength = 0;
@@ -474,8 +482,10 @@ int IOCoordinator::append(const char *filename, const uint8_t *data, size_t leng
 }
 
 // TODO: might need to support more open flags, ex: O_EXCL
-int IOCoordinator::open(const char *filename, int openmode, struct stat *out)
+int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
 {
+    bf::path p = _filename;  // normalize it
+    const char *filename = p.string().c_str();
     ScopedReadLock s(this, filename);
 
     MetadataFile meta(filename, MetadataFile::no_create_t());
@@ -513,14 +523,17 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
     return 0;
 }
 
-int IOCoordinator::stat(const char *path, struct stat *out)
+int IOCoordinator::stat(const char *_path, struct stat *out)
 {
+    bf::path p(_path);
+    const char *path = p.string().c_str();
+    
     ScopedReadLock s(this, path);
     MetadataFile meta(path, MetadataFile::no_create_t());
     return meta.stat(out);
 }
 
-int IOCoordinator::truncate(const char *path, size_t newSize)
+int IOCoordinator::truncate(const char *_path, size_t newSize)
 {
     /*
         grab the write lock.
@@ -533,6 +546,8 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
         tell cache they were deleted
         tell synchronizer they were deleted
     */
+    bf::path p(_path);
+    const char *path = p.string().c_str();
     
     Synchronizer *synchronizer = Synchronizer::get();  // needs to init sync here to break circular dependency...
     
@@ -559,7 +574,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
         return 0;
     }
     
-    vector<metadataObject> objects = meta.metadataRead(newSize, filesize);
+    vector<metadataObject> objects = meta.metadataRead(newSize, filesize - newSize);
     
     // truncate the file
     if (newSize == objects[0].offset)
@@ -575,7 +590,7 @@ int IOCoordinator::truncate(const char *path, size_t newSize)
     err = replicator->updateMetadata(path, meta);
     if (err)
         return err;
-    lock.unlock();
+    //lock.unlock();   <-- ifExistsThenDelete() needs the file lock held during the call
     
     uint i = (newSize == objects[0].offset ? 0 : 1);
     vector<string> deletedObjects;
@@ -608,13 +623,14 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     Synchronizer *synchronizer = Synchronizer::get();
 
     // this is kind of ugly.  We need to lock on 'file' relative to metaPath, and without the .meta extension
-    string pita = file.string();
-    pita = pita.substr(metaPath.string().length());
-    pita = pita.substr(0, pita.find_last_of('.'));
+    string pita = file.string().substr(metaPath.string().length());   // get rid of metapath
+    pita = pita.substr(0, pita.length() - 5);   // get rid of the extension
     ScopedWriteLock lock(this, pita);
-        
+    //cout << "file is " << file.string() << " locked on " << pita << endl;
+    
     MetadataFile meta(file);
     replicator->remove(file);
+    //lock.unlock();      <-- ifExistsThenDelete() needs the file lock held during the call
         
     vector<metadataObject> objects = meta.metadataRead(0, meta.getLength());
     vector<string> deletedObjects;
@@ -701,7 +717,7 @@ struct CFException
     string entry;
 };
     
-int IOCoordinator::copyFile(const char *filename1, const char *filename2)
+int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
 {
     /*
         if filename2 exists, delete it
@@ -724,10 +740,15 @@ int IOCoordinator::copyFile(const char *filename1, const char *filename2)
         write the new metadata object
     */
     
+    const bf::path p1(_filename1);
+    const bf::path p2(_filename2);
+    const char *filename1 = p1.string().c_str();
+    const char *filename2 = p2.string().c_str();
+    
     CloudStorage *cs = CloudStorage::get();
     Synchronizer *sync = Synchronizer::get();
-    bf::path metaFile1 = metaPath/(string(filename1) + ".meta");
-    bf::path metaFile2 = metaPath/(string(filename2) + ".meta");
+    bf::path metaFile1 = metaPath/(p1.string() + ".meta");
+    bf::path metaFile2 = metaPath/(p2.string() + ".meta");
     int err;
     char errbuf[80];
     

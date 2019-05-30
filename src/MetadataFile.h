@@ -54,7 +54,7 @@ class MetadataFile
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const char *filename, size_t length);
-        const metadataObject &getEntry(off_t offset);
+        bool getEntry(off_t offset, const metadataObject **out) const;
         void removeEntry(off_t offset);
         
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.

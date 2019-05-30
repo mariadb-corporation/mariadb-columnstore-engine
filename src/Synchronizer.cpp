@@ -123,6 +123,8 @@ void Synchronizer::deletedObjects(const vector<string> &keys)
         //makeJob(key);
         pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(DELETE));
     }
+    // would be good to signal to the things in opsInProgress that these were deleted.  That would
+    // quiet down the logging somewhat.  How to do that efficiently, and w/o gaps or deadlock...
 }
 
 void Synchronizer::flushObject(const string &key)
@@ -272,8 +274,10 @@ void Synchronizer::process(list<string>::iterator name)
     boost::shared_ptr<PendingOps> pending = it->second;
     bool inserted = opsInProgress.insert(*it).second;
     if (!inserted)
+    {
+        objNames.erase(name);
         return;    // the one in pending will have to wait until the next time to avoid clobbering waiting threads
-    //opsInProgress[key] = it->second;
+    }
     string sourceFile = MetadataFile::getSourceFromKey(*name);
     pendingOps.erase(it);
     s.unlock();
@@ -325,7 +329,7 @@ void Synchronizer::process(list<string>::iterator name)
         }
     }
         
-    opsInProgress.erase(key);
+    opsInProgress.erase(*name);
     objNames.erase(name);
 }
 
@@ -337,6 +341,22 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     char buf[80];
     bool exists = false;
     int err;
+    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    
+    if (!md.exists())
+    {
+        logger->log(LOG_DEBUG, "synchronize(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
+        return;
+    }
+    
+    const metadataObject *mdEntry;
+    bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
+    if (!entryExists)
+    {
+        logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
+        return;
+    }
+    assert(key == mdEntry->key);
     
     err = cs->exists(key, &exists);
     if (err)
@@ -345,6 +365,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     if (exists)
         return;
 
+    // TODO: should be safe to check with Cache instead of a file existence check
     exists = bf::exists(cachePath / key);
     if (!exists)
     {
@@ -362,10 +383,6 @@ void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::ite
 {
     ScopedWriteLock s(ioc, sourceFile);
     cs->deleteObject(*it);
-    
-    // delete any pending jobs for *it.  There shouldn't be any, this is out of pure paranoia.
-    boost::unique_lock<boost::mutex> sc(mutex);
-    pendingOps.erase(*it);
 }
 
 void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>::iterator &lit)
@@ -378,10 +395,18 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     if (!md.exists())
     {
-        logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s", sourceFile.c_str());
+        logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
         return;
     }
-    const metadataObject &mdEntry = md.getEntry(MetadataFile::getOffsetFromKey(key));
+    
+    const metadataObject *mdEntry;
+    bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
+    if (!metaExists)
+    {
+        logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
+        return;
+    }
+    assert(key == mdEntry->key);
     
     bf::path oldCachePath = cachePath / key;
     string journalName = (journalPath/ (key + ".journal")).string();
@@ -419,7 +444,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     int err;
     boost::shared_array<uint8_t> data;
-    size_t count = 0, size = mdEntry.length;
+    size_t count = 0, size = mdEntry->length;
     
     bool oldObjIsCached = cache->exists(key);
     
@@ -440,14 +465,14 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
 
         //TODO!!  This sucks.  Need a way to pass in a larger array to cloud storage, and also have it not
         // do any add'l alloc'ing or copying
-        if (size < mdEntry.length)
+        if (size < mdEntry->length)
         {
-            boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry.length]());
+            boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry->length]());
             memcpy(tmp.get(), data.get(), size);
-            memset(&tmp[size], 0, mdEntry.length - size);
+            memset(&tmp[size], 0, mdEntry->length - size);
             data.swap(tmp);
         }
-        size = mdEntry.length;    // reset length.  Using the metadata as a source of truth (truncation), not actual file length.
+        size = mdEntry->length;    // reset length.  Using the metadata as a source of truth (truncation), not actual file length.
         
         err = ioc->mergeJournalInMem(data, size, journalName.c_str());
         if (err)
@@ -536,10 +561,17 @@ void Synchronizer::rename(const string &oldKey, const string &newKey)
     boost::unique_lock<boost::mutex> s(mutex);
 
     auto it = pendingOps.find(oldKey);
-    if (it == pendingOps.end())
-        return;
-    pendingOps[newKey] = it->second;
-    pendingOps.erase(it);
+    if (it != pendingOps.end())
+    {
+        pendingOps[newKey] = it->second;
+        pendingOps.erase(it);
+    }
+    it = opsInProgress.find(oldKey);
+    if (it != opsInProgress.end())
+    {
+        opsInProgress[newKey] = it->second;
+        opsInProgress.erase(it);
+    }
     
     for (auto &name: objNames)
         if (name == oldKey)
