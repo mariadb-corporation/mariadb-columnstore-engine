@@ -116,12 +116,9 @@ void Synchronizer::deletedObjects(const vector<string> &keys)
     {
         auto it = pendingOps.find(key);
         if (it != pendingOps.end())
-        {
             it->second->opFlags |= DELETE;
-            return;
-        }
-        //makeJob(key);
-        pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(DELETE));
+        else
+            pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(DELETE));
     }
     // would be good to signal to the things in opsInProgress that these were deleted.  That would
     // quiet down the logging somewhat.  How to do that efficiently, and w/o gaps or deadlock...
