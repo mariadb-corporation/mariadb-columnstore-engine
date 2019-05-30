@@ -210,32 +210,8 @@ static derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 {
     ha_columnstore_derived_handler* handler = NULL;
-    handlerton *ht= 0;
 
     SELECT_LEX_UNIT *unit= derived->derived;
-
-   /* //if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
-// WIP MCOL-2178
-//            && MIGR::infinidb_vtable_mode != 0 )
-    {
-        return 0;
-    }*/
-
-    for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
-    {
-        if (!(sl->join))
-            return 0;
-        for (TABLE_LIST *tbl= sl->join->tables_list; tbl; tbl= tbl->next_local)
-        {
-            if (!tbl->table)
-                return 0;
-            // Same handlerton type check.
-            if (!ht)
-                ht= tbl->table->file->partition_ht();
-            else if (ht != tbl->table->file->partition_ht())
-                return 0;
-        }
-    }
 
     bool unsupported_feature = false;
     {
@@ -253,7 +229,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 
         if ( icp )
         {
-            icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            //icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
     }
 
@@ -470,36 +446,21 @@ static select_handler*
 create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 {
     ha_columnstore_select_handler* handler = NULL;
-    handlerton *ht= 0;
-
-    /*
-    // Return if vtable enabled.
-    //if ( MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_DISABLE_VTABLE )
-// WIP MCOL-2178
-//            && MIGR::infinidb_vtable_mode != 0 )
-    {
-        return 0;
-    }*/
-
-    for (SELECT_LEX* sl = select_lex;sl; sl= sl->next_select())
-    {
-        if (!(sl->join))
-            return 0;
-        for (TABLE_LIST *tbl= sl->join->tables_list; tbl; tbl= tbl->next_local)
-        {
-            if (!tbl->table)
-                return 0;
-            // Same handlerton type check.
-            if (!ht)
-                ht= tbl->table->file->partition_ht();
-            else if (ht != tbl->table->file->partition_ht())
-                return 0;
-        }
-    }
 
     bool unsupported_feature = false;
+    // Select_handler use the short-cut that effectively disables
+    // INSERT..SELECT and LDI
+    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT 
+        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE )
+        
+    {
+        unsupported_feature = true;
+    }
+
     // Impossible HAVING or WHERE
-    if ( ( select_lex->having && select_lex->having_value == Item::COND_FALSE )
+    // WIP replace with function call
+    if ( unsupported_feature
+       || ( select_lex->having && select_lex->having_value == Item::COND_FALSE )
         || ( select_lex->cond_count > 0
             && select_lex->cond_value == Item::COND_FALSE ) )
     {
@@ -521,7 +482,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 
         if ( where_icp )
         {
-            where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            //where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
 
         // Looking for JOIN with ON expression through
@@ -532,7 +493,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             if(table_ptr->on_expr)
             {
                 on_icp = reinterpret_cast<Item_cond*>(table_ptr->on_expr);
-                on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+                //on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             }
         }
 
@@ -543,7 +504,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             unsupported_feature = true;
         }
     }
-  
+ 
     if (!unsupported_feature)
     {
         handler = new ha_columnstore_select_handler(thd, select_lex);
@@ -571,7 +532,8 @@ ha_columnstore_select_handler::ha_columnstore_select_handler(THD *thd,
  * select_handler constructor
  ***********************************************************/
 ha_columnstore_select_handler::~ha_columnstore_select_handler()
-{}
+{
+}
 
 /*@brief  Initiate the query for select_handler           */
 /***********************************************************

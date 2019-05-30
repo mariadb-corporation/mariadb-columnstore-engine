@@ -1515,7 +1515,6 @@ uint32_t doUpdateDelete(THD* thd)
                 setError(thd, ER_INTERNAL_ERROR,
                          logging::IDBErrorInfo::instance()->errorMsg(ERR_WF_UPDATE));
                 return ER_CHECK_NOT_IMPLEMENTED;
-                //return 0;
             }
             else
             {
@@ -1594,7 +1593,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
     catch (IDBExcept& ie)
     {
-//		setError(thd, ER_UNKNOWN_TABLE, ie.what());
         setError(thd, ER_INTERNAL_ERROR, ie.what());
         return ER_INTERNAL_ERROR;
     }
@@ -1710,7 +1708,7 @@ uint32_t doUpdateDelete(THD* thd)
 
     //@Bug 2808 Error out on order by or limit clause
     //@bug5096. support dml limit.
-    if (/*( thd->lex->first_select_lex()->explicit_limit ) || */( thd->lex->first_select_lex()->order_list.elements != 0 ) )
+    if (( thd->lex->first_select_lex()->order_list.elements != 0 ) )
     {
         string emsg("DML Statement with order by clause is not currently supported.");
         thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
@@ -2348,19 +2346,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    // @bug 3005. if the table is not $vtable, then this could be a UDF defined on the connector.
-    // watch this for other complications
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_SELECT_VTABLE &&
-            string(table->s->table_name.str).find("$vtable") != 0)
-        return 0;
-
     // return error is error status is already set
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
-
-    // by pass the extra union trips. return 0
-    if (MIGR::infinidb_vtable.isUnion && MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
-        return 0;
 
     // @bug 2232. Basic SP support. Error out non support sp cases.
     // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
@@ -2370,11 +2358,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
-
-    // mysql reads table twice for order by
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_REDO_PHASE1 ||
-            MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ORDER_BY)
-        return 0;
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return 0;
@@ -2391,12 +2374,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     idbassert(ci != 0);
-
-    // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE &&
-            !MIGR::infinidb_vtable.isNewQuery)
-        return 0;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -2491,7 +2468,13 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
         // for ExeMgr logging sqltext. only log once for the query although multi plans may be sent
         if (ci->tableMap.size() == 1)
+        {
             ti.csep->data(idb_mysql_query_str(thd));
+        }
+        else
+        {
+            ti.csep->data("<part of the query executed in table mode>");
+        }
     }
     // vtable mode
     else
@@ -2595,6 +2578,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 return 0;
 
             // @bug 2547. don't need to send the plan if it's impossible where for all unions.
+            // WIP MCOL-2178 This singleton attribute could be a problem
             if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
                 return 0;
 
@@ -3114,10 +3098,6 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     }
 
     ti.tpl_ctx = 0;
-
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_SELECT_VTABLE &&
-            MIGR::infinidb_vtable.has_order_by)
-        MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_ORDER_BY;
 
     ci->tableMap[table] = ti;
 
@@ -4158,15 +4138,6 @@ int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
 
 int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
 {
-    // @bug 1738. no need to rollback for select. This is to avoid concurrent session
-    // conflict because DML is not thread safe.
-    //comment out for bug 3874. Select should never come to rollback. If there is no active transaction,
-    //rollback in DMLProc is not doing anything anyway
-    //if (!(current_thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-    //{
-    //	return 0;
-    //}
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4176,7 +4147,6 @@ int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
     {
 
         ci->dmlProc = new MessageQueueClient("DMLProc");
-        //cout << "rollback starts a client " << ci->dmlProc << " for session " << thd->thread_id << endl;
     }
 
     int rc = ha_calpont_impl_rollback_(hton, thd, all, *ci);
@@ -4224,6 +4194,8 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
+
+    thd_set_ha_data(thd, hton, NULL);
 
     return rc;
 }
@@ -4357,12 +4329,6 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
     IDEBUG( cout << "external_lock for " << alias << endl );
-    idbassert((MIGR::infinidb_vtable.vtable_state >= MIGR::INFINIDB_INIT_CONNECT &&
-               MIGR::infinidb_vtable.vtable_state <= MIGR::INFINIDB_REDO_QUERY) ||
-              MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ERROR);
-
-    if ( MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_INIT  )
-        return 0;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4371,18 +4337,15 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
+        ci->physTablesList.clear();
+        ci->tableMap.clear();
         force_close_fep_conn(thd, ci);
         return 0;
     }
 
-    CalTableMap::iterator mapiter = ci->tableMap.find(table);
-#ifdef _MSC_VER
 
-    //FIXME: fix this! (must be related to F_UNLCK define in winport)
-    if (mapiter != ci->tableMap.end() && lock_type == 0) // make sure it's the release lock (2nd) call
-#else
+    CalTableMap::iterator mapiter = ci->tableMap.find(table);
     if (mapiter != ci->tableMap.end() && lock_type == 2) // make sure it's the release lock (2nd) call
-#endif
     {
         // table mode
         if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE)
@@ -4411,11 +4374,26 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
             {
                 push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, infinidb_autoswitch_warning.c_str());
             }
+            // MCOL-2178 Check for tableMap size to set this only once.
             ci->queryState = 0;
         }
-        else // vtable mode
+        ci->tableMap.erase(table);
+    }
+    else
+    {
+        if (lock_type == 0) 
         {
-            if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_SELECT_VTABLE)
+            ci->physTablesList.insert(table);
+        }
+        else if (lock_type == 2)
+        {
+            std::set<TABLE*>::iterator iter = ci->physTablesList.find(table);
+            if ( iter != ci->physTablesList.end() )
+            {
+                ci->physTablesList.erase(table);
+            }
+
+            if ( iter != ci->physTablesList.end() && ci->physTablesList.empty() )
             {
                 if (!ci->cal_conn_hndl)
                     return 0;
@@ -4430,11 +4408,11 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 MIGR::infinidb_vtable.override_largeside_estimate = false;
                 // MCOL-3247 Use THD::ha_data as a per-plugin per-session
                 // storage for cal_conn_hndl to use it later in close_connection
-                thd_set_ha_data(thd, calpont_hton, get_fe_conn_info_ptr());
+                thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+                ci->tableMap.clear();
             }
-        }
 
-        ci->tableMap.erase(table);
+        }
     }
 
     return 0;
@@ -4495,11 +4473,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
 
-    // MCOL-1052
-    // by pass the extra union trips. return 0
-    //if (MIGR::infinidb_vtable.isUnion && MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
-    //    return 0;
-
     // @bug 2232. Basic SP support. Error out non support sp cases.
     // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
     if (MIGR::infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
@@ -4520,12 +4493,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
     idbassert(ci != 0);
 
-
-    // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE &&
-            !MIGR::infinidb_vtable.isNewQuery)
-        return 0;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -4660,6 +4627,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         // send plan whenever group_init is called
         int status = cp_get_group_plan(thd, csep, gi);
 
+        // WIP MCOL-2178 This could be a problem
         if (status > 0)
             goto internal_error;
         else if (status < 0)
@@ -5271,7 +5239,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     //check whether the system is ready to process statement.
 #ifndef _MSC_VER
     static DBRM dbrm(true);
-    bool bSystemQueryReady = dbrm.getSystemQueryReady();
+    int bSystemQueryReady = dbrm.getSystemQueryReady();
 
     if (bSystemQueryReady == 0)
     {
@@ -5299,18 +5267,6 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     // prevent "create table as select" from running on slave
     MIGR::infinidb_vtable.hasInfiniDBTable = true;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    if (thd->slave_thread && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
-
     // return error is error status is already set
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
@@ -5327,10 +5283,14 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     // mysql reads table twice for order by
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_REDO_PHASE1 ||
             MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ORDER_BY)
+    {
         return 0;
+    }
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
+    {
         return 0;
+    }
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
@@ -5346,12 +5306,6 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     idbassert(ci != 0);
-
-    // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE &&
-            !MIGR::infinidb_vtable.isNewQuery)
-        return 0;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -5495,17 +5449,19 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 dh = reinterpret_cast<derived_handler*>(handler_info->hndl_ptr);
                 status = cs_get_derived_plan(dh, thd, csep);
             }
+    
+            std::cout << "pushdown_init get_plan status " << status << std::endl;
 
-            // WIP MCOL-2121 Find a way to return an actual error
-            // It either ends up with 42 or other error status
-            if (status > 0)
+            // Return an error to avoid MDB crash later in end_statement 
+            if (status != 0)
                 goto internal_error;
-            else if (status < 0)
-                return 0;
 
+            std::cout << "pushdown_init impossibleWhereOnUnion " << status << std::endl;
             // @bug 2547. don't need to send the plan if it's impossible where for all unions.
             if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+            {
                 return 0;
+            }
 
             string query;
             query.assign(idb_mysql_query_str(thd));

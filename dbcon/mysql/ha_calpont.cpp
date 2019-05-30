@@ -145,8 +145,8 @@ static int columnstore_init_func(void* p)
     mcs_hton->commit = calpont_commit;
     mcs_hton->rollback = calpont_rollback;
     mcs_hton->close_connection = calpont_close_connection;
-    mcs_hton->create_group_by = create_calpont_group_by_handler;
-    mcs_hton->create_derived = create_columnstore_derived_handler;
+    //mcs_hton->create_group_by = create_calpont_group_by_handler;
+    //mcs_hton->create_derived = create_columnstore_derived_handler;
     mcs_hton->create_select = create_columnstore_select_handler;
     DBUG_RETURN(0);
 }
@@ -177,7 +177,7 @@ static int infinidb_init_func(void* p)
     calpont_hton->rollback = calpont_rollback;
     calpont_hton->close_connection = calpont_close_connection;
     calpont_hton->create_group_by = create_calpont_group_by_handler;
-    calpont_hton->create_derived = create_columnstore_derived_handler;
+    //calpont_hton->create_derived = create_columnstore_derived_handler;
     calpont_hton->create_select = create_columnstore_select_handler;
 
     DBUG_RETURN(0);
