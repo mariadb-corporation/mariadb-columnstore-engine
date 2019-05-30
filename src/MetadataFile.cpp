@@ -323,7 +323,7 @@ void MetadataFile::removeEntry(off_t offset)
     const auto &it = mObjects.find(offset);
     assert(it != mObjects.end());
     
-    mObjects.erase(offset);
+    mObjects.erase(it);
 }
 
 // There are more efficient ways to do it.  Optimize if necessary.
