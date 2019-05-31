@@ -49,7 +49,7 @@ set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
 include(ExternalProject)
 ExternalProject_Add(ms3
     SOURCE_DIR ${S3API_DIR}
-    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared=no --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
+    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
     INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}
@@ -57,9 +57,12 @@ ExternalProject_Add(ms3
 set(S3API_DEPS marias3 curl xml2 mhash)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
 
-add_executable(StorageManager src/main.cpp ${storagemanager_SRCS})
-add_dependencies(StorageManager ms3)
-target_link_libraries(StorageManager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
+add_library(storagemanager SHARED ${storagemanager_SRCS})
+target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
+add_dependencies(storagemanager ms3)
+
+add_executable(StorageManager src/main.cpp)
+target_link_libraries(StorageManager storagemanager)
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
 # There's probably a better way to do this, but this works, so moving on
@@ -67,10 +70,13 @@ set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 add_custom_target(test_files
     mkdir -p ${CMAKE_BINARY_DIR}/test_data && cp -R ${CMAKE_SOURCE_DIR}/test_data/* ${CMAKE_BINARY_DIR}/test_data
 )
-add_executable(unit_tests src/unit_tests.cpp ${storagemanager_SRCS})
-add_dependencies(unit_tests ms3 test_files)
-target_link_libraries(unit_tests boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
+add_executable(unit_tests src/unit_tests.cpp)
+add_dependencies(unit_tests test_files)
+target_link_libraries(unit_tests storagemanager)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
+
+add_executable(smcat src/smcat.cpp)
+target_link_libraries(smcat storagemanager)
 
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
