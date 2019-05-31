@@ -7,6 +7,7 @@ using namespace storagemanager;
 
 void usage(const char *progname)
 {
+    cerr << progname << " is 'cat' for files managed by StorageManager." << endl;
     cerr << "Usage: " << progname << " file1 file2 ... fileN" << endl;
 }
 

@@ -12,6 +12,7 @@ using namespace storagemanager;
 
 void usage(const char *progname)
 {
+    cerr << progname << " reads from stdin and puts it in a file managed by StorageManager" << endl;
     cerr << "Usage: " << progname << " output_file" << endl;
 }
 
