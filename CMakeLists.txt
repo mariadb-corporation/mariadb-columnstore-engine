@@ -81,6 +81,9 @@ target_link_libraries(smcat storagemanager)
 add_executable(smput src/smput.cpp)
 target_link_libraries(smput storagemanager)
 
+add_executable(smls src/smls.cpp)
+target_link_libraries(smls storagemanager)
+
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 

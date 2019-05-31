@@ -519,7 +519,12 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
     
     bf::directory_iterator end;
     for (bf::directory_iterator it(p); it != end; it++)
-        listing->push_back(it->path().stem().string());
+    {
+        if (bf::is_directory(it->path()))
+            listing->push_back(it->path().filename().string());
+        else
+            listing->push_back(it->path().stem().string());
+    }
     return 0;
 }
 
@@ -528,6 +533,9 @@ int IOCoordinator::stat(const char *_path, struct stat *out)
     bf::path p(_path);
     const char *path = p.string().c_str();
     
+    if (bf::is_directory(metaPath/p))
+        return ::stat((metaPath/p).string().c_str(), out);
+
     ScopedReadLock s(this, path);
     MetadataFile meta(path, MetadataFile::no_create_t());
     return meta.stat(out);
