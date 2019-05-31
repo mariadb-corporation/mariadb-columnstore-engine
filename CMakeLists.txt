@@ -78,6 +78,9 @@ set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 add_executable(smcat src/smcat.cpp)
 target_link_libraries(smcat storagemanager)
 
+add_executable(smput src/smput.cpp)
+target_link_libraries(smput storagemanager)
+
 #install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 

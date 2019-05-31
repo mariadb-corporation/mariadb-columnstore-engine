@@ -267,7 +267,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t());
     if (!metadata.exists())
     {
-        errno = EBADF;
+        errno = ENOENT;
         return -1;
     }
 
