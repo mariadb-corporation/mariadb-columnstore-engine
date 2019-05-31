@@ -75,18 +75,33 @@ S3Storage::S3Storage()
         Get necessary vars from config
         Init an ms3_st object
     */
-    char *_key_id = getenv("AWS_ACCESS_KEY_ID");
-    char *_secret = getenv("AWS_SECRET_ACCESS_KEY");
-    if (!_key_id || !_secret)
-    {
-        const char *msg = "S3 access requires setting the env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY";
-        logger->log(LOG_ERR, msg);
-        throw runtime_error(msg);
-    }
-    key = _key_id;
-    secret = _secret;
-    
     Config *config = Config::get();
+    
+    const char *keyerr = "S3 access requires setting AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env vars, "
+        " or setting aws_access_key_id and aws_secret_access_key in storagemanager.cnf";
+    key = config->getValue("S3", "aws_access_key_id");
+    secret = config->getValue("S3", "aws_secret_access_key");
+    if (key.empty())
+    {
+        char *_key_id = getenv("AWS_ACCESS_KEY_ID");
+        if (!_key_id)
+        {
+            logger->log(LOG_ERR, keyerr);
+            throw runtime_error(keyerr);
+        }
+        key = _key_id;
+    }
+    if (secret.empty())
+    {
+        char *_secret_id = getenv("AWS_SECRET_ACCESS_KEY");
+        if (!_secret_id)
+        {
+            logger->log(LOG_ERR, keyerr);
+            throw runtime_error(keyerr);
+        }
+        secret = _secret_id;
+    }
+    
     region = config->getValue("S3", "region");
     bucket = config->getValue("S3", "bucket");
     if (region.empty() || bucket.empty())
@@ -100,6 +115,7 @@ S3Storage::S3Storage()
 
     ms3_library_init();
     //ms3_debug(true);
+    testConnectivityAndPerms();
 }
 
 S3Storage::~S3Storage()
@@ -107,6 +123,36 @@ S3Storage::~S3Storage()
     for (auto &conn : freeConns)
         ms3_deinit(conn.conn);
     ms3_library_deinit();
+}
+
+// convenience macro for testConnectivityAndPerms()
+#define FAIL(OP) { \
+        const char *msg = "S3Storage: failed to " #OP ", check log files for specific error"; \
+        logger->log(LOG_ERR, msg); \
+        throw runtime_error(msg); \
+}
+
+void S3Storage::testConnectivityAndPerms()
+{
+    boost::shared_array<uint8_t> testObj(new uint8_t[1]);
+    testObj[0] = 0;
+    string testObjKey("connectivity_test");
+    
+    int err = putObject(testObj, 1, testObjKey);
+    if (err)
+        FAIL(PUT)
+    bool _exists;
+    err = exists(testObjKey, &_exists);
+    if (err)
+        FAIL(HEAD)
+    size_t len;
+    err = getObject(testObjKey, &testObj, &len);
+    if (err)
+        FAIL(GET)
+    err = deleteObject(testObjKey);
+    if (err)
+        FAIL(DELETE)
+    logger->log(LOG_DEBUG, "S3Storage: S3 connectivity & permissions are OK");
 }
 
 int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t *size)
@@ -273,7 +319,7 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     return 0;
 }
 
-void S3Storage::deleteObject(const string &key)
+int S3Storage::deleteObject(const string &key)
 {
     uint8_t s3err;
     ms3_st *creds = getConnection();
@@ -301,7 +347,9 @@ void S3Storage::deleteObject(const string &key)
         else
             logger->log(LOG_CRIT, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.", 
                 s3err_msgs[s3err], bucket.c_str(), key.c_str());
+        return -1;        
     }
+    return 0;
 }
 
 int S3Storage::copyObject(const string &sourceKey, const string &destKey)

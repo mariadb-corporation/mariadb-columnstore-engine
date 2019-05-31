@@ -153,11 +153,12 @@ int LocalStorage::copyObject(const string &source, const string &dest)
     return copy(prefix / source, prefix / dest);
 }
 
-void LocalStorage::deleteObject(const string &key)
+int LocalStorage::deleteObject(const string &key)
 {
     boost::system::error_code err;
     
     bf::remove(prefix / key, err);
+    return 0;
 }
 
 int LocalStorage::exists(const std::string &key, bool *out)

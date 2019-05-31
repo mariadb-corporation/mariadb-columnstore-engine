@@ -13,10 +13,13 @@ using namespace std;
 
 #include "SMLogging.h"
 #include "SessionManager.h"
+#include "IOCoordinator.h"
+#include "Cache.h"
+#include "Synchronizer.h"
+#include "Replicator.h"
 
 using namespace storagemanager;
 
-#include "Cache.h"
 void printCacheUsage(int sig)
 {
     cout << "Current cache size = " << Cache::get()->getCurrentCacheSize() << endl;
@@ -25,6 +28,13 @@ void printCacheUsage(int sig)
 
 int main(int argc, char** argv)
 {
+
+    /* Instantiate objects to have them verify config settings before continuing */
+    IOCoordinator::get();
+    Cache::get();
+    Synchronizer::get();
+    Replicator::get();
+
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = SIG_IGN;

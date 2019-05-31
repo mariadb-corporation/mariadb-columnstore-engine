@@ -18,7 +18,7 @@ class CloudStorage
         virtual int getObject(const std::string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size = NULL) = 0;
         virtual int putObject(const std::string &sourceFile, const std::string &destKey) = 0;
         virtual int putObject(const boost::shared_array<uint8_t> data, size_t len, const std::string &destKey) = 0;
-        virtual void deleteObject(const std::string &key) = 0;
+        virtual int deleteObject(const std::string &key) = 0;
         virtual int copyObject(const std::string &sourceKey, const std::string &destKey) = 0;
         virtual int exists(const std::string &key, bool *out) = 0;
         

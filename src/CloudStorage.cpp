@@ -45,7 +45,7 @@ CloudStorage * CloudStorage::get()
         inst = new LocalStorage();
     else {
         logger->log(LOG_CRIT,"CloudStorage: got unknown service provider: %s", type.c_str());
-        return NULL;
+        throw runtime_error("CloudStorage: got unknown service provider");
     }
  
     return inst;
