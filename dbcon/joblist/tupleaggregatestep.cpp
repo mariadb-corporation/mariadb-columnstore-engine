@@ -1583,8 +1583,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
             }
 
             functionVec[i]->fAuxColumnIndex = lastCol++;
-            oidsAgg.push_back(oidsAgg[j]);
-            keysAgg.push_back(keysAgg[j]);
+            oidsAgg.push_back(oidsProj[j]);
+            keysAgg.push_back(keysProj[j]);
             scaleAgg.push_back(0);
             precisionAgg.push_back(0);
             precisionAgg.push_back(0);
@@ -1599,8 +1599,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
         functionVec[i]->fAuxColumnIndex = lastCol;
 
         // sum(x)
-        oidsAgg.push_back(oidsAgg[j]);
-        keysAgg.push_back(keysAgg[j]);
+        oidsAgg.push_back(oidsProj[j]);
+        keysAgg.push_back(keysProj[j]);
         scaleAgg.push_back(0);
         precisionAgg.push_back(-1);
         typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
@@ -1608,8 +1608,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
         ++lastCol;
 
         // sum(x**2)
-        oidsAgg.push_back(oidsAgg[j]);
-        keysAgg.push_back(keysAgg[j]);
+        oidsAgg.push_back(oidsProj[j]);
+        keysAgg.push_back(keysProj[j]);
         scaleAgg.push_back(0);
         precisionAgg.push_back(-1);
         typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
