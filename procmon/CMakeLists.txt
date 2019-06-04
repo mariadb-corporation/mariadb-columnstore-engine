@@ -1,22 +1,23 @@
 
-add_executable(ProcMon main.cpp processmonitor.cpp ../utils/common/crashtrace.cpp)
+add_executable(ProcMon main.cpp processmonitor.cpp)
 
 target_link_libraries(ProcMon 
   PRIVATE alarmmanager_h
-          brm_h
+          brm
           cacheutils_h
           columnstore_h
           common_h
           compress_h
           configcpp_h
+          crashtrace
           ddlcleanuputil_h
-          idbboot_h
-          idbdatafile_h
+          execplan_h
+          idbboot
+          idbdatafile
           joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h
-          rt)
+          rt
+          rwlock_h
+          Boost::thread)
 
 
 install(TARGETS ProcMon DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

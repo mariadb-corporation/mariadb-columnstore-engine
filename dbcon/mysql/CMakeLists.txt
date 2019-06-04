@@ -24,11 +24,11 @@ add_library(calmysql SHARED
 
 target_compile_definitions(calmysql PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
-set_source_files_properties(ha_calpont.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti -fno-implicit-templates")
+#set_source_files_properties(ha_calpont.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti -fno-implicit-templates")
 
 target_link_libraries(calmysql 
-  PUBLIC calmysql_h
-  PRIVATE alarmmanager_h
+  PRIVATE calmysql_h
+          alarmmanager_h
           brm_h
           cacheutils_h
           columnstore_h
@@ -54,10 +54,11 @@ target_link_libraries(calmysql
           querystats_h
           querytele_h
           rowgroup_h
+          rwlock_h
           udfsdk_h
+          writeengineclient_h
           we_shared_h
-          we_wrapper_h
-          we_client_h)
+          writeengine_h)
 
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
@@ -122,7 +123,6 @@ target_link_libraries(is_columnstore_columns
 set_target_properties(is_columnstore_columns PROPERTIES PREFIX "")
 set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-
 # is_columnstore_extents
 
 add_library(is_columnstore_extents SHARED 
@@ -133,21 +133,23 @@ add_library(is_columnstore_extents SHARED
 target_compile_definitions(is_columnstore_extents PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 target_link_libraries(is_columnstore_extents 
-  PRIVATE mariadb
-          mariadb_sql
-          mariadb_pcre
-          messageqcpp_h 
-          querystats_h
-          loggingcpp_h
-          configcpp_h
-          brm_h
-          idbboot_h
-          common_h
-          rowgroup_h
-          dataconvert_h
-          udfsdk_h
-          joblist_h
-          oamcpp_h)
+  PRIVATE brm_h
+        common_h
+        configcpp_h
+        dataconvert_h
+        execplan_h
+        idbboot_h
+        joblist_h
+        loggingcpp_h
+        mariadb
+        mariadb_pcre
+        mariadb_sql
+        messageqcpp_h 
+        oamcpp_h
+        querystats_h
+        rowgroup_h
+        rwlock_h
+        udfsdk_h)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
@@ -164,25 +166,27 @@ add_library(is_columnstore_files SHARED
 target_compile_definitions(is_columnstore_files PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 target_link_libraries(is_columnstore_files 
-  PRIVATE mariadb 
-          mariadb_sql 
-          mariadb_pcre
-          messageqcpp_h 
-          querystats_h
-          loggingcpp_h
-          configcpp_h
-          brm_h
-          idbboot_h
-          common_h
-          rowgroup_h
-          dataconvert_h
-          udfsdk_h
-          joblist_h
-          we_shared_h
-          idbdatafile_h
-          oamcpp_h
-          alarmmanager_h
-          we_server_h 
+  PRIVATE alarmmanager_h
+        brm_h
+        common_h
+        configcpp_h
+        dataconvert_h
+        execplan_h
+        idbboot_h
+        idbdatafile_h
+        joblist_h
+        loggingcpp_h
+        mariadb 
+        mariadb_pcre
+        mariadb_sql 
+        messageqcpp_h 
+        oamcpp_h
+        querystats_h
+        rowgroup_h
+        rwlock_h
+        udfsdk_h
+        we_server_h
+        we_shared_h
           )
 
 # Don't prepend .so file with 'lib'

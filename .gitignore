@@ -30,14 +30,6 @@ export/
 libtool
 libnetsnmpmibs-prefix
 buildFlags
-dbcon/ddlpackage/ddl-gram.cpp
-dbcon/ddlpackage/ddl-gram.h
-dbcon/dmlpackage/dml-gram.cpp
-dbcon/dmlpackage/dml-gram.h
-dbcon/ddlpackage/ddl-scan.cpp
-dbcon/ddlpackage/ddl-scan.h
-dbcon/dmlpackage/dml-scan.cpp
-dbcon/dmlpackage/dml-scan.h
 ddlproc/DDLProc
 dmlproc/DMLProc
 exemgr/ExeMgr
@@ -86,8 +78,6 @@ writeengine/splitter/cpimport
 oamapps/columnstoreDB/columnstoreDBWrite
 oamapps/columnstoreSupport/columnstoreSupport
 *MYMETA.json
-utils/loggingcpp/errorids.h
-utils/loggingcpp/messageids.h
 CPackConfig.cmake
 CPackSourceConfig.cmake
 build/columnstore.community.spec
@@ -97,8 +87,7 @@ install_manifest_libs.txt
 install_manifest_platform.txt
 install_manifest_storage-engine.txt
 _CPack_Packages
-columnstoreversion.h
 .idea/
 .build
-/.vs
+**/.vs/*
 /CMakeSettings.json

@@ -12,34 +12,40 @@ add_library(ddlpackageproc SHARED
 
 
 target_link_libraries(ddlpackageproc 
-  PUBLIC ddlpackageproc_h 
-  PRIVATE alarmmanager_h
-          brm_h
-          cacheutils_h
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          ddlpackage_h
-          dmlpackage_h 
-          execplan_h 
-          funcexp_h
-          idbboot_h
-          idbdatafile_h
-          joblist_h
-          loggingcpp_h
-          mariadb_h
-          messageqcpp_h
-          oamcpp_h
-          querystats_h
-          querytele_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h
-          we_client_h
-          we_server_h
-          we_shared_h
-          we_wrapper_h)
+  INTERFACE ddlpackageproc_h 
+  PRIVATE
+    alarmmanager_h
+    common_h
+    compress_h
+    configcpp_h
+    dataconvert_h
+    dmlpackage_h 
+    funcexp_h
+    idbboot_h
+    joblist_h
+    loggingcpp_h
+    mariadb
+    messageqcpp_h
+    querystats_h
+    querytele_h
+    rowgroup_h
+    rwlock_h
+    threadpool_h
+    udfsdk_h
+    writeengine_h
+    we_server_h
+    we_shared_h
+  PUBLIC
+    execplan
+    cacheutils
+    ddlpackage
+    idbdatafile
+    writeengineclient
+    writeengine
+    oamcpp
+    brm
+    Boost::regex
+)
 
 set_target_properties(ddlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

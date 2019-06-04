@@ -60,7 +60,7 @@ namespace fs = boost::filesystem;
 #include "idbregistry.h"
 #endif
 
-//#include "bytestream.h"
+#include "bytestream.h"
 #include "xmlparser.h"
 
 namespace
@@ -520,7 +520,7 @@ void Config::write(const string& configFile) const
     }
 }
 
-#if 0
+
 void Config::writeConfigFile(messageqcpp::ByteStream msg) const
 {
     struct flock fl;
@@ -558,7 +558,6 @@ void Config::writeConfigFile(messageqcpp::ByteStream msg) const
         out << msg;
     }
 }
-#endif
 
 /* static */
 void Config::deleteInstanceMap()

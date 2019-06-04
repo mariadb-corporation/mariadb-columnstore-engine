@@ -19,15 +19,17 @@ target_compile_definitions(regr PRIVATE MYSQL_DYNAMIC_PLUGIN)
 set_target_properties(regr PROPERTIES VERSION 1.1.0 SOVERSION 1)
 
 target_link_libraries(regr 
-  PRIVATE udfsdk_h 
-          common_h 
-          execplan_h
-          messageqcpp_h
-          loggingcpp_h
-          mariadb
-          funcexp_h
-          joblist_h
-          dataconvert_h)
+  PUBLIC 
+  PRIVATE
+    udfsdk_h 
+    common_h 
+    execplan_h
+    messageqcpp_h
+    loggingcpp_h
+    mariadb
+    funcexp_h
+    joblist_h
+    dataconvert_h)
 
 target_pch(regr)
 
@@ -43,11 +45,13 @@ add_library(regr_mysql SHARED regrmysql.cpp)
 set_target_properties(regr_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 target_link_libraries(regr_mysql 
-  PRIVATE calmysql_h 
-          mariadb 
-          mariadb_sql 
-          mariadb_pcre
-          )
+  PUBLIC 
+  PRIVATE
+    calmysql_h 
+    mariadb 
+    mariadb_sql 
+    mariadb_pcre
+    )
 
 install(TARGETS regr_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
 

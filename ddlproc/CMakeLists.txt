@@ -1,30 +1,34 @@
 
-add_executable(DDLProc ddlproc.cpp ddlprocessor.cpp ../utils/common/crashtrace.cpp)
+add_executable(DDLProc ddlproc.cpp ddlprocessor.cpp )
 
 target_link_libraries(DDLProc
-  PRIVATE alarmmanager_h
-          brm_h
-          cacheutils_h
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          ddlpackage_h
-          ddlpackageproc_h
-          execplan_h
-          funcexp_h
-          idbboot_h
-          idbdatafile_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h
-          querytele_h
-          threadpool_h
-          we_client_h
-          we_server_h
-          we_shared_h
-          we_wrapper_h)
+  PRIVATE 
+    alarmmanager_h
+    brm_h
+    cacheutils_h
+    common_h
+    compress_h
+    configcpp_h
+    dataconvert_h
+    ddlpackage
+    ddlpackageproc
+    execplan_h
+    funcexp_h
+    idbboot_h
+    idbdatafile_h
+    joblist
+    loggingcpp
+    messageqcpp_h
+    oamcpp_h
+    querytele_h
+    rwlock_h
+    threadpool_h
+    writeengineclient_h
+    we_server_h
+    we_shared_h
+    writeengine
+    crashtrace
+    )
 
 target_pch(DDLProc)
 

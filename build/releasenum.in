@@ -1,2 +1,2 @@
-version=${PACKAGE_VERSION}
-release=${PACKAGE_RELEASE}
+version=${PROJECT_VERSION}
+release=${RELEASE_VERSION}

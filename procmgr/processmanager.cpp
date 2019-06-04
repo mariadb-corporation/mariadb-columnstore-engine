@@ -24,7 +24,6 @@
 //#define NDEBUG
 #include <cassert>
 
-#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"

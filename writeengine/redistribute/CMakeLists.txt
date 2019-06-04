@@ -7,19 +7,24 @@ add_library(writeengineredistribute SHARED
 
 
 target_link_libraries(writeengineredistribute 
-  PRIVATE messageqcpp_h
-          loggingcpp_h
-          oamcpp_h
-          configcpp_h
-          alarmmanager_h
-          brm_h
-          idbboot_h
-          joblist_h
-          common_h
-          we_server_h
-          idbdatafile_h
-          we_shared_h
-          compress_h)
+  PUBLIC 
+  PRIVATE
+    alarmmanager_h
+    brm_h
+    common_h
+    compress_h
+    configcpp_h
+    execplan_h
+    idbboot_h
+    idbdatafile_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp_h
+    rwlock_h
+    we_server_h
+    we_shared_h
+    )
 
 set_target_properties(writeengineredistribute PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

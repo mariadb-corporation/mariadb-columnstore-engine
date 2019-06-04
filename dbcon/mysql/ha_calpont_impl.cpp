@@ -141,7 +141,6 @@ using namespace logging;
 using namespace funcexp;
 
 #include "installdir.h"
-#include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
 
 namespace cal_impl_if

@@ -1,4 +1,4 @@
-
+target_include_directories(processor_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(processor STATIC primitiveprocessor.cpp dictionary.cpp column.cpp)
 
@@ -17,7 +17,10 @@ target_link_libraries(processor
           messageqcpp_h
           oamcpp_h
           primproc_h
-          we_shared_h)
+          processor_h
+          rwlock_h
+          we_shared_h
+          )
 
 target_include_directories(processor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

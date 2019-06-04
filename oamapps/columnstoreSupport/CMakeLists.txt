@@ -2,16 +2,21 @@
 
 add_executable(columnstoreSupport columnstoreSupport.cpp)
 
-#target_compile_options(columnstoreSupport PRIVATE -Wno-unused-result)
-
 target_link_libraries(columnstoreSupport 
   PRIVATE alarmmanager_h
           brm_h
-          configcpp_h          
+          common_h
+          configcpp
+          execplan_h
+          idbboot
           joblist_h
           loggingcpp_h
           messageqcpp_h
-          oamcpp_h 
+          oamcpp
+          rwlock_h
+          Readline::Readline
+          Boost::system
+          Boost::filesystem
           )
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

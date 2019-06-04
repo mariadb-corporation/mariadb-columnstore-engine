@@ -6,13 +6,14 @@ set_target_properties(querystats PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 target_link_libraries(querystats 
   PUBLIC querystats_h
-  PRIVATE mariadb 
+  PRIVATE
+   mariadb 
           messageqcpp_h
           joblist_h
           execplan_h 
           brm_h 
           compress_h
-          libmysql_client_h
+          mysql_client_h
           configcpp_h
           loggingcpp_h
           dataconvert_h

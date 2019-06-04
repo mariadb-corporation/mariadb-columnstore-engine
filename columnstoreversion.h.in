@@ -1,7 +1,0 @@
-#ifndef VERSIONNUMBER_H_
-#define VERSIONNUMBER_H_
-#include <string>
-const std::string columnstore_version("${VERSION}");
-const std::string columnstore_release("${PACKAGE_RELEASE}");
-#endif
-

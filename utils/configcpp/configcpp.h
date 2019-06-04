@@ -49,7 +49,7 @@ class ByteStream;
 
 }
 
-#if defined(_MSC_VER) && defined(LIBCONFIG_DLLEXPORT)
+#if defined(_MSC_VER) && defined(configcpp_EXPORTS)
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT
@@ -139,7 +139,7 @@ public:
     * write a stream copy of config file to disk. used to distributed mass updates to system nodes
     *
     */
-    //EXPORT void writeConfigFile(messageqcpp::ByteStream msg) const;
+    EXPORT void writeConfigFile(messageqcpp::ByteStream msg) const;
 
     /** @brief return the name of this config file
     *

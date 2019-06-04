@@ -2,17 +2,10 @@
 add_executable(postConfigure postConfigure.cpp helpers.cpp)
 
 target_link_libraries(postConfigure 
-  PRIVATE alarmmanager_h
-          brm_h 
-          columnstore_h
-          common_h
-          configcpp_h         
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h          
-          oamcpp_h
-          Readline::Readline)
+  PRIVATE 
+    brm
+    Readline::Readline
+    )
 
 
 
@@ -20,16 +13,21 @@ target_link_libraries(postConfigure
 add_executable(installer installer.cpp helpers.cpp)
 
 target_link_libraries(installer 
-  PRIVATE alarmmanager_h
-          brm_h 
-          common_h
-          configcpp_h         
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h          
-          oamcpp_h
-          Readline::Readline)
+  PRIVATE 
+    alarmmanager_h
+    brm
+    common_h
+    configcpp
+    execplan_h
+    idbboot_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp
+    oamcpp
+    Readline::Readline
+    rwlock_h
+    Boost::system
+    )
 
 
 
@@ -37,16 +35,21 @@ target_link_libraries(installer
 add_executable(getMySQLpw getMySQLpw.cpp)
 
 target_link_libraries(getMySQLpw 
-  PRIVATE brm
-          oamcpp
-          alarmmanager_h
-          common_h
-          configcpp_h
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          )
+  PRIVATE
+    oamcpp
+    messageqcpp_h
+    configcpp
+    alarmmanager_h
+    brm_h
+    execplan_h
+    joblist_h
+    loggingcpp_h
+    rwlock_h
+    common_h
+    idbboot
+    Boost::system
+    Boost::filesystem
+    )
 
 
 
@@ -64,13 +67,22 @@ install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 add_executable(mycnfUpgrade mycnfUpgrade.cpp)
 
 target_link_libraries(mycnfUpgrade 
-  PRIVATE alarmmanager_h
-          brm_h
-          configcpp_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h )
+  PRIVATE 
+    alarmmanager_h
+    brm_h
+    common_h
+    execplan_h
+    idbboot
+    configcpp
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp
+    rwlock_h
+    Boost::system
+    Boost::regex
+    Boost::filesystem
+    )
 
 
 

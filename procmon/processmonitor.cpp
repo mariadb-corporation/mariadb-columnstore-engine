@@ -23,7 +23,6 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include "columnstoreversion.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "processmonitor.h"

@@ -1,0 +1,103 @@
+#pragma once
+// cmake can use any of the following boolean values
+#pragma push_macro("ON")
+#pragma push_macro("OFF")
+#pragma push_macro("YES")
+#pragma push_macro("NO")
+#pragma push_macro("TRUE")
+#pragma push_macro("FALSE")
+
+#if defined(ON)
+  #undef ON
+#endif
+
+#if defined(OFF)
+  #undef OFF
+#endif
+
+#if defined(YES)
+  #undef YES
+#endif
+
+#if defined(NO)
+  #undef NO
+#endif
+
+#if defined(TRUE)
+  #undef TRUE
+#endif
+
+#if defined(FALSE)
+  #undef FALSE
+#endif
+
+#define ON    1
+#define OFF   0
+#define YES   1
+#define NO    0
+#define TRUE  1
+#define FALSE 0
+
+#if defined(NDEBUG)
+  #if !defined(D_)
+    #define D_(...)
+  #endif
+  #if !defined(R_)
+    #define R_(...) __VA_ARGS__
+  #endif
+#else
+  #if !defined(D_)
+    #define D_(...) __VA_ARGS__
+  #endif
+  #if !defined(R_)
+    #define R_(...)
+  #endif
+#endif
+
+#if !defined(QUOTE2_)
+    #define QUOTE2_( x ) # x
+#endif
+#if !defined(QUOTE)
+    #define QUOTE( x ) QUOTE2_( x )
+#endif
+
+#if !defined(CONCAT2_)
+    #define CONCAT2_(x, y) x ## y
+#endif
+#if !defined(CONCAT)
+    #define CONCAT(x, y) CONCAT2_(x,y)
+#endif
+
+#if defined(__COUNTER__)
+  #define UNIQUE_IDENTIFIER(_prefix) CONCAT(_prefix, __COUNTER__)
+#else
+  #define UNIQUE_IDENTIFIER(_prefix) CONCAT(_prefix, __LINE__)
+#endif
+
+#if !defined(PRAGMA_)
+    #define PRAGMA_(x) _Pragma( #x )
+#endif
+
+
+#if (@COLORIZE_OUTPUT@)
+  #define WARNING( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[31mWARNING : " x "\e[0m" ))
+  #define NOTE( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[32mNOTE : " x  "\e[0m"))
+  #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[33mTODO: " x  "\e[0m"))
+#else
+  #define WARNING( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : WARNING : " x ))
+  #define NOTE( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : NOTE : " x ))
+  #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : TODO : " x ))
+#endif
+
+#include <string>
+const std::string columnstore_version("@PROJECT_VERSION@");
+const std::string columnstore_release("@RELEASE_VERSION@");
+const std::string columnstore_githash("@GIT_HASH@");
+
+
+#pragma pop_macro("ON")
+#pragma pop_macro("OFF")
+#pragma pop_macro("YES")
+#pragma pop_macro("NO")
+#pragma pop_macro("TRUE")
+#pragma pop_macro("FALSE")

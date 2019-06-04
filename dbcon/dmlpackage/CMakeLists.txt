@@ -45,16 +45,19 @@ add_dependencies(dmlpackage dmlpackage_gen)
 SET_TARGET_PROPERTIES(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 target_link_libraries(dmlpackage 
-  PUBLIC dmlpackage_h
-  PRIVATE messageqcpp_h 
-          we_shared_h 
-          execplan_h 
-          brm_h 
-          idbdatafile_h 
-          compress_h
-          loggingcpp_h
-          dataconvert_h
-          joblist_h)
+  INTERFACE dmlpackage_h
+  PUBLIC 
+  PRIVATE
+    messageqcpp_h 
+    execplan_h 
+    brm_h 
+    idbdatafile_h 
+    compress_h
+    loggingcpp_h
+    dataconvert_h
+    joblist_h
+    we_shared_h
+    )
 
 target_pch(dmlpackage)
 

@@ -6,7 +6,7 @@ target_link_libraries(mcsadmin
   PRIVATE alarmmanager_h
           Boost::system
           Boost::thread
-          brm_h
+          brm
           columnstore_h
           common_h
           compress_h
@@ -17,9 +17,13 @@ target_link_libraries(mcsadmin
           joblist_h
           loggingcpp_h
           messageqcpp_h
-          oamcpp_h
+          oamcpp
+          rwlock_h
           we_server_h
-          we_shared_h)
+          we_shared_h
+          writeengine
+          Readline::Readline
+          )
 
 install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

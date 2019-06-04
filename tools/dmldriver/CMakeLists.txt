@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(dmldriver_SRCS dmldriver.cpp tpchrf2.cpp dmlif.cpp)
 
 kde4_add_executable(dmldriver ${dmldriver_SRCS})
 
-target_link_libraries(dmldriver ${KDE4_KDECORE_LIBS})
+#target_link_libraries(dmldriver ${KDE4_KDECORE_LIBS})
 
 target_pch(dmldriver)
 

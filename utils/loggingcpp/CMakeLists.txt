@@ -18,7 +18,7 @@ add_custom_target(loggingcpp_gen DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/messageids.
 
 add_dependencies(loggingcpp_h loggingcpp_gen)
     
-add_library(loggingcpp SHARED
+add_library(loggingcpp STATIC
     message.cpp
     messagelog.cpp
     logger.cpp
@@ -28,22 +28,20 @@ add_library(loggingcpp SHARED
     idberrorinfo.cpp
 	)
 
-target_link_libraries(loggingcpp 
-  PUBLIC loggingcpp_h
-          idbboot
-          configcpp
-          rt
-          Boost::system
-          Boost::thread
-  PRIVATE
-          
-          )
+add_dependencies(loggingcpp loggingcpp_gen)
 
-set_target_properties(loggingcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+target_link_libraries(loggingcpp
+  INTERFACE loggingcpp_h
+	PUBLIC 
+	PRIVATE
+    Boost::system
+    idbboot
+  )
+
 
 target_pch(loggingcpp)
 
-install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_ETCDIR} COMPONENT platform)
 

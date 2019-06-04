@@ -38,27 +38,41 @@ add_library(execplan SHARED
     treenodeimpl.cpp
     vendorexecutionplan.cpp
     windowfunctioncolumn.cpp
-    udafcolumn.cpp)
+    udafcolumn.cpp
+    )
 
-target_link_libraries(execplan PUBLIC execplan_h 
-  PRIVATE alarmmanager_h
-          brm_h
-          common_h
-          configcpp_h
-          dataconvert_h
-          ddlpackage_h 
-          funcexp_h 
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          mariadb
-          messageqcpp_h
-          oamcpp_h
-          querystats_h 
-          querytele_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h)
+target_link_libraries(execplan 
+	INTERFACE execplan_h
+  PRIVATE
+    Boost::thread
+    messageqcpp_h
+    loggingcpp_h
+    rowgroup_h
+    common_h
+    joblist_h
+    udfsdk_h
+    dataconvert_h
+    ddlpackage_h
+    brm_h
+    mariadb
+    funcexp_h
+    oamcpp_h
+    configcpp_h
+    alarmmanager_h
+    rwlock_h
+    querystats_h
+    idbboot_h
+    querytele_h
+    threadpool_h
+  PUBLIC
+    messageqcpp
+    idbboot
+    rowgroup
+    loggingcpp
+    dataconvert
+    udfsdk
+    funcexp
+    )
 
 set_target_properties(execplan PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

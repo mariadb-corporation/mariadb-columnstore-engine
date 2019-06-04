@@ -28,7 +28,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 

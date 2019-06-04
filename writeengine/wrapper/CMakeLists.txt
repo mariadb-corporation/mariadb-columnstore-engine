@@ -1,5 +1,5 @@
 
-target_include_directories(we_wrapper_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(writeengine_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(writeengine SHARED 
     writeengine.cpp
@@ -35,24 +35,29 @@ add_library(writeengine SHARED
 
 
 target_link_libraries(writeengine 
-  PUBLIC we_wrapper_h 
-  PRIVATE LibXml2::LibXml2
-          joblist_h 
-          we_shared_h 
-          messageqcpp_h 
-          brm_h 
-          idbdatafile_h 
-          compress_h 
-          cacheutils_h
-          loggingcpp_h
-          common_h
-          configcpp_h
-          oamcpp_h
-          alarmmanager_h
-          idbboot_h
-          funcexp_h
-          dataconvert_h
-          )
+  INTERFACE writeengine_h 
+  PRIVATE
+    alarmmanager_h
+    common_h
+    compress_h 
+    configcpp_h
+    dataconvert_h
+    execplan_h
+    funcexp_h
+    idbboot_h
+    idbdatafile_h 
+    joblist_h 
+    LibXml2::LibXml2
+    loggingcpp_h
+    messageqcpp_h 
+    oamcpp_h
+    rwlock_h
+    we_shared_h
+  PUBLIC
+    writeengineclient
+    brm
+    cacheutils
+  )
 
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

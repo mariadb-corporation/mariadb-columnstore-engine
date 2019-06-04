@@ -31,7 +31,6 @@ ADD_LIBRARY(ddlpackage SHARED
     columndef.cpp
     createtable.cpp
     tabledef.cpp
-    sqlstatement.cpp
     sqlstatementlist.cpp
     altertable.cpp
     createindex.cpp
@@ -48,13 +47,15 @@ ADD_LIBRARY(ddlpackage SHARED
 target_compile_definitions(ddlpackage PRIVATE $<$<CONFIG:Debug>:YYDEBUG=1>)
 
 target_link_libraries(ddlpackage 
-  PUBLIC ddlpackage_h 
-  PRIVATE brm_h 
-          messageqcpp_h
-          joblist_h
-          loggingcpp_h
-          oamcpp_h
-          brm_h)
+  INTERFACE ddlpackage_h 
+  PRIVATE 
+    brm_h
+		execplan_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp_h
+    )
 
 target_pch(ddlpackage)
 

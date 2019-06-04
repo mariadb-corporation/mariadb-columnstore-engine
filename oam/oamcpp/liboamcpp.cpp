@@ -46,9 +46,9 @@
 #include <csignal>
 #include <sstream>
 
-#include "columnstoreversion.h"
-#include "ddlpkg.h"
-#include "../../dbcon/dmlpackage/dmlpkg.h"
+//#include "ddlpkg.h"
+//#include "dmlpkg.h"
+
 #define LIBOAM_DLLEXPORT
 #include "liboamcpp.h"
 #undef LIBOAM_DLLEXPORT
@@ -3577,6 +3577,7 @@ void Oam::getLogFile(const std::string moduleName, const std::string loglevel, c
 
     string tempLogFile = tmpdir +"/logs";
 
+	TODO("REMOVE SHELL COMMANDS")
     //make 1 log file made up of archive and current *.log
     (void)system(tempLogFile.c_str());
 
