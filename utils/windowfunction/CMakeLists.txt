@@ -26,7 +26,9 @@ set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
 target_pch(windowfunction)
 
 target_link_libraries(windowfunction 
-  PRIVATE brm_h
+  PUBLIC 
+  PRIVATE
+    brm_h
           common_h
           configcpp_h
           dataconvert_h

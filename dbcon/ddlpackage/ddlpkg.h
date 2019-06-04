@@ -417,7 +417,10 @@ struct SchemaObject
  */
 struct SqlStatement
 {
-    /** @brief Deserialize from ByteStream */
+
+  static const uint32_t sessionID = 1;
+
+  /** @brief Deserialize from ByteStream */
     virtual int unserialize(messageqcpp::ByteStream& bs) = 0;
 
     /** @brief Serialize to ByteStream */
@@ -427,9 +430,9 @@ struct SqlStatement
     /** @brief Dump to stdout. */
     virtual std::ostream& put(std::ostream& os) const = 0;
 
-    EXPORT SqlStatement();
+    EXPORT SqlStatement() : fSessionID(sessionID){}
 
-    EXPORT virtual ~SqlStatement();
+    EXPORT virtual ~SqlStatement(){}
 
     /** @brief The session ID assigned to this stmt by the front end (in theory)
      *
@@ -454,6 +457,11 @@ struct SqlStatement
     uint32_t fTableWithAutoi; // has autoincrement column?
 
 };
+
+inline std::ostream& operator<<(std::ostream& os, const SqlStatement& stmt)
+{
+    return stmt.put(os);
+}
 
 
 
@@ -1376,8 +1384,7 @@ struct AlterTableStatement : public SqlStatement
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
 
-    AlterTableStatement() : fTableName(0)
-    {}
+    AlterTableStatement() : fTableName(0), fActions(){}
 
     EXPORT AlterTableStatement(QualifiedName* qName, AlterTableActionList* ataList);
 

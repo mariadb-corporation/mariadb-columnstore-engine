@@ -12,37 +12,42 @@ add_executable(WriteEngineServer
     we_cleartablelockcmd.cpp
     we_cpifeederthread.cpp
     we_getfilesizes.cpp
-    ../../utils/common/crashtrace.cpp)
+    )
 
 
-target_link_libraries(WriteEngineServer 
-  PRIVATE alarmmanager_h
-          Boost::filesystem
-          Boost::thread
-          brm_h
-          cacheutils_h
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          ddlpackage_h
-          dmlpackage_h
-          dmlpackageproc_h
-          funcexp_h
-          idbboot_h
-          idbdatafile_h
-          joblist_h
-          querystats_h
-          loggingcpp_h
-          mariadb
-          messageqcpp
-          oamcpp_h
-          querytele_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h
-          we_shared_h
-          we_wrapper_h)
+target_link_libraries(WriteEngineServer
+  PRIVATE
+    dmlpackageproc
+    brm_h
+    columnstore_h
+    we_server_h
+    loggingcpp_h
+    messageqcpp_h
+    threadpool_h
+    execplan_h
+    joblist_h
+    rwlock_h
+    common_h
+    configcpp_h
+    dmlpackage_h
+    idbdatafile_h
+    ddlpackage_h
+    compress_h
+    oamcpp_h
+    dataconvert_h
+    alarmmanager_h
+    idbboot_h
+    querystats_h
+    rowgroup_h
+    udfsdk_h
+    querytele_h
+    funcexp_h
+    cacheutils_h
+    dmlpackageproc_h
+    we_shared_h
+    crashtrace
+    mariadb
+
+          )
 
 install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
-

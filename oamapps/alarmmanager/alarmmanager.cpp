@@ -30,7 +30,7 @@
 
 #include "alarmglobal.h"
 #include "liboamcpp.h"
-//#include "installdir.h"
+#include "installdir.h"
 #include "messagequeue.h"
 
 using namespace std;
@@ -618,7 +618,7 @@ void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 *			date = MM/DD/YY format
 *
 *****************************************************************************************/
-#if 0
+#if 1
 void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 {
 

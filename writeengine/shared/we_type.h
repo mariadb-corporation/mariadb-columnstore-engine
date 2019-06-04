@@ -44,6 +44,7 @@
 #undef DELETE
 #undef NO_ERROR
 
+
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
@@ -137,6 +138,7 @@ enum ImportDataMode { IMPORT_DATA_TEXT            = 0,
  * the set of Calpont column data type names; MUST match ColDataType in
  * calpontsystemcatalog.h.
  */
+ // TODO("Review presence of execplan here. Seems to break responsibility principal by tightly coupling these libraries");
 const char  ColDataTypeStr[execplan::CalpontSystemCatalog::NUM_OF_COL_DATA_TYPE][20] =
 {
     "bit",

@@ -69,7 +69,6 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/tokenizer.hpp"
 
-#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 

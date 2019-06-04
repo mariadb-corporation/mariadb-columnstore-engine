@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(brmtest_SRCS brmtest.cpp locks.cpp)
 
 kde4_add_executable(brmtest ${brmtest_SRCS})
 
-target_link_libraries(brmtest ${KDE4_KDECORE_LIBS} execplan joblist rowgroup dataconvert loggingcpp @boost_thread_lib@ brm messageqcpp rwlock configcpp xml2 joiner oamcpp snmpmanager @boost_filesystem_lib@ @boost_date_time_lib@ multicast funcexp)
+#target_link_libraries(brmtest ${KDE4_KDECORE_LIBS} execplan joblist rowgroup dataconvert loggingcpp @boost_thread_lib@ brm messageqcpp rwlock configcpp xml2 joiner oamcpp snmpmanager @boost_filesystem_lib@ @boost_date_time_lib@ multicast funcexp)
 
 target_pch(brmtest)
 

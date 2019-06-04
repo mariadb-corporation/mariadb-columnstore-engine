@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(evalidx_SRCS evalidx.cpp)
 
 kde4_add_executable(evalidx ${evalidx_SRCS})
 
-target_link_libraries(evalidx ${KDE4_KDECORE_LIBS} dmlpackageproc execplan joblist rowgroup writeengine brm dataconvert cacheutils dmlpackage messageqcpp loggingcpp configcpp rwlock @boost_thread_lib@ xml2 joiner oamcpp snmpmanager @boost_filesystem_lib@ @boost_date_time_lib@ multicast funcexp)
+#target_link_libraries(evalidx ${KDE4_KDECORE_LIBS} dmlpackageproc execplan joblist rowgroup writeengine brm dataconvert cacheutils dmlpackage messageqcpp loggingcpp configcpp rwlock @boost_thread_lib@ xml2 joiner oamcpp snmpmanager @boost_filesystem_lib@ @boost_date_time_lib@ multicast funcexp)
 
 install(TARGETS evalidx ${INSTALL_TARGETS_DEFAULT_ARGS})
 

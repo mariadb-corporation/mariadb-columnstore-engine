@@ -1,6 +1,7 @@
 
 target_include_directories(we_shared_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+
 if(BUILD_TESTING)
   add_executable(we_shared_components_tests ./shared_components_tests.cpp)
   install(TARGETS we_shared_components_tests DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -8,7 +8,7 @@ set(sendPlan_SRCS sendplan.cpp)
 
 kde4_add_executable(sendPlan ${sendPlan_SRCS})
 
-target_link_libraries(sendPlan ${KDE4_KDECORE_LIBS})
+#target_link_libraries(sendPlan ${KDE4_KDECORE_LIBS})
 
 install(TARGETS sendPlan ${INSTALL_TARGETS_DEFAULT_ARGS})
 

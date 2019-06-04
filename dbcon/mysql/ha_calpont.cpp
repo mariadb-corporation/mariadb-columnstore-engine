@@ -17,7 +17,6 @@
    MA 02110-1301, USA. */
 
 #include "ha_calpont.h"
-#include "columnstoreversion.h"
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"

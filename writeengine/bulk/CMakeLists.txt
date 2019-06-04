@@ -20,27 +20,34 @@ add_library(we_bulk STATIC
     we_workers.cpp)
 
 target_link_libraries(we_bulk 
-  PUBLIC we_wrapper_h
-  PRIVATE alarmmanager_h
-          brm_h 
-          cacheutils_h
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          funcexp_h
-          idbboot_h
-          idbdatafile_h 
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h
-          querytele_h
-          threadpool_h
-          we_client_h
-          we_server_h
-          we_shared_h
-          we_xml_h)
+  PUBLIC 
+  PRIVATE
+    alarmmanager_h
+    brm_h 
+    cacheutils_h
+    common_h
+    compress_h
+    configcpp_h
+    dataconvert_h
+    execplan_h
+    funcexp_h
+    idbboot_h
+    idbdatafile_h 
+    joblist_h
+    LibXml2::LibXml2
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp_h
+    querytele_h
+    rwlock_h
+    threadpool_h
+    writeengineclient_h
+    writeengine_h
+    we_server_h
+    we_shared_h
+    we_xml_h
+    writeengine_h
+    )
 
 target_compile_definitions(we_bulk PRIVATE _FILE_OFFSET_BITS=64)
 
@@ -50,18 +57,23 @@ target_compile_definitions(we_bulk PRIVATE _FILE_OFFSET_BITS=64)
 add_executable(cpimport.bin cpimport.cpp)
 
 target_link_libraries(cpimport.bin
-  PRIVATE we_bulk)
-#[[
-  PRIVATE idbdatafile_h 
-          messageqcpp_h 
-          we_shared_h 
-          execplan_h 
-          we_wrapper_h 
-          brm_h 
-          compress_h 
-          we_xml_h 
-          querytele_h 
-          oamcpp_h
-          funcexp_h)
-]]
+  PUBLIC 
+  PRIVATE
+    execplan
+    loggingcpp
+    messageqcpp
+    we_bulk
+    we_shared_h
+    idbdatafile_h
+    writeengine
+    brm
+    rwlock_h
+    configcpp
+    compress_h
+    we_xml_h
+    oamcpp
+    LibXml2::LibXml2
+    )
+
+
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

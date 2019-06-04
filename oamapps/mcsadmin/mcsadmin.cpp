@@ -26,7 +26,6 @@
 #include <netdb.h>
 extern int h_errno;
 
-#include "columnstoreversion.h"
 #include "mcsadmin.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"

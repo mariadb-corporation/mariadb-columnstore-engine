@@ -1,6 +1,7 @@
-/* config.h.cmake  */
-#ifndef TEST_CONFIG_H
-#define TEST_CONFIG_H
+/* config.h.in  */
+#pragma once
+
+
 
 /* Define to 1 to let the system come up without using OAM */
 #cmakedefine SKIP_OAM_INIT 1
@@ -387,4 +388,3 @@
    code using `volatile' can become incorrect without. Disable with care. */
 #cmakedefine volatile
 
-#endif

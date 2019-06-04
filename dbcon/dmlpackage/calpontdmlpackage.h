@@ -30,7 +30,7 @@
 #include "bytestream.h"
 #include "dmlpackage.h"
 #include "dmltable.h"
-#include "calpontselectexecutionplan.h"
+//#include "calpontselectexecutionplan.h"
 #include "we_chunkmanager.h"
 #define DML_PACKAGE_DEBUG
 

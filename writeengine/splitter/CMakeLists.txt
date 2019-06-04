@@ -12,21 +12,27 @@ add_executable(cpimport
 
 
 target_link_libraries(cpimport 
-  PRIVATE alarmmanager_h
-          batchloader
-          brm_h
-          common_h
-          configcpp_h
-          dataconvert_h
-          idbboot_h
-          idbdatafile_h
-          joblist_h
-          LibXml2::LibXml2
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h
-          we_server_h
-          we_shared_h)
+  PUBLIC 
+  PRIVATE
+    alarmmanager
+    batchloader
+    Boost::system
+    brm
+    common_h
+    configcpp_h
+    dataconvert_h
+    idbboot_h
+    idbdatafile_h
+    joblist_h
+    LibXml2::LibXml2
+    loggingcpp
+    messageqcpp_h
+    oamcpp_h
+    we_server_h
+    execplan
+    we_shared_h
+    rwlock_h
+    writeengine)
 
 install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

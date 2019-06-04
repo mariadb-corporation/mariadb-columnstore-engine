@@ -1,6 +1,4 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
 add_subdirectory(shared)
 add_subdirectory(dictionary)
 add_subdirectory(xml)

@@ -16,9 +16,10 @@ target_pch(querytele)
 
 target_link_libraries(querytele 
   PUBLIC querytele_h 
-  PRIVATE threadpool_h
-          thrift 
-          common_h)
+  PRIVATE
+    threadpool_h
+    thrift 
+    common_h)
 
 install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

@@ -53,29 +53,44 @@ add_library(joblist SHARED
     virtualtable.cpp
     windowfunctionstep.cpp)
 
-target_link_libraries(joblist 
-  PUBLIC joblist_h 
-  PRIVATE alarmmanager_h
-          brm_h
-          common_h
-          compress_h          
-          configcpp_h
-          dataconvert_h
-          execplan_h
-          funcexp_h
-          idbboot_h
-          joiner_h
-          libmysql_client_h
-          loggingcpp_h
-          mariadb
-          messageqcpp_h
-          oamcpp_h
-          primproc_h 
-          querystats_h          
-          querytele_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h)
+target_link_libraries(joblist
+  INTERFACE joblist_h
+  
+  PRIVATE
+    rowgroup_h
+    common_h
+    messageqcpp_h
+    execplan_h
+    loggingcpp_h
+    udfsdk_h
+    dataconvert_h
+    brm_h
+    mariadb
+    rwlock_h
+    configcpp_h
+    querytele_h
+    threadpool_h
+    funcexp_h
+    oamcpp_h
+    alarmmanager_h
+    idbboot_h
+    joiner_h
+    querystats_h          
+    mysql_client_h
+    compress_h          
+    primproc_h 
+  PUBLIC
+    loggingcpp
+    querytele
+    windowfunction
+    threadpool
+    alarmmanager
+    joiner
+    common
+    udfsdk
+    querystats
+    mysql_client
+    )
 
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

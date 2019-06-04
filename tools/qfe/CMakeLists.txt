@@ -1,5 +1,5 @@
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+#include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
 
 
 ########### next target ###############
@@ -17,7 +17,7 @@ set(QFE_SRCS
 
 kde4_add_executable(QFE ${QFE_SRCS})
 
-target_link_libraries(QFE ${KDE4_KDECORE_LIBS})
+#target_link_libraries(QFE ${KDE4_KDECORE_LIBS})
 
 target_pch(QFE)
 

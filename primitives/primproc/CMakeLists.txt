@@ -1,5 +1,9 @@
 
-target_include_directories(primproc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(primproc_h 
+  INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}     
+  #  messageqcpp_h
+  )
 
 
 add_executable(PrimProc 
@@ -17,37 +21,38 @@ add_executable(PrimProc
     pseudocc.cpp
     rtscommand.cpp
     umsocketselector.cpp
-    ../../utils/common/crashtrace.cpp)
+    )
 
 target_link_libraries(PrimProc 
-  PUBLIC primproc_h
-  PRIVATE alarmmanager_h          
-          Boost::system
-          Boost::thread
-          brm_h
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          dbbc_h
-          execplan_h
-          funcexp_h
-          idbboot_h
-          idbdatafile_h
-          joblist_h
-          joiner_h
-          loggingcpp_h
-          mariadb
-          messageqcpp_h
-          oamcpp_h
-          processor_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h
-          we_client_h
-          we_shared_h
-          we_wrapper_h)
-
+  PRIVATE 
+    primproc_h
+    alarmmanager_h          
+    Boost::system
+    Boost::thread
+    brm_h
+    common_h
+    compress_h
+    configcpp_h
+    dataconvert_h
+    dbbc
+    execplan_h
+    funcexp
+    idbboot_h
+    idbdatafile_h
+    joblist_h
+    joiner_h
+    loggingcpp
+    mariadb
+    messageqcpp
+    oamcpp
+    processor_h
+    rowgroup_h
+    rwlock_h
+    threadpool_h
+    udfsdk_h
+    writeengineclient_h
+    writeengine_h
+    )
 target_pch(PrimProc)
 
 

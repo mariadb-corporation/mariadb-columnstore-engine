@@ -100,29 +100,32 @@ add_library(funcexp SHARED
     func_week.cpp
     func_weekday.cpp
     func_year.cpp
-    func_yearweek.cpp)
+    func_yearweek.cpp
+)
 
 target_link_libraries(funcexp 
-  PUBLIC funcexp_h
-  PRIVATE alarmmanager_h
-          brm_h
-          columnstore_h
-          common_h 
-          configcpp_h 
-          dataconvert_h 
-          execplan_h 
-          joblist_h 
-          loggingcpp_h 
-          mariadb 
-          messageqcpp_h 
-          oamcpp_h 
-          rowgroup_h 
-          udfsdk_h )
+  INTERFACE funcexp_h
+  PUBLIC
+  PRIVATE
+    Boost::system
+    execplan_h
+    messageqcpp_h
+    joblist_h
+    loggingcpp_h
+    dataconvert_h
+    oamcpp_h
+    configcpp_h
+    alarmmanager_h
+    rowgroup_h
+    brm_h
+    rwlock_h
+    common_h
+    udfsdk_h
+    mariadb    
+    )
 
 set_target_properties(funcexp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 target_pch(funcexp)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
-
-

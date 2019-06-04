@@ -1,17 +1,23 @@
+target_include_directories(batchloader_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(batchloader SHARED batchloader.cpp)
 
-target_include_directories(batchloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(batchloader 
-  PRIVATE alarmmanager_h 
-          brm_h
-          common_h 
-          configcpp_h
-          joblist_h
-          loggingcpp_h 
-          messageqcpp_h 
-          oamcpp_h )
+  INTERFACE batchloader_h
+  PUBLIC
+  PRIVATE     
+    alarmmanager_h 
+    brm_h
+    common_h 
+    configcpp_h
+    execplan_h
+    joblist_h
+    loggingcpp_h 
+    messageqcpp_h
+    oamcpp_h
+    rwlock_h
+    )
 
 set_target_properties(batchloader PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

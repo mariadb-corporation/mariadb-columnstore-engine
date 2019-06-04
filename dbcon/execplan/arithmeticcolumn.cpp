@@ -340,7 +340,9 @@ void ArithmeticColumn::unserialize(messageqcpp::ByteStream& b)
     fExpression = ObjectReader::createParseTree(b);
     b >> fTableAlias;
     b >> fData;
-    b >> reinterpret_cast< ByteStream::doublebyte&>(fAsc);
+	  ByteStream::doublebyte tmp;
+    b >> tmp;
+		fAsc = (tmp);
 
     fSimpleColumnList.clear();
     fExpression->walk(getSimpleCols, &fSimpleColumnList);

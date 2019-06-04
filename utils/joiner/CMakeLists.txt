@@ -1,24 +1,33 @@
+target_include_directories(joiner_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(joiner SHARED 
   joiner.cpp 
   tuplejoiner.cpp 
-  joinpartition.cpp)
+  joinpartition.cpp
+)
 
 target_link_libraries(joiner 
-  PRIVATE brm_h 
-          common_h
-          compress_h
-          configcpp_h
-          dataconvert_h
-          execplan_h 
-          idbboot_h
-          joblist_h 
-          loggingcpp_h
-          mariadb
-          messageqcpp_h
-          rowgroup_h 
-          rwlock_h
-          udfsdk_h)
+  INTERFACE joiner_h
+  PUBLIC
+  PRIVATE
+    Boost::filesystem
+    Boost::system
+    joblist_h
+    rowgroup_h
+    common_h
+    messageqcpp_h
+    execplan_h
+    loggingcpp_h
+    udfsdk_h
+    dataconvert_h
+    mariadb
+    configcpp_h
+    compress_h
+    idbboot_h
+    idbdatafile_h
+    brm_h
+    rwlock_h    
+  )
 
 target_include_directories(joiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

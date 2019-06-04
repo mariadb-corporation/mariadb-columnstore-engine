@@ -1,28 +1,32 @@
 
-add_executable(ExeMgr main.cpp activestatementcounter.cpp femsghandler.cpp ../utils/common/crashtrace.cpp)
+add_executable(ExeMgr main.cpp activestatementcounter.cpp femsghandler.cpp )
 
 target_link_libraries(ExeMgr 
-  PRIVATE Boost::filesystem
-          Boost::system
-          Boost::thread
-          mariadb
-          alarmmanager_h
-          brm_h
-          common_h
-          configcpp_h
-          dataconvert_h
-          execplan_h
-          funcexp_h
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h
-          querystats_h
-          querytele_h
-          rowgroup_h
-          threadpool_h
-          udfsdk_h)
+  PRIVATE 
+    Boost::filesystem
+    Boost::system
+    Boost::thread
+    crashtrace
+    mariadb
+    alarmmanager_h
+    brm
+    common_h
+    configcpp
+    dataconvert_h
+    execplan
+    funcexp_h
+    idbboot_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp
+    querystats_h
+    querytele_h
+    rowgroup_h
+    rwlock_h
+    threadpool_h
+    udfsdk_h
+    )
 
 target_pch(ExeMgr)
 

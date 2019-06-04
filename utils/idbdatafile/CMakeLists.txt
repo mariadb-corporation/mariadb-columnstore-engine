@@ -13,17 +13,21 @@ add_library(idbdatafile SHARED
     UnbufferedFile.cpp)
 
 target_link_libraries(idbdatafile 
-  PUBLIC idbdatafile_h 
-  PRIVATE alarmmanager_h
-          brm_h
-          common_h
-          compress_h
-          configcpp_h
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h )
+  INTERFACE idbdatafile_h 
+  PRIVATE
+    alarmmanager_h
+    brm_h
+    common_h
+    compress_h
+    configcpp_h
+    execplan_h
+    idbboot_h
+    joblist_h
+    loggingcpp_h
+    messageqcpp_h
+    oamcpp_h
+    rwlock_h 
+    )
 
 target_compile_definitions(idbdatafile PRIVATE BOOST_NO_CXX11_SCOPED_ENUMS)
 

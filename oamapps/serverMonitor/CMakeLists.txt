@@ -9,18 +9,16 @@ add_executable(ServerMonitor
     msgProcessor.cpp
     dbhealthMonitor.cpp
     UMAutoSync.cpp
-    ../../utils/common/crashtrace.cpp)
+    )
 
 target_link_libraries(ServerMonitor 
   PRIVATE alarmmanager_h
-          brm_h
+          joblist
+          brm
           common_h
-          configcpp_h
-          idbdatafile_h 
-          joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp_h )
+          crashtrace
+          idbboot_h
+          )
 
 target_pch(ServerMonitor)
 
