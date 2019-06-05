@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(storagemanager)
 
-include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories(include ${CMAKE_BINARY_DIR} ${CMAKE_INSTALL_PREFIX}/include)
 
 set(storagemanager_SRCS 
     src/AppendTask.cpp
@@ -44,18 +44,21 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
     set(S3_CONFIGURE_OPT --enable-debug)
 endif()
 
-set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
+set(S3API_DIR ${CMAKE_SOURCE_DIR}/libmarias3)
 
 include(ExternalProject)
 ExternalProject_Add(ms3
     SOURCE_DIR ${S3API_DIR}
-    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_CURRENT_BINARY_DIR} ${S3_CONFIGURE_OPT}
+    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_INSTALL_PREFIX} ${S3_CONFIGURE_OPT}
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
-    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
 )
 set(S3API_DEPS marias3 curl xml2 mhash)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+
+# get linkage right
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
@@ -87,6 +90,10 @@ target_link_libraries(smls storagemanager)
 add_executable(smrm src/smrm.cpp)
 target_link_libraries(smrm storagemanager)
 
-#install(TARGETS StorageManager DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS StorageManager smcat smput smls smrm storagemanager
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)
 
+install(FILES storagemanager.cnf DESTINATION etc)
 
