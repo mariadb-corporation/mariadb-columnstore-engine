@@ -5,10 +5,7 @@
 #include <string>
 #include <map>
 #include "CloudStorage.h"
-extern "C"
-{
 #include "libmarias3/marias3.h"
-}
 
 namespace storagemanager
 {
