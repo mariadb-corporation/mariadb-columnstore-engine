@@ -11055,6 +11055,8 @@ void ProcessManager::stopProcessTypes(bool manualFlag)
     //dbrm
     processManager.stopProcessType("DBRMControllerNode", manualFlag);
     processManager.stopProcessType("DBRMWorkerNode", manualFlag);
+    
+    processManager.stopProcessType("StorageManager", manualFlag);
 
     log.writeLog(__LINE__, "stopProcessTypes Completed");
 }
