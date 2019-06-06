@@ -118,6 +118,20 @@ retry:
         }
     }
     
+<<<<<<< HEAD
+=======
+    while (sock < 0)
+    {
+        sock = getSocket();
+        if (sock < 0)
+        {
+            log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): failed to get a connection, retrying in 5 sec...");
+            sleep(5);
+        }
+    }
+    
+    /* TODO: make these writes not send SIGPIPE */
+>>>>>>> 15c256b0... Checkpointing some stuff.  Doesn't work yet.
     storagemanager::sm_msg_header hdr;
     hdr.type = storagemanager::SM_MSG_START;
     hdr.payloadLen = length;
