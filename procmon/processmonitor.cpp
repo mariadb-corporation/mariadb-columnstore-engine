@@ -291,6 +291,8 @@ void  MonitorConfig::buildList(string ProcessModuleType, string processName, str
 
     if ( processName == "mysqld" )
         return;
+        
+    // Might need to add a similar do-nothing clause for StorageManager?
 
     pthread_mutex_lock(&LIST_LOCK);
 
@@ -505,7 +507,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                         break;
                     }
-
                     processList::iterator listPtr;
                     processList* aPtr = config.monitoredListPtr();
                     listPtr = aPtr->begin();
@@ -573,6 +574,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                         log.writeLog(__LINE__, "START: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
 
                         break;
+                    }
+                    if (processName == "StorageManager")   // storagemanager doesn't send its own response
+                    {
+                        ackMsg << (uint8_t) ACK << (uint8_t) START << (uint8_t) API_SUCCESS;
+                        mq.write(ackMsg);
                     }
 
                     ProcessConfig processconfig;
@@ -657,7 +663,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                        processconfig.LogFile,
                                                        initType,
                                                        actIndicator);
-
+                        if (processName == "StorageManager")
+                            log.writeLog(__LINE__, "START: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
+                                                       
                         if ( processID > oam::API_MAX )
                             processID = oam::API_SUCCESS;
 
@@ -701,6 +709,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                         log.writeLog(__LINE__, "RESTART: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
 
                         break;
+                    }
+                    if (processName == "StorageManager")   // storagemanager doesn't send its own response
+                    {
+                        ackMsg << (uint8_t) ACK << (uint8_t) RESTART << (uint8_t) API_SUCCESS;
+                        mq.write(ackMsg);
                     }
 
                     processList::iterator listPtr;
@@ -752,7 +765,10 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).DepModuleName,
                                                                (*listPtr).LogFile,
                                                                initType);
-
+                                if (processName == "StorageManager")
+                                    log.writeLog(__LINE__, "RESTART: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
+                                                       
+                                                               
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -1097,6 +1113,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                         break;
                     }
+                    if (processName == "StorageManager")    // storagemanager doesn't send its own status
+                    {
+                        ackMsg << (uint8_t) ACK << (uint8_t) STARTALL << (uint8_t) API_SUCCESS;
+                        mq.write(ackMsg);
+                    }
 
                     if ( config.moduleType() == "pm" )
                     {
@@ -1191,7 +1212,10 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                            (*listPtr).DepModuleName,
                                                            (*listPtr).LogFile,
                                                            initType);
-
+                            if (processName == "StorageManager")
+                                log.writeLog(__LINE__, "STARTALL: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
+                                                       
+                                                           
                             if ( processID > oam::API_MAX )
                             {
                                 processID = oam::API_SUCCESS;
@@ -1257,7 +1281,10 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).DepModuleName,
                                                                (*listPtr).LogFile,
                                                                initType);
-
+                                if (processName == "StorageManager")
+                                    log.writeLog(__LINE__, "STARTALL: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
+                                                       
+                                                               
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -2229,8 +2256,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     SystemProcessStatus systemprocessstatus;
     ProcessStatus processstatus;
 
-    log.writeLog(__LINE__, "STARTING Process: " + processName, LOG_TYPE_DEBUG);
-    log.writeLog(__LINE__, "Process location: " + processLocation, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "STARTING Process: " + processName, LOG_TYPE_CRITICAL); //, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "Process location: " + processLocation, LOG_TYPE_CRITICAL); //, LOG_TYPE_DEBUG);
 
     //check process location
     if (access(processLocation.c_str(), X_OK) != 0)
@@ -2815,6 +2842,12 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
         sleep(1);
         execv(processLocation.c_str(), argList);
 
+        if (processName == "StorageManager")
+        {
+            char buf[80];
+            int l_errno = errno;
+            log.writeLog(__LINE__, "exec'ing StorageManager failed, got " + string(strerror_r(l_errno, buf, 80)), LOG_TYPE_DEBUG);
+        }
         //record the process information into processList
         config.buildList(processModuleType, processName, processLocation, arg_list,
                          launchID, newProcessID, FAILED, BootLaunch, RunType,

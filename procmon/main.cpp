@@ -1013,7 +1013,13 @@ int main(int argc, char** argv)
                                                (*listPtr).DepModuleName,
                                                (*listPtr).LogFile,
                                                initType);
-
+                        if (listPtr->ProcessName == "StorageManager")
+                        {
+                            log.writeLog(__LINE__, "StorageManager WTF?  1", LOG_TYPE_DEBUG);
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, listPtr->processID);
+                        }
+                                               
                         string restartStatus;
 
                         if ( (*listPtr).processID == oam::API_MINOR_FAILURE ||
@@ -1064,7 +1070,13 @@ int main(int argc, char** argv)
                                        (*listPtr).DepModuleName,
                                        (*listPtr).LogFile,
                                        initType);
-
+                        if (listPtr->ProcessName == "StorageManager")
+                        {
+                            log.writeLog(__LINE__, "StorageManager WTF?  2", LOG_TYPE_DEBUG);
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, listPtr->processID);
+                        }
+                                       
                 string restartStatus;
 
                 if ( (*listPtr).processID == oam::API_MINOR_FAILURE ||
@@ -1651,7 +1663,13 @@ static void chldHandleThread(MonitorConfig config)
                                                (*listPtr).DepModuleName,
                                                (*listPtr).LogFile,
                                                initStatus);
-
+                        if (listPtr->ProcessName == "StorageManager")
+                        {
+                            log.writeLog(__LINE__, "StorageManager WTF?  3", LOG_TYPE_DEBUG);
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, listPtr->processID);
+                        }
+                                               
                         if ( (*listPtr).processID == oam::API_FAILURE )
                         {
                             // restart hard failure

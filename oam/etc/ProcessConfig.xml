@@ -21,7 +21,22 @@
 		<RunType>ACTIVE_STANDBY</RunType>
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG2>
+    
+    
 	<PROCESSCONFIG3>
+		<ProcessName>StorageManager</ProcessName>
+		<ModuleType>ChildExtOAMModule</ModuleType>
+		<ProcessLocation>$INSTALLDIR/bin/StorageManager</ProcessLocation>
+		<BootLaunch>2</BootLaunch>
+		<LaunchID>3</LaunchID>
+		<DepProcessName/>
+		<DepModuleName1>@</DepModuleName1>
+		<RunType>LOADSHARE</RunType>
+		<LogFile>off</LogFile>
+	</PROCESSCONFIG3>
+
+
+	<PROCESSCONFIG4>
 		<ProcessName>DBRMControllerNode</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
 		<ProcessLocation>$INSTALLDIR/bin/controllernode</ProcessLocation>
@@ -33,8 +48,8 @@
 		<DepModuleName1>@</DepModuleName1>
 		<RunType>SIMPLEX</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG3>
-	<PROCESSCONFIG4>
+	</PROCESSCONFIG4>
+	<PROCESSCONFIG5>
 		<ProcessName>ServerMonitor</ProcessName>
 		<ModuleType>ChildOAMModule</ModuleType>
 		<ProcessLocation>$INSTALLDIR/bin/ServerMonitor</ProcessLocation>
@@ -44,8 +59,8 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG4>
-	<PROCESSCONFIG5>
+	</PROCESSCONFIG5>
+	<PROCESSCONFIG6>
 		<ProcessName>DBRMWorkerNode</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
 		<ProcessLocation>$INSTALLDIR/bin/workernode</ProcessLocation>
@@ -57,7 +72,7 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG5>
+	</PROCESSCONFIG6>
 	<PROCESSCONFIG7>
 		<ProcessName>PrimProc</ProcessName>
 		<ModuleType>pm</ModuleType>
