@@ -120,14 +120,14 @@ bool IDBPolicy::isLocalFile( const std::string& path )
     strmblen = funcexp::utf8::idb_wcstombs(outbuf, filepath.extension().c_str(), strmblen);
     string fileExt(outbuf, strmblen);
 #else
-    string fileExt  = filepath.extension().c_str();
+    //string fileExt  = filepath.extension().c_str();
 #endif
-    bool isXml = (fileExt == ".xml");
-
+    bool isXml = filepath.extension() == ".xml";
+    bool isDbrm = path.find("dbrm") != string::npos;   // StorageManager: make this depend on config values
     bool isVb = path.find("versionbuffer") != string::npos;
     bool isScratch = path.find(s_hdfsRdwrScratch) == 0;
 
-    return isXml || isVb || isScratch;
+    return isXml || isDbrm || isVb || isScratch;
 }
 
 IDBDataFile::Types IDBPolicy::getType( const std::string& path, Contexts ctxt )

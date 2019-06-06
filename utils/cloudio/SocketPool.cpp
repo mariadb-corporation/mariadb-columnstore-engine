@@ -86,9 +86,19 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
 {
     uint count = 0;
     uint length = in.length();
-    int sock = getSocket();
+    int sock = -1;
     const uint8_t *inbuf = in.buf();
     int err = 0;
+    
+    while (sock < 0)
+    {
+        sock = getSocket();
+        if (sock < 0)
+        {
+            log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): failed to get a connection, retrying in 5 sec...");
+            sleep(5);
+        }
+    }
     
     /* TODO: make these writes not send SIGPIPE */
     storagemanager::sm_msg_header hdr;
