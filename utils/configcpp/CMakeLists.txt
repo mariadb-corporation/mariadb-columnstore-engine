@@ -16,6 +16,7 @@ target_link_libraries(configcpp
     idbboot_h
     LibXml2::LibXml2
     loggingcpp_h
-    messageqcpp_h         
+    messageqcpp_h
+    Boost::filesystem
 )
 

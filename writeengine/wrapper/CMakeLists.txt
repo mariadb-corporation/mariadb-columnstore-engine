@@ -37,6 +37,7 @@ add_library(writeengine SHARED
 target_link_libraries(writeengine 
   INTERFACE writeengine_h 
   PRIVATE
+  #[[
     alarmmanager_h
     common_h
     compress_h 
@@ -47,12 +48,14 @@ target_link_libraries(writeengine
     idbboot_h
     idbdatafile_h 
     joblist_h 
-    LibXml2::LibXml2
     loggingcpp_h
     messageqcpp_h 
     oamcpp_h
     rwlock_h
+    ]]
+    Boost::date_time
     we_shared_h
+    LibXml2::LibXml2
   PUBLIC
     writeengineclient
     brm

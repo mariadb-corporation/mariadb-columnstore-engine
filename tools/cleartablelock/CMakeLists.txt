@@ -4,22 +4,17 @@
 add_executable(cleartablelock cleartablelock.cpp cleartablelockthread.cpp)
 
 target_link_libraries(cleartablelock 
-    PRIVATE alarmmanager_h
-            Boost::system
+    PRIVATE 
+#            Boost::system
             brm
-            common_h
-            compress_h
-            configcpp_h
-            execplan
-            idbdatafile_h 
-            joblist_h
-            loggingcpp
-            messageqcpp
-            oamcpp
-            rwlock_h
-            we_server_h
             writeengine_h
             we_shared_h
+            we_server_h
+            #[[
+            common_h
+            joblist_h
+            ]]
+            Boost::thread
             )
 
 target_pch(cleartablelock)

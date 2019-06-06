@@ -4,19 +4,15 @@ add_executable(columnstoreSupport columnstoreSupport.cpp)
 
 target_link_libraries(columnstoreSupport 
   PRIVATE alarmmanager_h
-          brm_h
+          brm
           common_h
-          configcpp
-          execplan_h
           idbboot
           joblist_h
           loggingcpp_h
-          messageqcpp_h
-          oamcpp
-          rwlock_h
           Readline::Readline
           Boost::system
           Boost::filesystem
+          Threads::Threads
           )
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

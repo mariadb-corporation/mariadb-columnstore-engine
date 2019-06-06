@@ -77,18 +77,11 @@ target_link_libraries(controllernode
   PUBLIC 
   PRIVATE
     Boost::system
-    alarmmanager_h
+    Boost::thread
     brm
     common_h
-    configcpp_h
-    execplan_h 
     funcexp_h
-    idbdatafile_h 
     joblist_h
-    loggingcpp_h
-    messageqcpp_h         
-    oamcpp_h
-    rwlock_h         
     crashtrace
     )
 
@@ -102,19 +95,13 @@ add_executable(workernode slavenode.cpp)
 target_link_libraries(workernode 
   PUBLIC 
   PRIVATE
-    alarmmanager_h
     brm
     common_h
-    configcpp_h
     crashtrace
-    execplan_h
     funcexp_h
-    idbdatafile_h
     joblist_h
-    loggingcpp_h
-    messageqcpp_h
-    oamcpp_h
-    rwlock_h)
+    Boost::thread
+    )
 
 install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
@@ -126,16 +113,10 @@ add_executable(dbrmctl dbrmctl.cpp)
 target_link_libraries(dbrmctl
   PUBLIC 
   PRIVATE
-    configcpp 
 		brm
     common_h          
-    execplan_h
-    idbdatafile_h
     joblist_h
-    loggingcpp_h
-    messageqcpp_h
-    oamcpp_h
-    rwlock_h)
+    )
 
 install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

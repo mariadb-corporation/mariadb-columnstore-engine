@@ -14,21 +14,9 @@ add_executable(installer installer.cpp helpers.cpp)
 
 target_link_libraries(installer 
   PRIVATE 
-    alarmmanager_h
     brm
-    common_h
-    configcpp
-    execplan_h
-    idbboot_h
-    joblist_h
-    loggingcpp_h
-    messageqcpp
-    oamcpp
     Readline::Readline
-    rwlock_h
-    Boost::system
-    )
-
+  )
 
 
 # getMySQLpw 
@@ -36,20 +24,8 @@ add_executable(getMySQLpw getMySQLpw.cpp)
 
 target_link_libraries(getMySQLpw 
   PRIVATE
-    oamcpp
-    messageqcpp_h
-    configcpp
-    alarmmanager_h
-    brm_h
-    execplan_h
-    joblist_h
-    loggingcpp_h
-    rwlock_h
-    common_h
-    idbboot
-    Boost::system
-    Boost::filesystem
-    )
+    brm
+  )
 
 
 
@@ -68,17 +44,10 @@ add_executable(mycnfUpgrade mycnfUpgrade.cpp)
 
 target_link_libraries(mycnfUpgrade 
   PRIVATE 
-    alarmmanager_h
-    brm_h
+    brm
     common_h
-    execplan_h
     idbboot
-    configcpp
     joblist_h
-    loggingcpp_h
-    messageqcpp_h
-    oamcpp
-    rwlock_h
     Boost::system
     Boost::regex
     Boost::filesystem

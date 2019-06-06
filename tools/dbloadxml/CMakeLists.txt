@@ -24,16 +24,13 @@ target_link_libraries(colxml
     common_h
     configcpp
     dbload
-    execplan
     idbdatafile_h
     joblist_h
-    loggingcpp
-    messageqcpp_h
-    rwlock_h
     we_xml
     writeengine
     we_shared_h
     LibXml2::LibXml2
+    Boost::date_time
   )
 
 install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
