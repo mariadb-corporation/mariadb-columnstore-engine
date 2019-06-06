@@ -26,32 +26,25 @@ add_executable(PrimProc
 target_link_libraries(PrimProc 
   PRIVATE 
     primproc_h
-    alarmmanager_h          
     Boost::system
     Boost::thread
-    brm_h
+    brm
     common_h
-    compress_h
-    configcpp_h
     dataconvert_h
     dbbc
-    execplan_h
     funcexp
     idbboot_h
-    idbdatafile_h
-    joblist_h
+    joblist
     joiner_h
-    loggingcpp
     mariadb
-    messageqcpp
-    oamcpp
-    processor_h
+    processor
     rowgroup_h
-    rwlock_h
     threadpool_h
     udfsdk_h
     writeengineclient_h
-    writeengine_h
+    writeengine
+    crashtrace
+    we_shared_h
     )
 target_pch(PrimProc)
 

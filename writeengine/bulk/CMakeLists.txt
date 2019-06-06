@@ -59,20 +59,14 @@ add_executable(cpimport.bin cpimport.cpp)
 target_link_libraries(cpimport.bin
   PUBLIC 
   PRIVATE
-    execplan
-    loggingcpp
-    messageqcpp
     we_bulk
     we_shared_h
-    idbdatafile_h
     writeengine
     brm
-    rwlock_h
-    configcpp
-    compress_h
     we_xml_h
-    oamcpp
     LibXml2::LibXml2
+    Boost::thread
+    Boost::filesystem
     )
 
 

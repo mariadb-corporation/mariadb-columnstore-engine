@@ -47,7 +47,7 @@ target_link_libraries(WriteEngineServer
     we_shared_h
     crashtrace
     mariadb
-
+    Boost::thread
           )
 
 install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
