@@ -2,3 +2,4 @@
 /.vs
 /out
 /CMakeSettings.json
+/out/*

@@ -9,6 +9,19 @@ function(set_compile_options _switch)
   add_compile_options($<$<BOOL:${${switch_name}}>:${_switch}>)
 endfunction()
 
+# always on
+add_compile_options(-pipe)
+add_compile_options(-march=core2)
+add_compile_options(-mtune=generic)
+add_compile_options(-mfpmath=sse)
+add_compile_options(-fuse-cxa-atexit)
+add_compile_options($<$<CONFIG:Debug>:-ggdb3>)
+add_compile_options(-Wl,--demangle) # demangle names in error messages
+add_compile_options(-Wl,--cref) # generate cross reference is map file
+add_compile_options(-Wl,-z,combreloc) # Combine multiple dynamic relocation sections and sort to improve dynamic symbol lookup caching
+add_compile_options(-Wl,-z,now) # resolve all symbols when loaded or started rather than on-demand
+add_compile_options(-Wl,-z,relro) # mark segments are read-only after relocation
+add_compile_options(-Wl,-map) # generate map file
 
 set(ENV{GCC_COLORS} "error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01")
 unset(CMAKE_REQUIRE_FLAGS)
