@@ -16,7 +16,7 @@ target_link_libraries(compress
     idbboot_h
     columnstore_h
     Threads::Threads
-    snappy
+    Snappy::Snappy
     rt
 	)
 

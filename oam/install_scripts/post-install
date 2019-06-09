@@ -12,42 +12,42 @@ user=`whoami 2>/dev/null`
 quiet=0
 
 for arg in "$@"; do
-	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
-		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/mariadb/columnstore
-	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
-		rpmmode="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
-		installdirTmp="`echo $arg | awk -F= '{print $2}'`"
-		if [ $installdirTmp == $installdir ] ; then
-			user=root
-			export COLUMNSTORE_INSTALL_DIR=$installdir
-			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
-		else
-			installdir=$installdirTmp
-			prefix=`dirname $installdir`
+  if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
+    prefix="`echo $arg | awk -F= '{print $2}'`"
+    installdir=$prefix/mariadb/columnstore
+  elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
+    rpmmode="`echo $arg | awk -F= '{print $2}'`"
+  elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
+    installdirTmp="`echo $arg | awk -F= '{print $2}'`"
+    if [ $installdirTmp == $installdir ] ; then
+      user=root
+      export COLUMNSTORE_INSTALL_DIR=$installdir
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+    else
+      installdir=$installdirTmp
+      prefix=`dirname $installdir`
                 prefix=`dirname $prefix`
-		fi                
-	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
-		user="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
-		quiet=1
-	elif [ `expr -- "$arg" : '--plugin='` -eq 9 ]; then
-		plugin="`echo $arg | awk -F= '{print $2}'`"
-	else
-		echo "post-install: invalid unknown argument: $arg" 1>&2
-		echo "exiting..."
-		exit 1
-	fi
+    fi                
+  elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
+    user="`echo $arg | awk -F= '{print $2}'`"
+  elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
+    quiet=1
+  elif [ `expr -- "$arg" : '--plugin='` -eq 9 ]; then
+    plugin="`echo $arg | awk -F= '{print $2}'`"
+  else
+    echo "post-install: invalid unknown argument: $arg" 1>&2
+    echo "exiting..."
+    exit 1
+  fi
 done
  
 if [ $user != "root" ]; then
-	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+  export COLUMNSTORE_INSTALL_DIR=$installdir
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 else
-	# add library config file
-	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/. >/dev/null 2>&1
-	ldconfig >/dev/null 2>&1
+  # add library config file
+  /bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/. >/dev/null 2>&1
+  ldconfig >/dev/null 2>&1
 fi
 
 #check 64-bit OS compatiable
@@ -55,22 +55,22 @@ arch=`uname -m`
 patcnt=`expr "$arch" : 'i.86'`
 is64bitos=1
 if [ $patcnt -ne 0 ]; then
-	is64bitos=0
+  is64bitos=0
 fi
 is64bitpkg=1
 file $installdir/bin/PrimProc | grep '64-bit' >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-	is64bitpkg=0
+  is64bitpkg=0
 fi
 if [ $is64bitpkg -eq 1 -a $is64bitos -ne 1 ]; then
-	echo "ERROR: Incompatiable Version, package is intended for a x86_64 architecture"
-	echo "exiting...."
-	exit 1
+  echo "ERROR: Incompatiable Version, package is intended for a x86_64 architecture"
+  echo "exiting...."
+  exit 1
 fi
 
 if [ ! -f $installdir/etc/Columnstore.xml ]; then
-	echo "$installdir/etc/Columnstore.xml not found, exiting"
-	exit 1
+  echo "$installdir/etc/Columnstore.xml not found, exiting"
+  exit 1
 fi
 
 cd $installdir/lib || exit 1
@@ -87,9 +87,9 @@ rm -f $installdir/lib/libudfsdk.so.1
 rm -f $installdir/lib/libudfsdk.so.1.0.0
 
 for lib in *.so.1.0.0; do
-	blib=`basename $lib .1.0.0`
-	ln -sf $lib $blib
-	ln -sf $lib ${blib}.1
+  blib=`basename $lib .1.0.0`
+  ln -sf $lib $blib
+  ln -sf $lib ${blib}.1
 done
 for lib in *.so.1.1.0; do
         blib=`basename $lib .1.1.0`
@@ -99,8 +99,8 @@ done
 chown -h $user.$user *.so >/dev/null 2>&1
 
 if [ -f libstdc++.so.6.0.14 ]; then
-	ln -sf libstdc++.so.6.0.14 libstdc++.so.6
-	chown -h $user.$user libstdc++.so.6 >/dev/null 2>&1
+  ln -sf libstdc++.so.6.0.14 libstdc++.so.6
+  chown -h $user.$user libstdc++.so.6 >/dev/null 2>&1
 fi
 
 # softlink for libperl.sp, used by cplogger
@@ -111,42 +111,42 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 if [ $user != "root" ]; then
-	if [ -f $prefix/.bash_profile ]; then		
-		profileFile=$prefix/.bash_profile
-	elif [ -f $prefix/.profile ]; then		
-		profileFile=$prefix/.profile
-	else
-		profileFile=$prefix/.bashrc
-		touch $prefix/.bashrc
-	fi
-		
-	if [ ! -f ${profileFile}_backup ]; then
-	    cp $profileFile ${profileFile}_backup
-	fi
+  if [ -f $prefix/.bash_profile ]; then		
+    profileFile=$prefix/.bash_profile
+  elif [ -f $prefix/.profile ]; then		
+    profileFile=$prefix/.profile
+  else
+    profileFile=$prefix/.bashrc
+    touch $prefix/.bashrc
+  fi
+    
+  if [ ! -f ${profileFile}_backup ]; then
+      cp $profileFile ${profileFile}_backup
+  fi
 
-	egrep -qs 'MariaDB Columnstore Non-Root Environment Variables' ${profileFile}
-	rc1=$?
-	if [ $rc1 -ne 0 ]; then
-        	echo " " >> ${profileFile}
-		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFile}
-        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFile}
-        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFile}
-	fi
-	
-	egrep -qs 'MariaDB Columnstore Non-Root Alias Variables' ${profileFile}
-	rc1=$?
-	if [ $rc1 -ne 0 ]; then
-        	echo " " >> ${profileFile}
-		echo "# MariaDB Columnstore Non-Root Alias Variables" >> ${profileFile}
-		cat $installdir/bin/columnstoreAlias >> ${profileFile}
-	fi
+  egrep -qs 'MariaDB Columnstore Non-Root Environment Variables' ${profileFile}
+  rc1=$?
+  if [ $rc1 -ne 0 ]; then
+          echo " " >> ${profileFile}
+    echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFile}
+          echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFile}
+          echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFile}
+  fi
+  
+  egrep -qs 'MariaDB Columnstore Non-Root Alias Variables' ${profileFile}
+  rc1=$?
+  if [ $rc1 -ne 0 ]; then
+          echo " " >> ${profileFile}
+    echo "# MariaDB Columnstore Non-Root Alias Variables" >> ${profileFile}
+    cat $installdir/bin/columnstoreAlias >> ${profileFile}
+  fi
 
-	#source the file
-	. ${profileFile}
+  #source the file
+  . ${profileFile}
 else
-	profileFile="/etc/profile.d/columnstoreAlias.sh"
-	/bin/cp -f $installdir/bin/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
-	chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
+  profileFile="/etc/profile.d/columnstoreAlias.sh"
+  /bin/cp -f $installdir/bin/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
+  chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
 fi
 
 # set Profile File in config file
@@ -154,13 +154,13 @@ $installdir/bin/setConfig -d Installation ProfileFile $profileFile
 
 # create directories
 if [ $user == "root" ]; then
-	test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-	test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
-	chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+  test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
+  test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+  test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+  test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+  test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+  test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
+  chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 fi
 
 # make sure trace dir is world-writable and sticky
@@ -185,13 +185,13 @@ rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 #get temp base directory
 tmpDir="/tmp"
 if [ $user != "root" ]; then
-	tmpDir=$HOME"/.tmp"
-	mkdir $tmpDir >/dev/null 2>&1
+  tmpDir=$HOME"/.tmp"
+  mkdir $tmpDir >/dev/null 2>&1
 else
-	#get columnstore temp file directory name
-	TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
-	tmpDir=${tmpDir}${TempFileDir}
-	mkdir $tmpDir >/dev/null 2>&1
+  #get columnstore temp file directory name
+  TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
+  tmpDir=${tmpDir}${TempFileDir}
+  mkdir $tmpDir >/dev/null 2>&1
 fi
 
 #set base columnstore temp file directory
@@ -229,54 +229,54 @@ else
 fi
 
 if [ $user = "root" ]; then
-	#setup the columnstore service script
-	rm -f /etc/init.d/columnstore >/dev/null 2>&1
-	rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
-	rm -f /etc/default/columnstore
+  #setup the columnstore service script
+  rm -f /etc/init.d/columnstore >/dev/null 2>&1
+  rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
+  rm -f /etc/default/columnstore
 
-	systemctl=`which systemctl 2>/dev/null`
-	if [ -n "$systemctl" ]; then
+  systemctl=`which systemctl 2>/dev/null`
+  if [ -n "$systemctl" ]; then
 
-		chmod 644 $installdir/bin/columnstore.service
-		cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-		systemctl enable columnstore >/dev/null 2>&1
-	else
-		chkconfig=`which chkconfig 2>/dev/null`
-		if [ -n "$chkconfig" ]; then
+    chmod 644 $installdir/bin/columnstore.service
+    cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+    cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+    systemctl enable columnstore >/dev/null 2>&1
+  else
+    chkconfig=`which chkconfig 2>/dev/null`
+    if [ -n "$chkconfig" ]; then
 
-			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-			chkconfig --add columnstore > /dev/null 2>&1
-			chkconfig columnstore on > /dev/null 2>&1
-		else
-			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-			updaterc=`which update-rc.d 2>/dev/null`
-			if [ -n "$updaterc" ]; then
+      cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+      chkconfig --add columnstore > /dev/null 2>&1
+      chkconfig columnstore on > /dev/null 2>&1
+    else
+      cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+      updaterc=`which update-rc.d 2>/dev/null`
+      if [ -n "$updaterc" ]; then
 
-				update-rc.d columnstore defaults 99 > /dev/null 2>&1
-			else
-				echo ""
-				echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
-			fi
-		fi
-	fi
+        update-rc.d columnstore defaults 99 > /dev/null 2>&1
+      else
+        echo ""
+        echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+      fi
+    fi
+  fi
 fi
 
 if [ $user = "root" ]; then
-	$installdir/bin/syslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
+  $installdir/bin/syslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
 
-	#check if MariaDB Columnstore system logging was setup
-	cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-	    cat $tmpDir/syslog_install.log
-	fi
+  #check if MariaDB Columnstore system logging was setup
+  cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      cat $tmpDir/syslog_install.log
+  fi
 else
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
+  sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
 
-	sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
+  sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
-	chown $user:$user $installdir/etc/Columnstore.xml
-	
+  chown $user:$user $installdir/etc/Columnstore.xml
+  
 cat <<EOD
 
 NOTE: For non-root install, you will need to run the following commands as root user to
@@ -312,14 +312,14 @@ rm -f $lockdir/columnstore
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`
 if [ -z "aws" ]; then
-	$installdir/bin/MCSgetCredentials.sh >/dev/null 2>&1
+  $installdir/bin/MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
 if [ -z "$hadoop" ]; then
-	#check for non-root user
-	if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+  #check for non-root user
+  if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 The next steps are:
 
@@ -342,7 +342,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/columnstore start
 
 EOD
-	else
+  else
 cat <<EOD
 The next step is:
 
@@ -360,21 +360,21 @@ $installdir/bin/columnstore start
 
 
 EOD
-	fi
+  fi
         exit 0
 else
-	chmod 755 $installdir/bin/setenv-hdfs-12
-	chmod 755 $installdir/bin/setenv-hdfs-20
+  chmod 755 $installdir/bin/setenv-hdfs-12
+  chmod 755 $installdir/bin/setenv-hdfs-20
 
-	. $installdir/bin/setenv-hdfs-20
-	$installdir/bin/hdfsCheck $installdir/lib/hdfs-20.so > $tmpDir/hdfs-20-test.log 2>&1
-	if [ $? -eq 0 ]; then
-		#Passed set in config file
-		$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-20.so
-		$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-20
-	
-		#check for non-root user
-		if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+  . $installdir/bin/setenv-hdfs-20
+  $installdir/bin/hdfsCheck $installdir/lib/hdfs-20.so > $tmpDir/hdfs-20-test.log 2>&1
+  if [ $? -eq 0 ]; then
+    #Passed set in config file
+    $installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-20.so
+    $installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-20
+  
+    #check for non-root user
+    if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
@@ -407,7 +407,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/columnstore start
 
 EOD
-		else
+    else
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
@@ -431,16 +431,16 @@ If installing on a non-pm1 using the non-distributed option:
 $installdir/bin/columnstore start
 
 EOD
-		fi
-	else
-		. $installdir/bin/setenv-hdfs-12
-		$installdir/bin/hdfsCheck $installdir/lib/hdfs-12.so > $tmpDir/hdfs-12-test.log 2>&1
-		if [ $? -eq 0 ]; then
-			#Passed set in config file
-			$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
-			$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-12
+    fi
+  else
+    . $installdir/bin/setenv-hdfs-12
+    $installdir/bin/hdfsCheck $installdir/lib/hdfs-12.so > $tmpDir/hdfs-12-test.log 2>&1
+    if [ $? -eq 0 ]; then
+      #Passed set in config file
+      $installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
+      $installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-12
 
-			if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+      if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
@@ -462,7 +462,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/postConfigure -i $installdir
 
 EOD
-			else
+      else
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
@@ -488,16 +488,16 @@ If installing on a non-pm1 using the non-distributed option:
 $installdir/bin/columnstore start
 
 EOD
-			fi
-		else
+      fi
+    else
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the Hadoop sanity check did not pass.  
 Most likely there is an environment setup conflict or the hdfs services are down.
 Please Contact MariaDB Columnstore Customer Support.
 EOD
-		fi
-	fi
+    fi
+  fi
 fi
 
 exit 0

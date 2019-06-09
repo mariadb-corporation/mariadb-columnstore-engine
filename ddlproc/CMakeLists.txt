@@ -28,6 +28,7 @@ target_link_libraries(DDLProc
     we_shared_h
     writeengine
     crashtrace
+    Boost::thread
     )
 
 target_pch(DDLProc)

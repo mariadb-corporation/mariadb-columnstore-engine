@@ -58,25 +58,17 @@ target_link_libraries(joblist
   
   PRIVATE
     rowgroup_h
-    common_h
     messageqcpp_h
     execplan_h
-    loggingcpp_h
     udfsdk_h
     dataconvert_h
     brm_h
     mariadb
     rwlock_h
     configcpp_h
-    querytele_h
-    threadpool_h
     funcexp_h
     oamcpp_h
-    alarmmanager_h
     idbboot_h
-    joiner_h
-    querystats_h          
-    mysql_client_h
     compress_h          
     primproc_h 
   PUBLIC

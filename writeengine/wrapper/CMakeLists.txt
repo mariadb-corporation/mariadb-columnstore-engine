@@ -37,29 +37,12 @@ add_library(writeengine SHARED
 target_link_libraries(writeengine 
   INTERFACE writeengine_h 
   PRIVATE
-  #[[
-    alarmmanager_h
-    common_h
-    compress_h 
-    configcpp_h
-    dataconvert_h
-    execplan_h
-    funcexp_h
-    idbboot_h
-    idbdatafile_h 
-    joblist_h 
-    loggingcpp_h
-    messageqcpp_h 
-    oamcpp_h
-    rwlock_h
-    ]]
     Boost::date_time
     we_shared_h
     LibXml2::LibXml2
   PUBLIC
     writeengineclient
     brm
-    cacheutils
   )
 
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)

@@ -8,7 +8,6 @@ target_link_libraries(columnstoreSupport
           common_h
           idbboot
           joblist_h
-          loggingcpp_h
           Readline::Readline
           Boost::system
           Boost::filesystem

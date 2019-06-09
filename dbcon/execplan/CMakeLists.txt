@@ -45,23 +45,16 @@ target_link_libraries(execplan
 	INTERFACE execplan_h
   PRIVATE
     Boost::thread
-    messageqcpp_h
-    loggingcpp_h
-    rowgroup_h
     common_h
     joblist_h
-    udfsdk_h
-    dataconvert_h
     ddlpackage_h
     brm_h
     mariadb
-    funcexp_h
     oamcpp_h
     configcpp_h
     alarmmanager_h
     rwlock_h
     querystats_h
-    idbboot_h
     querytele_h
     threadpool_h
   PUBLIC

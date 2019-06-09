@@ -91,3 +91,4 @@ _CPack_Packages
 .build
 **/.vs/*
 /CMakeSettings.json
+/out/*
