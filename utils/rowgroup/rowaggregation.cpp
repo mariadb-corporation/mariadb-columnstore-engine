@@ -1927,7 +1927,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 {
     uint32_t paramCount = fRGContext.getParameterCount();
     // The vector of parameters to be sent to the UDAF
-    mcsv1sdk::ColumnDatum valsIn[paramCount];
+    std::vector<mcsv1sdk::ColumnDatum> valsIn;
+    valsIn.resize(paramCount);
     uint32_t dataFlags[paramCount];
     ConstantColumn* cc;
     bool bIsNull = false;
@@ -2192,7 +2193,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     fRGContext.setUserData(fRow.getUserData(colAux));
 
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    rc = fRGContext.getFunction()->nextValue(&fRGContext, valsIn);
+    rc = fRGContext.getFunction()->nextValue(&fRGContext, &valsIn[0]);
     fRGContext.setUserData(NULL);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
