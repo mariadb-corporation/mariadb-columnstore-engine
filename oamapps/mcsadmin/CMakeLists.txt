@@ -9,16 +9,8 @@ target_link_libraries(mcsadmin
           brm
           columnstore_h
           common_h
-          compress_h
-          configcpp_h
-          execplan_h
           idbboot_h
-          idbdatafile_h
           joblist_h
-          loggingcpp_h
-          messageqcpp_h
-          oamcpp
-          rwlock_h
           we_server_h
           we_shared_h
           writeengine

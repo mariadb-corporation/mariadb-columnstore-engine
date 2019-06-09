@@ -1,59 +1,152 @@
 
-include(CheckCXXCompilerFlag)
+function(set_compile_options _switch)
+  set(CMAKE_REQUIRED_FLAGS ${_switch})
+  string(REPLACE "-" "_" switch_name ${_switch})
+  string(REPLACE "," "_" switch_name ${_switch})
+  set(switch_name ${switch_name}_supported)
+  check_cxx_compiler_flag(${_switch} ${switch_name})
+  unset(CMAKE_REQUIRED_FLAGS)
+  add_compile_options($<$<BOOL:${${switch_name}}>:${_switch}>)
+endfunction()
 
 
-add_link_options(-Wl,--demangle)
-
-#remove dead code & data
-option(REMOVE_UNUSED_SYMS "Remove unused symbols from binaries" TRUE)
-cmake_dependent_option(PRINT_REMOVED_SYMS "Print the symbols that are removed from binaries" TRUE "REMOVE_UNUSED_SYMS" FALSE)
-add_compile_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-ffunction-sections>)
-add_compile_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-fdata-sections>)
-add_link_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-Wl,--gc-sections>)
-add_link_options($<$<BOOL:${PRINT_REMOVED_SYMS}>:-Wl,--print-gc-sections>)
+set(ENV{GCC_COLORS} "error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01")
+unset(CMAKE_REQUIRE_FLAGS)
+check_cxx_compiler_flag("-fdiagnostics-color=auto" COMPILER_COLOR_MESSAGES)
+add_compile_options($<$<AND:$<BOOL:COMPILER_COLOR_MESSAGES>,$<BOOL:CMAKE_COLOR_MAKEFILE>>:-fdiagnostics-color=auto>)
 
 
-add_compile_options(-fuse-ld=bfd)
-#[[
-#use gold linker (faster than LD)
-set(USE_GOLD_FLAGS -fuse-ld=gold)
-set(CMAKE_REQUIRED_FLAGS ${USE_GOLD_FLAGS})
-check_cxx_compiler_flag(${USE_GOLD_FLAGS} gold_linker_support)
-unset(CMAKE_REQUIRED_FLAGS)
-cmake_dependent_option(USE_GOLD_LD "Use GOLD linker" TRUE ${gold_linker_support} FALSE)
-add_compile_options($<$<BOOL:${USE_GOLD_LD}>:-fuse-ld=gold>)
-mark_as_advanced(USE_GOLD_LD)
-]]
+# always on
+add_compile_options(-pipe)
+add_compile_options(-march=core2)
+add_compile_options(-mtune=generic)
+add_compile_options(-mfpmath=sse)
+add_compile_options(-fuse-cxa-atexit)
+add_compile_options($<$<CONFIG:Debug>:-ggdb3>)
+add_compile_options(-Wl,--demangle) # demangle names in error messages
+add_compile_options(-Wl,--cref) # generate cross reference is map file
+add_compile_options(-Wl,-z,combreloc) # Combine multiple dynamic relocation sections and sort to improve dynamic symbol lookup caching
+add_compile_options(-Wl,-z,now) # resolve all symbols when loaded or started rather than on-demand
+add_compile_options(-Wl,-z,relro) # mark segments are read-only after relocation
+add_compile_options(-Wl,-map) # generate map file
+
+
+add_compile_options($<$<BOOL:${CMAKE_POSITION_INDEPENDENT_CODE}>:-pie>)
+
+
+option(ENABLE_STACK_PROTECTION "Enable stack protection" TRUE)
+mark_as_advanced(ENABLE_STACK_PROTECTION)
+add_compile_options($<IF:$<BOOL:${ENABLE_STACK_PROTECTION}>,-fstack-protector-strong$<SEMICOLON>--param=ssp-buffer-size=4,-fno-stack-protector>)
+
+add_compile_definitions($<$<BOOL:${ENABLE_STACK_PROTECTION}>:_FORTIFY_SOURCE=2>)
+
+
+set(ENABLE_CONTROL_FLOW_PROTECTION full CACHE STRING "Enable control-flow protection")
+set_property(CACHE ENABLE_CONTROL_FLOW_PROTECTION PROPERTY STRINGS full branch return none)
+mark_as_advanced(ENABLE_CONTROL_FLOW_PROTECTION)
+set_compile_options(-fcf-protection=${ENABLE_CONTROL_FLOW_PROTECTION})
+
+
+if("${CMAKE_COMPILER_VERSION}" VERSION_GREATER_EQUAL "8.0")
+  option(ENABLE_STACK_CLASH_PROTECTION "Protect from stack-clash attacks" TRUE)
+  mark_as_advanced(ENABLE_STACK_CLASH_PROTECTION)
+  add_compile_options($<$<BOOL:${ENABLE_STACK_CLASH_PROTECTION}>:-fstack-clash-protection>)
+endif()
+
 
 # warnings
 set(WARNING_LEVEL all CACHE STRING "Compiler warning level")
-set_property(CACHE WARNING_LEVEL PROPERTY STRINGS 0 all extra pedantic)
+set_property(CACHE WARNING_LEVEL PROPERTY STRINGS 0 1 2 3)
 if("0" STREQUAL "${WARNING_LEVEL}")
-  add_compile_options(-w)
-elseif("all" STREQUAL "${WARNING_LEVEL}")
-  add_compile_options(-Wall)
-elseif("extra" STREQUAL "${WARNING_LEVEL}")
-  add_compile_options(-Wall -Wextra)
+  set_compile_options(-w)
+elseif("1" STREQUAL "${WARNING_LEVEL}")
+  set_compile_options(-Wall)
+elseif("2" STREQUAL "${WARNING_LEVEL}")
+  set_compile_options(-Wall)
+  set_compile_options(-Wextra)
 else()
-  add_compile_options(-pedantic)
+  set_compile_options(-Wall)
+  set_compile_options(-Wextra)
+  set_compile_options(-pedantic)
+  set_compile_options(-Wnoexcept)
+  set_compile_options(-Wnon-virtual-dtor)
+  set_compile_options(-Wreorder)
+  set_compile_options(-Weffc++)
+  set_compile_options(-Wstrict-null-sentinel)
+  set_compile_options(-Wold-style-cast)
+  set_compile_options(-Woverloaded-virtual)
+  set_compile_options(-Wmultiple-inheritance )
+  set_compile_options(-Wvirtual-inheritance)
+  set_compile_options(-Wnamespaces)
+  set_compile_options(-Wno-terminate )
+  set_compile_options(-Wchkp)
+  set_compile_options(-Wmissing-include-dirsz)
+  set_compile_options(-Wswitch-default)
+  set_compile_options(-Wswitch-enum)
+  set_compile_options(-Wsync-nand)
+  set_compile_options(-Wunused)
+  set_compile_options(-Wuninitialized)
+  set_compile_options(-Wunknown-pragmas)
+  set_compile_options(-Wduplicated-cond)
+  set_compile_options(-Wcast-align)
+  set_compile_options(-Wstack-protector)
 endif()
 
-option(_WERROR "Treat warnings as errors" FALSE)
-add_compile_options($<$<BOOL:${_WERROR}>:-Werror>)
+
+option(ENABLE_PEDANTIC_WARNINGS "Enable pedantic warnings" FALSE)
+add_compile_options($<$<BOOL:${ENABLE_PEDANTIC_WARNINGS}>:-pedantic>)
 
 
-# optimization
-set(_default_optimization 3)
-if(_DEBUG)
-  set(_default_optimization 1)
+option(ENABLE_WERROR "Treat warnings as errors" FALSE)
+add_compile_options($<$<BOOL:${ENABLE_WERROR}>:-Werror>)
+
+
+option(ENABLE_EXCEPTIONS "Enable c++ exceptions" TRUE)
+add_compile_options($<$<BOOL:${ENABLE_EXCEPTIONS}>:-fexceptions>)
+mark_as_advanced(ENABLE_EXCEPTIONS)
+
+
+#remove dead code & data
+option(REMOVE_UNUSED_SYMS "Remove unused symbols from binaries" TRUE)
+mark_as_advanced(REMOVE_UNUSED_SYMS)
+cmake_dependent_option(PRINT_REMOVED_SYMS "Print the symbols that are removed from binaries" TRUE "REMOVE_UNUSED_SYMS" FALSE)
+add_compile_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-ffunction-sections>)
+add_compile_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-fdata-sections>)
+add_compile_options($<$<BOOL:${REMOVE_UNUSED_SYMS}>:-Wl,--gc-sections>)
+add_compile_options($<$<BOOL:${PRINT_REMOVED_SYMS}>:-Wl,--print-gc-sections>)
+
+
+set(USE_LINKER ld CACHE STRING "Specify alternate linker")
+mark_as_advanced(USE_LINKER)
+set_property(CACHE USE_LINKER PROPERTY STRINGS ld gold bfd)
+if (NOT "ld" STREQUAL "${USE_LINKER}")
+  add_compile_options(-fuse-ld=${USE_LINKER})
 endif()
-set(OPTIMIZATION_LEVEL ${_default_optimization} CACHE STRING "Compiler optimization level")
-set_property(CACHE OPTIMIZATION_LEVEL PROPERTY STRINGS 0 1 2 3)
-add_compile_options(-O${OPTIMIZATION_LEVEL})
+
 
 option(OMIT_FRAME_POINTERS "Omit frame pointers" FALSE)
-add_compile_options($<IF:$<BOOL:${OMIT_FRAME_POINTERS}>,-fomit-frame-pointer,-fno-omit-frame-pointer>)
 mark_as_advanced(OMIT_FRAME_POINTERS)
+add_compile_options($<IF:$<BOOL:${OMIT_FRAME_POINTERS}>,-fomit-frame-pointer,-fno-omit-frame-pointer>)
+
+
+if(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+  add_compile_options(-Wl,-flto)
+  add_compile_options(-Wl,-fuse-linker-plugin)
+  
+  set(CMAKE_C_ARCHIVE_CREATE  <CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>)
+  set(CMAKE_C_ARCHIVE_FINISH true)
+  set(CMAKE_AR "gcc-ar")  
+endif()
+
+
+option(ENABLE_STRICT_ALIASING "Enable strict aliasing of pointers" FALSE)
+mark_as_advanced(ENABLE_STRICT_ALIASING)
+add_compile_options($<IF:$<BOOL:${ENABLE_STRICT_ALIASING}>,-fstrict-aliasing,-fno-strict-aliasing>)
+
+
+option(ENABLE_TREE_VECTORIZATION "Perform vectorization on trees" FALSE)
+mark_as_advanced(ENABLE_TREE_VECTORIZATION)
+add_compile_options($<IF:$<BOOL:${ENABLE_TREE_VECTORIZATION}>,-ftree-vectorize,-fno-tree-vectorize>)
 
 
 
@@ -72,34 +165,3 @@ add_compile_definitions($<$<BOOL:${_GLIBCXX_CONCEPT_CHECKS}>:_GLIBCXX_CONCEPT_CH
 
 option(_GLIBCXX_PROFILE "Enable libstdc++ profiling" FALSE)
 add_compile_definitions($<$<BOOL:${_GLIBCXX_PROFILE}>:_GLIBCXX_PROFILE>)
-
-message(AUTHOR_WARNING "TODO: Enable runtime checks")
-#[[
-INCLUDE(check_compiler_flag)
-
-MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
-MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
-
-# enable security hardening features, like most distributions do
-# in our benchmarks that costs about ~1% of performance, depending on the load
-IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6")
-  SET(security_default OFF)
-ELSE()
-  SET(security_default ON)
-ENDIF()
-OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
-OPTION(SECURITY_HARDENED_NEW "Use new security-enhancing compilier features" OFF)
-IF(SECURITY_HARDENED)
-  # security-enhancing flags
-  MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector --param=ssp-buffer-size=4")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-D_FORTIFY_SOURCE=2" RELEASE RELWITHDEBINFO)
-  MY_CHECK_AND_SET_COMPILER_FLAG("-fexceptions")
-  IF(SECURITY_HARDENED_NEW)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-mcet -fcf-protection")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector-strong")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-clash-protection")
-  ENDIF()
-ENDIF()
-]]

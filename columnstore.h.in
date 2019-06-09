@@ -1,4 +1,12 @@
 #pragma once
+
+
+#include <string>
+const std::string columnstore_version("@PROJECT_VERSION@");
+const std::string columnstore_release("@RELEASE_VERSION@");
+const std::string columnstore_githash("@GIT_HASH@");
+
+
 // cmake can use any of the following boolean values
 #pragma push_macro("ON")
 #pragma push_macro("OFF")
@@ -79,7 +87,7 @@
 #endif
 
 
-#if (@COLORIZE_OUTPUT@)
+#if (@CMAKE_COLOR_MAKEFILE@)
   #define WARNING( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[31mWARNING : " x "\e[0m" ))
   #define NOTE( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[32mNOTE : " x  "\e[0m"))
   #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : \e[33mTODO: " x  "\e[0m"))
@@ -89,10 +97,6 @@
   #define TODO( x ) PRAGMA_(message ( __FILE__ ":" QUOTE(__LINE__) " : TODO : " x ))
 #endif
 
-#include <string>
-const std::string columnstore_version("@PROJECT_VERSION@");
-const std::string columnstore_release("@RELEASE_VERSION@");
-const std::string columnstore_githash("@GIT_HASH@");
 
 
 #pragma pop_macro("ON")

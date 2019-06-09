@@ -18,7 +18,7 @@ target_link_libraries(idbdatafile
     alarmmanager_h
     brm_h
     common_h
-    compress_h
+    compress
     configcpp_h
     execplan_h
     idbboot_h

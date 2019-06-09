@@ -22,9 +22,7 @@ target_link_libraries(colxml
     Boost::filesystem
     brm
     common_h
-    configcpp
     dbload
-    idbdatafile_h
     joblist_h
     we_xml
     writeengine

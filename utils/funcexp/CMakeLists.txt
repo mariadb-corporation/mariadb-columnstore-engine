@@ -120,7 +120,7 @@ target_link_libraries(funcexp
     brm_h
     rwlock_h
     common_h
-    udfsdk_h
+    udfsdk
     mariadb    
     )
 

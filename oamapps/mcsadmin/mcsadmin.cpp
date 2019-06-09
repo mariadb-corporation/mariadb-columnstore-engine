@@ -24,7 +24,7 @@
 
 #include <clocale>
 #include <netdb.h>
-extern int h_errno;
+//extern int h_errno;
 
 #include "mcsadmin.h"
 #include "boost/filesystem/operations.hpp"
@@ -759,9 +759,9 @@ int processCommand(string* arguments)
             vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
             set<int>::iterator dbiter;
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "start", 5) == 0))
+      if (_strnicmp(arguments[1].c_str(), "start", 5) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "start", 5) == 0)
+      if (strncasecmp(arguments[1].c_str(), "start", 5) == 0)
 #endif
             {
                 // Get a list of all the configured dbroots in the xml file.
@@ -775,9 +775,9 @@ int processCommand(string* arguments)
                 // The user may choose to redistribute in such a way as to
                 // leave certain dbroots empty, presumably for later removal.
 #if _MSC_VER
-				if (_strnicmp(arguments[1].c_str(), "remove", 6) == 0))
+        if (_strnicmp(arguments[1].c_str(), "remove", 6) == 0))
 #else
-				if (strncasecmp(arguments[1].c_str(), "remove", 6) == 0)
+        if (strncasecmp(arguments[1].c_str(), "remove", 6) == 0)
 #endif
                 {
                     int dbroot;
@@ -898,9 +898,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
+      if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
+      if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
 #endif
             {
                 ByteStream bs;
@@ -912,9 +912,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
+      if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
+      if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
 #endif
             {
                 ByteStream bs;
@@ -2614,8 +2614,8 @@ int processCommand(string* arguments)
 
                 if ( DBRootStorageType == "hdfs")
                 {
-					string logFile = tmpDir + "/cc-stop.pdsh";
-					
+          string logFile = tmpDir + "/cc-stop.pdsh";
+          
                     cmd = "pdsh -a '/" + installDir + "/bin/columnstore stop' > " + logFile + " 2>&1";
                     system(cmd.c_str());
 
@@ -2665,7 +2665,7 @@ int processCommand(string* arguments)
 
                 if ( DBRootStorageType == "hdfs")
                 {
-					string logFile = tmpDir + "cc-stop.pdsh";
+          string logFile = tmpDir + "cc-stop.pdsh";
                     cmd = "pdsh -a '" + installDir + "/bin/columnstore stop' > " + logFile + " 2>&1";
                     system(cmd.c_str());
 
@@ -2772,7 +2772,7 @@ int processCommand(string* arguments)
 
                     if ( DBRootStorageType == "hdfs")
                     {
-						string logFile = tmpDir + "/cc-restart.pdsh";
+            string logFile = tmpDir + "/cc-restart.pdsh";
                         cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + logFile + " 2>&1";
                         system(cmd.c_str());
 
@@ -3014,7 +3014,7 @@ int processCommand(string* arguments)
 
                     if ( DBRootStorageType == "hdfs")
                     {
-						string logFile = tmpDir + "/cc-restart.pdsh";
+            string logFile = tmpDir + "/cc-restart.pdsh";
                         cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + logFile + " 2>&1";
                         system(cmd.c_str());
 
@@ -4924,10 +4924,10 @@ int processCommand(string* arguments)
 
         case 39: // getSystemDirectories
         {
-			cout << endl << "System Installation and Temporary File Directories" << endl << endl;
-			
-			cout << "System Installation Directory = " << installDir << endl;
-			cout << "System Temporary File Directory = " << tmpDir << endl << endl;
+      cout << endl << "System Installation and Temporary File Directories" << endl << endl;
+      
+      cout << "System Installation Directory = " << installDir << endl;
+      cout << "System Temporary File Directory = " << tmpDir << endl << endl;
         }
         break;
 
@@ -5576,25 +5576,25 @@ int processCommand(string* arguments)
 
             if ( rootUser)
             {
-				string logFile = tmpDir + "/columnstore.log";
-				string cmd = "rpm -qi mariadb-columnstore-platform > " + logFile + " 2>&1";
+        string logFile = tmpDir + "/columnstore.log";
+        string cmd = "rpm -qi mariadb-columnstore-platform > " + logFile + " 2>&1";
                 int rtnCode = system(cmd.c_str());
 
                 if (WEXITSTATUS(rtnCode) == 0)
                 {
-					string cmd = "cat " + logFile;
+          string cmd = "cat " + logFile;
                     system(cmd.c_str());
-				}
+        }
                 else
                 {
-					string cmd = "dpkg -s mariadb-columnstore-platform > " + logFile + " 2>&1";
+          string cmd = "dpkg -s mariadb-columnstore-platform > " + logFile + " 2>&1";
                     rtnCode =  system(cmd.c_str());
 
                     if (WEXITSTATUS(rtnCode) == 0)
                     {
-						string cmd = "cat " + logFile;
-						system(cmd.c_str());
-					}
+            string cmd = "cat " + logFile;
+            system(cmd.c_str());
+          }
                    else
                     {
                         cout << "SoftwareVersion = " << columnstore_version << endl;
@@ -7894,32 +7894,32 @@ int processCommand(string* arguments)
                 {
                     if (systemstatus.SystemOpState == oam::ACTIVE )
                     {
-						try
-						{
-							cout << endl << "   Restarting System " << endl;
-							gracefulTemp = oam::FORCEFUL;
-							int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
-							switch (returnStatus)
-							{ 
-								case API_SUCCESS:
-									if ( waitForActive() )
-										cout << endl << "   Successful restart of System " << endl << endl;
-									else
-										cout << endl << "**** restartSystem Failed : check log files" << endl;
-									break;
-								case API_CANCELLED:
-									cout << endl << "   Restart of System canceled" << endl << endl;
-									break;
-								default:
-									cout << endl << "**** restartSystem Failed : Check system logs" << endl;
-									break;
-							}
-						}
-						catch (exception& e)
-						{
-							cout << endl << "**** restartSystem Failed :  " << e.what() << endl;
-							break;
-						}
+            try
+            {
+              cout << endl << "   Restarting System " << endl;
+              gracefulTemp = oam::FORCEFUL;
+              int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
+              switch (returnStatus)
+              { 
+                case API_SUCCESS:
+                  if ( waitForActive() )
+                    cout << endl << "   Successful restart of System " << endl << endl;
+                  else
+                    cout << endl << "**** restartSystem Failed : check log files" << endl;
+                  break;
+                case API_CANCELLED:
+                  cout << endl << "   Restart of System canceled" << endl << endl;
+                  break;
+                default:
+                  cout << endl << "**** restartSystem Failed : Check system logs" << endl;
+                  break;
+              }
+            }
+            catch (exception& e)
+            {
+              cout << endl << "**** restartSystem Failed :  " << e.what() << endl;
+              break;
+            }
                     }
                     else
                         cout << endl << "   System not Active, run 'startSystem' to start system if needed" << endl;
@@ -9229,24 +9229,24 @@ void printSystemStatus()
         if ( MySQLRep == "y" )
             cout << "MariaDB ColumnStore Replication Feature is enabled" << endl;
 
-		//display Distributed Install feature
+    //display Distributed Install feature
         if ( SingleServerInstall == "n" )
         {
-			string DistributedInstall;
+      string DistributedInstall;
 
-			try
-			{
-				oam.getSystemConfig("DistributedInstall", DistributedInstall);
-				
-				if ( DistributedInstall == "y" )
-					cout << "MariaDB ColumnStore set for Distributed Install" << endl;
-				else
-					cout << "MariaDB ColumnStore set for Non-Distributed Install" << endl;
-			}
-			catch (...) {}
-			
-			cout << endl;
-		}
+      try
+      {
+        oam.getSystemConfig("DistributedInstall", DistributedInstall);
+        
+        if ( DistributedInstall == "y" )
+          cout << "MariaDB ColumnStore set for Distributed Install" << endl;
+        else
+          cout << "MariaDB ColumnStore set for Non-Distributed Install" << endl;
+      }
+      catch (...) {}
+      
+      cout << endl;
+    }
     }
     catch (exception& e)
     {

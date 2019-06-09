@@ -9,14 +9,10 @@ add_executable(DMLProc
 
 target_link_libraries(DMLProc 
   PRIVATE
-    rwlock_h
-    alarmmanager
     batchloader
     brm
     cacheutils_h
     common_h
-    compress_h
-    configcpp
     crashtrace
     dataconvert_h
     ddlcleanuputil
@@ -24,13 +20,8 @@ target_link_libraries(DMLProc
     dmlpackageproc
     funcexp_h
     idbboot_h
-    idbdatafile_h
     joblist_h
-    loggingcpp
     mariadb
-    messageqcpp
-    execplan
-    oamcpp
     querystats_h
     querytele_h
     rowgroup_h

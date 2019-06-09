@@ -14,7 +14,7 @@ target_link_libraries(joiner
     Boost::system
     joblist_h
     rowgroup_h
-    common_h
+    common
     messageqcpp_h
     execplan_h
     loggingcpp_h

@@ -1,15 +1,31 @@
 
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
-project(columnstore 
+project(columnstore
+  LANGUAGES C CXX
   VERSION 1.4.0.0
   DESCRIPTION "Massively parallel and distributed columnar storage engine"
   HOMEPAGE_URL "https://mariadb.com/kb/en/library/mariadb-columnstore/")
 set(RELEASE_VERSION 1)
 
-option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during compilation?" TRUE)
+
+
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
+
+find_package(Flex REQUIRED)
+find_package(Perl REQUIRED)
+find_package(Python COMPONENTS Interpreter)
+find_package(Threads REQUIRED)
+find_package(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
+find_package(BISON REQUIRED)
+find_package(Readline REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(Snappy REQUIRED)
+find_package(JeMalloc REQUIRED)
+find_package(Git)
+
 
 include(CMakeDependentOption)
 include(CMakeGraphVizOptions)
@@ -18,12 +34,11 @@ include(CheckCXXSourceCompiles)
 include(CheckCXXCompilerFlag)
 include(colorize)
 
+
 string(TIMESTAMP _tmp "%b %d %y %H:%M:%S")
 status("${_tmp}")
 unset(_tmp)
 status("ColumnStore ver. ${PROJECT_VERSION} rel. ${RELEASE_VERSION}")
-
-find_package(Git)
 
 set(GIT_HASH "Unknown")
 if(Git_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
@@ -49,7 +64,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE TRUE)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
@@ -59,69 +73,55 @@ set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/.external)
 list(APPEND ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/.external)
 
 
+option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during compilation?" TRUE)
+
+
+option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" TRUE)
+mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
+
+
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable link-time optimizations" TRUE)
+mark_as_advanced(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+
+
 if(NOT SERVER_BUILD_DIR)
-	error("Missing parameter: SERVER_BUILD_DIR")
+  if(SERVER_BUILD_INCLUDE_DIR)
+    set(SERVER_BUILD_DIR ${SERVER_BUILD_INCLUDE_DIR}/..)
+  else()
+    error("Missing parameter: SERVER_BUILD_DIR")
+  endif()
 endif()
 
 find_path(SERVER_BUILD_DIR CMakeCache.txt 
-	HINTS ${SERVER_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${SERVER_BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${SERVER_BUILD_DIR}
-	DOC "Path to MariaDB Server CMakeCache.txt"
-	NO_DEFAULT_PATH
-	)
+  HINTS ${SERVER_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${SERVER_BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${SERVER_BUILD_DIR}
+  DOC "Path to MariaDB Server CMakeCache.txt"
+  NO_DEFAULT_PATH
+  )
 
 if(NOT EXISTS "${SERVER_BUILD_DIR}/CMakeCache.txt")
   error("Required parameter must point to the server build directory: SERVER_BUILD_DIR")
 endif()
 
 load_cache("${SERVER_BUILD_DIR}" READ_WITH_PREFIX SERVER_ 
-	MySQL_SOURCE_DIR MySQL_BINARY_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
-	mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
-	)
+  MySQL_SOURCE_DIR MySQL_BINARY_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
+  mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
+  )
+
+status("Server build directory: ${SERVER_BUILD_DIR}")
 
 set(SERVER_SOURCE_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
 set(SERVER_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
 set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-set(_DEBUG $<CONFIG:Debug>)
-add_compile_definitions($<IF:$<CONFIG:Debug>,_DEBUG,NDEBUG>)
+set(_DEBUG FALSE)
+if("Debug" STREQUAL "${CMAKE_BUILD_TYPE}")
+  set(_DEBUG TRUE)
+endif()
 status("Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(Threads REQUIRED)
-find_package(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
-find_package(BISON REQUIRED)
-find_package(Readline REQUIRED)
-find_package(LibXml2 REQUIRED)
-find_package(Perl REQUIRED)
-
-FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
-if(NOT LEX_EXECUTABLE)
-    FIND_PROGRAM(LEX_EXECUTABLE lex DOC "path to the lex executable")
-    if(NOT LEX_EXECUTABLE)
-        message(FATAL_ERROR "flex/lex not found!")
-    endif()
-endif()
 
 
-INCLUDE (FindSnappy)
-if (NOT SNAPPY_FOUND)
-    MESSAGE(FATAL_ERROR "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
-endif()
 
-# Jemalloc has issues with SLES 12, so disable for now
-IF (EXISTS "/etc/SuSE-release")
-    SET(JEMALLOC_LIBRARIES "")
-ELSE ()
-    INCLUDE (FindJeMalloc)
-    if (NOT JEMALLOC_FOUND)
-        message(FATAL_ERROR "jemalloc not found!")
-        SET(JEMALLOC_LIBRARIES "")
-    endif()
-ENDIF ()
-
-FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
-if(NOT AWK_EXECUTABLE)
-    message(FATAL_ERROR "awk not found!")
-endif()
 # Distinguish between community and non-community builds, with the
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to
@@ -136,10 +136,22 @@ if(BUILD_TESTING)
   include(cppunit)
 endif()
 
+if("GNU" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
+  include(gcc)
+elseif("Clang" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
+  include(clang)
+elseif("Intel" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
+  include(intel)
+endif()
+
 
 include(check_compiler_flag)
 include(ccache)
 include(pch)
+include(iwyu)
+include(cpplint)
+include(cppcheck)
+include(clang-tidy)
 
 
 SET (PACKAGE columnstore)
@@ -179,16 +191,6 @@ IF("${isSystemDir}" STREQUAL "-1")
 ENDIF()
 
 
-if("GNU" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
-  include(gcc)
-elseif("Clang" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
-  include(clang)
-elseif("Intel" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
-  include(intel)
-endif()
-
-
-
 INCLUDE (configureEngine)
 
 # releasenum is used by external scripts for various tasks. Leave it alone.
@@ -199,21 +201,24 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstore.h.in ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h @ONLY)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h)
 
-SET (ENGINE_LIBDIR     "lib")
-SET (ENGINE_BINDIR     "bin")
-SET (ENGINE_INCDIR     "include")
-SET (ENGINE_ETCDIR     "etc")
-SET (ENGINE_SYSCONFDIR "etc")
-SET (ENGINE_MANDIR     "man")
-SET (ENGINE_SBINDIR    "sbin")
-SET (ENGINE_SHAREDIR   "share")
-SET (ENGINE_POSTDIR    "post")
-SET (ENGINE_LOCALDIR   "local")
-SET (ENGINE_MYSQLDIR   "mysql")
-SET (ENGINE_TOOLSDIR   "tools")
+SET (ENGINE_LIBDIR     lib)
+SET (ENGINE_BINDIR     bin)
+SET (ENGINE_INCDIR     include)
+SET (ENGINE_ETCDIR     etc)
+SET (ENGINE_SYSCONFDIR etc)
+SET (ENGINE_MANDIR     man)
+SET (ENGINE_SBINDIR    sbin)
+SET (ENGINE_SHAREDIR   share)
+SET (ENGINE_POSTDIR    post)
+SET (ENGINE_LOCALDIR   local)
+SET (ENGINE_MYSQLDIR   mysql)
+SET (ENGINE_TOOLSDIR   tools)
 
 add_library(columnstore_h INTERFACE)
 target_include_directories(columnstore_h INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(mariadb_h INTERFACE)
+target_include_directories(mariadb_h INTERFACE "${SERVER_MySQL_SOURCE_DIR}/include;${SERVER_MySQL_BINARY_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include")
 
 add_library(mariadb STATIC IMPORTED)
 set_target_properties(mariadb PROPERTIES
@@ -222,6 +227,7 @@ set_target_properties(mariadb PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "SAFE_MUTEX;SAFEMALLOC"
   INTERFACE_COMPILE_DEFINITIONS $<IF:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
 )
+
 
 add_library(mariadb_sql INTERFACE)
 target_include_directories(mariadb_sql INTERFACE ${SERVER_SOURCE_DIR}/sql)
@@ -269,6 +275,15 @@ add_library(writeengine_h       INTERFACE)
 add_library(we_shared_h         INTERFACE)
 add_library(we_xml_h            INTERFACE)
 add_library(we_server_h         INTERFACE)
+
+
+function(cs_add_library)
+  add_library(${ARGN})
+endfunction()
+
+function(cs_add_executable)
+  add_executable(${ARGN})
+endfunction()
 
 
 

@@ -4,18 +4,14 @@ if(NOT Readline_ROOT)
 endif()
 
 if(NOT Readline_ROOT)
-  find_path(_Readline_ROOT NAMES include/readline/readline.h)
-else()
-  set(_Readline_ROOT "${Readline_ROOT}")
+  find_path(Readline_ROOT NAMES include/readline/readline.h)
 endif()
 
-find_path(Readline_INCLUDE_DIRS NAMES readline/readline.h HINTS ${_Readline_ROOT}/include)
+find_path(Readline_INCLUDE_DIRS NAMES readline/readline.h HINTS ${Readline_ROOT}/include)
 
-find_library(Readline_LIBRARIES NAMES readline 
-  HINTS ${_Readline_ROOT}/lib64 ${_Readline_ROOT}/lib 
-      ${_Readline_ROOT}/lib64/x86_64-linux-gnu ${_Readline_ROOT}/lib/x86_64-linux-gnu)
+find_library(Readline_LIBRARIES NAMES readline HINTS ${Readline_ROOT}/lib64 ${Readline_ROOT}/lib )
 
-
+mark_as_advanced(Readline_ROOT Readline_INCLUDE_DIRS Readline_LIBRARIES)
 
 
 file(STRINGS ${Readline_INCLUDE_DIRS}/readline/readline.h _RL_VERS REGEX "^[ \t]*#define[ \t]+RL_VERSION_(MAJOR|MINOR)")
@@ -28,7 +24,7 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(Readline FOUND_VAR Readline_FOUND
+find_package_handle_standard_args(Readline 
   REQUIRED_VARS Readline_INCLUDE_DIRS Readline_LIBRARIES
   VERSION_VAR Readline_VERSION
   )
@@ -40,4 +36,4 @@ set_target_properties(Readline::Readline PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${Readline_INCLUDE_DIRS}
   )
 
-unset(_Readline_ROOT)
+

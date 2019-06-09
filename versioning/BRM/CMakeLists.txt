@@ -33,19 +33,11 @@ target_link_libraries(brm
   PRIVATE
     alarmmanager_h         
     Boost::system   
-    cacheutils_h
     common_h
     dataconvert_h
-    execplan_h
     idbboot_h
-    idbdatafile_h
     joblist_h
-    loggingcpp_h
-    messageqcpp_h
-    oamcpp_h
-    rwlock_h
-    configcpp_h
-    snappy
+    Snappy::Snappy
   PUBLIC
     rt
     loggingcpp
