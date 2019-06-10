@@ -1757,7 +1757,7 @@ uint32_t doUpdateDelete(THD* thd)
 
         gwi.clauseType = WHERE;
 
-        if (getSelectPlan(gwi, select_lex, updateCP) != 0) //@Bug 3030 Modify the error message for unsupported functions
+        if (getSelectPlan(gwi, select_lex, updateCP, false, true) != 0) //@Bug 3030 Modify the error message for unsupported functions
         {
             if (MIGR::infinidb_vtable.isUpdateWithDerive)
             {

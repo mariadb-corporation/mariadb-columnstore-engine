@@ -5399,7 +5399,7 @@ void gp_walk(const Item* item, void* arg)
                     {
                         vector <Item_field*> fieldVec;
                         uint16_t parseInfo = 0;
-                        parse_item(it, fieldVec, gwip->fatalParseError, parseInfo);
+                        parse_item(it, fieldVec, gwip->fatalParseError, parseInfo, gwip);
 
                         if (parseInfo & CORRELATED)
                         {
@@ -5794,7 +5794,6 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
             for (uint32_t i = 0; i < isp->argument_count(); i++)
                 parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
-//				parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
             break;
         }
 
@@ -5805,7 +5804,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
             Item* cond_item;
 
             while ((cond_item = it++))
-                parse_item(cond_item, field_vec, hasNonSupportItem, parseInfo);
+                parse_item(cond_item, field_vec, hasNonSupportItem, parseInfo, gwi);
 
             break;
         }
@@ -6086,7 +6085,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 (table_ptr->derived->first_select())->print(gwi.thd, &str, QT_ORDINARY);
 
                 SELECT_LEX* select_cursor = table_ptr->derived->first_select();
-                FromSubQuery fromSub(gwi, select_cursor, isPushdownHand);
+                FromSubQuery fromSub(gwi, select_cursor, false, isPushdownHand);
                 string alias(table_ptr->alias.str);
                 fromSub.alias(lower(alias));
 
@@ -6289,62 +6288,63 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 #ifdef OUTER_JOIN_DEBUG
     List<TABLE_LIST>* tables = &(select_lex.top_join_list);
     List_iterator_fast<TABLE_LIST> ti(*tables);
-    //TABLE_LIST *inner;
-    //TABLE_LIST **table= (TABLE_LIST **)gwi.thd->alloc(sizeof(TABLE_LIST*) * tables->elements);
-    //for (TABLE_LIST **t= table + (tables->elements - 1); t >= table; t--)
-    //	*t= ti++;
 
-    //DBUG_ASSERT(tables->elements >= 1);
+    TABLE_LIST **table= (TABLE_LIST **)gwi.thd->alloc(sizeof(TABLE_LIST*) * tables->elements);
+    for (TABLE_LIST **t= table + (tables->elements - 1); t >= table; t--)
+    	*t= ti++;
 
-    //TABLE_LIST **end= table + tables->elements;
-    //for (TABLE_LIST **tbl= table; tbl < end; tbl++)
-    TABLE_LIST* curr;
+    DBUG_ASSERT(tables->elements >= 1);
 
-    while ((curr = ti++))
+    TABLE_LIST **end= table + tables->elements;
+    for (TABLE_LIST **tbl= table; tbl < end; tbl++)
     {
-        TABLE_LIST* curr = *tbl;
+        TABLE_LIST* curr;
 
-        if (curr->table_name)
-            cerr << curr->table_name << " ";
-        else
-            cerr << curr->alias << endl;
-
-        if (curr->outer_join)
-            cerr << " is inner table" << endl;
-        else if (curr->straight)
-            cerr << "straight_join" << endl;
-        else
-            cerr << "join" << endl;
-
-        if (curr->nested_join)
+        while ((curr = ti++))
         {
-            List<TABLE_LIST>* inners = &(curr->nested_join->join_list);
-            List_iterator_fast<TABLE_LIST> li(*inners);
-            TABLE_LIST** inner = (TABLE_LIST**)gwi.thd->alloc(sizeof(TABLE_LIST*) * inners->elements);
+            TABLE_LIST* curr = *tbl;
 
-            for (TABLE_LIST** t = inner + (inners->elements - 1); t >= inner; t--)
-                *t = li++;
+            if (curr->table_name.length)
+                cerr << curr->table_name.str << " ";
+            else
+                cerr << curr->alias.str << endl;
 
-            TABLE_LIST** end1 = inner + inners->elements;
+            if (curr->outer_join)
+                cerr << " is inner table" << endl;
+            else if (curr->straight)
+                cerr << "straight_join" << endl;
+            else
+                cerr << "join" << endl;
 
-            for (TABLE_LIST** tb = inner; tb < end1; tb++)
+            if (curr->nested_join)
             {
-                TABLE_LIST* curr1 = *tb;
-                cerr << curr1->alias << endl;
+                List<TABLE_LIST>* inners = &(curr->nested_join->join_list);
+                List_iterator_fast<TABLE_LIST> li(*inners);
+                TABLE_LIST** inner = (TABLE_LIST**)gwi.thd->alloc(sizeof(TABLE_LIST*) * inners->elements);
 
-                if (curr1->sj_on_expr)
+                for (TABLE_LIST** t = inner + (inners->elements - 1); t >= inner; t--)
+                    *t = li++;
+
+                TABLE_LIST** end1 = inner + inners->elements;
+
+                for (TABLE_LIST** tb = inner; tb < end1; tb++)
                 {
-                    curr1->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+                    TABLE_LIST* curr1 = *tb;
+                    cerr << curr1->alias.str << endl;
+
+                    if (curr1->sj_on_expr)
+                    {
+                        curr1->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+                    }
                 }
             }
-        }
 
-        if (curr->sj_on_expr)
-        {
-            curr->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+            if (curr->sj_on_expr)
+            {
+                curr->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+            }
         }
     }
-
 #endif
 
     uint32_t failed = buildOuterJoin(gwi, select_lex);
@@ -8137,6 +8137,8 @@ int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep)
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
+    // Derived table projection and filter optimization.
+    derivedTableOptimization(csep);
 
     return 0;
 }
