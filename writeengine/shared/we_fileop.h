@@ -50,6 +50,8 @@
 #define EXPORT
 #endif
 
+#define MAX_NBLOCKS 8192
+
 #include "brmtypes.h"
 
 /** Namespace WriteEngine */
@@ -89,6 +91,15 @@ public:
                                     uint16_t dbRoot, uint32_t partition,
                                     execplan::CalpontSystemCatalog::ColDataType colDataType,
                                     uint64_t emptyVal = 0, int width = 1 ) ;
+
+
+    /**
+     * @brief Create a file with a fixed file size by its name.
+     * Changed to public for UT.
+     */
+    int                 createFile( const char* fileName, int fileSize,
+                                    uint64_t emptyVal, int width,
+                                    uint16_t dbRoot );
 
     /**
      * @brief Delete a file
@@ -324,13 +335,15 @@ public:
      * @param blockHdrInit(in) - data used to initialize each block header
      * @param blockHdrInitSize(in) - number of bytes in blockHdrInit
      * @param bExpandExtent (in) -  Expand existing extent, or initialize new one
+     * @param bOptExtension (in) - skip or optimize full extent preallocation
      */
     EXPORT int          initDctnryExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
                                           int      nBlocks,
                                           unsigned char* blockHdrInit,
                                           int      blockHdrInitSize,
-                                          bool     bExpandExtent );
+                                          bool     bExpandExtent,
+                                          bool     bOptExtension = false );
 
     /**
      * @brief Check whether it is an directory
@@ -463,6 +476,25 @@ public:
     int                 compressionType() const;
 
     EXPORT virtual int  flushFile(int rc, std::map<FID, FID>& oids);
+    // Initialize an extent in a column segment file
+    // pFile (in) IDBDataFile* of column segment file to be written to
+    // dbRoot (in) - DBRoot of pFile
+    // nBlocks (in) - number of blocks to be written for an extent
+    // emptyVal(in) - empty value to be used for column data values
+    // width (in) - width of the applicable column
+    // bNewFile (in)      -  Adding extent to new file
+    // bExpandExtent (in) -  Expand existing extent, or initialize new one
+    // bAbbrevExtent (in) -  If adding new extent, is it abbreviated
+    // bOptExtension(in) - skip or optimize full extent preallocation
+    int                 initColumnExtent( IDBDataFile*    pFile,
+                                          uint16_t dbRoot,
+                                          int      nBlocks,
+                                          uint64_t emptyVal,
+                                          int      width,
+                                          bool     bNewFile,
+                                          bool     bExpandExtent,
+                                          bool     bAbbrevExtent,
+                                          bool     bOptExtension=false );
 
 protected:
     EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);
@@ -475,10 +507,6 @@ private:
     FileOp(const FileOp& rhs);
     FileOp& operator=(const FileOp& rhs);
 
-    int                 createFile( const char* fileName, int fileSize,
-                                    uint64_t emptyVal, int width,
-                                    uint16_t dbRoot );
-
     int                 expandAbbrevColumnChunk( IDBDataFile* pFile,
             uint64_t   emptyVal,
             int   colWidth,
@@ -490,24 +518,6 @@ private:
             int      nBlocks,
             uint64_t      emptyVal,
             int      width);
-
-    // Initialize an extent in a column segment file
-    // pFile (in) IDBDataFile* of column segment file to be written to
-    // dbRoot (in) - DBRoot of pFile
-    // nBlocks (in) - number of blocks to be written for an extent
-    // emptyVal(in) - empty value to be used for column data values
-    // width (in) - width of the applicable column
-    // bNewFile (in)      -  Adding extent to new file
-    // bExpandExtent (in) -  Expand existing extent, or initialize new one
-    // bAbbrevExtent (in) -  If adding new extent, is it abbreviated
-    int                 initColumnExtent( IDBDataFile*    pFile,
-                                          uint16_t dbRoot,
-                                          int      nBlocks,
-                                          uint64_t emptyVal,
-                                          int      width,
-                                          bool     bNewFile,
-                                          bool     bExpandExtent,
-                                          bool     bAbbrevExtent );
 
     static void         initDbRootExtentMutexes();
     static void         removeDbRootExtentMutexes();

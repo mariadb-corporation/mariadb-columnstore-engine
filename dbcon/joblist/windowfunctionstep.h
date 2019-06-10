@@ -134,15 +134,15 @@ private:
     uint64_t nextFunctionIndex();
 
     boost::shared_ptr<windowfunction::FrameBound> parseFrameBound(const execplan::WF_Boundary&,
-            const map<uint64_t, uint64_t>&, const vector<execplan::SRCP>&,
+            const std::map<uint64_t, uint64_t>&, const std::vector<execplan::SRCP>&,
             const boost::shared_ptr<ordering::EqualCompData>&, JobInfo&, bool, bool);
     boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRows(
-        const execplan::WF_Boundary&, const map<uint64_t, uint64_t>&, JobInfo&);
+        const execplan::WF_Boundary&, const std::map<uint64_t, uint64_t>&, JobInfo&);
     boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRange(
-        const execplan::WF_Boundary&, const map<uint64_t, uint64_t>&, const vector<execplan::SRCP>&,
+        const execplan::WF_Boundary&, const std::map<uint64_t, uint64_t>&, const std::vector<execplan::SRCP>&,
         JobInfo&);
-    void updateWindowCols(execplan::ParseTree*, const map<uint64_t, uint64_t>&, JobInfo&);
-    void updateWindowCols(execplan::ReturnedColumn*, const map<uint64_t, uint64_t>&, JobInfo&);
+    void updateWindowCols(execplan::ParseTree*, const std::map<uint64_t, uint64_t>&, JobInfo&);
+    void updateWindowCols(execplan::ReturnedColumn*, const std::map<uint64_t, uint64_t>&, JobInfo&);
     void sort(std::vector<joblist::RowPosition>::iterator, uint64_t);
 
     void formatMiniStats();

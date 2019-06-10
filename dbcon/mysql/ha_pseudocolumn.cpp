@@ -53,8 +53,6 @@ void bailout(char* error, const string& funcName)
 
 int64_t idblocalpm()
 {
-    THD* thd = current_thd;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 

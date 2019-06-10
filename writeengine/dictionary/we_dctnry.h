@@ -56,6 +56,17 @@ typedef struct Signature
     Token token;
 } Signature;
 
+struct sig_compare {
+	bool operator() (const Signature& a, const Signature& b) const {
+		if (a.size == b.size){
+			return memcmp(a.signature,b.signature,a.size)<0;}
+		else if (a.size<b.size){
+			return true;
+		}else{ return false;}
+	}
+}; 
+
+
 /**
  * @brief Class to interface with dictionary store files.
  */
@@ -131,6 +142,10 @@ public:
     EXPORT uint64_t     getCurLbid()
     {
         return m_curLbid;
+    }
+    const unsigned char* getDctnryHeader2() const
+    {
+        return m_dctnryHeader2;
     }
 
     /**
@@ -222,6 +237,17 @@ public:
     {
         return NO_ERROR;
     }
+    /**
+    * @brief Use this only in Unit Tests and not in prod
+    */
+    virtual IDBDataFile* createDctnryFileUnit(const char* name,
+        int width,
+        const char* mode,
+        int ioBuffSize)
+    {
+        return createDctnryFile(name, width, mode, ioBuffSize);
+    }
+
 
 //------------------------------------------------------------------------------
 // Protected members
@@ -285,7 +311,7 @@ protected:
     virtual void  closeDctnryFile(bool doFlush, std::map<FID, FID>& oids);
     virtual int   numOfBlocksInFile();
 
-    Signature    m_sigArray[MAX_STRING_CACHE_SIZE]; // string cache
+    std::set<Signature,sig_compare> m_sigArray;
     int          m_arraySize;                       // num strings in m_sigArray
 
     // m_dctnryHeader  used for hdr when readSubBlockEntry is used to read a blk

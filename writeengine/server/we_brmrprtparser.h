@@ -31,11 +31,9 @@
 
 #include <fstream>
 #include <iostream>
-using namespace std;
 
 #include "bytestream.h"
 #include "messagequeue.h"
-using namespace messageqcpp;
 
 /*
  *

@@ -64,7 +64,7 @@ class BulkLoad : public FileOp
 public:
 
     /**
-     * @brief BulkLoad onstructor
+     * @brief BulkLoad constructor
      */
     EXPORT              BulkLoad();
 

@@ -267,7 +267,7 @@ public:
                                 bool bDelete = false);
 
     /**
-     * @brief Write row(s) for update and delete  @Bug 1886,2870
+     * @brief Write row(s) for delete  @Bug 1886,2870
      */
     EXPORT virtual int writeRows(Column& curCol,
                                  uint64_t totalRow,
@@ -277,7 +277,7 @@ public:
                                  bool bDelete = false);
 
     /**
-     * @brief Write row(s) for update and delete  @Bug 1886,2870
+     * @brief Write row(s) for update @Bug 1886,2870
      */
     EXPORT virtual int writeRowsValues(Column& curCol,
                                        uint64_t totalRow,

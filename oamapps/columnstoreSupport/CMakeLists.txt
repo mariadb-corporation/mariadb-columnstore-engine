@@ -8,6 +8,8 @@ set(columnstoreSupport_SRCS columnstoreSupport.cpp)
 
 add_executable(columnstoreSupport ${columnstoreSupport_SRCS})
 
+target_compile_options(columnstoreSupport PRIVATE -Wno-unused-result)
+
 target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses  ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

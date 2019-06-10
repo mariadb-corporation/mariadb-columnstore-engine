@@ -54,8 +54,8 @@ int64_t Func_yearweek::getIntVal(rowgroup::Row& row,
 
     int64_t val = 0;
     int16_t mode = 0;	// default to 2
-    DateTime aDateTime;
-    Time     aTime;
+    dataconvert::DateTime aDateTime;
+    dataconvert::Time     aTime;
 
     if (parm.size() > 1)   // mode value
         mode = parm[1]->data()->getIntVal(row, isNull);
@@ -92,7 +92,7 @@ int64_t Func_yearweek::getIntVal(rowgroup::Row& row,
 
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
-            aDateTime = static_cast<DateTime>(nowDatetime());
+            aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
             aTime.day = 0;
             val = addTime(aDateTime, aTime);

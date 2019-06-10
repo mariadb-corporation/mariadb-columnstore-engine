@@ -39,7 +39,7 @@ mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    context->setResultType(CalpontSystemCatalog::TINYINT);
+    context->setResultType(execplan::CalpontSystemCatalog::TINYINT);
 
     return mcsv1_UDAF::SUCCESS;
 }

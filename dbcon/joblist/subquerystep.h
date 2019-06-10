@@ -227,11 +227,11 @@ public:
 
     /** @brief add function columns (returned columns)
      */
-    void addExpression(const vector<execplan::SRCP>&);
+    void addExpression(const std::vector<execplan::SRCP>&);
 
     /** @brief add function join expresssion
      */
-    void addFcnJoinExp(const vector<execplan::SRCP>&);
+    void addFcnJoinExp(const std::vector<execplan::SRCP>&);
 
 
 protected:

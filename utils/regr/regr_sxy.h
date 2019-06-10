@@ -25,8 +25,7 @@
  * Columnstore interface for for the regr_sxy function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_sxy returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_sxy returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_regr_sxy
@@ -44,7 +43,6 @@
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
-using namespace execplan;
 
 #if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)

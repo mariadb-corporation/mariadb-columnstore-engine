@@ -849,10 +849,11 @@ void printInputSource(
         if (alternateImportDir == IMPORT_PATH_CWD)
         {
             char cwdBuf[4096];
-            ::getcwd(cwdBuf, sizeof(cwdBuf));
+            char *bufPtr = &cwdBuf[0];
+            bufPtr = ::getcwd(cwdBuf, sizeof(cwdBuf));
 
             if (!(BulkLoad::disableConsoleOutput()))
-                cout << "Input file(s) will be read from : " << cwdBuf << endl;
+                cout << "Input file(s) will be read from : " << bufPtr << endl;
         }
         else
         {
@@ -1040,7 +1041,11 @@ int main(int argc, char** argv)
 #ifdef _MSC_VER
     _setmaxstdio(2048);
 #else
-    setuid( 0 ); // set effective ID to root; ignore return status
+    // set effective ID to root
+    if( setuid( 0 ) < 0 )
+    {
+        std::cerr << " cpimport: couldn't set uid " << std::endl;
+    } 
 #endif
     setupSignalHandlers();
 

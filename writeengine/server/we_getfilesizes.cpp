@@ -269,8 +269,8 @@ int WE_GetFileSizes::processFileName(
     std::string& errMsg, int key)
 {
     uint8_t rc = 0;
-    off_t fileSize;
-    off_t compressedFileSize;
+    off_t fileSize = 0;
+    off_t compressedFileSize = 0;
     errMsg.clear();
 
     try

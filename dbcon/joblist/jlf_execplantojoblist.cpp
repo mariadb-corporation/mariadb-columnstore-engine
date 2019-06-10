@@ -1644,7 +1644,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         string constval(cc->constval());
 
-
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
         const PseudoColumn* pc = dynamic_cast<const PseudoColumn*>(sc);
@@ -3382,7 +3381,7 @@ namespace joblist
 // conversion performed by the functions in this file.
 // @bug6131, pre-order traversing
 /* static */ void
-JLF_ExecPlanToJobList::walkTree(ParseTree* n, JobInfo& jobInfo)
+JLF_ExecPlanToJobList::walkTree(execplan::ParseTree* n, JobInfo& jobInfo)
 {
     TreeNode* tn = n->data();
     JobStepVector jsv;

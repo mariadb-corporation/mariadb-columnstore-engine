@@ -83,19 +83,6 @@ bool from_string(T& t, const std::string& s, std::ios_base & (*f)(std::ios_base&
     return !(iss >> f >> t).fail();
 }
 
-uint64_t pow10_(int32_t scale)
-{
-    if (scale <= 0) return 1;
-
-    idbassert(scale < 20);
-    uint64_t res = 1;
-
-    for (int32_t i = 0; i < scale; i++)
-        res *= 10;
-
-    return res;
-}
-
 bool number_value ( const string& data )
 {
     for (unsigned int i = 0; i < strlen(data.c_str()); i++)
@@ -893,7 +880,6 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
 
 bool mysql_str_to_time( const string& input, Time& output, long decimals )
 {
-//    int32_t datesepct = 0;
     uint32_t dtend = 0;
     bool isNeg = false;
 
@@ -1864,7 +1850,8 @@ int32_t DataConvert::convertColumnDate(
 bool DataConvert::isColumnDateValid( int32_t date )
 {
     Date d;
-    memcpy(&d, &date, sizeof(int32_t));
+    void* dp = static_cast<void*>(&d);
+    memcpy(dp, &date, sizeof(int32_t));
     return (isDateValid(d.day, d.month, d.year));
 }
 
@@ -2346,7 +2333,8 @@ int64_t DataConvert::convertColumnTime(
 bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
 {
     DateTime dt;
-    memcpy(&dt, &dateTime, sizeof(uint64_t));
+    void* dtp = static_cast<void*>(&dt);
+    memcpy(dtp, &dateTime, sizeof(uint64_t));
 
     if (isDateValid(dt.day, dt.month, dt.year))
         return isDateTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
@@ -2357,7 +2345,8 @@ bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
 bool DataConvert::isColumnTimeValid( int64_t time )
 {
     Time dt;
-    memcpy(&dt, &time, sizeof(uint64_t));
+    void* dtp = static_cast<void*>(&dt);
+    memcpy(dtp, &time, sizeof(uint64_t));
 
     return isTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
 }
@@ -2479,7 +2468,8 @@ std::string DataConvert::datetimeToString1( long long  datetimevalue )
 {
     // @bug 4703 abandon multiple ostringstream's for conversion
     DateTime dt(datetimevalue);
-    const int DATETIMETOSTRING1_LEN = 22; // YYYYMMDDHHMMSSmmmmmm\0
+    // Interesting, gcc 7 says the sprintf below generates between 21 and 23 bytes of output.
+    const int DATETIMETOSTRING1_LEN = 23; // YYYYMMDDHHMMSSmmmmmm\0
     char buf[DATETIMETOSTRING1_LEN];
 
     sprintf(buf, "%04d%02d%02d%02d%02d%02d%06d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.msecond);
@@ -2773,11 +2763,10 @@ int64_t DataConvert::stringToTimestamp(const string& data, const string& timeZon
         return -1;
 }
 
+/* This is really painful and expensive b/c it seems the input is not normalized or
+sanitized.  That should really be done on ingestion. */
 int64_t DataConvert::intToDate(int64_t data)
 {
-    //char buf[10] = {0};
-    //snprintf( buf, 10, "%llu", (long long unsigned int)data);
-    //string date = buf;
     char buf[21] = {0};
     Date aday;
 
@@ -2789,7 +2778,16 @@ int64_t DataConvert::intToDate(int64_t data)
         return *(reinterpret_cast<uint32_t*>(&aday));
     }
 
+    // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
+    // into 15 bytes, however, that appears to be intentional.
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#pragma GCC diagnostic pop
+#else
+    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#endif
 
     string year, month, day, hour, min, sec, msec;
     int64_t y = 0, m = 0, d = 0, h = 0, minute = 0, s = 0, ms = 0;
@@ -2892,6 +2890,8 @@ int64_t DataConvert::intToDate(int64_t data)
     return *(reinterpret_cast<uint32_t*>(&aday));
 }
 
+/* This is really painful and expensive b/c it seems the input is not normalized or
+sanitized.  That should really be done on ingestion. */
 int64_t DataConvert::intToDatetime(int64_t data, bool* date)
 {
     bool isDate = false;
@@ -2914,7 +2914,17 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
         return *(reinterpret_cast<uint64_t*>(&adaytime));
     }
 
+    // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
+    // into 15 bytes, however, that appears to be intentional.
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#pragma GCC diagnostic pop
+#else
+    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#endif
+
     //string date = buf;
     string year, month, day, hour, min, sec, msec;
     int64_t y = 0, m = 0, d = 0, h = 0, minute = 0, s = 0, ms = 0;
@@ -3022,6 +3032,8 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     return *(reinterpret_cast<uint64_t*>(&adaytime));
 }
 
+/* This is really painful and expensive b/c it seems the input is not normalized or
+sanitized.  That should really be done on ingestion. */
 int64_t DataConvert::intToTime(int64_t data, bool fromString)
 {
     char buf[21] = {0};
@@ -3040,7 +3052,17 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
         return *(reinterpret_cast<int64_t*>(&atime));
     }
 
+    // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
+    // into 15 bytes, however, that appears to be intentional.
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation="
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#pragma GCC diagnostic pop
+#else
+    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+#endif
+
     //string date = buf;
     string hour, min, sec, msec;
     int64_t h = 0, minute = 0, s = 0, ms = 0;

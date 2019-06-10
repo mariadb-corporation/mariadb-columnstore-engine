@@ -25,8 +25,6 @@
 
 #include "functor.h"
 
-using namespace std;
-
 namespace funcexp
 {
 
@@ -150,7 +148,7 @@ protected:
         exponent = (int)floor(log10( fabsl(floatVal)));
         base = floatVal * pow(10, -1.0 * exponent);
 
-        if (isnan(exponent) || isnan(base))
+        if (std::isnan(exponent) || std::isnan(base))
         {
             snprintf(buf, 20, "%Lf", floatVal);
             fFloatStr = execplan::removeTrailing0(buf, 20);
@@ -339,7 +337,7 @@ public:
   */
 class Func_lpad : public Func_Str
 {
-    static const string fPad;
+    static const std::string fPad;
 public:
     Func_lpad() : Func_Str("lpad") {}
     virtual ~Func_lpad() {}
@@ -357,7 +355,7 @@ public:
   */
 class Func_rpad : public Func_Str
 {
-    static const string fPad;
+    static const std::string fPad;
 public:
     Func_rpad() : Func_Str("rpad") {}
     virtual ~Func_rpad() {}

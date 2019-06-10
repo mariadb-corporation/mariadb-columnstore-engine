@@ -45,7 +45,7 @@ namespace
 {
 // Minimum time to wait for a condition, so as to periodically wake up and
 // check the global job status, to see if the job needs to terminate.
-const int COND_WAIT_SECONDS = 3;
+const int COND_WAIT_SECONDS = 1;
 }
 
 namespace WriteEngine
@@ -521,7 +521,9 @@ int ColumnBufferManager::writeToFile(int endOffset)
 // and the remaining buffer data will be written to the next segment file in
 // the DBRoot, partition, segement number sequence.
 // This function also catches and handles the case where an abbreviated
-// extent needs to be expanded to a full extent on disk.
+// extent needs to be expanded to a full extent on disk. When fillUpWEmpties is
+// set then CS finishes with writing and has to fill with magics this block
+// up to its boundary.
 //
 // WARNING: This means this function may change the information in the
 //          ColumnInfo struct that owns this ColumnBufferManager, if a
@@ -529,7 +531,7 @@ int ColumnBufferManager::writeToFile(int endOffset)
 //          internal buffer, or if an abbreviated extent is expanded.
 //------------------------------------------------------------------------------
 int ColumnBufferManager::writeToFileExtentCheck(
-    uint32_t startOffset, uint32_t writeSize)
+    uint32_t startOffset, uint32_t writeSize, bool fillUpWEmpties)
 {
 
     if (fLog->isDebug( DEBUG_3 ))
@@ -571,7 +573,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
 
     if (availableFileSize >= writeSize)
     {
-        int rc = fCBuf->writeToFile(startOffset, writeSize);
+        int rc = fCBuf->writeToFile(startOffset, writeSize, fillUpWEmpties);
 
         if (rc != NO_ERROR)
         {
@@ -581,6 +583,12 @@ int ColumnBufferManager::writeToFileExtentCheck(
                 ec.errorString(rc);
             fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
             return rc;
+        }
+
+        // MCOL-498 Fill this block up to its boundary.
+        if ( fillUpWEmpties )
+        {
+            writeSize = BLOCK_SIZE;    
         }
 
         fColInfo->updateBytesWrittenCounts( writeSize );
@@ -624,7 +632,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
         }
 
         int writeSize2 = writeSize - writeSize1;
-        fCBuf->writeToFile(startOffset + writeSize1, writeSize2);
+        rc = fCBuf->writeToFile(startOffset + writeSize1, writeSize2, fillUpWEmpties);
 
         if (rc != NO_ERROR)
         {
@@ -636,6 +644,12 @@ int ColumnBufferManager::writeToFileExtentCheck(
             return rc;
         }
 
+        // MCOL-498 Fill this block up to its boundary.
+        if ( fillUpWEmpties )
+        {
+            writeSize2 = BLOCK_SIZE;
+        }
+
         fColInfo->updateBytesWrittenCounts( writeSize2 );
     }
 
@@ -643,7 +657,8 @@ int ColumnBufferManager::writeToFileExtentCheck(
 }
 
 //------------------------------------------------------------------------------
-// Flush the contents of internal fCBuf (column buffer) to disk.
+// Flush the contents of internal fCBuf (column buffer) to disk. If CS flushes
+// less then BLOCK_SIZE bytes then it propagates this event down the stack.
 //------------------------------------------------------------------------------
 int ColumnBufferManager::flush( )
 {
@@ -668,17 +683,22 @@ int ColumnBufferManager::flush( )
 
     int bufferSize = fCBuf->getSize();
 
+    // MCOL-498 There are less the BLOCK_SIZE bytes in the buffer left
+    // so propagate this info down the stack to fill the buffer up
+    // with empty magics.
     // Account for circular buffer by making 2 calls to write the data,
     // if we are wrapping around at the end of the buffer.
     if (fBufFreeOffset < fBufWriteOffset)
     {
-        RETURN_ON_ERROR( writeToFileExtentCheck(
-                             fBufWriteOffset, bufferSize - fBufWriteOffset) );
+        bool fillUpWEmpties = ( static_cast<unsigned int>(bufferSize - fBufWriteOffset) >= BLOCK_SIZE )
+                            ? false : true;
+        RETURN_ON_ERROR( writeToFileExtentCheck( fBufWriteOffset, 
+                        bufferSize - fBufWriteOffset, fillUpWEmpties) );
         fBufWriteOffset = 0;
     }
-
+    // MCOL-498 fill the buffer up with empty magics.
     RETURN_ON_ERROR( writeToFileExtentCheck(
-                         fBufWriteOffset, fBufFreeOffset - fBufWriteOffset) );
+                     fBufWriteOffset, fBufFreeOffset - fBufWriteOffset, true) );
     fBufWriteOffset = fBufFreeOffset;
 
     return NO_ERROR;

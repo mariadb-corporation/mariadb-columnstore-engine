@@ -25,8 +25,7 @@
  * Columnstore interface for for the covar_pop function
  *
  *
- *    CREATE AGGREGATE FUNCTION covar_pop returns REAL
- *    soname 'libregr_mysql.so';
+ *    CREATE AGGREGATE FUNCTION covar_pop returns REAL soname 'libregr_mysql.so';
  *
  */
 #ifndef HEADER_covar_pop
@@ -44,7 +43,6 @@
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
-using namespace execplan;
 
 #if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)

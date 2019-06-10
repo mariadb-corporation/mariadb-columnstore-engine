@@ -40,22 +40,6 @@ struct to_lower
     }
 };
 
-//Trim any leading/trailing ws
-const string lrtrim(const string& in)
-{
-    string::size_type p1;
-    p1 = in.find_first_not_of(" \t\n");
-
-    if (p1 == string::npos) p1 = 0;
-
-    string::size_type p2;
-    p2 = in.find_last_not_of(" \t\n");
-
-    if (p2 == string::npos) p2 = in.size() - 1;
-
-    return string(in, p1, (p2 - p1 + 1));
-}
-
 }
 
 namespace execplan

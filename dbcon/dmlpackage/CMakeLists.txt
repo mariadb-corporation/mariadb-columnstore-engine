@@ -1,20 +1,20 @@
 
 INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
+#TODO: put generated files in binary folder
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
-    COMMAND ./dml-gram.sh ${BISON_EXECUTABLE}
-    COMMAND ./dml-scan.sh ${LEX_EXECUTABLE}
+    COMMAND /bin/sh ./dml-gram.sh ${BISON_EXECUTABLE}
+    COMMAND /bin/sh ./dml-scan.sh ${LEX_EXECUTABLE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS dml.y dml.l
 )
 
-ADD_CUSTOM_TARGET(dml-lexer DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
-ADD_CUSTOM_TARGET(dml-parser DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp)
+set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 ########### next target ###############
 
-SET(dmlpackage_LIB_SRCS
+ADD_LIBRARY(dmlpackage SHARED
     dml-scan.cpp
     dml-gram.cpp
     calpontdmlfactory.cpp
@@ -31,11 +31,11 @@ SET(dmlpackage_LIB_SRCS
     vendordmlstatement.cpp
     commanddmlpackage.cpp
     dmlpkg.cpp
-    dmlparser.cpp)
+    dmlparser.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
+	)
 
-ADD_LIBRARY(dmlpackage SHARED ${dmlpackage_LIB_SRCS})
-
-ADD_DEPENDENCIES(dmlpackage dml-lexer dml-parser)
 
 SET_TARGET_PROPERTIES(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

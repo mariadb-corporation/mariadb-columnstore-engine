@@ -279,4 +279,27 @@ int BufferedFile::close()
     return ret;
 }
 
+/**
+     @brief
+    The wrapper for fallocate function.
+     @see
+    This one is used in shared/we_fileop.cpp to skip expensive file preallocation.
+*/
+int BufferedFile::fallocate(int mode, off64_t offset, off64_t length)
+{
+    int ret = 0;
+    int savedErrno = 0;
+
+    ret = ::fallocate( fileno(m_fp), mode, offset, length );
+    savedErrno = errno;
+
+    if ( IDBLogger::isEnabled() )
+    {
+        IDBLogger::logNoArg(m_fname, this, "fallocate", errno);
+    }
+
+    errno = savedErrno;
+    return ret;
+}
+
 }

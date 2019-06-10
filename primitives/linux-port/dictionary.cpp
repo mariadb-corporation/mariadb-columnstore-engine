@@ -127,7 +127,11 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
     retTokens = reinterpret_cast<PrimToken*>(&niceRet[rdvOffset]);
     retDataValues = reinterpret_cast<DataValue*>(&niceRet[rdvOffset]);
-    memcpy(ret, h, sizeof(PrimitiveHeader) + sizeof(ISMPacketHeader));
+    
+    {
+        void *retp = static_cast<void*>(ret); 
+        memcpy(retp, h, sizeof(PrimitiveHeader) + sizeof(ISMPacketHeader));
+    }
     ret->NVALS = 0;
     ret->NBYTES = sizeof(TokenByScanResultHeader);
     ret->ism.Command = DICT_SCAN_COMPARE_RESULTS;
@@ -575,7 +579,10 @@ void PrimitiveProcessor::p_AggregateSignature(const AggregateSignatureRequestHea
     DataValue* min;
     DataValue* max;
 
-    memcpy(out, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    {
+        void *outp = static_cast<void*>(out);
+        memcpy(outp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    }
     out->ism.Command = DICT_AGGREGATE_RESULTS;
     niceOutput = reinterpret_cast<uint8_t*>(out);
 
@@ -824,7 +831,10 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
     in8 = reinterpret_cast<const uint8_t*>(in);
 
-    memcpy(&header, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    {
+        void *hp = static_cast<void*>(&header);
+        memcpy(hp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    }
     header.ism.Command = DICT_RESULTS;
     header.NVALS = 0;
     header.LBID = in->LBID;

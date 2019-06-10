@@ -62,6 +62,7 @@ public:
     /* virtual */ off64_t tell();
     /* virtual */ int flush();
     /* virtual */ time_t mtime();
+    /* virtual */ int fallocate(int mode, off64_t offset, off64_t length);
 
     // Returns the total size of all currently allocated HdfsRdwrMemBuffers
     static size_t getTotalBuff()

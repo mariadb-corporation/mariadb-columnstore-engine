@@ -186,6 +186,15 @@ public:
      */
     virtual time_t mtime() = 0;
 
+    /**
+     * The fallocate() method preallocates disk space cheaper then
+     * sequential write. fallocate() is supported by a limited number
+     * of FSes.This method is implemented for Un-/BufferedFile classes
+     * only.
+     * Returns -1 on error.
+     */
+    virtual int fallocate(int mode, off64_t offset, off64_t length) = 0;
+
     int colWidth()
     {
         return m_fColWidth;

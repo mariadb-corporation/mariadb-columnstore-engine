@@ -16,7 +16,9 @@ set(idbdatafile_LIB_SRCS
 
 add_library(idbdatafile SHARED ${idbdatafile_LIB_SRCS})
 
-target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES})
+target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS})
+
+target_compile_definitions(idbdatafile PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
 set_target_properties(idbdatafile PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

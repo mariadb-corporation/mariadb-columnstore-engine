@@ -1330,7 +1330,13 @@ int XMLJob::genJobXMLFileName(
             // nothing else to do
 #else
             char cwdPath[4096];
-            getcwd(cwdPath, sizeof(cwdPath));
+            char *err;
+            err = getcwd(cwdPath, sizeof(cwdPath));
+            if (err == NULL)
+            {
+                errMsg = "Failed to get the current working directory.";
+                return -1;
+            }
             string trailingPath(xmlFilePath.string());
             xmlFilePath  = cwdPath;
             xmlFilePath /= trailingPath;

@@ -53,8 +53,6 @@
 #  endif
 #endif
 
-using namespace threadpool;
-
 namespace joblist
 {
 
@@ -432,7 +430,7 @@ public:
         return fTimeZone;
     }
 
-    static ThreadPool jobstepThreadPool;
+    static threadpool::ThreadPool jobstepThreadPool;
 protected:
 
     //@bug6088, for telemetry posting

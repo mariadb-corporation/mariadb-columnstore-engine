@@ -151,7 +151,7 @@ HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(const char* fname, const char* mode, unsi
 
 // This constructor is for use by HdfsRdwrMemBuffer to create a file buffer when we
 // run out of memory.
-HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) throw (std::exception) :
+HdfsRdwrFileBuffer::HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) :
     IDBDataFile(pMemBuffer->name().c_str()),
     m_buffer(NULL),
     m_dirty(false)
@@ -315,6 +315,19 @@ int HdfsRdwrFileBuffer::close()
     delete m_buffer;
     m_buffer = 0;
     return 0;
+}
+
+/**
+     @brief
+    The dummy wrapper for fallocate function.
+    This is an open question which code must this method return.
+    fallocate fails for HDFS b/c it doesn't use it.
+     @see
+    This one is used in shared/we_fileop.cpp to skip expensive file preallocation.
+*/
+int HdfsRdwrFileBuffer::fallocate(int mode, off64_t offset, off64_t length)
+{
+    return -1;
 }
 
 }

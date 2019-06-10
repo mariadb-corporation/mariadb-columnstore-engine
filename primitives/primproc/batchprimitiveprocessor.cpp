@@ -1774,8 +1774,10 @@ void BatchPrimitiveProcessor::writeErrorMsg(const string& error, uint16_t errCod
 
     // we don't need every field of these headers.  Init'ing them anyway
     // makes memory checkers happy.
-    memset(&ism, 0, sizeof(ISMPacketHeader));
-    memset(&ph, 0, sizeof(PrimitiveHeader));
+    void *ismp = static_cast<void*>(&ism);
+    void *php = static_cast<void*>(&ph);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
+    memset(php, 0, sizeof(PrimitiveHeader));
     ph.SessionID = sessionID;
     ph.StepID = stepID;
     ph.UniqueID = uniqueID;
@@ -1800,8 +1802,10 @@ void BatchPrimitiveProcessor::writeProjectionPreamble()
 
     // we don't need every field of these headers.  Init'ing them anyway
     // makes memory checkers happy.
-    memset(&ism, 0, sizeof(ISMPacketHeader));
-    memset(&ph, 0, sizeof(PrimitiveHeader));
+    void *ismp = static_cast<void*>(&ism);
+    void *php = static_cast<void*>(&ph);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
+    memset(php, 0, sizeof(PrimitiveHeader));
     ph.SessionID = sessionID;
     ph.StepID = stepID;
     ph.UniqueID = uniqueID;
@@ -1899,8 +1903,10 @@ void BatchPrimitiveProcessor::makeResponse()
 
     // we don't need every field of these headers.  Init'ing them anyway
     // makes memory checkers happy.
-    memset(&ism, 0, sizeof(ISMPacketHeader));
-    memset(&ph, 0, sizeof(PrimitiveHeader));
+    void *ismp = static_cast<void*>(&ism);
+    void *php = static_cast<void*>(&ph);
+    memset(ismp, 0, sizeof(ISMPacketHeader));
+    memset(php, 0, sizeof(PrimitiveHeader));
     ph.SessionID = sessionID;
     ph.StepID = stepID;
     ph.UniqueID = uniqueID;

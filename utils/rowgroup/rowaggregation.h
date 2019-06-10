@@ -207,7 +207,7 @@ struct RowAggFunctionCol
     // The first will be a RowUDAFFunctionCol. Subsequent ones will be RowAggFunctionCol
     // with fAggFunction == ROWAGG_MULTI_PARM. Order is important.
     // If this parameter is constant, that value is here.
-    SRCP fpConstCol;
+    execplan::SRCP fpConstCol;
 };
 
 
@@ -272,7 +272,7 @@ inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
 
     if (t)
     {
-        fpConstCol.reset(new ConstantColumn);
+        fpConstCol.reset(new execplan::ConstantColumn);
         fpConstCol.get()->unserialize(bs);
     }
 }
@@ -640,7 +640,7 @@ protected:
         if (fAggMapPtr) fAggMapPtr->clear();
     }
 
-    void resetUDAF(uint64_t funcColID);
+    void resetUDAF(RowUDAFFunctionCol* rowUDAF);
 
     inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
     inline void makeAggFieldsNull(Row& row);
@@ -722,6 +722,9 @@ protected:
     static const static_any::any& doubleTypeId;
     static const static_any::any& longdoubleTypeId;
     static const static_any::any& strTypeId;
+
+    // For UDAF along with with multiple distinct columns
+    std::vector<SP_ROWAGG_FUNC_t>* fOrigFunctionCols;
 };
 
 //------------------------------------------------------------------------------

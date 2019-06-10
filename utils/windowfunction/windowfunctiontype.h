@@ -199,9 +199,9 @@ public:
         fStep = step;
     }
 
-    void constParms(const std::vector<SRCP>& functionParms);
+    void constParms(const std::vector<execplan::SRCP>& functionParms);
 
-    static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
+    static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, execplan::WindowFunctionColumn* wc);
 
 protected:
 
@@ -255,7 +255,7 @@ protected:
     std::vector<int64_t>                        fFieldIndex;
 
     // constant function parameters -- needed for udaf with constant
-    std::vector<SRCP>                           fConstantParms;
+    std::vector<execplan::SRCP>                           fConstantParms;
 
     // row meta data
     rowgroup::RowGroup	                        fRowGroup;

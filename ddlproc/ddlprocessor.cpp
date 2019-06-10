@@ -20,7 +20,6 @@
  *
  *
  ***********************************************************************/
-
 #include <map>
 #include <boost/scoped_ptr.hpp>
 using namespace std;

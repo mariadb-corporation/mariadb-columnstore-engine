@@ -750,6 +750,7 @@ bool LBIDList::CasualPartitionPredicate(const int64_t Min,
             int64_t tMax = Max;
             dataconvert::DataConvert::trimWhitespace(tMin);
             dataconvert::DataConvert::trimWhitespace(tMax);
+            dataconvert::DataConvert::trimWhitespace(value);
 
             scan = compareVal(order_swap(tMin), order_swap(tMax), order_swap(value),
                               op, lcf);

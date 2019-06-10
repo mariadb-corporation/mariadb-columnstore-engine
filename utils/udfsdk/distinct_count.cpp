@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include "distinct_count.h"
+#include "calpontsystemcatalog.h"
 
 using namespace mcsv1sdk;
 
@@ -36,7 +37,7 @@ mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context,
         context->setErrorMessage("avgx() with other than 1 arguments");
 		return mcsv1_UDAF::ERROR;
 	}
-	context->setResultType(CalpontSystemCatalog::BIGINT);
+	context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
 	context->setColWidth(8);
 	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
 	context->setRunFlag(mcsv1sdk::UDAF_DISTINCT);

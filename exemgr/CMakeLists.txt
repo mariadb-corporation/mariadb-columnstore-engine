@@ -10,6 +10,8 @@ add_executable(ExeMgr ${ExeMgr_SRCS})
 
 target_link_libraries(ExeMgr ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} cacheutils threadpool)
 
+target_include_directories(ExeMgr PRIVATE ${Boost_INCLUDE_DIRS})
+
 install(TARGETS ExeMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 

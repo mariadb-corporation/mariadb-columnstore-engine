@@ -2469,7 +2469,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
 
 
     //It's the same string for each column, so we just need one dictionary struct
-    memset(&dictTuple, 0, sizeof(dictTuple));
+    void *dictTuplePtr = static_cast<void*>(&dictTuple);
+    memset(dictTuplePtr, 0, sizeof(dictTuple));
     dictTuple.sigValue = (unsigned char*)newTablename.c_str();
     dictTuple.sigSize = newTablename.length();
     dictTuple.isNull = false;
@@ -3292,7 +3293,8 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
 
 
     //It's the same string for each column, so we just need one dictionary struct
-    memset(&dictTuple, 0, sizeof(dictTuple));
+    void *dictTuplePtr = static_cast<void*>(&dictTuple);
+    memset(dictTuplePtr, 0, sizeof(dictTuple));
     dictTuple.sigValue = (unsigned char*)newTablename.c_str();
     dictTuple.sigSize = newTablename.length();
     dictTuple.isNull = false;

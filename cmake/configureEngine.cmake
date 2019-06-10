@@ -717,7 +717,7 @@ SET (inline "")
 ENDIF()
 
 IF($ENV{SKIP_OAM_INIT})
-    SET(SKIP_OAM_INIT 1)
+    set(SKIP_OAM_INIT 1 CACHE BOOL "Skip OAM initialization" FORCE)
 ENDIF()
 
 EXECUTE_PROCESS(

@@ -958,7 +958,7 @@ void TableInfo::reportTotals(double elapsedTime)
     fLog->logMsg(oss2.str(), MSGLVL_INFO2);
 
     // @bug 3504: Loop through columns to print saturation counts
-    std::vector<boost::tuple<CalpontSystemCatalog::ColDataType, uint64_t, uint64_t> > satCounts;
+    std::vector<boost::tuple<execplan::CalpontSystemCatalog::ColDataType, uint64_t, uint64_t> > satCounts;
 
     for (unsigned i = 0; i < fColumns.size(); ++i)
     {
@@ -978,35 +978,34 @@ void TableInfo::reportTotals(double elapsedTime)
             ossSatCnt << "Column " << fTableName << '.' <<
                       fColumns[i].column.colName << "; Number of ";
 
-            if (fColumns[i].column.dataType == CalpontSystemCatalog::DATE)
+            if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::DATE)
             {
                 ossSatCnt <<
                           "invalid dates replaced with zero value : ";
             }
             else if (fColumns[i].column.dataType ==
-                     CalpontSystemCatalog::DATETIME)
+              execplan::CalpontSystemCatalog::DATETIME)
             {
                 //bug5383
                 ossSatCnt <<
                           "invalid date/times replaced with zero value : ";
             }
+
             else if (fColumns[i].column.dataType == CalpontSystemCatalog::TIMESTAMP)
             {
                 ossSatCnt <<
                           "invalid timestamps replaced with zero value : ";
             }
-            else if (fColumns[i].column.dataType == CalpontSystemCatalog::TIME)
+            else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::TIME)
             {
                 ossSatCnt <<
                           "invalid times replaced with zero value : ";
             }
-            else if (fColumns[i].column.dataType == CalpontSystemCatalog::CHAR)
+            else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::CHAR)
                 ossSatCnt <<
                           "character strings truncated: ";
-            else if (fColumns[i].column.dataType ==
-                     CalpontSystemCatalog::VARCHAR)
-                ossSatCnt <<
-                          "character strings truncated: ";
+            else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::VARCHAR)
+                ossSatCnt << "character strings truncated: ";
             else
                 ossSatCnt <<
                           "rows inserted with saturated values: ";
@@ -1469,9 +1468,11 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
 
             if (!p.has_root_path())
             {
+                // We could fail here having fixed size buffer
                 char cwdPath[4096];
-                getcwd(cwdPath, sizeof(cwdPath));
-                boost::filesystem::path rejectFileName2( cwdPath );
+                char* buffPtr = &cwdPath[0];
+                buffPtr = getcwd(cwdPath, sizeof(cwdPath));
+                boost::filesystem::path rejectFileName2( buffPtr );
                 rejectFileName2 /= fRejectDataFileName;
                 fBadFiles.push_back( rejectFileName2.string() );
 
@@ -1576,8 +1577,9 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
             if (!p.has_root_path())
             {
                 char cwdPath[4096];
-                getcwd(cwdPath, sizeof(cwdPath));
-                boost::filesystem::path errFileName2( cwdPath );
+                char* buffPtr = &cwdPath[0];
+                buffPtr = getcwd(cwdPath, sizeof(cwdPath));
+                boost::filesystem::path errFileName2( buffPtr );
                 errFileName2 /= fRejectErrFileName;
                 fErrFiles.push_back( errFileName2.string() );
 

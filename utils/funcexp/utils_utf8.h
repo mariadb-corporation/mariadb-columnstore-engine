@@ -37,12 +37,7 @@
 
 #include <clocale>
 
-#include "alarmmanager.h"
-using namespace alarmmanager;
-
 #include "liboamcpp.h"
-using namespace oam;
-
 
 /** @file */
 
@@ -63,7 +58,7 @@ std::string idb_setlocale()
 {
     // get and set locale language
     std::string systemLang("C");
-    Oam oam;
+    oam::Oam oam;
 
     try
     {
@@ -81,9 +76,9 @@ std::string idb_setlocale()
         try
         {
             //send alarm
-            ALARMManager alarmMgr;
+            alarmmanager::ALARMManager alarmMgr;
             std::string alarmItem = "system";
-            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, SET);
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::SET);
             printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
         }
         catch (...)
@@ -96,9 +91,9 @@ std::string idb_setlocale()
         try
         {
             //send alarm
-            ALARMManager alarmMgr;
+            alarmmanager::ALARMManager alarmMgr;
             std::string alarmItem = "system";
-            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, CLEAR);
+            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::CLEAR);
         }
         catch (...)
         {

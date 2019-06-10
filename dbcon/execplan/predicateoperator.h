@@ -36,6 +36,7 @@
 #endif
 #include <cstring>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "expressionparser.h"
 #include "returnedcolumn.h"
@@ -294,7 +295,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 // we won't want to just multiply by scale, as it may move
                 // significant digits out of scope. So we break them apart
                 // and compare each separately 
-                int64_t scale = max(lop->resultType().scale, rop->resultType().scale);
+                int64_t scale = std::max(lop->resultType().scale, rop->resultType().scale);
                 if (scale)
                 {
                     long double intpart1;
@@ -485,16 +486,20 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return !ret;
             }
 
+            // MCOL-1559
+	    std::string val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            const std::string& val1 = lop->getStrVal(row, isNull);
-
+            std::string val2 = rop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
-        }
+            boost::trim_right_if(val1, boost::is_any_of(" "));
+            boost::trim_right_if(val2, boost::is_any_of(" "));
+
+            return strCompare(val1, val2);
+	}
 
         //FIXME: ???
         case execplan::CalpontSystemCatalog::VARBINARY:

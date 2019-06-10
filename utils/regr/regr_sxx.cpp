@@ -63,7 +63,7 @@ mcsv1_UDAF::ReturnCode regr_sxx::init(mcsv1Context* context,
     }
 
     context->setUserDataSize(sizeof(regr_sxx_data));
-    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(DECIMAL_NOT_SPECIFIED);
     context->setPrecision(0);
@@ -132,7 +132,7 @@ mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any
         long double sumx2 = data->sumx2;
 
         long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-        valOut = static_cast<double>(data->cnt * var_popx);
+        valOut = static_cast<double>(N * var_popx);
     }
     return mcsv1_UDAF::SUCCESS;
 }

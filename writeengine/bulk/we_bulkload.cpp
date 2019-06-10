@@ -475,7 +475,7 @@ int BulkLoad::preProcess( Job& job, int tableNo,
     int         rc = NO_ERROR, minWidth = 9999; // give a big number
     HWM         minHWM = 999999;  // rp 9/25/07 Bug 473
     ColStruct   curColStruct;
-    CalpontSystemCatalog::ColDataType colDataType;
+    execplan::CalpontSystemCatalog::ColDataType colDataType;
 
     // Initialize portions of TableInfo object
     tableInfo->setBufferSize(fBufferSize);

@@ -54,7 +54,7 @@ mcsv1_UDAF::ReturnCode avgx::init(mcsv1Context* context,
     }
 
     context->setUserDataSize(sizeof(avgx_data));
-    context->setResultType(CalpontSystemCatalog::DOUBLE);
+    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(colTypes[0].scale + 4);
     context->setPrecision(19);

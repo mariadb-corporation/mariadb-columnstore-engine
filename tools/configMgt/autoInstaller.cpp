@@ -29,6 +29,7 @@
  * @file
  */
 
+
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -636,7 +637,7 @@ int main(int argc, char* argv[])
                             // Columnstore.xml found
 
                             //try to parse it
-                            Config* sysConfigOld;
+                            //Config* sysConfigOld;
 
                             ofstream file("/dev/null");
 
@@ -648,7 +649,7 @@ int main(int argc, char* argv[])
                                 // redirect cout to /dev/null
                                 cerr.rdbuf(file.rdbuf());
 
-                                sysConfigOld = Config::makeConfig( systemDir + "/Columnstore.xml");
+                                //sysConfigOld = Config::makeConfig( systemDir + "/Columnstore.xml");
 
                                 // restore cout stream buffer
                                 cerr.rdbuf (strm_buffer);

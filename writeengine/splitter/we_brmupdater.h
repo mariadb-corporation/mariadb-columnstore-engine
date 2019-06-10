@@ -68,7 +68,7 @@ public:
     static bool prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows,
                                         int64_t& InsRows);
     static bool prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
-                                            CalpontSystemCatalog::ColDataType& ColType,
+      execplan::CalpontSystemCatalog::ColDataType& ColType,
                                             std::string& ColName, int& OorValues);
     static bool prepareErrorFileInfo(std::string Entry, std::string& ErrFileName);
     static bool prepareBadDataFileInfo(std::string Entry, std::string& BadFileName);

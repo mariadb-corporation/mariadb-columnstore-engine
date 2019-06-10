@@ -20,6 +20,7 @@
  *
  ******************************************************************************/
 
+
 #include <clocale>
 
 #include <libxml/xmlwriter.h>
@@ -43,11 +44,11 @@ using namespace bulkloadxml;
 int main(int argc, char** argv)
 {
     const int DEBUG_LVL_TO_DUMP_SYSCAT_RPT = 4;
-#ifdef _MSC_VER
-    //FIXME
-#else
-    setuid( 0 ); // set effective ID to root; ignore return status
-#endif
+    // set effective ID to root
+    if( setuid( 0 ) < 0 )
+    {
+        std::cerr << " colxml: couldn't set uid " << std::endl;
+    }
     setlocale(LC_ALL, "");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings
 

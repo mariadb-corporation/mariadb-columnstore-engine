@@ -190,6 +190,7 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
     return columns;
 }
 
+
 uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
 {
     char attribute_buffer[1024];
@@ -2120,7 +2121,8 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
             thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE )
         return rc;
 
-    if (thd->slave_thread) return 0;
+    if (thd->slave_thread && !ci.replicationEnabled)
+        return 0;
 
     std::string command("COMMIT");
 #ifdef INFINIDB_DEBUG

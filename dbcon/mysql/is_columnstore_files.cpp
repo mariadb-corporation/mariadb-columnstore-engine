@@ -100,6 +100,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
     messageqcpp::MessageQueueClient* msgQueueClient;
     oam::Oam oam_instance;
     int pmId = 0;
+    int rc;
 
     emp->getExtents(oid, entries, false, false, true);
 
@@ -121,7 +122,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
         {
             oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
         }
-        catch (std::runtime_error)
+        catch (std::runtime_error&)
         {
             // MCOL-1116: If we are here a DBRoot is offline/missing
             iter++;
@@ -137,14 +138,16 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
         DbRootName << "DBRoot" << iter->dbRoot;
         std::string DbRootPath = config->getConfig("SystemConfig", DbRootName.str());
         fileSize = compressedFileSize = 0;
-        snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
+        rc = snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
 
         std::ostringstream oss;
         oss << "pm" << pmId << "_WriteEngineServer";
         std::string client = oss.str();
         msgQueueClient = messageqcpp::MessageQueueClientPool::getInstance(oss.str());
 
-        if (!get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
+        // snprintf output truncation check 
+        if (rc ==  WriteEngine::FILE_NAME_SIZE ||
+            !get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
         {
             messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
             delete emp;
