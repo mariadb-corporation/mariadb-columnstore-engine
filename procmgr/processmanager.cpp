@@ -9170,13 +9170,13 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     oam.getSystemConfig("OIDBitmapFile", oidFile);
 
     
-    // StorageManager:  Need to make these existence checks use an idbfilesystem op?
+    // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
+    // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
     ifstream oldFile (currentFileName.c_str());
 
     if (oldFile)
     {
-        
         // current file found, check for OIDBitmapFile
         ifstream mapFile (oidFile.c_str());
 
@@ -9293,7 +9293,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     // put oid file and current file in list
-    // StorageManager: no need to distribute these files
+    // StorageManager: no need to distribute these files if in cloud storage
     dbrmFiles.push_back(currentFileName);
 
     ifstream file1 (journalFileName.c_str());
@@ -9328,7 +9328,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     //remove any file of size 0
     std::vector<std::string>::iterator pt1 = dbrmFiles.begin();
 
-    // StorageManager: ?
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {
         string fileName = *pt1;
@@ -9362,7 +9361,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         return oam::API_FAILURE;
     }
 
-    // StorageManager: ?
     pt1 = dbrmFiles.begin();
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {

@@ -77,7 +77,9 @@ SocketPool::~SocketPool()
 #define sm_check_error \
     if (err < 0) \
     { \
-        cout << "SP: got an error on the socket" << endl; \
+        char _smbuf[80]; \
+        int l_errno = errno; \
+        log(logging::LOG_TYPE_ERROR, string("SocketPool: got a network error: ") + strerror_r(l_errno, _smbuf, 80)); \
         remoteClosed(sock); \
         return -1; \
     }
@@ -95,7 +97,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
         sock = getSocket();
         if (sock < 0)
         {
-            log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): failed to get a connection, retrying in 5 sec...");
+            log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): retrying in 5 sec...");
             sleep(5);
         }
     }
@@ -214,7 +216,7 @@ int SocketPool::getSocket()
             char buf[80];
             os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80);
             cout << os.str() << endl;
-            log(logging::LOG_TYPE_CRITICAL, os.str());
+            log(logging::LOG_TYPE_ERROR, os.str());
             errno = saved_errno;
         }
         return clientSocket;
