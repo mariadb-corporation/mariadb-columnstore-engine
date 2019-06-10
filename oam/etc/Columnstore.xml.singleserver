@@ -541,7 +541,6 @@
 	</QueryTele>
     <StorageManager>
         <Enabled>N</Enabled>
-        <Location>/usr/local/bin</Location>
         <MaxSockets>30</MaxSockets>
     </StorageManager>
 </Columnstore>
