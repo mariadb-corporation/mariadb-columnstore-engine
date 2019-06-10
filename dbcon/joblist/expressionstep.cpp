@@ -414,9 +414,10 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
     TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc, alias));
     fColumnKeys.push_back(ti.key);
 
-    // @bug 2990, MySQL time/date/datetime type is different from IDB type
+    // @bug 2990, MySQL timestamp/time/date/datetime type is different from IDB type
     if (ti.dtype == CalpontSystemCatalog::DATE || ti.dtype == CalpontSystemCatalog::DATETIME ||
-            ti.dtype == CalpontSystemCatalog::TIME)
+            ti.dtype == CalpontSystemCatalog::TIME ||
+            ti.dtype == CalpontSystemCatalog::TIMESTAMP)
     {
         if (ti.dtype != ct.colDataType)
         {

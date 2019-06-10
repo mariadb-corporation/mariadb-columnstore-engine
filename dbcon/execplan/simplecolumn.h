@@ -152,6 +152,14 @@ public:
     {
         fViewName = viewName;
     }
+    inline const std::string& timeZone() const
+    {
+        return fTimeZone;
+    }
+    inline void timeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
     inline const bool isInfiniDB() const
     {
         return fIsInfiniDB;
@@ -252,6 +260,7 @@ protected:
     std::string fIndexName;
     // if belong to view, view name is non-empty
     std::string fViewName;
+    std::string fTimeZone;
     bool fIsInfiniDB;
 
     /** @brief parse SimpleColumn text
@@ -274,7 +283,7 @@ public:
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);
-        return TreeNode::getStrVal();
+        return TreeNode::getStrVal(fTimeZone);
     }
 
     virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
@@ -346,6 +355,12 @@ public:
     {
         evaluate(row, isNull);
         return TreeNode::getDatetimeIntVal();
+    }
+
+    inline int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimestampIntVal();
     }
 
     inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)

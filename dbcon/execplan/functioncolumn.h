@@ -123,6 +123,16 @@ public:
         fTableAlias = tableAlias;
     }
 
+    inline const std::string timeZone () const
+    {
+        return fTimeZone;
+    }
+
+    inline void timeZone (const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
     virtual const std::string data() const;
     virtual void data(const std::string data)
     {
@@ -172,6 +182,7 @@ private:
     std::string fFunctionName;	/// function name
     std::string fTableAlias;	/// table alias which has the column
     std::string fData;			/// SQL representation
+    std::string fTimeZone;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
     *
@@ -259,6 +270,10 @@ public:
     virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
     {
         return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
+    }
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {

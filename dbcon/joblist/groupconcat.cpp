@@ -87,6 +87,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
         groupConcat->fSize = gcc->resultType().colWidth;
         groupConcat->fRm = jobInfo.rm;
         groupConcat->fSessionMemLimit = jobInfo.umMemLimit;
+        groupConcat->fTimeZone = jobInfo.timeZone;
 
         int key = -1;
         const vector<SRCP>& cols = rcp->columnVec();
@@ -396,6 +397,7 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
     // too high(3MB) to allocate it for every instance.
     fGroupConcatLen = gcc->fSize;
     fCurrentLength -= strlen(gcc->fSeparator.c_str());
+    fTimeZone = gcc->fTimeZone;
 
     fConstCols = gcc->fConstCols;
     fConstantLen = strlen(gcc->fSeparator.c_str());
@@ -507,6 +509,12 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
             case CalpontSystemCatalog::DATETIME:
             {
                 oss << DataConvert::datetimeToString(row.getUintField(*i));
+                break;
+            }
+
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                oss << DataConvert::timestampToString(row.getUintField(*i), fTimeZone);
                 break;
             }
 
@@ -643,6 +651,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             }
 
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             {
                 fieldLen = 19; // YYYY-MM-DD HH24:MI:SS
                 // Decimal point and milliseconds

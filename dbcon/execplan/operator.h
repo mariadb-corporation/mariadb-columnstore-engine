@@ -195,6 +195,10 @@ public:
     {
         return fResult.intVal;
     }
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+    {
+        return fResult.intVal;
+    }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         return fResult.intVal;

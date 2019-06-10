@@ -126,6 +126,31 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
             break;
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            if (type1 != type2)
+            {
+                isNull = true;
+                break;
+            }
+            int64_t temp = parm[0]->data()->getTimestampIntVal(row, isNull);
+            TimeStamp timestamp(temp);
+            int64_t seconds = timestamp.second;
+            MySQLTime time;
+            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            DateTime dt;
+            dt.year = time.year;
+            dt.month = time.month;
+            dt.day = time.day;
+            dt.hour = time.hour;
+            dt.minute = time.minute;
+            dt.second = time.second;
+            dt.msecond = timestamp.msecond;
+            val1 = (int64_t) *(reinterpret_cast<int64_t*>(&dt));
+
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -167,6 +192,25 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
             val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
             break;
+
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            int64_t temp = parm[1]->data()->getTimestampIntVal(row, isNull);
+            TimeStamp timestamp(temp);
+            int64_t seconds = timestamp.second;
+            MySQLTime time;
+            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            DateTime dt;
+            dt.year = time.year;
+            dt.month = time.month;
+            dt.day = time.day;
+            dt.hour = time.hour;
+            dt.minute = time.minute;
+            dt.second = time.second;
+            dt.msecond = timestamp.msecond;
+            val2 = (int64_t) *(reinterpret_cast<int64_t*>(&dt));
+            break;
+        }
 
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
@@ -218,6 +262,14 @@ int64_t Func_timediff::getDatetimeIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     return dataconvert::DataConvert::datetimeToInt(getStrVal(row, parm, isNull, ct));
+}
+
+int64_t Func_timediff::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), fTimeZone);
 }
 
 int64_t Func_timediff::getTimeIntVal(rowgroup::Row& row,

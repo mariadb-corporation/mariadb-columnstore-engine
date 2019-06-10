@@ -156,7 +156,8 @@ BulkLoad::BulkLoad() :
     fImportDataMode(IMPORT_DATA_TEXT),
     fbContinue(false),
     fDisableTimeOut(false),
-    fUUID(boost::uuids::nil_generator()())
+    fUUID(boost::uuids::nil_generator()()),
+    fTimeZone("SYSTEM")
 {
     fTableInfo.clear();
     setDebugLevel( DEBUG_0 );
@@ -251,6 +252,7 @@ int BulkLoad::loadJobInfo(
 {
     fJobFileName = fullName;
     fRootDir     = Config::getBulkRoot();
+    fJobInfo.setTimeZone(fTimeZone);
 
     if ( !exists( fullName.c_str() ) )
     {
@@ -486,6 +488,7 @@ int BulkLoad::preProcess( Job& job, int tableNo,
     tableInfo->setEnclosedByChar(fEnclosedByChar);
     tableInfo->setEscapeChar(fEscapeChar);
     tableInfo->setImportDataMode(fImportDataMode);
+    tableInfo->setTimeZone(fTimeZone);
     tableInfo->setJobUUID(fUUID);
 
     if (fMaxErrors != -1)

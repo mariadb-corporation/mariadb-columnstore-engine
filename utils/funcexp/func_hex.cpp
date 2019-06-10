@@ -78,6 +78,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::TIME:
         {

@@ -119,7 +119,8 @@ AggregateColumn::AggregateColumn( const AggregateColumn& rhs, const uint32_t ses
     fTableAlias(rhs.tableAlias()),
     fAsc(rhs.asc()),
     fData(rhs.data()),
-    fConstCol(rhs.fConstCol)
+    fConstCol(rhs.fConstCol),
+    fTimeZone(rhs.timeZone())
 {
     fAlias = rhs.alias();
     fAggParms = rhs.fAggParms;
@@ -186,6 +187,7 @@ void AggregateColumn::serialize(messageqcpp::ByteStream& b) const
         (*rcit)->serialize(b);
 
     b << fData;
+    b << fTimeZone;
     //b << fAlias;
     b << fTableAlias;
     b << static_cast<const ByteStream::doublebyte>(fAsc);
@@ -238,6 +240,7 @@ void AggregateColumn::unserialize(messageqcpp::ByteStream& b)
     }
 
     b >> fData;
+    b >> fTimeZone;
     //b >> fAlias;
     b >> fTableAlias;
     b >> reinterpret_cast< ByteStream::doublebyte&>(fAsc);
@@ -292,6 +295,9 @@ bool AggregateColumn::operator==(const AggregateColumn& t) const
              *(fConstCol.get()) != t.fConstCol.get()))
         return false;
 
+    if (fTimeZone != t.fTimeZone)
+        return false;
+
     return true;
 }
 
@@ -337,6 +343,14 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 
         case CalpontSystemCatalog::DATETIME:
             if (row.equals<8>(DATETIMENULL, fInputIndex))
+                isNull = true;
+            else
+                fResult.intVal = row.getUintField<8>(fInputIndex);
+
+            break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
+            if (row.equals<8>(TIMESTAMPNULL, fInputIndex))
                 isNull = true;
             else
                 fResult.intVal = row.getUintField<8>(fInputIndex);

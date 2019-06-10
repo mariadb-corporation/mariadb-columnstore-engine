@@ -75,6 +75,14 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            int64_t val1  = parm[0]->data()->getTimestampIntVal(row, isNull);
+            value = dataconvert::DataConvert::timestampToString(val1, fTimeZone);
+            value = value.substr(0, 10);
+            break;
+        }
+
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
         {

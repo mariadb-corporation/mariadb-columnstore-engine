@@ -395,6 +395,10 @@ public:
     {
         return fResult.intVal;
     }
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fResult.intVal;
+    }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {
         return fResult.intVal;
@@ -402,7 +406,7 @@ public:
     virtual void evaluate(rowgroup::Row& row, bool& isNull) {}
 
     inline bool getBoolVal();
-    inline const std::string& getStrVal();
+    inline const std::string& getStrVal(const std::string& timeZone);
     inline int64_t getIntVal();
     inline uint64_t getUintVal();
     inline float getFloatVal();
@@ -411,6 +415,7 @@ public:
     inline IDB_Decimal getDecimalVal();
     inline int32_t getDateIntVal();
     inline int64_t getDatetimeIntVal();
+    inline int64_t getTimestampIntVal();
     inline int64_t getTimeIntVal();
 
     virtual const execplan::CalpontSystemCatalog::ColType& resultType() const
@@ -503,6 +508,7 @@ inline bool TreeNode::getBoolVal()
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (fResult.intVal != 0);
 
@@ -535,7 +541,7 @@ inline bool TreeNode::getBoolVal()
     return fResult.boolVal;
 }
 
-inline const std::string& TreeNode::getStrVal()
+inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
 {
     switch (fResultType.colDataType)
     {
@@ -716,6 +722,13 @@ inline const std::string& TreeNode::getStrVal()
             break;
         }
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            dataconvert::DataConvert::timestampToString(fResult.intVal, tmp, 255, timeZone, fResultType.precision);
+            fResult.strVal = std::string(tmp);
+            break;
+        }
+
         case CalpontSystemCatalog::TIME:
         {
             dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255, fResultType.precision);
@@ -788,6 +801,7 @@ inline int64_t TreeNode::getIntVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return fResult.intVal;
 
@@ -834,6 +848,7 @@ inline uint64_t TreeNode::getUintVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return fResult.intVal;
 
@@ -900,6 +915,7 @@ inline float TreeNode::getFloatVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (float)fResult.intVal;
 
@@ -968,6 +984,7 @@ inline double TreeNode::getDoubleVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
             return (double)fResult.intVal;
 
@@ -1101,6 +1118,9 @@ inline IDB_Decimal TreeNode::getDecimalVal()
         case CalpontSystemCatalog::DATETIME:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from datetime.");
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from timestamp.");
+
         case CalpontSystemCatalog::TIME:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from time.");
 
@@ -1158,6 +1178,14 @@ inline int64_t TreeNode::getDatetimeIntVal()
     else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
         //return (fResult.intVal & 0xFFFFFFFFFFF00000LL);
         return (fResult.intVal);
+    else
+        return getIntVal();
+}
+
+inline int64_t TreeNode::getTimestampIntVal()
+{
+    if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+        return fResult.intVal;
     else
         return getIntVal();
 }

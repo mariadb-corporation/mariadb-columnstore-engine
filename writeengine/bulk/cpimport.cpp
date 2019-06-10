@@ -51,6 +51,7 @@
 #include "utils_utf8.h"
 #include "IDBPolicy.h"
 #include "MonitorProcMem.h"
+#include "dataconvert.h"
 
 using namespace std;
 using namespace WriteEngine;
@@ -104,7 +105,7 @@ void printUsage()
          "    [-c readBufSize] [-e maxErrs] [-B libBufSize] [-n NullOption] " << endl <<
          "    [-E encloseChar] [-C escapeChar] [-I binaryOpt] [-S] "
          "[-d debugLevel] [-i] " << endl <<
-         "     [-D] [-N] [-L rejectDir]" << endl;
+         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl;
 
     cout << endl << "Traditional usage without positional parameters "
          "(XML job file required):" << endl <<
@@ -114,7 +115,7 @@ void printUsage()
          "    [-E encloseChar] [-C escapeChar] [-I binaryOpt] [-S] "
          "[-d debugLevel] [-i] " << endl <<
          "    [-p path] [-l loadFile]" << endl <<
-         "     [-D] [-N] [-L rejectDir]" << endl << endl;
+         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl << endl;
 
     cout << "    Positional parameters:" << endl <<
          "        dbName    Name of database to load" << endl <<
@@ -162,7 +163,10 @@ void printUsage()
          "        -S Treat string truncations as errors" << endl <<
          "        -D Disable timeout when waiting for table lock" << endl <<
          "        -N Disable console output" << endl <<
-         "        -L send *.err and *.bad (reject) files here" << endl << endl;
+         "        -L send *.err and *.bad (reject) files here" << endl <<
+         "        -T Timezone used for TIMESTAMP datatype" << endl <<
+         "           Possible values: \"SYSTEM\" (default)" << endl <<
+         "                          : Offset in the form +/-HH:MM" << endl << endl;
 
     cout << "    Example1:" << endl <<
          "        cpimport.bin -j 1234" << endl <<
@@ -313,7 +317,7 @@ void parseCmdLineArgs(
     std::string jobUUID;
 
     while ( (option = getopt(
-                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:SX:NL:")) != EOF )
+                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:")) != EOF )
     {
         switch (option)
         {
@@ -665,6 +669,21 @@ void parseCmdLineArgs(
             {
                 //     greater than col def
                 curJob.setTruncationAsError(true);   //     are reported as err
+                break;
+            }
+
+            case 'T':
+            {
+                std::string timeZone = optarg;
+                long offset;
+
+                if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
+                {
+                    startupError ( std::string(
+                                       "Value for option -T is invalid"), true );
+                }
+
+                curJob.setTimeZone( timeZone );
                 break;
             }
 

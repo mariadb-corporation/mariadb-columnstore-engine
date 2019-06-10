@@ -312,6 +312,16 @@ public:
         return false;
     }
 
+    inline const std::string timeZone () const
+    {
+        return fTimeZone;
+    }
+
+    inline void timeZone (const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
 protected:
     std::string fFunctionName;	// deprecated field
     uint8_t fAggOp;
@@ -335,6 +345,7 @@ protected:
     ColumnList fGroupByColList;
     ColumnList fProjectColList;
     SRCP fConstCol;
+    std::string fTimeZone;
 
 public:
     /***********************************************************
@@ -346,7 +357,7 @@ public:
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);
-        return TreeNode::getStrVal();
+        return TreeNode::getStrVal(fTimeZone);
     }
 
     /**
@@ -426,6 +437,15 @@ public:
         evaluate(row, isNull);
         return TreeNode::getDatetimeIntVal();
     }
+    /**
+    * F&E
+    */
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimestampIntVal();
+    }
+
 
 private:
     void evaluate(rowgroup::Row& row, bool& isNull);

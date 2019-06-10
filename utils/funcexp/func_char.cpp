@@ -173,6 +173,7 @@ string Func_char::getStrVal(Row& row,
 
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             isNull = true;
             return "";

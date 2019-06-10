@@ -125,6 +125,7 @@ CURRENT_USER {return CURRENT_USER;}
 DATE {ddlget_lval(yyscanner)->str=strdup("date"); return DATE;}
 DATETIME {return DATETIME;}
 TIME {ddlget_lval(yyscanner)->str=strdup("time"); return TIME;}
+TIMESTAMP {return TIMESTAMP;}
 DECIMAL {return DECIMAL;}
 DEC {return DECIMAL;}
 DEFAULT {return DEFAULT;}

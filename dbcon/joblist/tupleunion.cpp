@@ -101,7 +101,8 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
     fRowsReturned(0),
     runRan(false),
     joinRan(false),
-    sessionMemLimit(jobInfo.umMemLimit)
+    sessionMemLimit(jobInfo.umMemLimit),
+    fTimeZone(jobInfo.timeZone)
 {
     uniquer.reset(new Uniquer_t(10, Hasher(this), Eq(this), allocator));
     fExtendedInfo = "TUN: ";
@@ -475,7 +476,8 @@ void TupleUnion::normalize(const Row& in, Row* out)
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
                     case CalpontSystemCatalog::TIME:
-                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a time, date or datetime");
+                    case CalpontSystemCatalog::TIMESTAMP:
+                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a timestamp, time, date or datetime");
 
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
@@ -597,7 +599,8 @@ dec1:
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
                     case CalpontSystemCatalog::TIME:
-                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a time, date or datetime");
+                    case CalpontSystemCatalog::TIMESTAMP:
+                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a timestamp, time, date or datetime");
 
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
@@ -712,6 +715,37 @@ dec2:
                         break;
                     }
 
+                    case CalpontSystemCatalog::TIMESTAMP:
+                    {
+                        dataconvert::Date date(in.getUintField(i));
+                        dataconvert::MySQLTime m_time;
+                        m_time.year = date.year;
+                        m_time.month = date.month;
+                        m_time.day = date.day;
+                        m_time.hour = 0;
+                        m_time.minute = 0;
+                        m_time.second = 0;
+                        m_time.second_part = 0;
+
+                        dataconvert::TimeStamp timeStamp;
+                        bool isValid = true;
+                        int64_t seconds = dataconvert::mySQLTimeToGmtSec(m_time, fTimeZone, isValid);
+
+                        if (!isValid)
+                        {
+                            timeStamp.reset();
+                        }
+                        else
+                        {
+                            timeStamp.second = seconds;
+                            timeStamp.msecond = m_time.second_part;
+                        }
+
+                        uint64_t outValue = (uint64_t) *(reinterpret_cast<uint64_t*>(&timeStamp));
+                        out->setUintField(outValue, i);
+                        break;
+                    }
+
                     case CalpontSystemCatalog::CHAR:
                     case CalpontSystemCatalog::TEXT:
                     case CalpontSystemCatalog::VARCHAR:
@@ -747,6 +781,39 @@ dec2:
                         break;
                     }
 
+                    case CalpontSystemCatalog::TIMESTAMP:
+                    {
+                        uint64_t val = in.getUintField(i);
+                        dataconvert::DateTime dtime(val);
+                        dataconvert::MySQLTime m_time;
+                        dataconvert::TimeStamp timeStamp;
+
+                        m_time.year = dtime.year;
+                        m_time.month = dtime.month;
+                        m_time.day = dtime.day;
+                        m_time.hour = dtime.hour;
+                        m_time.minute = dtime.minute;
+                        m_time.second = dtime.second;
+                        m_time.second_part = dtime.msecond;
+
+                        bool isValid = true;
+                        int64_t seconds = mySQLTimeToGmtSec(m_time, fTimeZone, isValid);
+
+                        if (!isValid)
+                        {
+                            timeStamp.reset();
+                        }
+                        else
+                        {
+                            timeStamp.second = seconds;
+                            timeStamp.msecond = m_time.second_part;
+                        }
+
+                        uint64_t outValue = (uint64_t) *(reinterpret_cast<uint64_t*>(&timeStamp));
+                        out->setUintField(outValue, i);
+                        break;
+                    }
+
                     case CalpontSystemCatalog::CHAR:
                     case CalpontSystemCatalog::TEXT:
                     case CalpontSystemCatalog::VARCHAR:
@@ -760,6 +827,70 @@ dec2:
                     {
                         ostringstream os;
                         os << "TupleUnion::normalize(): tried an illegal conversion: datetime to "
+                           << out->getColTypes()[i];
+                        throw logic_error(os.str());
+                    }
+                }
+
+                break;
+
+            case CalpontSystemCatalog::TIMESTAMP:
+                switch (out->getColTypes()[i])
+                {
+                    case CalpontSystemCatalog::TIMESTAMP:
+                        out->setIntField(in.getIntField(i), i);
+                        break;
+
+                    case CalpontSystemCatalog::DATE:
+                    case CalpontSystemCatalog::DATETIME:
+                    {
+                        uint64_t val = in.getUintField(i);
+                        dataconvert::TimeStamp timestamp(val);
+                        int64_t seconds = timestamp.second;
+                        uint64_t outValue;
+
+                        dataconvert::MySQLTime time;
+                        dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
+
+                        if (out->getColTypes()[i] == CalpontSystemCatalog::DATE)
+                        {
+                            dataconvert::Date date;
+                            date.year = time.year;
+                            date.month = time.month;
+                            date.day = time.day;
+                            date.spare = 0;
+                            outValue = (uint32_t) *(reinterpret_cast<uint32_t*>(&date));
+                        }
+                        else
+                        {
+                            dataconvert::DateTime datetime;
+                            datetime.year = time.year;
+                            datetime.month = time.month;
+                            datetime.day = time.day;
+                            datetime.hour = time.hour;
+                            datetime.minute = time.minute;
+                            datetime.second = time.second;
+                            datetime.msecond = timestamp.msecond;
+                            outValue = (uint64_t) *(reinterpret_cast<uint64_t*>(&datetime));
+                        }
+
+                        out->setUintField(outValue, i);
+                        break;
+                    }
+
+                    case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
+                    case CalpontSystemCatalog::VARCHAR:
+                    {
+                        string d = DataConvert::timestampToString(in.getUintField(i), fTimeZone);
+                        out->setStringField(d, i);
+                        break;
+                    }
+
+                    default:
+                    {
+                        ostringstream os;
+                        os << "TupleUnion::normalize(): tried an illegal conversion: timestamp to "
                            << out->getColTypes()[i];
                         throw logic_error(os.str());
                     }
@@ -1215,6 +1346,10 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
 
         case CalpontSystemCatalog::DATETIME:
             out->setUintField<8>(joblist::DATETIMENULL, col);
+            break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
+            out->setUintField<8>(joblist::TIMESTAMPNULL, col);
             break;
 
         case CalpontSystemCatalog::TIME:

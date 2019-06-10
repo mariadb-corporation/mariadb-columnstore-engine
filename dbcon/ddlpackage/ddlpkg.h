@@ -237,6 +237,7 @@ enum DDL_DATATYPES
     DDL_UNSIGNED_NUMERIC,
     DDL_TEXT,
     DDL_TIME,
+    DDL_TIMESTAMP,
     DDL_INVALID_DATATYPE
 };
 
@@ -274,7 +275,8 @@ const std::string DDLDatatypeString[] =
     "unsigned-double",
     "unsigned-numeric",
     "text",
-    "time"
+    "time",
+    "timestamp"
     ""
 };
 
@@ -331,6 +333,7 @@ const int  DDLDatatypeLength[] =
     2,      // UNSIGNED_NUMERIC,
     8,      // TEXT
     8,      // TIME
+    8,      // TIMESTAMP
     -1		// INVALID LENGTH
 };
 
@@ -1396,6 +1399,7 @@ struct AlterTableStatement : public SqlStatement
 
     QualifiedName* fTableName;
     AlterTableActionList fActions;
+    std::string fTimeZone;
 };
 
 

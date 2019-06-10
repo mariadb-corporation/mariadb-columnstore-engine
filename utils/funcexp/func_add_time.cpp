@@ -80,6 +80,9 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
         bool& isNull,
         CalpontSystemCatalog::ColType& ct)
 {
+    if (parm[0]->data()->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+        return getTimestampIntVal(row, parm, isNull, ct);
+
     int64_t val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
 
     if (isNull)
@@ -102,6 +105,90 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
     dt1.minute = (val1 >> 26) & 0x3f;
     dt1.second = (val1 >> 20) & 0x3f;
     dt1.msecond = val1 & 0xfffff;
+
+    int64_t	time = DataConvert::stringToTime(val2);
+
+    if (time == -1)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    Time t2 = *(reinterpret_cast<Time*>(&time));
+
+    // MySQL TIME type range '-838:59:59' and '838:59:59'
+    if (t2.minute > 59 || t2.second > 59 || t2.msecond > 999999)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    int val_sign = 1;
+
+    if (t2.hour < 0)
+    {
+        val_sign = -1;
+    }
+
+    if (abs(t2.hour) > 838)
+    {
+        t2.hour = 838;
+        t2.minute = 59;
+        t2.second = 59;
+        t2.msecond = 999999;
+    }
+
+    if (val_sign * sign < 0)
+    {
+        t2.hour = -abs(t2.hour);
+        t2.minute = -abs(t2.minute);
+        t2.second = -abs(t2.second);
+        t2.msecond = -abs(t2.msecond);
+    }
+    else
+    {
+        t2.hour = abs(t2.hour);
+        t2.minute = abs(t2.minute);
+        t2.second = abs(t2.second);
+        t2.msecond = abs(t2.msecond);
+    }
+
+    t2.day = 0;
+
+    return addTime(dt1, t2);
+}
+
+int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    int64_t val1 = parm[0]->data()->getTimestampIntVal(row, isNull);
+
+    if (isNull)
+        return -1;
+
+    // Adding a zero date to a time is always NULL
+    if (val1 == 0)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    const string& val2 = parm[1]->data()->getStrVal(row, isNull);
+    int sign = parm[2]->data()->getIntVal(row, isNull);
+    DateTime dt1;
+    TimeStamp timestamp(val1);
+    int64_t seconds = timestamp.second;
+    MySQLTime m_time;
+    gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+    dt1.year = m_time.year;
+    dt1.month = m_time.month;
+    dt1.day = m_time.day;
+    dt1.hour = m_time.hour;
+    dt1.minute = m_time.minute;
+    dt1.second = m_time.second;
+    dt1.msecond = timestamp.msecond;
 
     int64_t	time = DataConvert::stringToTime(val2);
 

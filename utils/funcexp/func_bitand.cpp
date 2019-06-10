@@ -157,6 +157,17 @@ int64_t Func_bitand::getIntVal(Row& row,
             }
             break;
 
+            case execplan::CalpontSystemCatalog::TIMESTAMP:
+            {
+                TimeStamp timestamp(parm[i]->data()->getTimestampIntVal(row, isNull));
+                int64_t seconds = timestamp.second;
+                MySQLTime m_time;
+                gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+
+                values.push_back((m_time.month * 100000000000000) + (m_time.day * 1000000000000) + (m_time.hour * 10000000000) + (m_time.minute * 100000000) + (m_time.second * 1000000) + timestamp.msecond);
+            }
+            break;
+
             case execplan::CalpontSystemCatalog::TIME:
             {
                 int64_t time = parm[i]->data()->getTimeIntVal(row, isNull);

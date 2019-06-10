@@ -84,6 +84,12 @@ int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row,
             sec = (uint32_t)((val >> 20) & 0x3f);
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            //TimeStamp timeStamp(val);
+            return ((val >> 20) & 0xFFFFFFFFFFFULL);
+            break;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:

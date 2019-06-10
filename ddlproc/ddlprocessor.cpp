@@ -144,6 +144,8 @@ struct PackageHandler
                     qts.schema_name = alterTableStmt.schemaName();
                     fQtc.postQueryTele(qts);
 
+                    processor->fTimeZone = alterTableStmt.fTimeZone;
+
                     result = processor->processPackage(alterTableStmt);
 
                     systemCatalogPtr->removeCalpontSystemCatalog( alterTableStmt.fSessionID );

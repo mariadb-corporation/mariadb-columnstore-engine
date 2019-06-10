@@ -484,10 +484,15 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             int32_t s = 0;
 
-            string value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
+            string value;
+            if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+                value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), fTimeZone);
+            else
+                value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
 
             //strip off micro seconds
             value = value.substr(0, 14);

@@ -501,6 +501,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
             cc = new ConstantColumn(localPm);
         else
             cc = new ConstantColumn("", ConstantColumn::NULLDATA);
+        cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
         cc->alias(ifp->full_name() ? ifp->full_name() : "");
         return cc;
@@ -564,6 +565,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
         parms.push_back(sptp);
         fc->functionParms(parms);
         fc->expressionId(ci->expressionId++);
+        fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
         // string result type
         CalpontSystemCatalog::ColType ct;

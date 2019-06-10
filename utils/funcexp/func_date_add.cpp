@@ -777,6 +777,24 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            DateTime dt;
+            dt.year = m_time.year;
+            dt.month = m_time.month;
+            dt.day = m_time.day;
+            dt.hour = m_time.hour;
+            dt.minute = m_time.minute;
+            dt.second = m_time.second;
+            dt.msecond = timestamp.msecond;
+            val = *(reinterpret_cast<int64_t*>(&dt));
+            break;
+        }
+
         default:
         {
             isNull = true;

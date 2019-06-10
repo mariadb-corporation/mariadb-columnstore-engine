@@ -115,6 +115,20 @@ public:
     /**
      * accessor
      */
+    inline const std::string& timeZone() const
+    {
+        return fTimeZone;
+    }
+    /**
+     * mutator
+     */
+    inline void timeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+    /**
+     * accessor
+     */
     virtual const std::string data() const;
     /**
      * accessor
@@ -192,6 +206,7 @@ private:
     std::string fConstval;
     int fType;
     std::string fData;
+    std::string fTimeZone;
 
     /***********************************************************
      *                  F&E framework                          *
@@ -310,6 +325,21 @@ public:
         if (!fResult.valueConverted)
         {
             fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal);
+            fResult.valueConverted = true;
+        }
+
+        return fResult.intVal;
+    }
+    /**
+     * F&E
+     */
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        isNull = isNull || (fType == NULLDATA);
+
+        if (!fResult.valueConverted)
+        {
+            fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal, fTimeZone);
             fResult.valueConverted = true;
         }
 

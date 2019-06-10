@@ -969,6 +969,7 @@ const uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCat
         case execplan::CalpontSystemCatalog::VARCHAR :
         case execplan::CalpontSystemCatalog::DATE :
         case execplan::CalpontSystemCatalog::DATETIME :
+        case execplan::CalpontSystemCatalog::TIMESTAMP :
         case execplan::CalpontSystemCatalog::TIME :
         case execplan::CalpontSystemCatalog::VARBINARY :
         case execplan::CalpontSystemCatalog::BLOB :

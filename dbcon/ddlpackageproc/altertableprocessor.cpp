@@ -214,6 +214,11 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 
             break;
 
+        case (CalpontSystemCatalog::TIMESTAMP):
+            if (newType.fType == DDL_TIMESTAMP) return true;
+
+            break;
+
         case (CalpontSystemCatalog::TIME):
             if (newType.fType == DDL_TIME) return true;
 
@@ -989,6 +994,7 @@ void AlterTableProcessor::addColumn (uint32_t sessionID, execplan::CalpontSystem
                 bs << (ByteStream::byte) column_iterator->colType.colDataType;
                 bs << (uint32_t) column_iterator->colType.colWidth;
                 bs << (ByteStream::byte) column_iterator->colType.compressionType;
+                bs << fTimeZone;
                 //cout << "sending command fillcolumn " << endl;
                 uint32_t msgRecived = 0;
                 fWEClient->write_to_all(bs);

@@ -271,6 +271,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
                     case CalpontSystemCatalog::TIME:
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIMESTAMP:
                     {
                         uint64_t valIn;
 
@@ -687,6 +688,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         case execplan::CalpontSystemCatalog::UBIGINT:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         case execplan::CalpontSystemCatalog::TIME:
             if (valOut.empty())
             {
@@ -931,6 +933,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::TIME:
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
+                        case CalpontSystemCatalog::TIMESTAMP:
                         {
                             uint64_t valIn;
 

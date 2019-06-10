@@ -110,6 +110,22 @@ uint64_t Func::stringToDatetime(const string str)
     return ret;
 }
 
+uint64_t Func::stringToTimestamp(const string str)
+{
+    int64_t ret = DataConvert::stringToTimestamp(str, fTimeZone);
+
+    if (ret == -1)
+    {
+        Message::Args args;
+        args.add("timestamp");
+        args.add(str);
+        unsigned errcode = ERR_INCORRECT_VALUE;
+        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+    }
+
+    return ret;
+}
+
 int64_t Func::stringToTime(const string str)
 {
     int64_t ret = DataConvert::stringToTime(str);
@@ -140,6 +156,11 @@ uint64_t Func::intToDatetime(int64_t i)
     if ((uint64_t) i < 0xFFFFFFFFL)
         return (i << 32);
 
+    return i;
+}
+
+uint64_t Func::intToTimestamp(int64_t i)
+{
     return i;
 }
 

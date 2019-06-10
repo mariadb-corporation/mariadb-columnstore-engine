@@ -406,6 +406,35 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
             return numericCompare(val1, rop->getDatetimeIntVal(row, isNull)) && !isNull;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            if (fOp == OP_ISNULL)
+            {
+                lop->getTimestampIntVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return ret;
+            }
+
+            if (fOp == OP_ISNOTNULL)
+            {
+                lop->getTimestampIntVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return !ret;
+            }
+
+            if (isNull)
+                return false;
+
+            int64_t val1 = lop->getTimestampIntVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            return numericCompare(val1, rop->getTimestampIntVal(row, isNull)) && !isNull;
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             if (fOp == OP_ISNULL)

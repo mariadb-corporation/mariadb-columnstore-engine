@@ -44,7 +44,7 @@ using namespace execplan;
 namespace cal_impl_if
 {
 
-void derivedTableOptimization(SCSEP& csep)
+void derivedTableOptimization(THD* thd, SCSEP& csep)
 {
     // @bug5634. replace the unused column with ConstantColumn from derived table column list,
     // ExeMgr will not project ConstantColumn. Only count for local derived column.
@@ -102,9 +102,13 @@ void derivedTableOptimization(SCSEP& csep)
                         cols[i]->derivedRefCol()->decRefCount();
 
                     cols[i].reset(new ConstantColumn(val));
+                    (dynamic_cast<ConstantColumn*>(cols[i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
 
                     for (uint j = 0; j < unionColVec.size(); j++)
+                    {
                         unionColVec[j][i].reset(new ConstantColumn(val));
+                        (dynamic_cast<ConstantColumn*>(unionColVec[j][i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                    }
                 }
             }
 
@@ -136,7 +140,7 @@ void derivedTableOptimization(SCSEP& csep)
     if (horizontalOptimization && pt)
     {
         pt->walk(setDerivedTable);
-        setDerivedFilter(pt, derivedTbFilterMap, derivedTbList);
+        setDerivedFilter(thd, pt, derivedTbFilterMap, derivedTbList);
         csep->filters(pt);
     }
 
@@ -208,7 +212,7 @@ void derivedTableOptimization(SCSEP& csep)
     for (uint i = 0; i < csep->subSelectList().size(); i++)
     {
         SCSEP subselect(boost::dynamic_pointer_cast<CalpontSelectExecutionPlan>(csep->subSelectList()[i]));
-        derivedTableOptimization(subselect);
+        derivedTableOptimization(thd, subselect);
     }
 }
 
@@ -246,7 +250,8 @@ void setDerivedTable(execplan::ParseTree* n)
     }
 }
 
-ParseTree* setDerivedFilter(ParseTree*& n, map<string, ParseTree*>& filterMap,
+ParseTree* setDerivedFilter(THD* thd, ParseTree*& n,
+                            map<string, ParseTree*>& filterMap,
                             CalpontSelectExecutionPlan::SelectList& derivedTbList)
 {
     if (!(n->derivedTable().empty()))
@@ -288,6 +293,7 @@ ParseTree* setDerivedFilter(ParseTree*& n, map<string, ParseTree*>& filterMap,
 
         int64_t val = 1;
         n = new ParseTree(new ConstantColumn(val));
+        (dynamic_cast<ConstantColumn*>(n->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
     }
     else
     {
@@ -303,10 +309,10 @@ ParseTree* setDerivedFilter(ParseTree*& n, map<string, ParseTree*>& filterMap,
             ParseTree* rhs = n->right();
 
             if (lhs)
-                n->left(setDerivedFilter(lhs, filterMap, derivedTbList));
+                n->left(setDerivedFilter(thd, lhs, filterMap, derivedTbList));
 
             if (rhs)
-                n->right(setDerivedFilter(rhs, filterMap, derivedTbList));
+                n->right(setDerivedFilter(thd, rhs, filterMap, derivedTbList));
         }
     }
 

@@ -50,7 +50,8 @@ namespace
 inline bool getBool(rowgroup::Row& row,
                     funcexp::FunctionParm& pm,
                     bool& isNull,
-                    CalpontSystemCatalog::ColType& ct)
+                    CalpontSystemCatalog::ColType& ct,
+                    const string& timeZone)
 {
 
     string expr;
@@ -89,6 +90,14 @@ inline bool getBool(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             expr = dataconvert::DataConvert::datetimeToString(pm[0]->data()->getDatetimeIntVal(row, isNull));
+            //strip off micro seconds
+            expr = expr.substr(0, 19);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            expr = dataconvert::DataConvert::timestampToString(pm[0]->data()->getTimestampIntVal(row, isNull), timeZone);
             //strip off micro seconds
             expr = expr.substr(0, 19);
             break;
@@ -161,6 +170,14 @@ inline bool getBool(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            pattern = dataconvert::DataConvert::timestampToString(pm[1]->data()->getTimestampIntVal(row, isNull), timeZone);
+            //strip off micro seconds
+            pattern = pattern.substr(0, 19);
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             pattern = dataconvert::DataConvert::timeToString(pm[1]->data()->getTimeIntVal(row, isNull));
@@ -227,7 +244,7 @@ bool Func_regexp::getBoolVal(rowgroup::Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-    return getBool(row, pm, isNull, ct) && !isNull;
+    return getBool(row, pm, isNull, ct, fTimeZone) && !isNull;
 }
 
 

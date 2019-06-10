@@ -694,6 +694,15 @@ public:
         return fIsDML;
     }
 
+    void timeZone(const std::string& timezone)
+    {
+        fTimeZone = timezone;
+    }
+    const std::string timeZone() const
+    {
+        return fTimeZone;
+    }
+
     /**
      * The serialization interface
      */
@@ -895,6 +904,8 @@ private:
     uint64_t fDJSPartitionSize;
     int64_t fUMMemLimit;
     bool fIsDML;
+
+    std::string fTimeZone;
 };
 
 /**

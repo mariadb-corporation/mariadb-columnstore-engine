@@ -159,6 +159,15 @@ int64_t Func_ceil::getIntVal(Row& row,
         }
         break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
+
+            if (!isNull)
+                ret = dt.convertToMySQLint(fTimeZone);
+        }
+        break;
+
         case CalpontSystemCatalog::TIME:
         {
             Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
@@ -252,6 +261,15 @@ uint64_t Func_ceil::getUintVal(Row& row,
 
             if (!isNull)
                 ret = dt.convertToMySQLint();
+        }
+        break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
+
+            if (!isNull)
+                ret = dt.convertToMySQLint(fTimeZone);
         }
         break;
 

@@ -101,6 +101,12 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
             return (int64_t)date.size();
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            string date = dataconvert::DataConvert::timestampToString(parm[0]->data()->getTimestampIntVal(row, isNull), fTimeZone);
+            return (int64_t)date.size();
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             string date = dataconvert::DataConvert::timeToString(parm[0]->data()->getTimeIntVal(row, isNull));

@@ -167,6 +167,10 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
             return "time";
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+            return "timestamp";
+            break;
+
         case CalpontSystemCatalog::VARCHAR:
             return "varchar";
             break;

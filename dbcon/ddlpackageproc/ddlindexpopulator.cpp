@@ -331,6 +331,7 @@ boost::any   DDLIndexPopulator::convertData(const CalpontSystemCatalog::ColType&
 
         case execplan::CalpontSystemCatalog::DATETIME: 	// @bug 375
         case execplan::CalpontSystemCatalog::TIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         case execplan::CalpontSystemCatalog::BIGINT:
             return  *reinterpret_cast<long long*>(&data);
 
@@ -526,6 +527,7 @@ bool DDLIndexPopulator::checkNotNull(const IdxTuple& data, const CalpontSystemCa
 
         case execplan::CalpontSystemCatalog::DATETIME:
         case execplan::CalpontSystemCatalog::TIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
             isNull =  any_cast<long long>(data.data) == any_cast<long long>(nullvalue);
             break;
 

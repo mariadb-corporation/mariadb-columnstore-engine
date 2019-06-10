@@ -88,6 +88,108 @@ inline uint32_t tid2sid(const uint32_t tid)
 }
 
 //StopWatch timer;
+int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
+{
+    char attribute_buffer[1024];
+    String attribute(attribute_buffer, sizeof(attribute_buffer),
+                     &my_charset_bin);
+
+    std::string cols = " (";
+    std::string vals = " values (";
+    columns = 0;
+
+    for (Field** field = table->field; *field; field++)
+    {
+        const char* ptr;
+        const char* end_ptr;
+
+        if ((*field)->is_null())
+            ptr = end_ptr = 0;
+        else
+        {
+            bitmap_set_bit(table->read_set, (*field)->field_index);
+            (*field)->val_str(&attribute, &attribute);
+            ptr = attribute.ptr();
+            end_ptr = attribute.length() + ptr;
+        }
+
+        if (columns > 0)
+        {
+            cols.append(",");
+            vals.append(",");
+        }
+
+        columns++;
+
+        cols.append((*field)->field_name.str);
+
+        if (ptr == end_ptr)
+        {
+            vals.append ("NULL");
+        }
+        else
+        {
+
+            if ( (*field)->type() == MYSQL_TYPE_VARCHAR ||
+                    /*FIXME: (*field)->type() == MYSQL_TYPE_VARBINARY || */
+                    (*field)->type() == MYSQL_TYPE_VAR_STRING ||
+                    (*field)->type() == MYSQL_TYPE_STRING ||
+                    (*field)->type() == MYSQL_TYPE_DATE ||
+                    (*field)->type() == MYSQL_TYPE_DATETIME ||
+                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
+                    (*field)->type() == MYSQL_TYPE_TIME )
+                vals.append("'");
+
+            while (ptr < end_ptr)
+            {
+
+                if (*ptr == '\r')
+                {
+                    ptr++;
+                }
+                else if (*ptr == '\n')
+                {
+                    ptr++;
+                }
+                else if (*ptr == '\'' )
+                {
+                    //@Bug 1820. Replace apostrophe with strange character to pass parser.
+                    vals += '\252';
+                    ptr++;
+                }
+                else
+                    vals += *ptr++;
+            }
+
+            if ( (*field)->type() == MYSQL_TYPE_VARCHAR ||
+                    /*FIXME: (*field)->type() == MYSQL_TYPE_VARBINARY || */
+                    (*field)->type() == MYSQL_TYPE_VAR_STRING ||
+                    (*field)->type() == MYSQL_TYPE_STRING ||
+                    (*field)->type() == MYSQL_TYPE_DATE ||
+                    (*field)->type() == MYSQL_TYPE_DATETIME ||
+                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
+                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
+                    (*field)->type() == MYSQL_TYPE_TIME )
+                vals.append("'");
+        }
+    }
+
+    if (columns)
+    {
+        cols.append(") ");
+        vals.append(") ");
+        buffer = "INSERT INTO ";
+        buffer.append(table->s->table_name.str);
+        buffer.append(cols);
+        buffer.append(vals);
+    }
+
+    return columns;
+}
+
 
 uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
 {
@@ -312,6 +414,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
     pDMLPackage->set_TableName(name);
     name = table->s->db.str;
     pDMLPackage->set_SchemaName(name);
+    pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
 
     if (thd->lex->sql_command == SQLCOM_INSERT_SELECT)
         pDMLPackage->set_isInsertSelect(true);
@@ -817,6 +920,41 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
 
                         buf += table->field[colpos]->pack_length();
                     }
+
+                    break;
+                }
+
+                case CalpontSystemCatalog::TIMESTAMP:
+                {
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                    {
+                        fprintf(ci.filePtr, "%c", ci.delimiter);
+                    }
+                    else
+                    {
+                        const uchar* pos = buf;
+                        struct timeval tm;
+                        my_timestamp_from_binary(&tm, pos, table->field[colpos]->decimals());
+
+                        MySQLTime time;
+                        gmtSecToMySQLTime(tm.tv_sec, time, current_thd->variables.time_zone->get_name()->ptr());
+
+                        if (!tm.tv_usec)
+                        {
+                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
+                                    time.year, time.month, time.day,
+                                    time.hour, time.minute, time.second, ci.delimiter);
+                        }
+                        else
+                        {
+                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
+                                    time.year, time.month, time.day,
+                                    time.hour, time.minute, time.second,
+                                    tm.tv_usec, ci.delimiter);
+                        }
+                    }
+
+                    buf += table->field[colpos]->pack_length();
 
                     break;
                 }

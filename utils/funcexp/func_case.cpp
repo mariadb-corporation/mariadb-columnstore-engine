@@ -107,6 +107,27 @@ inline uint64_t simple_case_cmp(Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            int64_t ev = parm[n]->data()->getTimestampIntVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getTimestampIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             int64_t ev = parm[n]->data()->getTimeIntVal(row, isNull);
@@ -574,6 +595,20 @@ int64_t Func_simple_case::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 
+int64_t Func_simple_case::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMESTAMPNULL;
+
+    return parm[i]->data()->getTimestampIntVal(row, isNull);
+}
+
+
 int64_t Func_simple_case::getTimeIntVal(rowgroup::Row& row,
                                         FunctionParm& parm,
                                         bool& isNull,
@@ -723,6 +758,20 @@ int64_t Func_searched_case::getDatetimeIntVal(rowgroup::Row& row,
         return joblist::DATETIMENULL;
 
     return parm[i]->data()->getDatetimeIntVal(row, isNull);
+}
+
+
+int64_t Func_searched_case::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMESTAMPNULL;
+
+    return parm[i]->data()->getTimestampIntVal(row, isNull);
 }
 
 

@@ -71,6 +71,18 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row,
             day = (uint32_t)((val >> 38) & 0x3f);
             break;
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+            MySQLTime m_time;
+            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            year = m_time.year;
+            month = m_time.month;
+            day = m_time.day;
+            break;
+        }
+
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());

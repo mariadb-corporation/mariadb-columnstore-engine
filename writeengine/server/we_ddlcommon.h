@@ -277,6 +277,13 @@ inline boost::any getNullValueForType(const execplan::CalpontSystemCatalog::ColT
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            long long d = joblist::TIMESTAMPNULL;
+            value = d;
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::CHAR:
         {
             std::string charnull;
@@ -438,6 +445,10 @@ inline int convertDataType(int dataType)
 
         case ddlpackage::DDL_TIME:
             calpontDataType = execplan::CalpontSystemCatalog::TIME;
+            break;
+
+        case ddlpackage::DDL_TIMESTAMP:
+            calpontDataType = CalpontSystemCatalog::TIMESTAMP;
             break;
 
         case ddlpackage::DDL_CLOB:

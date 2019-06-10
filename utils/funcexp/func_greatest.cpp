@@ -227,6 +227,26 @@ int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row,
     return greatestStr;
 }
 
+int64_t Func_greatest::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& ct)
+{
+    int64_t str = fp[0]->data()->getTimestampIntVal(row, isNull);
+
+    int64_t greatestStr = str;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        int64_t str1 = fp[i]->data()->getTimestampIntVal(row, isNull);
+
+        if ( greatestStr < str1 )
+            greatestStr = str1;
+    }
+
+    return greatestStr;
+}
+
 int64_t Func_greatest::getTimeIntVal(rowgroup::Row& row,
                                      FunctionParm& fp,
                                      bool& isNull,

@@ -76,6 +76,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::SMALLINT:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             period1 = parm[0]->data()->getIntVal(row, isNull);
             break;
@@ -124,6 +125,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::SMALLINT:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             period2 = parm[1]->data()->getIntVal(row, isNull);
             break;
