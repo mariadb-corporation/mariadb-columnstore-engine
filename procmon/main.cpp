@@ -1013,6 +1013,9 @@ int main(int argc, char** argv)
                                                (*listPtr).DepModuleName,
                                                (*listPtr).LogFile,
                                                initType);
+
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                         if (listPtr->ProcessName == "StorageManager")
                             oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                               oam::ACTIVE, listPtr->processID);
@@ -1659,6 +1662,9 @@ static void chldHandleThread(MonitorConfig config)
                                                (*listPtr).DepModuleName,
                                                (*listPtr).LogFile,
                                                initStatus);
+
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                         if (listPtr->ProcessName == "StorageManager")
                             oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                               oam::ACTIVE, listPtr->processID);
