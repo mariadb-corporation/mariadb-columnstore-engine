@@ -93,7 +93,7 @@ option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during c
 
 check_pie_supported(OUTPUT_VARIABLE PIE_SUPPORTED LANGUAGES CXX)
 status("Compiler position independent executable support: ${CMAKE_CXX_LINK_PIE_SUPPORTED}")
-cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" FALSE CMAKE_CXX_LINK_PIE_SUPPORTED FALSE)
+cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" TRUE CMAKE_CXX_LINK_PIE_SUPPORTED FALSE)
 mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
 
 
