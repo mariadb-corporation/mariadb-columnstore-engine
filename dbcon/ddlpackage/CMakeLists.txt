@@ -57,7 +57,6 @@ target_link_libraries(ddlpackage
     oamcpp_h
     )
 
-target_pch(ddlpackage)
 
 SET_TARGET_PROPERTIES(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

@@ -1,5 +1,5 @@
 
-include(CheckCXXCompilerFlag)
+include_guard(GLOBAL)
 
 set(SANATIZE_OPS none CACHE STRING "Use dynamic sanitizer")
 set_property(CACHE SANATIZE_OPS PROPERTY STRINGS none address pointer-compare thread leak undefined)

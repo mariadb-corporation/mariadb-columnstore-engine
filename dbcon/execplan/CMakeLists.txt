@@ -1,6 +1,6 @@
 target_include_directories(execplan_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(execplan SHARED 
+cs_add_library(execplan SHARED 
     calpontsystemcatalog.cpp
     aggregatecolumn.cpp
     arithmeticcolumn.cpp
@@ -69,7 +69,6 @@ target_link_libraries(execplan
 
 set_target_properties(execplan PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(execplan)
 
 install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

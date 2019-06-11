@@ -1,5 +1,5 @@
 
-add_executable(viewtablelock viewtablelock.cpp)
+cs_add_executable(viewtablelock viewtablelock.cpp)
 
 target_link_libraries(viewtablelock 
   PRIVATE Boost::system

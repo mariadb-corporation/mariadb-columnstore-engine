@@ -1,7 +1,7 @@
 
 target_include_directories(ddlpackageproc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(ddlpackageproc SHARED 
+cs_add_library(ddlpackageproc SHARED 
     ddlpackageprocessor.cpp
     createtableprocessor.cpp
     altertableprocessor.cpp
@@ -27,7 +27,6 @@ target_link_libraries(ddlpackageproc
 
 set_target_properties(ddlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(ddlpackageproc)
 
 install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

@@ -1,6 +1,6 @@
 target_include_directories(ddlcleanuputil_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(ddlcleanuputil SHARED ddlcleanuputil.cpp)
+cs_add_library(ddlcleanuputil SHARED ddlcleanuputil.cpp)
 
 target_link_libraries(ddlcleanuputil
   INTERFACE ddlcleanuputil_h

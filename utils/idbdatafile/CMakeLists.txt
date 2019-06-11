@@ -2,7 +2,7 @@
 target_include_directories(idbdatafile_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_library(idbdatafile SHARED 
+cs_add_library(idbdatafile SHARED 
     BufferedFile.cpp
     IDBDataFile.cpp
     IDBFactory.cpp
@@ -31,7 +31,6 @@ target_link_libraries(idbdatafile
 
 target_compile_definitions(idbdatafile PRIVATE BOOST_NO_CXX11_SCOPED_ENUMS)
 
-target_pch(idbdatafile)
 
 set_target_properties(idbdatafile PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

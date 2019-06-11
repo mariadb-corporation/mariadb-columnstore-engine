@@ -1,6 +1,6 @@
 
 
-add_executable(getConfig main.cpp)
+cs_add_executable(getConfig main.cpp)
 
 target_link_libraries(getConfig 
   PRIVATE brm

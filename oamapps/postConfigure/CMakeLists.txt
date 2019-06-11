@@ -1,5 +1,5 @@
 # postConfigure
-add_executable(postConfigure postConfigure.cpp helpers.cpp)
+cs_add_executable(postConfigure postConfigure.cpp helpers.cpp)
 
 target_link_libraries(postConfigure 
   PRIVATE 
@@ -10,7 +10,7 @@ target_link_libraries(postConfigure
 
 
 # installer
-add_executable(installer installer.cpp helpers.cpp)
+cs_add_executable(installer installer.cpp helpers.cpp)
 
 target_link_libraries(installer 
   PRIVATE 
@@ -20,7 +20,7 @@ target_link_libraries(installer
 
 
 # getMySQLpw 
-add_executable(getMySQLpw getMySQLpw.cpp)
+cs_add_executable(getMySQLpw getMySQLpw.cpp)
 
 target_link_libraries(getMySQLpw 
   PRIVATE
@@ -31,7 +31,7 @@ target_link_libraries(getMySQLpw
 
 #[[
 
-add_executable(amazonInstaller amazonInstaller.cpp helpers.cpp)
+cs_add_executable(amazonInstaller amazonInstaller.cpp helpers.cpp)
 
 target_link_libraries(amazonInstaller ${ENGINE_LDFLAGS} readline ncurses ${SNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
@@ -40,7 +40,7 @@ install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 # mycnfUpgrade
-add_executable(mycnfUpgrade mycnfUpgrade.cpp)
+cs_add_executable(mycnfUpgrade mycnfUpgrade.cpp)
 
 target_link_libraries(mycnfUpgrade 
   PRIVATE 

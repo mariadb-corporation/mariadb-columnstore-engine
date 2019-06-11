@@ -1,5 +1,5 @@
 
-add_executable(ServerMonitor 
+cs_add_executable(ServerMonitor 
     main.cpp
     serverMonitor.cpp
     cpuMonitor.cpp
@@ -20,7 +20,6 @@ target_link_libraries(ServerMonitor
           idbboot_h
           )
 
-target_pch(ServerMonitor)
 
 install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -6,7 +6,7 @@ target_include_directories(primproc_h
   )
 
 
-add_executable(PrimProc 
+cs_add_executable(PrimProc 
     primproc.cpp
     batchprimitiveprocessor.cpp
     bppseeder.cpp
@@ -46,7 +46,6 @@ target_link_libraries(PrimProc
     crashtrace
     we_shared_h
     )
-target_pch(PrimProc)
 
 
 install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

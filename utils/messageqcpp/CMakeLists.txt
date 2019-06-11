@@ -1,7 +1,7 @@
 
 target_include_directories(messageqcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(messageqcpp STATIC 
+cs_add_library(messageqcpp STATIC 
     messagequeue.cpp
     messagequeuepool.cpp
     bytestream.cpp
@@ -22,6 +22,5 @@ target_link_libraries(messageqcpp
   )
 
 
-target_pch(messageqcpp)
 
 

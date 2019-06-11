@@ -18,7 +18,7 @@ add_custom_target(loggingcpp_gen DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/messageids.
 
 add_dependencies(loggingcpp_h loggingcpp_gen)
     
-add_library(loggingcpp STATIC
+cs_add_library(loggingcpp STATIC
     message.cpp
     messagelog.cpp
     logger.cpp
@@ -40,7 +40,6 @@ target_link_libraries(loggingcpp
   )
 
 
-target_pch(loggingcpp)
 
 
 install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_ETCDIR} COMPONENT platform)

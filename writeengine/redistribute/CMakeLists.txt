@@ -1,5 +1,5 @@
 
-add_library(writeengineredistribute SHARED 
+cs_add_library(writeengineredistribute SHARED 
     we_redistribute.cpp
     we_redistributecontrol.cpp
     we_redistributecontrolthread.cpp

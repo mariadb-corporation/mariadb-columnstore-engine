@@ -1,5 +1,5 @@
 
-add_executable(editem editem.cpp)
+cs_add_executable(editem editem.cpp)
 
 target_link_libraries(editem 
   PRIVATE 

@@ -40,7 +40,7 @@ namespace BRM
 
 TableLockServer::TableLockServer(SessionManagerServer* sm) : sms(sm)
 {
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     config::Config* config = config::Config::makeConfig();
 
     filename = config->getConfig("SystemConfig", "TableLockSaveFile");
@@ -198,7 +198,7 @@ uint64_t TableLockServer::lock(TableLockInfo* tli)
     set<uint32_t> dbroots;
     lit_t it;
     uint32_t i;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     for (i = 0; i < tli->dbrootList.size(); i++)
         dbroots.insert(tli->dbrootList[i]);
@@ -240,7 +240,7 @@ bool TableLockServer::unlock(uint64_t id)
     std::map<uint64_t, TableLockInfo>::iterator it;
     TableLockInfo tli;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     it = locks.find(id);
 
     if (it != locks.end())
@@ -267,7 +267,7 @@ bool TableLockServer::unlock(uint64_t id)
 bool TableLockServer::changeState(uint64_t id, LockState state)
 {
     lit_t it;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     LockState old;
 
     it = locks.find(id);
@@ -295,7 +295,7 @@ bool TableLockServer::changeOwner(uint64_t id, const string& ownerName, uint32_t
                                   int32_t txnID)
 {
     lit_t it;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     string oldName;
     uint32_t oldPID;
     int32_t oldSession;
@@ -334,7 +334,7 @@ bool TableLockServer::changeOwner(uint64_t id, const string& ownerName, uint32_t
 vector<TableLockInfo> TableLockServer::getAllLocks() const
 {
     vector<TableLockInfo> ret;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     constlit_t it;
 
     for (it = locks.begin(); it != locks.end(); ++it)
@@ -347,7 +347,7 @@ void TableLockServer::releaseAllLocks()
 {
     std::map<uint64_t, TableLockInfo> tmp;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     tmp.swap(locks);
 
     try
@@ -364,7 +364,7 @@ void TableLockServer::releaseAllLocks()
 bool TableLockServer::getLockInfo(uint64_t id, TableLockInfo* out) const
 {
     constlit_t it;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     it = locks.find(id);
 

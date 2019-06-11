@@ -1,6 +1,6 @@
 target_include_directories(joblist_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(joblist SHARED 
+cs_add_library(joblist SHARED 
     anydatalist.cpp
     batchprimitiveprocessor-jl.cpp
     columncommand-jl.cpp
@@ -86,7 +86,6 @@ target_link_libraries(joblist
 
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(joblist)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

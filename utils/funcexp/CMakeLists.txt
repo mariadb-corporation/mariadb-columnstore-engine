@@ -1,6 +1,6 @@
 target_include_directories(funcexp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(funcexp SHARED
+cs_add_library(funcexp SHARED
     functor.cpp
     funcexp.cpp
     funcexpwrapper.cpp
@@ -126,6 +126,5 @@ target_link_libraries(funcexp
 
 set_target_properties(funcexp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(funcexp)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)

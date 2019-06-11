@@ -2,7 +2,7 @@
 target_include_directories(brm_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_library(brm SHARED 
+cs_add_library(brm SHARED 
     autoincrementmanager.cpp
     blockresolutionmanager.cpp
     brmshmimpl.cpp
@@ -60,7 +60,7 @@ install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 # controllernode
 
-add_executable(controllernode 
+cs_add_executable(controllernode 
   masternode.cpp 
   masterdbrmnode.cpp 
   )
@@ -82,7 +82,7 @@ install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # workernode
 
-add_executable(workernode slavenode.cpp)
+cs_add_executable(workernode slavenode.cpp)
 
 target_link_libraries(workernode 
   PUBLIC 
@@ -100,7 +100,7 @@ install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # dbrmctl
 
-add_executable(dbrmctl dbrmctl.cpp)
+cs_add_executable(dbrmctl dbrmctl.cpp)
 
 target_link_libraries(dbrmctl
   PUBLIC 
@@ -115,7 +115,7 @@ install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # reset_locks
 
-add_executable(reset_locks reset_locks.cpp)
+cs_add_executable(reset_locks reset_locks.cpp)
 
 target_link_libraries(reset_locks 
   PUBLIC 
@@ -134,7 +134,7 @@ install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # rollback
 
-add_executable(rollback rollback.cpp)
+cs_add_executable(rollback rollback.cpp)
 
 target_link_libraries(rollback 
   PUBLIC 
@@ -148,7 +148,7 @@ install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # save_brm 
 
-add_executable(save_brm save_brm.cpp)
+cs_add_executable(save_brm save_brm.cpp)
 
 target_link_libraries(save_brm 
   PUBLIC 
@@ -162,7 +162,7 @@ install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 # load_brm
 
-add_executable(load_brm load_brm.cpp)
+cs_add_executable(load_brm load_brm.cpp)
 
 target_link_libraries(load_brm 
   PUBLIC 

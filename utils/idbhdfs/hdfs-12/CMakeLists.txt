@@ -1,5 +1,5 @@
 
-add_library(hdfs-12 SHARED 
+cs_add_library(hdfs-12 SHARED 
     ../hdfs-shared/HdfsFile.cpp
     ../hdfs-shared/HdfsFileSystem.cpp
     ../hdfs-shared/HdfsFsCache.cpp
@@ -19,7 +19,6 @@ target_link_libraries(hdfs-12
     common_h
     configcpp_h)
 
-target_pch(hdfs-12)
 
 install(TARGETS hdfs-12 DESTINATION ${ENGINE_LIBDIR})
 

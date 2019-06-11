@@ -73,7 +73,7 @@ string RedistributeControlThread::fWesInUse;
 
 void RedistributeControlThread::setStopAction(bool s)
 {
-    mutex::scoped_lock lock(fActionMutex);
+    boost::mutex::scoped_lock lock(fActionMutex);
     fStopAction = s;
 }
 
@@ -153,7 +153,7 @@ void RedistributeControlThread::doRedistribute()
         fControl->logMessage(fErrorMsg + " @controlThread::doRedistribute");
 
     {
-        mutex::scoped_lock lock(fActionMutex);
+        boost::mutex::scoped_lock lock(fActionMutex);
         fWesInUse.clear();
     }
 }
@@ -776,7 +776,7 @@ int  RedistributeControlThread::connectToWes(int dbroot)
 
     try
     {
-        mutex::scoped_lock lock(fActionMutex);
+        boost::mutex::scoped_lock lock(fActionMutex);
         fWesInUse = oss.str();
         fMsgQueueClient.reset(new MessageQueueClient(fWesInUse, fConfig));
     }
@@ -793,7 +793,7 @@ int  RedistributeControlThread::connectToWes(int dbroot)
 
     if (ret != 0)
     {
-        mutex::scoped_lock lock(fActionMutex);
+        boost::mutex::scoped_lock lock(fActionMutex);
         fWesInUse.clear();
 
         fMsgQueueClient.reset();
@@ -808,7 +808,7 @@ void RedistributeControlThread::doStopAction()
     fConfig = Config::makeConfig();
     fControl = RedistributeControl::instance();
 
-    mutex::scoped_lock lock(fActionMutex);
+    boost::mutex::scoped_lock lock(fActionMutex);
 
     if (!fWesInUse.empty())
     {

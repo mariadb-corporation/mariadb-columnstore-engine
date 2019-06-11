@@ -1,5 +1,5 @@
 
-add_executable(ProcMgr main.cpp processmanager.cpp )
+cs_add_executable(ProcMgr main.cpp processmanager.cpp )
 
 target_link_libraries(ProcMgr 
   PRIVATE 

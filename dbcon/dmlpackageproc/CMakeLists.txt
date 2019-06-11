@@ -1,6 +1,6 @@
 target_include_directories(dmlpackageproc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(dmlpackageproc SHARED 
+cs_add_library(dmlpackageproc SHARED 
     deletepackageprocessor.cpp
     dmlpackageprocessor.cpp
     insertpackageprocessor.cpp
@@ -39,7 +39,6 @@ target_link_libraries(dmlpackageproc
 
 set_target_properties(dmlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(dmlpackageproc)
 
 install(TARGETS dmlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

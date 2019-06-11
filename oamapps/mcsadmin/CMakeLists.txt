@@ -1,6 +1,6 @@
 
 
-add_executable(mcsadmin mcsadmin.cpp)
+cs_add_executable(mcsadmin mcsadmin.cpp)
 
 target_link_libraries(mcsadmin 
   PRIVATE alarmmanager_h

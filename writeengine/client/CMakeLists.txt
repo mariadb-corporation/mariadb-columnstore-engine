@@ -2,7 +2,7 @@
 target_include_directories(writeengineclient_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_library(writeengineclient SHARED we_clients.cpp we_ddlcommandclient.cpp we_dmlcommandclient.cpp)
+cs_add_library(writeengineclient SHARED we_clients.cpp we_ddlcommandclient.cpp we_dmlcommandclient.cpp)
 
 target_link_libraries(writeengineclient 
   INTERFACE writeengineclient_h 

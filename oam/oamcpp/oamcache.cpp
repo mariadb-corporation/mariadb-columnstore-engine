@@ -39,7 +39,7 @@ using namespace boost;
 namespace
 {
 oam::OamCache* oamCache = 0;
-mutex cacheLock;
+boost::mutex cacheLock;
 }
 
 namespace oam
@@ -47,7 +47,7 @@ namespace oam
 
 OamCache* OamCache::makeOamCache()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     if (oamCache == 0)
         oamCache = new OamCache();
@@ -226,7 +226,7 @@ void OamCache::checkReload()
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return dbRootPMMap;
@@ -234,7 +234,7 @@ OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return dbRootConnectionMap;
@@ -242,7 +242,7 @@ OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
 
 OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return pmDbrootsMap;
@@ -250,7 +250,7 @@ OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
 
 uint32_t OamCache::getDBRootCount()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return numDBRoots;
@@ -258,7 +258,7 @@ uint32_t OamCache::getDBRootCount()
 
 DBRootConfigList& OamCache::getDBRootNums()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return dbroots;
@@ -266,7 +266,7 @@ DBRootConfigList& OamCache::getDBRootNums()
 
 std::vector<int>& OamCache::getModuleIds()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return moduleIds;
@@ -274,7 +274,7 @@ std::vector<int>& OamCache::getModuleIds()
 
 std::string OamCache::getOAMParentModuleName()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return OAMParentModuleName;
@@ -282,7 +282,7 @@ std::string OamCache::getOAMParentModuleName()
 
 int OamCache::getLocalPMId()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     // This comes from the file $INSTALL/local/module, not from the xml.
     // Thus, it's not refreshed during checkReload().
@@ -324,7 +324,7 @@ int OamCache::getLocalPMId()
 
 string OamCache::getSystemName()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     checkReload();
     return systemName;
@@ -332,7 +332,7 @@ string OamCache::getSystemName()
 
 string OamCache::getModuleName()
 {
-    mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     if (!moduleName.empty())
         return moduleName;

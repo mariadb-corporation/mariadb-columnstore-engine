@@ -1,6 +1,6 @@
 
 
-add_library(hdfs-20 SHARED     
+cs_add_library(hdfs-20 SHARED     
     ../hdfs-shared/HdfsFile.cpp
     ../hdfs-shared/HdfsFileSystem.cpp
     ../hdfs-shared/HdfsFsCache.cpp
@@ -22,7 +22,6 @@ target_link_libraries(hdfs-20
 
 set_target_properties(hdfs-20 PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(hdfs-20)
 
 install(TARGETS hdfs-20 DESTINATION ${ENGINE_LIBDIR})
 

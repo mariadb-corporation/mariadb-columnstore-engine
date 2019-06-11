@@ -1,5 +1,5 @@
 
-add_executable(cplogger main.cpp)
+cs_add_executable(cplogger main.cpp)
 
 target_link_libraries(cplogger 
   PRIVATE 

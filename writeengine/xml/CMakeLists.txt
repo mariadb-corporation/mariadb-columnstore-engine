@@ -1,6 +1,6 @@
 target_include_directories(we_xml_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(we_xml STATIC 
+cs_add_library(we_xml STATIC 
     we_xmlop.cpp
     we_xmljob.cpp
     we_xmlgendata.cpp

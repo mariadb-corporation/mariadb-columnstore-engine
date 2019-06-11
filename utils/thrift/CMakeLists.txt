@@ -1,5 +1,5 @@
 
-add_library(thrift SHARED 
+cs_add_library(thrift SHARED 
     thrift/Thrift.cpp
     thrift/server/TSimpleServer.cpp
     thrift/transport/TSocket.cpp
@@ -13,7 +13,6 @@ set_target_properties(thrift PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 target_include_directories(thrift INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_pch(thrift)
 
 install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

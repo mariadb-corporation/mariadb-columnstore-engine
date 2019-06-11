@@ -1,6 +1,6 @@
 target_include_directories(cacheutils_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(cacheutils SHARED cacheutils.cpp)
+cs_add_library(cacheutils SHARED cacheutils.cpp)
 
 target_link_libraries(cacheutils
   PRIVATE 

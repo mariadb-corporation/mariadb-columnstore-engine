@@ -1,6 +1,6 @@
 target_include_directories(batchloader_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(batchloader SHARED batchloader.cpp)
+cs_add_library(batchloader SHARED batchloader.cpp)
 
 
 target_link_libraries(batchloader 

@@ -1,5 +1,5 @@
 
-add_executable(clearShm main.cpp)
+cs_add_executable(clearShm main.cpp)
 
 target_link_libraries(clearShm 
   PRIVATE

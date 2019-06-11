@@ -41,7 +41,7 @@ using namespace boost;
 namespace
 {
 
-mutex mx;
+boost::mutex mx;
 bool catalogLoaded = false;
 
 typedef map<int, string> CatMap;
@@ -182,7 +182,7 @@ const string Message::lookupMessage(const MessageID& msgid)
 {
     if (!catalogLoaded)
     {
-        mutex::scoped_lock lock(mx);
+        boost::mutex::scoped_lock lock(mx);
 
         if (!catalogLoaded)
         {

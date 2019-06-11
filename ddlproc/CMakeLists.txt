@@ -1,5 +1,5 @@
 
-add_executable(DDLProc ddlproc.cpp ddlprocessor.cpp )
+cs_add_executable(DDLProc ddlproc.cpp ddlprocessor.cpp )
 
 target_link_libraries(DDLProc
   PRIVATE 
@@ -31,7 +31,6 @@ target_link_libraries(DDLProc
     Boost::thread
     )
 
-target_pch(DDLProc)
 
 install(TARGETS DDLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

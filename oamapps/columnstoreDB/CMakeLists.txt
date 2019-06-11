@@ -1,5 +1,5 @@
 
-add_executable(columnstoreDBWrite columnstoreDB.cpp)
+cs_add_executable(columnstoreDBWrite columnstoreDB.cpp)
 
 target_link_libraries(columnstoreDBWrite 
   PRIVATE 

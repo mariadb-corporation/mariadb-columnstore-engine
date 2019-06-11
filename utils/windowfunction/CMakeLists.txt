@@ -1,6 +1,6 @@
 
 
-add_library(windowfunction SHARED 
+cs_add_library(windowfunction SHARED 
     framebound.cpp
     frameboundrange.cpp
     frameboundrow.cpp
@@ -23,26 +23,25 @@ add_library(windowfunction SHARED
 
 set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(windowfunction)
 
 target_link_libraries(windowfunction 
   PUBLIC 
   PRIVATE
     brm_h
-          common_h
-          configcpp_h
-          dataconvert_h
-          execplan_h
-          funcexp_h
-          idbboot_h
-          joblist_h
-          loggingcpp_h
-          mariadb
-          messageqcpp_h
-          querytele_h 
-          rowgroup_h
-          threadpool_h
-          udfsdk_h)
+    common_h
+    configcpp_h
+    dataconvert_h
+    execplan_h
+    funcexp_h
+    idbboot_h
+    joblist_h
+    loggingcpp_h
+    mariadb
+    messageqcpp_h
+    querytele_h 
+    rowgroup_h
+    threadpool_h
+    udfsdk_h)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

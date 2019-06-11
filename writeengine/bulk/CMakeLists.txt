@@ -1,5 +1,5 @@
 
-add_library(we_bulk STATIC 
+cs_add_library(we_bulk STATIC 
     we_brmreporter.cpp
     we_bulkload.cpp
     we_bulkloadbuffer.cpp
@@ -54,7 +54,7 @@ target_compile_definitions(we_bulk PRIVATE _FILE_OFFSET_BITS=64)
 
 # cpimport.bin
 
-add_executable(cpimport.bin cpimport.cpp)
+cs_add_executable(cpimport.bin cpimport.cpp)
 
 target_link_libraries(cpimport.bin
   PUBLIC 

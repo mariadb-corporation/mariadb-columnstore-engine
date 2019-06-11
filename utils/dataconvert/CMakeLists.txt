@@ -1,7 +1,7 @@
 
 target_include_directories(dataconvert_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(dataconvert STATIC 
+cs_add_library(dataconvert STATIC 
   dataconvert.cpp
 )
 

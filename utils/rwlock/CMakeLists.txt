@@ -1,6 +1,6 @@
 target_include_directories(rwlock_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(rwlock STATIC 
+cs_add_library(rwlock STATIC 
   rwlock.cpp 
   rwlock_local.cpp
   )

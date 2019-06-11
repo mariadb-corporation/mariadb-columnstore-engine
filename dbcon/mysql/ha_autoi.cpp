@@ -22,7 +22,7 @@
 bool parseAutoincrementTableComment ( std::string comment, uint64_t& startValue, std::string& columnName )
 {
     algorithm::to_upper(comment);
-    regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", regex_constants::extended);
+    boost::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", boost::regex_constants::extended);
     bool autoincrement = false;
     columnName = "";
     boost::match_results<std::string::const_iterator> what;
@@ -113,7 +113,7 @@ bool parseAutoincrementTableComment ( std::string comment, uint64_t& startValue,
 bool parseAutoincrementColumnComment ( std::string comment, uint64_t& startValue )
 {
     algorithm::to_upper(comment);
-    regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", regex_constants::extended);
+    boost::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", boost::regex_constants::extended);
     bool autoincrement = false;
     boost::match_results<std::string::const_iterator> what;
     std::string::const_iterator start, end;

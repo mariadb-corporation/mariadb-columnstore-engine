@@ -1,7 +1,15 @@
 
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
-project(columnstore 
+if(POLICY CMP0069)
+endif()
+
+if(POLICY CMP0083)
+  cmake_policy(SET CMP0083 NEW)  # CMake > 3.13 adds linker flags for position independent executables. Old behavior does not
+endif()
+
+
+project(columnstore
   LANGUAGES C CXX
   VERSION 1.4.0.0
   DESCRIPTION "Massively parallel and distributed columnar storage engine"
@@ -9,10 +17,16 @@ project(columnstore
 set(RELEASE_VERSION 1)
 
 
-
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
+include(CMakeDependentOption)
+include(CMakeGraphVizOptions)
+include(ExternalProject)
+include(CheckCXXSourceCompiles)
+include(CheckCXXCompilerFlag)
+include(CheckIPOSupported)
+include(CheckPIESupported)
+include(colorize)
 
 find_package(Flex REQUIRED)
 find_package(Perl REQUIRED)
@@ -25,14 +39,6 @@ find_package(LibXml2 REQUIRED)
 find_package(Snappy REQUIRED)
 find_package(JeMalloc REQUIRED)
 find_package(Git)
-
-
-include(CMakeDependentOption)
-include(CMakeGraphVizOptions)
-include(ExternalProject)
-include(CheckCXXSourceCompiles)
-include(CheckCXXCompilerFlag)
-include(colorize)
 
 
 string(TIMESTAMP _tmp "%b %d %y %H:%M:%S")
@@ -59,6 +65,15 @@ endif()
 status("Git hash: ${GIT_HASH}")
 status("CMake version ${CMAKE_VERSION}")
 
+function(cs_add_library _target _type)
+  status("${_type} library configured: ${Blue}${_target}")
+endfunction()
+
+function(cs_add_executable _target)
+  status("executable configured: ${Blue}${_target}")
+endfunction()
+
+
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -72,14 +87,19 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/.external)
 list(APPEND ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/.external)
 
+
 option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during compilation?" TRUE)
 
 
-option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" TRUE)
+check_pie_supported(OUTPUT_VARIABLE PIE_SUPPORTED LANGUAGES CXX)
+status("Compiler position independent executable support: ${CMAKE_CXX_LINK_PIE_SUPPORTED}")
+cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" FALSE CMAKE_CXX_LINK_PIE_SUPPORTED FALSE)
 mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
 
 
-option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable link-time optimizations" TRUE)
+check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT _ignore)
+status("Compiler Inter-Procedural Optimization support: ${IPO_SUPPORTED}")
+cmake_dependent_option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Use IPO" FALSE IPO_SUPPORTED FALSE)
 mark_as_advanced(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
 
@@ -146,7 +166,6 @@ endif()
 
 include(check_compiler_flag)
 include(ccache)
-include(pch)
 include(iwyu)
 include(cpplint)
 include(cppcheck)
@@ -196,9 +215,9 @@ INCLUDE (configureEngine)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT platform)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstore.h.in ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h @ONLY)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h)
+
 
 SET (ENGINE_LIBDIR     lib)
 SET (ENGINE_BINDIR     bin)
@@ -212,6 +231,11 @@ SET (ENGINE_POSTDIR    post)
 SET (ENGINE_LOCALDIR   local)
 SET (ENGINE_MYSQLDIR   mysql)
 SET (ENGINE_TOOLSDIR   tools)
+
+
+include(pch)
+
+
 
 add_library(columnstore_h INTERFACE)
 target_include_directories(columnstore_h INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
@@ -276,14 +300,15 @@ add_library(we_xml_h            INTERFACE)
 add_library(we_server_h         INTERFACE)
 
 
-function(cs_add_library)
-  add_library(${ARGN})
+function(cs_add_library _target)
+  add_library(${ARGV})
+  target_pch(${ARGV})
 endfunction()
 
-function(cs_add_executable)
-  add_executable(${ARGN})
+function(cs_add_executable _target)
+  add_executable(${ARGV})
+  target_pch(${ARGV})
 endfunction()
-
 
 
 add_subdirectory(utils/startup)

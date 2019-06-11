@@ -1,7 +1,7 @@
 
 target_include_directories(writeengine_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(writeengine SHARED 
+cs_add_library(writeengine SHARED 
     writeengine.cpp
     we_colop.cpp
     we_colopcompress.cpp

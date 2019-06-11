@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 
 #[[
 find_path(CPPUNIT_INCLUDE_DIR cppunit/Test.h)

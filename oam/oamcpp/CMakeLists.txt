@@ -1,6 +1,6 @@
 target_include_directories(oamcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(oamcpp STATIC liboamcpp.cpp oamcache.cpp)
+cs_add_library(oamcpp STATIC liboamcpp.cpp oamcache.cpp)
 
 target_link_libraries(oamcpp 
   INTERFACE oamcpp_h

@@ -1,5 +1,5 @@
 
-add_executable(DMLProc 
+cs_add_executable(DMLProc 
     dmlproc.cpp
     dmlprocessor.cpp
     dmlresultbuffer.cpp
@@ -35,7 +35,6 @@ target_link_libraries(DMLProc
 
     )
 
-target_pch(DMLProc)
 
 install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

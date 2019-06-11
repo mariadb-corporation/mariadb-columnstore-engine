@@ -1,6 +1,6 @@
 
 
-add_executable(columnstoreSupport columnstoreSupport.cpp)
+cs_add_executable(columnstoreSupport columnstoreSupport.cpp)
 
 target_link_libraries(columnstoreSupport 
   PRIVATE alarmmanager_h

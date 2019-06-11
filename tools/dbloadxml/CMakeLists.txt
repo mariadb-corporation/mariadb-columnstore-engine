@@ -1,7 +1,7 @@
 
 # dbload
 
-add_library(dbload STATIC inputmgr.cpp)
+cs_add_library(dbload STATIC inputmgr.cpp)
 
 target_link_libraries(dbload 
   PRIVATE 
@@ -15,7 +15,7 @@ target_link_libraries(dbload
 
 # colxml
 
-add_executable(colxml colxml.cpp)
+cs_add_executable(colxml colxml.cpp)
 
 target_link_libraries(colxml 
   PRIVATE 

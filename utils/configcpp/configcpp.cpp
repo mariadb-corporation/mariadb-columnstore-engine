@@ -82,7 +82,7 @@ Config* Config::makeConfig(const string& cf)
 
 Config* Config::makeConfig(const char* cf)
 {
-    mutex::scoped_lock lk(fInstanceMapMutex);
+    boost::mutex::scoped_lock lk(fInstanceMapMutex);
 
     static string installDir;
 
@@ -240,7 +240,7 @@ void Config::closeConfig(void)
 
 const string Config::getConfig(const string& section, const string& name)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::getConfig: both section and name must have a length");
@@ -267,7 +267,7 @@ const string Config::getConfig(const string& section, const string& name)
 
 void Config::getConfig(const string& section, const string& name, vector<string>& values)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0)
         throw invalid_argument("Config::getConfig: section must have a length");
@@ -292,7 +292,7 @@ void Config::getConfig(const string& section, const string& name, vector<string>
 
 void Config::setConfig(const string& section, const string& name, const string& value)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0 )
         throw invalid_argument("Config::setConfig: all of section and name must have a length");
@@ -322,7 +322,7 @@ void Config::setConfig(const string& section, const string& name, const string& 
 
 void Config::delConfig(const string& section, const string& name)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::delConfig: both section and name must have a length");
@@ -350,7 +350,7 @@ void Config::delConfig(const string& section, const string& name)
 
 void Config::writeConfig(const string& configFile) const
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
     FILE* fi;
 
     if (fDoc == 0)
@@ -467,7 +467,7 @@ void Config::writeConfig(const string& configFile) const
 
 void Config::write(void) const
 {
-    mutex::scoped_lock lk(fWriteXmlLock);
+    boost::mutex::scoped_lock lk(fWriteXmlLock);
 #ifdef _MSC_VER
     writeConfig(fConfigFile);
 #else
@@ -562,7 +562,7 @@ void Config::writeConfigFile(messageqcpp::ByteStream msg) const
 /* static */
 void Config::deleteInstanceMap()
 {
-    mutex::scoped_lock lk(fInstanceMapMutex);
+    boost::mutex::scoped_lock lk(fInstanceMapMutex);
 
     for (Config::configMap_t::iterator iter = fInstanceMap.begin();
             iter != fInstanceMap.end(); ++iter)
@@ -624,7 +624,7 @@ int64_t Config::fromText(const std::string& text)
 
 time_t Config::getCurrentMTime()
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     struct stat statbuf;
 
@@ -636,7 +636,7 @@ time_t Config::getCurrentMTime()
 
 const vector<string> Config::enumConfig()
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {
@@ -660,7 +660,7 @@ const vector<string> Config::enumConfig()
 
 const vector<string> Config::enumSection(const string& section)
 {
-    mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {

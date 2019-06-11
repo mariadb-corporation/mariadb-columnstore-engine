@@ -1,5 +1,5 @@
 
-add_executable(ExeMgr main.cpp activestatementcounter.cpp femsghandler.cpp )
+cs_add_executable(ExeMgr main.cpp activestatementcounter.cpp femsghandler.cpp )
 
 target_link_libraries(ExeMgr 
   PRIVATE 
@@ -21,7 +21,6 @@ target_link_libraries(ExeMgr
     udfsdk_h
     )
 
-target_pch(ExeMgr)
 
 
 ########### install files ###############

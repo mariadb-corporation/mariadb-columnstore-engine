@@ -1,5 +1,5 @@
 
-add_executable(dbbuilder dbbuilder.cpp systemcatalog.cpp)
+cs_add_executable(dbbuilder dbbuilder.cpp systemcatalog.cpp)
 
 target_link_libraries(dbbuilder 
   PRIVATE 

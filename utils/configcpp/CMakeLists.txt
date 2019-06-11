@@ -1,7 +1,7 @@
 
 target_include_directories(configcpp_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(configcpp STATIC 
+cs_add_library(configcpp STATIC 
   configcpp.cpp 
   xmlparser.cpp 
   configstream.cpp

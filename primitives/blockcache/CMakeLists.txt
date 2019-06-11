@@ -1,7 +1,7 @@
 
 target_include_directories(dbbc_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(dbbc STATIC 
+cs_add_library(dbbc STATIC 
     blockcacheclient.cpp
     blockrequestprocessor.cpp
     fileblockrequestqueue.cpp
@@ -35,6 +35,5 @@ target_link_libraries(dbbc
 
 target_include_directories(dbbc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_pch(dbbc)
 
 INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})

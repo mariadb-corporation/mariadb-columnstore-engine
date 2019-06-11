@@ -1,5 +1,5 @@
 
-add_executable(ProcMon main.cpp processmonitor.cpp)
+cs_add_executable(ProcMon main.cpp processmonitor.cpp)
 
 target_link_libraries(ProcMon 
   PRIVATE 

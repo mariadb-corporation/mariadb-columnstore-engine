@@ -79,7 +79,7 @@ const string Logger::logMessage(LOG_TYPE logLevel, Message::MessageID mid, const
 
 const std::string Logger::logMessage(LOG_TYPE logLevel, const Message& msg, const LoggingID& logInfo)
 {
-    mutex::scoped_lock lk(fLogLock);
+    boost::mutex::scoped_lock lk(fLogLock);
     fMl1.logData(logInfo);
 
     switch (logLevel)

@@ -2,7 +2,7 @@
 target_include_directories(rowgroup_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_library(rowgroup SHARED rowaggregation.cpp rowgroup.cpp)
+cs_add_library(rowgroup SHARED rowaggregation.cpp rowgroup.cpp)
 
 target_link_libraries(rowgroup 
   INTERFACE rowgroup_h

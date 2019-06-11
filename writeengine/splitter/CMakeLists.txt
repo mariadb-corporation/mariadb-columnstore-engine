@@ -1,5 +1,5 @@
 
-add_executable(cpimport 
+cs_add_executable(cpimport 
     we_splitterapp.cpp
     we_cmdargs.cpp
     we_sdhandler.cpp

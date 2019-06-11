@@ -239,7 +239,7 @@ uint32_t convertDataType(int dataType)
 int parseCompressionComment ( std::string comment )
 {
     algorithm::to_upper(comment);
-    regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", regex_constants::extended);
+    boost::regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", boost::regex_constants::extended);
     int compressiontype = 0;
     boost::match_results<std::string::const_iterator> what;
     std::string::const_iterator start, end;
@@ -1423,7 +1423,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                     {
                         //@Bug 3782 This is for synchronization after calonlinealter to use
                         algorithm::to_upper(comment);
-                        regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+                        boost::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", boost::regex_constants::extended);
 
                         if (regex_search(comment, pat))
                         {
@@ -2317,7 +2317,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         return 1;
     }
 
-    regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+    boost::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", boost::regex_constants::extended);
 
     if (regex_search(tablecomment, pat))
     {

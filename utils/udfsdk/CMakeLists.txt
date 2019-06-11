@@ -3,7 +3,7 @@ target_include_directories(udfsdk_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 # udfsdk
-add_library(udfsdk STATIC
+cs_add_library(udfsdk STATIC
   udfsdk.cpp 
   mcsv1_udaf.cpp 
   allnull.cpp 
@@ -32,14 +32,13 @@ target_compile_definitions(udfsdk PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 set_target_properties(udfsdk PROPERTIES VERSION 1.1.0 SOVERSION 1)
 
-target_pch(udfsdk)
 
 install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 
 # udf_mysql
 
-add_library(udf_mysql SHARED udfmysql.cpp)
+cs_add_library(udf_mysql SHARED udfmysql.cpp)
 
 set_target_properties(udf_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

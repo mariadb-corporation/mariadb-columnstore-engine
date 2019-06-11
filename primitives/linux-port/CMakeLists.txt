@@ -1,6 +1,6 @@
 target_include_directories(processor_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(processor STATIC primitiveprocessor.cpp dictionary.cpp column.cpp)
+cs_add_library(processor STATIC primitiveprocessor.cpp dictionary.cpp column.cpp)
 
 target_link_libraries(processor 
   PRIVATE alarmmanager_h
@@ -24,7 +24,6 @@ target_link_libraries(processor
 
 target_include_directories(processor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_pch(processor)
 
 INSTALL (TARGETS processor DESTINATION ${ENGINE_LIBDIR})
 

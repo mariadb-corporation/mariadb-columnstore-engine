@@ -59,7 +59,6 @@ target_link_libraries(dmlpackage
     we_shared_h
     )
 
-target_pch(dmlpackage)
 
 INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

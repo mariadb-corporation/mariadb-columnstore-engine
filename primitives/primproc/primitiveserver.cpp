@@ -151,8 +151,8 @@ int  noVB = 0;
 
 const uint8_t fMaxColWidth(8);
 BPPMap bppMap;
-mutex bppLock;
-mutex djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
+boost::mutex bppLock;
+boost::mutex djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 volatile int32_t asyncCounter;
 const int asyncMax = 20;	// current number of asynchronous loads
 
@@ -183,7 +183,7 @@ pfBlockMap_t pfExtentMap;
 boost::mutex pfMutex; // = PTHREAD_MUTEX_INITIALIZER;
 
 map<uint32_t, boost::shared_ptr<DictEqualityFilter> > dictEqualityFilters;
-mutex eqFilterMutex;
+boost::mutex eqFilterMutex;
 
 uint32_t cacheNum(uint64_t lbid)
 {
@@ -921,7 +921,7 @@ struct AsynchLoader
         cacheCount(cCount),
         readCount(rCount),
         busyLoaders(loaderCount),
-        mutex(m),
+        _mutex(m),
         sendThread(st),
         vssCache(vCache)
     { }
@@ -944,9 +944,9 @@ struct AsynchLoader
             cerr << "AsynchLoader caught loadBlock exception: " << ex.what() << endl;
             idbassert(asyncCounter > 0);
             (void)atomicops::atomicDec(&asyncCounter);
-            mutex->lock();
+            _mutex->lock();
             --(*busyLoaders);
-            mutex->unlock();
+            _mutex->unlock();
             logging::Message::Args args;
             args.add(string("PrimProc AsyncLoader caught error: "));
             args.add(ex.what());
@@ -960,9 +960,9 @@ struct AsynchLoader
             //FIXME Use a locked processor primitive?
             idbassert(asyncCounter > 0);
             (void)atomicops::atomicDec(&asyncCounter);
-            mutex->lock();
+            _mutex->lock();
             --(*busyLoaders);
-            mutex->unlock();
+            _mutex->unlock();
             logging::Message::Args args;
             args.add(string("PrimProc AsyncLoader caught unknown error"));
             primitiveprocessor::mlp->logMessage(logging::M0000, args, false);
@@ -971,14 +971,14 @@ struct AsynchLoader
 
         idbassert(asyncCounter > 0);
         (void)atomicops::atomicDec(&asyncCounter);
-        mutex->lock();
+        _mutex->lock();
 
         if (cached)
             (*cacheCount)++;
 
         *readCount += rCount;
         --(*busyLoaders);
-        mutex->unlock();
+        _mutex->unlock();
 // 			cerr << "done\n";
     }
 
@@ -993,7 +993,7 @@ private:
     uint32_t* cacheCount;
     uint32_t* readCount;
     uint32_t* busyLoaders;
-    boost::mutex* mutex;
+    boost::mutex* _mutex;
     boost::shared_ptr<BPPSendThread> sendThread;
     VSSCache* vssCache;
 };
@@ -1043,7 +1043,7 @@ void loadBlockAsync(uint64_t lbid,
 
     (void)atomicops::atomicInc(&asyncCounter);
 
-    mutex::scoped_lock sl(*m);
+    boost::mutex::scoped_lock sl(*m);
 
     try
     {
@@ -1130,7 +1130,7 @@ DictScanJob::~DictScanJob()
 
 void DictScanJob::write(const ByteStream& bs)
 {
-    mutex::scoped_lock lk(*fWriteLock);
+    boost::mutex::scoped_lock lk(*fWriteLock);
     fIos->write(bs);
 }
 
@@ -1174,7 +1174,7 @@ int DictScanJob::operator()()
         /* Grab the equality filter if one is specified */
         if (cmd->flags & HAS_EQ_FILTER)
         {
-            mutex::scoped_lock sl(eqFilterMutex);
+            boost::mutex::scoped_lock sl(eqFilterMutex);
             map<uint32_t, boost::shared_ptr<DictEqualityFilter> >::iterator it;
             it = dictEqualityFilters.find(uniqueId);
 
@@ -1276,7 +1276,7 @@ struct BPPHandler
 
     ~BPPHandler()
     {
-        mutex::scoped_lock scoped(bppLock);
+        boost::mutex::scoped_lock scoped(bppLock);
 
         for (bppKeysIt = bppKeys.begin() ; bppKeysIt != bppKeys.end(); ++bppKeysIt)
         {
@@ -1379,7 +1379,7 @@ struct BPPHandler
             return -1;
         }
 
-        mutex::scoped_lock scoped(bppLock);
+        boost::mutex::scoped_lock scoped(bppLock);
         bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
 
         if (bppKeysIt != bppKeys.end())
@@ -1471,7 +1471,7 @@ struct BPPHandler
             }
         }
 
-        mutex::scoped_lock scoped(bppLock);
+        boost::mutex::scoped_lock scoped(bppLock);
         key = bpp->getUniqueID();
         bppKeys.push_back(key);
         bool newInsert;
@@ -1500,7 +1500,7 @@ struct BPPHandler
         */
         SBPPV ret;
 
-        mutex::scoped_lock scoped(bppLock);
+        boost::mutex::scoped_lock scoped(bppLock);
         it = bppMap.find(uniqueID);
 
         if (it != bppMap.end())
@@ -1542,7 +1542,7 @@ struct BPPHandler
 
         if (bppv)
         {
-            mutex::scoped_lock lk(djLock);
+            boost::mutex::scoped_lock lk(djLock);
             bppv->get()[0]->addToJoiner(bs);
             return 0;
         }
@@ -1579,7 +1579,7 @@ struct BPPHandler
                 return -1;
         }
 
-        mutex::scoped_lock lk(djLock);
+        boost::mutex::scoped_lock lk(djLock);
 
         for (i = 0; i < bppv->get().size(); i++)
         {
@@ -1623,8 +1623,8 @@ struct BPPHandler
             return -1;
         }
 
-        mutex::scoped_lock lk(djLock);
-        mutex::scoped_lock scoped(bppLock);
+        boost::mutex::scoped_lock lk(djLock);
+        boost::mutex::scoped_lock scoped(bppLock);
 
         bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
 
@@ -1782,7 +1782,7 @@ private:
             filter->insert(str);
         }
 
-        mutex::scoped_lock sl(eqFilterMutex);
+        boost::mutex::scoped_lock sl(eqFilterMutex);
         dictEqualityFilters[uniqueID] = filter;
     }
 };
@@ -1804,7 +1804,7 @@ public:
         bs->advance(sizeof(ISMPacketHeader));
         *bs >> uniqueID;
 
-        mutex::scoped_lock sl(eqFilterMutex);
+        boost::mutex::scoped_lock sl(eqFilterMutex);
         it = dictEqualityFilters.find(uniqueID);
 
         if (it != dictEqualityFilters.end())
@@ -1958,11 +1958,11 @@ struct ReadThread
         SBS bs;
         UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
-        // Establish default output IOSocket (and mutex) based on the input
+        // Establish default output IOSocket (and boost::mutex) based on the input
         // IOSocket. If we end up rotating through multiple output sockets
         // for the same UM, we will use UmSocketSelector to select output.
         SP_UM_IOSOCK outIosDefault(new IOSocket(fIos));
-        SP_UM_MUTEX  writeLockDefault(new mutex());
+        SP_UM_MUTEX  writeLockDefault(new boost::mutex());
 
         bool bRotateDest = fPrimitiveServerPtr->rotatingDestination();
 
@@ -2089,7 +2089,7 @@ struct ReadThread
                                     // If we ever fall into this part of the
                                     // code we have a "bug" of some sort.
                                     // See handleUmSockSelErr() for more info.
-                                    // We reset ios and mutex to defaults.
+                                    // We reset ios and boost::mutex to defaults.
                                     handleUmSockSelErr(string("default cmd"));
                                     outIos		= outIosDefault;
                                     writeLock	= writeLockDefault;
@@ -2137,7 +2137,7 @@ struct ReadThread
                                     // If we ever fall into this part of the
                                     // code we have a "bug" of some sort.
                                     // See handleUmSockSelErr() for more info.
-                                    // We reset ios and mutex to defaults.
+                                    // We reset ios and boost::mutex to defaults.
                                     handleUmSockSelErr(string("BPR cmd"));
                                     outIos		= outIosDefault;
                                     writeLock	= writeLockDefault;

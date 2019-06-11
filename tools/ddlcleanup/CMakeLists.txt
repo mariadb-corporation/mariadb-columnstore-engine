@@ -1,5 +1,5 @@
 
-add_executable(ddlcleanup ddlcleanup.cpp)
+cs_add_executable(ddlcleanup ddlcleanup.cpp)
 
 target_link_libraries(ddlcleanup 
   PRIVATE

@@ -1,6 +1,6 @@
 
 # regr
-add_library(regr SHARED 
+cs_add_library(regr SHARED 
   regr_avgx.cpp 
   regr_avgy.cpp 
   regr_count.cpp 
@@ -31,7 +31,6 @@ target_link_libraries(regr
     joblist_h
     dataconvert_h)
 
-target_pch(regr)
 
 install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
@@ -40,7 +39,7 @@ install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 # regr_mysql
 
-add_library(regr_mysql SHARED regrmysql.cpp)
+cs_add_library(regr_mysql SHARED regrmysql.cpp)
 
 set_target_properties(regr_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

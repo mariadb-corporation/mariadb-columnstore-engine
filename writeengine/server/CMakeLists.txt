@@ -1,7 +1,7 @@
 target_include_directories(we_server_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_executable(WriteEngineServer 
+cs_add_executable(WriteEngineServer 
     we_server.cpp
     we_readthread.cpp
     we_ddlcommandproc.cpp

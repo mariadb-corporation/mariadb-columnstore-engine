@@ -1,6 +1,6 @@
 target_include_directories(querystats_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(querystats SHARED querystats.cpp)
+cs_add_library(querystats SHARED querystats.cpp)
 
 set_target_properties(querystats PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

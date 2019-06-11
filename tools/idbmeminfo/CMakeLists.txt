@@ -1,5 +1,5 @@
 
-add_executable(idbmeminfo idbmeminfo.cpp)
+cs_add_executable(idbmeminfo idbmeminfo.cpp)
 
 target_link_libraries(idbmeminfo 
   PRIVATE messageqcpp_h)

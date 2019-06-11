@@ -44,11 +44,11 @@ namespace logging
 {
 
 IDBErrorInfo* IDBErrorInfo::fInstance = 0;
-mutex mx;
+boost::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-    mutex::scoped_lock lk(mx);
+    boost::mutex::scoped_lock lk(mx);
 
     if (!fInstance)
         fInstance = new IDBErrorInfo();

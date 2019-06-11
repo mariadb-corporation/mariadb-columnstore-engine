@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 
 OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
 find_program(CCACHE NAMES ccache ccache.exe)

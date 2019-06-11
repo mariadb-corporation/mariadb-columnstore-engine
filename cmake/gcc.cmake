@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 
 function(set_compile_options _switch)
   set(CMAKE_REQUIRED_FLAGS ${_switch})
@@ -9,19 +10,6 @@ function(set_compile_options _switch)
   add_compile_options($<$<BOOL:${${switch_name}}>:${_switch}>)
 endfunction()
 
-# always on
-add_compile_options(-pipe)
-add_compile_options(-march=core2)
-add_compile_options(-mtune=generic)
-add_compile_options(-mfpmath=sse)
-add_compile_options(-fuse-cxa-atexit)
-add_compile_options($<$<CONFIG:Debug>:-ggdb3>)
-add_compile_options(-Wl,--demangle) # demangle names in error messages
-add_compile_options(-Wl,--cref) # generate cross reference is map file
-add_compile_options(-Wl,-z,combreloc) # Combine multiple dynamic relocation sections and sort to improve dynamic symbol lookup caching
-add_compile_options(-Wl,-z,now) # resolve all symbols when loaded or started rather than on-demand
-add_compile_options(-Wl,-z,relro) # mark segments are read-only after relocation
-add_compile_options(-Wl,-map) # generate map file
 
 set(ENV{GCC_COLORS} "error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01")
 unset(CMAKE_REQUIRE_FLAGS)
@@ -34,14 +22,14 @@ add_compile_options(-pipe)
 add_compile_options(-march=core2)
 add_compile_options(-mtune=generic)
 add_compile_options(-mfpmath=sse)
-add_compile_options(-fuse-cxa-atexit)
-add_compile_options($<$<CONFIG:Debug>:-ggdb3>)
-add_compile_options(-Wl,--demangle) # demangle names in error messages
-add_compile_options(-Wl,--cref) # generate cross reference is map file
-add_compile_options(-Wl,-z,combreloc) # Combine multiple dynamic relocation sections and sort to improve dynamic symbol lookup caching
-add_compile_options(-Wl,-z,now) # resolve all symbols when loaded or started rather than on-demand
-add_compile_options(-Wl,-z,relro) # mark segments are read-only after relocation
-add_compile_options(-Wl,-map) # generate map file
+add_compile_options(-fuse-cxa-atexit)                     # use c++ exit function instead of legacy C _atexit
+add_compile_options($<$<CONFIG:Debug>:-ggdb3>)            # maximize debug info for gdb
+add_compile_options(-Wl,--demangle)                       # demangle names in error messages
+add_compile_options(-Wl,--cref)                           # generate cross reference is map file
+add_compile_options(-Wl,-z,combreloc)                     # Combine multiple dynamic relocation sections and sort to improve dynamic symbol lookup caching
+add_compile_options(-Wl,-z,now)                           # resolve all symbols when loaded or started rather than on-demand
+add_compile_options(-Wl,-z,relro)                         # mark segments are read-only after relocation
+add_compile_options(-Wl,-map)                             # generate map file
 
 
 add_compile_options($<$<BOOL:${CMAKE_POSITION_INDEPENDENT_CODE}>:-pie>)
@@ -131,7 +119,7 @@ add_compile_options($<$<BOOL:${PRINT_REMOVED_SYMS}>:-Wl,--print-gc-sections>)
 
 set(USE_LINKER ld CACHE STRING "Specify alternate linker")
 mark_as_advanced(USE_LINKER)
-set_property(CACHE USE_LINKER PROPERTY STRINGS ld gold bfd)
+set_property(CACHE USE_LINKER PROPERTY STRINGS ld gold bfd lld)
 if (NOT "ld" STREQUAL "${USE_LINKER}")
   add_compile_options(-fuse-ld=${USE_LINKER})
 endif()

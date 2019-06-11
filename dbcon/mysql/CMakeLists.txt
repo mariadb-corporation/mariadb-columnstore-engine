@@ -3,7 +3,7 @@ target_include_directories(calmysql_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # calmysql
 
-add_library(calmysql SHARED 
+cs_add_library(calmysql SHARED 
     ha_mcs_sysvars.cpp
     ha_mcs_client_udfs.cpp
     ha_calpont.cpp
@@ -62,12 +62,11 @@ target_link_libraries(calmysql
 
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-target_pch(calmysql)
 
 
 # is_columnstore_tables
 
-add_library(is_columnstore_tables SHARED is_columnstore_tables.cpp sm.cpp)
+cs_add_library(is_columnstore_tables SHARED is_columnstore_tables.cpp sm.cpp)
 
 target_compile_definitions(is_columnstore_tables PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
@@ -95,7 +94,7 @@ set_target_properties(is_columnstore_tables PROPERTIES VERSION 1.0.0 SOVERSION 1
 
 # is_columnstore_columns
 
-add_library(is_columnstore_columns SHARED 
+cs_add_library(is_columnstore_columns SHARED 
     is_columnstore_columns.cpp
     sm.cpp
     )
@@ -125,7 +124,7 @@ set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 
 
 # is_columnstore_extents
 
-add_library(is_columnstore_extents SHARED 
+cs_add_library(is_columnstore_extents SHARED 
     is_columnstore_extents.cpp
     sm.cpp
     )
@@ -158,7 +157,7 @@ set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 
 
 # is_columnstore_files
 
-add_library(is_columnstore_files SHARED 
+cs_add_library(is_columnstore_files SHARED 
     is_columnstore_files.cpp
     sm.cpp
     )
