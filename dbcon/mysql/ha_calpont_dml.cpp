@@ -860,7 +860,13 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 				}
 				case CalpontSystemCatalog::VARCHAR:
 				{
-					if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                    size_t length;
+                    if (ci.utf8)
+                        length = (ci.columnTypes[colpos].colWidth * 3);
+                    else
+                        length = ci.columnTypes[colpos].colWidth;
+
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
 					{
 						fprintf(ci.filePtr, "%c", ci.delimiter);
 						if (!ci.utf8)
@@ -901,6 +907,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 								dataLength = *(uint16_t*) buf;
 								buf = buf + 2 ;
 							}
+                            length = dataLength;
                             escape.assign((char*)buf, dataLength);
                             boost::replace_all(escape, "\\", "\\\\");
 							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter); 							
@@ -917,8 +924,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 								dataLength = *(uint16_t*) buf;
 								buf = buf + 2 ;
 							}
-							if ( dataLength > ci.columnTypes[colpos].colWidth)
-								dataLength = ci.columnTypes[colpos].colWidth;
+                            length = dataLength;
 
                             escape.assign((char*)buf, dataLength);
                             boost::replace_all(escape, "\\", "\\\\");
@@ -926,11 +932,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter); 
 						}
 					}
-					//buf += ci.columnTypes[colpos].colWidth;
-					if (ci.utf8)
-						buf += (ci.columnTypes[colpos].colWidth * 3);
-					else
-						buf += ci.columnTypes[colpos].colWidth;
+					buf += length;
 					
 					break;
 				}
