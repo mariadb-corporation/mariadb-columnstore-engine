@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <iostream>
 
 using namespace std;
 
@@ -49,13 +50,14 @@ Config::Config() : die(false)
     // the paths to search in order
     paths.push_back(".");
     if (cs_install_dir)
-        paths.push_back(cs_install_dir);
+        paths.push_back(string(cs_install_dir) + "/etc");
     paths.push_back("/etc");
     
     for (uint i = 0; i < paths.size(); i++)
     {
+        //cout << "Config: searching '" << paths[i] << "'" << endl;
         if (boost::filesystem::exists(paths[i] + "/storagemanager.cnf"))
-        {
+        {  
             filename = paths[i] + "/storagemanager.cnf";
             break;
         }
