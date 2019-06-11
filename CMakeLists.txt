@@ -211,6 +211,8 @@ ENDIF()
 
 INCLUDE (configureEngine)
 
+# generate git info for automated system tests. A downstream test suite scans these for changes as a trigger
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine "${GIT_HASH}-dirty")
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT platform)
@@ -234,8 +236,6 @@ SET (ENGINE_TOOLSDIR   tools)
 
 
 include(pch)
-
-
 
 add_library(columnstore_h INTERFACE)
 target_include_directories(columnstore_h INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
