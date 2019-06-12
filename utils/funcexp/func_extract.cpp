@@ -249,11 +249,11 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
 
         case CalpontSystemCatalog::TIMESTAMP:
         {
-            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
-            MySQLTime m_time;
-            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
-            DateTime dt;
+	    dataconvert::MySQLTime m_time;
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+	    dataconvert::DateTime dt;
             dt.year = m_time.year;
             dt.month = m_time.month;
             dt.day = m_time.day;

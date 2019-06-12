@@ -991,7 +991,7 @@ void TableInfo::reportTotals(double elapsedTime)
                           "invalid date/times replaced with zero value : ";
             }
 
-            else if (fColumns[i].column.dataType == CalpontSystemCatalog::TIMESTAMP)
+            else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::TIMESTAMP)
             {
                 ossSatCnt <<
                           "invalid timestamps replaced with zero value : ";

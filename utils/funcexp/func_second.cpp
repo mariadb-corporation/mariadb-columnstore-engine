@@ -110,10 +110,10 @@ int64_t Func_second::getIntVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
-            MySQLTime m_time;
-            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+	    dataconvert::MySQLTime m_time;
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
             return m_time.second;
         }
 
