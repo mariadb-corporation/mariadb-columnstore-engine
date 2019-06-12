@@ -935,6 +935,8 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
+	
+	
 
 	// perform single server install
 	if (singleServerInstall == "1")
@@ -4926,11 +4928,19 @@ bool storageSetup(bool amazonInstall)
     if ( DBRootStorageType == "DataRedundancy")
         DataRedundancy = true;
 
+    sysConfig->setConfig("StorageManager", "Enabled", "N");
     if ( reuseConfig == "y" )
     {
         cout << "===== Storage Configuration = " + DBRootStorageType + " =====" << endl << endl;
 
-        if (hdfs)
+        if (DBRootStorageType == "storagemanager")
+        {
+            hdfs = false;
+            sysConfig->setConfig("StorageManager", "Enabled", "Y");
+            sysConfig->setConfig("SystemConfig", "DataFilePlugin", "$INSTALLDIR/lib/libcloudio.so");
+            sysConfig->setConfig("SystemConfig", "DataFileEnvFile", "");
+        }
+        else if (hdfs)
         {
             //default
             DataFileEnvFile = "setenv-hdfs-20";
@@ -5043,10 +5053,10 @@ bool storageSetup(bool amazonInstall)
 
         cout << "----- Setup User Module MariaDB ColumnStore Data Storage Mount Configuration -----" << endl << endl;
 
-        cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
+        cout << "There are 2 options when configuring the storage: internal, and external" << endl << endl;
         cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
         cout << "  'external' -    This is specified when the MariaDB ColumnStore Data directory is externally mounted." << endl << endl;
-
+           
         try
         {
             UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
@@ -5074,7 +5084,7 @@ bool storageSetup(bool amazonInstall)
                 callFree(pcommand);
             }
 
-            if ( storageType == "1" || storageType == "2")
+            if ( storageType == "1" || storageType == "2" )
                 break;
 
             cout << endl << "Invalid Entry, please re-enter" << endl << endl;
@@ -5306,6 +5316,23 @@ bool storageSetup(bool amazonInstall)
     else
         hadoopInstalled = "y";
 
+    // check whether StorageManager is installed
+    Config *processConfig = Config::makeConfig((installDir + "/etc/ProcessConfig.xml").c_str());
+    string storageManagerLocation;
+    bool storageManagerInstalled = false;
+    // search the 'PROCESSCONFIG#' entries for the StorageManager entry
+    for (uint i = 1; i <= MAX_PROCESS; i++)
+    {
+        char blah[20];
+        sprintf(blah, "PROCESSCONFIG%d", i);
+        if (processConfig->getConfig(blah, "ProcessName") == "StorageManager")
+        {
+            storageManagerLocation = processConfig->getConfig(blah, "ProcessLocation");
+            break;
+        }
+    }
+    storageManagerInstalled = boost::filesystem::exists(storageManagerLocation);
+        
     //
     // get Backend Data storage type
     //
@@ -5321,9 +5348,36 @@ bool storageSetup(bool amazonInstall)
 
     if ( DBRootStorageType == "hdfs" )
         storageType = "4";
+        
+    if (DBRootStorageType == "storagemanager")
+        storageType = "5";
 
     cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
 
+    cout << "Columnstore supports the following storage options..." << endl;
+    cout << "  1 - internal.  This uses the linux VFS to access files and does " << endl <<
+        "not manage the filesystem." << endl;
+    cout << "  2 - external *.  If you have other mountable filesystems you would " << endl <<
+        " like ColumnStore to use & manage, select this option." << endl;
+    cout << "  3 - GlusterFS *  (NOTE: glusterd service must be running and enabled on all PMs.)" << endl;
+    cout << "  4 - HDFS *" << endl;
+    cout << "  5 - Storage Manager*" << endl;
+    cout << "* - This option enables data replication and server failover in a multi-node" << endl <<
+        "    configuration." << endl;
+    
+    cout << endl << "These options are available on this system: [1, 2";
+    if (glusterInstalled == "y" && singleServerInstall != "1")
+        cout << ", 3";
+    if (hadoopInstalled == "y")
+        cout << ", 4";
+    if (storageManagerInstalled)
+        cout << ", 5";
+    cout << "]" << endl;
+    
+    prompt = "Select the type of data storage (" + storageType + ") > ";
+    
+    #if 0
+    // pre-storagemanager version
     if (( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
     {
         cout << "There are 2 options when configuring the storage: internal or external" << endl << endl;
@@ -5344,7 +5398,7 @@ bool storageSetup(bool amazonInstall)
 
     if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
     {
-        cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
+        cout << "There are 4 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
         prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
     }
 
@@ -5368,6 +5422,7 @@ bool storageSetup(bool amazonInstall)
         cout << "                  directories to be controlled by the Hadoop Distributed File System (HDFS)." << endl;
         cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
     }
+    #endif
 
     while (true)
     {
@@ -5380,6 +5435,23 @@ bool storageSetup(bool amazonInstall)
             callFree(pcommand);
         }
 
+        if ((storageType == "1" || storageType == "2")   // these are always valid options
+          || (glusterInstalled == "y" && singleServerInstall != "1" && storageType == "3")    // allow gluster if installed
+          || (hadoopInstalled == "y" && storageType == "4")   // allow HDFS if installed
+          || (storageManagerInstalled && storageType == "5")   // allow storagemanager if installed
+          )
+            break;
+            
+        // if it gets here the selection was invalid
+        if (noPrompting)
+        {
+            cout << endl << "Invalid selection" << endl << endl;
+            exit(1);
+        }
+        cout << endl << "Invalid selection, please re-enter" << endl << endl;
+        
+        #if 0
+        old version
         if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
         {
             if ( storageType == "1" || storageType == "2")
@@ -5425,11 +5497,12 @@ bool storageSetup(bool amazonInstall)
             if ( noPrompting )
                 exit(1);
         }
+        #endif
     }
 
     if (storageType != "3" && DataRedundancy)
     {
-        cout << "WARNING: This system was configured with ColumnStore DataRedundancy storage." << endl;
+        cout << "WARNING: This system was previously configured with ColumnStore DataRedundancy storage." << endl;
         cout << "         Before changing from DataRedundancy to another storage type," << endl;
         cout << "         existing data should be migrated to the targeted storage." << endl;
         cout << "         Please refer to the ColumnStore documentation for more information." << endl;
@@ -5488,6 +5561,9 @@ bool storageSetup(bool amazonInstall)
             DBRootStorageType = "hdfs";
             break;
         }
+        case 5:
+            DBRootStorageType = "storagemanager";
+            break;
     }
 
     //set DBRootStorageType
@@ -5829,6 +5905,13 @@ bool storageSetup(bool amazonInstall)
             cout << "ERROR: Problem setting ExtentsPerSegmentFile in the MariaDB ColumnStore System Configuration file" << endl;
             return false;
         }
+    }
+    else if (storageType == "5")
+    {
+        hdfs = false;
+        sysConfig->setConfig("StorageManager", "Enabled", "Y");
+        sysConfig->setConfig("SystemConfig", "DataFilePlugin", "$INSTALLDIR/lib/libcloudio.so");
+        sysConfig->setConfig("SystemConfig", "DataFileEnvFile", "");
     }
     else
     {

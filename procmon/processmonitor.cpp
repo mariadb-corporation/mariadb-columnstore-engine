@@ -6316,7 +6316,20 @@ int ProcessMonitor::checkDataMount()
 
         return API_SUCCESS;
     }
-
+    else if (DBRootStorageType == "storagemanager")
+    {
+        /*  StorageManager isn't running yet.
+        IDBFileSystem &fs = IDBFactory::getFs(IDBDataFile::CLOUD);
+        bool up = fs.filesystemIsUp();
+        if (!up)
+        {
+            log.writeLog(__LINE__, "ERROR: StorageManager is down, check its log files", LOG_TYPE_CRITICAL);
+            return API_FAILURE;
+        }
+        */
+        return API_SUCCESS;
+    }
+        
     //go unmount disk NOT assigned to this pm
     unmountExtraDBroots();
 
