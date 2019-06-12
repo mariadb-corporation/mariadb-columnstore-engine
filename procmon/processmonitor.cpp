@@ -6121,7 +6121,7 @@ void ProcessMonitor::unmountExtraDBroots()
     {
         oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 
-        if ( DBRootStorageType == "hdfs" ||
+        if ( DBRootStorageType == "hdfs" || DBRootStorageType == "storagemanager" ||
                 ( DBRootStorageType == "internal" && DataRedundancyConfig == "n") )
             return;
     }
