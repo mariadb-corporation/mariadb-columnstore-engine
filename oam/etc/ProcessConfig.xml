@@ -21,8 +21,6 @@
 		<RunType>ACTIVE_STANDBY</RunType>
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG2>
-    
-    
 	<PROCESSCONFIG3>
 		<ProcessName>StorageManager</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
@@ -34,8 +32,6 @@
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG3>
-
-
 	<PROCESSCONFIG4>
 		<ProcessName>DBRMControllerNode</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>

@@ -663,9 +663,13 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                        processconfig.LogFile,
                                                        initType,
                                                        actIndicator);
-                        if (processName == "StorageManager")
-                            log.writeLog(__LINE__, "START: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
-                                                       
+
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                        if (processconfig.ProcessName == "StorageManager")
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, processID);
+                        
                         if ( processID > oam::API_MAX )
                             processID = oam::API_SUCCESS;
 
@@ -765,10 +769,13 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).DepModuleName,
                                                                (*listPtr).LogFile,
                                                                initType);
-                                if (processName == "StorageManager")
-                                    log.writeLog(__LINE__, "RESTART: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
-                                                       
-                                                               
+
+                                // StorageManager doesn't send the "I'm online" msg to Proc*.
+                                // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                                if (listPtr->ProcessName == "StorageManager")
+                                    oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                      oam::ACTIVE, listPtr->processID);
+                      
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -1212,10 +1219,13 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                            (*listPtr).DepModuleName,
                                                            (*listPtr).LogFile,
                                                            initType);
-                            if (processName == "StorageManager")
-                                log.writeLog(__LINE__, "STARTALL: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
-                                                       
-                                                           
+
+                            // StorageManager doesn't send the "I'm online" msg to Proc*.
+                            // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                            if (listPtr->ProcessName == "StorageManager")
+                                oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                  oam::ACTIVE, processID);
+                          
                             if ( processID > oam::API_MAX )
                             {
                                 processID = oam::API_SUCCESS;
@@ -1281,10 +1291,13 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).DepModuleName,
                                                                (*listPtr).LogFile,
                                                                initType);
-                                if (processName == "StorageManager")
-                                    log.writeLog(__LINE__, "STARTALL: supposedly StorageManager was started, got processID " + processID, LOG_TYPE_DEBUG);
-                                                       
-                                                               
+
+                                // StorageManager doesn't send the "I'm online" msg to Proc*.
+                                // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                                if (listPtr->ProcessName == "StorageManager")
+                                    oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                      oam::ACTIVE, processID);
+                         
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -6312,7 +6325,12 @@ int ProcessMonitor::checkDataMount()
 
         return API_SUCCESS;
     }
-
+    else if (DBRootStorageType == "storagemanager")
+    {
+        /*  StorageManager isn't running yet.  Can't check for writability here. */
+        return API_SUCCESS;
+    }
+        
     //go unmount disk NOT assigned to this pm
     unmountExtraDBroots();
 
