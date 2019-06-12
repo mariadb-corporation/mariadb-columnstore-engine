@@ -10769,6 +10769,10 @@ void Oam::mountDBRoot(dbrootList dbrootConfigList, bool mount)
     }
     catch (...) {}
 
+    // nothing to do here
+    if (DBRootStorageType == "storagemanager")
+        return;
+    
     string DataRedundancyConfig = "n";
 
     try

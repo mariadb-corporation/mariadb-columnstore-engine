@@ -1898,6 +1898,7 @@ void pingDeviceThread()
                                         {
                                             DBRootConfigList::iterator pt = dbrootConfigList.begin();
 
+                                            // StorageManager: Need to do this for storagemanager as well?  What's it doing?
                                             if (( DBRootStorageType == "DataRedundancy") && (*pt == 1))
                                             {
                                                 log.writeLog(__LINE__, "stopModule, " + config.moduleName(), LOG_TYPE_DEBUG);
