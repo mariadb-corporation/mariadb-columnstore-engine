@@ -2228,6 +2228,22 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
         }
     }
 
+    // sending sigkill to StorageManager right after sigterm would not allow it to 
+    // exit gracefully.  This will wait until StorageManager goes down to prevent
+    // weirdness that I suspect will happen if we combine a slow connection with a restart
+    // command.
+    if (processName == "StorageManager")
+    {
+        while (status == API_SUCCESS)
+        {
+            sleep(1);
+            log.writeLog(__LINE__, "Waiting for StorageManager to go away...", LOG_TYPE_DEBUG);
+            status = kill(processID, SIGTERM);
+        }
+    
+        return status;
+    }
+    
     //now do a pkill on process just to make sure all is clean
     string::size_type pos = processLocation.find("bin/", 0);
     string procName = processLocation.substr(pos + 4, 15) + "\\*";
