@@ -55,7 +55,7 @@ target_link_libraries(brm
 
 set_target_properties(brm PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS brm DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 
 # controllernode
@@ -77,7 +77,7 @@ target_link_libraries(controllernode
     crashtrace
     )
 
-install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS controllernode DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # workernode
@@ -95,7 +95,7 @@ target_link_libraries(workernode
     Boost::thread
     )
 
-install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS workernode DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # dbrmctl
@@ -110,7 +110,7 @@ target_link_libraries(dbrmctl
     joblist_h
     )
 
-install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS dbrmctl DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # reset_locks
@@ -129,7 +129,7 @@ target_link_libraries(reset_locks
     messageqcpp_h
     rwlock_h)
 
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS reset_locks DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # rollback
@@ -144,7 +144,7 @@ target_link_libraries(rollback
     loggingcpp_h
     messageqcpp_h)
 
-install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS rollback DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # save_brm 
@@ -158,7 +158,7 @@ target_link_libraries(save_brm
     messageqcpp_h
     loggingcpp_h)
 
-install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS save_brm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 # load_brm
@@ -178,4 +178,4 @@ target_link_libraries(load_brm
     messageqcpp_h
     rwlock_h)
 
-install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS load_brm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)

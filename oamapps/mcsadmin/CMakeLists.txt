@@ -17,5 +17,5 @@ target_link_libraries(mcsadmin
           Readline::Readline
           )
 
-install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS mcsadmin DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

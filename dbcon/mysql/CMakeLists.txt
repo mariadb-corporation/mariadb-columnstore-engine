@@ -198,7 +198,7 @@ install(TARGETS calmysql
                 is_columnstore_columns 
                 is_columnstore_extents 
                 is_columnstore_files 
-        DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)
 
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
@@ -207,7 +207,7 @@ install(FILES syscatalog_mysql.sql
               calshowprocesslist.sql 
               columnstore_info.sql
               my.cnf
-        DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR} COMPONENT storage-engine)
 
 install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore
-        DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
+        DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT storage-engine)

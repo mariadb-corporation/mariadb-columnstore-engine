@@ -4,7 +4,7 @@ target_include_directories(we_shared_h INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(BUILD_TESTING)
   cs_add_executable(we_shared_components_tests ./shared_components_tests.cpp)
-  install(TARGETS we_shared_components_tests DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+  install(TARGETS we_shared_components_tests DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 endif()
 
 install(FILES  we_index.h we_define.h we_type.h we_fileop.h we_blockop.h we_dbfileop.h we_obj.h we_log.h 

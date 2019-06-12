@@ -14,5 +14,5 @@ target_link_libraries(rwlock
 
 #set_target_properties(rwlock PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-#install(TARGETS rwlock DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+#install(TARGETS rwlock DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

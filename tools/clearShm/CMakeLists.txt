@@ -7,5 +7,5 @@ target_link_libraries(clearShm
     brm
     )
 
-install(TARGETS clearShm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS clearShm DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

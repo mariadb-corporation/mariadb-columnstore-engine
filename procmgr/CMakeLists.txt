@@ -15,5 +15,5 @@ target_link_libraries(ProcMgr
     threadpool_h
     )
 
-install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ProcMgr DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

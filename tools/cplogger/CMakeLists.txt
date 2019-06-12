@@ -6,5 +6,5 @@ target_link_libraries(cplogger
 			brm
 		  )
 
-install(TARGETS cplogger DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cplogger DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

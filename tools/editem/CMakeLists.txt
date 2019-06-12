@@ -9,5 +9,5 @@ target_link_libraries(editem
     joblist
   )
 
-install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS editem DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

@@ -13,7 +13,7 @@ target_link_libraries(setConfig
     oamcpp
   )
 
-install(TARGETS setConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS setConfig DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
-install(PROGRAMS configxml.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(PROGRAMS configxml.sh DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

@@ -31,5 +31,5 @@ set_target_properties(writeengineredistribute PROPERTIES VERSION 1.0.0 SOVERSION
 target_compile_definitions(writeengineredistribute PRIVATE BOOST_NO_CXX11_SCOPED_ENUMS)
 
 
-install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS writeengineredistribute DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

@@ -20,6 +20,6 @@ target_link_libraries(alarmmanager
     rwlock_h
     )
 
-install(TARGETS alarmmanager DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS alarmmanager DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 

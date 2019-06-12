@@ -21,5 +21,5 @@ target_link_libraries(we_xml
     we_shared_h
     )
 
-INSTALL(TARGETS we_xml DESTINATION ${ENGINE_LIBDIR})
+INSTALL(TARGETS we_xml DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

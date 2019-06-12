@@ -25,5 +25,5 @@ target_link_libraries(processor
 target_include_directories(processor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-INSTALL (TARGETS processor DESTINATION ${ENGINE_LIBDIR})
+INSTALL (TARGETS processor DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

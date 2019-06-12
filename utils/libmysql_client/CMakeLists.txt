@@ -14,5 +14,5 @@ target_link_libraries(mysql_client
     mariadb
     )
 
-install(TARGETS mysql_client DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS mysql_client DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

@@ -48,6 +48,6 @@ target_link_libraries(PrimProc
     )
 
 
-install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS PrimProc DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 

@@ -33,7 +33,7 @@ target_compile_definitions(udfsdk PRIVATE MYSQL_DYNAMIC_PLUGIN)
 set_target_properties(udfsdk PROPERTIES VERSION 1.1.0 SOVERSION 1)
 
 
-install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS udfsdk DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 
 # udf_mysql
@@ -50,5 +50,5 @@ target_link_libraries(udf_mysql
     mariadb_pcre
   )
 
-install(TARGETS udf_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+install(TARGETS udf_mysql DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)
 

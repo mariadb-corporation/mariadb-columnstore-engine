@@ -9,5 +9,5 @@ target_link_libraries(columnstoreDBWrite
     joblist_h
     )
 
-install(TARGETS columnstoreDBWrite DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS columnstoreDBWrite DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

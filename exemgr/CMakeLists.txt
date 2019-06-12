@@ -25,4 +25,4 @@ target_link_libraries(ExeMgr
 
 ########### install files ###############
 
-install(TARGETS ExeMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ExeMgr DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)

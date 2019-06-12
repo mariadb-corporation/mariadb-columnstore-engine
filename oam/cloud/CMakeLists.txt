@@ -3,5 +3,5 @@ install(
   PROGRAMS MCSInstanceCmds.sh 
            MCSVolumeCmds.sh 
            MCSgetCredentials.sh 
-  DESTINATION ${ENGINE_BINDIR} 
+  DESTINATION ${CMAKE_INSTALL_BINDIR} 
   COMPONENT platform)

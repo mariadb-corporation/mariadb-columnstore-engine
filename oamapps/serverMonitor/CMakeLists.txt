@@ -21,5 +21,5 @@ target_link_libraries(ServerMonitor
           )
 
 
-install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ServerMonitor DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

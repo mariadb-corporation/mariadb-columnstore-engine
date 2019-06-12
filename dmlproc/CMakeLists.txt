@@ -36,7 +36,7 @@ target_link_libraries(DMLProc
     )
 
 
-install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS DMLProc DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 
 

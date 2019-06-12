@@ -87,5 +87,5 @@ target_link_libraries(joblist
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS joblist DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

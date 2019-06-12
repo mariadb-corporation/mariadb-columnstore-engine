@@ -28,5 +28,5 @@ target_link_libraries(rowgroup
 
 set_target_properties(rowgroup PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS rowgroup DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

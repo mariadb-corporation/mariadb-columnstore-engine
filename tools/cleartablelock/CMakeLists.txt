@@ -13,5 +13,5 @@ target_link_libraries(cleartablelock
     )
 
 
-install(TARGETS cleartablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cleartablelock DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

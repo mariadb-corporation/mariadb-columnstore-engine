@@ -35,7 +35,7 @@ cs_add_executable(amazonInstaller amazonInstaller.cpp helpers.cpp)
 
 target_link_libraries(amazonInstaller ${ENGINE_LDFLAGS} readline ncurses ${SNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS amazonInstaller DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 ]]
 
 
@@ -61,7 +61,7 @@ install(
           getMySQLpw 
           mycnfUpgrade 
           postConfigure 
-  DESTINATION ${ENGINE_BINDIR} 
+  DESTINATION ${CMAKE_INSTALL_BINDIR} 
   COMPONENT platform)
 
 
@@ -69,5 +69,5 @@ install(
   PROGRAMS quick_installer_single_server.sh 
            quick_installer_multi_server.sh 
            quick_installer_amazon.sh
-  DESTINATION ${ENGINE_BINDIR} 
+  DESTINATION ${CMAKE_INSTALL_BINDIR} 
   COMPONENT platform)               

@@ -30,6 +30,6 @@ target_link_libraries(writeengineclient
 
 set_target_properties(writeengineclient PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS writeengineclient DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS writeengineclient DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 

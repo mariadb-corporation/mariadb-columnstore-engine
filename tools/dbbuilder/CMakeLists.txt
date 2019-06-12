@@ -33,5 +33,5 @@ target_link_libraries(dbbuilder
     Boost::system
   )
 
-install(TARGETS dbbuilder DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS dbbuilder DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

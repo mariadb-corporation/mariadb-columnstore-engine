@@ -14,5 +14,5 @@ target_link_libraries(ProcMon
     )
 
 
-install(TARGETS ProcMon DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ProcMon DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

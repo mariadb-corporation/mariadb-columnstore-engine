@@ -32,7 +32,7 @@ target_link_libraries(regr
     dataconvert_h)
 
 
-install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS regr DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 
 
@@ -52,5 +52,5 @@ target_link_libraries(regr_mysql
     mariadb_pcre
     )
 
-install(TARGETS regr_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+install(TARGETS regr_mysql DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)
 

@@ -13,5 +13,5 @@ target_link_libraries(getConfig
           rt
           )
 
-install(TARGETS getConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS getConfig DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

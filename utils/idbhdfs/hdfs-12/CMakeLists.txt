@@ -20,7 +20,7 @@ target_link_libraries(hdfs-12
     configcpp_h)
 
 
-install(TARGETS hdfs-12 DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS hdfs-12 DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(PROGRAMS setenv-hdfs-12 DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(PROGRAMS setenv-hdfs-12 DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

@@ -70,5 +70,5 @@ target_link_libraries(execplan
 set_target_properties(execplan PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS execplan DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

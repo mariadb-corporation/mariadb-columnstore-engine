@@ -36,4 +36,4 @@ target_link_libraries(dbbc
 target_include_directories(dbbc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})
+INSTALL (TARGETS dbbc DESTINATION ${CMAKE_INSTALL_LIBDIR})

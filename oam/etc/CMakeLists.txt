@@ -4,5 +4,5 @@ install(
         Columnstore.xml 
         ProcessConfig.xml 
         ConsoleCmds.xml 
-  DESTINATION ${ENGINE_ETCDIR} 
+  DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} 
   COMPONENT platform)

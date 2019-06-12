@@ -13,5 +13,5 @@ target_link_libraries(ddlcleanup
     Boost::thread
   )
 
-install(TARGETS ddlcleanup DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ddlcleanup DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

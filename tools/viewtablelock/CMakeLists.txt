@@ -10,5 +10,5 @@ target_link_libraries(viewtablelock
           )
 
 
-install(TARGETS viewtablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS viewtablelock DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

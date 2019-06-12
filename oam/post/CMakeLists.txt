@@ -5,6 +5,6 @@ install(
           test-002.sh 
           test-003.sh 
           test-004.sh 
-  DESTINATION ${ENGINE_POSTDIR} 
+  DESTINATION ${CMAKE_INSTALL_DATADIR} 
   COMPONENT platform)
 

@@ -20,5 +20,5 @@ target_link_libraries(querytele
     thrift 
     common_h)
 
-install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS querytele DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

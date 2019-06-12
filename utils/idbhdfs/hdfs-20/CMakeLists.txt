@@ -23,7 +23,7 @@ target_link_libraries(hdfs-20
 set_target_properties(hdfs-20 PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-install(TARGETS hdfs-20 DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS hdfs-20 DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(PROGRAMS setenv-hdfs-20 DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(PROGRAMS setenv-hdfs-20 DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

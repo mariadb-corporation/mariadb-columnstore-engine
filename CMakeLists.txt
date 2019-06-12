@@ -219,34 +219,20 @@ include (configureEngine)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine "${GIT_HASH}-dirty")
 # releasenum is used by external scripts for various tasks. Leave it alone.
 configure_file(build/releasenum.in  build/releasenum IMMEDIATE)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT platform)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION / COMPONENT platform)
 
-configure_file(config.h.in        config.h)
+configure_file(config.h.in  config.h)
 
-configure_file(columnstore.h.in   columnstore.h @ONLY)
+configure_file(columnstore.h.in  columnstore.h @ONLY)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h)
 
-
-set (ENGINE_LIBDIR     lib)
-set (ENGINE_BINDIR     bin)
-set (ENGINE_INCDIR     include)
-set (ENGINE_ETCDIR     etc)
-set (ENGINE_SYSCONFDIR etc)
-set (ENGINE_MANDIR     man)
-set (ENGINE_SBINDIR    sbin)
-set (ENGINE_SHAREDIR   share)
-set (ENGINE_POSTDIR    post)
-set (ENGINE_LOCALDIR   local)
-set (ENGINE_MYSQLDIR   mysql)
-set (ENGINE_TOOLSDIR   tools)
-
-
-
-
-file(RELATIVE_PATH _reldir
-     ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
-     ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${_reldir})
+file(RELATIVE_PATH _rel ${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR} ${CMAKE_INSTALL_PREFIX})
+set(_rpath "\$ORIGIN/${_rel}")
+file(TO_NATIVE_PATH "${_rpath}/${INSTALL_LIBDIR}" message_RPATH)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH $ORIGIN "${message_RPATH}")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 
 include(pch)
@@ -262,7 +248,7 @@ set_target_properties(mariadb PROPERTIES
   IMPORTED_LOCATION ${SERVER_mariadb-connector-c_BINARY_DIR}/libmariadb/libmariadb.so
   INTERFACE_INCLUDE_DIRECTORIES "${SERVER_SOURCE_DIR}/include;${SERVER_BUILD_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include"
   INTERFACE_COMPILE_DEFINITIONS "SAFE_MUTEX;SAFEMALLOC"
-  INTERFACE_COMPILE_DEFINITIONS $<if:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
+  INTERFACE_COMPILE_DEFINITIONS $<IF:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
 )
 
 

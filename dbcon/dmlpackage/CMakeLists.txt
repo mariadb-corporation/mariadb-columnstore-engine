@@ -60,5 +60,5 @@ target_link_libraries(dmlpackage
     )
 
 
-INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+INSTALL(TARGETS dmlpackage DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

@@ -42,5 +42,5 @@ target_link_libraries(loggingcpp
 
 
 
-install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_ETCDIR} COMPONENT platform)
+install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} COMPONENT platform)
 

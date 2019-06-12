@@ -20,5 +20,5 @@ target_link_libraries(querystats
           idbboot_h
           common_h)
 
-install(TARGETS querystats DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS querystats DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

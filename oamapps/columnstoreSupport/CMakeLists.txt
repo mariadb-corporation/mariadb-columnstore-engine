@@ -14,7 +14,7 @@ target_link_libraries(columnstoreSupport
           Threads::Threads
           )
 
-install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS columnstoreSupport DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 
 install(
   PROGRAMS alarmReport.sh 
@@ -25,6 +25,6 @@ install(
           logReport.sh 
           resourceReport.sh 
           softwareReport.sh 
-  DESTINATION ${ENGINE_BINDIR} 
+  DESTINATION ${CMAKE_INSTALL_BINDIR} 
   COMPONENT platform)
               

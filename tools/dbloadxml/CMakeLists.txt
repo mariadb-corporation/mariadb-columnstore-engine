@@ -31,5 +31,5 @@ target_link_libraries(colxml
     Boost::date_time
   )
 
-install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS colxml DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

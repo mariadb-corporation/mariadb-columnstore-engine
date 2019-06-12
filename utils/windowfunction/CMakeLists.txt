@@ -43,5 +43,5 @@ target_link_libraries(windowfunction
     threadpool_h
     udfsdk_h)
 
-install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS windowfunction DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

@@ -22,4 +22,4 @@ target_link_libraries(threadpool
 #set_target_properties(threadpool PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-#install(TARGETS threadpool DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+#install(TARGETS threadpool DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)

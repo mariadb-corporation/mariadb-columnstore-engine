@@ -50,4 +50,4 @@ target_link_libraries(WriteEngineServer
     Boost::thread
           )
 
-install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS WriteEngineServer DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)

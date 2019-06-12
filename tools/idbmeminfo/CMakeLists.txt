@@ -7,5 +7,5 @@ target_link_libraries(idbmeminfo
     Boost::system  
   )
 
-install(TARGETS idbmeminfo DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS idbmeminfo DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

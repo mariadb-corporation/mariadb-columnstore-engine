@@ -32,5 +32,5 @@ target_link_libraries(DDLProc
     )
 
 
-install(TARGETS DDLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS DDLProc DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

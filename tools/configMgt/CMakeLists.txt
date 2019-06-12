@@ -9,7 +9,7 @@ target_link_libraries(autoInstaller
     Readline::Readline
   )
 
-install(TARGETS autoInstaller DESTINATION ${ENGINE_BINDIR})
+install(TARGETS autoInstaller DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
 
@@ -21,5 +21,5 @@ target_link_libraries(autoConfigure
   PRIVATE 
     brm
   )
-install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS autoConfigure DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
                                                                                                                  

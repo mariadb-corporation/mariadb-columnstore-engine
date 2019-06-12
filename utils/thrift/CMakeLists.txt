@@ -14,5 +14,5 @@ set_target_properties(thrift PROPERTIES VERSION 1.0.0 SOVERSION 1)
 target_include_directories(thrift INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS thrift DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 

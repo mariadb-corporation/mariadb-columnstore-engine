@@ -34,6 +34,6 @@ target_include_directories(joiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(joiner PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-install(TARGETS joiner DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS joiner DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libs)
 
 

@@ -28,5 +28,5 @@ target_link_libraries(cpimport
     we_shared_h
     writeengine)
 
-install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cpimport DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
 

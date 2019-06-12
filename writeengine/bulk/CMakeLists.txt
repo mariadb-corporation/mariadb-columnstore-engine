@@ -70,4 +70,4 @@ target_link_libraries(cpimport.bin
     )
 
 
-install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS cpimport.bin DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT platform)
