@@ -935,8 +935,6 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	
-	
 
 	// perform single server install
 	if (singleServerInstall == "1")
@@ -5053,10 +5051,10 @@ bool storageSetup(bool amazonInstall)
 
         cout << "----- Setup User Module MariaDB ColumnStore Data Storage Mount Configuration -----" << endl << endl;
 
-        cout << "There are 2 options when configuring the storage: internal, and external" << endl << endl;
+        cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
         cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
         cout << "  'external' -    This is specified when the MariaDB ColumnStore Data directory is externally mounted." << endl << endl;
-           
+
         try
         {
             UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
@@ -5084,7 +5082,7 @@ bool storageSetup(bool amazonInstall)
                 callFree(pcommand);
             }
 
-            if ( storageType == "1" || storageType == "2" )
+            if ( storageType == "1" || storageType == "2")
                 break;
 
             cout << endl << "Invalid Entry, please re-enter" << endl << endl;

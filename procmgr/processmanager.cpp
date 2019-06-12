@@ -9169,7 +9169,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     string oidFile;
     oam.getSystemConfig("OIDBitmapFile", oidFile);
 
-    
     // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
     // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
@@ -9293,7 +9292,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     // put oid file and current file in list
-    // StorageManager: no need to distribute these files if in cloud storage
     dbrmFiles.push_back(currentFileName);
 
     ifstream file1 (journalFileName.c_str());

@@ -1018,11 +1018,8 @@ int main(int argc, char** argv)
                         // StorageManager doesn't send the "I'm online" msg to Proc*.
                         // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                         if (listPtr->ProcessName == "StorageManager")
-                        {
-                            log.writeLog(__LINE__, "StorageManager WTF?  1", LOG_TYPE_DEBUG);
                             oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                               oam::ACTIVE, listPtr->processID);
-                        }
                                                
                         string restartStatus;
 
@@ -1078,11 +1075,8 @@ int main(int argc, char** argv)
                 // StorageManager doesn't send the "I'm online" msg to Proc*.
                 // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                 if (listPtr->ProcessName == "StorageManager")
-                {
-                    log.writeLog(__LINE__, "StorageManager WTF?  2", LOG_TYPE_DEBUG);
                     oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                     oam::ACTIVE, listPtr->processID);
-                }
                                        
                 string restartStatus;
 
@@ -1674,12 +1668,9 @@ static void chldHandleThread(MonitorConfig config)
                         // StorageManager doesn't send the "I'm online" msg to Proc*.
                         // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                         if (listPtr->ProcessName == "StorageManager")
-                        {
-                            log.writeLog(__LINE__, "StorageManager WTF?  3", LOG_TYPE_DEBUG);
                             oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                               oam::ACTIVE, listPtr->processID);
-                        }
-                                               
+              
                         if ( (*listPtr).processID == oam::API_FAILURE )
                         {
                             // restart hard failure

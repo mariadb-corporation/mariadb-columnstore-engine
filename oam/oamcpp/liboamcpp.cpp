@@ -1991,6 +1991,7 @@ void Oam::getProcessConfig(SystemProcessConfig& systemprocessconfig)
                               proConfig->getConfig(sectionName, "ModuleType"),
                               processconfig );
 
+        // hide StorageManager from everything else if it is disabled
         if (processconfig.ProcessName.empty() || 
           (!storageManagerEnabled && processconfig.ProcessName == "StorageManager"))
             continue;

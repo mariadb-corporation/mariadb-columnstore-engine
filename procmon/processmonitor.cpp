@@ -662,11 +662,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                         // StorageManager doesn't send the "I'm online" msg to Proc*.
                         // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                         if (processconfig.ProcessName == "StorageManager")
-                        {
-                            log.writeLog(__LINE__, "StorageManager WTF?  6", LOG_TYPE_DEBUG);
                             oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                               oam::ACTIVE, processID);
-                        }
                         
                         if ( processID > oam::API_MAX )
                             processID = oam::API_SUCCESS;
@@ -766,12 +763,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                 // StorageManager doesn't send the "I'm online" msg to Proc*.
                                 // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                                 if (listPtr->ProcessName == "StorageManager")
-                                {
-                                    log.writeLog(__LINE__, "StorageManager WTF?  7", LOG_TYPE_DEBUG);
                                     oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                                       oam::ACTIVE, listPtr->processID);
-                                }         
-                                                               
+                      
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -1214,12 +1208,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                             // StorageManager doesn't send the "I'm online" msg to Proc*.
                             // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                             if (listPtr->ProcessName == "StorageManager")
-                            {
-                                log.writeLog(__LINE__, "StorageManager WTF?  4", LOG_TYPE_DEBUG);
                                 oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                                   oam::ACTIVE, processID);
-                            }    
-                                                           
+                          
                             if ( processID > oam::API_MAX )
                             {
                                 processID = oam::API_SUCCESS;
@@ -1289,12 +1280,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                 // StorageManager doesn't send the "I'm online" msg to Proc*.
                                 // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
                                 if (listPtr->ProcessName == "StorageManager")
-                                {
-                                    log.writeLog(__LINE__, "StorageManager WTF?  5", LOG_TYPE_DEBUG);
                                     oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
                                       oam::ACTIVE, processID);
-                                }
-                                                               
+                         
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -6318,15 +6306,7 @@ int ProcessMonitor::checkDataMount()
     }
     else if (DBRootStorageType == "storagemanager")
     {
-        /*  StorageManager isn't running yet.
-        IDBFileSystem &fs = IDBFactory::getFs(IDBDataFile::CLOUD);
-        bool up = fs.filesystemIsUp();
-        if (!up)
-        {
-            log.writeLog(__LINE__, "ERROR: StorageManager is down, check its log files", LOG_TYPE_CRITICAL);
-            return API_FAILURE;
-        }
-        */
+        /*  StorageManager isn't running yet.  Can't check for writability here. */
         return API_SUCCESS;
     }
         
