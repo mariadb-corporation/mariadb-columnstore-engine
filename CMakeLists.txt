@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 if(POLICY CMP0069)
 endif()
@@ -11,14 +11,13 @@ endif()
 
 project(columnstore
   LANGUAGES C CXX
-  VERSION 1.4.0.0
+  VERSION 1.4.0.1
   DESCRIPTION "Massively parallel and distributed columnar storage engine"
   HOMEPAGE_URL "https://mariadb.com/kb/en/library/mariadb-columnstore/")
-set(RELEASE_VERSION 1)
-
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
+include(GNUInstallDirs)
 include(CMakeDependentOption)
 include(CMakeGraphVizOptions)
 include(ExternalProject)
@@ -88,6 +87,9 @@ set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/.external)
 list(APPEND ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/.external)
 
 
+option(ERROR_REPORTING_ENROLLMENT "Enroll in automatic error reporting to help improve quality?" FALSE)
+
+
 option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during compilation?" TRUE)
 
 
@@ -122,7 +124,7 @@ if(NOT EXISTS "${SERVER_BUILD_DIR}/CMakeCache.txt")
 endif()
 
 load_cache("${SERVER_BUILD_DIR}" READ_WITH_PREFIX SERVER_ 
-  MySQL_SOURCE_DIR MySQL_BINARY_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
+  MySQL_SOURCE_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
   mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
   )
 
@@ -145,7 +147,7 @@ status("Build type: ${CMAKE_BUILD_TYPE}")
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to
 # custom packaging steps.
-OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
+option(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
 
 
 option(BUILD_TESTING "Build unit tests" FALSE)
@@ -172,67 +174,79 @@ include(cppcheck)
 include(clang-tidy)
 
 
-SET (PACKAGE columnstore)
-SET (PACKAGE_NAME columnstore)
-SET (PACKAGE_TARNAME columnstore)
-SET (PACKAGE_BUGREPORT support@mariadb.com)
-SET (PACKAGE_URL "")
+set (PACKAGE columnstore)
+set (PACKAGE_NAME columnstore)
+set (PACKAGE_TARNAME columnstore)
+set (PACKAGE_BUGREPORT support@mariadb.com)
+set (PACKAGE_URL "")
 
-SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
+set (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "/usr/local/mariadb/columnstore" CACHE PATH "Installation prefix" FORCE)
 endif()
 
+
+#[[
 # use, i.e. don't skip the full RPATH for the build tree
-SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
 # when building, don't use the install RPATH already
 # (but later on when installing)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;${CMAKE_INSTALL_PREFIX}/mysql/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;${CMAKE_INSTALL_PREFIX}/mysql/lib")
 
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # the RPATH to be used when installing, but only if it's not a system directory
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF()
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+endif()
 
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SERVER_SOURCE_ROOT_DIR}/libmysql/" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CMAKE_INSTALL_PREFIX}/mysql/lib")
-ENDIF()
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SERVER_SOURCE_ROOT_DIR}/libmysql/" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CMAKE_INSTALL_PREFIX}/mysql/lib")
+endif()
+]]
 
-
-INCLUDE (configureEngine)
+include (configureEngine)
 
 # generate git info for automated system tests. A downstream test suite scans these for changes as a trigger
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine "${GIT_HASH}-dirty")
 # releasenum is used by external scripts for various tasks. Leave it alone.
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT platform)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstore.h.in ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h @ONLY)
+configure_file(build/releasenum.in  build/releasenum IMMEDIATE)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT platform)
+
+configure_file(config.h.in        config.h)
+
+configure_file(columnstore.h.in   columnstore.h @ONLY)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/columnstore.h)
 
 
-SET (ENGINE_LIBDIR     lib)
-SET (ENGINE_BINDIR     bin)
-SET (ENGINE_INCDIR     include)
-SET (ENGINE_ETCDIR     etc)
-SET (ENGINE_SYSCONFDIR etc)
-SET (ENGINE_MANDIR     man)
-SET (ENGINE_SBINDIR    sbin)
-SET (ENGINE_SHAREDIR   share)
-SET (ENGINE_POSTDIR    post)
-SET (ENGINE_LOCALDIR   local)
-SET (ENGINE_MYSQLDIR   mysql)
-SET (ENGINE_TOOLSDIR   tools)
+set (ENGINE_LIBDIR     lib)
+set (ENGINE_BINDIR     bin)
+set (ENGINE_INCDIR     include)
+set (ENGINE_ETCDIR     etc)
+set (ENGINE_SYSCONFDIR etc)
+set (ENGINE_MANDIR     man)
+set (ENGINE_SBINDIR    sbin)
+set (ENGINE_SHAREDIR   share)
+set (ENGINE_POSTDIR    post)
+set (ENGINE_LOCALDIR   local)
+set (ENGINE_MYSQLDIR   mysql)
+set (ENGINE_TOOLSDIR   tools)
+
+
+
+
+file(RELATIVE_PATH _reldir
+     ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+     ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${_reldir})
 
 
 include(pch)
@@ -241,14 +255,14 @@ add_library(columnstore_h INTERFACE)
 target_include_directories(columnstore_h INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(mariadb_h INTERFACE)
-target_include_directories(mariadb_h INTERFACE "${SERVER_MySQL_SOURCE_DIR}/include;${SERVER_MySQL_BINARY_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include")
+target_include_directories(mariadb_h INTERFACE "${SERVER_SOURCE_DIR}/include;${SERVER_BUILD_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include")
 
 add_library(mariadb STATIC IMPORTED)
 set_target_properties(mariadb PROPERTIES
   IMPORTED_LOCATION ${SERVER_mariadb-connector-c_BINARY_DIR}/libmariadb/libmariadb.so
-  INTERFACE_INCLUDE_DIRECTORIES "${SERVER_MySQL_SOURCE_DIR}/include;${SERVER_MySQL_BINARY_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${SERVER_SOURCE_DIR}/include;${SERVER_BUILD_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include"
   INTERFACE_COMPILE_DEFINITIONS "SAFE_MUTEX;SAFEMALLOC"
-  INTERFACE_COMPILE_DEFINITIONS $<IF:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
+  INTERFACE_COMPILE_DEFINITIONS $<if:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
 )
 
 
@@ -373,15 +387,9 @@ add_subdirectory(utils/libmysql_client)
 add_subdirectory(utils/clusterTester)
 
 
-# WriteEngine component tests
-IF( WITH_SHARED_COMP_TESTS )
-    # search for cppunit
-    INCLUDE (findcppunit.cmake)
-    if (NOT CPPUNIT_FOUND)
-        MESSAGE(FATAL_ERROR "CPPUnit not found please install cppunit-devel for CentOS/RedHat or libcppunit-dev for Ubuntu/Debian")
-    endif()
-    ADD_SUBDIRECTORY(writeengine/shared)
-ENDIF( WITH_SHARED_COMP_TESTS )
+if( BUILD_TESTING )
+    add_subdirectory(writeengine/shared)
+endif()
 
-INCLUDE(cpackEngineRPM)
-INCLUDE(cpackEngineDEB)
+include(cpackEngineRPM)
+include(cpackEngineDEB)

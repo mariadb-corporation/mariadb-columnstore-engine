@@ -32,7 +32,7 @@ target_link_libraries(brm
   INTERFACE brm_h 
   PRIVATE
     alarmmanager_h         
-    Boost::system   
+    Boost::system
     common_h
     dataconvert_h
     idbboot_h
@@ -139,6 +139,7 @@ cs_add_executable(rollback rollback.cpp)
 target_link_libraries(rollback 
   PUBLIC 
   PRIVATE
+    Boost::thread
     brm
     loggingcpp_h
     messageqcpp_h)
