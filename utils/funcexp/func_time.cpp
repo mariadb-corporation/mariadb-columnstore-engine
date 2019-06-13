@@ -120,11 +120,11 @@ string Func_time::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
-            MySQLTime m_time;
-            gmtSecToMySQLTime(seconds, m_time, fTimeZone);
-            Time time;
+	    dataconvert::MySQLTime m_time;
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+	    dataconvert::Time time;
             time.hour = m_time.hour;
             time.minute = m_time.minute;
             time.second = m_time.second;

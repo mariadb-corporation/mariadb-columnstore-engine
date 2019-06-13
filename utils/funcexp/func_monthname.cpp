@@ -104,10 +104,10 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::TIMESTAMP:
         {
             val = parm[0]->data()->getIntVal(row, isNull);
-            TimeStamp timestamp(val);
+	    dataconvert::TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
-            MySQLTime time;
-            gmtSecToMySQLTime(seconds, time, fTimeZone);
+	    dataconvert::MySQLTime time;
+	    dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
             return time.month;
         }
 

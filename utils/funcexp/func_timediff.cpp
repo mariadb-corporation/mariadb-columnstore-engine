@@ -134,11 +134,11 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
                 break;
             }
             int64_t temp = parm[0]->data()->getTimestampIntVal(row, isNull);
-            TimeStamp timestamp(temp);
+	    dataconvert::TimeStamp timestamp(temp);
             int64_t seconds = timestamp.second;
-            MySQLTime time;
-            gmtSecToMySQLTime(seconds, time, fTimeZone);
-            DateTime dt;
+	    dataconvert::MySQLTime time;
+	    dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
+	    dataconvert::DateTime dt;
             dt.year = time.year;
             dt.month = time.month;
             dt.day = time.day;
@@ -196,11 +196,11 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             int64_t temp = parm[1]->data()->getTimestampIntVal(row, isNull);
-            TimeStamp timestamp(temp);
+	    dataconvert::TimeStamp timestamp(temp);
             int64_t seconds = timestamp.second;
-            MySQLTime time;
-            gmtSecToMySQLTime(seconds, time, fTimeZone);
-            DateTime dt;
+	    dataconvert::MySQLTime time;
+	    dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
+	    dataconvert::DateTime dt;
             dt.year = time.year;
             dt.month = time.month;
             dt.day = time.day;

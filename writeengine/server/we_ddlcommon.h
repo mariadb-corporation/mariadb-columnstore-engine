@@ -448,7 +448,7 @@ inline int convertDataType(int dataType)
             break;
 
         case ddlpackage::DDL_TIMESTAMP:
-            calpontDataType = CalpontSystemCatalog::TIMESTAMP;
+            calpontDataType = execplan::CalpontSystemCatalog::TIMESTAMP;
             break;
 
         case ddlpackage::DDL_CLOB:
