@@ -1927,9 +1927,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 {
     uint32_t paramCount = fRGContext.getParameterCount();
     // The vector of parameters to be sent to the UDAF
-    std::vector<mcsv1sdk::ColumnDatum> valsIn;
-    valsIn.resize(paramCount);
-    uint32_t dataFlags[paramCount];
+    std::vector<mcsv1sdk::ColumnDatum> valsIn(paramCount);
+    std::vector<uint32_t> dataFlags(paramCount);
     ConstantColumn* cc;
     bool bIsNull = false;
     execplan::CalpontSystemCatalog::ColDataType colDataType;
