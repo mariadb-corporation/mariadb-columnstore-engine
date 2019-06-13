@@ -2574,7 +2574,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             system(cmd.c_str());
 
             // if Non Parent OAM Module, get the dbmr data from Parent OAM Module
-            if ( !gOAMParentModuleFlag && !HDFS )
+            if ( !gOAMParentModuleFlag && !HDFS && DBRootStorageType != "storagemanager")
             {
 
                 //create temp dbrm directory
@@ -2684,7 +2684,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 }
 
                 // now delete the dbrm data from local disk
-                if ( !gOAMParentModuleFlag && !HDFS && DataRedundancyConfig == "n")
+                if ( !gOAMParentModuleFlag && !HDFS && DBRootStorageType != "storagemanager" && DataRedundancyConfig == "n")
                 {
                     IDBFileSystem &fs = IDBPolicy::getFs(DBRMDir);
                     fs.remove(DBRMDir.c_str());
