@@ -5,8 +5,8 @@ After=network.target
 Type=forking
 #Restart=on-abnormal
 GuessMainPID=yes
-ExecStart=/usr/local/mariadb/columnstore/bin/columnstore start
-ExecStopPost=/usr/local/mariadb/columnstore/bin/columnstore stop
+ExecStart=@CMAKE_INSTALL_PREFIX@/bin/columnstore start
+ExecStopPost=@CMAKE_INSTALL_PREFIX@/bin/columnstore stop
 TimeoutStopSec=5
 LimitNOFILE=65535
 [Install]

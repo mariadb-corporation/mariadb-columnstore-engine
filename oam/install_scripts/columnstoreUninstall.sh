@@ -4,7 +4,7 @@
 #
 # Uninstall Package from system
 
-set COLUMNSTORE_INSTALL_DIR "/usr/local/mariadb/columnstore"
+set COLUMNSTORE_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@"
 set env(COLUMNSTORE_INSTALL_DIR) $COLUMNSTORE_INSTALL_DIR
 
 set USERNAME $env(USER)

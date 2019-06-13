@@ -1,2 +1,2 @@
-/usr/local/mariadb/columnstore/lib
-/usr/local/mariadb/columnstore/mysql/lib
+@CMAKE_INSTALL_PREFIX@/lib
+@SERVER_INSTALL_PREFIX@/lib

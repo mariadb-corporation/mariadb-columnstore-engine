@@ -29,7 +29,7 @@ if [ -f /etc/init.d/functions ]; then
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
+	COLUMNSTORE_INSTALL_DIR=@CMAKE_INSTALL_PREFIX@
 fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR

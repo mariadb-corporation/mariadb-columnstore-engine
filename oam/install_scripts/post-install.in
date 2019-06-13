@@ -106,8 +106,8 @@ fi
 # softlink for libperl.sp, used by cplogger
 ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
+        sed -i -e s@@CMAKE_INSTALL_PREFIX@@$installdir@g $installdir/bin/columnstoreAlias
 fi
 
 if [ $user != "root" ]; then
@@ -271,7 +271,7 @@ if [ $user = "root" ]; then
       cat $tmpDir/syslog_install.log
   fi
 else
-  sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
+  sed -i -e s@@CMAKE_INSTALL_PREFIX@@$installdir@g $installdir/bin/columnstoreLogRotate
 
   sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
@@ -319,7 +319,7 @@ fi
 hadoop=`which hadoop 2>/dev/null`
 if [ -z "$hadoop" ]; then
   #check for non-root user
-  if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+  if [ $installdir != "@CMAKE_INSTALL_PREFIX@" -a $quiet -eq 0 ]; then
 cat <<EOD
 The next steps are:
 
@@ -374,7 +374,7 @@ else
     $installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-20
   
     #check for non-root user
-    if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+    if [ $installdir != "@CMAKE_INSTALL_PREFIX@" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
@@ -440,7 +440,7 @@ EOD
       $installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
       $installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-12
 
-      if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
+      if [ $installdir != "@CMAKE_INSTALL_PREFIX@" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:

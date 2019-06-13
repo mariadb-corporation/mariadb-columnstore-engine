@@ -48,7 +48,7 @@ for arg in "$@"; do
 done
 shift $shiftcnt
 
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:$COLUMNSTORE_INSTALL_DIR/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib

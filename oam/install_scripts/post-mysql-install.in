@@ -91,8 +91,8 @@ if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
 	ln -sf $libregrsdk libregr_mysql.so
 fi
 
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/mysql/my.cnf
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
+	sed -i -e s@@CMAKE_INSTALL_PREFIX@@$installdir@g $installdir/mysql/my.cnf
 fi
 
 if [ -x $installdir/mysql/mysql-Columnstore ]; then

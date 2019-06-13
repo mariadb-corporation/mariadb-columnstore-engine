@@ -54,7 +54,7 @@ for arg in "$@"; do
 	shift
 done
 
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib
 fi

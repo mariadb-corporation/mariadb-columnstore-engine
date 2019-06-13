@@ -12,18 +12,18 @@
     olddir /var/log/mariadb/columnstore/archive
     su root root 
 }
-/usr/local/mariadb/columnstore/etc/Columnstore.xml {
+@CMAKE_INSTALL_PREFIX@/etc/Columnstore.xml {
     daily
     dateext
 	copy
-    olddir /usr/local/mariadb/columnstore/etc/
+    olddir @CMAKE_INSTALL_PREFIX@/etc/
 }
-/usr/local/mariadb/columnstore/mysql/db/*.err {
+@SERVER_INSTALL_PREFIX@/db/*.err {
     missingok
     rotate 7
     daily
     dateext
 	copytruncate
-    olddir /usr/local/mariadb/columnstore/mysql/db
+    olddir @SERVER_INSTALL_PREFIX@/db
     su root root
 }

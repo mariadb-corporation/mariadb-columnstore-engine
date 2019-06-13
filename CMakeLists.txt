@@ -186,40 +186,13 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "/usr/local/mariadb/columnstore" CACHE PATH "Installation prefix" FORCE)
 endif()
 
-
-#[[
-# use, i.e. don't skip the full RPATH for the build tree
-set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-
-# when building, don't use the install RPATH already
-# (but later on when installing)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;${CMAKE_INSTALL_PREFIX}/mysql/lib")
-
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# the RPATH to be used when installing, but only if it's not a system directory
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-if("${isSystemDir}" STREQUAL "-1")
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-endif()
-
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SERVER_SOURCE_ROOT_DIR}/libmysql/" isSystemDir)
-if("${isSystemDir}" STREQUAL "-1")
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CMAKE_INSTALL_PREFIX}/mysql/lib")
-endif()
-]]
-
 include (configureEngine)
 
 # generate git info for automated system tests. A downstream test suite scans these for changes as a trigger
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine "${GIT_HASH}-dirty")
 # releasenum is used by external scripts for various tasks. Leave it alone.
 configure_file(build/releasenum.in  build/releasenum IMMEDIATE)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION / COMPONENT platform)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION . COMPONENT platform)
 
 configure_file(config.h.in  config.h)
 

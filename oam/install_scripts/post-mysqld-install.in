@@ -70,8 +70,8 @@ usermod -g $user $user 2> /dev/null || true
 chown -R $user:$user $installdir/mysql
 
 # Initiate databases if needed
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/mysql/my.cnf
+if [ $installdir != "@CMAKE_INSTALL_PREFIX@" ]; then
+	sed -i -e s@@CMAKE_INSTALL_PREFIX@@$installdir@g $installdir/mysql/my.cnf
 fi
 
 # InfiniDB testing hook...

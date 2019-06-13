@@ -8,5 +8,5 @@ MAILTO=root
 HOME=/
 
 # Translation Log Archiver, default to every 10 minutes
-*/10 * * * * root /usr/local/mariadb/columnstore/bin/transactionLogArchiver.sh
+*/10 * * * * root @CMAKE_INSTALL_PREFIX@/bin/transactionLogArchiver.sh
 

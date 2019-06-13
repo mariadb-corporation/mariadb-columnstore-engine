@@ -20,7 +20,7 @@ set AMAZONINSTALL [lindex $argv 5]
 set PKGTYPE [lindex $argv 6]
 set NODEPS [lindex $argv 7]
 set DEBUG [lindex $argv 8]
-set INSTALLDIR "/usr/local/mariadb/columnstore"
+set INSTALLDIR "@CMAKE_INSTALL_PREFIX@"
 set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
