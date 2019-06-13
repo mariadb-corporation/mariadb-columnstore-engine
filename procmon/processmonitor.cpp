@@ -2269,6 +2269,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     Oam oam;
     SystemProcessStatus systemprocessstatus;
     ProcessStatus processstatus;
+    Config *cs_config = Config::makeConfig();
+    string DBRootStorageType = cs_config->getConfig("Installation", "DBRootStorageType");
 
     log.writeLog(__LINE__, "STARTING Process: " + processName, LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "Process location: " + processLocation, LOG_TYPE_DEBUG);

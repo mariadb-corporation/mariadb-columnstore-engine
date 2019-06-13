@@ -123,11 +123,12 @@ bool IDBPolicy::isLocalFile( const std::string& path )
     //string fileExt  = filepath.extension().c_str();
 #endif
     bool isXml = filepath.extension() == ".xml";
-    bool isDbrm = path.find("dbrm") != string::npos;   // StorageManager: debatable whether dbrm files should go in the cloud
+    //bool isDbrm = path.find("dbrm") != string::npos;   // StorageManager: debatable whether dbrm files should go in the cloud
     bool isVb = path.find("versionbuffer") != string::npos;
     bool isScratch = path.find(s_hdfsRdwrScratch) == 0;
 
-    return isXml || isDbrm || isVb || isScratch;
+    return isXml || isVb || isScratch;
+    //return isXml || isDbrm || isVb || isScratch;
 }
 
 IDBDataFile::Types IDBPolicy::getType( const std::string& path, Contexts ctxt )
