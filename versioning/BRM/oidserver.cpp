@@ -153,7 +153,8 @@ void OIDServer::writeData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
+    if (true || IDBPolicy::useHdfs())
     {
         for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
         {
@@ -231,7 +232,8 @@ void OIDServer::readData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
+    if (true || IDBPolicy::useHdfs())
     {
         for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
         {
@@ -354,14 +356,16 @@ void OIDServer::initializeBitmap() const
 
     //for (i = 0; i < bitmapSize; i += HeaderSize)
     //    writeData(buf, HeaderSize + i, (bitmapSize - i > HeaderSize ? HeaderSize : bitmapSize - i));
-
+    
     uint8_t *bitmapbuf = new uint8_t[bitmapSize];
     memset(bitmapbuf, 0, bitmapSize);
     writeData(bitmapbuf, HeaderSize, bitmapSize);
-    delete bitmapbuf;
+    delete[] bitmapbuf;
     
     flipOIDBlock(0, firstOID, 0);
 
+    buf[0] = 0;
+    buf[1] = 0;
     /* append a 16-bit 0 to indicate 0 entries in the vboid->dbroot mapping */
     writeData(buf, StartOfVBOidSection, 2);
 }
@@ -384,7 +388,8 @@ OIDServer::OIDServer() : fFp(NULL), fFd(-1)
         throw runtime_error(os.str());
     }
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: Forcing the IDB* path.
+    if (true || IDBPolicy::useHdfs())
     {
         if (!IDBPolicy::exists(fFilename.c_str()))   //no bitmap file
         {
@@ -616,7 +621,7 @@ retry:
     {
         writeData(buf, offset, byteSize);
 
-        if (IDBPolicy::useHdfs())
+        if (true || IDBPolicy::useHdfs())
             fFp->flush();
 
         delete [] buf;
@@ -663,7 +668,7 @@ retry:
     {
         writeData(buf, offset, byteSize);
 
-        if (IDBPolicy::useHdfs())
+        if (true || IDBPolicy::useHdfs())
             fFp->flush();
 
         delete [] buf;
@@ -785,7 +790,7 @@ void OIDServer::patchFreelist(struct FEntry* freelist, int start, int num) const
     {
         writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
 
-        if (IDBPolicy::useHdfs())
+        if (true || IDBPolicy::useHdfs())
             fFp->flush();
     }
 }
@@ -813,7 +818,7 @@ int OIDServer::allocVBOID(uint16_t dbroot)
         throw;
     }
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
         fFp->flush();
 
     return ret;
@@ -887,7 +892,7 @@ int OIDServer::allocOIDs(int num)
     writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
     flipOIDBlock(bestMatchBegin, num, 0);
 
-    if (IDBPolicy::useHdfs())
+    if (true || IDBPolicy::useHdfs())
         fFp->flush();
 
     return bestMatchBegin;
