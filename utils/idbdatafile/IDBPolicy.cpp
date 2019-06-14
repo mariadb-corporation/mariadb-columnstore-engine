@@ -82,8 +82,15 @@ void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string&
         else
         {
 			cout << tmpfilepath << endl;
-
-            if (!boost::filesystem::create_directory(tmpfilepath))
+            bool itWorked = false;
+            
+            try 
+            {
+                itWorked = boost::filesystem::create_directories(tmpfilepath);
+            }
+            catch (...)
+            { }
+            if (!itWorked)
             {
                 // We failed to create the scratch directory
                 ostringstream oss;
