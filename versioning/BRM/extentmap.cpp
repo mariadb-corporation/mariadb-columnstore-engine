@@ -1493,7 +1493,7 @@ void ExtentMap::save(const string& filename)
         }
 
         allocdSize = fEMShminfo->allocdSize / sizeof(EMEntry);
-        const int emEntrySize = sizeof(EMEntry);
+        //const int emEntrySize = sizeof(EMEntry);
 
         int first = -1, last = -1, err;
         size_t progress, writeSize;
@@ -1504,7 +1504,7 @@ void ExtentMap::save(const string& filename)
             else if (fExtentMap[i].range.size <= 0 && first != -1)
             {
                 last = i;
-                writeSize = (last - first) * emEntrySize;
+                writeSize = (last - first) * sizeof(EMEntry);
                 progress = 0;
                 char *writePos = (char *) &fExtentMap[first];
                 while (progress < writeSize)
@@ -1523,7 +1523,7 @@ void ExtentMap::save(const string& filename)
         }
         if (first != -1)
         {
-            writeSize = (allocdSize - first) * emEntrySize;
+            writeSize = (allocdSize - first) * sizeof(EMEntry);
             progress = 0;
             char *writePos = (char *) &fExtentMap[first];
             while (progress < writeSize)
@@ -1539,14 +1539,15 @@ void ExtentMap::save(const string& filename)
             }
         }
 
-        allocdSize = fFLShminfo->allocdSize / sizeof(InlineLBIDRange);
+        //allocdSize = fFLShminfo->allocdSize / sizeof(InlineLBIDRange);
         //const int inlineLbidRangeSize = sizeof(InlineLBIDRange);
 
         progress = 0;
+        writeSize = fFLShminfo->allocdSize;
         char *writePos = (char *) fFreeList;
-        while (progress < (size_t) allocdSize)
+        while (progress < writeSize)
         {
-            err = out->write(writePos + progress, allocdSize - progress);
+            err = out->write(writePos + progress, writeSize - progress);
             if (err < 0)
             {
                 releaseFreeList(READ);
@@ -1556,7 +1557,7 @@ void ExtentMap::save(const string& filename)
             progress += err;
         }
     }
-    else    // this is the fstream version to be expired
+    else   // this is the fstream version to be expired
     {
         ofstream out;
 
