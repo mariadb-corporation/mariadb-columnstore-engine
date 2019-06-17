@@ -354,6 +354,10 @@ public:
 	void derivedTbAlias(const std::string derivedTbAlias) { fDerivedTbAlias = derivedTbAlias; }
 	const std::string derivedTbAlias() const { return fDerivedTbAlias; }
 
+    void derivedTbView(const std::string derivedTbView) { fDerivedTbView = derivedTbView; }
+    const std::string derivedTbView() const { return fDerivedTbView; }
+
+
 	void limitStart(const uint64_t limitStart) { fLimitStart = limitStart; }
 	const uint64_t limitStart() const { return fLimitStart; }
 
@@ -565,6 +569,7 @@ private:
 	// for subselect
 	uint64_t fSubType;
 	std::string fDerivedTbAlias;
+    std::string fDerivedTbView;
 
 	// for limit
 	uint64_t fLimitStart;
