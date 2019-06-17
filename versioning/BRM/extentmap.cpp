@@ -1253,14 +1253,22 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         growEMShmseg(nrows);
     }
 
-    for (int i = 0; i < emNumElements; i++)
+    size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
+    int err;
+    char *writePos = (char *) fExtentMap;
+    while (progress < writeSize)
     {
-        if (in->read((char*) &fExtentMap[i], sizeof(EMEntry)) != sizeof(EMEntry))
+        err = in->read(writePos + progress, writeSize - progress);
+        if (err <= 0)
         {
             log_errno("ExtentMap::loadVersion4(): read ");
             throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
         }
-
+        progress += (uint) err;
+    }
+    
+    for (int i = 0; i < emNumElements; i++)
+    {
         reserveLBIDRange(fExtentMap[i].range.start, fExtentMap[i].range.size);
 
         //@bug 1911 - verify status value is valid
@@ -1268,6 +1276,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
                 fExtentMap[i].status > EXTENTSTATUSMAX)
             fExtentMap[i].status = EXTENTAVAILABLE;
     }
+    
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
 
@@ -1328,7 +1337,8 @@ void ExtentMap::load(const string& filename, bool fixFL)
         throw;
     }
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: Forcing the IDB path.  Remove the fstream path once we see this works.
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile>  in(IDBDataFile::open(
@@ -1363,7 +1373,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
             throw;
         }
     }
-    else
+    else   // fstream path to be remove
     {
         ifstream in;
         in.open(filename.c_str(), ios_base::in | ios_base::binary);
@@ -1443,14 +1453,15 @@ void ExtentMap::save(const string& filename)
         throw runtime_error("ExtentMap::save(): got request to save an empty BRM");
     }
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: I don't know why there are two options here.  It can just use the IDBDataFile stuff.
+    // Forcing the IDB option to execute for now.  Leaving the old fstream version there in case we find there's 
+    // a case the IDB option doesn't work.
+    if (true || IDBPolicy::useHdfs())
     {
-        utmp = ::umask(0);
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile> out(IDBDataFile::open(
                                         IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
                                         filename_p, "wb", IDBDataFile::USE_VBUF));
-        ::umask(utmp);
 
         if (!out)
         {
@@ -1482,52 +1493,71 @@ void ExtentMap::save(const string& filename)
         }
 
         allocdSize = fEMShminfo->allocdSize / sizeof(EMEntry);
-        const int emEntrySize = sizeof(EMEntry);
+        //const int emEntrySize = sizeof(EMEntry);
 
+        int first = -1, last = -1, err;
+        size_t progress, writeSize;
         for (i = 0; i < allocdSize; i++)
         {
-            if (fExtentMap[i].range.size > 0)
+            if (fExtentMap[i].range.size > 0 && first == -1)
+                first = i;
+            else if (fExtentMap[i].range.size <= 0 && first != -1)
             {
-                try
+                last = i;
+                writeSize = (last - first) * sizeof(EMEntry);
+                progress = 0;
+                char *writePos = (char *) &fExtentMap[first];
+                while (progress < writeSize)
                 {
-                    bytes = out->write((char*) &fExtentMap[i], emEntrySize);
-
-                    if (bytes != emEntrySize)
+                    err = out->write(writePos + progress, writeSize - progress);
+                    if (err < 0)
+                    {
+                        releaseFreeList(READ);
+                        releaseEMEntryTable(READ);
                         throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
+                    }
+                    progress += err;
                 }
-                catch (...)
+                first = -1;
+            }
+        }
+        if (first != -1)
+        {
+            writeSize = (allocdSize - first) * sizeof(EMEntry);
+            progress = 0;
+            char *writePos = (char *) &fExtentMap[first];
+            while (progress < writeSize)
+            {
+                err = out->write(writePos + progress, writeSize - progress);
+                if (err < 0)
                 {
                     releaseFreeList(READ);
                     releaseEMEntryTable(READ);
-                    throw;
+                    throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
                 }
+                progress += err;
             }
         }
 
-        allocdSize = fFLShminfo->allocdSize / sizeof(InlineLBIDRange);
-        const int inlineLbidRangeSize = sizeof(InlineLBIDRange);
+        //allocdSize = fFLShminfo->allocdSize / sizeof(InlineLBIDRange);
+        //const int inlineLbidRangeSize = sizeof(InlineLBIDRange);
 
-        for (i = 0; i < allocdSize; i++)
+        progress = 0;
+        writeSize = fFLShminfo->allocdSize;
+        char *writePos = (char *) fFreeList;
+        while (progress < writeSize)
         {
-//			if (fFreeList[i].size > 0) {
-            try
-            {
-                int bytes = out->write((char*) &fFreeList[i], inlineLbidRangeSize);
-
-                if (bytes != inlineLbidRangeSize)
-                    throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
-            }
-            catch (...)
+            err = out->write(writePos + progress, writeSize - progress);
+            if (err < 0)
             {
                 releaseFreeList(READ);
                 releaseEMEntryTable(READ);
-                throw;
+                throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
             }
-
-//			}
+            progress += err;
         }
     }
-    else
+    else   // this is the fstream version to be expired
     {
         ofstream out;
 

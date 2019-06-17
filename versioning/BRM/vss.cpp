@@ -1293,15 +1293,14 @@ void VSS::save(string filename)
 {
     int i;
     struct Header header;
-    mode_t utmp = ::umask(0);
 
-    if (IDBPolicy::useHdfs())
+    // XXXPAT: Forcing the IDB* path to run.  Delete the fstream path when appropriate.
+    if (true || IDBPolicy::useHdfs())
     {
         const char* filename_p = filename.c_str();
         scoped_ptr<IDBDataFile> out(IDBDataFile::open(
                                         IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
                                         filename_p, "wb", IDBDataFile::USE_VBUF));
-        ::umask(utmp);
 
         if (!out)
         {
@@ -1318,6 +1317,49 @@ void VSS::save(string filename)
             throw runtime_error("VSS::save(): Failed to write header to the file");
         }
 
+        int first = -1, last = -1, err;
+        size_t progress, writeSize;
+        for (i = 0; i < vss->capacity; i++)
+        {
+            if (storage[i].lbid != -1 && first == -1)
+                first = i;
+            else if (storage[i].lbid == -1 && first != -1)
+            {
+                last = i;
+                writeSize = (last - first) * sizeof(VSSEntry);
+                progress = 0;
+                char *writePos = (char *) &storage[first];
+                while (progress < writeSize)
+                {
+                    err = out->write(writePos + progress, writeSize - progress);
+                    if (err < 0)
+                    {
+                        log_errno("VSS::save()");
+                        throw runtime_error("VSS::save(): Failed to write the file");
+                    }
+                    progress += err;
+                }
+                first = -1;
+            }
+        }
+        if (first != -1)
+        {
+            writeSize = (vss->capacity - first) * sizeof(VSSEntry);
+            progress = 0;
+            char *writePos = (char *) &storage[first];
+            while (progress < writeSize)
+            {
+                err = out->write(writePos + progress, writeSize - progress);
+                if (err < 0)
+                {
+                    log_errno("VSS::save()");
+                    throw runtime_error("VSS::save(): Failed to write the file");
+                }
+                progress += err;
+            }
+        }
+        
+        /*
         for (i = 0; i < vss->capacity; i++)
         {
             if (storage[i].lbid != -1)
@@ -1329,12 +1371,13 @@ void VSS::save(string filename)
                 }
             }
         }
+        */
     }
     else
     {
         ofstream out;
         out.open(filename.c_str(), ios_base::trunc | ios_base::out | ios_base::binary);
-        ::umask(utmp);
+        //::umask(utmp);
 
         if (!out)
         {
@@ -1450,6 +1493,32 @@ void VSS::load(string filename)
     	vss->LWM = 0;
     */
 
+    size_t readSize = header.entries * sizeof(entry);
+    char *readBuf = new char[readSize];
+    size_t progress = 0;
+    int err;
+    while (progress < readSize)
+    {
+        err = in->read(readBuf + progress, readSize - progress);
+        if (err < 0)
+        {
+            log_errno("VBBM::load()");
+            throw runtime_error("VBBM::load(): Failed to load, check the critical log file");
+        }
+        else if (err == 0)
+        {
+            log("VBBM::load(): Got early EOF");
+            throw runtime_error("VBBM::load(): Got early EOF");
+        }
+        progress += err;
+    }
+    
+    VSSEntry *loadedEntries = (VSSEntry *) readBuf;
+    for (i = 0; i < header.entries; i++)
+        insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, 
+          loadedEntries[i].locked, true);
+
+    /*
     for (i = 0; i < header.entries; i++)
     {
         if (in->read((char*)&entry, sizeof(entry)) != sizeof(entry))
@@ -1460,7 +1529,8 @@ void VSS::load(string filename)
 
         insert(entry.lbid, entry.verID, entry.vbFlag, entry.locked, true);
     }
-
+    */
+    
     //time2 = microsec_clock::local_time();
     //cout << "done loading " << time2 << " duration: " << time2-time1 << endl;
 }
