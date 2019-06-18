@@ -579,7 +579,12 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 					// bug 3485, reserve enough space for the longest float value
 					// -3.402823466E+38 to -1.175494351E-38, 0, and
 					// 1.175494351E-38 to 3.402823466E+38.
-					(*f)->field_length = 40;
+                    if (!f2->dec)
+                    {
+                        (*f)->field_length = 40;
+                        f2->dec = row.getScale(s);
+                    }
+
 					//float float_val = *(float*)(&value);
 					//f2->store(float_val);
 					if (f2->decimals() < (uint32_t)row.getScale(s))
@@ -602,7 +607,12 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 					// bug 3483, reserve enough space for the longest double value
 					// -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
 					// 2.2250738585072014E-308 to 1.7976931348623157E+308.
-					(*f)->field_length = 310;
+                    if (!f2->dec)
+                    {
+                        (*f)->field_length = 310;
+                        f2->dec = row.getScale(s);
+                    }
+
 					//double double_val = *(double*)(&value);
 					//f2->store(double_val);
 					if (f2->decimals() < (uint32_t)row.getScale(s))
