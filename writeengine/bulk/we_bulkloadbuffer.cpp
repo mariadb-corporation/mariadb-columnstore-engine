@@ -569,14 +569,16 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
             }
 
             // Swap byte order before comparing character string
-            int64_t binChar = static_cast<int64_t>( uint64ToStr(
-                    *(reinterpret_cast<uint64_t*>(charTmpBuf)) ) );
+            // Compare must be unsigned
+            uint64_t compChar = uint64ToStr( *(reinterpret_cast<uint64_t*>(charTmpBuf)) );
+            int64_t binChar = static_cast<int64_t>( compChar );
 
             // Update min/max range
-            if (binChar < bufStats.minBufferVal)
+            uint64_t minVal = static_cast<uint64_t>( bufStats.minBufferVal );
+            uint64_t maxVal = static_cast<uint64_t>( bufStats.maxBufferVal );
+            if (compChar < minVal)
                 bufStats.minBufferVal = binChar;
-
-            if (binChar > bufStats.maxBufferVal)
+            if (compChar > maxVal)
                 bufStats.maxBufferVal = binChar;
 
             pVal = charTmpBuf;
