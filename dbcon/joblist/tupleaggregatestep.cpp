@@ -5011,7 +5011,8 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
         uint64_t eid = -1;
 
         if (((ac = dynamic_cast<ArithmeticColumn*>(it->get())) != NULL) &&
-                (ac->aggColumnList().size() > 0))
+             (ac->aggColumnList().size() > 0) && 
+             (ac->windowfunctionColumnList().size() == 0))
         {
             const vector<SimpleColumn*>& scols = ac->simpleColumnList();
             simpleColumns.insert(simpleColumns.end(), scols.begin(), scols.end());
@@ -5020,7 +5021,8 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
             expressionVec.push_back(*it);
         }
         else if (((fc = dynamic_cast<FunctionColumn*>(it->get())) != NULL) &&
-                 (fc->aggColumnList().size() > 0))
+                  (fc->aggColumnList().size() > 0) &&
+                  (fc->windowfunctionColumnList().size() == 0))
         {
             const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
             simpleColumns.insert(simpleColumns.end(), sCols.begin(), sCols.end());

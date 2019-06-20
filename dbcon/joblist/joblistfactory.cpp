@@ -274,9 +274,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 
             if (retCols[i]->windowfunctionColumnList().size() > 0)
                 jobInfo.expressionVec.push_back(key);
-            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
-                     jobInfo.expressionVec.end())
+            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) 
+                     == jobInfo.expressionVec.end())
+            {
                 jobInfo.returnedExpressions.push_back(sjstep);
+            }
 
             //put place hold column in projection list
             jobInfo.pjColList.push_back(ti);
@@ -1047,16 +1049,21 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         const FunctionColumn* fc = NULL;
                         const WindowFunctionColumn* wc = NULL;
                         bool hasAggCols = false;
+                        bool hasWndCols = false;
 
                         if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
                         {
                             if (ac->aggColumnList().size() > 0)
                                 hasAggCols = true;
+                            if (ac->windowfunctionColumnList().size() > 0)
+                                hasWndCols = true;
                         }
                         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
                         {
                             if (fc->aggColumnList().size() > 0)
                                 hasAggCols = true;
+                            if (fc->windowfunctionColumnList().size() > 0)
+                                hasWndCols = true;
                         }
                         else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
                         {
@@ -1081,7 +1088,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
                         tupleKey = ti.key;
 
-                        if (hasAggCols)
+                        if (hasAggCols && !hasWndCols)
                             jobInfo.expressionVec.push_back(tupleKey);
                     }
 
@@ -1195,16 +1202,21 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 const FunctionColumn* fc = NULL;
                 const WindowFunctionColumn* wc = NULL;
                 bool hasAggCols = false;
+                bool hasWndCols = false;
 
                 if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
                 {
                     if (ac->aggColumnList().size() > 0)
                         hasAggCols = true;
+                    if (ac->windowfunctionColumnList().size() > 0)
+                        hasWndCols = true;
                 }
                 else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
                 {
                     if (fc->aggColumnList().size() > 0)
                         hasAggCols = true;
+                    if (fc->windowfunctionColumnList().size() > 0)
+                        hasWndCols = true;
                 }
                 else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
                 {
@@ -1229,7 +1241,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
                 tupleKey = ti.key;
 
-                if (hasAggCols)
+                if (hasAggCols && !hasWndCols)
                     jobInfo.expressionVec.push_back(tupleKey);
             }
 
