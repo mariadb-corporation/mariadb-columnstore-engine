@@ -346,7 +346,10 @@ void WindowFunctionStep::AddSimplColumn(const vector<SimpleColumn*>& scs,
         if (scProjected.find(UniqId(*i)) == scProjected.end())
         {
             jobInfo.windowDels.push_back(SRCP((*i)->clone()));
-            jobInfo.windowSet.insert(getTupleKey(jobInfo, *i, true));
+// MCOL-3343 Enable this if we decide to allow Window Functions to run with
+// aggregates with no group by. MariaDB allows this. Nobody else in the world does.
+// There will be more work to get it to function if we try this.                
+//            jobInfo.windowSet.insert(getTupleKey(jobInfo, *i, true));
             scProjected.insert(UniqId(*i));
         }
     }
@@ -496,7 +499,10 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
             if (colSet.find(key) == colSet.end())
             {
                 jobInfo.deliveredCols.push_back(*j);
-                jobInfo.windowSet.insert(getTupleKey(jobInfo, *j, true));
+// MCOL-3343 Enable this if we decide to allow Window Functions to run with
+// aggregates with no group by. MariaDB allows this. Nobody else in the world does.
+// There will be more work to get it to function if we try this.                
+//                jobInfo.windowSet.insert(getTupleKey(jobInfo, *j, true));
             }
 
             colSet.insert(key);
