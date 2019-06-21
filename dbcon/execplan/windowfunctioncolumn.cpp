@@ -386,7 +386,6 @@ void WindowFunctionColumn::adjustResultType()
         fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
         fResultType.colWidth = sizeof(long double);
         fResultType.precision = -1;
-        fResultType.scale = 0;
     }
 }
 
