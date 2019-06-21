@@ -30,8 +30,14 @@
 
 #include "config.h"
 
+#if !defined(_FILE_OFFSET_BITS)
 #define _FILE_OFFSET_BITS 64
+#endif
+
+#if !defined(_LARGEFILE64_SOURCE)
 #define _LARGEFILE64_SOURCE
+#endif
+
 #ifdef __linux__
 #include <sys/mount.h>
 #include <linux/fs.h>

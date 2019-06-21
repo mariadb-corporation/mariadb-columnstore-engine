@@ -48,8 +48,7 @@ target_link_libraries(regr_mysql
   PRIVATE
     calmysql_h 
     mariadb 
-    mariadb_sql 
-    mariadb_pcre
+    PCRE::PCRE
     )
 
 install(TARGETS regr_mysql DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)

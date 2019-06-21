@@ -47,8 +47,7 @@ target_link_libraries(calmysql
           joblist_h
           loggingcpp_h
           mariadb
-          mariadb_pcre 
-          mariadb_sql 
+          PCRE::PCRE 
           messageqcpp_h 
           oamcpp_h
           querystats_h
@@ -72,8 +71,7 @@ target_compile_definitions(is_columnstore_tables PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 target_link_libraries(is_columnstore_tables 
   PRIVATE mariadb 
-          mariadb_sql 
-          mariadb_pcre 
+          PCRE::PCRE 
           messageqcpp_h 
           querystats_h
           execplan_h
@@ -103,8 +101,7 @@ target_compile_definitions(is_columnstore_columns PRIVATE MYSQL_DYNAMIC_PLUGIN)
 
 target_link_libraries(is_columnstore_columns 
   PRIVATE mariadb 
-          mariadb_sql 
-          mariadb_pcre 
+          PCRE::PCRE 
           messageqcpp_h 
           execplan_h 
           querystats_h
@@ -141,8 +138,7 @@ target_link_libraries(is_columnstore_extents
         joblist_h
         loggingcpp_h
         mariadb
-        mariadb_pcre
-        mariadb_sql
+        PCRE::PCRE
         messageqcpp_h 
         oamcpp_h
         querystats_h
@@ -176,8 +172,7 @@ target_link_libraries(is_columnstore_files
         joblist_h
         loggingcpp_h
         mariadb 
-        mariadb_pcre
-        mariadb_sql 
+        PCRE::PCRE
         messageqcpp_h 
         oamcpp_h
         querystats_h

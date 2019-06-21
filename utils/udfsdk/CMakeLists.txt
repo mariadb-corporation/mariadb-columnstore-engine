@@ -46,8 +46,7 @@ target_link_libraries(udf_mysql
   PRIVATE 
     calmysql_h 
     mariadb 
-    mariadb_sql 
-    mariadb_pcre
+    PCRE::PCRE
   )
 
 install(TARGETS udf_mysql DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT storage-engine)

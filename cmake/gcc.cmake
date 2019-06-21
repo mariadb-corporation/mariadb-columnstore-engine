@@ -56,7 +56,7 @@ endif()
 
 
 # warnings
-set(WARNING_LEVEL all CACHE STRING "Compiler warning level")
+set(WARNING_LEVEL 3 CACHE STRING "Compiler warning level")
 set_property(CACHE WARNING_LEVEL PROPERTY STRINGS 0 1 2 3)
 if("0" STREQUAL "${WARNING_LEVEL}")
   set_compile_options(-w)
@@ -91,6 +91,7 @@ else()
   set_compile_options(-Wduplicated-cond)
   set_compile_options(-Wcast-align)
   set_compile_options(-Wstack-protector)
+  set_compile_options(-Werror=ignored-qualifiers)
 endif()
 
 
@@ -98,7 +99,7 @@ option(ENABLE_PEDANTIC_WARNINGS "Enable pedantic warnings" FALSE)
 add_compile_options($<$<BOOL:${ENABLE_PEDANTIC_WARNINGS}>:-pedantic>)
 
 
-option(ENABLE_WERROR "Treat warnings as errors" FALSE)
+option(ENABLE_WERROR "Treat warnings as errors" TRUE)
 add_compile_options($<$<BOOL:${ENABLE_WERROR}>:-Werror>)
 
 

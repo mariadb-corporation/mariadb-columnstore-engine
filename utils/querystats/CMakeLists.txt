@@ -7,7 +7,7 @@ set_target_properties(querystats PROPERTIES VERSION 1.0.0 SOVERSION 1)
 target_link_libraries(querystats 
   PUBLIC querystats_h
   PRIVATE
-   mariadb 
+    mariadb 
           messageqcpp_h
           joblist_h
           execplan_h 

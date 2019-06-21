@@ -8,12 +8,18 @@ if(POLICY CMP0083)
   cmake_policy(SET CMP0083 NEW)  # CMake > 3.13 adds linker flags for position independent executables. Old behavior does not
 endif()
 
+get_directory_property(_parentdir PARENT_DIRECTORY)
+set(_SUB_BUILD FALSE)
+if(EXISTS "${_parentdir}")
+  set(_SUB_BUILD TRUE)
+endif()
 
 project(columnstore
   LANGUAGES C CXX
   VERSION 1.4.0.1
   DESCRIPTION "Massively parallel and distributed columnar storage engine"
   HOMEPAGE_URL "https://mariadb.com/kb/en/library/mariadb-columnstore/")
+
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
@@ -27,6 +33,11 @@ include(CheckIPOSupported)
 include(CheckPIESupported)
 include(colorize)
 
+string(TIMESTAMP TIMESTAMP "%b %d %y %H:%M:%S")
+status("${TIMESTAMP}")
+status("ColumnStore version ${PROJECT_VERSION}")
+
+
 find_package(Flex REQUIRED)
 find_package(Perl REQUIRED)
 find_package(Python COMPONENTS Interpreter)
@@ -39,11 +50,6 @@ find_package(Snappy REQUIRED)
 find_package(JeMalloc REQUIRED)
 find_package(Git)
 
-
-string(TIMESTAMP _tmp "%b %d %y %H:%M:%S")
-status("${_tmp}")
-unset(_tmp)
-status("ColumnStore ver. ${PROJECT_VERSION} rel. ${RELEASE_VERSION}")
 
 set(GIT_HASH "Unknown")
 if(Git_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
@@ -105,42 +111,61 @@ cmake_dependent_option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Use IPO" FALSE IPO_SU
 mark_as_advanced(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
 
-if(NOT SERVER_BUILD_DIR)
-  if(SERVER_BUILD_INCLUDE_DIR)
-    set(SERVER_BUILD_DIR ${SERVER_BUILD_INCLUDE_DIR}/..)
+if(NOT CMAKE_BUILD_TYPE)
+  set(_default_build_type)
+  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../.git")
+    set(_default_build_type Debug)
   else()
-    error("Missing parameter: SERVER_BUILD_DIR")
+    set(_default_build_type Release)
   endif()
+  set(CMAKE_BUILD_TYPE ${_default_build_type} CACHE STRING "Build configuration type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 endif()
 
-find_path(SERVER_BUILD_DIR CMakeCache.txt 
-  HINTS ${SERVER_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${SERVER_BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${SERVER_BUILD_DIR}
-  DOC "Path to MariaDB Server CMakeCache.txt"
-  NO_DEFAULT_PATH
-  )
 
-if(NOT EXISTS "${SERVER_BUILD_DIR}/CMakeCache.txt")
-  error("Required parameter must point to the server build directory: SERVER_BUILD_DIR")
+if(NOT MySQL_BINARY_DIR)
+
+  find_path(MySQL_BINARY_DIR 
+      NAMES CMakeCache.txt  
+      PATHS ${SERVER_BUILD_INCLUDE_DIR}/.. 
+            ${CMAKE_CURRENT_BINARY_DIR}/.. 
+            ${CMAKE_CURRENT_BINARY_DIR}/../..
+            ${CMAKE_CURRENT_BINARY_DIR}/../../..
+      DOC "MariaDB Server CMake build path"
+      NO_DEFAULT_PATH
+      )
+
 endif()
 
-load_cache("${SERVER_BUILD_DIR}" READ_WITH_PREFIX SERVER_ 
-  MySQL_SOURCE_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
-  mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
-  )
 
-status("Server build directory: ${SERVER_BUILD_DIR}")
-
-set(SERVER_SOURCE_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
-set(SERVER_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
-set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-set(_DEBUG FALSE)
-if("Debug" STREQUAL "${CMAKE_BUILD_TYPE}")
-  set(_DEBUG TRUE)
+if(NOT EXISTS "${MySQL_BINARY_DIR}/CMakeCache.txt")
+  error("Could not find MariaDB Server CMake build path: MySQL_BINARY_DIR (${MySQL_BINARY_DIR})")
 endif()
+
+
+dump_all_variables()
+
+
+if(_SUB_BUILD)
+  #TODO: reset vars
+else()
+  load_cache("${MySQL_BINARY_DIR}" READ_WITH_PREFIX SERVER_ 
+    MySQL_SOURCE_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
+    mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
+    )
+
+  set(MySQL_SOURCE_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
+  set(SERVER_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
+  set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
+
+  add_library(pcre INTERFACE)
+  target_include_directories(pcre INTERFACE ${MySQL_BINARY_DIR}/pcre)
+
+endif()
+  
+status("Server build directory: ${MySQL_BINARY_DIR}")
+
 status("Build type: ${CMAKE_BUILD_TYPE}")
-
-
 
 
 # Distinguish between community and non-community builds, with the
@@ -156,6 +181,7 @@ if(BUILD_TESTING)
   include(CTestCoverageCollectGCOV)
   include(cppunit)
 endif()
+
 
 if("GNU" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
   include(gcc)
@@ -183,7 +209,7 @@ set (PACKAGE_URL "")
 set (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "/usr/local/mariadb/columnstore" CACHE PATH "Installation prefix" FORCE)
+  set(CMAKE_INSTALL_PREFIX "/opt/columnstore" CACHE PATH "Installation prefix" FORCE)
 endif()
 
 include (configureEngine)
@@ -213,23 +239,17 @@ include(pch)
 add_library(columnstore_h INTERFACE)
 target_include_directories(columnstore_h INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(mariadb_h INTERFACE)
-target_include_directories(mariadb_h INTERFACE "${SERVER_SOURCE_DIR}/include;${SERVER_BUILD_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include")
 
 add_library(mariadb STATIC IMPORTED)
 set_target_properties(mariadb PROPERTIES
-  IMPORTED_LOCATION ${SERVER_mariadb-connector-c_BINARY_DIR}/libmariadb/libmariadb.so
-  INTERFACE_INCLUDE_DIRECTORIES "${SERVER_SOURCE_DIR}/include;${SERVER_BUILD_DIR}/include;${SERVER_mariadb-connector-c_BINARY_DIR}/include;${SERVER_mariadb-connector-c_SOURCE_DIR}/include"
+  IMPORTED_LOCATION ${MySQL_BINARY_DIR}/libmariadb/libmariadb/libmariadb.so
+  INTERFACE_INCLUDE_DIRECTORIES "${MySQL_SOURCE_DIR}/include;${MySQL_BINARY_DIR}/include;${MySQL_SOURCE_DIR}/sql;${MySQL_BINARY_DIR}/sql"
   INTERFACE_COMPILE_DEFINITIONS "SAFE_MUTEX;SAFEMALLOC"
   INTERFACE_COMPILE_DEFINITIONS $<IF:$<BOOL:${_DEBUG}>,ENABLED_DEBUG_SYNC,DBUG_OFF>
 )
 
 
-add_library(mariadb_sql INTERFACE)
-target_include_directories(mariadb_sql INTERFACE ${SERVER_SOURCE_DIR}/sql)
-
-add_library(mariadb_pcre INTERFACE)
-target_include_directories(mariadb_pcre INTERFACE ${SERVER_BUILD_DIR}/pcre)
+add_library(PCRE::PCRE ALIAS pcre)
 
 
 add_library(alarmmanager_h      INTERFACE)
