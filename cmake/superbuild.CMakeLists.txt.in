@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+include(ExternalProject)
+
+ExternalProject_Add(@_target@ 
+  @ARGN@
+  )
+  

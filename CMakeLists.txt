@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 if(POLICY CMP0069)
@@ -8,10 +7,20 @@ if(POLICY CMP0083)
   cmake_policy(SET CMP0083 NEW)  # CMake > 3.13 adds linker flags for position independent executables. Old behavior does not
 endif()
 
+#[[
+CMake scripts are executed twice to generate a builder. The first execution is the 'Configure' stage. Subsequent
+executions are the 'Generate' stages
+]]
+set(CMAKE_STAGE Generate)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_STAGE Configure)
+endif()
+
+#[[ ISA_SUB_PROJECT indicates whether this script is run as a result of add_subdirectory ]]
 get_directory_property(_parentdir PARENT_DIRECTORY)
-set(_SUB_BUILD FALSE)
+set(ISA_SUB_PROJECT FALSE)
 if(EXISTS "${_parentdir}")
-  set(_SUB_BUILD TRUE)
+  set(ISA_SUB_PROJECT TRUE)
 endif()
 
 project(columnstore
@@ -34,8 +43,8 @@ include(CheckPIESupported)
 include(colorize)
 
 string(TIMESTAMP TIMESTAMP "%b %d %y %H:%M:%S")
-status("${TIMESTAMP}")
-status("ColumnStore version ${PROJECT_VERSION}")
+dump(TIMESTAMP)
+dump(PROJECT_VERSION)
 
 
 find_package(Flex REQUIRED)
@@ -67,46 +76,39 @@ if(Git_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
   endif()
 endif()
 
-status("Git hash: ${GIT_HASH}")
-status("CMake version ${CMAKE_VERSION}")
-
-function(cs_add_library _target _type)
-  status("${_type} library configured: ${Blue}${_target}")
-endfunction()
-
-function(cs_add_executable _target)
-  status("executable configured: ${Blue}${_target}")
-endfunction()
+dump(GIT_HASH)
+dump(CMAKE_VERSION)
 
 
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE TRUE)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION TRUE)
+set(REPORT_UNDEFINED_PROPERTIES ${CMAKE_CURRENT_BINARY_DIR}/undefined_cmake_variables.txt)
 set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/.external)
 list(APPEND ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/.external)
 
 
 option(ERROR_REPORTING_ENROLLMENT "Enroll in automatic error reporting to help improve quality?" FALSE)
-
+dump(ERROR_REPORTING_ENROLLMENT)
 
 option(BUILD_MISSING_TOOLS "Attempt to download and build missing tools during compilation?" TRUE)
-
+dump(BUILD_MISSING_TOOLS)
 
 check_pie_supported(OUTPUT_VARIABLE PIE_SUPPORTED LANGUAGES CXX)
-status("Compiler position independent executable support: ${CMAKE_CXX_LINK_PIE_SUPPORTED}")
+dump(CMAKE_CXX_LINK_PIE_SUPPORTED)
 cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" FALSE CMAKE_CXX_LINK_PIE_SUPPORTED TRUE)
 mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
 
 
 check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT _ignore)
-status("Compiler Inter-Procedural Optimization support: ${IPO_SUPPORTED}")
+dump(IPO_SUPPORTED)
 cmake_dependent_option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Use IPO" FALSE IPO_SUPPORTED FALSE)
 mark_as_advanced(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
@@ -119,7 +121,15 @@ if(NOT CMAKE_BUILD_TYPE)
     set(_default_build_type Release)
   endif()
   set(CMAKE_BUILD_TYPE ${_default_build_type} CACHE STRING "Build configuration type" FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
+
+set(SCAN_TYPE "none" CACHE INTERNAL "specifies the scan stage when run under CI/CD")
+
+if(SERVER_BUILD_INCLUDE_DIR OR SERVER_SOURCE_ROOT_DIR)
+  warning("The parameters SERVER_BUILD_INCLUDE_DIR and SERVER_SOURCE_ROOT_DIR are deprecated.
+  Try configuring with no parameters to locate a server build directory or
+  pass MySQL_BINARY_DIR if needed")
 endif()
 
 
@@ -135,27 +145,30 @@ if(NOT MySQL_BINARY_DIR)
       NO_DEFAULT_PATH
       )
 
+  if(EXISTS MySQL_BINARY_DIR)
+    load_cache(${MySQL_BINARY_DIR} READ_WITH_PREFIX TESTER_ 
+      MySQL_SOURCE_DIR)
+    if(NOT TESTER_MySQL_SOURCE_DIR)
+      error("Could not find MariaDB Server CMake build path: MySQL_BINARY_DIR (${MySQL_BINARY_DIR})")
+    endif()
+  endif()
 endif()
 
 
-if(NOT EXISTS "${MySQL_BINARY_DIR}/CMakeCache.txt")
-  error("Could not find MariaDB Server CMake build path: MySQL_BINARY_DIR (${MySQL_BINARY_DIR})")
+
+if(NOT EXISTS ${MySQL_BINARY_DIR}/CMakeCache.txt)
+  error("Could not find MariaDB Server CMake build path: (${MySQL_BINARY_DIR})")
 endif()
 
 
-dump_all_variables()
-
-
-if(_SUB_BUILD)
-  #TODO: reset vars
-else()
-  load_cache("${MySQL_BINARY_DIR}" READ_WITH_PREFIX SERVER_ 
+if(NOT ISA_EXTERNAL_PROJECT)
+  load_cache(${MySQL_BINARY_DIR} READ_WITH_PREFIX SERVER_ 
     MySQL_SOURCE_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX
     mariadb-connector-c_BINARY_DIR mariadb-connector-c_SOURCE_DIR
     )
 
   set(MySQL_SOURCE_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
-  set(SERVER_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
+  set(SERVER_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "" FORCE)
   set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
 
   add_library(pcre INTERFACE)
@@ -163,9 +176,9 @@ else()
 
 endif()
   
-status("Server build directory: ${MySQL_BINARY_DIR}")
-
-status("Build type: ${CMAKE_BUILD_TYPE}")
+dump(MySQL_BINARY_DIR)
+dump(MySQL_SOURCE_DIR)
+dump(CMAKE_BUILD_TYPE)
 
 
 # Distinguish between community and non-community builds, with the
@@ -182,7 +195,7 @@ if(BUILD_TESTING)
   include(cppunit)
 endif()
 
-
+dump(CMAKE_CXX_COMPILER_ID)
 if("GNU" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
   include(gcc)
 elseif("Clang" STREQUAL "${CMAKE_CXX_COMPILER_ID}")
@@ -208,7 +221,7 @@ set (PACKAGE_URL "")
 
 set (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if("Configure" STREQUAL "${CMAKE_STAGE}")
   set(CMAKE_INSTALL_PREFIX "/opt/columnstore" CACHE PATH "Installation prefix" FORCE)
 endif()
 
@@ -232,6 +245,7 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH $ORIGIN "${message_RPATH}")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 
 
 include(pch)
