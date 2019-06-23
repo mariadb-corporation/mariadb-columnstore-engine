@@ -989,7 +989,7 @@ int main(int argc, char* argv[])
         system(cmd.c_str());
 
         if (oam.checkLogStatus(logFile, "System Catalog created") )
-            cout << endl << "System Catalog Successfull Created" << endl;
+            cout << endl << "System Catalog Successfully Created" << endl;
         else
         {
             if ( oam.checkLogStatus(logFile, "System catalog appears to exist") )
