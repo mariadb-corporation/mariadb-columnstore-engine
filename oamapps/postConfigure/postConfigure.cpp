@@ -801,6 +801,7 @@ int main(int argc, char* argv[])
         try
         {
             sysConfig->setConfig(InstallSection, "MySQLPort", mysqlPort);
+            sysConfig->setConfig("CrossEngineSupport", "Port", mysqlPort);
         }
         catch (...)
         {}
