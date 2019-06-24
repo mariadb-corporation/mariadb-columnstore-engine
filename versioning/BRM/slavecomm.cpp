@@ -138,7 +138,6 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         firstSlave = true;
         journalName = savefile + "_journal";
         const char* filename = journalName.c_str();
-        uint32_t utmp = ::umask(0);
 
         if (true || IDBPolicy::useHdfs())
         {
@@ -149,8 +148,6 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         {
             journal.open(filename, ios_base::binary | ios_base::out | ios_base::app);
         }
-
-        ::umask(utmp);
 
         if ((journal.is_open() == false) && (journalh == NULL))
             throw runtime_error("Could not open the BRM journal for writing!");
@@ -2009,7 +2006,7 @@ void SlaveComm::do_confirm()
     {
         const char* filename = tmp.c_str();
 
-        if (false && !IDBPolicy::useHdfs() && currentSaveFD < 0)
+        if ((false && !IDBPolicy::useHdfs()) && currentSaveFD < 0)
         {
             currentSaveFD = open(filename, O_WRONLY | O_CREAT, 0664);
         }
@@ -2027,10 +2024,7 @@ void SlaveComm::do_confirm()
             log(os.str());
             throw runtime_error(os.str());
         }
-
-#ifndef _MSC_VER
-        chmod(filename, 0664);
-#endif
+        
         tmp = savefile + (saveFileToggle ? 'A' : 'B');
         slave->saveState(tmp);
 #ifndef _MSC_VER
@@ -2062,11 +2056,9 @@ void SlaveComm::do_confirm()
             saveFileToggle = !saveFileToggle;
 
             const char* filename = journalName.c_str();
-            uint32_t utmp = ::umask(0);
             delete journalh;
             journalh = IDBDataFile::open(
                            IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);
-            //::umask(utmp);
 
             if (!journalh)
                 throw runtime_error("Could not open the BRM journal for writing!");
