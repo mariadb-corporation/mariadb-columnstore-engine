@@ -420,6 +420,16 @@ void FunctionColumn::setDerivedTable()
                 break;
             }
         }
+        // MCOL-3239 Block for func column with both
+        // derived table column and normal table column.
+        else if (derivedTableAlias == "")
+        {
+            if (sc->tableAlias().length())
+            {
+                derivedTableAlias = "";
+                break;
+            }
+        }
     }
 
     fDerivedTable = derivedTableAlias;

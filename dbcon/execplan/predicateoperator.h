@@ -36,7 +36,6 @@
 #endif
 #include <cstring>
 #include <boost/regex.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
 #include "expressionparser.h"
 #include "returnedcolumn.h"
