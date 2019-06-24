@@ -285,6 +285,18 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
                 break;
             }
 
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                int64_t val = expression[i]->getTimestampIntVal(row, isNull);
+
+                if (isNull)
+                    row.setUintField<8>(TIMESTAMPNULL, expression[i]->outputIndex());
+                else
+                    row.setUintField<8>(val, expression[i]->outputIndex());
+
+                break;
+            }
+
             case CalpontSystemCatalog::TIME:
             {
                 int64_t val = expression[i]->getTimeIntVal(row, isNull);

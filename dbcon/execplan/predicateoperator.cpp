@@ -182,6 +182,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
 {
     if ( l.colDataType == execplan::CalpontSystemCatalog::DATETIME ||
             l.colDataType == execplan::CalpontSystemCatalog::TIME ||
+            l.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP ||
             l.colDataType == execplan::CalpontSystemCatalog::DATE )
     {
         switch (r.colDataType)
@@ -193,6 +194,11 @@ void PredicateOperator::setOpType(Type& l, Type& r)
 
             case execplan::CalpontSystemCatalog::DATETIME:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DATETIME;
+                fOperationType.colWidth = 8;
+                break;
+
+            case execplan::CalpontSystemCatalog::TIMESTAMP:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::TIMESTAMP;
                 fOperationType.colWidth = 8;
                 break;
 
@@ -213,6 +219,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
     }
     else if ( r.colDataType == execplan::CalpontSystemCatalog::DATETIME ||
               r.colDataType == execplan::CalpontSystemCatalog::TIME ||
+              r.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP ||
               r.colDataType == execplan::CalpontSystemCatalog::DATE )
     {
         switch (l.colDataType)
@@ -225,6 +232,11 @@ void PredicateOperator::setOpType(Type& l, Type& r)
 
             case execplan::CalpontSystemCatalog::DATETIME:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DATETIME;
+                fOperationType.colWidth = 8;
+                break;
+
+            case execplan::CalpontSystemCatalog::TIMESTAMP:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::TIMESTAMP;
                 fOperationType.colWidth = 8;
                 break;
 

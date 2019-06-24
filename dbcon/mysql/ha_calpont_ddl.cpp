@@ -178,6 +178,10 @@ uint32_t convertDataType(int dataType)
             calpontDataType = CalpontSystemCatalog::TIME;
             break;
 
+        case ddlpackage::DDL_TIMESTAMP:
+            calpontDataType = CalpontSystemCatalog::TIMESTAMP;
+            break;
+
         case ddlpackage::DDL_CLOB:
             calpontDataType = CalpontSystemCatalog::CLOB;
             break;
@@ -524,7 +528,177 @@ bool anyRowInTable(string& schema, string& tableName, int sessionID)
     }
 }
 
-bool anyNullInTheColumn (string& schema, string& table, string& columnName, int sessionID)
+bool anyTimestampColumn(string& schema, string& tableName, int sessionID)
+{
+    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    csc->identity(execplan::CalpontSystemCatalog::FE);
+    CalpontSystemCatalog::TableName aTableName;
+    algorithm::to_lower(schema);
+    algorithm::to_lower(tableName);
+
+    // select columnname from calpontsys.syscolumn
+    // where schema = schema and tablename = tableName
+    // and datatype = 'timestamp'
+    CalpontSelectExecutionPlan csep;
+    CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+    CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+    CalpontSelectExecutionPlan::ColumnMap colMap;
+
+    SessionManager sm;
+    BRM::TxnID txnID;
+    txnID = sm.getTxnID(sessionID);
+
+    if (!txnID.valid)
+    {
+        txnID.id = 0;
+        txnID.valid = true;
+    }
+
+    QueryContext verID;
+    verID = sm.verID();
+    csep.txnID(txnID.id);
+    csep.verID(verID);
+    csep.sessionID(sessionID);
+
+    string sysTable = "calpontsys.syscolumn.";
+    string firstCol = sysTable + "columnname";
+    SimpleColumn* c1 = new SimpleColumn(firstCol, sessionID);
+    string secondCol = sysTable + "schema";
+    SimpleColumn* c2 = new SimpleColumn(secondCol, sessionID);
+    string thirdCol = sysTable + "tablename";
+    SimpleColumn* c3 = new SimpleColumn(thirdCol, sessionID);
+    string fourthCol = sysTable + "datatype";
+    SimpleColumn* c4 = new SimpleColumn(fourthCol, sessionID);
+    SRCP srcp;
+    srcp.reset(c1);
+    colMap.insert(CMVT_(firstCol, srcp));
+    srcp.reset(c2);
+    colMap.insert(CMVT_(secondCol, srcp));
+    srcp.reset(c3);
+    colMap.insert(CMVT_(thirdCol, srcp));
+    srcp.reset(c4);
+    colMap.insert(CMVT_(fourthCol, srcp));
+    csep.columnMapNonStatic(colMap);
+    srcp.reset(c1->clone());
+    returnedColumnList.push_back(srcp);
+    csep.returnedCols(returnedColumnList);
+
+    // Filters
+    const SOP opeq(new Operator("="));
+    SimpleFilter* f1 = new SimpleFilter (opeq,
+                                         c2->clone(),
+                                         new ConstantColumn(schema, ConstantColumn::LITERAL));
+    filterTokenList.push_back(f1);
+    filterTokenList.push_back(new Operator("and"));
+
+    SimpleFilter* f2 = new SimpleFilter (opeq,
+                                         c3->clone(),
+                                         new ConstantColumn(tableName, ConstantColumn::LITERAL));
+    filterTokenList.push_back(f2);
+    filterTokenList.push_back(new Operator("and"));
+
+    SimpleFilter* f3 = new SimpleFilter (opeq,
+                                         c4->clone(),
+                                         new ConstantColumn((uint64_t) execplan::CalpontSystemCatalog::TIMESTAMP, ConstantColumn::NUM));
+    filterTokenList.push_back(f3);
+    csep.filterTokenList(filterTokenList);
+
+    CalpontSelectExecutionPlan::TableList tablelist;
+    tablelist.push_back(make_aliastable("calpontsys", "syscolumn", ""));
+    csep.tableList(tablelist);
+
+    boost::shared_ptr<messageqcpp::MessageQueueClient> exemgrClient (new messageqcpp::MessageQueueClient("ExeMgr1"));
+    ByteStream msg, emsgBs;
+    rowgroup::RGData rgData;
+    ByteStream::quadbyte qb = 4;
+    msg << qb;
+    rowgroup::RowGroup* rowGroup = 0;
+    bool anyRow = false;
+
+    exemgrClient->write(msg);
+    ByteStream msgPlan;
+    csep.serialize(msgPlan);
+    exemgrClient->write(msgPlan);
+    msg.restart();
+    msg = exemgrClient->read(); //error handling
+    emsgBs = exemgrClient->read();
+    ByteStream::quadbyte qb1;
+
+    if (emsgBs.length() == 0)
+    {
+        //exemgrClient->shutdown();
+        //delete exemgrClient;
+        //exemgrClient = 0;
+        throw runtime_error("Lost conection to ExeMgr.");
+    }
+
+    string emsgStr;
+    emsgBs >> emsgStr;
+
+    if (msg.length() == 4)
+    {
+        msg >> qb1;
+
+        if (qb1 != 0)
+        {
+            //exemgrClient->shutdown();
+            //delete exemgrClient;
+            //exemgrClient = 0;
+            throw runtime_error(emsgStr);
+        }
+    }
+
+    while (true)
+    {
+        msg.restart();
+        msg = exemgrClient->read();
+
+        if ( msg.length() == 0 )
+        {
+            //exemgrClient->shutdown();
+            //delete exemgrClient;
+            //exemgrClient = 0;
+            throw runtime_error("Lost conection to ExeMgr.");
+        }
+        else
+        {
+            if (!rowGroup)
+            {
+                //This is mete data
+                rowGroup = new rowgroup::RowGroup();
+                rowGroup->deserialize(msg);
+                qb = 100;
+                msg.restart();
+                msg << qb;
+                exemgrClient->write(msg);
+                continue;
+            }
+
+            rgData.deserialize(msg);
+            rowGroup->setData(&rgData);
+
+            if (rowGroup->getStatus() != 0)
+            {
+                //msg.advance(rowGroup->getDataSize());
+                msg >> emsgStr;
+                //exemgrClient->shutdown();
+                //delete exemgrClient;
+                //exemgrClient = 0;
+                throw runtime_error(emsgStr);
+            }
+
+            if (rowGroup->getRowCount() > 0)
+                anyRow = true;
+
+            //exemgrClient->shutdown();
+            //delete exemgrClient;
+            //exemgrClient = 0;
+            return anyRow;
+        }
+    }
+}
+
+bool anyNullInTheColumn (THD* thd, string& schema, string& table, string& columnName, int sessionID)
 {
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -561,9 +735,11 @@ bool anyNullInTheColumn (string& schema, string& table, string& columnName, int 
     csep.returnedCols(returnedColumnList);
 
     SimpleFilter* sf = new SimpleFilter();
+    sf->timeZone(thd->variables.time_zone->get_name()->ptr());
     boost::shared_ptr<Operator> sop(new PredicateOperator("isnull"));
     sf->op(sop);
     ConstantColumn* rhs = new ConstantColumn("", ConstantColumn::NULLDATA);
+    rhs->timeZone(thd->variables.time_zone->get_name()->ptr());
     sf->lhs(col[0]->clone());
     sf->rhs(rhs);
 
@@ -725,6 +901,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
             }
 
             bool matchedCol = false;
+            bool isFirstTimestamp = true;
 
             for ( unsigned i = 0; i < createTable->fTableDef->fColumns.size(); i++ )
             {
@@ -775,6 +952,13 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                     return rc;
                 }
 
+                // For TIMESTAMP, if no constraint is given, default to NOT NULL
+                if (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                    createTable->fTableDef->fColumns[i]->fConstraints.empty())
+                {
+                    createTable->fTableDef->fColumns[i]->fConstraints.push_back(new ColumnConstraintDef(DDL_NOT_NULL));
+                }
+
                 if (createTable->fTableDef->fColumns[i]->fDefaultValue)
                 {
                     if ((!createTable->fTableDef->fColumns[i]->fDefaultValue->fNull) && (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_VARBINARY))
@@ -803,7 +987,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                         try
                         {
-                            convertedVal = DataConvert::convertColumnData(colType, createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, false, false );
+                            convertedVal = DataConvert::convertColumnData(colType, createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                         }
                         catch (std::exception&)
                         {
@@ -824,6 +1008,35 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                             ci->isAlter = false;
                             return rc;
                         }
+                        if (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_TIMESTAMP)
+                        {
+                            if (createTable->fTableDef->fColumns[i]->fDefaultValue->fValue == "0")
+                            {
+                                createTable->fTableDef->fColumns[i]->fDefaultValue->fValue = "0000-00-00 00:00:00";
+                            }
+                            if (isFirstTimestamp)
+                            {
+                                isFirstTimestamp = false;
+                            }
+                        }
+                    }
+                }
+                // If no default value exists for TIMESTAMP, we apply
+                // automatic TIMESTAMP properties.
+                // TODO: If no default value exists but the constraint is NULL,
+                // default value should be set to NULL. But this is currently
+                // not supported since columnstore does not track whether user
+                // specified a NULL or not
+                else if (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_TIMESTAMP)
+                {
+                    if (isFirstTimestamp)
+                    {
+                        isFirstTimestamp = false;
+                        createTable->fTableDef->fColumns[i]->fDefaultValue = new ColumnDefaultValue("current_timestamp() ON UPDATE current_timestamp()");
+                    }
+                    else
+                    {
+                        createTable->fTableDef->fColumns[i]->fDefaultValue = new ColumnDefaultValue("0000-00-00 00:00:00");
                     }
                 }
 
@@ -990,6 +1203,8 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         {
             AlterTableStatement* alterTable = dynamic_cast <AlterTableStatement*> ( &stmt );
 
+            alterTable->fTimeZone = thd->variables.time_zone->get_name()->ptr();
+
             if ( schema.length() == 0 )
             {
                 schema = alterTable->fTableName->fSchema;
@@ -1065,7 +1280,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                             }
 
                             //if not null constraint, user has to provide a default value
-                            if ((addColumnPtr->fColumnDef->fConstraints[j]->fConstraintType == DDL_NOT_NULL) && (!addColumnPtr->fColumnDef->fDefaultValue))
+                            if ((addColumnPtr->fColumnDef->fConstraints[j]->fConstraintType == DDL_NOT_NULL) && (!addColumnPtr->fColumnDef->fDefaultValue) && (addColumnPtr->fColumnDef->fType->fType != ddlpackage::DDL_TIMESTAMP))
                             {
 
                                 //do select count(*) from the table to check whether there are existing rows. if there is, error out.
@@ -1143,7 +1358,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = DataConvert::convertColumnData(colType, addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, false, false );
+                                convertedVal = DataConvert::convertColumnData(colType, addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                             }
                             catch (std::exception&)
                             {
@@ -1164,6 +1379,39 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                                 ci->isAlter = false;
                                 return rc;
                             }
+                            if (addColumnPtr->fColumnDef->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                                addColumnPtr->fColumnDef->fDefaultValue->fValue == "0")
+                            {
+                                addColumnPtr->fColumnDef->fDefaultValue->fValue = "0000-00-00 00:00:00";
+                            }
+                        }
+                    }
+
+                    // For TIMESTAMP, if no constraint is given, default to NOT NULL
+                    if (addColumnPtr->fColumnDef->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                        addColumnPtr->fColumnDef->fConstraints.empty())
+                    {
+                        addColumnPtr->fColumnDef->fConstraints.push_back(new ColumnConstraintDef(DDL_NOT_NULL));
+                    }
+
+                    // If no default value exists for TIMESTAMP, we apply
+                    // automatic TIMESTAMP properties.
+                    // TODO: If no default value exists but the constraint is NULL,
+                    // default value should be set to NULL. But this is currently
+                    // not supported since columnstore does not track whether user
+                    // specified a NULL or not
+                    if (addColumnPtr->fColumnDef->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                        !addColumnPtr->fColumnDef->fDefaultValue)
+                    {
+                        // Query calpontsys.syscolumn to see
+                        // if a timestamp column already exists in this table
+                        if (!anyTimestampColumn(alterTable->fTableName->fSchema, alterTable->fTableName->fName, sessionID))
+                        {
+                            addColumnPtr->fColumnDef->fDefaultValue = new ColumnDefaultValue("current_timestamp() ON UPDATE current_timestamp()");
+                        }
+                        else
+                        {
+                            addColumnPtr->fColumnDef->fDefaultValue = new ColumnDefaultValue("0000-00-00 00:00:00");
                         }
                     }
 
@@ -1386,7 +1634,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                             }
 
                             //if not null constraint, user has to provide a default value
-                            if ((addColumnsPtr->fColumns[0]->fConstraints[j]->fConstraintType == DDL_NOT_NULL) && (!addColumnsPtr->fColumns[0]->fDefaultValue))
+                            if ((addColumnsPtr->fColumns[0]->fConstraints[j]->fConstraintType == DDL_NOT_NULL) && (!addColumnsPtr->fColumns[0]->fDefaultValue) && (addColumnsPtr->fColumns[0]->fType->fType != ddlpackage::DDL_TIMESTAMP))
                             {
 
                                 //do select count(*) from the table to check whether there are existing rows. if there is, error out.
@@ -1464,7 +1712,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = DataConvert::convertColumnData(colType, addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, false, false );
+                                convertedVal = DataConvert::convertColumnData(colType, addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                             }
                             catch (std::exception&)
                             {
@@ -1485,6 +1733,39 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                                 ci->isAlter = false;
                                 return rc;
                             }
+                            if (addColumnsPtr->fColumns[0]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                                addColumnsPtr->fColumns[0]->fDefaultValue->fValue == "0")
+                            {
+                                addColumnsPtr->fColumns[0]->fDefaultValue->fValue = "0000-00-00 00:00:00";
+                            }
+                        }
+                    }
+
+                    // For TIMESTAMP, if no constraint is given, default to NOT NULL
+                    if (addColumnsPtr->fColumns[0]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                        addColumnsPtr->fColumns[0]->fConstraints.empty())
+                    {
+                        addColumnsPtr->fColumns[0]->fConstraints.push_back(new ColumnConstraintDef(DDL_NOT_NULL));
+                    }
+
+                    // If no default value exists for TIMESTAMP, we apply
+                    // automatic TIMESTAMP properties.
+                    // TODO: If no default value exists but the constraint is NULL,
+                    // default value should be set to NULL. But this is currently
+                    // not supported since columnstore does not track whether user
+                    // specified a NULL or not
+                    if (addColumnsPtr->fColumns[0]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
+                        !addColumnsPtr->fColumns[0]->fDefaultValue)
+                    {
+                        // Query calpontsys.syscolumn to see
+                        // if a timestamp column already exists in this table
+                        if (!anyTimestampColumn(alterTable->fTableName->fSchema, alterTable->fTableName->fName, sessionID))
+                        {
+                            addColumnsPtr->fColumns[0]->fDefaultValue = new ColumnDefaultValue("current_timestamp() ON UPDATE current_timestamp()");
+                        }
+                        else
+                        {
+                            addColumnsPtr->fColumns[0]->fDefaultValue = new ColumnDefaultValue("0000-00-00 00:00:00");
                         }
                     }
 
@@ -1734,7 +2015,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                                 try
                                 {
-                                    anyNullVal = anyNullInTheColumn (alterTable->fTableName->fSchema, alterTable->fTableName->fName, renameColumnsPtr->fName, sessionID);
+                                    anyNullVal = anyNullInTheColumn (thd, alterTable->fTableName->fSchema, alterTable->fTableName->fName, renameColumnsPtr->fName, sessionID);
                                 }
                                 catch (runtime_error& ex)
                                 {

@@ -44,7 +44,8 @@ using namespace funcexp;
 dataconvert::DateTime getDateTime (rowgroup::Row& row,
                                    FunctionParm& parm,
                                    bool& isNull,
-                                   CalpontSystemCatalog::ColType&)
+                                   CalpontSystemCatalog::ColType& ct,
+                                   const string& timeZone)
 {
     TimeExtractor extractor;
     dataconvert::DateTime dateTime;
@@ -81,6 +82,21 @@ dataconvert::DateTime getDateTime (rowgroup::Row& row,
         {
             val = parm[0]->data()->getIntVal(row, isNull);
             valStr = dataconvert::DataConvert::datetimeToString (val);
+            rc = extractor.extractTime (valStr, formatStr, dateTime);
+
+            if ( rc < 0)
+            {
+                isNull = true;
+                return -1;
+            }
+
+            break;
+        }
+
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            val = parm[0]->data()->getIntVal(row, isNull);
+            valStr = dataconvert::DataConvert::timestampToString (val, timeZone);
             rc = extractor.extractTime (valStr, formatStr, dateTime);
 
             if ( rc < 0)
@@ -171,7 +187,7 @@ string Func_str_to_date::getStrVal(rowgroup::Row& row,
                                    CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct);
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
     string convertedDate = dataconvert::DataConvert::datetimeToString(*((long long*) &dateTime));
     return convertedDate;
 }
@@ -182,7 +198,7 @@ int32_t Func_str_to_date::getDateIntVal(rowgroup::Row& row,
                                         CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct);
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
     return ((((int32_t)(time >> 32)) & 0xFFFFFFC0) | 0x3E);
 }
@@ -193,8 +209,39 @@ int64_t Func_str_to_date::getDatetimeIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct);
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
+    return time;
+}
+
+int64_t Func_str_to_date::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    dataconvert::DateTime dateTime;
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
+    dataconvert::TimeStamp timestamp;
+    dataconvert::MySQLTime m_time;
+    m_time.year = dateTime.year;
+    m_time.month = dateTime.month;
+    m_time.day = dateTime.day;
+    m_time.hour = dateTime.hour;
+    m_time.minute = dateTime.minute;
+    m_time.second = dateTime.second;
+    bool isValid = true;
+    int64_t seconds = mySQLTimeToGmtSec(m_time, fTimeZone, isValid);
+    if (!isValid)
+    {
+        timestamp = -1;
+        isNull = true;
+    }
+    else
+    {
+        timestamp.second = seconds;
+        timestamp.msecond = dateTime.msecond;
+    }
+    int64_t time = *(reinterpret_cast<int64_t*>(&timestamp));
     return time;
 }
 
@@ -205,7 +252,7 @@ int64_t Func_str_to_date::getTimeIntVal(rowgroup::Row& row,
 {
     dataconvert::DateTime dateTime;
     dataconvert::Time retTime;
-    dateTime = getDateTime(row, parm, isNull, ct);
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
     retTime.day = 0;
     retTime.is_neg = false;
     retTime.hour = dateTime.hour;
@@ -222,7 +269,7 @@ int64_t Func_str_to_date::getIntVal(rowgroup::Row& row,
                                     CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct);
+    dateTime = getDateTime(row, parm, isNull, ct, fTimeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
     return time;
 }

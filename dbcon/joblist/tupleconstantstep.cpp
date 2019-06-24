@@ -225,6 +225,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
             case CalpontSystemCatalog::TIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             {
                 fRowConst.setIntField(c.intVal, *i);
                 break;

@@ -119,6 +119,12 @@ uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType
                    dtm.hour * 3600 + dtm.minute * 60 + dtm.second;
         }
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            dataconvert::TimeStamp ts(value);
+            return ts.second;
+        }
+
         // Use the first character only for estimating chars and varchar ranges.
         // TODO:  Use dictionary column HWM for dictionary columns.
         case CalpontSystemCatalog::CHAR:
@@ -179,6 +185,7 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
             // Use 1000 for dates.
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
                 return 1000;
 
             // Use 10 for CHARs and VARCHARs.  We'll use 10 for whatever else.

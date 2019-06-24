@@ -50,25 +50,63 @@ int64_t Func_timestampdiff::getIntVal(rowgroup::Row& row,
                                       bool& isNull,
                                       CalpontSystemCatalog::ColType& op_ct)
 {
-    int64_t val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
-    int64_t val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
-    IntervalColumn::interval_type unit = static_cast<IntervalColumn::interval_type>(parm[2]->data()->getIntVal(row, isNull));
+    int64_t val1, val2;
     DateTime dt1, dt2;
-    dt1.year = (val1 >> 48) & 0xffff;
-    dt1.month = (val1 >> 44) & 0xf;
-    dt1.day = (val1 >> 38) & 0x3f;
-    dt1.hour = (val1 >> 32) & 0x3f;
-    dt1.minute = (val1 >> 26) & 0x3f;
-    dt1.second = (val1 >> 20) & 0x3f;
-    dt1.msecond = val1 & 0xfffff;
+    if (parm[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+    {
+        TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+        int64_t seconds = timestamp.second;
+        MySQLTime m_time;
+        gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+        dt1.year = m_time.year;
+        dt1.month = m_time.month;
+        dt1.day = m_time.day;
+        dt1.hour = m_time.hour;
+        dt1.minute = m_time.minute;
+        dt1.second = m_time.second;
+        dt1.msecond = timestamp.msecond;
+        val1 = *(reinterpret_cast<int64_t*>(&dt1));
+    }
+    else
+    {
+        val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+        dt1.year = (val1 >> 48) & 0xffff;
+        dt1.month = (val1 >> 44) & 0xf;
+        dt1.day = (val1 >> 38) & 0x3f;
+        dt1.hour = (val1 >> 32) & 0x3f;
+        dt1.minute = (val1 >> 26) & 0x3f;
+        dt1.second = (val1 >> 20) & 0x3f;
+        dt1.msecond = val1 & 0xfffff;
+    }
 
-    dt2.year = (val2 >> 48) & 0xffff;
-    dt2.month = (val2 >> 44) & 0xf;
-    dt2.day = (val2 >> 38) & 0x3f;
-    dt2.hour = (val2 >> 32) & 0x3f;
-    dt2.minute = (val2 >> 26) & 0x3f;
-    dt2.second = (val2 >> 20) & 0x3f;
-    dt2.msecond = val2 & 0xfffff;
+    if (parm[1]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+    {
+        TimeStamp timestamp(parm[1]->data()->getTimestampIntVal(row, isNull));
+        int64_t seconds = timestamp.second;
+        MySQLTime m_time;
+        gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+        dt2.year = m_time.year;
+        dt2.month = m_time.month;
+        dt2.day = m_time.day;
+        dt2.hour = m_time.hour;
+        dt2.minute = m_time.minute;
+        dt2.second = m_time.second;
+        dt2.msecond = timestamp.msecond;
+        val2 = *(reinterpret_cast<int64_t*>(&dt2));
+    }
+    else
+    {
+        val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
+        dt2.year = (val2 >> 48) & 0xffff;
+        dt2.month = (val2 >> 44) & 0xf;
+        dt2.day = (val2 >> 38) & 0x3f;
+        dt2.hour = (val2 >> 32) & 0x3f;
+        dt2.minute = (val2 >> 26) & 0x3f;
+        dt2.second = (val2 >> 20) & 0x3f;
+        dt2.msecond = val2 & 0xfffff;
+    }
+
+    IntervalColumn::interval_type unit = static_cast<IntervalColumn::interval_type>(parm[2]->data()->getIntVal(row, isNull));
 
     int64_t diff = 0;
 
@@ -145,6 +183,14 @@ int32_t Func_timestampdiff::getDateIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_timestampdiff::getDatetimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    return getIntVal(row, parm, isNull, ct);
+}
+
+int64_t Func_timestampdiff::getTimestampIntVal(rowgroup::Row& row,
         FunctionParm& parm,
         bool& isNull,
         CalpontSystemCatalog::ColType& ct)

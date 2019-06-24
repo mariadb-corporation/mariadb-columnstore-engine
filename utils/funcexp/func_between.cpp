@@ -157,6 +157,24 @@ inline bool getBool(rowgroup::Row& row,
                    numericLE(val, pm[2]->data()->getDatetimeIntVal(row, isNull));
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            int64_t val = pm[0]->data()->getTimestampIntVal(row, isNull);
+
+            if (notBetween)
+            {
+                if (!numericGE(val, pm[1]->data()->getTimestampIntVal(row, isNull)) && !isNull)
+                    return true;
+
+                isNull = false;
+                return (!numericLE(val, pm[2]->data()->getTimestampIntVal(row, isNull)) && !isNull);
+            }
+
+            return !isNull &&
+                   numericGE(val, pm[1]->data()->getTimestampIntVal(row, isNull)) &&
+                   numericLE(val, pm[2]->data()->getTimestampIntVal(row, isNull));
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             // Shift out unused day for compare
@@ -286,6 +304,7 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR) ||
                 ct.colDataType == CalpontSystemCatalog::DATE ||
                 ct.colDataType == CalpontSystemCatalog::DATETIME ||
+                ct.colDataType == CalpontSystemCatalog::TIMESTAMP ||
                 ct.colDataType == CalpontSystemCatalog::TIME)
         {
             allString = false;
@@ -310,6 +329,22 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
             {
                 Result result = cc->result();
                 result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
+                cc->result(result);
+            }
+        }
+    }
+    else if (op.operationType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+    {
+        ConstantColumn* cc = NULL;
+
+        for (uint32_t i = 1; i < fp.size(); i++)
+        {
+            cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
+
+            if (cc)
+            {
+                Result result = cc->result();
+                result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, fTimeZone);
                 cc->result(result);
             }
         }

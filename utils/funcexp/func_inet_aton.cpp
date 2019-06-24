@@ -222,6 +222,26 @@ int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row,
     return iValue;
 }
 
+int64_t Func_inet_aton::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& fp,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    int64_t iValue = joblist::TIMESTAMPNULL;
+
+    const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
+
+    if (!isNull)
+    {
+        int64_t iVal = convertAton( sValue, isNull );
+
+        if (!isNull)
+            iValue = iVal;
+    }
+
+    return iValue;
+}
+
 int64_t Func_inet_aton::getTimeIntVal(rowgroup::Row& row,
                                       FunctionParm& fp,
                                       bool& isNull,

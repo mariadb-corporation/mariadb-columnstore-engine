@@ -1891,7 +1891,6 @@ void SlaveComm::do_vbRollback1(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    //takeSnapshot = true;
     doSaveDelta = true;
 }
 
@@ -1931,7 +1930,6 @@ void SlaveComm::do_vbRollback2(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    //takeSnapshot = true;
     doSaveDelta = true;
 }
 
@@ -1964,7 +1962,6 @@ void SlaveComm::do_vbCommit(ByteStream& msg)
     if (!standalone)
         master.write(reply);
 
-    //takeSnapshot = true;
     doSaveDelta = true;
 }
 
@@ -2065,7 +2062,7 @@ void SlaveComm::do_confirm()
             saveFileToggle = !saveFileToggle;
 
             const char* filename = journalName.c_str();
-            uint32_t utmp = ::umask(0);
+            //uint32_t utmp = ::umask(0);
             delete journalh;
             journalh = IDBDataFile::open(
                            IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);

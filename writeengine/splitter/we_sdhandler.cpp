@@ -1910,6 +1910,10 @@ void WESDHandler::onCleanupResult(int PmId, messageqcpp::SBS& Sbs)
                             ossSatCnt << "invalid date/times replaced with zero value: ";
                             break;
 
+                        case CalpontSystemCatalog::TIMESTAMP:
+                            ossSatCnt << "invalid timestamps replaced with zero value: ";
+                            break;
+
                         case CalpontSystemCatalog::TIME:
                             ossSatCnt << "invalid times replaced with zero value: ";
                             break;

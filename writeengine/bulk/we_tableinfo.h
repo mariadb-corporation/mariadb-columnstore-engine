@@ -128,6 +128,7 @@ private:
     //   data file
     bool fbTruncationAsError;           // Treat string truncation as error
     ImportDataMode fImportDataMode;     // Import data in text or binary mode
+    std::string fTimeZone;               // Timezone used by TIMESTAMP data type
 
     volatile bool fTableLocked;         // Do we have db table lock
 
@@ -253,6 +254,10 @@ public:
      */
     ImportDataMode getImportDataMode( ) const;
 
+    /** @brief Get timezone.
+     */
+    const std::string& getTimeZone( ) const;
+
     /** @brief Get number of buffers
      */
     int getNumberOfBuffers() const;
@@ -309,6 +314,10 @@ public:
     /** @brief Set binary import data mode (text or binary).
      */
     void setImportDataMode( ImportDataMode importMode );
+
+    /** @brief Set timezone.
+     */
+    void setTimeZone( const std::string& timeZone );
 
     /** @brief Enable distributed mode, saving BRM updates in rptFileName
      */
@@ -481,6 +490,11 @@ inline ImportDataMode TableInfo::getImportDataMode() const
     return fImportDataMode;
 }
 
+inline const std::string& TableInfo::getTimeZone() const
+{
+    return fTimeZone;
+}
+
 inline int TableInfo::getNumberOfBuffers() const
 {
     return fReadBufCount;
@@ -578,6 +592,11 @@ inline void TableInfo::setFileBufferSize(const int fileBufSize)
 inline void TableInfo::setImportDataMode( ImportDataMode importMode )
 {
     fImportDataMode = importMode;
+}
+
+inline void TableInfo::setTimeZone( const std::string& timeZone )
+{
+    fTimeZone = timeZone;
 }
 
 inline void TableInfo::setJobFileName(const std::string& jobFileName)

@@ -114,6 +114,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID,
     fKeepRbMetaFile(bKeepRbMetaFile),
     fbTruncationAsError(false),
     fImportDataMode(IMPORT_DATA_TEXT),
+    fTimeZone("SYSTEM"),
     fTableLocked(false),
     fReadFromStdin(false),
     fNullStringMode(false),
@@ -989,6 +990,12 @@ void TableInfo::reportTotals(double elapsedTime)
                 ossSatCnt <<
                           "invalid date/times replaced with zero value : ";
             }
+
+            else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+            {
+                ossSatCnt <<
+                          "invalid timestamps replaced with zero value : ";
+            }
             else if (fColumns[i].column.dataType == execplan::CalpontSystemCatalog::TIME)
             {
                 ossSatCnt <<
@@ -1244,6 +1251,7 @@ void TableInfo::initializeBuffers(int   noOfBuffers,
         buffer->setTruncationAsError(getTruncationAsError());
         buffer->setImportDataMode(fImportDataMode,
                                   fixedBinaryRecLen);
+        buffer->setTimeZone(fTimeZone);
         fBuffers.push_back(buffer);
     }
 }

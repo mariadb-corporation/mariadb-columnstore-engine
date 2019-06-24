@@ -65,6 +65,16 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
             month = (val >> 44) & 0xf;
             break;
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+            int64_t seconds = timestamp.second;
+	    dataconvert::MySQLTime m_time;
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+            month = m_time.month;
+            break;
+        }
+
         // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());

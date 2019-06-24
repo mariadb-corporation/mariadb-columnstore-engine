@@ -53,8 +53,6 @@ void bailout(char* error, const string& funcName)
 
 int64_t idblocalpm()
 {
-    THD* thd = current_thd;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -503,6 +501,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
             cc = new ConstantColumn(localPm);
         else
             cc = new ConstantColumn("", ConstantColumn::NULLDATA);
+        cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
         cc->alias(ifp->full_name() ? ifp->full_name() : "");
         return cc;
@@ -566,6 +565,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
         parms.push_back(sptp);
         fc->functionParms(parms);
         fc->expressionId(ci->expressionId++);
+        fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
         // string result type
         CalpontSystemCatalog::ColType ct;

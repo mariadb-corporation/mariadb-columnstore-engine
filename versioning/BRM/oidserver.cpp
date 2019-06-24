@@ -153,6 +153,7 @@ void OIDServer::writeData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
+    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
     if (true || IDBPolicy::useHdfs())
     {
         for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
@@ -231,6 +232,7 @@ void OIDServer::readData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
+    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
     if (true || IDBPolicy::useHdfs())
     {
         for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
@@ -349,14 +351,22 @@ void OIDServer::initializeBitmap() const
     writeData(buf, 0, HeaderSize);
 
     // reset buf to all 0's and write the bitmap
-    for (i = 0; i < HeaderSize; i++)
-        buf[i] = 0;
+    //for (i = 0; i < HeaderSize; i++)
+    //    buf[i] = 0;
 
-    for (i = 0; i < bitmapSize; i += HeaderSize)
-        writeData(buf, HeaderSize + i, (bitmapSize - i > HeaderSize ? HeaderSize : bitmapSize - i));
+    //for (i = 0; i < bitmapSize; i += HeaderSize)
+    //    writeData(buf, HeaderSize + i, (bitmapSize - i > HeaderSize ? HeaderSize : bitmapSize - i));
+    
+    uint8_t *bitmapbuf = new uint8_t[bitmapSize];
+    memset(bitmapbuf, 0, bitmapSize);
+    writeData(bitmapbuf, HeaderSize, bitmapSize);
+    delete[] bitmapbuf;
+    
 
     flipOIDBlock(0, firstOID, 0);
 
+    buf[0] = 0;
+    buf[1] = 0;
     /* append a 16-bit 0 to indicate 0 entries in the vboid->dbroot mapping */
     writeData(buf, StartOfVBOidSection, 2);
 }
@@ -379,6 +389,7 @@ OIDServer::OIDServer() : fFp(NULL), fFd(-1)
         throw runtime_error(os.str());
     }
 
+    // XXXPAT: Forcing the IDB* path.
     if (true || IDBPolicy::useHdfs())
     {
         if (!IDBPolicy::exists(fFilename.c_str()))   //no bitmap file

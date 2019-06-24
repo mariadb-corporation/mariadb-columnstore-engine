@@ -188,6 +188,25 @@ int64_t Func_ifnull::getDatetimeIntVal(Row& row,
     return r;
 }
 
+int64_t Func_ifnull::getTimestampIntVal(Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType&)
+{
+    if (isNull)
+        return 0;
+
+    int64_t r = parm[0]->data()->getTimestampIntVal(row, isNull);
+
+    if (isNull)
+    {
+        isNull = false;
+        return parm[1]->data()->getTimestampIntVal(row, isNull);
+    }
+
+    return r;
+}
+
 int64_t Func_ifnull::getTimeIntVal(Row& row,
                                    FunctionParm& parm,
                                    bool& isNull,

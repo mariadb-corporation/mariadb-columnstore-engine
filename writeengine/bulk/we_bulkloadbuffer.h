@@ -139,6 +139,7 @@ private:
     //   for db cols (omits default cols)
     bool fbTruncationAsError;           // Treat string truncation as error
     ImportDataMode fImportDataMode;     // Import data in text or binary mode
+    std::string fTimeZone;              // Timezone used by TIMESTAMP datatype
     unsigned int fFixedBinaryRecLen;    // Fixed rec len used in binary mode
 
     //--------------------------------------------------------------------------
@@ -380,6 +381,13 @@ public:
     {
         fImportDataMode    = importMode;
         fFixedBinaryRecLen = fixedBinaryRecLen;
+    }
+
+    /** @brief set timezone.
+     */
+    void setTimeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
     }
 };
 

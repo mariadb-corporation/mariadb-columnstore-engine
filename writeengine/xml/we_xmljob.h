@@ -123,6 +123,14 @@ public:
      */
     EXPORT bool    processNode( xmlNode* pParentNode );
 
+    /**
+     * @brief Set timezone
+     */
+    void setTimeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
 private:
     void           setJobData( xmlNode* pNode,
                                const xmlTag tag,
@@ -154,6 +162,7 @@ private:
     JobColList     fDefaultColumns;          // temporary list of default cols
     //   for table node being processed
     bool           fValidateColList;         // Validate all cols have XML tag
+    std::string    fTimeZone;                // Timezone used for TIMESTAMP datatype
 };
 
 } //end of namespace

@@ -60,8 +60,8 @@ SimpleFilter::SimpleFilter(const string& sql):
     parse(sql);
 }
 
-SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs) :
-    fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA)
+SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const string& timeZone) :
+    fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA), fTimeZone(timeZone)
 {
     convertConstant();
 }
@@ -69,7 +69,8 @@ SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* r
 SimpleFilter::SimpleFilter(const SimpleFilter& rhs) :
     fOp(rhs.op()),
     fIndexFlag(rhs.indexFlag()),
-    fJoinFlag(rhs.joinFlag())
+    fJoinFlag(rhs.joinFlag()),
+    fTimeZone(rhs.timeZone())
 {
     fLhs = rhs.lhs()->clone();
     fRhs = rhs.rhs()->clone();
@@ -210,6 +211,7 @@ const string SimpleFilter::data() const
              fRhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
+             fRhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::TIME))
         rhs = "'" + SimpleFilter::escapeString(fRhs->data()) + "'";
     else
@@ -223,6 +225,7 @@ const string SimpleFilter::data() const
              fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::TIME ||
+             fLhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
         lhs = "'" + SimpleFilter::escapeString(fLhs->data()) + "'";
     else
@@ -313,6 +316,7 @@ void SimpleFilter::serialize(messageqcpp::ByteStream& b) const
 
     b << static_cast<uint32_t>(fIndexFlag);
     b << static_cast<uint32_t>(fJoinFlag);
+    b << fTimeZone;
 }
 
 void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
@@ -328,6 +332,7 @@ void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
     fRhs = dynamic_cast<ReturnedColumn*>(ObjectReader::createTreeNode(b));
     b >> reinterpret_cast<uint32_t&>(fIndexFlag);
     b >> reinterpret_cast<uint32_t&>(fJoinFlag);
+    b >> fTimeZone;
 
     fSimpleColumnList.clear();
     fAggColumnList.clear();
@@ -459,6 +464,9 @@ bool SimpleFilter::operator==(const SimpleFilter& t) const
     else if (fJoinFlag != t.fJoinFlag)
         return false;
 
+    else if (fTimeZone != t.fTimeZone)
+        return false;
+
     return true;
 }
 
@@ -546,6 +554,19 @@ void SimpleFilter::convertConstant()
                 result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
             }
         }
+        else if (fRhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+        {
+            if (lcc->constval().empty())
+            {
+                lcc->constval("0000-00-00 00:00:00");
+                result.intVal = 0;
+                result.strVal = lcc->constval();
+            }
+            else
+            {
+                result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, fTimeZone);
+            }
+        }
         else if (fRhs->resultType().colDataType == CalpontSystemCatalog::TIME)
         {
             if (lcc->constval().empty())
@@ -591,6 +612,19 @@ void SimpleFilter::convertConstant()
             else
             {
                 result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
+            }
+        }
+        else if (fLhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+        {
+            if (rcc->constval().empty())
+            {
+                rcc->constval("0000-00-00 00:00:00");
+                result.intVal = 0;
+                result.strVal = rcc->constval();
+            }
+            else
+            {
+                result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, fTimeZone);
             }
         }
         else if (fLhs->resultType().colDataType == CalpontSystemCatalog::TIME)

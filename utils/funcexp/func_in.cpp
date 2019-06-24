@@ -159,6 +159,27 @@ inline bool getBoolForIn(rowgroup::Row& row,
             return false;
         }
 
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            int64_t val = pm[0]->data()->getTimestampIntVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            for (uint32_t i = 1; i < pm.size(); i++)
+            {
+                isNull = false;
+
+                if ( val == pm[i]->data()->getTimestampIntVal(row, isNull) && !isNull )
+                    return true;
+
+                if (isNull && isNotIn)
+                    return true; // will be reversed to false by the caller
+            }
+
+            return false;
+        }
+
         case execplan::CalpontSystemCatalog::TIME:
         {
             int64_t val = pm[0]->data()->getTimeIntVal(row, isNull);

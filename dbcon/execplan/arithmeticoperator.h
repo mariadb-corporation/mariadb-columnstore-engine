@@ -60,6 +60,15 @@ public:
         return new ArithmeticOperator (*this);
     }
 
+    inline const std::string& timeZone() const
+    {
+        return fTimeZone;
+    }
+    inline void timeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
     /**
      * The serialization interface
      */
@@ -102,7 +111,7 @@ public:
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
-        return TreeNode::getStrVal();
+        return TreeNode::getStrVal(fTimeZone);
     }
     virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
@@ -157,6 +166,11 @@ public:
         evaluate(row, isNull, lop, rop);
         return TreeNode::getDatetimeIntVal();
     }
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+    {
+        evaluate(row, isNull, lop, rop);
+        return TreeNode::getTimestampIntVal();
+    }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
@@ -173,6 +187,7 @@ private:
     template <typename result_t>
     inline result_t execute(result_t op1, result_t op2, bool& isNull);
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
+    std::string fTimeZone;
 };
 
 #include "parsetree.h"

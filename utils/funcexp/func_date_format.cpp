@@ -269,6 +269,23 @@ string Func_date_format::getStrVal(rowgroup::Row& row,
             dt.msecond = (uint32_t)((val & 0xfffff));
             break;
 
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            val = parm[0]->data()->getTimestampIntVal(row, isNull);
+            TimeStamp timestamp(val);
+            int64_t seconds = timestamp.second;
+            MySQLTime time;
+            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            dt.year = time.year;
+            dt.month = time.month;
+            dt.day = time.day;
+            dt.hour = time.hour;
+            dt.minute = time.minute;
+            dt.second = time.second;
+            dt.msecond = timestamp.msecond;
+            break;
+        }
+
         case CalpontSystemCatalog::TIME:
         {
             DateTime aDateTime = static_cast<DateTime>(nowDatetime());
@@ -395,6 +412,14 @@ int64_t Func_date_format::getDatetimeIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     return dataconvert::DataConvert::datetimeToInt(getStrVal(row, parm, isNull, ct));
+}
+
+int64_t Func_date_format::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), fTimeZone);
 }
 
 

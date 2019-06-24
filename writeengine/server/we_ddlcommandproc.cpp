@@ -3539,6 +3539,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     int dataWidth, scale, precision, compressionType, refColWidth, refCompressionType;
     string defaultValStr;
     ColTuple defaultVal;
+    string timeZone;
 
     bs >> tmp32;
     txnID = tmp32;
@@ -3567,6 +3568,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     refColWidth = tmp32;
     bs >> tmp8;
     refCompressionType = tmp8;
+    bs >> timeZone;
     //Find the fill in value
     bool isNULL = false;
 
@@ -3579,7 +3581,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     colType.scale = scale;
     colType.precision = precision;
     bool pushWarning = false;
-    defaultVal.data = DataConvert::convertColumnData(colType, defaultValStr, pushWarning, isNULL);
+    defaultVal.data = DataConvert::convertColumnData(colType, defaultValStr, pushWarning, timeZone, isNULL, false, false);
     fWEWrapper.setTransId(txnID);
     fWEWrapper.setIsInsert(true);
     fWEWrapper.setBulkFlag(true);

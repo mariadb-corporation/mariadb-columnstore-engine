@@ -76,7 +76,8 @@ const long long infinidb_precision[19] =
 //------------------------------------------------------------------------------
 XMLJob::XMLJob( ) : fDebugLevel( DEBUG_0 ),
     fDeleteTempFile(false),
-    fValidateColList(true)
+    fValidateColList(true),
+    fTimeZone("SYSTEM")
 {
 }
 
@@ -1120,6 +1121,22 @@ void XMLJob::fillInXMLDataNotNullDefault(
                         col_defaultValue.c_str(),
                         dataconvert::CALPONTDATETIME_ENUM, convertStatus,
                         col_defaultValue.length() );
+
+                if (convertStatus != 0)
+                    bDefaultConvertError = true;
+
+                col.fDefaultInt = dt;
+                break;
+            }
+
+            case execplan::CalpontSystemCatalog::TIMESTAMP:
+            {
+                int convertStatus;
+                int64_t dt =
+                    dataconvert::DataConvert::convertColumnTimestamp(
+                        col_defaultValue.c_str(),
+                        dataconvert::CALPONTDATETIME_ENUM, convertStatus,
+                        col_defaultValue.length(), fTimeZone );
 
                 if (convertStatus != 0)
                     bDefaultConvertError = true;

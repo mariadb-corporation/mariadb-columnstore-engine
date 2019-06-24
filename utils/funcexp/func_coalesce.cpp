@@ -140,6 +140,30 @@ int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row,
     return val;
 }
 
+int64_t Func_coalesce::getTimestampIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    int64_t val = 0;
+
+    for (uint32_t i = 0; i < parm.size(); i++)
+    {
+        val = parm[i]->data()->getTimestampIntVal(row, isNull);
+
+        if (isNull)
+        {
+            isNull = false;
+            continue;
+        }
+
+        return val;
+    }
+
+    isNull = true;
+    return val;
+}
+
 int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row,
                                      FunctionParm& parm,
                                      bool& isNull,

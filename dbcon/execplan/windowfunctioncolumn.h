@@ -146,6 +146,16 @@ public:
         return udafContext;
     }
 
+    inline const std::string timeZone () const
+    {
+        return fTimeZone;
+    }
+
+    inline void timeZone (const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+
 private:
     /**
      * Fields
@@ -169,6 +179,8 @@ private:
 
     // UDAnF support
     mcsv1sdk::mcsv1Context udafContext;
+
+    std::string fTimeZone;
     /***********************************************************
      *                 F&E framework                           *
      ***********************************************************/
@@ -176,7 +188,7 @@ public:
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);
-        return TreeNode::getStrVal();
+        return TreeNode::getStrVal(fTimeZone);
     }
 
     virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
@@ -223,6 +235,11 @@ public:
     {
         evaluate(row, isNull);
         return TreeNode::getDatetimeIntVal();
+    }
+    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimestampIntVal();
     }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {

@@ -220,6 +220,22 @@ public:
         return fSchemaName;
     }
 
+    /** @brief set the timezone
+     *
+     * @param the timezone to set
+     */
+    void set_TimeZone( const std::string& timeZone )
+    {
+        fTimeZone = timeZone;
+    }
+
+    /** @brief get the timezone
+     */
+    const std::string get_TimeZone() const
+    {
+        return fTimeZone;
+    }
+
     /** @brief does this dml statement have a filter
      */
     bool HasFilter() const
@@ -345,6 +361,7 @@ protected:
     void initializeTable();
 
     std::string fSchemaName;
+    std::string fTimeZone;
     std::string fTableName;
     std::string fDMLStatement;
     std::string fSQLStatement;

@@ -36,6 +36,7 @@ using namespace std;
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
 
+#include "dataconvert.h"
 #include "liboamcpp.h"
 using namespace oam;
 
@@ -74,7 +75,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv) :
     fBlockMode3(false),
     fbTruncationAsError(false),
     fUUID(boost::uuids::nil_generator()()),
-    fConsoleOutput(true)
+    fConsoleOutput(true),
+    fTimeZone("SYSTEM")
 {
     try
     {
@@ -210,6 +212,7 @@ std::string WECmdArgs::getCpImportCmdLine()
     }
 
     aSS << " -P " << getModuleID();
+    aSS << " -T " << fTimeZone;
 
     if (fbTruncationAsError)
         aSS << " -S ";
@@ -482,7 +485,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-r readers] [-j JobID] [-e maxErrs] [-B libBufSize] [-w parsers]\n";
     cout << "\t\t [-s c] [-E enclosedChar] [-C escapeChar] [-n NullOption]\n";
     cout << "\t\t [-q batchQty] [-p jobPath] [-P list of PMs] [-S] [-i] [-v verbose]\n";
-    cout << "\t\t [-I binaryOpt]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
 
 
     cout << "Traditional usage without positional parameters (XML job file required):\n";
@@ -491,7 +494,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-b readBufs] [-p path] [-c readBufSize] [-e maxErrs] [-B libBufSize]\n";
     cout << "\t\t [-n NullOption] [-E encloseChar] [-C escapeChar] [-i] [-v verbose]\n";
     cout << "\t\t [-d debugLevel] [-q batchQty] [-l loadFile] [-P list of PMs] [-S]\n";
-    cout << "\t\t [-I binaryOpt]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
 
     cout << "\n\nPositional parameters:\n";
     cout << "\tdbName     Name of the database to load\n";
@@ -535,7 +538,10 @@ void WECmdArgs::usage()
          << "\t-m\tmode\n"
          << "\t\t\t1 - rows will be loaded in a distributed manner across PMs.\n"
          << "\t\t\t2 - PM based input files loaded onto their respective PM.\n"
-         << "\t\t\t3 - input files will be loaded on the local PM.\n";
+         << "\t\t\t3 - input files will be loaded on the local PM.\n"
+         << "\t-T\tTimezone used for TIMESTAMP datatype.\n"
+         << "\t\tPossible values: \"SYSTEM\" (default)\n"
+         << "\t\t               : Offset in the form +/-HH:MM\n";
 
     cout << "\nExample1: Traditional usage\n"
          << "\tcpimport -j 1234";
@@ -574,7 +580,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     //	fPrgmName = "/home/bpaul/genii/export/bin/cpimport";
 
     while ((aCh = getopt(argc, argv,
-                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:SN"))
+                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:N"))
             != EOF)
     {
         switch (aCh)
@@ -839,6 +845,21 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             {
                 setTruncationAsError(true);
                 //cout << "TruncationAsError  : true" << endl;
+                break;
+            }
+
+            case 'T':
+            {
+                std::string timeZone = optarg;
+                long offset;
+
+                if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
+                {
+                    throw (runtime_error(
+                               "Value for option -T is invalid"));
+                }
+
+                fTimeZone = timeZone;
                 break;
             }
 

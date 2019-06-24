@@ -203,6 +203,26 @@ int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row,
     return leastStr;
 }
 
+int64_t Func_least::getTimestampIntVal(rowgroup::Row& row,
+                                       FunctionParm& fp,
+                                       bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    int64_t str = fp[0]->data()->getTimestampIntVal(row, isNull);
+
+    int64_t leastStr = str;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        int64_t str1 = fp[i]->data()->getTimestampIntVal(row, isNull);
+
+        if ( leastStr > str1 )
+            leastStr = str1;
+    }
+
+    return leastStr;
+}
+
 int64_t Func_least::getTimeIntVal(rowgroup::Row& row,
                                   FunctionParm& fp,
                                   bool& isNull,

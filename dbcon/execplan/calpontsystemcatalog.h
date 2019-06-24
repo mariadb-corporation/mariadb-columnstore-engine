@@ -161,6 +161,7 @@ public:
         UDOUBLE,		/*!< Unsigned DOUBLE type */
         TEXT,           /*!< TEXT type */
         TIME,           /*!< TIME type */
+        TIMESTAMP,      /*!< TIMESTAMP type */
         NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
         LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
         STRINT,			/* @bug3532, string as int for fast comparison */
@@ -1155,6 +1156,13 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             if ((int64_t)joblist::DATETIMENULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIMESTAMP:
+        {
+            if ((int64_t)joblist::TIMESTAMPNULL == val) ret = true;
 
             break;
         }

@@ -139,6 +139,7 @@ BulkLoadBuffer::BulkLoadBuffer(
     fEnclosedByChar('\0'), fEscapeChar('\\'),
     fBufferId(bufferId), fTableName(tableName),
     fbTruncationAsError(false), fImportDataMode(IMPORT_DATA_TEXT),
+    fTimeZone("SYSTEM"),
     fFixedBinaryRecLen(0)
 {
     fData            = new char[bufferSize];
@@ -939,6 +940,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
             bool bSatVal = false;
 
             if ( column.dataType != CalpontSystemCatalog::DATETIME &&
+                    column.dataType != CalpontSystemCatalog::TIMESTAMP &&
                     column.dataType != CalpontSystemCatalog::TIME )
             {
                 if (nullFlag)
@@ -1067,6 +1069,59 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 }
                 else
                 {
+                    bufStats.satCount++;
+                }
+
+                pVal = &llDate;
+            }
+            else if (column.dataType == CalpontSystemCatalog::TIMESTAMP)
+            {
+                // timestamp conversion
+                int rc = 0;
+
+                if (nullFlag)
+                {
+                    if (column.fWithDefault)
+                    {
+                        llDate = column.fDefaultInt;
+                        // fall through to update saturation and min/max
+                    }
+                    else
+                    {
+                        llDate = joblist::TIMESTAMPNULL;
+                        pVal = &llDate;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (fImportDataMode != IMPORT_DATA_TEXT)
+                    {
+                        memcpy(&llDate, field, sizeof(llDate));
+
+                        if (!dataconvert::DataConvert::isColumnTimeStampValid(
+                                    llDate))
+                            rc = -1;
+                    }
+                    else
+                    {
+                        llDate = dataconvert::DataConvert::convertColumnTimestamp(
+                                     field, dataconvert::CALPONTDATETIME_ENUM,
+                                     rc, fieldLength, fTimeZone );
+                    }
+                }
+
+                if (rc == 0)
+                {
+                    if (llDate < bufStats.minBufferVal)
+                        bufStats.minBufferVal = llDate;
+
+                    if (llDate > bufStats.maxBufferVal)
+                        bufStats.maxBufferVal = llDate;
+                }
+                else
+                {
+                    llDate = 0;
                     bufStats.satCount++;
                 }
 
@@ -3087,6 +3142,11 @@ bool BulkLoadBuffer::isBinaryFieldNull(void* val,
             if (dt == execplan::CalpontSystemCatalog::DATETIME)
             {
                 if ((*(uint64_t*)val) == joblist::DATETIMENULL)
+                    isNullFlag = true;
+            }
+            else if (dt == execplan::CalpontSystemCatalog::TIMESTAMP)
+            {
+                if ((*(uint64_t*)val) == joblist::TIMESTAMPNULL)
                     isNullFlag = true;
             }
             else if (dt == execplan::CalpontSystemCatalog::TIME)

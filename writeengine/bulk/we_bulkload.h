@@ -115,6 +115,7 @@ public:
     void                addToCmdLineImportFileList(const std::string& importFile);
     const std::string&  getAlternateImportDir( ) const;
     const std::string&  getErrorDir          ( ) const;
+    const std::string&  getTimeZone          ( ) const;
     const std::string&  getJobDir            ( ) const;
     const std::string&  getSchema            ( ) const;
     const std::string&  getTempJobDir        ( ) const;
@@ -149,6 +150,7 @@ public:
     void                setTruncationAsError ( bool bTruncationAsError );
     void                setJobUUID           ( const std::string& jobUUID );
     void                setErrorDir          ( const std::string& errorDir );
+    void                setTimeZone          ( const std::string& timeZone );
     // Timer functions
     void                startTimer           ( );
     void                stopTimer            ( );
@@ -227,6 +229,7 @@ private:
     bool        fDisableTimeOut;           // disable timeout when waiting for table lock
     boost::uuids::uuid fUUID;               // job UUID
     static bool		fNoConsoleOutput;		   // disable output to console
+    std::string fTimeZone;                 // Timezone to use for TIMESTAMP data type
 
     //--------------------------------------------------------------------------
     // Private Functions
@@ -317,6 +320,11 @@ inline const std::string& BulkLoad::getAlternateImportDir( ) const
 inline const std::string& BulkLoad::getErrorDir( ) const
 {
     return fErrorDir;
+}
+
+inline const std::string& BulkLoad::getTimeZone( ) const
+{
+    return fTimeZone;
 }
 
 inline const std::string& BulkLoad::getJobDir( ) const
@@ -457,6 +465,11 @@ inline void BulkLoad::setTruncationAsError(bool bTruncationAsError)
 inline void BulkLoad::setErrorDir( const std::string& errorDir )
 {
     fErrorDir = errorDir;
+}
+
+inline void BulkLoad::setTimeZone( const std::string& timeZone )
+{
+    fTimeZone = timeZone;
 }
 
 inline void BulkLoad::startTimer( )

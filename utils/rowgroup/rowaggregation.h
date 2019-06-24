@@ -423,6 +423,7 @@ struct GroupConcat
     std::vector<std::pair<int, bool> >  fOrderCond;    // position to order by [asc/desc]
     joblist::ResourceManager*           fRm;           // resource manager
     boost::shared_ptr<int64_t>			fSessionMemLimit;
+    std::string fTimeZone;
 
     GroupConcat() : fRm(NULL) {}
 };
@@ -606,6 +607,15 @@ public:
         return fAggMapKeyCount;
     }
 
+    inline void timeZone(const std::string& timeZone)
+    {
+        fTimeZone = timeZone;
+    }
+    inline const std::string& timeZone() const
+    {
+        return fTimeZone;
+    }
+
 protected:
     virtual void initialize();
     virtual void initMapData(const Row& row);
@@ -685,6 +695,8 @@ protected:
 
     boost::scoped_ptr<AggHasher> fHasher;
     boost::scoped_ptr<AggComparator> fEq;
+
+    std::string fTimeZone;
 
     //TODO: try to get rid of these friend decl's.  AggHasher & Comparator
     //need access to rowgroup storage holding the rows to hash & ==.

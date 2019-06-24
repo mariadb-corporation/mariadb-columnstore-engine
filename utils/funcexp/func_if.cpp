@@ -36,7 +36,7 @@ using namespace rowgroup;
 namespace
 {
 
-bool boolVal(SPTP& parm, Row& row)
+bool boolVal(SPTP& parm, Row& row, const string& timeZone)
 {
     bool ret = true;
     bool isNull = false;  // Keep it local. We don't want to mess with the global one here.
@@ -52,7 +52,7 @@ bool boolVal(SPTP& parm, Row& row)
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::VARCHAR:
-                ret = (atoi((char*)(parm->data()->getStrVal().c_str())) != 0);
+                ret = (atoi((char*)(parm->data()->getStrVal(timeZone).c_str())) != 0);
 
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
@@ -79,6 +79,7 @@ bool boolVal(SPTP& parm, Row& row)
             case CalpontSystemCatalog::UINT:
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
             case CalpontSystemCatalog::TIME:
             default:
                 ret = (parm->data()->getIntVal(row, isNull) != 0);
@@ -133,7 +134,7 @@ int64_t Func_if::getIntVal(Row& row,
                            bool& isNull,
                            CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getIntVal(row, isNull);
     }
@@ -150,7 +151,7 @@ string Func_if::getStrVal(Row& row,
                           CalpontSystemCatalog::ColType&)
 {
 
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getStrVal(row, isNull);
     }
@@ -166,7 +167,7 @@ IDB_Decimal Func_if::getDecimalVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getDecimalVal(row, isNull);
     }
@@ -182,7 +183,7 @@ double Func_if::getDoubleVal(Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getDoubleVal(row, isNull);
     }
@@ -197,7 +198,7 @@ long double Func_if::getLongDoubleVal(Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getLongDoubleVal(row, isNull);
     }
@@ -213,7 +214,7 @@ int32_t Func_if::getDateIntVal(Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getDateIntVal(row, isNull);
     }
@@ -229,7 +230,7 @@ int64_t Func_if::getDatetimeIntVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getDatetimeIntVal(row, isNull);
     }
@@ -239,12 +240,29 @@ int64_t Func_if::getDatetimeIntVal(Row& row,
     }
 }
 
+
+int64_t Func_if::getTimestampIntVal(Row& row,
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType&)
+{
+    if (boolVal(parm[0], row, fTimeZone))
+    {
+        return parm[1]->data()->getTimestampIntVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getTimestampIntVal(row, isNull);
+    }
+}
+
+
 int64_t Func_if::getTimeIntVal(Row& row,
                                FunctionParm& parm,
                                bool& isNull,
                                CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row))
+    if (boolVal(parm[0], row, fTimeZone))
     {
         return parm[1]->data()->getTimeIntVal(row, isNull);
     }
