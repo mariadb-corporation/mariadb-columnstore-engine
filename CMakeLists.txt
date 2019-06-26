@@ -103,9 +103,8 @@ dump(BUILD_MISSING_TOOLS)
 
 check_pie_supported(OUTPUT_VARIABLE PIE_SUPPORTED LANGUAGES CXX)
 dump(CMAKE_CXX_LINK_PIE_SUPPORTED)
-cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" FALSE CMAKE_CXX_LINK_PIE_SUPPORTED TRUE)
+cmake_dependent_option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" TRUE CMAKE_CXX_LINK_PIE_SUPPORTED FALSE)
 mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
-
 
 check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT _ignore)
 dump(IPO_SUPPORTED)
@@ -175,7 +174,10 @@ if(NOT ISA_EXTERNAL_PROJECT)
   target_include_directories(pcre INTERFACE ${MySQL_BINARY_DIR}/pcre)
 
 endif()
-  
+
+get_filename_component(MySQL_SOURCE_DIR ${MySQL_SOURCE_DIR} ABSOLUTE)
+get_filename_component(MySQL_BINARY_DIR ${MySQL_BINARY_DIR} ABSOLUTE)
+
 dump(MySQL_BINARY_DIR)
 dump(MySQL_SOURCE_DIR)
 dump(CMAKE_BUILD_TYPE)

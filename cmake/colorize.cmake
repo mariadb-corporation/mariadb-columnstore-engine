@@ -1,17 +1,6 @@
 
 include_guard(GLOBAL)
 
-set(ENV{GCC_COLORS} "error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01")
-set(COMPILER_COLOR_MESSAGES FALSE)
-if("GNU" STREQUAL "${CMAKE_CXX_COMPILER}")
-  set(_diag_color_flags "-fdiagnostics-color=auto")
-  set(CMAKE_REQUIRE_FLAGS ${_diag_color_flags})
-  check_cxx_compiler_flag(${_diag_color_flags} COMPILER_COLOR_MESSAGES)
-  unset(CMAKE_REQUIRE_FLAGS)
-endif()
-
-add_compile_options($<$<BOOL:COMPILER_COLOR_MESSAGES>:-fdiagnostics-color=auto>)
-
 
 find_program(TPUT NAMES tput tput.exe)
 set(_term $ENV{TERM})
