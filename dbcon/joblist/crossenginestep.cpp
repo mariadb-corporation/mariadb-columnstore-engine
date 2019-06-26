@@ -727,17 +727,17 @@ void CrossEngineStep::setProjectBPP(JobStep* jobStep1, JobStep*)
     else
         fSelectClause += "SELECT ";
 
-    fSelectClause += jobStep1->name();
+    fSelectClause += "`" + jobStep1->name() + "`";
 }
 
 
 string CrossEngineStep::makeQuery()
 {
     ostringstream oss;
-    oss << fSelectClause << " FROM " << fTable;
+    oss << fSelectClause << " FROM `" << fTable << "`";
 
     if (fTable.compare(fAlias) != 0)
-        oss << " " << fAlias;
+        oss << " `" << fAlias << "`";
 
     if (!fWhereClause.empty())
         oss << fWhereClause;
