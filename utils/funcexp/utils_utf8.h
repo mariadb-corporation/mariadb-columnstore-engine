@@ -75,6 +75,8 @@ std::string idb_setlocale()
     }
 
     char* pLoc = setlocale(LC_ALL, systemLang.c_str());
+    // MCOL-1559 also set the C++ locale
+    std::locale::global(std::locale(pLoc));
 
     if (pLoc == NULL)
     {
@@ -131,78 +133,40 @@ int idb_strcoll(const char* str1, const char* str2)
 }
 
 // MCOL-1559 Add a trimmed version of strcoll
-// We want to compare str1 and str2 ignoring any trailing whitespace
-// without making a copy of the strings (performance hit).
-// I can't find any library that does this while paying attention to
-// Locale. string::compare can be used to compare substrings, but
-// it's a byte by byte compare.
-// We find the last real character, and if a space is following, we
-// temporarily replace it with a NULL, do the compare, and restore the
-// original value to that spot. 
-// WARNING: This is not thread safe. It temporarily modifies the
-// strings and assumes it is free to do so.
+// The intent here is to make no copy of the original strings and
+// not modify them, so we can't use trim to deal with the spaces.
 inline
 int idb_strtrimcoll(const std::string& str1, const std::string& str2)
 {
-    const std::string whitespaces (" \t\f\v\n\r");
-    int rtn = 0;
-    char orig1;
-    char orig2;
-    char* s1 = NULL;
-    char* s2 = NULL;
-
-    // Set found1 to the first whitespace char in str1
+    const std::string whitespaces (" ");
+    const char* s1 = str1.c_str();
+    const char* s2 = str2.c_str();
+    // Set found1 to the last non-whitespace char in str1
     std::size_t found1 = str1.find_last_not_of(whitespaces);
-    if (found1 == std::string::npos) // Either the string is empty or all whitespace.
-    {
-        if (strlen(str1) > 0) // Is all whitespace
-            found1 = 0;       // First whitespace position
-    }
-    else
-    {
-        if (strlen(str1) > found1+1)
-            ++found1; // move to the first whitespace position
-        else
-            found1 = std::string::npos; // No trailing whitespace
-    }
-    // Save the value at found1 and set to NULL
-    if (found1 != std::string::npos)
-    {
-        s1 = &const_cast<std::string&>(str1)[found1];
-        orig1 = *s1;
-        *s1 = 0;
-    }
-
     // Set found2 to the first whitespace char in str2
     std::size_t found2 = str2.find_last_not_of(whitespaces);
-    if (found2 == std::string::npos) // Either the string is empty or all whitespace.
-    {
-        if (strlen(str2) > 0) // Is all whitespace
-            found2 = 0;       // First whitespace position
-    }
-    else
-    {
-        if (strlen(str2) > found2+1)
-            ++found2; // move to the first whitespace position
-        else
-            found2 = std::string::npos; // No trailing whitespace
-    }
-    // Save the value at found2 and set to NULL
-    if (found2 != std::string::npos)
-    {
-        s2 = &const_cast<std::string&>(str2)[found2];
-        orig2 = *s2;
-        *s2 = 0;
-    }
-        
-    // Compare the trimmed strings
-    rtn = idb_strcoll(str1.c_str(), str2.c_str());
 
-    // Restore the whitespace
-    if (s1)
-        *s1 = orig1;
-    if (s2)
-        *s2 = orig2;
+     // Are both strings empty or all whitespace?
+    if (found1 == std::string::npos && found2 == std::string::npos)
+    {
+        return 0; // they match
+    }
+    // If str1 is empty or all spaces
+    if (found1 == std::string::npos && found2 != std::string::npos)
+    {
+        return -1;
+    }
+    // If str2 is empty or all spaces
+    if (found1 != std::string::npos && found2 == std::string::npos)
+    {
+        return 1;
+    }
+
+    // Compare the (trimmed) strings
+    std::locale loc;
+    const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+    int rtn = coll.compare(s1, s1+found1+1, s2, s2+found2+1);
+//    return coll.compare(s1, s1+found1, s2, s2+found2);
     return rtn;
 }
 

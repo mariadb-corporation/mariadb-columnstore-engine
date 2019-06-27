@@ -1635,6 +1635,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         string constval(cc->constval());
+        // Because, on a filter, we want to compare ignoring trailing spaces
+//        boost::algorithm::trim_right(constval);
 
 
         CalpontSystemCatalog::OID dictOid = 0;
@@ -2770,7 +2772,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                         cop = COMPARE_NIL;
 
                     string value = cc->constval();
-
+                    // Because, on a filter, we want to compare ignoring trailing spaces
+//                    boost::algorithm::trim_right(value);
 
                     pds->addFilter(cop, value);
                 }
@@ -2853,7 +2856,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                         cop = COMPARE_NIL;
 
                     string value = cc->constval();
-
+                    // Because, on a filter, we want to compare ignoring trailing spaces
+//                    boost::algorithm::trim_right(value);
 
                     pds->addFilter(cop, value);
                 }
@@ -2959,7 +2963,6 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     int8_t cop = op2num(sop);
                     int64_t value = 0;
                     string constval = cc->constval();
-
 
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;

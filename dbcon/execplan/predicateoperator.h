@@ -466,6 +466,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return false;
 
             return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+//            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
 
         }
 
