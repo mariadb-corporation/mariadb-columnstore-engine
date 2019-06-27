@@ -4,7 +4,6 @@
 
 #include "Downloader.h"
 #include "SMLogging.h"
-#include "Synchronizer.h"
 #include "Replicator.h"
 
 #include <string>
@@ -27,6 +26,7 @@ class Cache : public boost::noncopyable
         virtual ~Cache();
         
         void read(const std::vector<std::string> &keys);
+        void doneReading(const std::vector<std::string> &keys);
         bool exists(const std::string &key) const;
         void exists(const std::vector<std::string> &keys, std::vector<bool> *out) const;
         void newObject(const std::string &key, size_t size);
@@ -94,7 +94,7 @@ class Cache : public boost::noncopyable
         typedef std::unordered_set<M_LRU_element_t, KeyHasher, KeyEquals> M_LRU_t;
         M_LRU_t m_lru;   // the LRU entries as a hash table
         
-        /* The do-not-evict list stuff.  Unused at the moment for simplicity. */
+        /* The do-not-evict list stuff. */
         struct DNEElement
         {
             DNEElement(const LRU_t::iterator &);
@@ -116,6 +116,7 @@ class Cache : public boost::noncopyable
         DNE_t doNotEvict;
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
+        boost::condition readyToDelete;
         
         // the to-be-deleted set.  Elements removed from the LRU but not yet deleted will be here.
         // Elements are inserted and removed by makeSpace().  If read() references a file that is in this,
@@ -127,8 +128,6 @@ class Cache : public boost::noncopyable
 
         typedef std::set<LRU_t::iterator, TBDLess> TBD_t;
         TBD_t toBeDeleted;
-        
-        
         
         mutable boost::mutex lru_mutex;   // protects the main cache structures & the do-not-evict set
 };

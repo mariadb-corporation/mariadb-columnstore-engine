@@ -178,6 +178,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         }
         else if (errno != ENOENT)
         {
+            cache->doneReading(keys);
             int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
                 filename.c_str(), strerror_r(l_errno, buf, 80));
@@ -190,6 +191,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         fd = ::open(filename.c_str(), O_RDONLY);
         if (fd < 0)
         {
+            cache->doneReading(keys);
             int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
                 filename.c_str(), strerror_r(l_errno, buf, 80));
@@ -231,6 +233,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
                 &data[count], thisOffset, thisLength);
         if (err) 
         {
+            cache->doneReading(keys);
             if (count == 0)
                 return -1;
             else
@@ -240,6 +243,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         count += thisLength;
     }
     
+    cache->doneReading(keys);
     // all done
     return count;
 }

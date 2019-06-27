@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <iostream>
 
+#include "SMLogging.h"
+
 using namespace std;
 
 namespace
@@ -59,6 +61,7 @@ Config::Config() : die(false)
         if (boost::filesystem::exists(paths[i] + "/storagemanager.cnf"))
         {  
             filename = paths[i] + "/storagemanager.cnf";
+            SMLogging::get()->log(LOG_DEBUG, "Using the config file found at %s", filename.c_str());
             break;
         }
     }
