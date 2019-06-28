@@ -3,6 +3,7 @@
 #include "IOCoordinator.h"
 #include "SMLogging.h"
 #include "Utilities.h"
+#include "Cache.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -134,6 +135,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         assert((uint) err == header.length() + 1);
         if (err <= 0)
             return err;
+        Cache::get()->newJournalEntry(header.length() + 1);
     }
     else
     {
