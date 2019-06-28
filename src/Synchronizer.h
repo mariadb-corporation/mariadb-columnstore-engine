@@ -30,6 +30,7 @@ class Synchronizer : public boost::noncopyable
         // these take keys as parameters, not full path names, ex, pass in '12345' not
         // 'cache/12345'.
         void newJournalEntry(const std::string &key);
+        void newJournalEntries(const std::vector<std::string> &keys);
         void newObjects(const std::vector<std::string> &keys);
         void deletedObjects(const std::vector<std::string> &keys);        
         void flushObject(const std::string &key);
@@ -41,6 +42,7 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
+        void _newJournalEntry(const std::string &key);
         void process(std::list<std::string>::iterator key);
         void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
@@ -85,7 +87,6 @@ class Synchronizer : public boost::noncopyable
         boost::thread syncThread;
         const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
         void periodicSync();
-        
         
         SMLogging *logger;
         Cache *cache;

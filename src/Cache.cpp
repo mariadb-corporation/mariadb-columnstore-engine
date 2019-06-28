@@ -2,6 +2,7 @@
 #include "Cache.h"
 #include "Config.h"
 #include "Downloader.h"
+#include "Synchronizer.h"
 #include <iostream>
 #include <syslog.h>
 #include <boost/filesystem.hpp>
@@ -120,7 +121,6 @@ Cache::~Cache()
 
 void Cache::populate()
 {
-    Synchronizer *sync = Synchronizer::get();
     bf::directory_iterator dir(prefix);
     bf::directory_iterator dend;
     while (dir != dend)
@@ -147,9 +147,7 @@ void Cache::populate()
         if (bf::is_regular_file(p))
         {
             if (p.extension() == ".journal") 
-            {
                 currentCacheSize += bf::file_size(*dir);
-                sync->newJournalEntry(p.stem());
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
         }
@@ -257,7 +255,7 @@ void Cache::read(const vector<string> &keys)
             TBD_t::iterator tbd_it = toBeDeleted.find(mit->lit);
             if (tbd_it != toBeDeleted.end())
             {
-                cout << "Saved one from being deleted" << endl;
+                //cout << "Saved one from being deleted" << endl;
                 toBeDeleted.erase(tbd_it);
             }
         }
@@ -297,7 +295,7 @@ void Cache::read(const vector<string> &keys)
     }
     
     // fix cache size
-    _makeSpace(sum_sizes);
+    //_makeSpace(sum_sizes);
     currentCacheSize += sum_sizes;
 }
 
@@ -310,7 +308,12 @@ void Cache::doneReading(const vector<string> &keys)
         if (it != m_lru.end())
             removeFromDNE(it->lit);
     }
-    readyToDelete.notify_all();
+    _makeSpace(0);
+}
+
+void Cache::doneWriting()
+{
+    makeSpace(0);
 }
 
 Cache::DNEElement::DNEElement(const LRU_t::iterator &k) : key(k), refCount(1)
@@ -369,7 +372,7 @@ void Cache::newObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(m_lru.find(key) == m_lru.end());
-    _makeSpace(size);
+    //_makeSpace(size);
     lru.push_back(key);
     LRU_t::iterator back = lru.end();
     m_lru.insert(--back);
@@ -379,7 +382,7 @@ void Cache::newObject(const string &key, size_t size)
 void Cache::newJournalEntry(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    _makeSpace(size);
+    //_makeSpace(size);
     currentCacheSize += size;
 }
 
@@ -432,7 +435,9 @@ void Cache::_makeSpace(size_t size)
     ssize_t thisMuch = currentCacheSize + size - maxCacheSize;
     if (thisMuch <= 0)
         return;
-
+    if (thisMuch > (ssize_t) currentCacheSize)
+        thisMuch = currentCacheSize;
+    
     LRU_t::iterator it;
     while (thisMuch > 0 && !lru.empty())
     {
@@ -447,10 +452,8 @@ void Cache::_makeSpace(size_t size)
         }
         if (it == lru.end())
         {
-            // nothing can be deleted, wait for something to change
-            cout << "nothing can be deleted, waiting" << endl;
-            readyToDelete.wait(lru_mutex);
-            continue;
+            // nothing can be deleted right now
+            return;
         }
         
         
@@ -492,8 +495,17 @@ void Cache::_makeSpace(size_t size)
             lru.erase(it);
             size_t newSize = bf::file_size(cachedFile);
             replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
-            currentCacheSize -= newSize;
-            thisMuch -= newSize;
+            if (newSize < currentCacheSize)
+            {
+                currentCacheSize -= newSize;
+                thisMuch -= newSize;
+            }
+            else
+            {
+                logger->log(LOG_WARNING, "Cache::makeSpace(): accounting error.  Almost wrapped currentCacheSize on flush.");
+                currentCacheSize = 0;
+                thisMuch = 0;
+            }
         }
     }
 }
@@ -511,7 +523,7 @@ void Cache::rename(const string &oldKey, const string &newKey, ssize_t sizediff)
     auto lit = it->lit;
     m_lru.erase(it);
     int refCount = 0;
-    auto dne_it = doNotEvict.find(it->lit);
+    auto dne_it = doNotEvict.find(lit);
     if (dne_it != doNotEvict.end())
     {
         refCount = dne_it->refCount;
@@ -544,12 +556,11 @@ int Cache::ifExistsThenDelete(const string &key)
 
     boost::unique_lock<boost::mutex> s(lru_mutex);
     bool objectExists = false;
-    bool journalExists = bf::exists(journalPath);
+   
     
     auto it = m_lru.find(key);
     if (it != m_lru.end())
     {
-        // let makeSpace() delete it if it's already being flushed
         if (toBeDeleted.find(it->lit) == toBeDeleted.end())
         {
             doNotEvict.erase(it->lit);
@@ -557,8 +568,11 @@ int Cache::ifExistsThenDelete(const string &key)
             m_lru.erase(it);
             objectExists = true;
         }
+        else  // let makeSpace() delete it if it's already in progress
+            return 0;
     }
-    //assert(objectExists == bf::exists(cachedPath));
+    bool journalExists = bf::exists(journalPath);
+    assert(objectExists == bf::exists(cachedPath));
     
     size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
     //size_t objectSize = (objectExists ? MetadataFile::getLengthFromKey(key) : 0);

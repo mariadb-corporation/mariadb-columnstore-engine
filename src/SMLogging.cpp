@@ -46,7 +46,7 @@ void SMLogging::log(int priority,const char *format, ...)
     #ifdef DEBUG
     va_list args2;
     va_copy(args2, args);
-    vprintf(format, args2);
+    vfprintf(stderr, format, args2);
     printf("\n");
     #endif
     vsyslog(priority, format, args);

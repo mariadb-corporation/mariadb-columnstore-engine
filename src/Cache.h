@@ -17,20 +17,26 @@
 namespace storagemanager
 {
 
-class Synchronizer;
-
 class Cache : public boost::noncopyable
 {
     public:
         static Cache *get();
         virtual ~Cache();
         
+        //reading fcns
+        // read() marks objects to be read s.t. they do not get flushed.
+        // after reading them, unlock the 'logical file', and call doneReading().
         void read(const std::vector<std::string> &keys);
         void doneReading(const std::vector<std::string> &keys);
         bool exists(const std::string &key) const;
         void exists(const std::vector<std::string> &keys, std::vector<bool> *out) const;
+        
+        // writing fcns
+        // new*() fcns tell the cache data was added.  After writing a set of objects,
+        // unlock the 'logical file', and call doneWriting().
         void newObject(const std::string &key, size_t size);
         void newJournalEntry(size_t size);
+        void doneWriting();
         void deletedObject(const std::string &key, size_t size);
         void deletedJournal(size_t size);
         
@@ -116,7 +122,6 @@ class Cache : public boost::noncopyable
         DNE_t doNotEvict;
         void addToDNE(const LRU_t::iterator &key);
         void removeFromDNE(const LRU_t::iterator &key);
-        boost::condition readyToDelete;
         
         // the to-be-deleted set.  Elements removed from the LRU but not yet deleted will be here.
         // Elements are inserted and removed by makeSpace().  If read() references a file that is in this,

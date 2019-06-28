@@ -2,7 +2,6 @@
 #include "Replicator.h"
 #include "IOCoordinator.h"
 #include "SMLogging.h"
-#include "Cache.h"
 #include "Utilities.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -122,7 +121,6 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     int version = 1;
     string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
     uint64_t thisEntryMaxOffset = (offset + length - 1);
-    Cache *cache = Cache::get();  // need to init sync here to break circular dependency...
 
     bool exists = boost::filesystem::exists(journalFilename);
     OPEN(journalFilename.c_str(), (exists ? O_RDWR : O_WRONLY | O_CREAT))
@@ -132,7 +130,6 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         // create new journal file with header
         //OPEN(journalFilename.c_str(), O_WRONLY | O_CREAT);
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
-        cache->makeSpace(header.size());
         err = ::write(fd, header.c_str(), header.length() + 1);
         assert((uint) err == header.length() + 1);
         if (err <= 0)

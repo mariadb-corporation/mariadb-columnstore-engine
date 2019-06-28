@@ -82,10 +82,8 @@ enum OpFlags
     NEW_OBJECT = 0x4,
 };
 
-void Synchronizer::newJournalEntry(const string &key)
+void Synchronizer::_newJournalEntry(const string &key)
 {
-    boost::unique_lock<boost::mutex> s(mutex);
-    
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
     {
@@ -94,6 +92,19 @@ void Synchronizer::newJournalEntry(const string &key)
     }
     //makeJob(key);
     pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(JOURNAL));
+}
+    
+void Synchronizer::newJournalEntry(const string &key)
+{
+    boost::unique_lock<boost::mutex> s(mutex);
+    _newJournalEntry(key);   
+}
+
+void Synchronizer::newJournalEntries(const vector<string> &keys)
+{
+    boost::unique_lock<boost::mutex> s(mutex);
+    for (const string &key : keys)
+        _newJournalEntry(key);
 }
 
 void Synchronizer::newObjects(const vector<string> &keys)

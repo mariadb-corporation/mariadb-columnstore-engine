@@ -1,7 +1,7 @@
 
 #include "IOCoordinator.h"
 #include "MetadataFile.h"
-#include "Utilities.h"
+#include "Synchronizer.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -178,6 +178,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         }
         else if (errno != ENOENT)
         {
+            fileLock.unlock();
             cache->doneReading(keys);
             int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
@@ -191,6 +192,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         fd = ::open(filename.c_str(), O_RDONLY);
         if (fd < 0)
         {
+            fileLock.unlock();
             cache->doneReading(keys);
             int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
@@ -221,7 +223,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         off_t thisOffset = (count == 0 ? offset - object.offset : 0);
         // This checks and returns if the read is starting past EOF
         if (thisOffset >= (off_t) object.length)
-            return count;
+            goto out;
         // if this is the last object, the length of the read is length - count,
         // otherwise it is the length of the object - starting offset
         
@@ -233,6 +235,7 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
                 &data[count], thisOffset, thisLength);
         if (err) 
         {
+            fileLock.unlock();
             cache->doneReading(keys);
             if (count == 0)
                 return -1;
@@ -243,6 +246,8 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         count += thisLength;
     }
     
+out:
+    fileLock.unlock();
     cache->doneReading(keys);
     // all done
     return count;
@@ -254,7 +259,10 @@ int IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offse
     const char *filename = p.string().c_str();
     
     ScopedWriteLock lock(this, filename);
-    return _write(filename, data, offset, length);
+    int ret = _write(filename, data, offset, length);
+    lock.unlock();
+    cache->doneWriting();
+    return ret;
 }
 
 int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length)
@@ -298,7 +306,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
                 writeLength = min(objectSize,dataRemaining);
                 objectOffset = 0;
             }
-            cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],objectOffset,writeLength);
             assert((uint) err == writeLength);
@@ -316,7 +324,6 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
 
             if ((writeLength + objectOffset) > i->length)
                 metadata.updateEntryLength(i->offset, (writeLength + objectOffset));
-
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
@@ -349,7 +356,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
         // writeLength is the data length passed to write()
         // objectOffset is 0 unless the write starts beyond the end of data
         // in that case need to add the null data to cachespace
-        cache->makeSpace(writeLength + objectOffset);
+        //cache->makeSpace(writeLength + objectOffset);
 
         metadataObject newObject = metadata.addMetadataObject(filename,(writeLength + objectOffset));
 
@@ -373,7 +380,6 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
         count += writeLength;
         dataRemaining -= writeLength;
     }
-
     synchronizer->newObjects(newObjectKeys);
 
     metadata.writeMetadata(filename);
@@ -419,7 +425,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
             // figure out how much data to write to this object
             writeLength = min((objectSize - i->length),dataRemaining);
 
-            cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             err = replicator->addJournalEntry(i->key.c_str(),&data[count],i->length,writeLength);
             assert((uint) err == writeLength);
@@ -428,14 +434,13 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
                 metadata.updateEntryLength(i->offset, (count + i->length));
                 metadata.writeMetadata(filename);
                 logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
-                return count;
+                goto out;
             }
             metadata.updateEntryLength(i->offset, (writeLength + i->length));
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             synchronizer->newJournalEntry(i->key);
-
             count += writeLength;
             dataRemaining -= writeLength;
         }
@@ -453,7 +458,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
         //add a new metaDataObject
         writeLength = min(objectSize,dataRemaining);
 
-        cache->makeSpace(writeLength);
+        //cache->makeSpace(writeLength);
         // add a new metadata object, this will get a new objectKey NOTE: probably needs offset too
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
 
@@ -466,7 +471,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
             metadata.updateEntryLength(newObject.offset, (count));
             metadata.writeMetadata(filename);
             logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
-            return count;
+            goto out;
             //log error and abort
         }
         cache->newObject(newObject.key,writeLength);
@@ -475,12 +480,14 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
         count += writeLength;
         dataRemaining -= writeLength;
     }
-
     synchronizer->newObjects(newObjectKeys);
-
     metadata.writeMetadata(filename);
     
+    // had to add this hack to prevent deadlock
+out:
+    // need to release the file lock before calling the cache fcns.
     lock.unlock();
+    cache->doneWriting();
     
     return count;
 }
@@ -581,6 +588,8 @@ int IOCoordinator::truncate(const char *_path, size_t newSize)
     {
         uint8_t zero = 0;
         err = _write(path, &zero, newSize - 1, 1);
+        lock.unlock();
+        cache->doneWriting();
         if (err < 0)
             return -1;
         return 0;

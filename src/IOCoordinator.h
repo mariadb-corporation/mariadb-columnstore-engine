@@ -17,6 +17,7 @@
 #include "SMLogging.h"
 #include "RWLock.h"
 #include "Replicator.h"
+#include "Utilities.h"
 
 namespace storagemanager
 {
@@ -85,6 +86,7 @@ class IOCoordinator : public boost::noncopyable
         
         void remove(const boost::filesystem::path &path);
         void deleteMetaFile(const boost::filesystem::path &file);
+        
         int _write(const char *filename, const uint8_t *data, off_t offset, size_t length);
         
         int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 

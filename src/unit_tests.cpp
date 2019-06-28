@@ -15,6 +15,7 @@
 #include "Replicator.h"
 #include "S3Storage.h"
 #include "Utilities.h"
+#include "Synchronizer.h"
 
 #include <iostream>
 #include <stdlib.h>
