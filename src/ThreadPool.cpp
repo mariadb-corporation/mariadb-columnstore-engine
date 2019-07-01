@@ -7,7 +7,7 @@ using namespace std;
 namespace storagemanager
 {
 
-ThreadPool::ThreadPool() : maxThreads(1000), die(false), processQueueOnExit(false), threadsWaiting(0)
+ThreadPool::ThreadPool() : maxThreads(1000), die(false), processQueueOnExit(true), threadsWaiting(0)
 {
     // Using this ctor effectively limits the # of threads here to the natural limit of the 
     // context it's used in.  In the CRP class for example, the # of active threads would be 

@@ -90,9 +90,9 @@ Cache::Cache() : currentCacheSize(0)
         throw e;
     }
     //cout << "Cache got prefix " << prefix << endl;
-    
-    downloader.setDownloadPath(prefix.string());
-    downloader.useThisLock(&lru_mutex);
+    downloader.reset(new Downloader());
+    downloader->setDownloadPath(prefix.string());
+    downloader->useThisLock(&lru_mutex);
     
     stmp = conf->getValue("ObjectStorage", "journal_path");
     if (stmp.empty())
@@ -191,7 +191,7 @@ void Cache::read(const vector<string> &keys)
     vector<int> dl_errnos;
     vector<size_t> sizes;
     if (!keysToFetch.empty())
-        downloader.download(keysToFetch, &dl_errnos, &sizes, lru_mutex);
+        downloader->download(keysToFetch, &dl_errnos, &sizes, lru_mutex);
     
     size_t sum_sizes = 0;
     for (size_t &size : sizes)
@@ -266,7 +266,7 @@ void Cache::read(const vector<string> &keys)
         return;
     
     assert(s.owns_lock());
-    downloader.download(keysToFetch, &dlErrnos, &dlSizes);
+    downloader->download(keysToFetch, &dlErrnos, &dlSizes);
     assert(s.owns_lock());
     
     size_t sum_sizes = 0;
@@ -612,6 +612,12 @@ void Cache::reset()
     for (dir = bf::directory_iterator(journalPrefix); dir != dend; ++dir)
         bf::remove_all(dir->path());
     currentCacheSize = 0;
+}
+
+void Cache::shutdown()
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    downloader.reset();
 }
 
 /* The helper classes */

@@ -56,7 +56,8 @@ Synchronizer::Synchronizer() : maxUploads(0)
         
     journalPath = cache->getJournalPath();    
     cachePath = cache->getCachePath();
-    threadPool.setMaxThreads(maxUploads);
+    threadPool.reset(new ThreadPool());
+    threadPool->setMaxThreads(maxUploads);
     die = false;
     syncThread = boost::thread([this] () { this->periodicSync(); });
 }
@@ -67,11 +68,10 @@ Synchronizer::~Synchronizer()
         or save the list it's working on.....
         For milestone 2, this will do the safe thing and finish working first.
         Later we can get fancy. */
-    boost::unique_lock<boost::mutex> lock(mutex);
+    forceFlush();
     die = true;
-    syncThread.interrupt();
-    lock.unlock();
     syncThread.join();
+    threadPool.reset();
 }
 
 enum OpFlags
@@ -224,7 +224,7 @@ void Synchronizer::periodicSync()
             //logger->log(LOG_DEBUG,"Synchronizer Force Flush.");
         }
         lock.lock();
-        //cout << "Sync'ing " << pendingOps.size() << " objects" << " queue size is " << 
+        //cout << "Sync'ing " << pendingOps.size() << " objects" << " queue size is " <<
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
             makeJob(job.first);
@@ -243,7 +243,7 @@ void Synchronizer::makeJob(const string &key)
     objNames.push_front(key);
     
     boost::shared_ptr<Job> j(new Job(this, objNames.begin()));
-    threadPool.addJob(j);
+    threadPool->addJob(j);
 }
 
 void Synchronizer::process(list<string>::iterator name)

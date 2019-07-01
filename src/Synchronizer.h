@@ -72,7 +72,7 @@ class Synchronizer : public boost::noncopyable
         };
         
         uint maxUploads;
-        ThreadPool threadPool;
+        boost::scoped_ptr<ThreadPool> threadPool;
         std::map<std::string, boost::shared_ptr<PendingOps> > pendingOps;
         std::map<std::string, boost::shared_ptr<PendingOps> > opsInProgress;
         

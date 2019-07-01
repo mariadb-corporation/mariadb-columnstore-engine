@@ -60,9 +60,10 @@ int SessionManager::start()
     int pollTimeout = -1;
     int socketIncr;
     int current_size = 0;
-    bool running = true;
+    int prevNFDS = 0;
 
-    logger->log(LOG_INFO,"SessionManager starting...");
+    bool shutdown = false;
+    bool running = true;
 
     if (pipe(socketCtrl)==-1)
     {
@@ -156,7 +157,7 @@ int SessionManager::start()
                 {
                     //logger->log(LOG_DEBUG,"Listening socket is readable");
                     incomingSockfd = 0;
-                    while (incomingSockfd != -1)
+                    while (incomingSockfd != -1 && !shutdown)
                     {
                         if (nfds >= MAX_SM_SOCKETS)
                             break; // try to free up some room
@@ -167,7 +168,7 @@ int SessionManager::start()
                             if (errno != EWOULDBLOCK)
                             {
                                 logger->log(LOG_CRIT,"accept() failed: %s", strerror(errno));
-                                running = false;
+                                shutdown = true;
                             }
                             break;
                         }
@@ -200,8 +201,13 @@ int SessionManager::start()
                             {
                                 if(fds[i].fd == socket)
                                 {
-                                    //logger->log(LOG_DEBUG,"returned socket %i at index %i", fds[i].fd,i);
-                                    fds[i].events = POLLIN;
+                                    if (shutdown)
+                                    {
+                                        logger->log(LOG_DEBUG,"Shutdown in progress, closed socket %i at index %i", fds[i].fd,i);                                       
+                                        close(socket);
+                                        break;
+                                    }
+                                    fds[i].events = (POLLIN | POLLPRI);
                                     break;
                                 }
                             }
@@ -223,6 +229,10 @@ int SessionManager::start()
                                     break;
                                 }
                             }
+                            break;
+                        case SHUTDOWN:
+                            logger->log(LOG_DEBUG,"Shutdown StorageManager...");
+                            shutdown = true;
                             break;
                         default:
                             break;
@@ -364,8 +374,15 @@ int SessionManager::start()
         /* get rid of fds == -1 */
         int i, j;
         for (i = 2; i < nfds; ++i)
+        {
+            if (shutdown && fds[i].events == (POLLIN | POLLPRI))
+            {
+                close(fds[i].fd);
+                fds[i].fd = -1;
+            }
             if (fds[i].fd == -1)
                 break;
+        }
         for (j = i + 1; j < nfds; ++j)
         {
             if (fds[j].fd != -1)
@@ -376,7 +393,19 @@ int SessionManager::start()
             }
         }
         nfds = i;
+        
+        if(shutdown)
+        {
+            //if (prevNFDS != nfds)
+            //    logger->log(LOG_CRIT,"StorageManager shutting down, nfds = %i",nfds);
+            //prevNFDS = nfds;
+            if (nfds <= 2)
+                running = false;
+        }
     }
+    
+    //Shutdown Done
+    crp->shutdown();
 
     return -1;
 }
@@ -411,6 +440,19 @@ void SessionManager::socketError(int socket)
         return;
     }
     err = ::write(socketCtrl[1], &socket, sizeof(socket));
+    if (err <= 0)
+    {
+        return;
+    }
+}
+
+void SessionManager::shutdownSM(int sig){
+    boost::mutex::scoped_lock s(ctrlMutex);
+    SMLogging* logger = SMLogging::get();
+    logger->log(LOG_INFO,"SessionManager Caught Signal %i",sig);
+    int err;
+    uint8_t ctrlCode = SHUTDOWN;
+    err = ::write(socketCtrl[1], &ctrlCode, 1);
     if (err <= 0)
     {
         return;

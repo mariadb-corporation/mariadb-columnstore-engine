@@ -37,6 +37,11 @@ void ClientRequestProcessor::processRequest(int sock, uint len)
     threadPool.addJob(t);
 }
 
+void ClientRequestProcessor::shutdown()
+{
+    delete crp;
+}
+
 }
 
 

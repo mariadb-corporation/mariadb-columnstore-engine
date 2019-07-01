@@ -6,6 +6,7 @@
 #include "ClientRequestProcessor.h"
 #include "messageFormat.h"
 
+#include <signal.h>
 #include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
 #include <tr1/unordered_map>
@@ -16,7 +17,8 @@ namespace storagemanager
 
 enum sessionCtrl {
     ADDFD,
-    REMOVEFD
+    REMOVEFD,
+    SHUTDOWN
 };
 
 #define MAX_SM_SOCKETS 200
@@ -38,6 +40,7 @@ public:
     void returnSocket(int socket);
     void socketError(int socket);
     void CRPTest(int socket,uint length);
+    void shutdownSM(int sig);
 
 private:
     SessionManager();

@@ -59,6 +59,8 @@ class Cache : public boost::noncopyable
         const boost::filesystem::path &getJournalPath();
         // this will delete everything in the cache and journal paths, and empty all Cache structures.
         void reset();
+        void shutdown();
+
     private:
         Cache();
         
@@ -67,7 +69,7 @@ class Cache : public boost::noncopyable
         size_t maxCacheSize;
         size_t objectSize;
         size_t currentCacheSize;
-        Downloader downloader;
+        boost::scoped_ptr<Downloader> downloader;
         Replicator *replicator;
         SMLogging *logger;
         

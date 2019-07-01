@@ -20,23 +20,39 @@ using namespace std;
 
 using namespace storagemanager;
 
+bool signalCaught = false;
+
 void printCacheUsage(int sig)
 {
     cout << "Current cache size = " << Cache::get()->getCurrentCacheSize() << endl;
     cout << "Cache element count = " << Cache::get()->getCurrentCacheElementCount() << endl;
 }
 
+void shutdownSM(int sig)
+{
+    if (!signalCaught)
+        (SessionManager::get())->shutdownSM(sig);
+    signalCaught = true;
+}
+
 int main(int argc, char** argv)
 {
 
     /* Instantiate objects to have them verify config settings before continuing */
-    IOCoordinator::get();
-    Cache::get();
-    Synchronizer::get();
-    Replicator::get();
+    IOCoordinator* ioc = IOCoordinator::get();
+    Cache* cache = Cache::get();
+    Synchronizer* sync = Synchronizer::get();
+    Replicator* rep = Replicator::get();
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
+
+    for (int i=0; i<SIGRTMAX; i++)
+    {
+        sa.sa_handler = shutdownSM;
+        sigaction(i, &sa, NULL);
+    }
+
     sa.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sa, NULL);
  
@@ -51,8 +67,16 @@ int main(int argc, char** argv)
 
     SessionManager* sm = SessionManager::get();
 
+
+
     ret = sm->start();
 
+    cache->shutdown();
+    delete sync;
+    delete cache;
+    delete ioc;
+    delete rep;
+    logger->log(LOG_INFO,"StorageManager Shutdown Complete.");
 
     return ret;
 }

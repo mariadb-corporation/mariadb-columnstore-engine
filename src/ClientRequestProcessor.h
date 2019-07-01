@@ -16,6 +16,7 @@ class ClientRequestProcessor : public boost::noncopyable
         virtual ~ClientRequestProcessor();
 
         void processRequest(int sock, uint len);
+        void shutdown();
 
     private:
         ClientRequestProcessor();
