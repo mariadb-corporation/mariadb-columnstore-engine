@@ -91,7 +91,7 @@ int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::OPEN << mode << absfilename;
@@ -108,7 +108,7 @@ ssize_t SMComm::pread(const string &filename, void *buf, const size_t count, con
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::READ << count << offset << absfilename;
@@ -125,7 +125,7 @@ ssize_t SMComm::pwrite(const string &filename, const void *buf, const size_t cou
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::WRITE << count << offset << absfilename;
@@ -144,7 +144,7 @@ ssize_t SMComm::append(const string &filename, const void *buf, const size_t cou
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
 
     *command << (uint8_t) storagemanager::APPEND << count << absfilename;
@@ -163,7 +163,7 @@ int SMComm::unlink(const string &filename)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::UNLINK << absfilename;
@@ -178,7 +178,7 @@ int SMComm::stat(const string &filename, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::STAT << absfilename;
@@ -195,7 +195,7 @@ int SMComm::truncate(const string &filename, const off64_t length)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename(getAbsFilename(filename));
     
     *command << (uint8_t) storagemanager::TRUNCATE << length << absfilename;
@@ -210,7 +210,7 @@ int SMComm::listDirectory(const string &path, list<string> *entries)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string abspath(getAbsFilename(path));
     
     *command << (uint8_t) storagemanager::LIST_DIRECTORY << abspath;
@@ -235,7 +235,7 @@ int SMComm::ping()
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     
     *command << (uint8_t) storagemanager::PING;
     err = sockets.send_recv(*command, response);
@@ -249,7 +249,7 @@ int SMComm::copyFile(const string &file1, const string &file2)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
-    int err;
+    ssize_t err;
     string absfilename1(getAbsFilename(file1));
     string absfilename2(getAbsFilename(file2));
     

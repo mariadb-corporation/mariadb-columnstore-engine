@@ -90,7 +90,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     uint length = in.length();
     int sock = -1;
     const uint8_t *inbuf = in.buf();
-    int err = 0;
+    ssize_t err = 0;
     
     while (sock < 0)
     {
