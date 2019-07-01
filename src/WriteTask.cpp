@@ -49,7 +49,7 @@ bool WriteTask::run()
     logger->log(LOG_DEBUG,"write filename %s offset %i count %i.",cmd->filename,cmd->offset,cmd->count);
     #endif
             
-    size_t readCount = 0, writeCount = 0;
+    ssize_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
     uint bufsize = min(1 << 20, cmd->count);   // 1 MB
     databuf.resize(bufsize);
@@ -61,7 +61,7 @@ bool WriteTask::run()
         check_error("WriteTask read data", false);
         readCount += toRead;
         uint writePos = 0;
-        int err;
+        ssize_t err;
         while (writeCount < readCount)
         {
             try 

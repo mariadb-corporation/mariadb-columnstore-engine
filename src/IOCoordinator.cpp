@@ -119,7 +119,7 @@ int IOCoordinator::loadObjectAndJournal(const char *objFilename, const char *jou
     return 0;
 }
 
-int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size_t length)
+ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size_t length)
 {
     /*
         This is a bit complex and verbose, so for the first cut, it will only return a partial
@@ -253,7 +253,7 @@ out:
     return count;
 }
 
-int IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
+ssize_t IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
 {
     bf::path p(_filename);
     const char *filename = p.string().c_str();
@@ -265,10 +265,10 @@ int IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offse
     return ret;
 }
 
-int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length)
+ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length)
 {
     int err = 0;
-    uint64_t count = 0;
+    ssize_t count = 0;
     uint64_t writeLength = 0;
     uint64_t dataRemaining = length;
     uint64_t objectOffset = 0;
@@ -387,13 +387,13 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     return count;
 }
 
-int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t length)
+ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t length)
 {
     bf::path p(_filename);
     const char *filename = p.string().c_str();
 
     int err;
-    size_t count = 0;
+    ssize_t count = 0;
     uint64_t writeLength = 0;
     uint64_t dataRemaining = length;
     vector<metadataObject> objects;

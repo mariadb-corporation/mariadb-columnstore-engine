@@ -35,7 +35,7 @@ struct sm_request {
 
 struct sm_response {
     sm_msg_header header;
-    int32_t returnCode;   // if < 0 it indicates an error, and payload contains a 4-byte errno value
+    ssize_t returnCode;   // if < 0 it indicates an error, and payload contains a 4-byte errno value
     uint8_t payload[];
 };
 

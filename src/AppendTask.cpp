@@ -31,7 +31,7 @@ bool AppendTask::run()
     SMLogging* logger = SMLogging::get();
     bool success;
     uint8_t cmdbuf[1024] = {0};
-    int err;
+    ssize_t err;
     
     success = read(cmdbuf, sizeof(append_cmd));
     check_error("AppendTask read", false);
@@ -49,7 +49,7 @@ bool AppendTask::run()
     logger->log(LOG_DEBUG,"append %d bytes to %s.",cmd->count,cmd->filename);
     #endif
     
-    size_t readCount = 0, writeCount = 0;
+    ssize_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
     uint bufsize = min(1 << 20, cmd->count);   // 1 MB
     databuf.resize(bufsize);

@@ -32,9 +32,9 @@ class IOCoordinator : public boost::noncopyable
 
         void willRead(const char *filename, off_t offset, size_t length);
         /* TODO: make read, write, append return a ssize_t */
-        int read(const char *filename, uint8_t *data, off_t offset, size_t length);
-        int write(const char *filename, const uint8_t *data, off_t offset, size_t length);
-        int append(const char *filename, const uint8_t *data, size_t length);
+        ssize_t read(const char *filename, uint8_t *data, off_t offset, size_t length);
+        ssize_t write(const char *filename, const uint8_t *data, off_t offset, size_t length);
+        ssize_t append(const char *filename, const uint8_t *data, size_t length);
         int open(const char *filename, int openmode, struct stat *out);
         int listDirectory(const char *filename, std::vector<std::string> *listing);
         int stat(const char *path, struct stat *out);
@@ -86,8 +86,8 @@ class IOCoordinator : public boost::noncopyable
         
         void remove(const boost::filesystem::path &path);
         void deleteMetaFile(const boost::filesystem::path &file);
-        
-        int _write(const char *filename, const uint8_t *data, off_t offset, size_t length);
+
+        ssize_t _write(const char *filename, const uint8_t *data, off_t offset, size_t length);
         
         int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
             uint8_t *data, off_t offset, size_t length) const;
