@@ -22,6 +22,7 @@ using namespace storagemanager;
 
 void printCacheUsage(int sig)
 {
+    Cache::get()->validateCacheSize();
     cout << "Current cache size = " << Cache::get()->getCurrentCacheSize() << endl;
     cout << "Cache element count = " << Cache::get()->getCurrentCacheElementCount() << endl;
 }

@@ -359,12 +359,13 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     
     const metadataObject *mdEntry;
     bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!entryExists)
+    if (!entryExists || key != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
     }
-    assert(key == mdEntry->key);
+    
+    //assert(key == mdEntry->key);  <-- This could fail b/c of truncation + a write/append before this job runs.
     
     err = cs->exists(key, &exists);
     if (err)
@@ -374,7 +375,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
 
     // TODO: should be safe to check with Cache instead of a file existence check
-    exists = bf::exists(cachePath / key);
+    exists = cache->exists(key);
     if (!exists)
     {
         logger->log(LOG_DEBUG, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
@@ -409,12 +410,12 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     const metadataObject *mdEntry;
     bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!metaExists)
+    if (!metaExists || key != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
     }
-    assert(key == mdEntry->key);
+    //assert(key == mdEntry->key);   <--- I suspect this can happen in a truncate + write situation + a deep sync queue
     
     bf::path oldCachePath = cachePath / key;
     string journalName = (journalPath/ (key + ".journal")).string();
@@ -431,7 +432,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             throw runtime_error(string("Synchronizer: cs->exists() failed: ") + strerror_r(errno, buf, 80));
         if (!existsOnCloud)
         {
-            if (bf::exists(oldCachePath))
+            if (cache->exists(key))
             {
                 logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal and does not exist in the cloud, calling "
                     "synchronize() instead.  Need to explain how this happens.", key.c_str());

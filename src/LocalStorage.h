@@ -27,8 +27,13 @@ class LocalStorage : public CloudStorage
 
     private:
         boost::filesystem::path prefix;
-        
         int copy(const boost::filesystem::path &sourceKey, const boost::filesystem::path &destKey);
+        
+        // stuff for faking the latency on cloud ops
+        bool fakeLatency;
+        uint64_t usecLatencyCap;
+        uint r_seed;
+        void addLatency();
 };
 
 }

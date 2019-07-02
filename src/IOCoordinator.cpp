@@ -150,7 +150,8 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
     vector<metadataObject> relevants = meta.metadataRead(offset, length);
     map<string, int> journalFDs, objectFDs;
     map<string, string> keyToJournalName, keyToObjectName;
-    vector<SharedCloser> fdMinders;
+    ScopedCloser fdMinders[relevants.size() * 2];
+    int mindersIndex = 0;
     char buf[80];
     
     // load them into the cache
@@ -174,7 +175,8 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         {
             keyToJournalName[key] = filename;
             journalFDs[key] = fd;
-            fdMinders.push_back(SharedCloser(fd));
+            fdMinders[mindersIndex++].fd = fd;
+            //fdMinders.push_back(SharedCloser(fd));
         }
         else if (errno != ENOENT)
         {
@@ -202,7 +204,8 @@ int IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, size
         }
         keyToObjectName[key] = filename;
         objectFDs[key] = fd;
-        fdMinders.push_back(SharedCloser(fd));
+        fdMinders[mindersIndex++].fd = fd;
+        //fdMinders.push_back(SharedCloser(fd));
     }
     //fileLock.unlock();
     
@@ -317,7 +320,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
                 // There's another block below that looks similar.  Also similar blocks in append().
                 if ((count + objectOffset) > i->length)
                     metadata.updateEntryLength(i->offset, (count + objectOffset));
-                metadata.writeMetadata(filename);
+                replicator->updateMetadata(filename, metadata);
                 logger->log(LOG_ERR,"IOCoordinator::write(): object failed to complete write, %u of %u bytes written.",count,length);
                 return count;
             }
@@ -368,7 +371,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
             // update metadataObject length to reflect what awas actually written
             if ((count + objectOffset) > newObject.length)
                 metadata.updateEntryLength(newObject.offset, (count + objectOffset));
-            metadata.writeMetadata(filename);
+            replicator->updateMetadata(filename, metadata);
             logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
             return count;
             //log error and abort
@@ -382,7 +385,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
     }
     synchronizer->newObjects(newObjectKeys);
 
-    metadata.writeMetadata(filename);
+    replicator->updateMetadata(filename, metadata);
 
     return count;
 }
@@ -432,7 +435,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
             if (err <= 0)
             {
                 metadata.updateEntryLength(i->offset, (count + i->length));
-                metadata.writeMetadata(filename);
+                replicator->updateMetadata(filename, metadata);
                 logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
                 goto out;
             }
@@ -469,7 +472,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
         {
             // update metadataObject length to reflect what awas actually written
             metadata.updateEntryLength(newObject.offset, (count));
-            metadata.writeMetadata(filename);
+            replicator->updateMetadata(filename, metadata);
             logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
             goto out;
             //log error and abort
@@ -481,7 +484,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
         dataRemaining -= writeLength;
     }
     synchronizer->newObjects(newObjectKeys);
-    metadata.writeMetadata(filename);
+    replicator->updateMetadata(filename, metadata);
     
     // had to add this hack to prevent deadlock
 out:
@@ -797,9 +800,14 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
 
     vector<string> newJournalEntries;
     ScopedReadLock lock(this, filename1);
+    ScopedWriteLock lock2(this, filename2);
     MetadataFile meta1(metaFile1);
     MetadataFile meta2(metaFile2);
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
+    
+    if (meta2.exists())
+        cout << "copyFile: overwriting a file" << endl;
+    meta2.removeAllEntries();
     
     // TODO.  I dislike large try-catch blocks, and large loops.  Maybe a little refactoring is in order.
     try 
@@ -871,8 +879,9 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         return -1;
     }
     lock.unlock();
-    
     replicator->updateMetadata(filename2, meta2);
+    lock2.unlock();
+    
     for (auto &jEntry : newJournalEntries)
         sync->newJournalEntry(jEntry);
     return 0;
@@ -1086,6 +1095,15 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
         uint64_t startReadingAt = offlen[0];
         uint64_t lengthOfRead = offlen[1];
 
+        // XXXPAT: Speculative change.  Got mem errors from writing past the end of objData.  The length
+        // in the metadata is shorter than this journal entry, and not because it got crazy values.
+        // I think the explanation is a truncation.  Remove the log here if we see good results.
+        if (startReadingAt + lengthOfRead > len)
+        {
+            logger->log(LOG_CRIT, "mergeJournalInMem: possibly bad journal entry in %s.  jStart = %lld, jEnd = %lld, max = %lld",
+                journalPath, startReadingAt, startReadingAt + lengthOfRead, len);
+            lengthOfRead = len - startReadingAt;
+        }
         uint count = 0;
         while (count < lengthOfRead)
         {

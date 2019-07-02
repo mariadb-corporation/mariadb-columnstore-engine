@@ -59,6 +59,8 @@ class Cache : public boost::noncopyable
         const boost::filesystem::path &getJournalPath();
         // this will delete everything in the cache and journal paths, and empty all Cache structures.
         void reset();
+        
+        void validateCacheSize();
     private:
         Cache();
         
@@ -104,7 +106,9 @@ class Cache : public boost::noncopyable
         struct DNEElement
         {
             DNEElement(const LRU_t::iterator &);
+            DNEElement(const std::string &);
             LRU_t::iterator key;
+            std::string sKey;
             uint refCount;
         };
         
@@ -120,8 +124,8 @@ class Cache : public boost::noncopyable
         
         typedef std::unordered_set<DNEElement, DNEHasher, DNEEquals> DNE_t;
         DNE_t doNotEvict;
-        void addToDNE(const LRU_t::iterator &key);
-        void removeFromDNE(const LRU_t::iterator &key);
+        void addToDNE(const DNEElement &);
+        void removeFromDNE(const DNEElement &);
         
         // the to-be-deleted set.  Elements removed from the LRU but not yet deleted will be here.
         // Elements are inserted and removed by makeSpace().  If read() references a file that is in this,
