@@ -132,7 +132,7 @@ void Cache::populate()
             lru.push_back(p.filename().string());
             auto last = lru.end();
             m_lru.insert(--last);
-            currentCacheSize += bf::file_size(p);
+            currentCacheSize += bf::file_size(*dir);
         }
         else
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
@@ -147,7 +147,7 @@ void Cache::populate()
         if (bf::is_regular_file(p))
         {
             if (p.extension() == ".journal") 
-                currentCacheSize += bf::file_size(p);
+                currentCacheSize += bf::file_size(*dir);
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
         }
@@ -286,8 +286,17 @@ void Cache::read(const vector<string> &keys)
         }
         else
         {
+            // There's window where the file has been downloaded but is not yet
+            // added to the lru structs.  However it is in the DNE.  If it is in the DNE, then it is also
+            // in Downloader's map.  So, this thread needs to start the download if it's not in the 
+            // DNE or if there's an existing download that hasn't finished yet.  Starting the download
+            // includes waiting for an existing download to finish, which from this class's pov is the
+            // same thing.
+            if (doNotEvict.find(key) == doNotEvict.end() || downloader.inProgress(key))
+                keysToFetch.push_back(&key);
+            else
+                cout << "Cache: detected and stopped a racey download" << endl;
             addToDNE(key);
-            keysToFetch.push_back(&key);
         }
     }
     if (keysToFetch.empty())
@@ -301,13 +310,22 @@ void Cache::read(const vector<string> &keys)
         // downloads with size 0 didn't actually happen, either because it
         // was a preexisting download (another read() call owns it), or because
         // there was an error downloading it.  Use size == 0 as an indication of
-        // what to add to the cache
+        // what to add to the cache.  Also needs to verify that the file was not deleted,
+        // indicated by existence in doNotEvict.
         if (dlSizes[i] != 0)
         {
-            sum_sizes += dlSizes[i];
-            lru.push_back(*keysToFetch[i]);
-            LRU_t::iterator lit = lru.end();
-            m_lru.insert(--lit);  // I dislike this way of grabbing the last iterator in a list.
+            if (doNotEvict.find(*keysToFetch[i]) != doNotEvict.end())
+            {
+                sum_sizes += dlSizes[i];
+                lru.push_back(*keysToFetch[i]);
+                LRU_t::iterator lit = lru.end();
+                m_lru.insert(--lit);  // I dislike this way of grabbing the last iterator in a list.
+            }
+            else    // it was downloaded, but a deletion happened so we have to toss it
+            {
+                cout << "removing a file that was deleted by another thread during download" << endl;
+                bf::remove(prefix / (*keysToFetch[i]));
+            }
         }
     }
     
@@ -329,9 +347,14 @@ void Cache::doneReading(const vector<string> &keys)
     boost::unique_lock<boost::mutex> s(lru_mutex);
     for (const string &key : keys)
     {
-        const auto &it = m_lru.find(key);
-        if (it != m_lru.end())
-            removeFromDNE(it->lit);
+        removeFromDNE(key);
+        // most should be in the map.
+        // debateable whether it's faster to look up the list iterator and use it
+        // or whether it's faster to bypass that and use strings only.
+        
+        //const auto &it = m_lru.find(key);
+        //if (it != m_lru.end())
+        //    removeFromDNE(it->lit);
     }
     _makeSpace(0);
 }
@@ -588,12 +611,6 @@ int Cache::ifExistsThenDelete(const string &key)
     auto it = m_lru.find(key);
     if (it != m_lru.end())
     {
-        if (doNotEvict.find(it->lit) != doNotEvict.end())
-        {
-            cout << "almost deleted a file being read, are we really doing that somewhere?" << endl;
-            return 0;
-        }
-    
         if (toBeDeleted.find(it->lit) == toBeDeleted.end())
         {
             doNotEvict.erase(it->lit);

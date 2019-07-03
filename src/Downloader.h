@@ -28,6 +28,7 @@ class Downloader
         void download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
         void setDownloadPath(const std::string &path);
         void useThisLock(boost::mutex *);
+        bool inProgress(const std::string &);
         
     private:
         uint maxDownloads;
@@ -51,6 +52,7 @@ class Downloader
         struct Download : public ThreadPool::Job
         {
             Download(const std::string &source, const std::string &_dlPath, boost::mutex *_lock);
+            Download(const std::string &source);
             ~Download();
             void operator()();
             boost::filesystem::path dlPath;

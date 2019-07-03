@@ -488,7 +488,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
     
     // had to add this hack to prevent deadlock
 out:
-    // need to release the file lock before calling the cache fcns.
+    // need to release the file lock before telling Cache that we're done writing.
     lock.unlock();
     cache->doneWriting();
     
@@ -802,12 +802,13 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     ScopedReadLock lock(this, filename1);
     ScopedWriteLock lock2(this, filename2);
     MetadataFile meta1(metaFile1);
-    MetadataFile meta2(metaFile2);
+    MetadataFile meta2(metaFile2.string().c_str(), MetadataFile::no_create_t());
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
     
-    if (meta2.exists())
+    if (meta2.exists()) {
         cout << "copyFile: overwriting a file" << endl;
-    meta2.removeAllEntries();
+        meta2.removeAllEntries();
+    }
     
     // TODO.  I dislike large try-catch blocks, and large loops.  Maybe a little refactoring is in order.
     try 
@@ -1089,19 +1090,34 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     {
         uint64_t offlen[2];
         int err = ::read(journalFD, &offlen, 16);
-        if (err != 16)   // got EOF
+        if (err == 0)   // got EOF
             break;
+        else if (err < 16)
+        {
+            // punting on this
+            cout << "mergeJournalInMem: failed to read a journal entry header in one attempt.  fixme..." << endl;
+            errno = ENODATA;
+            return -1;
+        }
         
         uint64_t startReadingAt = offlen[0];
         uint64_t lengthOfRead = offlen[1];
 
         // XXXPAT: Speculative change.  Got mem errors from writing past the end of objData.  The length
         // in the metadata is shorter than this journal entry, and not because it got crazy values.
-        // I think the explanation is a truncation.  Remove the log here if we see good results.
+        // I think the explanation is a truncation.
+        if (startReadingAt > len)
+        {
+            //logger->log(LOG_CRIT, "mergeJournalInMem: skipping a theoretically irrelevant journal entry in %s.  "
+            //    "jstart = %llu, max = %llu", journalPath, startReadingAt, len);
+            ::lseek(journalFD, offlen[1], SEEK_CUR);
+            continue;
+        }
+        
         if (startReadingAt + lengthOfRead > len)
         {
-            logger->log(LOG_CRIT, "mergeJournalInMem: possibly bad journal entry in %s.  jStart = %lld, jEnd = %lld, max = %lld",
-                journalPath, startReadingAt, startReadingAt + lengthOfRead, len);
+            //logger->log(LOG_CRIT, "mergeJournalInMem: possibly bad journal entry in %s.  jStart = %llu, jEnd = %llu, max = %llu",
+            //    journalPath, startReadingAt, startReadingAt + lengthOfRead, len);
             lengthOfRead = len - startReadingAt;
         }
         uint count = 0;
@@ -1124,6 +1140,8 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
             }
             count += err;
         }
+        if (lengthOfRead < offlen[1])
+            ::lseek(journalFD, offlen[1] - lengthOfRead, SEEK_CUR);
     }
     return 0;
 }
