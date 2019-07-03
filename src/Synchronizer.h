@@ -85,7 +85,7 @@ class Synchronizer : public boost::noncopyable
         // this thread will start jobs for entries in pendingOps every 10 seconds
         bool die;
         boost::thread syncThread;
-        const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
+        const boost::chrono::seconds syncInterval = boost::chrono::seconds(1);
         void periodicSync();
         
         SMLogging *logger;

@@ -276,13 +276,6 @@ void Cache::read(const vector<string> &keys)
         {
             addToDNE(mit->lit);
             lru.splice(lru.end(), lru, mit->lit);   // move them to the back so they are last to pick for eviction
-            // if it's about to be deleted, stop that
-            TBD_t::iterator tbd_it = toBeDeleted.find(mit->lit);
-            if (tbd_it != toBeDeleted.end())
-            {
-                //cout << "Saved one from being deleted" << endl;
-                toBeDeleted.erase(tbd_it);
-            }
         }
         else
         {
@@ -448,7 +441,7 @@ void Cache::deletedObject(const string &key, size_t size)
     boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
-    assert(mit != m_lru.end());          // TODO: 5/16/19 - got this assertion using S3 by running test000, then test000 again.
+    assert(mit != m_lru.end());
     
     // if it's being flushed, let makeSpace() do the deleting
     if (toBeDeleted.find(mit->lit) == toBeDeleted.end())
@@ -507,7 +500,7 @@ void Cache::_makeSpace(size_t size)
         }
         
         if (!bf::exists(prefix / *it))
-            cout << prefix / *it << " doesn't exist, WTF?" << endl;
+            cout << prefix / *it << " doesn't exist, WTF?" << endl;  // Have gotten this a couple times
         assert(bf::exists(prefix / *it));
         /* 
             tell Synchronizer that this key will be evicted
@@ -518,7 +511,7 @@ void Cache::_makeSpace(size_t size)
 
         //logger->log(LOG_WARNING, "Cache:  flushing!");
         toBeDeleted.insert(it);
-        string key = *it;    // need to make a copy; it could be in the process of being renamed
+        string key = *it;    // need to make a copy; it could get changed after unlocking.
         
         lru_mutex.unlock();
         try 
@@ -534,15 +527,12 @@ void Cache::_makeSpace(size_t size)
         }
         lru_mutex.lock();
         
-        TBD_t::iterator tbd_it = toBeDeleted.find(it);
-        if (tbd_it != toBeDeleted.end())
+        // check doNotEvict again in case this object is now being read
+        if (doNotEvict.find(it) == doNotEvict.end())
         {
-            // if it's still in toBeDeleted then it is safe to delete.
-            // if read() happened to access it while it was flushing, it will not 
-            // be in that set.
             bf::path cachedFile = prefix / *it;
             m_lru.erase(*it);
-            toBeDeleted.erase(tbd_it);
+            toBeDeleted.erase(it);
             lru.erase(it);
             size_t newSize = bf::file_size(cachedFile);
             replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
