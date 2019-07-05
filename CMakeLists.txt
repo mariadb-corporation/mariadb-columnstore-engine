@@ -35,6 +35,7 @@ set(storagemanager_SRCS
 )
 
 option(TRACE "Enable some tracing output" OFF)
+option(LOG_TO_STDERR "Make the logging system also print to stderr" OFF)
 if (TRACE)
     add_definitions(-DSM_TRACE)
 endif()
@@ -42,6 +43,10 @@ endif()
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DDEBUG -Werror -Wall)
     set(S3_CONFIGURE_OPT --enable-debug)
+endif()
+
+if (LOG_TO_STDERR)
+    add_definitions(-DDEBUG)
 endif()
 
 set(S3API_DIR ${CMAKE_SOURCE_DIR}/libmarias3)
