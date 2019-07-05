@@ -87,7 +87,7 @@ class Synchronizer : public boost::noncopyable
         boost::thread syncThread;
         const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
         void periodicSync();
-        size_t uncommittedJournalSize;
+        size_t uncommittedJournalSize, journalSizeThreshold;
         
         SMLogging *logger;
         Cache *cache;

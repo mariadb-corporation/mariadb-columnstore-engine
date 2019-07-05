@@ -59,6 +59,7 @@ Synchronizer::Synchronizer() : maxUploads(0)
     threadPool.setMaxThreads(maxUploads);
     die = false;
     uncommittedJournalSize = 0;
+    journalSizeThreshold = cache->getMaxCacheSize() / 2;
     syncThread = boost::thread([this] () { this->periodicSync(); });
 }
 
@@ -100,7 +101,7 @@ void Synchronizer::newJournalEntry(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(mutex);
     _newJournalEntry(key, size);
-    if (uncommittedJournalSize > 50000000)
+    if (uncommittedJournalSize > journalSizeThreshold)
     {
         uncommittedJournalSize = 0;
         s.unlock();
@@ -113,7 +114,7 @@ void Synchronizer::newJournalEntries(const vector<pair<string, size_t> > &keys)
     boost::unique_lock<boost::mutex> s(mutex);
     for (auto &keysize : keys)
         _newJournalEntry(keysize.first, keysize.second);
-    if (uncommittedJournalSize > 50000000)
+    if (uncommittedJournalSize > journalSizeThreshold)
     {
         uncommittedJournalSize = 0;
         s.unlock();
