@@ -58,6 +58,7 @@ Synchronizer::Synchronizer() : maxUploads(0)
     cachePath = cache->getCachePath();
     threadPool.setMaxThreads(maxUploads);
     die = false;
+    uncommittedJournalSize = 0;
     syncThread = boost::thread([this] () { this->periodicSync(); });
 }
 
@@ -82,8 +83,9 @@ enum OpFlags
     NEW_OBJECT = 0x4,
 };
 
-void Synchronizer::_newJournalEntry(const string &key)
+void Synchronizer::_newJournalEntry(const string &key, size_t size)
 {
+    uncommittedJournalSize += size;
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
     {
@@ -94,17 +96,29 @@ void Synchronizer::_newJournalEntry(const string &key)
     pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(JOURNAL));
 }
     
-void Synchronizer::newJournalEntry(const string &key)
+void Synchronizer::newJournalEntry(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(mutex);
-    _newJournalEntry(key);   
+    _newJournalEntry(key, size);
+    if (uncommittedJournalSize > 50000000)
+    {
+        uncommittedJournalSize = 0;
+        s.unlock();
+        forceFlush();
+    }
 }
 
-void Synchronizer::newJournalEntries(const vector<string> &keys)
+void Synchronizer::newJournalEntries(const vector<pair<string, size_t> > &keys)
 {
     boost::unique_lock<boost::mutex> s(mutex);
-    for (const string &key : keys)
-        _newJournalEntry(key);
+    for (auto &keysize : keys)
+        _newJournalEntry(keysize.first, keysize.second);
+    if (uncommittedJournalSize > 50000000)
+    {
+        uncommittedJournalSize = 0;
+        s.unlock();
+        forceFlush();
+    }
 }
 
 void Synchronizer::newObjects(const vector<string> &keys)
@@ -228,6 +242,7 @@ void Synchronizer::periodicSync()
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
             makeJob(job.first);
+        uncommittedJournalSize = 0;
     }
 }
 
@@ -235,7 +250,6 @@ void Synchronizer::forceFlush()
 {
     boost::unique_lock<boost::mutex> lock(mutex);
     syncThread.interrupt();
-    lock.unlock();
 }
 
 void Synchronizer::makeJob(const string &key)

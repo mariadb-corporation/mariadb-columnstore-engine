@@ -330,7 +330,7 @@ int IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offse
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            synchronizer->newJournalEntry(i->key);
+            synchronizer->newJournalEntry(i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
         }
@@ -443,7 +443,7 @@ int IOCoordinator::append(const char *_filename, const uint8_t *data, size_t len
 
             cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            synchronizer->newJournalEntry(i->key);
+            synchronizer->newJournalEntry(i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
         }
@@ -798,7 +798,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         return -1;
     }
 
-    vector<string> newJournalEntries;
+    vector<pair<string, size_t> > newJournalEntries;
     ScopedReadLock lock(this, filename1);
     ScopedWriteLock lock2(this, filename2);
     MetadataFile meta1(metaFile1);
@@ -853,8 +853,9 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
                 try 
                 {
                     bf::copy_file(journalFile, newJournalFile);
-                    cache->newJournalEntry(bf::file_size(newJournalFile));
-                    newJournalEntries.push_back(newObj.key);
+                    size_t tmp = bf::file_size(newJournalFile);
+                    cache->newJournalEntry(tmp);
+                    newJournalEntries.push_back(pair<string, size_t>(newObj.key, tmp));
                 }
                 catch (bf::filesystem_error &e)
                 {
@@ -872,7 +873,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
             cs->deleteObject(newObject.key);
         for (auto &jEntry : newJournalEntries)
         {
-            bf::path fullJournalPath = journalPath/(jEntry + ".journal");
+            bf::path fullJournalPath = journalPath/(jEntry.first + ".journal");
             cache->deletedJournal(bf::file_size(fullJournalPath));
             bf::remove(fullJournalPath);
         }
@@ -884,7 +885,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     lock2.unlock();
     
     for (auto &jEntry : newJournalEntries)
-        sync->newJournalEntry(jEntry);
+        sync->newJournalEntry(jEntry.first, jEntry.second);
     return 0;
 }
 

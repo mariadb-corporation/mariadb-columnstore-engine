@@ -29,8 +29,8 @@ class Synchronizer : public boost::noncopyable
         
         // these take keys as parameters, not full path names, ex, pass in '12345' not
         // 'cache/12345'.
-        void newJournalEntry(const std::string &key);
-        void newJournalEntries(const std::vector<std::string> &keys);
+        void newJournalEntry(const std::string &key, size_t len);
+        void newJournalEntries(const std::vector<std::pair<std::string, size_t> > &keys);
         void newObjects(const std::vector<std::string> &keys);
         void deletedObjects(const std::vector<std::string> &keys);        
         void flushObject(const std::string &key);
@@ -42,7 +42,7 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
-        void _newJournalEntry(const std::string &key);
+        void _newJournalEntry(const std::string &key, size_t len);
         void process(std::list<std::string>::iterator key);
         void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
@@ -85,8 +85,9 @@ class Synchronizer : public boost::noncopyable
         // this thread will start jobs for entries in pendingOps every 10 seconds
         bool die;
         boost::thread syncThread;
-        const boost::chrono::seconds syncInterval = boost::chrono::seconds(1);
+        const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
         void periodicSync();
+        size_t uncommittedJournalSize;
         
         SMLogging *logger;
         Cache *cache;
