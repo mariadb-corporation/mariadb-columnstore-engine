@@ -500,7 +500,7 @@ void Cache::_makeSpace(size_t size)
         }
         
         if (!bf::exists(prefix / *it))
-            cout << prefix / *it << " doesn't exist, WTF?" << endl;  // Have gotten this a couple times
+            cout << prefix / *it << " doesn't exist, WTF?" << endl;  // ran into this a couple times, still happens as of commit 948ee1aa5
         assert(bf::exists(prefix / *it));
         /* 
             tell Synchronizer that this key will be evicted
