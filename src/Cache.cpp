@@ -548,6 +548,8 @@ void Cache::_makeSpace(size_t size)
                 thisMuch = 0;
             }
         }
+        else
+            toBeDeleted.erase(it);
     }
 }
 
