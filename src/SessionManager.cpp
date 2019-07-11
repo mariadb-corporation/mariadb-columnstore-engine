@@ -60,7 +60,6 @@ int SessionManager::start()
     int pollTimeout = -1;
     int socketIncr;
     int current_size = 0;
-    int prevNFDS = 0;
 
     bool shutdown = false;
     bool running = true;
@@ -396,9 +395,6 @@ int SessionManager::start()
         
         if(shutdown)
         {
-            //if (prevNFDS != nfds)
-            //    logger->log(LOG_CRIT,"StorageManager shutting down, nfds = %i",nfds);
-            //prevNFDS = nfds;
             if (nfds <= 2)
                 running = false;
         }

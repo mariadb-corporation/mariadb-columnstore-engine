@@ -135,7 +135,7 @@ typedef uint8_t read_resp;
 */
 struct write_cmd {
     uint8_t opcode;   // == WRITE
-    size_t count;
+    ssize_t count;
     off_t offset;
     uint32_t flen;
     char filename[];
@@ -152,7 +152,7 @@ struct write_cmd {
 */
 struct append_cmd {
     uint8_t opcode;    // == APPEND
-    size_t count;
+    ssize_t count;
     uint32_t flen;
     char filename[];
     // after this is the data to be written, ie at &filename[flen]
