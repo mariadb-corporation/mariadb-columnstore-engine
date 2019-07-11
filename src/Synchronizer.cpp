@@ -59,6 +59,8 @@ Synchronizer::Synchronizer() : maxUploads(0)
     threadPool.reset(new ThreadPool());
     threadPool->setMaxThreads(maxUploads);
     die = false;
+    uncommittedJournalSize = 0;
+    journalSizeThreshold = cache->getMaxCacheSize() / 2;
     syncThread = boost::thread([this] () { this->periodicSync(); });
 }
 
@@ -82,8 +84,9 @@ enum OpFlags
     NEW_OBJECT = 0x4,
 };
 
-void Synchronizer::_newJournalEntry(const string &key)
+void Synchronizer::_newJournalEntry(const string &key, size_t size)
 {
+    uncommittedJournalSize += size;
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
     {
@@ -94,17 +97,29 @@ void Synchronizer::_newJournalEntry(const string &key)
     pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(JOURNAL));
 }
     
-void Synchronizer::newJournalEntry(const string &key)
+void Synchronizer::newJournalEntry(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(mutex);
-    _newJournalEntry(key);   
+    _newJournalEntry(key, size);
+    if (uncommittedJournalSize > journalSizeThreshold)
+    {
+        uncommittedJournalSize = 0;
+        s.unlock();
+        forceFlush();
+    }
 }
 
-void Synchronizer::newJournalEntries(const vector<string> &keys)
+void Synchronizer::newJournalEntries(const vector<pair<string, size_t> > &keys)
 {
     boost::unique_lock<boost::mutex> s(mutex);
-    for (const string &key : keys)
-        _newJournalEntry(key);
+    for (auto &keysize : keys)
+        _newJournalEntry(keysize.first, keysize.second);
+    if (uncommittedJournalSize > journalSizeThreshold)
+    {
+        uncommittedJournalSize = 0;
+        s.unlock();
+        forceFlush();
+    }
 }
 
 void Synchronizer::newObjects(const vector<string> &keys)
@@ -228,6 +243,7 @@ void Synchronizer::periodicSync()
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
             makeJob(job.first);
+        uncommittedJournalSize = 0;
     }
 }
 
@@ -235,7 +251,6 @@ void Synchronizer::forceFlush()
 {
     boost::unique_lock<boost::mutex> lock(mutex);
     syncThread.interrupt();
-    lock.unlock();
 }
 
 void Synchronizer::makeJob(const string &key)
@@ -359,12 +374,13 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     
     const metadataObject *mdEntry;
     bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!entryExists)
+    if (!entryExists || key != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
     }
-    assert(key == mdEntry->key);
+    
+    //assert(key == mdEntry->key);  <-- This could fail b/c of truncation + a write/append before this job runs.
     
     err = cs->exists(key, &exists);
     if (err)
@@ -374,7 +390,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
 
     // TODO: should be safe to check with Cache instead of a file existence check
-    exists = bf::exists(cachePath / key);
+    exists = cache->exists(key);
     if (!exists)
     {
         logger->log(LOG_DEBUG, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
@@ -409,12 +425,12 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     const metadataObject *mdEntry;
     bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!metaExists)
+    if (!metaExists || key != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
     }
-    assert(key == mdEntry->key);
+    //assert(key == mdEntry->key);   <--- I suspect this can happen in a truncate + write situation + a deep sync queue
     
     bf::path oldCachePath = cachePath / key;
     string journalName = (journalPath/ (key + ".journal")).string();
@@ -431,7 +447,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             throw runtime_error(string("Synchronizer: cs->exists() failed: ") + strerror_r(errno, buf, 80));
         if (!existsOnCloud)
         {
-            if (bf::exists(oldCachePath))
+            if (cache->exists(key))
             {
                 logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal and does not exist in the cloud, calling "
                     "synchronize() instead.  Need to explain how this happens.", key.c_str());

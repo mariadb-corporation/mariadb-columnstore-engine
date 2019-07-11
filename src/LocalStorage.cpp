@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 #include "LocalStorage.h"
 #include "Config.h"
 
@@ -30,6 +31,22 @@ LocalStorage::LocalStorage()
             throw e;
         }
     }
+    string stmp = Config::get()->getValue("LocalStorage", "fake_latency");
+    if (!stmp.empty() && (stmp[0] == 'Y' || stmp[0] == 'y'))
+    {
+        fakeLatency = true;
+        stmp = Config::get()->getValue("LocalStorage", "max_latency");
+        usecLatencyCap = strtoull(stmp.c_str(), NULL, 10);
+        if (usecLatencyCap == 0)
+        {
+            logger->log(LOG_CRIT, "LocalStorage:  bad value for max_latency");
+            throw runtime_error("LocalStorage:  bad value for max_latency");
+        }
+        r_seed = (uint) ::time(NULL);
+        logger->log(LOG_DEBUG, "LocalStorage:  Will simulate cloud latency of max %llu us", usecLatencyCap);
+    }
+    else
+        fakeLatency = false;
 }
 
 LocalStorage::~LocalStorage()
@@ -41,8 +58,19 @@ const bf::path & LocalStorage::getPrefix() const
     return prefix;
 }
 
+void LocalStorage::addLatency()
+{
+    if (fakeLatency)
+    {
+        uint64_t usec_delay = ((double) rand_r(&r_seed) / (double) RAND_MAX) * usecLatencyCap;
+        ::usleep(usec_delay);
+    }
+}
+
 int LocalStorage::copy(const bf::path &source, const bf::path &dest)
 {
+    addLatency();
+    
     boost::system::error_code err;
     bf::copy_file(source, dest, bf::copy_option::fail_if_exists, err);
     if (err)
@@ -72,6 +100,8 @@ int LocalStorage::getObject(const string &source, const string &dest, size_t *si
 
 int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
 {
+    addLatency();
+    
     bf::path source = prefix / sourceKey;
     const char *c_source = source.string().c_str();
     //char buf[80];
@@ -115,6 +145,8 @@ int LocalStorage::putObject(const string &source, const string &dest)
 
 int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const string &dest)
 {
+    addLatency();
+    
     bf::path destPath = prefix / dest;
     const char *c_dest = destPath.string().c_str();
     //char buf[80];
@@ -155,14 +187,17 @@ int LocalStorage::copyObject(const string &source, const string &dest)
 
 int LocalStorage::deleteObject(const string &key)
 {
-    boost::system::error_code err;
+    addLatency();
     
+    boost::system::error_code err;
     bf::remove(prefix / key, err);
     return 0;
 }
 
 int LocalStorage::exists(const std::string &key, bool *out)
 {
+    addLatency();
+    
     *out = bf::exists(prefix / key);
     return 0;
 }

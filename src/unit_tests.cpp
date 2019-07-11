@@ -1041,7 +1041,7 @@ bool syncTest1()
     assert(!err);
     assert(exists);
     
-    sync->newJournalEntry(key);
+    sync->newJournalEntry(key, 0);
     sync->forceFlush();
     sleep(1);  // let it do what it does
     
@@ -1080,7 +1080,7 @@ bool syncTest1()
     // make the journal again, call sync->newJournalObject()
     makeTestJournal((journalPath / (newKey + ".journal")).string().c_str());
     cache->newJournalEntry(bf::file_size(journalPath / (newKey + ".journal")));
-    sync->newJournalEntry(newKey);
+    sync->newJournalEntry(newKey, 0);
     sync->forceFlush();
     sleep(1);
     

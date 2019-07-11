@@ -156,6 +156,30 @@ void Cache::populate()
         ++dir;
     }
 }
+// be careful using this!  SM should be idle.  No ongoing reads or writes.
+void Cache::validateCacheSize()
+{
+    boost::unique_lock<boost::mutex> s(lru_mutex);
+    
+    if (!doNotEvict.empty() || !toBeDeleted.empty())
+    {
+        cout << "Not safe to use validateCacheSize() at the moment." << endl;
+        return;
+    }
+    
+    size_t oldSize = currentCacheSize;
+    currentCacheSize = 0;
+    m_lru.clear();
+    lru.clear();
+    populate();
+    
+    if (oldSize != currentCacheSize)
+        logger->log(LOG_DEBUG, "Cache::validateCacheSize(): found a discrepancy.  Actual size is %lld, had %lld.",
+            currentCacheSize, oldSize);
+    else
+        logger->log(LOG_DEBUG, "Cache::validateCacheSize(): Cache size accounting agrees with reality for now.");
+}
+    
 
 #if 0
 /*  Need to simplify this, we keep running into sneaky problems, and I just spotted a couple more.
@@ -250,24 +274,27 @@ void Cache::read(const vector<string> &keys)
         if (mit != m_lru.end())
         {
             addToDNE(mit->lit);
-            lru.splice(lru.end(), lru, mit->lit);
-            // if it's about to be deleted, stop that
-            TBD_t::iterator tbd_it = toBeDeleted.find(mit->lit);
-            if (tbd_it != toBeDeleted.end())
-            {
-                //cout << "Saved one from being deleted" << endl;
-                toBeDeleted.erase(tbd_it);
-            }
+            lru.splice(lru.end(), lru, mit->lit);   // move them to the back so they are last to pick for eviction
         }
         else
-            keysToFetch.push_back(&key);
+        {
+            // There's window where the file has been downloaded but is not yet
+            // added to the lru structs.  However it is in the DNE.  If it is in the DNE, then it is also
+            // in Downloader's map.  So, this thread needs to start the download if it's not in the 
+            // DNE or if there's an existing download that hasn't finished yet.  Starting the download
+            // includes waiting for an existing download to finish, which from this class's pov is the
+            // same thing.
+            if (doNotEvict.find(key) == doNotEvict.end() || downloader.inProgress(key))
+                keysToFetch.push_back(&key);
+            else
+                cout << "Cache: detected and stopped a racey download" << endl;
+            addToDNE(key);
+        }
     }
     if (keysToFetch.empty())
         return;
     
-    assert(s.owns_lock());
     downloader->download(keysToFetch, &dlErrnos, &dlSizes);
-    assert(s.owns_lock());
     
     size_t sum_sizes = 0;
     for (uint i = 0; i < keysToFetch.size(); ++i)
@@ -275,14 +302,22 @@ void Cache::read(const vector<string> &keys)
         // downloads with size 0 didn't actually happen, either because it
         // was a preexisting download (another read() call owns it), or because
         // there was an error downloading it.  Use size == 0 as an indication of
-        // what to add to the cache
+        // what to add to the cache.  Also needs to verify that the file was not deleted,
+        // indicated by existence in doNotEvict.
         if (dlSizes[i] != 0)
         {
-            sum_sizes += dlSizes[i];
-            lru.push_back(*keysToFetch[i]);
-            LRU_t::iterator lit = lru.end();
-            m_lru.insert(--lit);  // I dislike this way of grabbing the last iterator in a list.
-            addToDNE(lit);
+            if (doNotEvict.find(*keysToFetch[i]) != doNotEvict.end())
+            {
+                sum_sizes += dlSizes[i];
+                lru.push_back(*keysToFetch[i]);
+                LRU_t::iterator lit = lru.end();
+                m_lru.insert(--lit);  // I dislike this way of grabbing the last iterator in a list.
+            }
+            else    // it was downloaded, but a deletion happened so we have to toss it
+            {
+                cout << "removing a file that was deleted by another thread during download" << endl;
+                bf::remove(prefix / (*keysToFetch[i]));
+            }
         }
     }
     
@@ -290,7 +325,7 @@ void Cache::read(const vector<string> &keys)
     for (const string &key : keys)
     {
         mit = m_lru.find(key);
-        if (mit != m_lru.end())   // it could have been deleted by deletedObject() or ifExistsThenDelete()
+        if (mit != m_lru.end())    // all of the files exist, just not all of them are 'owned by' this thread.
             lru.splice(lru.end(), lru, mit->lit);
     }
     
@@ -304,9 +339,14 @@ void Cache::doneReading(const vector<string> &keys)
     boost::unique_lock<boost::mutex> s(lru_mutex);
     for (const string &key : keys)
     {
-        const auto &it = m_lru.find(key);
-        if (it != m_lru.end())
-            removeFromDNE(it->lit);
+        removeFromDNE(key);
+        // most should be in the map.
+        // debateable whether it's faster to look up the list iterator and use it
+        // or whether it's faster to bypass that and use strings only.
+        
+        //const auto &it = m_lru.find(key);
+        //if (it != m_lru.end())
+        //    removeFromDNE(it->lit);
     }
     _makeSpace(0);
 }
@@ -319,24 +359,25 @@ void Cache::doneWriting()
 Cache::DNEElement::DNEElement(const LRU_t::iterator &k) : key(k), refCount(1)
 {
 }
-        
-void Cache::addToDNE(const LRU_t::iterator &key)
+Cache::DNEElement::DNEElement(const string &k) : sKey(k), refCount(1)
 {
-    DNEElement e(key);
-    DNE_t::iterator it = doNotEvict.find(e);
+}
+
+void Cache::addToDNE(const DNEElement &key)
+{
+    DNE_t::iterator it = doNotEvict.find(key);
     if (it != doNotEvict.end())
     {
         DNEElement &dnee = const_cast<DNEElement &>(*it);
         ++(dnee.refCount);
     }
     else
-        doNotEvict.insert(e);
+        doNotEvict.insert(key);
 }
         
-void Cache::removeFromDNE(const LRU_t::iterator &key)
+void Cache::removeFromDNE(const DNEElement &key)
 {
-    DNEElement e(key);
-    DNE_t::iterator it = doNotEvict.find(e);
+    DNE_t::iterator it = doNotEvict.find(key);
     if (it == doNotEvict.end())
         return;
     DNEElement &dnee = const_cast<DNEElement &>(*it);
@@ -398,9 +439,9 @@ void Cache::deletedObject(const string &key, size_t size)
     boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
-    assert(mit != m_lru.end());          // TODO: 5/16/19 - got this assertion using S3 by running test000, then test000 again.
+    assert(mit != m_lru.end());
     
-    // if it's being flushed, let it do the deleting
+    // if it's being flushed, let makeSpace() do the deleting
     if (toBeDeleted.find(mit->lit) == toBeDeleted.end())
     {
         doNotEvict.erase(mit->lit);
@@ -456,9 +497,9 @@ void Cache::_makeSpace(size_t size)
             return;
         }
         
-        
-        bf::path cachedFile = prefix / *it;
-        assert(bf::exists(cachedFile));
+        if (!bf::exists(prefix / *it))
+            cout << prefix / *it << " doesn't exist, WTF?" << endl;  // ran into this a couple times, still happens as of commit 948ee1aa5
+        assert(bf::exists(prefix / *it));
         /* 
             tell Synchronizer that this key will be evicted
             delete the file
@@ -469,10 +510,12 @@ void Cache::_makeSpace(size_t size)
         //logger->log(LOG_WARNING, "Cache:  flushing!");
         toBeDeleted.insert(it);
 
+        string key = *it;    // need to make a copy; it could get changed after unlocking.
+        
         lru_mutex.unlock();
         try 
         {
-            Synchronizer::get()->flushObject(*it);
+            Synchronizer::get()->flushObject(key);
         }
         catch (...)
         {
@@ -483,15 +526,12 @@ void Cache::_makeSpace(size_t size)
         }
         lru_mutex.lock();
         
-        TBD_t::iterator tbd_it = toBeDeleted.find(it);
-        if (tbd_it != toBeDeleted.end())
+        // check doNotEvict again in case this object is now being read
+        if (doNotEvict.find(it) == doNotEvict.end())
         {
-            // if it's still in toBeDeleted then it is safe to delete.
-            // if read() happened to access it while it was flushing, it will not 
-            // be in that set.
-            cachedFile = prefix / *it;
-            toBeDeleted.erase(tbd_it);
+            bf::path cachedFile = prefix / *it;
             m_lru.erase(*it);
+            toBeDeleted.erase(it);
             lru.erase(it);
             size_t newSize = bf::file_size(cachedFile);
             replicator->remove(cachedFile, Replicator::LOCAL_ONLY);
@@ -507,6 +547,8 @@ void Cache::_makeSpace(size_t size)
                 thisMuch = 0;
             }
         }
+        else
+            toBeDeleted.erase(it);
     }
 }
 
@@ -557,7 +599,6 @@ int Cache::ifExistsThenDelete(const string &key)
     boost::unique_lock<boost::mutex> s(lru_mutex);
     bool objectExists = false;
    
-    
     auto it = m_lru.find(key);
     if (it != m_lru.end())
     {
@@ -572,7 +613,7 @@ int Cache::ifExistsThenDelete(const string &key)
             return 0;
     }
     bool journalExists = bf::exists(journalPath);
-    assert(objectExists == bf::exists(cachedPath));
+    //assert(objectExists == bf::exists(cachedPath));
     
     size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
     //size_t objectSize = (objectExists ? MetadataFile::getLengthFromKey(key) : 0);
@@ -643,12 +684,16 @@ inline bool Cache::KeyEquals::operator()(const M_LRU_element_t &l1, const M_LRU_
 
 inline size_t Cache::DNEHasher::operator()(const DNEElement &l) const
 {
-    return hash<string>()(*(l.key));
+    return (l.sKey.empty() ? hash<string>()(*(l.key)) : hash<string>()(l.sKey));
 }
 
 inline bool Cache::DNEEquals::operator()(const DNEElement &l1, const DNEElement &l2) const
 {
-    return (*(l1.key) == *(l2.key));
+    const string *s1, *s2;
+    s1 = l1.sKey.empty() ? &(*(l1.key)) : &(l1.sKey);
+    s2 = l2.sKey.empty() ? &(*(l2.key)) : &(l2.sKey);
+    
+    return (*s1 == *s2);
 }
 
 inline bool Cache::TBDLess::operator()(const LRU_t::iterator &i1, const LRU_t::iterator &i2) const

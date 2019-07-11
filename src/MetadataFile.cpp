@@ -326,6 +326,11 @@ void MetadataFile::removeEntry(off_t offset)
     mObjects.erase(it);
 }
 
+void MetadataFile::removeAllEntries()
+{
+    mObjects.clear();
+}
+
 // There are more efficient ways to do it.  Optimize if necessary.
 void MetadataFile::breakout(const string &key, vector<string> &ret)
 {

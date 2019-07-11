@@ -37,6 +37,7 @@ struct ScopedWriteLock
 
 struct ScopedCloser
 {
+    ScopedCloser();
     ScopedCloser(int f);
     ~ScopedCloser();
     int fd;

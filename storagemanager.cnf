@@ -20,6 +20,14 @@ bucket = s3-cs-test2
 [LocalStorage]
 path = ${HOME}/storagemanager/fake-cloud
 
+# introduce latency to fake-cloud operations.  Useful for debugging.
+fake_latency = n
+
+# values are randomized between 1 and max_latency in microseconds.
+# values between 30000-50000 roughly simulate observed latency of S3
+# access from an EC2 node.
+max_latency = 50000
+
 [Cache]
 cache_size = 2g
 path = ${HOME}/storagemanager/cache

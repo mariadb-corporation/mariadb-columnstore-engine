@@ -54,8 +54,11 @@ void ScopedWriteLock::unlock()
     }
 }
 
+ScopedCloser::ScopedCloser() : fd(-1) { }
 ScopedCloser::ScopedCloser(int f) : fd(f) { assert(f != -1); }
-ScopedCloser::~ScopedCloser() { 
+ScopedCloser::~ScopedCloser() {
+    if (fd < 0)
+        return;
     int s_errno = errno;
     ::close(fd);
     errno = s_errno; 
