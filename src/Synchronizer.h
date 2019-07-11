@@ -8,6 +8,7 @@
 #include <boost/utility.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/chrono.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "SMLogging.h"
 #include "Replicator.h"
