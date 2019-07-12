@@ -111,8 +111,10 @@ Cache::Cache() : currentCacheSize(0)
         logger->log(LOG_CRIT, "Failed to create %s, got: %s", journalPrefix.string().c_str(), e.what());
         throw e;
     }
-    
-    populate();
+        
+    lru_mutex.lock();    // unlocked by populate() when it's done
+    boost::thread t([this] { this->populate(); });
+    t.detach();
 }
 
 Cache::~Cache()
@@ -121,8 +123,10 @@ Cache::~Cache()
 
 void Cache::populate()
 {
+    Synchronizer *sync = Synchronizer::get();
     bf::directory_iterator dir(prefix);
     bf::directory_iterator dend;
+    vector<string> newObjects;
     while (dir != dend)
     {
         // put everything in lru & m_lru
@@ -133,21 +137,29 @@ void Cache::populate()
             auto last = lru.end();
             m_lru.insert(--last);
             currentCacheSize += bf::file_size(*dir);
+            newObjects.push_back(p.filename().string());
         }
         else
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
         ++dir;
     }
+    sync->newObjects(newObjects);
+    newObjects.clear();
     
     // account for what's in the journal dir
+    vector<pair<string, size_t> > newJournals;
     dir = bf::directory_iterator(journalPrefix);
     while (dir != dend)
     {
         const bf::path &p = dir->path();
         if (bf::is_regular_file(p))
         {
-            if (p.extension() == ".journal") 
-                currentCacheSize += bf::file_size(*dir);
+            if (p.extension() == ".journal")
+            {
+                size_t s = bf::file_size(*dir);
+                currentCacheSize += s;
+                newJournals.push_back(pair<string, size_t>(p.stem().string(), s));
+            }
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
         }
@@ -155,7 +167,10 @@ void Cache::populate()
             logger->log(LOG_WARNING, "Cache: found something in the journal dir that does not belong '%s'", p.string().c_str());
         ++dir;
     }
+    lru_mutex.unlock();
+    sync->newJournalEntries(newJournals);
 }
+
 // be careful using this!  SM should be idle.  No ongoing reads or writes.
 void Cache::validateCacheSize()
 {
@@ -274,7 +289,7 @@ void Cache::read(const vector<string> &keys)
         if (mit != m_lru.end())
         {
             addToDNE(mit->lit);
-            lru.splice(lru.end(), lru, mit->lit);   // move them to the back so they are last to pick for eviction
+            lru.splice(lru.end(), lru, mit->lit);   // move them to the back so they are last to pick for eviction 
         }
         else
         {
@@ -284,7 +299,7 @@ void Cache::read(const vector<string> &keys)
             // DNE or if there's an existing download that hasn't finished yet.  Starting the download
             // includes waiting for an existing download to finish, which from this class's pov is the
             // same thing.
-            if (doNotEvict.find(key) == doNotEvict.end() || downloader.inProgress(key))
+            if (doNotEvict.find(key) == doNotEvict.end() || downloader->inProgress(key))
                 keysToFetch.push_back(&key);
             else
                 cout << "Cache: detected and stopped a racey download" << endl;
@@ -476,8 +491,6 @@ void Cache::_makeSpace(size_t size)
     ssize_t thisMuch = currentCacheSize + size - maxCacheSize;
     if (thisMuch <= 0)
         return;
-    if (thisMuch > (ssize_t) currentCacheSize)
-        thisMuch = currentCacheSize;
     
     LRU_t::iterator it;
     while (thisMuch > 0 && !lru.empty())
@@ -487,6 +500,7 @@ void Cache::_makeSpace(size_t size)
         // makeSpace() call.
         while (it != lru.end())
         {
+            // make sure it's not currently being read or being flushed by another _makeSpace() call
             if ((doNotEvict.find(it) == doNotEvict.end()) && (toBeDeleted.find(it) == toBeDeleted.end()))
                 break;
             ++it;

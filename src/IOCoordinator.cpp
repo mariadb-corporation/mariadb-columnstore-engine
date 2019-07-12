@@ -180,9 +180,9 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         }
         else if (errno != ENOENT)
         {
+            int l_errno = errno;
             fileLock.unlock();
             cache->doneReading(keys);
-            int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
                 filename.c_str(), strerror_r(l_errno, buf, 80));
             errno = l_errno;
@@ -194,9 +194,9 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         fd = ::open(filename.c_str(), O_RDONLY);
         if (fd < 0)
         {
+            int l_errno = errno;
             fileLock.unlock();
             cache->doneReading(keys);
-            int l_errno = errno;
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
                 filename.c_str(), strerror_r(l_errno, buf, 80));
             errno = l_errno;
