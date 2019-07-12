@@ -231,6 +231,7 @@ int SessionManager::start()
                             break;
                         case SHUTDOWN:
                             logger->log(LOG_DEBUG,"Shutdown StorageManager...");
+                            close(fds[0].fd);
                             shutdown = true;
                             break;
                         default:
@@ -370,15 +371,21 @@ int SessionManager::start()
             throw std::exception();
         }
         
-        /* get rid of fds == -1 */
         int i, j;
+        if (shutdown)
+        {
+            for (i = 2; i < nfds; ++i)
+            {
+                if (fds[i].events == (POLLIN | POLLPRI))
+                {
+                    close(fds[i].fd);
+                    fds[i].fd = -1;
+                }
+            }
+        }
+        /* get rid of fds == -1 */
         for (i = 2; i < nfds; ++i)
         {
-            if (shutdown && fds[i].events == (POLLIN | POLLPRI))
-            {
-                close(fds[i].fd);
-                fds[i].fd = -1;
-            }
             if (fds[i].fd == -1)
                 break;
         }
@@ -392,7 +399,7 @@ int SessionManager::start()
             }
         }
         nfds = i;
-        
+
         if(shutdown)
         {
             if (nfds <= 2)
