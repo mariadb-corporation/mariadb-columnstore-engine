@@ -63,41 +63,21 @@ void TableLockServer::save()
 
     const char* filename_p = filename.c_str();
 
-    if (true || IDBPolicy::useHdfs())
+    scoped_ptr<IDBDataFile> out(IDBDataFile::open(
+                                    IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+                                    filename_p, "wb", 0));
+
+    if (!out)
+        throw runtime_error("TableLockServer::save():  could not open save file");
+
+    out->write((char*) &count, 4);
+
+    for (it = locks.begin(); it != locks.end(); ++it)
     {
-        scoped_ptr<IDBDataFile> out(IDBDataFile::open(
-                                        IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                        filename_p, "wb", 0));
-
         if (!out)
-            throw runtime_error("TableLockServer::save():  could not open save file");
+            throw runtime_error("TableLockServer::save():  could not write save file");
 
-        out->write((char*) &count, 4);
-
-        for (it = locks.begin(); it != locks.end(); ++it)
-        {
-            if (!out)
-                throw runtime_error("TableLockServer::save():  could not write save file");
-
-            it->second.serialize(out.get());
-        }
-    }
-    else
-    {
-        ofstream out(filename.c_str(), ios::trunc | ios::binary | ios::out );
-
-        if (!out)
-            throw runtime_error("TableLockServer::save():  could not open save file");
-
-        out.write((char*) &count, 4);
-
-        for (it = locks.begin(); it != locks.end(); ++it)
-        {
-            if (!out)
-                throw runtime_error("TableLockServer::save():  could not write save file");
-
-            it->second.serialize(out);
-        }
+        it->second.serialize(out.get());
     }
 }
 
@@ -109,85 +89,42 @@ void TableLockServer::load()
     TableLockInfo tli;
 
     /* Need to standardize the file error handling */
-    if (true || IDBPolicy::useHdfs())
+    const char* filename_p = filename.c_str();
+    scoped_ptr<IDBDataFile>  in(IDBDataFile::open(
+                                    IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+                                    filename_p, "rb", 0));
+
+    if (!in)
     {
-        const char* filename_p = filename.c_str();
-        scoped_ptr<IDBDataFile>  in(IDBDataFile::open(
-                                        IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                        filename_p, "rb", 0));
+        ostringstream os;
+        os << "TableLockServer::load(): could not open the save file"
+           << filename;
+        log(os.str(), logging::LOG_TYPE_DEBUG);
+        return;
+    }
 
-        if (!in)
+    try
+    {
+        in->read((char*) &size, 4);
+
+        for (i = 0; i < size; i++)
         {
-            ostringstream os;
-            os << "TableLockServer::load(): could not open the save file"
-               << filename;
-            log(os.str(), logging::LOG_TYPE_DEBUG);
-            return;
-        }
+            tli.deserialize(in.get());
+            tli.id = sms->getUnique64();   // Need new #s...
 
-        try
-        {
-            in->read((char*) &size, 4);
+            if (tli.id == 0)	// 0 is an error code
+                tli.id = sms->getUnique64();
 
-            for (i = 0; i < size; i++)
-            {
-                tli.deserialize(in.get());
-                tli.id = sms->getUnique64();   // Need new #s...
-
-                if (tli.id == 0)	// 0 is an error code
-                    tli.id = sms->getUnique64();
-
-                locks[tli.id] = tli;
-            }
-        }
-        catch (std::exception& e)
-        {
-            ostringstream os;
-            os << "TableLockServer::load(): could not load save file " << filename <<
-               " loaded " << i << "/" << size << " entries\n";
-            log(os.str(), logging::LOG_TYPE_DEBUG);
-            throw;
+            locks[tli.id] = tli;
         }
     }
-    else
+    catch (std::exception& e)
     {
-        ifstream in(filename.c_str(), ios::binary | ios::in);
-
-        if (!in)
-        {
-            ostringstream os;
-            os << "TableLockServer::load(): could not open the save file"
-               << filename;
-            log(os.str(), logging::LOG_TYPE_DEBUG);
-            return;
-        }
-
-        in.exceptions(ios::failbit | ios::badbit);
-
-        try
-        {
-            in.read((char*) &size, 4);
-
-            for (i = 0; i < size; i++)
-            {
-                tli.deserialize(in);
-                tli.id = sms->getUnique64();   // Need new #s...
-
-                if (tli.id == 0)	// 0 is an error code
-                    tli.id = sms->getUnique64();
-
-                locks[tli.id] = tli;
-            }
-        }
-        catch (std::exception& e)
-        {
-            ostringstream os;
-
-            os << "TableLockServer::load(): could not load save file " << filename <<
-               " loaded " << i << "/" << size << " entries\n";
-            log(os.str(), logging::LOG_TYPE_DEBUG);
-            throw;
-        }
+        ostringstream os;
+        os << "TableLockServer::load(): could not load save file " << filename <<
+           " loaded " << i << "/" << size << " entries\n";
+        log(os.str(), logging::LOG_TYPE_DEBUG);
+        throw;
     }
 }
 
