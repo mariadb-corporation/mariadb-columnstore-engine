@@ -377,25 +377,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
     if (isDDL)
         ++_sysCatVerID;
 
-    if (false && !IDBPolicy::useHdfs())
-    {
-        int filedata[2];
-        filedata[0] = _verID;
-        filedata[1] = _sysCatVerID;
-
-        lseek(txnidfd, 0, SEEK_SET);
-        int err = write(txnidfd, filedata, 8);
-
-        if (err < 0)
-        {
-            perror("SessionManagerServer::newTxnID(): write(verid)");
-            throw runtime_error("SessionManagerServer::newTxnID(): write(verid) failed");
-        }
-    }
-    else
-    {
-        saveSMTxnIDAndState();
-    }
+    saveSMTxnIDAndState();
 
     return ret;
 }
