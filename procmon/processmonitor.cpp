@@ -2232,13 +2232,16 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
     // exit gracefully.  This will wait until StorageManager goes down to prevent
     // weirdness that I suspect will happen if we combine a slow connection with a restart
     // command.
-    if (processName == "StorageManager")
+    if (processName == "StorageManager" && processID != 0)
     {
         while (status == API_SUCCESS)
         {
             sleep(1);
-            log.writeLog(__LINE__, "Waiting for StorageManager to go away...", LOG_TYPE_DEBUG);
+            ostringstream os;
+            os << "Waiting for StorageManager to exit gracefully... pid is " << processID;
+            log.writeLog(__LINE__, os.str(), LOG_TYPE_DEBUG);
             status = kill(processID, SIGTERM);
+            break;
         }
     
         return API_SUCCESS;
