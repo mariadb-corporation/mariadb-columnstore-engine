@@ -2241,7 +2241,7 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
             status = kill(processID, SIGTERM);
         }
     
-        return status;
+        return API_SUCCESS;
     }
     
     //now do a pkill on process just to make sure all is clean
