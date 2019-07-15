@@ -273,6 +273,10 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
         Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(sort_item);
         found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
     }
+    else if (!found && sort_item->type() == Item::FIELD_ITEM)
+    {
+        return found;
+    }
 
     // seeking for a group_item match
     for (uint32_t i = 0; !found && i < ifp_sort->argument_count(); i++)
@@ -6085,7 +6089,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 (table_ptr->derived->first_select())->print(gwi.thd, &str, QT_ORDINARY);
 
                 SELECT_LEX* select_cursor = table_ptr->derived->first_select();
-                FromSubQuery fromSub(gwi, select_cursor, false, isPushdownHand);
+                FromSubQuery fromSub(gwi, select_cursor, isPushdownHand);
                 string alias(table_ptr->alias.str);
                 fromSub.alias(lower(alias));
 

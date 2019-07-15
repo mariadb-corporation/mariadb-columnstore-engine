@@ -3062,7 +3062,10 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 
         try
         {
-            sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
+            {
+                bool ask_4_stats = (ci->traceFlags) ? true : false;
+                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats);
+            }
 
             // set conn hndl back. could be changed in tpl_close
             if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE)
@@ -5124,7 +5127,10 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         {
             if(hndl)
             {
-                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, clearScanCtx);
+                {
+                    bool ask_4_stats = (ci->traceFlags) ? true : false;
+                    sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats, clearScanCtx);
+                }
 // Normaly stats variables are set in external_lock method but we set it here
 // since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
 // We sum the stats up here since server could run a number of

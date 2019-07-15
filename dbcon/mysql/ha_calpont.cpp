@@ -527,7 +527,11 @@ int ha_calpont::rnd_init(bool scan)
 {
     DBUG_ENTER("ha_calpont::rnd_init");
 
-    int rc = ha_calpont_impl_rnd_init(table);
+    int rc = 0;
+    if(scan)
+    {
+        rc = ha_calpont_impl_rnd_init(table);
+    }
 
     DBUG_RETURN(rc);
 }
