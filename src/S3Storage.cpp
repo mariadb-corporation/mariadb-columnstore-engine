@@ -104,9 +104,10 @@ S3Storage::S3Storage()
     
     region = config->getValue("S3", "region");
     bucket = config->getValue("S3", "bucket");
-    if (region.empty() || bucket.empty())
+    prefix = config->getValue("S3", "prefix");
+    if (bucket.empty())
     {
-        const char *msg = "S3 access requires setting S3/region and S3/bucket in storagemanager.cnf";
+        const char *msg = "S3 access requires setting S3/bucket in storagemanager.cnf";
         logger->log(LOG_ERR, msg);
         throw runtime_error(msg);
     }
@@ -194,11 +195,12 @@ int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t
     return 0;
 }
 
-int S3Storage::getObject(const string &sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
+int S3Storage::getObject(const string &_sourceKey, boost::shared_array<uint8_t> *data, size_t *size)
 {
     uint8_t err;
     size_t len = 0;
     uint8_t *_data = NULL;
+    string sourceKey = prefix + _sourceKey;
     
     ms3_st *creds = getConnection();
     ScopedConnection sc(this, creds);
@@ -286,8 +288,9 @@ int S3Storage::putObject(const string &sourceFile, const string &destKey)
     return putObject(data, len, destKey);
 }
 
-int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, const string &destKey)
+int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, const string &_destKey)
 {
+    string destKey = prefix + _destKey;
     uint8_t s3err;
     ms3_st *creds = getConnection();
     ScopedConnection sc(this, creds);
@@ -319,9 +322,10 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     return 0;
 }
 
-int S3Storage::deleteObject(const string &key)
+int S3Storage::deleteObject(const string &_key)
 {
     uint8_t s3err;
+    string key = prefix + _key;
     ms3_st *creds = getConnection();
     ScopedConnection sc(this, creds);
         
@@ -352,8 +356,9 @@ int S3Storage::deleteObject(const string &key)
     return 0;
 }
 
-int S3Storage::copyObject(const string &sourceKey, const string &destKey)
+int S3Storage::copyObject(const string &_sourceKey, const string &_destKey)
 {
+    string sourceKey = prefix + _sourceKey, destKey = prefix + _destKey;
     uint8_t s3err;
     ms3_st *creds = getConnection();
     ScopedConnection sc(this, creds);
@@ -400,8 +405,9 @@ int S3Storage::copyObject(const string &sourceKey, const string &destKey)
 #endif
 }
 
-int S3Storage::exists(const string &key, bool *out)
+int S3Storage::exists(const string &_key, bool *out)
 {
+    string key = prefix + _key;
     uint8_t s3err;
     ms3_status_st status;
     ms3_st *creds = getConnection();

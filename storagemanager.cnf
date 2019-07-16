@@ -11,6 +11,10 @@ region = us-east-2
 bucket = s3-cs-test2
 # endpoint = <non-S3 endpoint to use>
 
+# optional prefix for objects; using this will hurt performance
+# prefix = cs/
+
+
 # Keys for S3 can also be set through the environment vars
 # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 # StorageManager will prioritize these config values over envvars.

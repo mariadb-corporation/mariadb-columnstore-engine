@@ -30,6 +30,7 @@ class S3Storage : public CloudStorage
         void returnConnection(ms3_st *);
     
         std::string bucket;   // might store this as a char *, since it's only used that way
+        std::string prefix;
         std::string region;
         std::string key;
         std::string secret;
