@@ -2203,7 +2203,9 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
         status = API_SUCCESS;
     else
     {
-        if (actionIndicator == GRACEFUL)
+        // XXXPAT: StorageManager shouldn't be killed with KILL, or there's a chance of data corruption.
+        // once we minimize that chance, we could allow KILL to be sent.
+        if (actionIndicator == GRACEFUL || processName == "StorageManager")
         {
             status = kill(processID, SIGTERM);
         }
