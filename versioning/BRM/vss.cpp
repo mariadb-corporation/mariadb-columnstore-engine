@@ -21,7 +21,6 @@
  ****************************************************************************/
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
 //#define NDEBUG
 #include <cassert>
@@ -1294,57 +1293,36 @@ void VSS::save(string filename)
     int i;
     struct Header header;
 
-    // XXXPAT: Forcing the IDB* path to run.  Delete the fstream path when appropriate.
-    if (true || IDBPolicy::useHdfs())
+    const char* filename_p = filename.c_str();
+    scoped_ptr<IDBDataFile> out(IDBDataFile::open(
+                                    IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+                                    filename_p, "wb", IDBDataFile::USE_VBUF));
+
+    if (!out)
     {
-        const char* filename_p = filename.c_str();
-        scoped_ptr<IDBDataFile> out(IDBDataFile::open(
-                                        IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                        filename_p, "wb", IDBDataFile::USE_VBUF));
+        log_errno("VSS::save()");
+        throw runtime_error("VSS::save(): Failed to open the file");
+    }
 
-        if (!out)
-        {
-            log_errno("VSS::save()");
-            throw runtime_error("VSS::save(): Failed to open the file");
-        }
+    header.magic = VSS_MAGIC_V1;
+    header.entries = vss->currentSize;
 
-        header.magic = VSS_MAGIC_V1;
-        header.entries = vss->currentSize;
+    if (out->write((char*)&header, sizeof(header)) != sizeof(header))
+    {
+        log_errno("VSS::save()");
+        throw runtime_error("VSS::save(): Failed to write header to the file");
+    }
 
-        if (out->write((char*)&header, sizeof(header)) != sizeof(header))
+    int first = -1, last = -1, err;
+    size_t progress, writeSize;
+    for (i = 0; i < vss->capacity; i++)
+    {
+        if (storage[i].lbid != -1 && first == -1)
+            first = i;
+        else if (storage[i].lbid == -1 && first != -1)
         {
-            log_errno("VSS::save()");
-            throw runtime_error("VSS::save(): Failed to write header to the file");
-        }
-
-        int first = -1, last = -1, err;
-        size_t progress, writeSize;
-        for (i = 0; i < vss->capacity; i++)
-        {
-            if (storage[i].lbid != -1 && first == -1)
-                first = i;
-            else if (storage[i].lbid == -1 && first != -1)
-            {
-                last = i;
-                writeSize = (last - first) * sizeof(VSSEntry);
-                progress = 0;
-                char *writePos = (char *) &storage[first];
-                while (progress < writeSize)
-                {
-                    err = out->write(writePos + progress, writeSize - progress);
-                    if (err < 0)
-                    {
-                        log_errno("VSS::save()");
-                        throw runtime_error("VSS::save(): Failed to write the file");
-                    }
-                    progress += err;
-                }
-                first = -1;
-            }
-        }
-        if (first != -1)
-        {
-            writeSize = (vss->capacity - first) * sizeof(VSSEntry);
+            last = i;
+            writeSize = (last - first) * sizeof(VSSEntry);
             progress = 0;
             char *writePos = (char *) &storage[first];
             while (progress < writeSize)
@@ -1357,56 +1335,25 @@ void VSS::save(string filename)
                 }
                 progress += err;
             }
+            first = -1;
         }
-        
-        /*
-        for (i = 0; i < vss->capacity; i++)
-        {
-            if (storage[i].lbid != -1)
-            {
-                if (out->write((char*)&storage[i], sizeof(VSSEntry)) != sizeof(VSSEntry))
-                {
-                    log_errno("VSS::save()");
-                    throw runtime_error("VSS::save(): Failed to write vss entry to the file");
-                }
-            }
-        }
-        */
     }
-    else
+    if (first != -1)
     {
-        ofstream out;
-        out.open(filename.c_str(), ios_base::trunc | ios_base::out | ios_base::binary);
-        //::umask(utmp);
-
-        if (!out)
+        writeSize = (vss->capacity - first) * sizeof(VSSEntry);
+        progress = 0;
+        char *writePos = (char *) &storage[first];
+        while (progress < writeSize)
         {
-            log_errno("VSS::save()");
-            throw runtime_error("VSS::save(): Failed to open the file");
+            err = out->write(writePos + progress, writeSize - progress);
+            if (err < 0)
+            {
+                log_errno("VSS::save()");
+                throw runtime_error("VSS::save(): Failed to write the file");
+            }
+            progress += err;
         }
-
-        out.exceptions(ios_base::badbit);
-
-        header.magic = VSS_MAGIC_V1;
-        header.entries = vss->currentSize;
-
-        try
-        {
-            out.write((char*)&header, sizeof(header));
-
-            for (i = 0; i < vss->capacity; i++)
-                if (storage[i].lbid != -1)
-                    out.write((char*)&storage[i], sizeof(VSSEntry));
-        }
-        catch (std::exception& e)
-        {
-            out.close();
-            throw;
-        }
-
-        out.close();
     }
-
 }
 
 // Ideally, we;d like to get in and out of this fcn as quickly as possible.
@@ -1517,93 +1464,10 @@ void VSS::load(string filename)
     for (i = 0; i < header.entries; i++)
         insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, 
           loadedEntries[i].locked, true);
-
-    /*
-    for (i = 0; i < header.entries; i++)
-    {
-        if (in->read((char*)&entry, sizeof(entry)) != sizeof(entry))
-        {
-            log_errno("VSS::load()");
-            throw runtime_error("VSS::load(): Failed to read entry");
-        }
-
-        insert(entry.lbid, entry.verID, entry.vbFlag, entry.locked, true);
-    }
-    */
     
     //time2 = microsec_clock::local_time();
     //cout << "done loading " << time2 << " duration: " << time2-time1 << endl;
 }
-
-#ifndef __LP64__
-//This code is OBE now that the structs are padded correctly
-struct VSSEntry_
-{
-    LBID_t lbid;
-    VER_t verID;
-    bool vbFlag;
-    bool locked;
-    int next;
-    uint32_t pad1;
-};
-
-void VSS::load64(string filename)
-{
-    int i;
-    struct Header header;
-    struct VSSEntry_ entry;
-
-    const char* filename_p = filename.c_str();
-    scoped_ptr<IDBDataFile>  in(IDBDataFile::open(
-                                    IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                    filename_p, "rb", 0));
-
-    if (!in)
-    {
-        log_errno("VSS::load()");
-        throw runtime_error("VSS::load(): Failed to open the file");
-    }
-
-    if (in->read((char*)&header, sizeof(header)) != sizeof(header))
-    {
-        log_errno("VSS::load()");
-        throw runtime_error("VSS::load(): Failed to read header");
-    }
-
-    if (header.magic != VSS_MAGIC_V1)
-    {
-        log("VSS::load(): Bad magic.  Not a VSS file?");
-        throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
-    }
-
-    if (header.entries < 0)
-    {
-        log("VSS::load(): Bad size.  Not a VSS file?");
-        throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
-    }
-
-    for (i = 0; i < vss->capacity; i++)
-        storage[i].lbid = -1;
-
-    for (i = 0; i < vss->numHashBuckets; i++)
-        hashBuckets[i] = -1;
-
-    vss->currentSize = 0;
-    vss->lockedEntryCount = 0;
-    vss->LWM = 0;
-
-    for (i = 0; i < header.entries; i++)
-    {
-        if (in->read((char*)&entry, sizeof(entry)) != sizeof(entry))
-        {
-            log_errno("VSS::load()");
-            throw runtime_error("VSS::load(): Failed to read entry");
-        }
-
-        insert(entry.lbid, entry.verID, entry.vbFlag, entry.locked, true);
-    }
-}
-#endif
 
 #ifdef BRM_DEBUG
 // read lock

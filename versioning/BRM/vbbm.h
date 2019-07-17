@@ -214,7 +214,6 @@ public:
 
     EXPORT void clear();
     EXPORT void load(std::string filename);
-    EXPORT void loadVersion1(idbdatafile::IDBDataFile* in);
     EXPORT void loadVersion2(idbdatafile::IDBDataFile* in);
     EXPORT void save(std::string filename);
 

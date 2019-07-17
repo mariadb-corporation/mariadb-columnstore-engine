@@ -123,10 +123,7 @@ public:
      * It does not destroy the semaphores.  Those persist until the system
      * is shut down.
      */
-    virtual ~SessionManagerServer()
-    {
-        if (txnidfd >= 0 ) close(txnidfd);
-    }
+    virtual ~SessionManagerServer();
 
     /** @brief Gets the current version ID
      *
@@ -276,7 +273,6 @@ private:
 
     int maxTxns;  // the maximum number of concurrent transactions
     std::string txnidFilename;
-    int txnidfd;		// file descriptor for the "last txnid" file
     execplan::CalpontSystemCatalog::SCN _verID;
     execplan::CalpontSystemCatalog::SCN _sysCatVerID;
     uint32_t systemState;

@@ -250,10 +250,6 @@ public:
 
     EXPORT void clear();
     EXPORT void load(std::string filename);
-#ifndef __LP64__
-    //This method is OBE now that the structs are padded correctly
-    EXPORT void load64(std::string filename);
-#endif
     EXPORT void save(std::string filename);
 
 #ifdef BRM_DEBUG
