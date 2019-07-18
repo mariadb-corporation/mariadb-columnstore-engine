@@ -92,13 +92,14 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     const uint8_t *inbuf = in.buf();
     ssize_t err = 0;
     
+    /* should there be a retry limit here... */
     while (sock < 0)
     {
         sock = getSocket();
         if (sock < 0)
         {
-            log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): retrying in 5 sec...");
-            sleep(5);
+            //log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): retrying in 5 sec...");
+            sleep(1);
         }
     }
     
@@ -214,10 +215,12 @@ int SocketPool::getSocket()
             int saved_errno = errno;
             ostringstream os;
             char buf[80];
-            os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80);
+            os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80) << "'";
             cout << os.str() << endl;
             log(logging::LOG_TYPE_ERROR, os.str());
+            close(clientSocket);
             errno = saved_errno;
+            return -1;
         }
         return clientSocket;
     }
