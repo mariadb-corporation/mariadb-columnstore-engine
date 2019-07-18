@@ -1331,11 +1331,27 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                         }
                         else
                         {
+                            /* XXXPAT: saveBRM requires StorageManager being up at the time.
+                            A couple options. 1) start/stop SM around saveBRM().  Will work but it means SM would go
+                            down-up-down for this single operation.  2) add a special path to stopModule()
+                            to NOT stop SM in the first call, then after saveBRM(), stop SM.
+                            
+                            Neither option is great.  The least invasive is option 1, so going with that
+                            for now.
+                            */
+                            
                             //now stop local module
                             processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
                             //run save brm script
+                            string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+                            if (storageType == "storagemanager")
+                                processManager.startProcess(config.moduleName(), "StorageManager", FORCEFUL);
+                                
                             processManager.saveBRM(false);
+                            
+                            if (storageType == "storagemanager")
+                                processManager.stopProcess(config.moduleName(), "StorageManager", GRACEFUL, false);
 
                             log.writeLog(__LINE__, "Stop System Completed Success", LOG_TYPE_INFO);
 
@@ -1766,7 +1782,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
                     //run save.brm script
+                    string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+                    if (storageType == "storagemanager")
+                        processManager.startProcess(config.moduleName(), "StorageManager", FORCEFUL);
+                        
                     processManager.saveBRM(false);
+                    
+                    if (storageType == "storagemanager")
+                        processManager.stopProcess(config.moduleName(), "StorageManager", GRACEFUL, false);
+                    
 
                     log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor for stopModule requests, return status = " + oam.itoa(status));
 
@@ -7049,7 +7073,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
     int rtnCode = system(cmd.c_str());
     log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
-
+    
     log.writeLog(__LINE__, "Running DBRM save_brm", LOG_TYPE_DEBUG);
 
     cmd = startup::StartUp::installDir() + "/bin/save_brm > " + logdir + "/save_brm.log1 2>&1";
@@ -7061,7 +7085,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     }
     else
         log.writeLog(__LINE__, "Error running DBRM save_brm", LOG_TYPE_ERROR);
-
+        
     if ( clearshm )
     {
         cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
