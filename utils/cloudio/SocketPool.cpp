@@ -92,6 +92,7 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     const uint8_t *inbuf = in.buf();
     ssize_t err = 0;
     
+retry:
     /* should there be a retry limit here... */
     while (sock < 0)
     {
@@ -103,13 +104,19 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
         }
     }
     
-    /* TODO: make these writes not send SIGPIPE */
     storagemanager::sm_msg_header hdr;
     hdr.type = storagemanager::SM_MSG_START;
     hdr.payloadLen = length;
     hdr.flags = 0;
     //cout << "SP sending msg on sock " << sock << " with length = " << length << endl;
     err = ::write(sock, &hdr, sizeof(hdr));
+    if (err < 0 && errno == EPIPE)
+    {
+        log(logging::LOG_TYPE_WARNING, "SocketPool: remote connection is closed, getting a new one");
+        remoteClosed(sock);
+        sock = -1;
+        goto retry;
+    }
     sm_check_error;
     while (count < length)
     {
