@@ -478,7 +478,7 @@ public:
     */
     int updateConfigFile(messageqcpp::ByteStream msg);
 
-    int getDBRMdata();
+    int getDBRMdata(std::string *path);
 
     /**
      *@brief Send Msg to Process Monitor
