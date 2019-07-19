@@ -9437,6 +9437,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
             }
             progress += err;
         }
+        fdmsg.advanceInputPtr(size);
         
         log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
         fnmsg << fileName;
