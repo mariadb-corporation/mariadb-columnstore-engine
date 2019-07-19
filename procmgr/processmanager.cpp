@@ -30,6 +30,10 @@
 #include "dbrm.h"
 #include "cacheutils.h"
 #include "ddlcleanuputil.h"
+#include "IDBFileSystem.h"
+#include "IDBDataFile.h"
+#include "IDBPolicy.h"
+
 using namespace cacheutils;
 
 using namespace std;
@@ -39,6 +43,7 @@ using namespace oam;
 using namespace logging;
 using namespace alarmmanager;
 using namespace config;
+using namespace idbdatafile;
 
 pthread_mutex_t STATUS_LOCK;
 pthread_mutex_t THREAD_LOCK;
@@ -9197,12 +9202,20 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
     // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
-    ifstream oldFile (currentFileName.c_str());
+    IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
+    boost::scoped_ptr<IDBDataFile> oldFile(IDBDataFile::open(IDBPolicy::getType(currentFileName.c_str(),
+                                                         IDBPolicy::WRITEENG),
+                                                         currentFileName.c_str(), "r", 0));
+    //ifstream oldFile (currentFileName.c_str());
 
-    if (oldFile)
+    if (fs.exists(currentFileName.c_str()))
     {
         // current file found, check for OIDBitmapFile
-        ifstream mapFile (oidFile.c_str());
+        boost::scoped_ptr<IDBDataFile> mapFile(IDBDataFile::open(IDBPolicy::getType(oidFile.c_str(),
+                                                     IDBPolicy::WRITEENG),
+                                                     oidFile.c_str(), "r", 0));
+        
+        //ifstream mapFile (oidFile.c_str());
 
         if (!mapFile)
         {
@@ -9213,7 +9226,9 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
 
         char line[200];
-        oldFile.getline(line, 200);
+        memset(line, 0, 200);
+        oldFile->read(line, 200);
+        //oldFile.getline(line, 200);
         // MCOL-1558.  Handle absolute and relative paths.
         if (line[0] == '/')
             currentDbrmFile = line;
@@ -9248,7 +9263,14 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
     unlink(fileName.c_str());
 
-    string cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    string cmd;
+    
+    // todo, make all this use fs.listDirectory() instead...
+    string storageType = config::Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+    if (storageType == "storagemanager")
+        cmd = "smls " + currentDbrmFile + "_* | awk '// { print $3 }' >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    else
+        cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
     system(cmd.c_str());
 
     ifstream file (fileName.c_str());
@@ -9320,14 +9342,9 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // StorageManager: no need to distribute these files if in cloud storage
     dbrmFiles.push_back(currentFileName);
 
-    ifstream file1 (journalFileName.c_str());
-
-    if (file1)
+    if (fs.exists(journalFileName.c_str()))
         dbrmFiles.push_back(journalFileName);
-
-    ifstream file2 (oidFile.c_str());
-
-    if (file2)
+    if (fs.exists(oidFile.c_str()))
         dbrmFiles.push_back(oidFile);
 
     //type
@@ -9354,13 +9371,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {
-        string fileName = *pt1;
-        ifstream in(fileName.c_str());
-
-        in.seekg(0, std::ios::end);
-        int size = in.tellg();
-
-        if ( size == 0 )
+        if (fs.size(pt1->c_str()) == 0)
             dbrmFiles.erase(pt1);
     }
 
@@ -9391,11 +9402,53 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         ByteStream fnmsg, fdmsg;
 
         string fileName = *pt1;
-        ifstream in(fileName.c_str());
 
+        //Goal of the stuff below is to load a file's data into fdmsg
+        //and it's filename into fnmsg.
+
+        ssize_t size = fs.size(fileName.c_str());
+        if (size <= 0)
+            continue;
+            
+        boost::scoped_ptr<IDBDataFile> in(IDBDataFile::open(
+                                                IDBPolicy::getType(fileName.c_str(),
+                                                IDBPolicy::WRITEENG),
+                                                fileName.c_str(), "r", 0));
+            
+        fdmsg.needAtLeast(size);
+        uint8_t *buf = fdmsg.getInputPtr();
+        ssize_t progress = 0;
+        ssize_t err;
+        char errbuf[80];
+        while (progress < size)
+        {
+            err = in->read(&buf[progress], size - progress);
+            if (err < 0)
+            {
+                int saved_errno = errno;
+                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got " + 
+                    strerror_r(saved_errno, errbuf, 80));
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return oam::API_FAILURE;
+            }
+            else if (err == 0)
+            {
+                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got early EOF");
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return oam::API_FAILURE;
+            }
+            progress += err;
+        }
+        
+        log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
+        fnmsg << fileName;
+        
+        #if 0
+        ifstream in(fileName.c_str());
+                
         //skip any file of size 0
         in.seekg(0, std::ios::end);
-        int size = in.tellg();
+        size = in.tellg();
 
         if ( size == 0 )
             continue;
@@ -9404,7 +9457,8 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
         log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
         fnmsg << fileName;
-
+        #endif
+        
         try
         {
             cfIos.write(fnmsg);
@@ -9423,8 +9477,8 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
             return oam::API_FAILURE;
         }
 
-        in >> fdmsg;
-
+        //in >> fdmsg;
+        
         try
         {
             cfIos.write(fdmsg);
