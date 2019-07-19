@@ -9202,6 +9202,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
     // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
+    log.writeLog(__LINE__, "I declare that I am ProcMgr, and I am running getDBRMData!", LOG_TYPE_DEBUG);
     IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
     boost::scoped_ptr<IDBDataFile> oldFile(IDBDataFile::open(IDBPolicy::getType(currentFileName.c_str(),
                                                          IDBPolicy::WRITEENG),
@@ -9271,6 +9272,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         cmd = "smls " + currentDbrmFile + "_* | awk '// { print $3 }' >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
     else
         cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    log.writeLog(__LINE__, "Running '" + cmd + "'", LOG_TYPE_DEBUG);
     system(cmd.c_str());
 
     ifstream file (fileName.c_str());
@@ -9427,13 +9429,13 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
             {
                 int saved_errno = errno;
                 log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got " + 
-                    strerror_r(saved_errno, errbuf, 80));
+                    strerror_r(saved_errno, errbuf, 80), LOG_TYPE_ERROR);
                 pthread_mutex_unlock(&THREAD_LOCK);
                 return oam::API_FAILURE;
             }
             else if (err == 0)
             {
-                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got early EOF");
+                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got early EOF", LOG_TYPE_ERROR);
                 pthread_mutex_unlock(&THREAD_LOCK);
                 return oam::API_FAILURE;
             }
