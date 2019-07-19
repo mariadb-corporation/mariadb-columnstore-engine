@@ -22,6 +22,10 @@
  ***************************************************************************/
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include "columnstoreversion.h"
 #include "IDBDataFile.h"
@@ -40,6 +44,7 @@ using namespace logging;
 using namespace config;
 
 using namespace idbdatafile;
+namespace bf = boost::filesystem;
 
 extern string systemOAM;
 extern string dm_server;
@@ -2574,7 +2579,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             system(cmd.c_str());
 
             // if Non Parent OAM Module, get the dbmr data from Parent OAM Module
-            if ( !gOAMParentModuleFlag && !HDFS && DBRootStorageType != "storagemanager")
+            if ( !gOAMParentModuleFlag && !HDFS)
             {
 
                 //create temp dbrm directory
@@ -2599,18 +2604,22 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 //				system(cmd.c_str());
 
                 // go request files from parent OAM module
-                if ( getDBRMdata() != oam::API_SUCCESS )
+                if ( getDBRMdata(&DBRMDir) != oam::API_SUCCESS )
                 {
                     log.writeLog(__LINE__, "Error: getDBRMdata failed", LOG_TYPE_ERROR);
                     sendAlarm("DBRM", DBRM_LOAD_DATA_ERROR, SET);
                     return oam::API_MINOR_FAILURE;
                 }
-
+                // DBRMDir might have changed, so need to change DBRMroot
+                bf::path tmp(DBRMroot);
+                tmp = tmp.filename();
+                DBRMroot = (bf::path(DBRMDir) / tmp).string();
+                
                 sendAlarm("DBRM", DBRM_LOAD_DATA_ERROR, CLEAR);
                 // change DBRMroot to temp DBRMDir path
 //				DBRMroot = tempDBRMDir + "/BRM_saves";
             }
-
+            
             //
             // run the 'load_brm' script first if files exist
             //
@@ -2680,11 +2689,17 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 }
 
                 // now delete the dbrm data from local disk
-                if ( !gOAMParentModuleFlag && !HDFS && DBRootStorageType != "storagemanager" && DataRedundancyConfig == "n")
+                if ( !gOAMParentModuleFlag && !HDFS && DataRedundancyConfig == "n")
                 {
+                    IDBFileSystem &fs = IDBPolicy::getFs(DBRMDir);
+                    fs.remove(DBRMDir.c_str());
+                    log.writeLog(__LINE__, "removed downloaded DBRM files at " + DBRMDir, LOG_TYPE_DEBUG);
+                    
+                    #if 0
                     string cmd = "rm -f " + DBRMDir + "/*";
                     system(cmd.c_str());
                     log.writeLog(__LINE__, "removed DBRM file with command: " + cmd, LOG_TYPE_DEBUG);
+                    #endif
                 }
             }
             else
@@ -4315,7 +4330,7 @@ int ProcessMonitor::processRestarted( std::string processName, bool manual)
 *
 *
 ******************************************************************************************/
-int ProcessMonitor::getDBRMdata()
+int ProcessMonitor::getDBRMdata(string *path)
 {
     MonitorLog log;
 
@@ -4397,7 +4412,11 @@ int ProcessMonitor::getDBRMdata()
                     log.writeLog(__LINE__, oam.itoa(numFiles), LOG_TYPE_DEBUG);
 
                     bool journalFile = false;
-
+                    boost::uuids::uuid u = boost::uuids::random_generator()();
+                    bf::path pTmp = bf::path(*path) / boost::uuids::to_string(u);
+                    *path = pTmp.string();
+                    log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
+                    
                     for ( int i = 0 ; i < numFiles ; i ++ )
                     {
                         string fileName;
@@ -4438,11 +4457,14 @@ int ProcessMonitor::getDBRMdata()
 //								string temp1 = temp + "data" + fileName.substr(pos1,80);
 //								fileName = temp1;
 //							}
-
+                            bf::path pFilename(fileName);
+                            pFilename = pTmp / pFilename.filename();
+                            const char *cFilename = pFilename.string().c_str();
+                            
                             boost::scoped_ptr<IDBDataFile> out(IDBDataFile::open(
-                                                                   IDBPolicy::getType(fileName.c_str(),
+                                                                   IDBPolicy::getType(cFilename,
                                                                            IDBPolicy::WRITEENG),
-                                                                   fileName.c_str(), "w", 0));
+                                                                   cFilename, "w", 0));
 
                             // read file data
                             try
