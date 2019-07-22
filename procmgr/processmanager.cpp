@@ -9228,7 +9228,11 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
         char line[200];
         memset(line, 0, 200);
-        oldFile->read(line, 200);
+        int err = oldFile->read(line, 200);
+        // XXXPAT.  HACK!  This is brittle, need to fix later.  Need to eat a \n char.  Need to move forward now.
+        if (err > 0)
+            line[err-1] = 0;
+        
         //oldFile.getline(line, 200);
         // MCOL-1558.  Handle absolute and relative paths.
         if (line[0] == '/')
