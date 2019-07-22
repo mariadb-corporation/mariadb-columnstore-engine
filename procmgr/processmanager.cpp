@@ -9366,9 +9366,9 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // put oid file and current file in list
     dbrmFiles.push_back(currentFileName);
 
-    if (fs.exists(journalFileName.c_str()))
+    if (fs.exists(journalFileName.c_str()) && fs.size(journalFileName.c_str()) > 0)
         dbrmFiles.push_back(journalFileName);
-    if (fs.exists(oidFile.c_str()))
+    if (fs.exists(oidFile.c_str()) && fs.size(oidFile.c_str()) > 0)
         dbrmFiles.push_back(oidFile);
 
     //type
