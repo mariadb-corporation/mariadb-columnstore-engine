@@ -9268,14 +9268,22 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // this replaces the stuff that's if-0'd below
     boost::filesystem::path pCurrentDbrmFile(currentDbrmFile);
     boost::filesystem::path dbrmDir(pCurrentDbrmFile.parent_path());
+    log.writeLog(__LINE__, "pCurrentDbrmFile is " + pCurrentDbrmFile.string(), LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "dbrmDir is " + dbrmDir.string(), LOG_TYPE_DEBUG);
     list<string> fileListing;
     vector<string> dbrmFiles;
     fs.listDirectory(dbrmDir.string().c_str(), fileListing);
     for (const auto &file : fileListing)
+    {
+        log.writeLog(__LINE__, "fileListing contains " + file, LOG_TYPE_DEBUG);
         // put file in dbrmFiles if it contains the right prefix and is not empty
-        if (file.find(pCurrentDbrmFile.filename().string()) == 0 &&
+        if (file.find(pCurrentDbrmFile.filename().string()) != string::npos &&
           fs.size((dbrmDir / file).string().c_str()) != 0)
+          {
+            log.writeLog(__LINE__, "adding " + (dbrmDir/file).string() + " to dbrmFiles", LOG_TYPE_DEBUG);
             dbrmFiles.push_back((dbrmDir / file).string());
+          }
+    }
     fileListing.clear();
     
     #if 0
