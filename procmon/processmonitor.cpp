@@ -22,7 +22,7 @@
  ***************************************************************************/
 
 #include <boost/scoped_ptr.hpp>
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -4414,6 +4414,8 @@ int ProcessMonitor::getDBRMdata(string *path)
                     bool journalFile = false;
                     boost::uuids::uuid u = boost::uuids::random_generator()();
                     bf::path pTmp = bf::path(*path) / boost::uuids::to_string(u);
+                    if (config::Config::makeConfig()->getConfig("Installation", "DBRootStorageType") != "storagemanager")
+                        bf::create_directories(pTmp);
                     *path = pTmp.string();
                     log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
                     
