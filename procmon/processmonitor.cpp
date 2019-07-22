@@ -4501,8 +4501,12 @@ int ProcessMonitor::getDBRMdata(string *path)
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
-                        system(cmd.c_str());
+                        string journalFilename = startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(journalFilename.c_str(),
+                            IDBPolicy::WRITEENG), journalFilename.c_str(), "w", 0);
+                        delete idbJournalFile;
+                        //string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        //system(cmd.c_str());
                     }
 
                     returnStatus = oam::API_SUCCESS;
