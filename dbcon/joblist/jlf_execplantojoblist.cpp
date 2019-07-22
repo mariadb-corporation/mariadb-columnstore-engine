@@ -1635,9 +1635,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         string constval(cc->constval());
-        // Because, on a filter, we want to compare ignoring trailing spaces
-        boost::algorithm::trim_right_if(constval, boost::is_any_of(" "));
-
 
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
@@ -1648,6 +1645,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
 
+        // Because, on a filter, we want to compare ignoring trailing spaces in many cases
+        // MaraiDB Server compares without trim for LIKE against CHAR.
+        if (ct.colDataType != execplan::CalpontSystemCatalog::CHAR ||
+            sf->op()->op() != execplan::OP_LIKE)
+        {
+            boost::algorithm::trim_right_if(constval, boost::is_any_of(" "));
+        }
 //X
         //@bug 339 nulls are not stored in dictionary
         if ((dictOid = isDictCol(ct)) > 0  && ConstantColumn::NULLDATA != cc->type())
