@@ -33,6 +33,7 @@
 #include "IDBFileSystem.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
+#include <boost/filesystem/path.hpp>
 
 using namespace cacheutils;
 
@@ -9263,12 +9264,25 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
     unlink(fileName.c_str());
 
-    string cmd;
+    // this replaces the stuff that's if-0'd below
+    boost::filesystem::path pCurrentDbrmFile(currentDbrmFile);
+    boost::filesystem::path dbrmDir(pCurrentDbrmFile.parent_path());
+    list<string> fileListing;
+    vector<string> dbrmFiles;
+    fs.listDirectory(dbrmDir.string().c_str(), fileListing);
+    for (const auto &file : fileListing)
+        // put file in dbrmFiles if it contains the right prefix and is not empty
+        if (file.find(pCurrentDbrmFile.filename().string()) == 0 &&
+          fs.size((dbrmDir / file).string().c_str()) != 0)
+            dbrmFiles.push_back((dbrmDir / file).string());
+    fileListing.clear();
     
-    // todo, make all this use fs.listDirectory() instead...
+    #if 0
+    string cmd;
     string storageType = config::Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
     if (storageType == "storagemanager")
-        cmd = "smls " + currentDbrmFile + "_* | awk '// { print $3 }' >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+        cmd = startup::StartUp::installDir() + "/bin/smls " + currentDbrmFile + "_* | awk '// { print $3 }' >> " +
+            startup::StartUp::installDir() + "/local/dbrmfiles";
     else
         cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
     log.writeLog(__LINE__, "Running '" + cmd + "'", LOG_TYPE_DEBUG);
@@ -9301,6 +9315,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         return returnStatus;
     }
 
+    
     vector <string> dbrmFiles;
 
     char line[200];
@@ -9313,6 +9328,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     file.close();
+    #endif
 
     if ( dbrmFiles.size() < 1 )
     {
@@ -9367,13 +9383,15 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     //remove any file of size 0
+    
     std::vector<std::string>::iterator pt1 = dbrmFiles.begin();
-
+    #if 0
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {
         if (fs.size(pt1->c_str()) == 0)
             dbrmFiles.erase(pt1);
     }
+    #endif
 
     ByteStream fcmsg;
 
@@ -9405,16 +9423,13 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
         //Goal of the stuff below is to load a file's data into fdmsg
         //and it's filename into fnmsg.
-
-        ssize_t size = fs.size(fileName.c_str());
-        if (size <= 0)
-            continue;
             
         boost::scoped_ptr<IDBDataFile> in(IDBDataFile::open(
                                                 IDBPolicy::getType(fileName.c_str(),
                                                 IDBPolicy::WRITEENG),
                                                 fileName.c_str(), "r", 0));
-            
+        
+        ssize_t size = in->size();
         fdmsg.needAtLeast(size);
         uint8_t *buf = fdmsg.getInputPtr();
         ssize_t progress = 0;
