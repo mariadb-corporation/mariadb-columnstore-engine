@@ -9368,9 +9368,9 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // StorageManager: no need to distribute these files if in cloud storage
     dbrmFiles.push_back(currentFileName);
 
-    if (fs.exists(journalFileName.c_str()))
+    if (fs.exists(journalFileName.c_str()) && fs.size(journalFileName.c_str()) > 0)
         dbrmFiles.push_back(journalFileName);
-    if (fs.exists(oidFile.c_str()))
+    if (fs.exists(oidFile.c_str()) && fs.size(oidFile.c_str()) > 0)
         dbrmFiles.push_back(oidFile);
 
     //type
