@@ -9266,7 +9266,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     unlink(fileName.c_str());
 
     // this replaces the stuff that's if-0'd below
-    boost::filesystem::path pCurrentDbrmFile(currentDbrmFile);
+    boost::filesystem::path pCurrentDbrmFile(currentDbrmFile + "_");
     boost::filesystem::path dbrmDir(pCurrentDbrmFile.parent_path());
     log.writeLog(__LINE__, "pCurrentDbrmFile is " + pCurrentDbrmFile.string(), LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "dbrmDir is " + dbrmDir.string(), LOG_TYPE_DEBUG);
@@ -9277,7 +9277,12 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     {
         log.writeLog(__LINE__, "fileListing contains " + file, LOG_TYPE_DEBUG);
         // put file in dbrmFiles if it contains the right prefix and is not empty
-        if (file.find(pCurrentDbrmFile.filename().string()) != string::npos &&
+        if (file.find(pCurrentDbrmFile.filename().string()) == 0)
+            log.writeLog(__LINE__, "this one should go in the set", LOG_TYPE_DEBUG);
+        if (fs.size((dbrmDir / file).string().c_str()) != 0)
+            log.writeLog(__LINE__, "FS says size = 0", LOG_TYPE_DEBUG);
+        
+        if (file.find(pCurrentDbrmFile.filename().string()) == 0 &&
           fs.size((dbrmDir / file).string().c_str()) != 0)
           {
             log.writeLog(__LINE__, "adding " + (dbrmDir/file).string() + " to dbrmFiles", LOG_TYPE_DEBUG);
