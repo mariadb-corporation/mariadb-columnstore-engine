@@ -1644,15 +1644,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 //    type of pseudo column is set by connector
         if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
+//X
 
         // Because, on a filter, we want to compare ignoring trailing spaces in many cases
-        // MaraiDB Server compares without trim for LIKE against CHAR.
-        if (ct.colDataType != execplan::CalpontSystemCatalog::CHAR ||
-            sf->op()->op() != execplan::OP_LIKE)
+        if (sf->op()->op() != execplan::OP_LIKE)
         {
             boost::algorithm::trim_right_if(constval, boost::is_any_of(" "));
         }
-//X
         //@bug 339 nulls are not stored in dictionary
         if ((dictOid = isDictCol(ct)) > 0  && ConstantColumn::NULLDATA != cc->type())
         {

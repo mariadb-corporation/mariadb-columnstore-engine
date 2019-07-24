@@ -166,7 +166,6 @@ int idb_strtrimcoll(const std::string& str1, const std::string& str2)
     std::locale loc;
     const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
     int rtn = coll.compare(s1, s1+found1+1, s2, s2+found2+1);
-//    return coll.compare(s1, s1+found1, s2, s2+found2);
     return rtn;
 }
 
