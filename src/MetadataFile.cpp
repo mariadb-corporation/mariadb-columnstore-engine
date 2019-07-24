@@ -90,7 +90,7 @@ MetadataFile::MetadataFile()
 }
 
 
-MetadataFile::MetadataFile(const char* filename)
+MetadataFile::MetadataFile(const boost::filesystem::path &filename)
 {
     mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
@@ -124,12 +124,13 @@ MetadataFile::MetadataFile(const char* filename)
     ++metadataFilesAccessed;
 }
 
-MetadataFile::MetadataFile(const char* filename, no_create_t)
+MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,bool appendExt)
 {
     mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
  
-    mFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
+    if(appendExt)
+        mFilename = mpConfig->msMetadataPath / string(filename) + ".meta";
     if (boost::filesystem::exists(mFilename))
     {
         _exists = true;
@@ -262,7 +263,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     return ret;
 }
 
-metadataObject MetadataFile::addMetadataObject(const char *filename, size_t length)
+metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &filename, size_t length)
 {
     // this needs to handle if data write is beyond the end of the last object
     // but not at start of new object
@@ -286,11 +287,11 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
 }
 
 
-int MetadataFile::writeMetadata(const char *filename)
+int MetadataFile::writeMetadata(const boost::filesystem::path &filename)
 {
     int error=0;
     
-    string metadataFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
+    string metadataFilename = mpConfig->msMetadataPath / filename + ".meta";
     boost::filesystem::path pMetadataFilename = metadataFilename;
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;

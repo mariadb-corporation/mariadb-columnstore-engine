@@ -158,12 +158,12 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         release read lock
         put together the response in data
     */
-    bf::path p = ownership.get(_filename);
-    const bf::path firstDir = *(p.begin());
-    const char *filename = p.string().c_str();
+    bf::path filename = ownership.get(_filename);
+    const bf::path firstDir = *(filename.begin());
+    //const char *filename = p.string().c_str();
     
-    ScopedReadLock fileLock(this, filename);
-    MetadataFile meta(filename, MetadataFile::no_create_t());
+    ScopedReadLock fileLock(this, filename.string());
+    MetadataFile meta(filename, MetadataFile::no_create_t(),true);
     
     if (!meta.exists())
     {
@@ -283,18 +283,17 @@ out:
 
 ssize_t IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
 {
-    bf::path p = ownership.get(_filename);
-    const bf::path firstDir = *(p.begin());
-    const char *filename = p.string().c_str();
+    bf::path filename = ownership.get(_filename);
+    const bf::path firstDir = *(filename.begin());
     bytesWritten += length;
-    ScopedWriteLock lock(this, filename);
+    ScopedWriteLock lock(this, filename.string());
     int ret = _write(filename, data, offset, length, firstDir);
     lock.unlock();
     cache->doneWriting(firstDir);
     return ret;
 }
 
-ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length,
+ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length,
     const bf::path &firstDir)
 {
     int err = 0;
@@ -306,7 +305,7 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
     vector<string> newObjectKeys;
     Synchronizer *synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
 
-    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t());
+    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t(),true);
     if (!metadata.exists())
     {
         errno = ENOENT;
@@ -421,9 +420,9 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
 
 ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t length)
 {
-    bf::path p = ownership.get(_filename);
-    const bf::path firstDir = *(p.begin());
-    const char *filename = p.string().c_str();
+    bf::path filename = ownership.get(_filename);
+    const bf::path firstDir = *(filename.begin());
+    //const char *filename = p.string().c_str();
 
     int err;
     ssize_t count = 0;
@@ -433,9 +432,9 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
     vector<string> newObjectKeys;
     Synchronizer *synchronizer = Synchronizer::get();  // need to init sync here to break circular dependency...
     
-    ScopedWriteLock lock(this, filename);
+    ScopedWriteLock lock(this, filename.string());
 
-    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t());
+    MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t(),true);
     if (!metadata.exists())
     {
         errno = EBADF;
@@ -530,23 +529,23 @@ out:
 // TODO: might need to support more open flags, ex: O_EXCL
 int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
 {
-    bf::path p = ownership.get(_filename);
-    const char *filename = p.string().c_str();
+    bf::path filename = ownership.get(_filename);
+    //const char *filename = p.string().c_str();
     boost::scoped_ptr<ScopedFileLock> s;
     
     if (openmode & O_CREAT || openmode | O_TRUNC)
-        s.reset(new ScopedWriteLock(this, filename));
+        s.reset(new ScopedWriteLock(this, filename.string()));
     else
-        s.reset(new ScopedReadLock(this, filename));    
+        s.reset(new ScopedReadLock(this, filename.string()));
 
-    MetadataFile meta(filename, MetadataFile::no_create_t());
+    MetadataFile meta(filename, MetadataFile::no_create_t(),true);
     
     if ((openmode & O_CREAT) && !meta.exists()) {
         ++filesCreated;
         replicator->updateMetadata(filename, meta);   // this will end up creating filename
     }
     if ((openmode & O_TRUNC) && meta.exists())
-        _truncate(p, 0, s.get());
+        _truncate(filename, 0, s.get());
         
     ++filesOpened;
     return meta.stat(out);
@@ -582,14 +581,13 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 
 int IOCoordinator::stat(const char *_path, struct stat *out)
 {
-    bf::path p = ownership.get(_path);
-    const char *path = p.string().c_str();
+    bf::path filename = ownership.get(_path);
     
-    if (bf::is_directory(metaPath/p))
-        return ::stat((metaPath/p).string().c_str(), out);
+    if (bf::is_directory(metaPath/filename))
+        return ::stat((metaPath/filename).string().c_str(), out);
 
-    ScopedReadLock s(this, path);
-    MetadataFile meta(path, MetadataFile::no_create_t());
+    ScopedReadLock s(this, filename.string());
+    MetadataFile meta(filename, MetadataFile::no_create_t(),true);
     return meta.stat(out);
 }
 
@@ -617,12 +615,11 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
         tell synchronizer they were deleted
     */
     const bf::path firstDir = *(bfpath.begin());
-    const char *path = bfpath.string().c_str();
     
     Synchronizer *synchronizer = Synchronizer::get();  // needs to init sync here to break circular dependency...
     
     int err;
-    MetadataFile meta(path, MetadataFile::no_create_t());
+    MetadataFile meta(bfpath, MetadataFile::no_create_t(),true);
     if (!meta.exists())
     {
         errno = ENOENT;
@@ -637,7 +634,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     if (filesize < newSize)
     {
         uint8_t zero = 0;
-        err = _write(path, &zero, newSize - 1, 1, firstDir);
+        err = _write(bfpath, &zero, newSize - 1, 1, firstDir);
         lock->unlock();
         cache->doneWriting(firstDir);
         if (err < 0)
@@ -658,7 +655,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
     
-    err = replicator->updateMetadata(path, meta);
+    err = replicator->updateMetadata(filename.string().c_str(), meta);
     if (err)
         return err;
     //lock.unlock();   <-- ifExistsThenDelete() needs the file lock held during the call
@@ -703,7 +700,7 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     ScopedWriteLock lock(this, pita);
     //cout << "file is " << file.string() << " locked on " << pita << endl;
     
-    MetadataFile meta(file);
+    MetadataFile meta(file,MetadataFile::no_create_t(),false);
     replicator->remove(file);
     //lock.unlock();      <-- ifExistsThenDelete() needs the file lock held during the call
         
@@ -858,7 +855,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     ScopedReadLock lock(this, filename1);
     ScopedWriteLock lock2(this, filename2);
     MetadataFile meta1(metaFile1);
-    MetadataFile meta2(metaFile2.string().c_str(), MetadataFile::no_create_t());
+    MetadataFile meta2(metaFile2, MetadataFile::no_create_t(),false);
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
     bytesCopied += meta1.getLength();
     

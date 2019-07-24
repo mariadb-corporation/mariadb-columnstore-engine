@@ -423,7 +423,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     char buf[80];
     bool exists = false;
     int err;
-    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
@@ -481,7 +481,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     bf::path prefix = key.substr(0, pos);
     string cloudKey = key.substr(pos + 1);
     
-    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
