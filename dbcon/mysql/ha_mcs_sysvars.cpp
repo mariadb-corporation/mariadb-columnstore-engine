@@ -58,6 +58,21 @@ static MYSQL_THDVAR_ULONGLONG(
     1
 );
 
+// optimizer flags vault
+static MYSQL_THDVAR_ULONGLONG(
+    original_optimizer_flags,
+    PLUGIN_VAR_NOSYSVAR | PLUGIN_VAR_NOCMDOPT,
+    "Vault for original optimizer flags. For internal usage.",
+    NULL,
+    NULL,
+    0,
+    0,
+    ~0U,
+    1
+);
+
+
+
 // legacy system variables
 static MYSQL_THDVAR_ULONG(
     decimal_scale,
@@ -240,6 +255,7 @@ st_mysql_sys_var* mcs_system_variables[] =
 {
   MYSQL_SYSVAR(compression_type),
   MYSQL_SYSVAR(fe_conn_info_ptr),
+  MYSQL_SYSVAR(original_optimizer_flags),
   MYSQL_SYSVAR(decimal_scale),
   MYSQL_SYSVAR(use_decimal_scale),
   MYSQL_SYSVAR(ordered_only),
@@ -275,14 +291,20 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd)
     THDVAR(current_thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
 
-bool get_use_legacy_sysvars(THD* thd)
+ulonglong get_original_optimizer_flags(THD* thd)
 {
-    return ( thd == NULL ) ? false : THDVAR(thd, use_legacy_sysvars);
+    return ( current_thd == NULL && thd == NULL ) ? NULL :
+        THDVAR(current_thd, original_optimizer_flags);
 }
 
-void set_use_legacy_sysvars(THD* thd, bool value)
+void set_original_optimizer_flags(ulonglong ptr, THD* thd)
 {
-    THDVAR(thd, use_legacy_sysvars) = value;
+    if ( current_thd == NULL && thd == NULL)
+    {
+        return;
+    }
+    
+    THDVAR(current_thd, original_optimizer_flags) = (uint64_t)(ptr);
 }
 
 void set_compression_type(THD* thd, ulong value)

@@ -1143,6 +1143,12 @@ void debug_walk(const Item* item, void* arg)
             break;
         }
 
+        case Item::TYPE_HOLDER:
+        {
+            cerr << "TYPE_HOLDER item with cmp_type " << item->cmp_type() << endl;
+            break;
+        }
+
         default:
         {
             cerr << "UNKNOWN_ITEM type " << item->type() << endl;
@@ -3120,7 +3126,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
             vector <Item_field*> tmpVec;
             //bool hasAggColumn = false;
             uint16_t parseInfo = 0;
-            parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
+            parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo, &gwi);
 
             if (parseInfo & SUB_BIT)
             {
@@ -3616,7 +3622,7 @@ ReturnedColumn* buildFunctionColumn(
                             // try to identify const F&E. fall to primitive if parms are constant F&E.
                             vector <Item_field*> tmpVec;
                             uint16_t parseInfo = 0;
-                            parse_item(ifp->arguments()[i], tmpVec, gwi.fatalParseError, parseInfo);
+                            parse_item(ifp->arguments()[i], tmpVec, gwi.fatalParseError, parseInfo, &gwi);
 
                             if (!gwi.fatalParseError && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
                                 continue;
@@ -4625,7 +4631,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                         // check count(1+1) case
                         vector <Item_field*> tmpVec;
                         uint16_t parseInfo = 0;
-                        parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
+                        parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo, &gwi);
 
                         if (parseInfo & SUB_BIT)
                         {
@@ -5238,7 +5244,7 @@ void gp_walk(const Item* item, void* arg)
             // try to evaluate const F&E
             vector <Item_field*> tmpVec;
             uint16_t parseInfo = 0;
-            parse_item(ifp, tmpVec, gwip->fatalParseError, parseInfo);
+            parse_item(ifp, tmpVec, gwip->fatalParseError, parseInfo, gwip);
 
             // table mode takes only one table filter
             if (gwip->condPush)
@@ -5704,10 +5710,6 @@ void gp_walk(const Item* item, void* arg)
             printf("********** received INSERT_VALUE_ITEM *********\n");
             break;
 
-        case Item::Item::TYPE_HOLDER:
-            printf("********** received TYPE_HOLDER *********\n");
-            break;
-
         case Item::PARAM_ITEM:
             printf("********** received PARAM_ITEM *********\n");
             break;
@@ -5729,6 +5731,9 @@ void gp_walk(const Item* item, void* arg)
             printf("********** received VIEW_FIXER_ITEM *********\n");
             break;
         */
+        case Item::TYPE_HOLDER:
+            std::cerr << "********** received TYPE_HOLDER *********" << std::endl;
+            break;
         default:
         {
             if (gwip->condPush)
@@ -5779,7 +5784,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
             Item** sfitempp = isp->arguments();
 
             for (uint32_t i = 0; i < isp->argument_count(); i++)
-                parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
+                parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
             break;
         }
@@ -5839,7 +5844,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                     }
 
                     for (uint32_t i = 0; i < isp->argument_count(); i++)
-                        parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
+                        parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
                     break;
                 }
@@ -5867,14 +5872,14 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                     Item** sfitempp = isp->arguments();
 
                     for (uint32_t i = 0; i < isp->argument_count(); i++)
-                        parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
+                        parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
                     break;
                 }
                 else if ((*(ref->ref))->type() == Item::CACHE_ITEM)
                 {
                     Item_cache* isp = reinterpret_cast<Item_cache*>(*(ref->ref));
-                    parse_item(isp->get_example(), field_vec, hasNonSupportItem, parseInfo);
+                    parse_item(isp->get_example(), field_vec, hasNonSupportItem, parseInfo, gwi);
                     break;
                 }
                 else if ((*(ref->ref))->type() == Item::REF_ITEM)
@@ -5913,7 +5918,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
             Item_row* row = (Item_row*)item;
 
             for (uint32_t i = 0; i < row->cols(); i++)
-                parse_item(row->element_index(i), field_vec, hasNonSupportItem, parseInfo);
+                parse_item(row->element_index(i), field_vec, hasNonSupportItem, parseInfo, gwi);
 
             break;
         }
@@ -5921,7 +5926,11 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
         case Item::EXPR_CACHE_ITEM:
         {
             // item is a Item_cache_wrapper. Shouldn't get here.
-            printf("EXPR_CACHE_ITEM in parse_item\n");
+            // WIP Why
+            IDEBUG(std::cerr << "EXPR_CACHE_ITEM in parse_item\n" << std::endl);
+            gwi->fatalParseError = true;
+            // DRRTUY The questionable error text. I've seen
+            // ERR_CORRELATED_SUB_OR
             string parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SUB_QUERY_TYPE);
             setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
             break;
@@ -6570,7 +6579,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 uint16_t parseInfo = 0;
                 vector <Item_field*> tmpVec;
                 bool hasNonSupportItem = false;
-                parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo);
+                parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo, &gwi);
 
                 if (ifp->with_subquery() ||
                         string(ifp->func_name()) == string("<in_optimizer>") ||
@@ -6606,7 +6615,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 {
                     hasNonSupportItem = false;
                     uint32_t before_size = funcFieldVec.size();
-                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo);
+                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo, &gwi);
                     uint32_t after_size = funcFieldVec.size();
 
                     // group by func and func in subquery can not be post processed
@@ -6915,6 +6924,23 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.returnedCols.push_back(srcp);
                 break;
             }
+            case Item::TYPE_HOLDER:
+            {
+                if(!gwi.tbList.size())
+                {
+                    gwi.parseErrorText = "subquery with VALUES";
+                    gwi.fatalParseError = true;
+                    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+                    return ER_CHECK_NOT_IMPLEMENTED;
+                }
+                else
+                {
+                    std::cerr << "********** received TYPE_HOLDER *********" << std::endl;
+
+                }
+                break;
+            }
+              
 
             default:
             {
@@ -7551,7 +7577,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
                         bool hasNonSupportItem = false;
                         uint16_t parseInfo = 0;
-                        parse_item(ord_item, fieldVec, hasNonSupportItem, parseInfo);
+                        parse_item(ord_item, fieldVec, hasNonSupportItem, parseInfo, &gwi);
 
                         if (hasNonSupportItem)
                         {
@@ -8099,6 +8125,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
         return ER_INTERNAL_ERROR;
     else if (status < 0)
         return status;
+    // Derived table projection and filter optimization.
+    derivedTableOptimization(csep);
 
     return 0;
 }
@@ -8120,7 +8148,8 @@ int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
-
+    // Derived table projection and filter optimization.
+    derivedTableOptimization(csep);
     return 0;
 }
 
@@ -8682,7 +8711,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 uint16_t parseInfo = 0;
                 vector <Item_field*> tmpVec;
                 bool hasNonSupportItem = false;
-                parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo);
+                parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo, &gwi);
 
                 if (ifp->with_subquery() ||
                         string(ifp->func_name()) == string("<in_optimizer>") ||

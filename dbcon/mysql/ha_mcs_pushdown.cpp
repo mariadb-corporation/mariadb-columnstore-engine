@@ -17,6 +17,29 @@
 
 // ha_calpont.cpp includes this file.
 
+void mutate_optimizer_flags(THD *thd_)
+{
+   // MCOL-2178 Disable all optimizer flags as it was in the fork.
+    // CS restores it later in SH::scan_end() and in case of an error
+    // in SH::scan_init()
+    set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
+    thd_->variables.optimizer_switch = OPTIMIZER_SWITCH_IN_TO_EXISTS |
+        OPTIMIZER_SWITCH_EXISTS_TO_IN |
+        OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED;
+}
+
+void restore_optimizer_flags(THD *thd_)
+{
+    // MCOL-2178 restore original optimizer flags after SH, DH
+    ulonglong orig_flags = get_original_optimizer_flags(thd_);
+    if (orig_flags)
+    {
+        thd_->variables.optimizer_switch = orig_flags;
+        set_original_optimizer_flags(0, thd_);
+    }
+}
+ 
+
 /*@brief  check_walk - It traverses filter conditions*/
 /************************************************************
  * DESCRIPTION:
@@ -508,6 +531,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     if (!unsupported_feature)
     {
         handler = new ha_columnstore_select_handler(thd, select_lex);
+        mutate_optimizer_flags(thd);
     }
 
   return handler;

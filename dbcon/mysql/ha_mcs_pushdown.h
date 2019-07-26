@@ -21,6 +21,9 @@
 #include "idb_mysql.h"
 #include "ha_calpont.h"
 
+void mutate_optimizer_flags(THD *thd_);
+void restore_optimizer_flags(THD *thd_);
+
 enum mcs_handler_types_t
 {
     SELECT,

@@ -1380,15 +1380,7 @@ uint32_t doUpdateDelete(THD* thd)
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
-            // WIP MCOL-2178
-            /*else if ( value->type() ==  Item::VARBIN_ITEM )
-            {
-                String val, *str;
-                str = value->val_str(&val);
-                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
-                columnAssignmentPtr->fFromCol = false;
-            }*/
-            else if ( value->type() ==  Item::FUNC_ITEM )
+           else if ( value->type() ==  Item::FUNC_ITEM )
             {
                 //Bug 2092 handle negative values
                 Item_func* ifp = (Item_func*)value;
@@ -2994,13 +2986,6 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-    // WIP MCOL-2178. Won't see this state anymore.
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ORDER_BY )
-    {
-        MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_SELECT_VTABLE;	// flip back to normal state
-        return rc;
-    }
-
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
 
@@ -4387,6 +4372,8 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
         if (lock_type == 0) 
         {
             ci->physTablesList.insert(table);
+            // MCOL-2178 Disable Conversion of Big IN Predicates Into Subqueries
+            thd->variables.in_subquery_conversion_threshold=~0;
         }
         else if (lock_type == 2)
         {
@@ -4413,6 +4400,9 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 // storage for cal_conn_hndl to use it later in close_connection
                 thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
                 ci->tableMap.clear();
+                // MCOL-2178 Enable Conversion of Big IN Predicates Into Subqueries
+                thd->variables.in_subquery_conversion_threshold = IN_SUBQUERY_CONVERSION_THRESHOLD;
+                restore_optimizer_flags(thd);
             }
 
         }
@@ -5286,6 +5276,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
         return ER_INTERNAL_ERROR;
     }
 
+    // WIP MCOL-2178 Remove this.
     // mysql reads table twice for order by
     if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_REDO_PHASE1 ||
             MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ORDER_BY)
@@ -5413,6 +5404,9 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 
         hndl = ci->cal_conn_hndl;
 
+        // WIP MCOL-2178
+        std::cout << idb_mysql_query_str(thd) << std::endl;
+
         if (MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_SELECT_VTABLE)
         {
             if (!csep)
@@ -5455,13 +5449,15 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 dh = reinterpret_cast<derived_handler*>(handler_info->hndl_ptr);
                 status = cs_get_derived_plan(dh, thd, csep);
             }
-    
+   
+            // WIP MCOL-2178 Remove this 
             std::cout << "pushdown_init get_plan status " << status << std::endl;
 
             // Return an error to avoid MDB crash later in end_statement 
             if (status != 0)
                 goto internal_error;
 
+            // WIP MCOL-2178 Remove this 
             std::cout << "pushdown_init impossibleWhereOnUnion " << status << std::endl;
             // @bug 2547. don't need to send the plan if it's impossible where for all unions.
             if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
@@ -5731,7 +5727,7 @@ error:
         ci->cal_conn_hndl = 0;
     }
 
-    // do we need to close all connection handle of the table map?
+    // do we need to close all connection handle of the table map
     return ER_INTERNAL_ERROR;
 
 internal_error:
