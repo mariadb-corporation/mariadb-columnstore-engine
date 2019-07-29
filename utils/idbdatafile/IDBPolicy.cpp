@@ -131,7 +131,7 @@ bool IDBPolicy::isLocalFile( const std::string& path )
 #endif
     bool isXml = filepath.extension() == ".xml";
     //bool isDbrm = path.find("dbrm") != string::npos;   // StorageManager: debatable whether dbrm files should go in the cloud
-    bool isVb = path.find("versionbuffer") != string::npos;
+    bool isVb = filepath.filename() == "versionbuffer.cdf";
     bool isScratch = path.find(s_hdfsRdwrScratch) == 0;
 
     return isXml || isVb || isScratch;
