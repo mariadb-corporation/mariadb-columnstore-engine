@@ -86,7 +86,7 @@ using namespace joblist;
 
 namespace fs = boost::filesystem;
 
-ThreadPool DMLServer::fDmlPackagepool(10, 0);
+threadpool::ThreadPool DMLServer::fDmlPackagepool(10, 0);
 
 namespace
 {
@@ -658,7 +658,7 @@ int main(int argc, char* argv[])
         JobStep::jobstepThreadPool.setDebug(true);
         JobStep::jobstepThreadPool.invoke(threadpool::ThreadPoolMonitor(&JobStep::jobstepThreadPool));
         DMLServer::fDmlPackagepool.setDebug(true);
-        DMLServer::fDmlPackagepool.invoke(ThreadPoolMonitor(&DMLServer::fDmlPackagepool));
+        DMLServer::fDmlPackagepool.invoke(threadpool::ThreadPoolMonitor(&DMLServer::fDmlPackagepool));
     }
 
     //set ACTIVE state

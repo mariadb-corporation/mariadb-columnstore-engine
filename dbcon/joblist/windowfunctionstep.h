@@ -148,7 +148,7 @@ private:
     void formatMiniStats();
     void printCalTrace();
 
-    static void AddSimplColumn(const vector<SimpleColumn*>& scs, JobInfo& jobInfo);
+    static void AddSimplColumn(const std::vector<execplan::SimpleColumn*>& scs, JobInfo& jobInfo);
 
     class Runner
     {

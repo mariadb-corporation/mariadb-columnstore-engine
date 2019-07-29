@@ -1594,11 +1594,7 @@ uint32_t doUpdateDelete(THD* thd)
         {
             if (timeStampColumnNames.find(onUpdateTimeStampColumns[i]) == timeStampColumnNames.end())
             {
-                columnAssignmentPtr = new ColumnAssignment();
-                columnAssignmentPtr->fColumn = string(onUpdateTimeStampColumns[i]);
-                columnAssignmentPtr->fOperator = "=";
-                columnAssignmentPtr->fFuncScale = 0;
-                columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr = new ColumnAssignment(string(onUpdateTimeStampColumns[i]), "=", "");
                 struct timeval tv;
                 char buf[64];
                 gettimeofday(&tv, 0);
