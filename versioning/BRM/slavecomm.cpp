@@ -139,9 +139,19 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         journalName = savefile + "_journal";
         const char* filename = journalName.c_str();
 
-        journalh = IDBDataFile::open(
-                       IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);
-        if (journalh == NULL)
+        if (true || IDBPolicy::useHdfs())
+        {
+            journalh = IDBDataFile::open(
+                           IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0);
+        }
+        else
+        {
+            journal.open(filename, ios_base::binary | ios_base::out | ios_base::app);
+        }
+
+        ::umask(utmp);
+
+        if ((journal.is_open() == false) && (journalh == NULL))
             throw runtime_error("Could not open the BRM journal for writing!");
     }
     else
