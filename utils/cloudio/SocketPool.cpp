@@ -93,14 +93,22 @@ int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *
     ssize_t err = 0;
     
 retry:
-    /* should there be a retry limit here... */
+    int retries = 0;
     while (sock < 0)
     {
         sock = getSocket();
         if (sock < 0)
         {
-            //log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): retrying in 5 sec...");
-            sleep(1);
+            if (++retries < 10)
+            {
+                //log(logging::LOG_TYPE_ERROR, "SocketPool::send_recv(): retrying in 5 sec...");
+                sleep(1);
+            }
+            else
+            {
+                errno = ECONNREFUSED;
+                return -1;
+            }
         }
     }
     

@@ -46,8 +46,10 @@ SMComm * SMComm::get()
 // timesavers
 #define common_exit(bs1, bs2, retCode) \
     { \
+        int l_errno = errno; \
         buffers.returnByteStream(bs1); \
         buffers.returnByteStream(bs2); \
+        errno = l_errno; \
         return retCode; \
     }
 

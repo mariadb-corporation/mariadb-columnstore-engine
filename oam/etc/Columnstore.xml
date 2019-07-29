@@ -549,7 +549,6 @@
 		<Port>0</Port>
 	</QueryTele>
     <StorageManager>
-        <Enabled>N</Enabled>
         <MaxSockets>30</MaxSockets>
     </StorageManager>
 </Columnstore>
