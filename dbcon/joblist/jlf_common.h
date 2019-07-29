@@ -402,8 +402,9 @@ execplan::CalpontSystemCatalog::OID tableOid(const execplan::SimpleColumn* sc,
 /** @brief Returns the unique ID to be used in tupleInfo
  *
  */
-uint32_t getTupleKey(const JobInfo& jobInfo,
-                     const execplan::SimpleColumn* sc);
+uint32_t getTupleKey(JobInfo& jobInfo,
+                     const execplan::SimpleColumn* sc,
+                     bool add = false);
 uint32_t getTableKey(const JobInfo& jobInfo,
                      execplan::CalpontSystemCatalog::OID tableOid,
                      const std::string& alias,
@@ -465,7 +466,7 @@ TupleInfo setExpTupleInfo(const execplan::ReturnedColumn* rc, JobInfo& jobInfo);
 /** @brief add an aggregate column info
  *
  */
-void addAggregateColumn(execplan::AggregateColumn*, int, RetColsVector&, JobInfo&);
+void addAggregateColumn(execplan::ReturnedColumn*, int, RetColsVector&, JobInfo&);
 
 void makeJobSteps(execplan::CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
                   JobStepVector& querySteps, JobStepVector& projectSteps,

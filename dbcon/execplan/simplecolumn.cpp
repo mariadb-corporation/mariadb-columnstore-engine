@@ -212,9 +212,9 @@ const string SimpleColumn::data() const
     if (!fData.empty())
         return fData;
     else if (!fTableAlias.empty())
-        return string(fSchemaName + '.' + fTableAlias + '.' + fColumnName);
+        return string("`" + fSchemaName + "`.`" + fTableAlias + "`.`" + fColumnName + "`");
 
-    return string(fSchemaName + '.' + fTableName + '.' + fColumnName);
+    return string("`" + fSchemaName + "`.`" + fTableName + "`.`" + fColumnName + "`");
 }
 
 SimpleColumn& SimpleColumn::operator=(const SimpleColumn& rhs)

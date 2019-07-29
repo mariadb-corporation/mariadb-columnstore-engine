@@ -2203,8 +2203,15 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
                     sc->colPosition(j);
                     string tableAlias(csep->derivedTbAlias());
                     sc->tableAlias(lower(tableAlias));
-                    sc->viewName(lower(viewName));
                     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                    if (!viewName.empty())
+                    {
+                            sc->viewName(viewName);
+                    }
+                    else
+                    {
+                            sc->viewName(csep->derivedTbView());
+                    }
                     sc->resultType(cols[j]->resultType());
                     sc->hasAggregate(cols[j]->hasAggregate());
 

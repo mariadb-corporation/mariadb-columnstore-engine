@@ -749,8 +749,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3485, reserve enough space for the longest float value
                     // -3.402823466E+38 to -1.175494351E-38, 0, and
                     // 1.175494351E-38 to 3.402823466E+38.
-                    (*f)->field_length = 40;
-
+					(*f)->field_length = 40;
                     //float float_val = *(float*)(&value);
                     //f2->store(float_val);
                     if (f2->decimals() < (uint32_t)row.getScale(s))
@@ -779,8 +778,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3483, reserve enough space for the longest double value
                     // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 310;
-
+					(*f)->field_length = 310;
                     //double double_val = *(double*)(&value);
                     //f2->store(double_val);
                     if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
@@ -1395,16 +1393,13 @@ uint32_t doUpdateDelete(THD* thd)
             else
                 schemaName = string(item->db_name);
 
+            columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             if (item->field_type() == MYSQL_TYPE_TIMESTAMP ||
                 item->field_type() == MYSQL_TYPE_TIMESTAMP2)
             {
                 timeStampColumnNames.insert(string(item->name.str));
             }
 
-            columnAssignmentPtr = new ColumnAssignment();
-            columnAssignmentPtr->fColumn = string(item->name.str);
-            columnAssignmentPtr->fOperator = "=";
-            columnAssignmentPtr->fFuncScale = 0;
             Item* value = value_it++;
 
             if (value->type() ==  Item::STRING_ITEM)
@@ -1528,8 +1523,9 @@ uint32_t doUpdateDelete(THD* thd)
             else if ( value->type() ==  Item::NULL_ITEM )
             {
 //                dmlStmt += "NULL";
-                columnAssignmentPtr->fScalarExpression = "NULL";
+                columnAssignmentPtr->fScalarExpression = "";
                 columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr->fIsNull = true;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {
