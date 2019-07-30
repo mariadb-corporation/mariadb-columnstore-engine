@@ -90,7 +90,6 @@ Cache::Cache()
     }
     //cout << "Cache got cachePrefix " << cachePrefix << endl;
     downloader.reset(new Downloader());
-    downloader->setDownloadPath(cachePrefix);
     
     stmp = conf->getValue("ObjectStorage", "journal_path");
     if (stmp.empty())

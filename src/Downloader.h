@@ -28,8 +28,8 @@ class Downloader
         void download(const std::vector<const std::string *> &keys, 
             std::vector<int> *errnos, std::vector<size_t> *sizes, const boost::filesystem::path &prefix,
             boost::mutex *lock);
-        void setDownloadPath(const boost::filesystem::path &path);
         bool inProgress(const std::string &);  // call this holding the cache's lock
+        const boost::filesystem::path & getTmpPath() const;
         
     private:
         uint maxDownloads;
@@ -52,7 +52,7 @@ class Downloader
         */
         struct Download : public ThreadPool::Job
         {
-            Download(const std::string &source, const boost::filesystem::path &_dlPath, boost::mutex *);
+            Download(const std::string &source, const boost::filesystem::path &_dlPath, boost::mutex *, Downloader *);
             Download(const std::string &source);
             ~Download();
             void operator()();
@@ -62,6 +62,7 @@ class Downloader
             size_t size;
             boost::mutex *lock;
             bool finished, itRan;
+            Downloader *dl;
             std::vector<DownloadListener *> listeners;
         };
     
@@ -77,6 +78,7 @@ class Downloader
     
         typedef std::unordered_set<boost::shared_ptr<Download>, DLHasher, DLEquals> Downloads_t;
         Downloads_t downloads;
+        boost::filesystem::path tmpPath;
         
         // something is not working right with this lock design, need to simplify.
         // for now, download will use Cache's lock for everything.

@@ -126,7 +126,7 @@ void PrefixCache::populate()
             currentCacheSize += bf::file_size(*dir);
             newObjects.push_back(p.filename().string());
         }
-        else
+        else if (p != downloader->getTmpPath())
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
         ++dir;
     }

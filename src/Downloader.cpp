@@ -28,6 +28,7 @@ Downloader::Downloader() : maxDownloads(0)
     workers.setMaxThreads(maxDownloads);
     workers.setName("Downloader");
     logger = SMLogging::get();
+    tmpPath = "downloading";
 }
 
 Downloader::~Downloader()
@@ -50,7 +51,7 @@ void Downloader::download(const vector<const string *> &keys, vector<int> *errno
     boost::unique_lock<boost::mutex> s(lock);
     for (uint i = 0; i < keys.size(); i++)
     {
-        boost::shared_ptr<Download> newDL(new Download(*keys[i], prefix, cache_lock));
+        boost::shared_ptr<Download> newDL(new Download(*keys[i], prefix, cache_lock, this));
         
         auto it = downloads.find(newDL);   // kinda sucks to have to search this way.
         if (it == downloads.end())
@@ -116,20 +117,20 @@ bool Downloader::inProgress(const string &key)
         return !(*it)->finished;
     return false;
 }
-           
-void Downloader::setDownloadPath(const bf::path &path)
+
+inline const bf::path & Downloader::getTmpPath() const
 {
-    //downloadPath = path;
+    return tmpPath;
 }
 
 /* The helper fcns */
-Downloader::Download::Download(const string &source, const bf::path &_dlPath, boost::mutex *_lock) : 
-                dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false)
+Downloader::Download::Download(const string &source, const bf::path &_dlPath, boost::mutex *_lock, Downloader *_dl) : 
+                dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false), dl(_dl)
 {
 }
 
 Downloader::Download::Download(const string &source) : 
-    key(source), dl_errno(0), size(0), lock(NULL), finished(false), itRan(false)
+    key(source), dl_errno(0), size(0), lock(NULL), finished(false), itRan(false), dl(NULL)
 {
 }
 
@@ -142,17 +143,18 @@ void Downloader::Download::operator()()
 {
     itRan = true;
     CloudStorage *storage = CloudStorage::get();
-    // TODO: we should have it download to a tmp path, then mv it to the cache dir to avoid
-    // Cache seeing an incomplete download after a crash
 
-    int err = storage->getObject(key, (dlPath / key).string(), &size);
+    bf::create_directories(dlPath / dl->getTmpPath());    // todo... code up a way for this to only be done once...
+    bf::path tmpFile = dlPath / dl->getTmpPath() / key;
+    int err = storage->getObject(key, tmpFile.string(), &size);
     if (err != 0)
     {
         dl_errno = errno;
-        bf::remove(dlPath / key);
+        bf::remove(tmpFile);
         size = 0;
     }
     
+    bf::rename(tmpFile, dlPath / key);
     lock->lock();
     finished = true;
     for (uint i = 0; i < listeners.size(); i++)
