@@ -25,15 +25,16 @@ class Downloader
         
         // caller owns the memory for the strings.
         // errors are reported through errnos
-        void download(const std::vector<const std::string *> &keys, std::vector<int> *errnos, std::vector<size_t> *sizes);
-        void setDownloadPath(const std::string &path);
-        void useThisLock(boost::mutex *);
-        bool inProgress(const std::string &);
+        void download(const std::vector<const std::string *> &keys, 
+            std::vector<int> *errnos, std::vector<size_t> *sizes, const boost::filesystem::path &prefix,
+            boost::mutex *lock);
+        void setDownloadPath(const boost::filesystem::path &path);
+        bool inProgress(const std::string &);  // call this holding the cache's lock
         
     private:
         uint maxDownloads;
-        std::string downloadPath;
-        boost::mutex *lock;
+        //boost::filesystem::path downloadPath;
+        boost::mutex lock;
     
         class DownloadListener
         {
@@ -51,7 +52,7 @@ class Downloader
         */
         struct Download : public ThreadPool::Job
         {
-            Download(const std::string &source, const std::string &_dlPath, boost::mutex *_lock);
+            Download(const std::string &source, const boost::filesystem::path &_dlPath, boost::mutex *);
             Download(const std::string &source);
             ~Download();
             void operator()();

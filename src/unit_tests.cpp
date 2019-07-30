@@ -891,9 +891,9 @@ bool cacheTest1()
     
     // make sure nothing shows up in the cache path for files that don't exist
     v_bogus.push_back("does-not-exist");
-    cache->read(v_bogus);
+    cache->read("", v_bogus);
     assert(!bf::exists(cachePath / "does-not-exist"));
-    cache->exists(v_bogus, &exists);
+    cache->exists("", v_bogus, &exists);
     assert(exists.size() == 1);
     assert(!exists[0]);
     
@@ -901,21 +901,21 @@ bool cacheTest1()
     string realFile("storagemanager.cnf");
     bf::copy_file(realFile, storagePath / realFile, bf::copy_option::overwrite_if_exists);
     v_bogus[0] = realFile;
-    cache->read(v_bogus);
+    cache->read("", v_bogus);
     assert(bf::exists(cachePath / realFile));
     exists.clear();
-    cache->exists(v_bogus, &exists);
+    cache->exists("", v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
     size_t currentSize = cache->getCurrentCacheSize();
     assert(currentSize == bf::file_size(cachePath / realFile));
     
     // lie about the file being deleted and then replaced
-    cache->deletedObject(realFile, currentSize);
+    cache->deletedObject("", realFile, currentSize);
     assert(cache->getCurrentCacheSize() == 0);
-    cache->newObject(realFile, currentSize);
+    cache->newObject("", realFile, currentSize);
     assert(cache->getCurrentCacheSize() == currentSize);
-    cache->exists(v_bogus, &exists);
+    cache->exists("", v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
     
@@ -1025,13 +1025,13 @@ bool syncTest1()
     makeTestJournal((journalPath/journalName).string().c_str());
     makeTestMetadata((metaPath/"test-file.meta").string().c_str());
     
-    cache->newObject(key, bf::file_size(cachePath/key));
-    cache->newJournalEntry(bf::file_size(journalPath/journalName));
+    cache->newObject("", key, bf::file_size(cachePath/key));
+    cache->newJournalEntry("", bf::file_size(journalPath/journalName));
 
     vector<string> vObj;
     vObj.push_back(key);
     
-    sync->newObjects(vObj);
+    sync->newObjects("", vObj);
     sync->forceFlush();
     sleep(1);  // wait for the job to run
     
@@ -1041,12 +1041,12 @@ bool syncTest1()
     assert(!err);
     assert(exists);
     
-    sync->newJournalEntry(key, 0);
+    sync->newJournalEntry("", key, 0);
     sync->forceFlush();
     sleep(1);  // let it do what it does
     
     // check that the original objects no longer exist
-    assert(!cache->exists(key));
+    assert(!cache->exists("", key));
     assert(!bf::exists(journalPath/journalName));
     
     // Replicator doesn't implement all of its functionality yet, need to delete key from the cache manually for now
@@ -1063,24 +1063,24 @@ bool syncTest1()
         foundIt = (MetadataFile::getSourceFromKey(newKey) == "test-file");
         if (foundIt)
         {
-            assert(cache->exists(newKey));
+            assert(cache->exists("", newKey));
             cs->deleteObject(newKey);
             break;
         }
     }
     
     assert(foundIt);
-    cache->makeSpace(cache->getMaxCacheSize());   // clear the cache & make it call sync->flushObject() 
+    cache->makeSpace("", cache->getMaxCacheSize());   // clear the cache & make it call sync->flushObject() 
     
     // the key should now be back in cloud storage and deleted from the cache
-    assert(!cache->exists(newKey));
+    assert(!cache->exists("", newKey));
     err = cs->exists(newKey, &exists);
     assert(!err && exists);
     
     // make the journal again, call sync->newJournalObject()
     makeTestJournal((journalPath / (newKey + ".journal")).string().c_str());
-    cache->newJournalEntry(bf::file_size(journalPath / (newKey + ".journal")));
-    sync->newJournalEntry(newKey, 0);
+    cache->newJournalEntry("", bf::file_size(journalPath / (newKey + ".journal")));
+    sync->newJournalEntry("", newKey, 0);
     sync->forceFlush();
     sleep(1);
     
@@ -1102,7 +1102,7 @@ bool syncTest1()
     vector<string> keys;
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
         keys.push_back(dir->path().filename().string());
-    sync->deletedObjects(keys);
+    sync->deletedObjects("", keys);
     sync->forceFlush();
     sleep(1);
     ::unlink((metaPath/"test-file.meta").string().c_str());
@@ -1318,11 +1318,11 @@ void IOCUnlink()
     makeTestObject(cachedObjPath.string().c_str());
     makeTestJournal(cachedJournalPath.string().c_str());
     
-    cache->newObject(cachedObjPath.filename().string(), bf::file_size(cachedObjPath));
-    cache->newJournalEntry(bf::file_size(cachedJournalPath));
+    cache->newObject("", cachedObjPath.filename().string(), bf::file_size(cachedObjPath));
+    cache->newJournalEntry("", bf::file_size(cachedJournalPath));
     vector<string> keys;
     keys.push_back(cachedObjPath.filename().string());
-    sync->newObjects(keys);
+    sync->newObjects("", keys);
     //sync->newJournalEntry(keys[0]);    don't want to end up renaming it
     sync->forceFlush();
     sleep(1);
@@ -1385,7 +1385,7 @@ void IOCCopyFile1()
     makeTestMetadata(sourcePath.string().c_str());
     makeTestObject((csPath/testObjKey).string().c_str());
     makeTestJournal((journalPath/(string(testObjKey) + ".journal")).string().c_str());
-    cache->newJournalEntry(bf::file_size(journalPath/(string(testObjKey) + ".journal")));
+    cache->newJournalEntry("", bf::file_size(journalPath/(string(testObjKey) + ".journal")));
     
     int err = ioc->copyFile("copyfile1/source", "copyfile2/dest");
     assert(!err);
@@ -1445,8 +1445,8 @@ void IOCCopyFile3()
     makeTestMetadata(sourcePath.string().c_str());
     makeTestObject((cachePath/testObjKey).string().c_str());
     makeTestJournal((journalPath/(string(testObjKey) + ".journal")).string().c_str());
-    cache->newObject(testObjKey, bf::file_size(cachePath/testObjKey));
-    cache->newJournalEntry(bf::file_size(journalPath/(string(testObjKey) + ".journal")));
+    cache->newObject("", testObjKey, bf::file_size(cachePath/testObjKey));
+    cache->newJournalEntry("", bf::file_size(journalPath/(string(testObjKey) + ".journal")));
     
     int err = ioc->copyFile("copyfile3/source", "copyfile4/dest");
     assert(!err);

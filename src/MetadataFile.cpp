@@ -49,7 +49,7 @@ MetadataFile::MetadataConfig::MetadataConfig()
     catch (...)
     {
         logger->log(LOG_CRIT, "ObjectStorage/object_size must be set to a numeric value");
-        throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+        throw runtime_error("Please set ObjectStorage/object)size in the storagemanager.cnf file");
     }
         
     try
@@ -57,8 +57,8 @@ MetadataFile::MetadataConfig::MetadataConfig()
         msMetadataPath = config->getValue("ObjectStorage", "metadata_path");
         if (msMetadataPath.empty())
         {
-            logger->log(LOG_CRIT, "ObjectStorage/journal_path is not set");
-            throw runtime_error("Please set ObjectStorage/journal_path in the storagemanager.cnf file");
+            logger->log(LOG_CRIT, "ObjectStorage/metadata_path is not set");
+            throw runtime_error("Please set ObjectStorage/metadata_path in the storagemanager.cnf file");
         }
     }
     catch (...)

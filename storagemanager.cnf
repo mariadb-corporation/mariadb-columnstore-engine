@@ -1,10 +1,40 @@
 [ObjectStorage]
 service = LocalStorage
+
+# This is a tuneable value, but also implies a maximum capacity.
+# Each file managed by StorageManager is broken into chunks of
+# object_size bytes.  Each chunk is stored in the cache as a file,
+# so the filesystem the cache is put on needs to have enough inodes to
+# support at least cache_size/object_size files.
+#
+# Regarding tuning, object stores do not support modifying stored data;
+# entire objects must be replaced on modification, and entire
+# objects are fetched on read.  An access pattern that includes
+# frequently accessing small amounts of data will benefit from 
+# a smaller object_size.  An access pattern where data
+# is accessed in large chunks will benefit from a larger object_size.
+#
+# Another limitation to consider is the get/put rate imposed by the
+# cloud provider.  If that is the limitation, increasing object_size
+# will result in higher transfer rates.
 object_size = 5M
+
 metadata_path = ${HOME}/storagemanager/metadata
 journal_path = ${HOME}/storagemanager/journal
 max_concurrent_downloads = 20
 max_concurrent_uploads = 20
+
+# This is the depth of the common prefix that all files managed by SM have
+# Ex: /usr/local/mariadb/columnstore/data1, and 
+# /usr/local/mariadb/columnstore/data2 differ at the 5th directory element,
+# so they have a common prefix depth of 4.
+#
+# This value is used to manage the ownership of prefixes between
+# StorageManager instances that sharing a filesystem.
+# 
+# -1 is a special value indicating that there is no filesystem shared
+# between SM instances.
+common_prefix_depth = 4
 
 [S3]
 region = us-east-2

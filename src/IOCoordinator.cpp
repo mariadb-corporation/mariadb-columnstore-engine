@@ -80,11 +80,6 @@ IOCoordinator * IOCoordinator::get()
     return ioc;
 }
 
-void IOCoordinator::willRead(const char *, off_t, size_t)
-{
-    // not sure we will implement this.
-}
-
 int IOCoordinator::loadObject(int fd, uint8_t *data, off_t offset, size_t length) const
 {
     size_t count = 0;
@@ -135,7 +130,8 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         release read lock
         put together the response in data
     */
-    bf::path p(_filename);
+    bf::path p = ownership.get(_filename);
+    const bf::path firstDir = *(p.begin());
     const char *filename = p.string().c_str();
     
     ScopedReadLock fileLock(this, filename);
@@ -158,7 +154,7 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     vector<string> keys;
     for (const auto &object : relevants)
         keys.push_back(object.key);
-    cache->read(keys);
+    cache->read(firstDir, keys);
     
     // open the journal files and objects that exist to prevent them from being 
     // deleted mid-operation
@@ -169,11 +165,11 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         // later.  not thinking about it for now.
         
         // open all of the journal files that exist
-        string filename = (journalPath/(key + ".journal")).string();
-        int fd = ::open(filename.c_str(), O_RDONLY);
+        string jFilename = (journalPath/firstDir/(key + ".journal")).string();
+        int fd = ::open(jFilename.c_str(), O_RDONLY);
         if (fd >= 0)
         {
-            keyToJournalName[key] = filename;
+            keyToJournalName[key] = jFilename;
             journalFDs[key] = fd;
             fdMinders[mindersIndex++].fd = fd;
             //fdMinders.push_back(SharedCloser(fd));
@@ -182,27 +178,27 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         {
             int l_errno = errno;
             fileLock.unlock();
-            cache->doneReading(keys);
+            cache->doneReading(firstDir, keys);
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
-                filename.c_str(), strerror_r(l_errno, buf, 80));
+                jFilename.c_str(), strerror_r(l_errno, buf, 80));
             errno = l_errno;
             return -1;
         }
         
         // open all of the objects
-        filename = (cachePath/key).string();
-        fd = ::open(filename.c_str(), O_RDONLY);
+        string oFilename = (cachePath/firstDir/key).string();
+        fd = ::open(oFilename.c_str(), O_RDONLY);
         if (fd < 0)
         {
             int l_errno = errno;
             fileLock.unlock();
-            cache->doneReading(keys);
+            cache->doneReading(firstDir, keys);
             logger->log(LOG_CRIT, "IOCoordinator::read(): Got an unexpected error opening %s, error was '%s'",
-                filename.c_str(), strerror_r(l_errno, buf, 80));
+                oFilename.c_str(), strerror_r(l_errno, buf, 80));
             errno = l_errno;
             return -1;
         }
-        keyToObjectName[key] = filename;
+        keyToObjectName[key] = oFilename;
         objectFDs[key] = fd;
         fdMinders[mindersIndex++].fd = fd;
         //fdMinders.push_back(SharedCloser(fd));
@@ -239,7 +235,7 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
         if (err) 
         {
             fileLock.unlock();
-            cache->doneReading(keys);
+            cache->doneReading(firstDir, keys);
             if (count == 0)
                 return -1;
             else
@@ -251,24 +247,26 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     
 out:
     fileLock.unlock();
-    cache->doneReading(keys);
+    cache->doneReading(firstDir, keys);
     // all done
     return count;
 }
 
 ssize_t IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
 {
-    bf::path p(_filename);
+    bf::path p = ownership.get(_filename);
+    const bf::path firstDir = *(p.begin());
     const char *filename = p.string().c_str();
     
     ScopedWriteLock lock(this, filename);
-    int ret = _write(filename, data, offset, length);
+    int ret = _write(filename, data, offset, length, firstDir);
     lock.unlock();
-    cache->doneWriting();
+    cache->doneWriting(firstDir);
     return ret;
 }
 
-ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length)
+ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t offset, size_t length,
+    const bf::path &firstDir)
 {
     int err = 0;
     ssize_t count = 0;
@@ -311,7 +309,7 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
             }
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            err = replicator->addJournalEntry(i->key.c_str(),&data[count],objectOffset,writeLength);
+            err = replicator->addJournalEntry((firstDir/i->key).string().c_str(),&data[count],objectOffset,writeLength);
             assert((uint) err == writeLength);
             
             if (err <= 0)
@@ -328,9 +326,9 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
             if ((writeLength + objectOffset) > i->length)
                 metadata.updateEntryLength(i->offset, (writeLength + objectOffset));
 
-            cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            cache->newJournalEntry(firstDir, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            synchronizer->newJournalEntry(i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            synchronizer->newJournalEntry(firstDir, i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
         }
@@ -364,7 +362,7 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
         metadataObject newObject = metadata.addMetadataObject(filename,(writeLength + objectOffset));
 
         // send to replicator
-        err = replicator->newObject(newObject.key.c_str(),&data[count],objectOffset,writeLength);
+        err = replicator->newObject((firstDir/newObject.key).string().c_str(),&data[count],objectOffset,writeLength);
         assert((uint) err == writeLength);
         if (err <= 0)
         {
@@ -377,13 +375,13 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
             //log error and abort
         }
 
-        cache->newObject(newObject.key,writeLength + objectOffset);
+        cache->newObject(firstDir, newObject.key,writeLength + objectOffset);
         newObjectKeys.push_back(newObject.key);
 
         count += writeLength;
         dataRemaining -= writeLength;
     }
-    synchronizer->newObjects(newObjectKeys);
+    synchronizer->newObjects(firstDir, newObjectKeys);
 
     replicator->updateMetadata(filename, metadata);
 
@@ -392,7 +390,8 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
 
 ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t length)
 {
-    bf::path p(_filename);
+    bf::path p = ownership.get(_filename);
+    const bf::path firstDir = *(p.begin());
     const char *filename = p.string().c_str();
 
     int err;
@@ -430,7 +429,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
 
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            err = replicator->addJournalEntry(i->key.c_str(),&data[count],i->length,writeLength);
+            err = replicator->addJournalEntry((firstDir/i->key).string().c_str(),&data[count],i->length,writeLength);
             assert((uint) err == writeLength);
             if (err <= 0)
             {
@@ -441,9 +440,9 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             }
             metadata.updateEntryLength(i->offset, (writeLength + i->length));
 
-            cache->newJournalEntry(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            cache->newJournalEntry(firstDir, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            synchronizer->newJournalEntry(i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
+            synchronizer->newJournalEntry(firstDir, i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
         }
@@ -466,7 +465,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
 
         // write the new object
-        err = replicator->newObject(newObject.key.c_str(),&data[count],0,writeLength);
+        err = replicator->newObject((firstDir/newObject.key).string().c_str(),&data[count],0,writeLength);
         assert((uint) err == writeLength);
         if (err <= 0)
         {
@@ -477,20 +476,20 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             goto out;
             //log error and abort
         }
-        cache->newObject(newObject.key,writeLength);
+        cache->newObject(firstDir, newObject.key,writeLength);
         newObjectKeys.push_back(newObject.key);
 
         count += writeLength;
         dataRemaining -= writeLength;
     }
-    synchronizer->newObjects(newObjectKeys);
+    synchronizer->newObjects(firstDir, newObjectKeys);
     replicator->updateMetadata(filename, metadata);
     
     // had to add this hack to prevent deadlock
 out:
     // need to release the file lock before telling Cache that we're done writing.
     lock.unlock();
-    cache->doneWriting();
+    cache->doneWriting(firstDir);
     
     return count;
 }
@@ -498,26 +497,28 @@ out:
 // TODO: might need to support more open flags, ex: O_EXCL
 int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
 {
-    bf::path p = _filename;  // normalize it
+    bf::path p = ownership.get(_filename);
     const char *filename = p.string().c_str();
-    ScopedReadLock s(this, filename);
+    boost::scoped_ptr<ScopedFileLock> s;
+    
+    if (openmode & O_CREAT || openmode | O_TRUNC)
+        s.reset(new ScopedWriteLock(this, filename));
+    else
+        s.reset(new ScopedReadLock(this, filename));    
 
     MetadataFile meta(filename, MetadataFile::no_create_t());
     
     if ((openmode & O_CREAT) && !meta.exists())
         replicator->updateMetadata(filename, meta);   // this will end up creating filename
     if ((openmode & O_TRUNC) && meta.exists())
-    {
-        s.unlock();
-        truncate(filename, 0);
-        s.lock();
-    }
+        _truncate(p, 0, s.get());
+        
     return meta.stat(out);
 }
 
 int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 {
-    bf::path p(metaPath / dirname);
+    bf::path p(metaPath / ownership.get(dirname));
     
     listing->clear();
     if (!bf::exists(p))
@@ -544,7 +545,7 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 
 int IOCoordinator::stat(const char *_path, struct stat *out)
 {
-    bf::path p(_path);
+    bf::path p = ownership.get(_path);
     const char *path = p.string().c_str();
     
     if (bf::is_directory(metaPath/p))
@@ -557,6 +558,16 @@ int IOCoordinator::stat(const char *_path, struct stat *out)
 
 int IOCoordinator::truncate(const char *_path, size_t newSize)
 {
+    bf::path p = ownership.get(_path);
+    const char *path = p.string().c_str();
+
+    ScopedWriteLock lock(this, path);
+    return _truncate(p, newSize, &lock);
+}
+
+
+int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileLock *lock)
+{
     /*
         grab the write lock.
         get the relevant metadata.
@@ -568,13 +579,12 @@ int IOCoordinator::truncate(const char *_path, size_t newSize)
         tell cache they were deleted
         tell synchronizer they were deleted
     */
-    bf::path p(_path);
-    const char *path = p.string().c_str();
+    const bf::path firstDir = *(bfpath.begin());
+    const char *path = bfpath.string().c_str();
     
     Synchronizer *synchronizer = Synchronizer::get();  // needs to init sync here to break circular dependency...
     
     int err;
-    ScopedWriteLock lock(this, path);
     MetadataFile meta(path, MetadataFile::no_create_t());
     if (!meta.exists())
     {
@@ -590,9 +600,9 @@ int IOCoordinator::truncate(const char *_path, size_t newSize)
     if (filesize < newSize)
     {
         uint8_t zero = 0;
-        err = _write(path, &zero, newSize - 1, 1);
-        lock.unlock();
-        cache->doneWriting();
+        err = _write(path, &zero, newSize - 1, 1, firstDir);
+        lock->unlock();
+        cache->doneWriting(firstDir);
         if (err < 0)
             return -1;
         return 0;
@@ -620,15 +630,15 @@ int IOCoordinator::truncate(const char *_path, size_t newSize)
     vector<string> deletedObjects;
     for (; i < objects.size(); ++i)
     {
-        int result = cache->ifExistsThenDelete(objects[i].key);
+        int result = cache->ifExistsThenDelete(firstDir, objects[i].key);
         if (result & 0x1)
-            replicator->remove(cachePath / objects[i].key);
+            replicator->remove(cachePath/firstDir/objects[i].key);
         if (result & 0x2)
-            replicator->remove(journalPath / (objects[i].key + ".journal"));
+            replicator->remove(journalPath/firstDir/(objects[i].key + ".journal"));
         deletedObjects.push_back(objects[i].key);
     }
     if (!deletedObjects.empty())
-        synchronizer->deletedObjects(deletedObjects);
+        synchronizer->deletedObjects(firstDir, deletedObjects);
     return 0;
 }
 
@@ -645,10 +655,11 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     //cout << "deleteMetaFile called on " << file << endl;
     
     Synchronizer *synchronizer = Synchronizer::get();
-
+    
     // this is kind of ugly.  We need to lock on 'file' relative to metaPath, and without the .meta extension
-    string pita = file.string().substr(metaPath.string().length());   // get rid of metapath
+    string pita = file.string().substr(metaPath.string().length() + 1);   // get rid of metapath
     pita = pita.substr(0, pita.length() - 5);   // get rid of the extension
+    const bf::path firstDir = *(bf::path(pita).begin());
     ScopedWriteLock lock(this, pita);
     //cout << "file is " << file.string() << " locked on " << pita << endl;
     
@@ -661,14 +672,14 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
     for (auto &object : objects)
     {
         //cout << "deleting " << object.key << endl;
-        int result = cache->ifExistsThenDelete(object.key);
+        int result = cache->ifExistsThenDelete(firstDir, object.key);
         if (result & 0x1)
-            replicator->remove(cachePath/object.key);
+            replicator->remove(cachePath/firstDir/object.key);
         if (result & 0x2)
-            replicator->remove(journalPath/(object.key + ".journal"));
+            replicator->remove(journalPath/firstDir/(object.key + ".journal"));
         deletedObjects.push_back(object.key);
     }
-    synchronizer->deletedObjects(deletedObjects);
+    synchronizer->deletedObjects(firstDir, deletedObjects);
 }
 
 void IOCoordinator::remove(const bf::path &p)
@@ -718,7 +729,7 @@ int IOCoordinator::unlink(const char *path)
     
     /* TODO!  We need to make sure the input params to IOC fcns don't go up to parent dirs,
         ex, if path = '../../../blahblah'. */
-    bf::path p(metaPath/path);
+    bf::path p(metaPath/ownership.get(path));
     
     try 
     {
@@ -764,8 +775,10 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         write the new metadata object
     */
     
-    const bf::path p1(_filename1);
-    const bf::path p2(_filename2);
+    const bf::path p1 = ownership.get(_filename1);
+    const bf::path p2 = ownership.get(_filename2);
+    const bf::path firstDir1 = *(p1.begin());
+    const bf::path firstDir2 = *(p2.begin());
     const char *filename1 = p1.string().c_str();
     const char *filename2 = p2.string().c_str();
     
@@ -815,7 +828,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     {
         for (const auto &object : objects)
         {
-            bf::path journalFile = journalPath/(object.key + ".journal");
+            bf::path journalFile = journalPath/firstDir1/(object.key + ".journal");
             metadataObject newObj = meta2.addMetadataObject(filename2, object.length);
             assert(newObj.offset == object.offset);
             // TODO: failure here makes a lot of noise in the log file
@@ -826,7 +839,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
                 if (errno == ENOENT)
                 {
                     // it's not in cloudstorage, see if it's in the cache
-                    bf::path cachedObjPath = cachePath/object.key;
+                    bf::path cachedObjPath = cachePath/firstDir1/object.key;
                     bool objExists = bf::exists(cachedObjPath);
                     if (!objExists)
                         throw CFException(ENOENT, string("IOCoordinator::copyFile(): source = ") + filename1 + 
@@ -849,12 +862,12 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
             // if there's a journal file for this object, make a copy
             if (bf::exists(journalFile))
             {
-                bf::path newJournalFile = journalPath/(newObj.key + ".journal");
+                bf::path newJournalFile = journalPath/firstDir2/(newObj.key + ".journal");
                 try 
                 {
                     bf::copy_file(journalFile, newJournalFile);
                     size_t tmp = bf::file_size(newJournalFile);
-                    cache->newJournalEntry(tmp);
+                    cache->newJournalEntry(firstDir2, tmp);
                     newJournalEntries.push_back(pair<string, size_t>(newObj.key, tmp));
                 }
                 catch (bf::filesystem_error &e)
@@ -873,8 +886,8 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
             cs->deleteObject(newObject.key);
         for (auto &jEntry : newJournalEntries)
         {
-            bf::path fullJournalPath = journalPath/(jEntry.first + ".journal");
-            cache->deletedJournal(bf::file_size(fullJournalPath));
+            bf::path fullJournalPath = journalPath/firstDir2/(jEntry.first + ".journal");
+            cache->deletedJournal(firstDir2, bf::file_size(fullJournalPath));
             bf::remove(fullJournalPath);
         }
         errno = e.l_errno;
@@ -885,7 +898,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     lock2.unlock();
     
     for (auto &jEntry : newJournalEntries)
-        sync->newJournalEntry(jEntry.first, jEntry.second);
+        sync->newJournalEntry(firstDir2, jEntry.first, jEntry.second);
     return 0;
 }
 
@@ -1147,18 +1160,12 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     return 0;
 }
 
-void IOCoordinator::renameObject(const string &oldKey, const string &newKey)
-{
-    // does anything need to be done here?
-}
-
-
 void IOCoordinator::readLock(const string &filename)
 {
     boost::unique_lock<boost::mutex> s(lockMutex);
 
     //cout << "read-locking " << filename << endl;
-    //assert(filename[0] == '/');
+    assert(filename[0] != '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();
@@ -1183,7 +1190,7 @@ void IOCoordinator::writeLock(const string &filename)
     boost::unique_lock<boost::mutex> s(lockMutex);
     
     //cout << "write-locking " << filename << endl;
-    //assert(filename[0] == '/');
+    assert(filename[0] != '/');
     auto ins = locks.insert(pair<string, RWLock *>(filename, NULL));
     if (ins.second)
         ins.first->second = new RWLock();

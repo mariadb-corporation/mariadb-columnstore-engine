@@ -56,7 +56,6 @@ bool ReadTask::run()
     
     // todo: do the reading and writing in chunks
     // todo: need to make this use O_DIRECT on the IOC side
-    ioc->willRead(cmd->filename, cmd->offset, cmd->count);
     ssize_t err;
     while ((uint) resp->returnCode < cmd->count)
     {

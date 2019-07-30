@@ -59,8 +59,8 @@ Synchronizer::Synchronizer() : maxUploads(0)
     threadPool.reset(new ThreadPool());
     threadPool->setMaxThreads(maxUploads);
     die = false;
-    uncommittedJournalSize = 0;
     journalSizeThreshold = cache->getMaxCacheSize() / 2;
+    blockNewJobs = false;
     syncThread = boost::thread([this] () { this->periodicSync(); });
 }
 
@@ -84,9 +84,28 @@ enum OpFlags
     NEW_OBJECT = 0x4,
 };
 
-void Synchronizer::_newJournalEntry(const string &key, size_t size)
+/* XXXPAT.  Need to revisit this later.  To make multiple prefix functionality as minimal as possible,
+I limited the changes to key string manipulation where possible.  The keys it manages have the prefix they 
+belong to prepended.  So key 12345 in prefix p1 becomes p1/12345.  This is not the most elegant or performant
+option, just the least invasive.
+*/
+
+void Synchronizer::newPrefix(const bf::path &p)
 {
-    uncommittedJournalSize += size;
+    uncommittedJournalSize[p] = 0;
+}
+
+void Synchronizer::dropPrefix(const bf::path &p)
+{
+    syncNow(p);
+    boost::unique_lock<boost::mutex> s(mutex);
+    uncommittedJournalSize.erase(p);
+}
+
+void Synchronizer::_newJournalEntry(const bf::path &prefix, const string &_key, size_t size)
+{
+    string key = (prefix/_key).string();
+    uncommittedJournalSize[prefix] += size;
     auto it = pendingOps.find(key);
     if (it != pendingOps.end())
     {
@@ -97,61 +116,64 @@ void Synchronizer::_newJournalEntry(const string &key, size_t size)
     pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(JOURNAL));
 }
     
-void Synchronizer::newJournalEntry(const string &key, size_t size)
+void Synchronizer::newJournalEntry(const bf::path &prefix, const string &_key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(mutex);
-    _newJournalEntry(key, size);
-    if (uncommittedJournalSize > journalSizeThreshold)
+    _newJournalEntry(prefix, _key, size);
+    if (uncommittedJournalSize[prefix] > journalSizeThreshold)
     {
-        uncommittedJournalSize = 0;
+        uncommittedJournalSize[prefix] = 0;
         s.unlock();
         forceFlush();
     }
 }
 
-void Synchronizer::newJournalEntries(const vector<pair<string, size_t> > &keys)
+void Synchronizer::newJournalEntries(const bf::path &prefix, const vector<pair<string, size_t> > &keys)
 {
     boost::unique_lock<boost::mutex> s(mutex);
     for (auto &keysize : keys)
-        _newJournalEntry(keysize.first, keysize.second);
-    if (uncommittedJournalSize > journalSizeThreshold)
+        _newJournalEntry(prefix, keysize.first, keysize.second);
+    if (uncommittedJournalSize[prefix] > journalSizeThreshold)
     {
-        uncommittedJournalSize = 0;
+        uncommittedJournalSize[prefix] = 0;
         s.unlock();
         forceFlush();
     }
 }
 
-void Synchronizer::newObjects(const vector<string> &keys)
+void Synchronizer::newObjects(const bf::path &prefix, const vector<string> &keys)
 {
     boost::unique_lock<boost::mutex> s(mutex);
 
-    for (const string &key : keys)
+    for (const string &_key : keys)
     {
-        assert(pendingOps.find(key) == pendingOps.end());
+        bf::path key(prefix/_key);
+        assert(pendingOps.find(key.string()) == pendingOps.end());
         //makeJob(key);
-        pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(NEW_OBJECT));
+        pendingOps[key.string()] = boost::shared_ptr<PendingOps>(new PendingOps(NEW_OBJECT));
     }
 }
 
-void Synchronizer::deletedObjects(const vector<string> &keys)
+void Synchronizer::deletedObjects(const bf::path &prefix, const vector<string> &keys)
 {
     boost::unique_lock<boost::mutex> s(mutex);
 
-    for (const string &key : keys)
+    for (const string &_key : keys)
     {
-        auto it = pendingOps.find(key);
+        bf::path key(prefix/_key);
+        auto it = pendingOps.find(key.string());
         if (it != pendingOps.end())
             it->second->opFlags |= DELETE;
         else
-            pendingOps[key] = boost::shared_ptr<PendingOps>(new PendingOps(DELETE));
+            pendingOps[key.string()] = boost::shared_ptr<PendingOps>(new PendingOps(DELETE));
     }
     // would be good to signal to the things in opsInProgress that these were deleted.  That would
     // quiet down the logging somewhat.  How to do that efficiently, and w/o gaps or deadlock...
 }
 
-void Synchronizer::flushObject(const string &key)
+void Synchronizer::flushObject(const bf::path &prefix, const string &_key)
 {
+    string key = (prefix/_key).string();
     boost::unique_lock<boost::mutex> s(mutex);
 
     // if there is something to do on key, it should be either in pendingOps or opsInProgress
@@ -192,7 +214,7 @@ void Synchronizer::flushObject(const string &key)
     bool keyExists, journalExists;
     int err;
     do {
-        err = cs->exists(key.c_str(), &keyExists);
+        err = cs->exists(_key.c_str(), &keyExists);
         if (err)
         {
             char buf[80];
@@ -239,12 +261,35 @@ void Synchronizer::periodicSync()
             //logger->log(LOG_DEBUG,"Synchronizer Force Flush.");
         }
         lock.lock();
+        if (blockNewJobs)
+            continue;
         //cout << "Sync'ing " << pendingOps.size() << " objects" << " queue size is " <<
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
             makeJob(job.first);
-        uncommittedJournalSize = 0;
+        for (auto it = uncommittedJournalSize.begin(); it != uncommittedJournalSize.end(); ++it)
+            it->second = 0;
     }
+}
+
+void Synchronizer::syncNow(const bf::path &prefix)
+{
+    boost::unique_lock<boost::mutex> lock(mutex);
+    
+    // this is pretty hacky.  when time permits, implement something better.
+    //
+    // Issue all of the pendingOps for the given prefix
+    // recreate the threadpool (dtor returns once all jobs have finished)
+    // resume normal operation
+    
+    blockNewJobs = true;
+    for (auto &job : pendingOps)
+        if (job.first.find(prefix.string()) == 0)
+            makeJob(job.first);
+    uncommittedJournalSize[prefix] = 0;
+    threadPool.reset(new ThreadPool());
+    threadPool->setMaxThreads(maxUploads);
+    blockNewJobs = false;
 }
 
 void Synchronizer::forceFlush()
@@ -361,6 +406,9 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     ScopedReadLock s(ioc, sourceFile);
     
     string &key = *it;
+    size_t pos = key.find_first_of('/');
+    bf::path prefix = key.substr(0, pos);
+    string cloudKey = key.substr(pos + 1);
     char buf[80];
     bool exists = false;
     int err;
@@ -374,7 +422,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     
     const metadataObject *mdEntry;
     bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!entryExists || key != mdEntry->key)
+    if (!entryExists || cloudKey != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
@@ -382,7 +430,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     
     //assert(key == mdEntry->key);  <-- This could fail b/c of truncation + a write/append before this job runs.
     
-    err = cs->exists(key, &exists);
+    err = cs->exists(cloudKey, &exists);
     if (err)
         throw runtime_error(string("synchronize(): checking existence of ") + key + ", got " + 
             strerror_r(errno, buf, 80));
@@ -390,14 +438,14 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
 
     // TODO: should be safe to check with Cache instead of a file existence check
-    exists = cache->exists(key);
+    exists = cache->exists(prefix, cloudKey);
     if (!exists)
     {
         logger->log(LOG_DEBUG, "synchronize(): was told to upload %s but it does not exist locally", key.c_str());
         return;
     }
 
-    err = cs->putObject((cachePath / key).string(), key);
+    err = cs->putObject((cachePath / key).string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
     replicator->remove((cachePath/key).string().c_str(), Replicator::NO_LOCAL);
@@ -406,7 +454,8 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
 void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::iterator &it)
 {
     ScopedWriteLock s(ioc, sourceFile);
-    cs->deleteObject(*it);
+    string cloudKey = it->substr(it->find('/') + 1);
+    cs->deleteObject(cloudKey);
 }
 
 void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>::iterator &lit)
@@ -415,6 +464,10 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     char buf[80];
     string key = *lit;
+    size_t pos = key.find_first_of('/');
+    bf::path prefix = key.substr(0, pos);
+    string cloudKey = key.substr(pos + 1);
+    
     MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
     
     if (!md.exists())
@@ -425,7 +478,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     const metadataObject *mdEntry;
     bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!metaExists || key != mdEntry->key)
+    if (!metaExists || cloudKey != mdEntry->key)
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
@@ -442,12 +495,12 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         // sanity check + add'l info.  Test whether the object exists in cloud storage.  If so, complain,
         // and run synchronize() instead.
         bool existsOnCloud;
-        int err = cs->exists(key, &existsOnCloud);
+        int err = cs->exists(cloudKey, &existsOnCloud);
         if (err)
             throw runtime_error(string("Synchronizer: cs->exists() failed: ") + strerror_r(errno, buf, 80));
         if (!existsOnCloud)
         {
-            if (cache->exists(key))
+            if (cache->exists(prefix, cloudKey))
             {
                 logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s has no journal and does not exist in the cloud, calling "
                     "synchronize() instead.  Need to explain how this happens.", key.c_str());
@@ -470,13 +523,13 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     boost::shared_array<uint8_t> data;
     size_t count = 0, size = mdEntry->length;
     
-    bool oldObjIsCached = cache->exists(key);
+    bool oldObjIsCached = cache->exists(prefix, cloudKey);
     
     // get the base object if it is not already cached
     // merge it with its journal file
     if (!oldObjIsCached)
     {
-        err = cs->getObject(key, &data, &size);
+        err = cs->getObject(cloudKey, &data, &size);
         if (err)
         {
             if (errno == ENOENT)
@@ -524,14 +577,15 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     // get a new key for the resolved version & upload it
-    string newKey = MetadataFile::getNewKeyFromOldKey(key, size);
-    err = cs->putObject(data, size, newKey);
+    string newCloudKey = MetadataFile::getNewKeyFromOldKey(key, size);
+    string newKey = (prefix/newCloudKey).string();
+    err = cs->putObject(data, size, newCloudKey);
     if (err)
     {
         // try to delete it in cloud storage... unlikely it is there in the first place, and if it is
         // this probably won't work
         int l_errno = errno;
-        cs->deleteObject(newKey);    
+        cs->deleteObject(newCloudKey);    
         throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(l_errno, buf, 80));
     }
     
@@ -562,22 +616,21 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             }
             count += err;
         }
-        cache->rename(key, newKey, size - bf::file_size(oldCachePath));
+        cache->rename(prefix, cloudKey, newCloudKey, size - bf::file_size(oldCachePath));
         replicator->remove(oldCachePath);
     }
     
     // update the metadata for the source file
     
-    md.updateEntry(MetadataFile::getOffsetFromKey(key), newKey, size);
+    md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
     replicator->updateMetadata(sourceFile.c_str(), md);
 
     rename(key, newKey);
-    ioc->renameObject(key, newKey);
     
     // delete the old object & journal file
-    cache->deletedJournal(bf::file_size(journalName));
+    cache->deletedJournal(prefix, bf::file_size(journalName));
     replicator->remove(journalName);
-    cs->deleteObject(key);
+    cs->deleteObject(cloudKey);
 }
 
 void Synchronizer::rename(const string &oldKey, const string &newKey)
@@ -637,6 +690,14 @@ void Synchronizer::PendingOps::wait(boost::mutex *m)
         condvar.wait(*m);
         waiters--;
     }
+}
+
+Synchronizer::Job::Job(Synchronizer *s, std::list<std::string>::iterator i) : sync(s), it(i)
+{ }
+
+void Synchronizer::Job::operator()()
+{ 
+    sync->process(it);
 }
 
 }

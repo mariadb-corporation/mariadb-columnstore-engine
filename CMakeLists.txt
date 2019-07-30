@@ -86,6 +86,8 @@ set(storagemanager_SRCS
     src/MetadataFile.cpp
     src/Replicator.cpp
     src/Utilities.cpp
+    src/Ownership.cpp
+    src/PrefixCache.cpp
 )
 
 option(TRACE "Enable some tracing output" OFF)

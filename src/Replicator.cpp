@@ -121,6 +121,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     size_t count = 0;
     int version = 1;
     string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
+    boost::filesystem::path firstDir = *(boost::filesystem::path(filename).begin());
     uint64_t thisEntryMaxOffset = (offset + length - 1);
 
     bool exists = boost::filesystem::exists(journalFilename);
@@ -135,7 +136,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         assert((uint) err == header.length() + 1);
         if (err <= 0)
             return err;
-        Cache::get()->newJournalEntry(header.length() + 1);
+        Cache::get()->newJournalEntry(firstDir, header.length() + 1);
     }
     else
     {

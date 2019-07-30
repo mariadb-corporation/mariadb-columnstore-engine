@@ -18,6 +18,7 @@
 #include "RWLock.h"
 #include "Replicator.h"
 #include "Utilities.h"
+#include "Ownership.h"
 
 namespace storagemanager
 {
@@ -30,7 +31,6 @@ class IOCoordinator : public boost::noncopyable
         static IOCoordinator *get();
         virtual ~IOCoordinator();
 
-        void willRead(const char *filename, off_t offset, size_t length);
         /* TODO: make read, write, append return a ssize_t */
         ssize_t read(const char *filename, uint8_t *data, off_t offset, size_t length);
         ssize_t write(const char *filename, const uint8_t *data, off_t offset, size_t length);
@@ -58,7 +58,6 @@ class IOCoordinator : public boost::noncopyable
         
         /* Lock manipulation fcns.  They can lock on any param given to them.  For convention's sake,
            the parameter should mostly be the abs filename being accessed. */
-        void renameObject(const std::string &oldKey, const std::string &newKey);
         void readLock(const std::string &filename);
         void writeLock(const std::string &filename);
         void readUnlock(const std::string &filename);
@@ -75,6 +74,7 @@ class IOCoordinator : public boost::noncopyable
         Cache *cache;
         SMLogging *logger;
         Replicator *replicator;
+        Ownership ownership;   // ACK!  Need a new name for this!
 
         size_t objectSize;
         boost::filesystem::path journalPath;
@@ -87,7 +87,9 @@ class IOCoordinator : public boost::noncopyable
         void remove(const boost::filesystem::path &path);
         void deleteMetaFile(const boost::filesystem::path &file);
 
-        ssize_t _write(const char *filename, const uint8_t *data, off_t offset, size_t length);
+        int _truncate(const boost::filesystem::path &path, size_t newsize, ScopedFileLock *lock);
+        ssize_t _write(const char *filename, const uint8_t *data, off_t offset, size_t length, 
+            const boost::filesystem::path &firstDir);
         
         int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
             uint8_t *data, off_t offset, size_t length) const;

@@ -68,11 +68,10 @@ int main(int argc, char** argv)
 
     SessionManager* sm = SessionManager::get();
 
-
-
     ret = sm->start();
 
     cache->shutdown();
+    
     delete sync;
     delete cache;
     delete ioc;

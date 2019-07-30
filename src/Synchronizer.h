@@ -21,7 +21,6 @@ namespace storagemanager
 class Cache;  // break circular dependency in header files
 class IOCoordinator;
 
-/* TODO: Need to think about how errors are handled / propagated */
 class Synchronizer : public boost::noncopyable
 {
     public:
@@ -30,12 +29,16 @@ class Synchronizer : public boost::noncopyable
         
         // these take keys as parameters, not full path names, ex, pass in '12345' not
         // 'cache/12345'.
-        void newJournalEntry(const std::string &key, size_t len);
-        void newJournalEntries(const std::vector<std::pair<std::string, size_t> > &keys);
-        void newObjects(const std::vector<std::string> &keys);
-        void deletedObjects(const std::vector<std::string> &keys);        
-        void flushObject(const std::string &key);
-        void forceFlush();
+        void newJournalEntry(const boost::filesystem::path &firstDir, const std::string &key, size_t len);
+        void newJournalEntries(const boost::filesystem::path &firstDir, const std::vector<std::pair<std::string, size_t> > &keys);
+        void newObjects(const boost::filesystem::path &firstDir, const std::vector<std::string> &keys);
+        void deletedObjects(const boost::filesystem::path &firstDir, const std::vector<std::string> &keys);        
+        void flushObject(const boost::filesystem::path &firstDir, const std::string &key);
+        void forceFlush();  // ideally, make a version of this that takes a firstDir parameter
+        
+        
+        void newPrefix(const boost::filesystem::path &p);
+        void dropPrefix(const boost::filesystem::path &p);
         
         // for testing primarily
         boost::filesystem::path getJournalPath();
@@ -43,7 +46,7 @@ class Synchronizer : public boost::noncopyable
     private:
         Synchronizer();
         
-        void _newJournalEntry(const std::string &key, size_t len);
+        void _newJournalEntry(const boost::filesystem::path &firstDir, const std::string &key, size_t len);
         void process(std::list<std::string>::iterator key);
         void synchronize(const std::string &sourceFile, std::list<std::string>::iterator &it);
         void synchronizeDelete(const std::string &sourceFile, std::list<std::string>::iterator &it);
@@ -66,8 +69,8 @@ class Synchronizer : public boost::noncopyable
         
         struct Job : public ThreadPool::Job
         {
-            Job(Synchronizer *s, std::list<std::string>::iterator i) : sync(s), it(i) { }
-            void operator()() { sync->process(it); }
+            Job(Synchronizer *s, std::list<std::string>::iterator i);
+            void operator()();
             Synchronizer *sync;
             std::list<std::string>::iterator it;
         };
@@ -88,7 +91,11 @@ class Synchronizer : public boost::noncopyable
         boost::thread syncThread;
         const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
         void periodicSync();
-        size_t uncommittedJournalSize, journalSizeThreshold;
+        std::map<boost::filesystem::path, size_t> uncommittedJournalSize;
+        size_t journalSizeThreshold;
+        bool blockNewJobs;
+        
+        void syncNow(const boost::filesystem::path &prefix);  // a synchronous version of forceFlush()
         
         SMLogging *logger;
         Cache *cache;
