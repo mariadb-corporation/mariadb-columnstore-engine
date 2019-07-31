@@ -118,7 +118,7 @@ bool Downloader::inProgress(const string &key)
     return false;
 }
 
-inline const bf::path & Downloader::getTmpPath() const
+const bf::path & Downloader::getTmpPath() const
 {
     return tmpPath;
 }
