@@ -205,11 +205,11 @@ ConstantColumn::ConstantColumn( const ConstantColumn& rhs):
     if (fRegex.get() != NULL)
     {
         fRegex.reset(new CNX_Regex());
-#ifdef _MSC_VER
-        *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-#else
+#ifdef POSIX_REGEX
         string str = dataconvert::DataConvert::constructRegexp(fResult.strVal);
         regcomp(fRegex.get(), str.c_str(), REG_NOSUB | REG_EXTENDED);
+#else
+        *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
 #endif
     }
 }
@@ -256,7 +256,7 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
 
 ConstantColumn::~ConstantColumn()
 {
-#ifndef _MSC_VER
+#ifdef POSIX_REGEX
 
     if (fRegex.get() != NULL)
         regfree(fRegex.get());
@@ -394,11 +394,11 @@ void ConstantColumn::constructRegex()
 {
     //fRegex = new regex_t();
     fRegex.reset(new CNX_Regex());
-#ifdef _MSC_VER
-    *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-#else
+#ifdef POSIX_REGEX
     string str = dataconvert::DataConvert::constructRegexp(fResult.strVal);
     regcomp(fRegex.get(), str.c_str(), REG_NOSUB | REG_EXTENDED);
+#else
+    *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
 #endif
 }
 
