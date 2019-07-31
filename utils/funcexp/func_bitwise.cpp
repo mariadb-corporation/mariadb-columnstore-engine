@@ -93,10 +93,6 @@ bool getUIntValFromParm(
             {
                 isNull = true;
             }
-            else
-            {
-                value = 0;
-            }
         }
         break;
 
