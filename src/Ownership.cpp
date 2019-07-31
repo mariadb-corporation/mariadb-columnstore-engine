@@ -142,7 +142,6 @@ void Ownership::releaseOwnership(const bf::path &p, bool isDtor)
         logger->log(LOG_DEBUG, "Ownership::releaseOwnership(): told to disown %s, but do not own it", p.string().c_str());
         return;
     }
-    ownedPrefixes.erase(it);
     
     if (isDtor)
     {
@@ -152,7 +151,9 @@ void Ownership::releaseOwnership(const bf::path &p, bool isDtor)
         DELETE(p, "FLUSHING");      
         return; 
     }
-    
+    else
+        ownedPrefixes.erase(it);
+        
     s.unlock();
     
     volatile bool done = false;
