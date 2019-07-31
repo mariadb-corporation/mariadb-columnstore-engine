@@ -144,7 +144,9 @@ void Downloader::Download::operator()()
     itRan = true;
     CloudStorage *storage = CloudStorage::get();
 
-    bf::create_directories(dlPath / dl->getTmpPath());    // todo... code up a way for this to only be done once...
+    // download to a tmp path
+    if (!bf::exists(dlPath / dl->getTmpPath()))
+        bf::create_directories(dlPath / dl->getTmpPath());
     bf::path tmpFile = dlPath / dl->getTmpPath() / key;
     int err = storage->getObject(key, tmpFile.string(), &size);
     if (err != 0)
@@ -154,7 +156,16 @@ void Downloader::Download::operator()()
         size = 0;
     }
     
-    bf::rename(tmpFile, dlPath / key);
+    // move it to its proper place
+    boost::system::error_code berr;
+    bf::rename(tmpFile, dlPath / key, berr);
+    if (berr)
+    {
+        dl_errno = berr.value();
+        bf::remove(tmpFile);
+        size = 0;
+    }
+    
     lock->lock();
     finished = true;
     for (uint i = 0; i < listeners.size(); i++)
