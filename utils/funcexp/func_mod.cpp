@@ -74,10 +74,10 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
     }
 
     IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-    int64_t value = d.value / helpers::power(d.scale);
-    int lefto = d.value % helpers::power(d.scale);
+    int64_t value = d.value / pow(10.0, d.scale);
+    int lefto = d.value % pow(10.0, d.scale);
 
-    int64_t mod = (value % div) * helpers::power(d.scale) + lefto;
+    int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
 
     retValue.value = mod;
     retValue.scale = d.scale;
@@ -164,7 +164,7 @@ double Func_mod::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / helpers::power(d.scale);
+            int64_t value = d.value / pow(10.0, d.scale);
 
             mod = value % div;
         }
@@ -268,7 +268,7 @@ long double Func_mod::getLongDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / helpers::power(d.scale);
+            int64_t value = d.value / pow(10.0, d.scale);
 
             mod = value % div;
         }
@@ -375,7 +375,7 @@ int64_t Func_mod::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / helpers::power(d.scale);
+            int64_t value = d.value / pow(10.0, d.scale);
 
             mod = value % div;
         }
@@ -473,7 +473,7 @@ uint64_t Func_mod::getUIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / helpers::power(d.scale);
+            int64_t value = d.value / pow(10.0, d.scale);
 
             mod = value % div;
         }

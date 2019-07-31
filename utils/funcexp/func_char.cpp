@@ -156,9 +156,10 @@ string Func_char::getStrVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+            double dscale = d.scale;
             // get decimal and round up
-            int value = d.value / helpers::power(d.scale);
-            int lefto = (d.value - value * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            int value = d.value / pow(10.0, dscale);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(dscale - 1);
 
             if ( lefto > 4 )
                 value++;
