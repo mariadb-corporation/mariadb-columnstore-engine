@@ -65,7 +65,7 @@ double_quote \"
 grave_accent `
 
 comment ("--"{non_newline}*)
-extended_ident_cont [A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
+extended_ident_cont [ A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
 
@@ -189,8 +189,6 @@ BOOL {return BOOL;}
 BOOLEAN {return BOOLEAN;}
 
 \n { lineno++;}
-
-{column_ident_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES); return IDENT;}
 
 {whitespace} {
     /* ignore */
