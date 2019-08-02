@@ -700,6 +700,8 @@ void Synchronizer::printKPIs() const
     cout << "\tnumBytesUploaded: " << numBytesUploaded << endl;
     cout << "\tnumBytesDownloaded: " << numBytesDownloaded << endl;
     cout << "\tmergeDiff: " << mergeDiff << endl;
+    cout << "\tflushesTriggeredBySize: " << flushesTriggeredBySize << endl;
+    cout << "\tflushesTriggeredByTimer: " << flushesTriggeredByTimer << endl;
 }
     
 /* The helper objects & fcns */

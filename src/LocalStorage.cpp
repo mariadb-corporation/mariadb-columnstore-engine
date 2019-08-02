@@ -159,11 +159,16 @@ int LocalStorage::putObject(const string &source, const string &dest)
 {
     addLatency();
     
-    size_t _size = bf::file_size(source);
-    bytesRead += _size;
-    bytesWritten += _size;
-    ++objectsPut;
-    return copy(source, prefix / dest);
+    int ret = copy(source, prefix / dest);
+
+    if (ret == 0)
+    {
+        size_t _size = bf::file_size(source);
+        bytesRead += _size;
+        bytesWritten += _size;
+        ++objectsPut;
+    }
+    return ret;
 }
 
 int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const string &dest)
@@ -210,11 +215,16 @@ int LocalStorage::copyObject(const string &source, const string &dest)
 {
     addLatency();
     
-    ++objectsCopied;
-    size_t _size = bf::file_size(prefix/source);
-    bytesRead += _size;
-    bytesWritten += _size;
-    return copy(prefix / source, prefix / dest);
+    int ret = copy(prefix / source, prefix / dest);
+    
+    if (ret == 0)
+    {
+        ++objectsCopied;
+        size_t _size = bf::file_size(prefix/source);
+        bytesRead += _size;
+        bytesWritten += _size;
+    }
+    return ret;
 }
 
 int LocalStorage::deleteObject(const string &key)
