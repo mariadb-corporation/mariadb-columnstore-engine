@@ -14,8 +14,8 @@ using namespace std;
 
 namespace
 {
-storagemanager::Synchronizer *instance = NULL;
-boost::mutex inst_mutex;
+    storagemanager::Synchronizer *instance = NULL;
+    boost::mutex inst_mutex;
 }
 
 namespace bf = boost::filesystem;
@@ -41,6 +41,9 @@ Synchronizer::Synchronizer() : maxUploads(0)
     replicator = Replicator::get();
     ioc = IOCoordinator::get();
     cs = CloudStorage::get();
+    
+    numBytesRead = numBytesWritten = numBytesUploaded = numBytesDownloaded = mergeDiff =
+        flushesTriggeredBySize = flushesTriggeredByTimer = 0;
     
     string stmp = config->getValue("ObjectStorage", "max_concurrent_uploads");
     try
@@ -252,6 +255,7 @@ void Synchronizer::periodicSync()
     while (!die)
     {
         lock.unlock();
+        bool wasTriggeredBySize = false;
         try
         {
             boost::this_thread::sleep_for(syncInterval);
@@ -259,10 +263,18 @@ void Synchronizer::periodicSync()
         catch (const boost::thread_interrupted)
         {
             //logger->log(LOG_DEBUG,"Synchronizer Force Flush.");
+            wasTriggeredBySize = true;
         }
         lock.lock();
         if (blockNewJobs)
             continue;
+        if (!pendingOps.empty())
+        {
+            if (wasTriggeredBySize)
+                ++flushesTriggeredBySize;
+            else
+                ++flushesTriggeredByTimer;
+        }
         //cout << "Sync'ing " << pendingOps.size() << " objects" << " queue size is " <<
         //    threadPool.currentQueueSize() << endl;
         for (auto &job : pendingOps)
@@ -291,7 +303,6 @@ void Synchronizer::syncNow(const bf::path &prefix)
     threadPool->setMaxThreads(maxUploads);
     blockNewJobs = false;
 }
-
 void Synchronizer::forceFlush()
 {
     boost::unique_lock<boost::mutex> lock(mutex);
@@ -448,6 +459,8 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     err = cs->putObject((cachePath / key).string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
+    numBytesRead += mdEntry->length;
+    numBytesUploaded += mdEntry->length;
     replicator->remove((cachePath/key).string().c_str(), Replicator::NO_LOCAL);
 }
 
@@ -521,7 +534,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     int err;
     boost::shared_array<uint8_t> data;
-    size_t count = 0, size = mdEntry->length;
+    size_t count = 0, size = mdEntry->length, originalSize = 0;
     
     bool oldObjIsCached = cache->exists(prefix, cloudKey);
     
@@ -540,6 +553,9 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             throw runtime_error(string("Synchronizer: getObject() failed: ") + strerror_r(errno, buf, 80));
         }
 
+        numBytesDownloaded += size;
+        originalSize += size;
+        
         //TODO!!  This sucks.  Need a way to pass in a larger array to cloud storage, and also have it not
         // do any add'l alloc'ing or copying
         if (size < mdEntry->length)
@@ -551,7 +567,8 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         }
         size = mdEntry->length;    // reset length.  Using the metadata as a source of truth (truncation), not actual file length.
         
-        err = ioc->mergeJournalInMem(data, size, journalName.c_str());
+        size_t _bytesRead = 0;
+        err = ioc->mergeJournalInMem(data, size, journalName.c_str(), &_bytesRead);
         if (err)
         {   
             if (!bf::exists(journalName))
@@ -561,10 +578,13 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
                 logger->log(LOG_ERR, "synchronizeWithJournal(): unexpected error merging journal for %s", key.c_str());
             return;
         }
+        numBytesRead += _bytesRead;
+        originalSize += _bytesRead;
     }
     else
     {
-        data = ioc->mergeJournal(oldCachePath.string().c_str(), journalName.c_str(), 0, size);
+        size_t _bytesRead = 0;
+        data = ioc->mergeJournal(oldCachePath.string().c_str(), journalName.c_str(), 0, size, &_bytesRead);
         if (!data)
         {
             if (!bf::exists(journalName))
@@ -574,7 +594,11 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
                 logger->log(LOG_ERR, "synchronizeWithJournal(): unexpected error merging journal for %s", key.c_str());
             return;
         }
+        numBytesRead += _bytesRead;
+        originalSize = _bytesRead;
     }
+    
+    // original size here should be == objectsize + journalsize
     
     // get a new key for the resolved version & upload it
     string newCloudKey = MetadataFile::getNewKeyFromOldKey(key, size);
@@ -588,6 +612,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         cs->deleteObject(newCloudKey);    
         throw runtime_error(string("Synchronizer: putObject() failed: ") + strerror_r(l_errno, buf, 80));
     }
+    numBytesUploaded += size;
     
     // if the object was cached...
     //   write the new data to disk,
@@ -616,10 +641,12 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             }
             count += err;
         }
+        numBytesWritten += size;
         cache->rename(prefix, cloudKey, newCloudKey, size - bf::file_size(oldCachePath));
         replicator->remove(oldCachePath);
     }
     
+    mergeDiff += size - originalSize;
     // update the metadata for the source file
     
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
@@ -665,6 +692,16 @@ bf::path Synchronizer::getCachePath()
     return cachePath;
 }
 
+void Synchronizer::printKPIs() const
+{
+    cout << "Synchronizer" << endl;
+    cout << "\tnumBytesRead: " << numBytesRead << endl;
+    cout << "\tnumBytesWritten: " << numBytesWritten << endl;
+    cout << "\tnumBytesUploaded: " << numBytesUploaded << endl;
+    cout << "\tnumBytesDownloaded: " << numBytesDownloaded << endl;
+    cout << "\tmergeDiff: " << mergeDiff << endl;
+}
+    
 /* The helper objects & fcns */
 
 Synchronizer::PendingOps::PendingOps(int flags) : opFlags(flags), waiters(0), finished(false)

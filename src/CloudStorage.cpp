@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <string>
 #include <ctype.h>
+#include <iostream>
 
 using namespace std;
 
@@ -54,6 +55,24 @@ CloudStorage * CloudStorage::get()
 CloudStorage::CloudStorage()
 {
     logger = SMLogging::get();
+    
+    bytesUploaded = bytesDownloaded = objectsDeleted = objectsCopied = objectsGotten = objectsPut =
+        existenceChecks = 0;
 }
+
+void CloudStorage::printKPIs() const
+{
+    cout << "CloudStorage" << endl;
+    cout << "\tbytesUplaoded = " << bytesUploaded << endl;
+    cout << "\tbytesDownloaded = " << bytesDownloaded << endl;
+    cout << "\tobjectsDeleted = " << objectsDeleted << endl;
+    cout << "\tobjectsCopied = " << objectsCopied << endl;
+    cout << "\tobjectsGotten = " << objectsGotten << endl;
+    cout << "\tobjectsPut = " << objectsPut << endl;
+    cout << "\texistenceChecks = " << existenceChecks << endl;
+}
+    
+
+
 
 }

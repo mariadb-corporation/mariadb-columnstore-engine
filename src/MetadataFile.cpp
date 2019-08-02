@@ -21,6 +21,7 @@ namespace
 {   
     boost::mutex mutex;
     storagemanager::MetadataFile::MetadataConfig *inst = NULL;
+    uint64_t metadataFilesAccessed = 0;
 }
 
 namespace storagemanager
@@ -120,6 +121,7 @@ MetadataFile::MetadataFile(const char* filename)
         mRevision = 1;
         writeMetadata(filename);
     }
+    ++metadataFilesAccessed;
 }
 
 MetadataFile::MetadataFile(const char* filename, no_create_t)
@@ -153,6 +155,7 @@ MetadataFile::MetadataFile(const char* filename, no_create_t)
         mRevision = 1;
         _exists = false;
     }
+    ++metadataFilesAccessed;
 }
 
 MetadataFile::MetadataFile(const boost::filesystem::path &path)
@@ -186,10 +189,16 @@ MetadataFile::MetadataFile(const boost::filesystem::path &path)
         mRevision = 1;
         _exists = false;
     }
+    ++metadataFilesAccessed;
 }
 
 MetadataFile::~MetadataFile()
 {
+}
+
+void MetadataFile::printKPIs()
+{
+    cout << "Metadata files accessed = " << metadataFilesAccessed << endl;
 }
 
 int MetadataFile::stat(struct stat *out) const

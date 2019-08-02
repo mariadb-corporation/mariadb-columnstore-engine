@@ -31,6 +31,8 @@ class Downloader
         bool inProgress(const std::string &);  // call this holding the cache's lock
         const boost::filesystem::path & getTmpPath() const;
         
+        void printKPIs() const;
+        
     private:
         uint maxDownloads;
         //boost::filesystem::path downloadPath;
@@ -80,13 +82,12 @@ class Downloader
         Downloads_t downloads;
         boost::filesystem::path tmpPath;
         
-        // something is not working right with this lock design, need to simplify.
-        // for now, download will use Cache's lock for everything.
-        //boost::mutex download_mutex;
-        //boost::mutex *getDownloadMutex();
         ThreadPool workers;
         CloudStorage *storage;
         SMLogging *logger;
+
+        // KPIs
+        size_t bytesDownloaded;
 };
 
 }

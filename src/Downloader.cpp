@@ -29,6 +29,7 @@ Downloader::Downloader() : maxDownloads(0)
     workers.setName("Downloader");
     logger = SMLogging::get();
     tmpPath = "downloading";
+    bytesDownloaded = 0;
 }
 
 Downloader::~Downloader()
@@ -77,7 +78,6 @@ void Downloader::download(const vector<const string *> &keys, vector<int> *errno
         }
     }
     s.unlock();
-
     // wait for the downloads to finish
     while (counter > 0)
         condvar.wait(*cache_lock);
@@ -98,6 +98,7 @@ void Downloader::download(const vector<const string *> &keys, vector<int> *errno
                 logger->log(LOG_ERR, "Downloader: failed to download %s, got '%s'", keys[i]->c_str(), 
                     strerror_r((*errnos)[i], buf, 80));
             downloads.erase(ownedDownloads[i]);
+            bytesDownloaded += (*sizes)[i];
         }
         else 
         {
@@ -105,6 +106,10 @@ void Downloader::download(const vector<const string *> &keys, vector<int> *errno
             (*errnos)[i] = 0;
         }
     }
+}
+void Downloader::printKPIs() const
+{
+    cout << "Downloader: bytesDownloaded = " << bytesDownloaded << endl;
 }
 
 bool Downloader::inProgress(const string &key)
@@ -122,7 +127,6 @@ const bf::path & Downloader::getTmpPath() const
 {
     return tmpPath;
 }
-
 /* The helper fcns */
 Downloader::Download::Download(const string &source, const bf::path &_dlPath, boost::mutex *_lock, Downloader *_dl) : 
                 dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false), dl(_dl)
@@ -143,7 +147,6 @@ void Downloader::Download::operator()()
 {
     itRan = true;
     CloudStorage *storage = CloudStorage::get();
-
     // download to a tmp path
     if (!bf::exists(dlPath / dl->getTmpPath()))
         bf::create_directories(dlPath / dl->getTmpPath());

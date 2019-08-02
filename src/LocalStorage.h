@@ -24,7 +24,11 @@ class LocalStorage : public CloudStorage
         int exists(const std::string &key, bool *out);
         
         const boost::filesystem::path & getPrefix() const;
-
+        void printKPIs() const;
+        
+    protected:
+        size_t bytesRead, bytesWritten;
+        
     private:
         boost::filesystem::path prefix;
         int copy(const boost::filesystem::path &sourceKey, const boost::filesystem::path &destKey);

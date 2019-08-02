@@ -66,7 +66,8 @@ class Cache : public boost::noncopyable
         void newPrefix(const boost::filesystem::path &prefix);
         void dropPrefix(const boost::filesystem::path &prefix);
         void shutdown();
-
+        void printKPIs() const;
+        
         // test helpers
         const boost::filesystem::path &getCachePath() const;
         const boost::filesystem::path &getJournalPath() const;

@@ -220,9 +220,14 @@ int Cache::ifExistsThenDelete(const bf::path &prefix, const string &key)
     return getPCache(prefix).ifExistsThenDelete(key);
 }
 
+void Cache::printKPIs() const
+{
+    downloader->printKPIs();
+}
 size_t Cache::getCurrentCacheSize()
 {
     size_t totalSize = 0;
+
     boost::unique_lock<boost::mutex> s(lru_mutex);
     
     for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
@@ -237,7 +242,6 @@ size_t Cache::getCurrentCacheElementCount()
     for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
         totalCount += it->second->getCurrentCacheElementCount();
     return totalCount;
-
 }
 
 size_t Cache::getCurrentCacheSize(const bf::path &prefix)
@@ -314,3 +318,7 @@ void Cache::shutdown()
 }
 
 }
+
+
+
+

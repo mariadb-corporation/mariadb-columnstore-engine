@@ -29,6 +29,14 @@ void printCacheUsage(int sig)
     cout << "Cache element count = " << Cache::get()->getCurrentCacheElementCount() << endl;
 }
 
+void printKPIs(int sig)
+{
+    IOCoordinator::get()->printKPIs();
+    Cache::get()->printKPIs();
+    Synchronizer::get()->printKPIs();
+    CloudStorage::get()->printKPIs();
+}
+
 void shutdownSM(int sig)
 {
     if (!signalCaught)
@@ -51,7 +59,8 @@ int main(int argc, char** argv)
     for (int i=0; i<SIGRTMAX; i++)
     {
         sa.sa_handler = shutdownSM;
-        sigaction(i, &sa, NULL);
+        if (i != SIGCONT && i != SIGKILL && i != SIGSTOP)
+            sigaction(i, &sa, NULL);
     }
 
     sa.sa_handler = SIG_IGN;
@@ -59,6 +68,9 @@ int main(int argc, char** argv)
  
     sa.sa_handler = printCacheUsage;
     sigaction(SIGUSR1, &sa, NULL);
+ 
+    sa.sa_handler = printKPIs;
+    sigaction(SIGUSR2, &sa, NULL);
     
     int ret = 0;
 

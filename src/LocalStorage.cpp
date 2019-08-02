@@ -47,10 +47,20 @@ LocalStorage::LocalStorage()
     }
     else
         fakeLatency = false;
+        
+    bytesRead = bytesWritten = 0;
 }
 
 LocalStorage::~LocalStorage()
 {
+}
+
+void LocalStorage::printKPIs() const
+{
+    cout << "LocalStorage" << endl;
+    cout << "\tbytesRead = " << bytesRead << endl;
+    cout << "\tbytesWritten = " << bytesWritten << endl;
+    CloudStorage::printKPIs();
 }
 
 const bf::path & LocalStorage::getPrefix() const 
@@ -58,7 +68,7 @@ const bf::path & LocalStorage::getPrefix() const
     return prefix;
 }
 
-void LocalStorage::addLatency()
+inline void LocalStorage::addLatency()
 {
     if (fakeLatency)
     {
@@ -69,8 +79,6 @@ void LocalStorage::addLatency()
 
 int LocalStorage::copy(const bf::path &source, const bf::path &dest)
 {
-    addLatency();
-    
     boost::system::error_code err;
     bf::copy_file(source, dest, bf::copy_option::fail_if_exists, err);
     if (err)
@@ -90,11 +98,17 @@ bf::path operator+(const bf::path &p1, const bf::path &p2)
 
 int LocalStorage::getObject(const string &source, const string &dest, size_t *size)
 {
+    addLatency();
+
     int ret = copy(prefix / source, dest);
     if (ret)
         return ret;
+    size_t _size = bf::file_size(dest);
     if (size)
-        *size = bf::file_size(dest);
+        *size = _size;
+    bytesRead += _size;
+    bytesWritten += _size;
+    ++objectsGotten;
     return ret;
 }
 
@@ -127,6 +141,7 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
             l_errno = errno;
             //logger->log(LOG_WARNING, "LocalStorage::getObject() failed to read %s, got '%s'", c_source, strerror_r(errno, buf, 80));
             close(fd);
+            bytesRead += count;
             errno = l_errno;
             return err;
         }
@@ -135,11 +150,19 @@ int LocalStorage::getObject(const std::string &sourceKey, boost::shared_array<ui
     if (size)
         *size = l_size;
     close(fd);
+    bytesRead += l_size;
+    ++objectsGotten;
     return 0;
 }
 
 int LocalStorage::putObject(const string &source, const string &dest)
 {
+    addLatency();
+    
+    size_t _size = bf::file_size(source);
+    bytesRead += _size;
+    bytesWritten += _size;
+    ++objectsPut;
     return copy(source, prefix / dest);
 }
 
@@ -172,16 +195,25 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
             //logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
             close(fd);
             errno = l_errno;
+            bytesWritten += count;
             return err;
         }
         count += err;
     }
     close(fd);
+    bytesWritten += count;
+    ++objectsPut;
     return 0;
 }
 
 int LocalStorage::copyObject(const string &source, const string &dest)
 {
+    addLatency();
+    
+    ++objectsCopied;
+    size_t _size = bf::file_size(prefix/source);
+    bytesRead += _size;
+    bytesWritten += _size;
     return copy(prefix / source, prefix / dest);
 }
 
@@ -189,6 +221,7 @@ int LocalStorage::deleteObject(const string &key)
 {
     addLatency();
     
+    ++objectsDeleted;
     boost::system::error_code err;
     bf::remove(prefix / key, err);
     return 0;
@@ -198,6 +231,7 @@ int LocalStorage::exists(const std::string &key, bool *out)
 {
     addLatency();
     
+    ++existenceChecks;
     *out = bf::exists(prefix / key);
     return 0;
 }

@@ -44,10 +44,12 @@ class IOCoordinator : public boost::noncopyable
         
         // The shared logic for merging a journal file with its base file.
         // len should be set to the length of the data requested
-        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, size_t len) const;
+        boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, 
+            size_t len, size_t *sizeRead) const;
         
         // this version modifies object data in memory, given the journal filename
-        int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath) const;
+        int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath, 
+            size_t *sizeRead) const;
         
         // this version takes already-open file descriptors, and an already-allocated buffer as input.
         // file descriptor are positioned, eh, best not to assume anything about their positions
@@ -67,6 +69,8 @@ class IOCoordinator : public boost::noncopyable
         const boost::filesystem::path &getCachePath() const;
         const boost::filesystem::path &getJournalPath() const;
         const boost::filesystem::path &getMetadataPath() const;
+        
+        void printKPIs() const;
         
     private:
         IOCoordinator();
@@ -92,8 +96,17 @@ class IOCoordinator : public boost::noncopyable
             const boost::filesystem::path &firstDir);
         
         int loadObjectAndJournal(const char *objFilename, const char *journalFilename, 
-            uint8_t *data, off_t offset, size_t length) const;
-        int loadObject(int fd, uint8_t *data, off_t offset, size_t length) const;
+            uint8_t *data, off_t offset, size_t length);
+        int loadObject(int fd, uint8_t *data, off_t offset, size_t length);
+        
+        // some KPIs
+        // from the user's POV...
+        size_t bytesRead, bytesWritten, filesOpened, filesCreated, filesCopied;
+        size_t filesDeleted, bytesCopied, filesTruncated, listingCount;
+        
+        // from IOC's pov...
+        size_t iocFilesOpened, iocObjectsCreated, iocJournalsCreated, iocFilesDeleted;
+        size_t iocBytesRead, iocBytesWritten;
 };
 
 }

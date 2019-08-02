@@ -43,6 +43,7 @@ class Synchronizer : public boost::noncopyable
         // for testing primarily
         boost::filesystem::path getJournalPath();
         boost::filesystem::path getCachePath();
+        void printKPIs() const;
     private:
         Synchronizer();
         
@@ -96,6 +97,11 @@ class Synchronizer : public boost::noncopyable
         bool blockNewJobs;
         
         void syncNow(const boost::filesystem::path &prefix);  // a synchronous version of forceFlush()
+        
+        // some KPIs
+        size_t numBytesRead, numBytesWritten, numBytesUploaded, numBytesDownloaded,
+            flushesTriggeredBySize, flushesTriggeredByTimer;
+        ssize_t mergeDiff;
         
         SMLogging *logger;
         Cache *cache;

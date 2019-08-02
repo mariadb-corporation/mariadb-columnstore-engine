@@ -84,7 +84,9 @@ class MetadataFile
             private:
                 MetadataConfig();
         };
-        
+  
+        static void printKPIs();
+              
     private:
         MetadataConfig *mpConfig;
         SMLogging *mpLogger;
