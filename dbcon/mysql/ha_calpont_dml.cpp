@@ -2117,10 +2117,6 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
 {
     int rc = 0;
 
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ALTER_VTABLE ||
-            MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_SELECT_VTABLE )
-        return rc;
-
     if (thd->slave_thread && !ci.replicationEnabled)
         return 0;
 

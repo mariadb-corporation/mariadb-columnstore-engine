@@ -43,6 +43,15 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd = NULL);
 ulonglong get_original_optimizer_flags(THD* thd = NULL);
 void set_original_optimizer_flags(ulonglong ptr, THD* thd = NULL);
 
+bool get_select_handler(THD* thd);
+void set_select_handler(THD* thd, bool value);
+
+bool get_derived_handler(THD* thd);
+void set_derived_handler(THD* thd, bool value);
+
+bool get_group_by_handler(THD* thd);
+void set_group_by_handler(THD* thd, bool value);
+
 bool get_use_decimal_scale(THD* thd);
 void set_use_decimal_scale(THD* thd, bool value);
 

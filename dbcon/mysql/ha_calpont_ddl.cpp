@@ -2306,17 +2306,6 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     bool schemaSyncOnly = false;
     bool isCreate = true;
 
-    // relate to bug 1793. Make sure this is not for a select statement because
-    if (db == "calpontsys" && MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_INIT
-            && tbl != "systable"
-            && tbl != "syscolumn" && tbl != "sysindex"
-            && tbl != "sysconstraint" && tbl != "sysindexcol"
-            && tbl != "sysconstraintcol" )
-    {
-        setError(thd, ER_INTERNAL_ERROR, "Cannot create non-system Calpont tables in calpontsys database");
-        return 1;
-    }
-
     regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
 
     if (regex_search(tablecomment, pat))
@@ -2334,11 +2323,6 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
 #ifdef MCS_DEBUG
             cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
 #endif
-            return 0;
-        }
-
-        if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_ALTER_VTABLE) //check if it is select
-        {
             return 0;
         }
     }

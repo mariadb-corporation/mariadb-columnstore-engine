@@ -71,6 +71,33 @@ static MYSQL_THDVAR_ULONGLONG(
     1
 );
 
+static MYSQL_THDVAR_BOOL(
+    select_handler,
+    PLUGIN_VAR_NOCMDARG,
+    "Enable/Disable the MCS select_handler",
+    NULL,
+    NULL,
+    1
+);
+
+static MYSQL_THDVAR_BOOL(
+    derived_handler,
+    PLUGIN_VAR_NOCMDARG,
+    "Enable/Disable the MCS derived_handler",
+    NULL,
+    NULL,
+    1
+);
+
+static MYSQL_THDVAR_BOOL(
+    group_by_handler,
+    PLUGIN_VAR_NOCMDARG,
+    "Enable/Disable the MCS group_by_handler",
+    NULL,
+    NULL,
+    1
+);
+
 
 
 // legacy system variables
@@ -256,6 +283,9 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(compression_type),
   MYSQL_SYSVAR(fe_conn_info_ptr),
   MYSQL_SYSVAR(original_optimizer_flags),
+  MYSQL_SYSVAR(select_handler),
+  MYSQL_SYSVAR(derived_handler),
+  MYSQL_SYSVAR(group_by_handler),
   MYSQL_SYSVAR(decimal_scale),
   MYSQL_SYSVAR(use_decimal_scale),
   MYSQL_SYSVAR(ordered_only),
@@ -305,6 +335,33 @@ void set_original_optimizer_flags(ulonglong ptr, THD* thd)
     }
     
     THDVAR(current_thd, original_optimizer_flags) = (uint64_t)(ptr);
+}
+
+bool get_select_handler(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, select_handler);
+}
+void set_select_handler(THD* thd, bool value)
+{
+    THDVAR(thd, select_handler) = value;
+}
+
+bool get_derived_handler(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, derived_handler);
+}
+void set_derived_handler(THD* thd, bool value)
+{
+    THDVAR(thd, derived_handler) = value;
+}
+
+bool get_group_by_handler(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, group_by_handler);
+}
+void set_group_by_handler(THD* thd, bool value)
+{
+    THDVAR(thd, group_by_handler) = value;
 }
 
 void set_compression_type(THD* thd, ulong value)

@@ -148,15 +148,20 @@ static group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
+
+    // MCOL-2178 Disable SP support in the group_by_handler for now
+    // Check the session variable value to enable/disable use of
+    // group_by_handler
+    if (!get_group_by_handler(thd) || (thd->lex)->sphead)
+    {
+        return handler;
+    }
+
     // same as thd->lex->current_select
     SELECT_LEX *select_lex = query->from->select_lex;
 
     // Create a handler if query is valid. See comments for details.
-    if //( MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_DISABLE_VTABLE
-        // WIP MCOL-2178
-        //&& ( MIGR::infinidb_vtable_mode == 0
-        //    || MIGR::infinidb_vtable_mode == 2 )
-        ( query->group_by || select_lex->with_sum_func ) //)
+    if ( query->group_by || select_lex->with_sum_func )
     {
         bool unsupported_feature = false;
         // revisit SELECT_LEX for all units
@@ -234,6 +239,14 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 {
     ha_columnstore_derived_handler* handler = NULL;
 
+    // MCOL-2178 Disable SP support in the derived_handler for now
+    // Check the session variable value to enable/disable use of
+    // derived_handler
+    if (!get_derived_handler(thd) || (thd->lex)->sphead)
+    {
+        return handler;
+    }
+
     SELECT_LEX_UNIT *unit= derived->derived;
 
     bool unsupported_feature = false;
@@ -287,8 +300,6 @@ ha_columnstore_derived_handler::~ha_columnstore_derived_handler()
 /***********************************************************
  * DESCRIPTION:
  * Execute the query and saves derived table query.
- * ATM this function sets vtable_state and restores it afterwards
- * since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -305,15 +316,9 @@ int ha_columnstore_derived_handler::init_scan()
     derived_query.length(0);
     derived->derived->print(&derived_query, QT_ORDINARY);
 
-    // Save vtable_state to restore the after we inited.
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_CREATE_VTABLE;
-
     mcs_handler_info mhi = mcs_handler_info(static_cast<void*>(this), DERIVED);
     // this::table is the place for the result set
     int rc = ha_cs_impl_pushdown_init(&mhi, table);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -322,8 +327,6 @@ int ha_columnstore_derived_handler::init_scan()
 /***********************************************************
  * DESCRIPTION:
  * Fetches next row and saves it in the temp table
- * ATM this function sets vtable_state and restores it
- * afterwards since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -334,14 +337,7 @@ int ha_columnstore_derived_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::next_row");
 
-    // Save vtable_state to restore the after we inited.
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_CREATE_VTABLE;
-
     int rc = ha_calpont_impl_rnd_next(table->record[0], table);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -350,8 +346,6 @@ int ha_columnstore_derived_handler::next_row()
 /***********************************************************
  * DESCRIPTION:
  * Finishes the scan for derived handler
- * ATM this function sets vtable_state and restores it
- * afterwards since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -362,12 +356,7 @@ int ha_columnstore_derived_handler::end_scan()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::end_scan");
 
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_SELECT_VTABLE;
-
     int rc = ha_calpont_impl_rnd_end(table, true);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -413,12 +402,7 @@ int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
 
-    // Save vtable_state to restore the after we inited.
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-    // MCOL-1052 Should be removed after cleaning the code up.
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_CREATE_VTABLE;
     int rc = ha_calpont_impl_group_by_init(this, table);
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -469,6 +453,14 @@ static select_handler*
 create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 {
     ha_columnstore_select_handler* handler = NULL;
+
+    // MCOL-2178 Disable SP support in the select_handler for now.
+    // Check the session variable value to enable/disable use of
+    // select_handler
+    if (!get_select_handler(thd) || (thd->lex)->sphead)
+    {
+        return handler;
+    }
 
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
@@ -563,8 +555,6 @@ ha_columnstore_select_handler::~ha_columnstore_select_handler()
 /***********************************************************
  * DESCRIPTION:
  * Execute the query and saves select table query.
- * ATM this function sets vtable_state and restores it afterwards
- * since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -581,15 +571,9 @@ int ha_columnstore_select_handler::init_scan()
     select_query.length(0);
     select->print(thd, &select_query, QT_ORDINARY);
 
-    // Save vtable_state to restore the after we inited.
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_CREATE_VTABLE;
-
     mcs_handler_info mhi = mcs_handler_info(static_cast<void*>(this), SELECT);
     // this::table is the place for the result set
     int rc = ha_cs_impl_pushdown_init(&mhi, table);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -598,8 +582,6 @@ int ha_columnstore_select_handler::init_scan()
 /***********************************************************
  * DESCRIPTION:
  * Fetches next row and saves it in the temp table
- * ATM this function sets vtable_state and restores it
- * afterwards since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -610,14 +592,7 @@ int ha_columnstore_select_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_select_handler::next_row");
 
-    // Save vtable_state to restore the after we inited.
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_CREATE_VTABLE;
-
     int rc = ha_calpont_impl_rnd_next(table->record[0], table);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -626,8 +601,6 @@ int ha_columnstore_select_handler::next_row()
 /***********************************************************
  * DESCRIPTION:
  * Finishes the scan for select handler
- * ATM this function sets vtable_state and restores it
- * afterwards since it reuses existed vtable code internally.
  * PARAMETERS:
  *
  * RETURN:
@@ -638,12 +611,7 @@ int ha_columnstore_select_handler::end_scan()
 {
     DBUG_ENTER("ha_columnstore_select_handler::end_scan");
 
-    MIGR::infinidb_state oldState = MIGR::infinidb_vtable.vtable_state;
-    MIGR::infinidb_vtable.vtable_state = MIGR::INFINIDB_SELECT_VTABLE;
-
     int rc = ha_calpont_impl_rnd_end(table, true);
-
-    MIGR::infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }

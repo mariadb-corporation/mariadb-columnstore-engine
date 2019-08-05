@@ -1321,8 +1321,9 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             {
                 if (gwi.thd->derived_tables_processing)
                 {
-                    MIGR::infinidb_vtable.isUnion = false;
-                    MIGR::infinidb_vtable.isUpdateWithDerive = true;
+// TODO MCOL-2178 isUnion member only assigned, never used
+//                    MIGR::infinidb_vtable.isUnion = false;
+                    gwi.cs_vtable_is_update_with_derive = true;
                     return -1;
                 }
             }
@@ -2645,8 +2646,6 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
     }
 
     thd->raise_error_printf(errcode, errmsg.c_str());
-    MIGR::infinidb_vtable.isNewQuery = true;
-    MIGR::infinidb_vtable.override_largeside_estimate = false;
 
     // reset expressionID
     if (get_fe_conn_info_ptr() == NULL)
@@ -5623,7 +5622,8 @@ void gp_walk(const Item* item, void* arg)
                 gwip->hasSubSelect = true;
                 gwip->subQuery = existsSub;
                 gwip->ptWorkStack.push(existsSub->transform());
-                MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
+// TODO MCOL-2178 isUnion member only assigned, never used
+//                MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
                 // recover original
                 gwip->subQuery = orig;
                 gwip->lastSub = existsSub;
@@ -5983,7 +5983,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
-        MIGR::infinidb_vtable.isUnion = false;
+// TODO MCOL-2178 isUnion member only assigned, never used
+//        MIGR::infinidb_vtable.isUnion = false;
         return -1;
     }
 
@@ -6031,7 +6032,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
     // @bug 2123. Override large table estimate if infinidb_ordered hint was used.
     // @bug 2404. Always override if the infinidb_ordered_only variable is turned on.
-    if (MIGR::infinidb_vtable.override_largeside_estimate || get_ordered_only(gwi.thd))
+    if (get_ordered_only(gwi.thd))
         csep->overrideLargeSideEstimate(true);
 
     // @bug 5741. Set a flag when in Local PM only query mode
@@ -6117,7 +6118,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+// TODO MCOL-2178 isUnion member only assigned, never used
+//                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
             {
@@ -6188,7 +6190,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     // is_unit_op() give a segv for derived_handler's SELECT_LEX
     if (!isUnion && select_lex.master_unit()->is_unit_op())
     {
-        MIGR::infinidb_vtable.isUnion = true;
+// TODO MCOL-2178 isUnion member only assigned, never used
+//        MIGR::infinidb_vtable.isUnion = true;
         CalpontSelectExecutionPlan::SelectList unionVec;
         SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
         unionSel = true;
@@ -6247,7 +6250,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         csep->distinctUnionNum(distUnionNum);
 
         if (unionVec.empty())
-            MIGR::infinidb_vtable.impossibleWhereOnUnion = true;
+            gwi.cs_vtable_impossible_where_on_union = true;
     }
 
     gwi.clauseType = WHERE;
@@ -6280,8 +6283,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-                MIGR::infinidb_vtable.isUnion = false;
-                MIGR::infinidb_vtable.isUpdateWithDerive = true;
+// TODO MCOL-2178 isUnion member only assigned, never used
+//                MIGR::infinidb_vtable.isUnion = false;
+                gwi.cs_vtable_is_update_with_derive = true;
                 return -1;
             }
 
@@ -7094,7 +7098,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     SRCP minSc;             // min width projected column. for count(*) use
 
     // Group by list. not valid for union main query
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE && !unionSel)
+    if (!unionSel)
     {
         gwi.clauseType = GROUP_BY;
         Item* nonSupportItem = NULL;
@@ -7374,7 +7378,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         }
     }
 
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
     {
         SQL_I_List<ORDER> order_list = select_lex.order_list;
         ORDER* ordercol = reinterpret_cast<ORDER*>(order_list.first);
@@ -7861,10 +7864,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
             // relate to bug4848. let mysql drive limit when limit session variable set.
             // do not set in csep. @bug5096. ignore session limit setting for dml
-            if ((gwi.thd->variables.select_limit == (uint64_t) - 1 ||
-                    (gwi.thd->variables.select_limit != (uint64_t) - 1 &&
-                     MIGR::infinidb_vtable.vtable_state != MIGR::INFINIDB_CREATE_VTABLE)) &&
-                    !csep->hasOrderBy())
+            if (gwi.thd->variables.select_limit == (uint64_t) - 1 &&
+                !csep->hasOrderBy())
             {
                 csep->limitStart(limitOffset);
                 csep->limitNum(limitNum);
@@ -7977,7 +7978,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     csep->derivedTableList(gwi.derivedTbList);
     csep->selectSubList(selectSubList);
     csep->subSelectList(gwi.subselectList);
-    MIGR::infinidb_vtable.duplicate_field_name = false;
     clearStacks(gwi);
     return 0;
 }
@@ -7987,10 +7987,11 @@ int cp_get_plan(THD* thd, SCSEP& csep)
     LEX* lex = thd->lex;
     idbassert(lex != 0);
 
-    // WIP MCOL-2178 A questionable replacement.
-    SELECT_LEX select_lex = *lex->first_select_lex();
     gp_walk_info gwi;
     gwi.thd = thd;
+
+    // WIP MCOL-2178 A questionable replacement.
+    SELECT_LEX select_lex = *lex->first_select_lex();
     int status = getSelectPlan(gwi, select_lex, csep);
 
     if (status > 0)
@@ -8126,16 +8127,14 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     else if (status < 0)
         return status;
     // Derived table projection and filter optimization.
-    derivedTableOptimization(csep);
+    derivedTableOptimization(thd, csep);
 
     return 0;
 }
 
-int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
+int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
 {
     SELECT_LEX select_lex = *handler->select;
-    gp_walk_info gwi;
-    gwi.thd = thd;
     int status = getSelectPlan(gwi, select_lex, csep, false, true);
 
     if (status > 0)
@@ -8149,15 +8148,13 @@ int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
     // Derived table projection and filter optimization.
-    derivedTableOptimization(csep);
+    derivedTableOptimization(thd, csep);
     return 0;
 }
 
-int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep)
+int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
 {
     SELECT_LEX select_lex = *handler->select;
-    gp_walk_info gwi;
-    gwi.thd = thd;
     int status = getSelectPlan(gwi, select_lex, csep, false, true);
 
     if (status > 0)
@@ -8171,7 +8168,7 @@ int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep)
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
     // Derived table projection and filter optimization.
-    derivedTableOptimization(csep);
+    derivedTableOptimization(thd, csep);
 
     return 0;
 }
@@ -8268,7 +8265,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     // @bug 2123. Override large table estimate if infinidb_ordered hint was used.
     // @bug 2404. Always override if the infinidb_ordered_only variable is turned on.
-    if (MIGR::infinidb_vtable.override_largeside_estimate || get_ordered_only(gwi.thd))
+    if (get_ordered_only(gwi.thd))
         csep->overrideLargeSideEstimate(true);
 
     // @bug 5741. Set a flag when in Local PM only query mode
@@ -8355,6 +8352,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
+// TODO MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
@@ -8453,8 +8451,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-                MIGR::infinidb_vtable.isUnion = false;
-                MIGR::infinidb_vtable.isUpdateWithDerive = true;
+// TODO MCOL-2178 isUnion member only assigned, never used
+//                MIGR::infinidb_vtable.isUnion = false;
                 return -1;
             }
 
@@ -9248,7 +9246,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     SRCP minSc;             // min width projected column. for count(*) use
 
     // Group by list. not valid for union main query
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE && !unionSel)
+    if (!unionSel)
     {
         gwi.clauseType = GROUP_BY;
         Item* nonSupportItem = NULL;
@@ -9531,7 +9529,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
 
     // ORDER BY processing starts here
-    if (MIGR::infinidb_vtable.vtable_state == MIGR::INFINIDB_CREATE_VTABLE)
     {
         ORDER* ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
 
@@ -10071,7 +10068,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     csep->derivedTableList(gwi.derivedTbList);
     csep->selectSubList(selectSubList);
     csep->subSelectList(gwi.subselectList);
-    MIGR::infinidb_vtable.duplicate_field_name = false;
     clearStacks(gwi);
     return 0;
 }
