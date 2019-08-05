@@ -79,7 +79,7 @@ class MetadataFile
             public:
                 static MetadataConfig *get();
                 size_t mObjectSize;
-                std::string msMetadataPath;
+                boost::filesystem::path msMetadataPath;
             
             private:
                 MetadataConfig();

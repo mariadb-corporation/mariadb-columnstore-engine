@@ -160,7 +160,6 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     */
     bf::path filename = ownership.get(_filename);
     const bf::path firstDir = *(filename.begin());
-    //const char *filename = p.string().c_str();
     
     ScopedReadLock fileLock(this, filename.string());
     MetadataFile meta(filename, MetadataFile::no_create_t(),true);
@@ -308,6 +307,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
     MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t(),true);
     if (!metadata.exists())
     {
+    	logger->log(LOG_CRIT,"IOCoordinator::write():metadata exist check failed.");
         errno = ENOENT;
         return -1;
     }
@@ -337,7 +337,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             }
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            err = replicator->addJournalEntry((firstDir/i->key).string().c_str(),&data[count],objectOffset,writeLength);
+            err = replicator->addJournalEntry((firstDir/i->key),&data[count],objectOffset,writeLength);
             assert((uint) err == writeLength);
             
             if (err <= 0)
@@ -391,7 +391,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
         metadataObject newObject = metadata.addMetadataObject(filename,(writeLength + objectOffset));
 
         // send to replicator
-        err = replicator->newObject((firstDir/newObject.key).string().c_str(),&data[count],objectOffset,writeLength);
+        err = replicator->newObject((firstDir/newObject.key),&data[count],objectOffset,writeLength);
         assert((uint) err == writeLength);
         if (err <= 0)
         {
@@ -422,7 +422,6 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
 {
     bf::path filename = ownership.get(_filename);
     const bf::path firstDir = *(filename.begin());
-    //const char *filename = p.string().c_str();
 
     int err;
     ssize_t count = 0;
@@ -459,7 +458,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
 
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
-            err = replicator->addJournalEntry((firstDir/i->key).string().c_str(),&data[count],i->length,writeLength);
+            err = replicator->addJournalEntry((firstDir/i->key),&data[count],i->length,writeLength);
             assert((uint) err == writeLength);
             if (err <= 0)
             {
@@ -496,7 +495,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         metadataObject newObject = metadata.addMetadataObject(filename,writeLength);
 
         // write the new object
-        err = replicator->newObject((firstDir/newObject.key).string().c_str(),&data[count],0,writeLength);
+        err = replicator->newObject((firstDir/newObject.key),&data[count],0,writeLength);
         assert((uint) err == writeLength);
         if (err <= 0)
         {
@@ -530,7 +529,6 @@ out:
 int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
 {
     bf::path filename = ownership.get(_filename);
-    //const char *filename = p.string().c_str();
     boost::scoped_ptr<ScopedFileLock> s;
     
     if (openmode & O_CREAT || openmode | O_TRUNC)
@@ -655,7 +653,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
     
-    err = replicator->updateMetadata(filename.string().c_str(), meta);
+    err = replicator->updateMetadata(bfpath, meta);
     if (err)
         return err;
     //lock.unlock();   <-- ifExistsThenDelete() needs the file lock held during the call
@@ -824,6 +822,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     
     CloudStorage *cs = CloudStorage::get();
     Synchronizer *sync = Synchronizer::get();
+
     bf::path metaFile1 = metaPath/(p1.string() + ".meta");
     bf::path metaFile2 = metaPath/(p2.string() + ".meta");
     int err;

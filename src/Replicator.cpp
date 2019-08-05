@@ -92,10 +92,10 @@ Replicator * Replicator::get()
         return fd; \
     ScopedCloser sc(fd);
 
-int Replicator::newObject(const char *filename, const uint8_t *data, off_t offset, size_t length )
+int Replicator::newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length )
 {
     int fd, err;
-    string objectFilename = msCachePath + "/" + string(filename);
+    string objectFilename = msCachePath + "/" + filename.string();
 
     OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
     size_t count = 0;
@@ -114,14 +114,14 @@ int Replicator::newObject(const char *filename, const uint8_t *data, off_t offse
     return count;
 }
 
-int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length)
+int Replicator::addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length)
 {
     int fd, err;
     uint64_t offlen[] = {(uint64_t) offset,length};
     size_t count = 0;
     int version = 1;
-    string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
-    boost::filesystem::path firstDir = *(boost::filesystem::path(filename).begin());
+    string journalFilename = msJournalPath + "/" + filename.string() + ".journal";
+    boost::filesystem::path firstDir = *((filename).begin());
     uint64_t thisEntryMaxOffset = (offset + length - 1);
 
     bool exists = boost::filesystem::exists(journalFilename);
@@ -213,17 +213,7 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
     return ret;
 }
 
-
-int Replicator::remove(const char *filename, Flags flags)
-{
-    if (flags & NO_LOCAL)
-        return 0;   // not implemented yet
-        
-    boost::filesystem::path p(filename);
-    return remove(p);
-}
-
-int Replicator::updateMetadata(const char *filename, MetadataFile &meta)
+int Replicator::updateMetadata(const boost::filesystem::path &filename, MetadataFile &meta)
 {
     return meta.writeMetadata(filename);
 }
