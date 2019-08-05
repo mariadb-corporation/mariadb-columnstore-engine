@@ -1284,7 +1284,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
             throw runtime_error("ExtentMap::load(): That file is not a valid ExtentMap image");
         }
     }
-    else   // fstream path to be remove
+    catch (...)
     {
         releaseFreeList(WRITE);
         releaseEMEntryTable(WRITE);
@@ -1310,7 +1310,6 @@ void ExtentMap::save(const string& filename)
 #endif
 
     int allocdSize, loadSize[3], i;
-    mode_t utmp;
 
     grabEMEntryTable(READ);
 
