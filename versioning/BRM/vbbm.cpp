@@ -21,7 +21,6 @@
  ****************************************************************************/
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <sstream>
 #include <sys/types.h>
@@ -980,54 +979,6 @@ void VBBM::setReadOnly()
  * 		struct VBBMEntry * numEntries
  */
 
-void VBBM::loadVersion1(IDBDataFile* in)
-{
-    int vbbmEntries, i;
-    VBBMEntry entry;
-
-    clear();
-
-    if (in->read((char*) &vbbmEntries, 4) != 4)
-    {
-        log_errno("VBBM::load()");
-        throw runtime_error("VBBM::load(): Failed to read entry number");
-    }
-
-    for (i = 0; i < vbbmEntries; i++)
-    {
-        if (in->read((char*)&entry, sizeof(entry)) != sizeof(entry))
-        {
-            log_errno("VBBM::load()");
-            throw runtime_error("VBBM::load(): Failed to load entry");
-        }
-
-        insert(entry.lbid, entry.verID, entry.vbOID, entry.vbFBO, true);
-        //confirmChanges();
-        addVBFileIfNotExists(entry.vbOID);
-    }
-
-    /* This will load the saved file data from 2.2, but it is not compatible with
-     * 3.0+.  If enabled, take out the addVBFile..() call above
-     */
-#if 0
-    int dummy, nFiles;
-
-    in.read((char*) &nFiles, 4);
-    cout << "got nfiles = " << nFiles << endl;
-    in.read((char*) &dummy, 4);    // an unused var in 3.0+
-
-    while (vbbm->nFiles < nFiles)
-        growVBBM(true);  // this allocates one file, doesn't grow the main storage
-
-    in.read((char*) files, sizeof(VBFileMetadata) * nFiles);
-
-    for (i = 0; i < nFiles; i++)
-        cout << "file " << i << ": oid=" << files[i].OID << " size=" << files[i].fileSize
-             << " offset=" << files[i].nextOffset << endl;
-
-#endif
-
-}
 
 void VBBM::loadVersion2(IDBDataFile* in)
 {
@@ -1091,19 +1042,6 @@ void VBBM::loadVersion2(IDBDataFile* in)
     for (i = 0; i < vbbmEntries; i++)
         insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbOID,
           loadedEntries[i].vbFBO, true);
-    
-    /*
-    for (i = 0; i < vbbmEntries; i++)
-    {
-        if (in->read((char*)&entry, sizeof(entry)) != sizeof(entry))
-        {
-            log_errno("VBBM::load()");
-            throw runtime_error("VBBM::load(): Failed to load entry");
-        }
-
-        insert(entry.lbid, entry.verID, entry.vbOID, entry.vbFBO, true);
-    }
-    */
 
 }
 
@@ -1138,9 +1076,6 @@ void VBBM::load(string filename)
 
     switch (magic)
     {
-        case VBBM_MAGIC_V1:
-            loadVersion1(in.get());
-            break;
 
         case VBBM_MAGIC_V2:
             loadVersion2(in.get());
@@ -1161,59 +1096,38 @@ void VBBM::save(string filename)
     int i;
     int var;
 
-    // XXXPAT: forcing the IDB* path.  Delete the fstream path when appropriate.
-    if (true || IDBPolicy::useHdfs())
+    const char* filename_p = filename.c_str();
+    scoped_ptr<IDBDataFile> out(IDBDataFile::open(
+                                    IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+                                    filename_p, "wb", IDBDataFile::USE_VBUF));
+
+    if (!out)
     {
-        const char* filename_p = filename.c_str();
-        scoped_ptr<IDBDataFile> out(IDBDataFile::open(
-                                        IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                        filename_p, "wb", IDBDataFile::USE_VBUF));
+        log_errno("VBBM::save()");
+        throw runtime_error("VBBM::save(): Failed to open the file");
+    }
 
-        if (!out)
+    var = VBBM_MAGIC_V2;
+    int bytesWritten = 0;
+    int bytesToWrite = 12;
+    bytesWritten += out->write((char*) &var, 4);
+    bytesWritten += out->write((char*) &vbbm->vbCurrentSize, 4);
+    bytesWritten += out->write((char*) &vbbm->nFiles, 4);
+
+    bytesWritten += out->write((char*) files, sizeof(VBFileMetadata) * vbbm->nFiles);
+    bytesToWrite += sizeof(VBFileMetadata) * vbbm->nFiles;
+
+    int first = -1, last = -1, err;
+    size_t progress, writeSize;
+    
+    for (i = 0; i < vbbm->vbCapacity; i++)
+    {
+        if (storage[i].lbid != -1 && first == -1)
+            first = i;
+        else if (storage[i].lbid == -1 && first != -1)
         {
-            log_errno("VBBM::save()");
-            throw runtime_error("VBBM::save(): Failed to open the file");
-        }
-
-        var = VBBM_MAGIC_V2;
-        int bytesWritten = 0;
-        int bytesToWrite = 12;
-        bytesWritten += out->write((char*) &var, 4);
-        bytesWritten += out->write((char*) &vbbm->vbCurrentSize, 4);
-        bytesWritten += out->write((char*) &vbbm->nFiles, 4);
-
-        bytesWritten += out->write((char*) files, sizeof(VBFileMetadata) * vbbm->nFiles);
-        bytesToWrite += sizeof(VBFileMetadata) * vbbm->nFiles;
-
-        int first = -1, last = -1, err;
-        size_t progress, writeSize;
-        
-        for (i = 0; i < vbbm->vbCapacity; i++)
-        {
-            if (storage[i].lbid != -1 && first == -1)
-                first = i;
-            else if (storage[i].lbid == -1 && first != -1)
-            {
-                last = i;
-                writeSize = (last - first) * sizeof(VBBMEntry);
-                progress = 0;
-                char *writePos = (char *) &storage[first];
-                while (progress < writeSize)
-                {
-                    err = out->write(writePos + progress, writeSize - progress);
-                    if (err < 0)
-                    {
-                        log_errno("VBBM::save()");
-                        throw runtime_error("VBBM::save(): Failed to write the file");
-                    }
-                    progress += err;
-                }
-                first = -1;
-            }
-        }
-        if (first != -1)
-        {
-            writeSize = (vbbm->vbCapacity - first) * sizeof(VBBMEntry);
+            last = i;
+            writeSize = (last - first) * sizeof(VBBMEntry);
             progress = 0;
             char *writePos = (char *) &storage[first];
             while (progress < writeSize)
@@ -1226,49 +1140,27 @@ void VBBM::save(string filename)
                 }
                 progress += err;
             }
+            first = -1;
         }
 
-        /*
-        for (i = 0; i < vbbm->vbCapacity; i++)
-        {
-            if (storage[i].lbid != -1)
-            {
-                bytesToWrite += sizeof(VBBMEntry);
-                bytesWritten += out->write((char*)&storage[i], sizeof(VBBMEntry));
-            }
-        }
-
-        if (bytesWritten != bytesToWrite)
-        {
-            log_errno("VBBM::save()");
-            throw runtime_error("VBBM::save(): Failed to write the file");
-        }
-        */
     }
-    else
+    if (first != -1)
     {
-        ofstream out;
-        out.open(filename.c_str(), ios_base::trunc | ios_base::out | ios_base::binary);
-
-        if (!out)
+        writeSize = (vbbm->vbCapacity - first) * sizeof(VBBMEntry);
+        progress = 0;
+        char *writePos = (char *) &storage[first];
+        while (progress < writeSize)
         {
-            log_errno("VBBM::save()");
-            throw runtime_error("VBBM::save(): Failed to open the file");
+            err = out->write(writePos + progress, writeSize - progress);
+            if (err < 0)
+            {
+                log_errno("VBBM::save()");
+                throw runtime_error("VBBM::save(): Failed to write the file");
+            }
+            progress += err;
         }
-
-        out.exceptions(ios_base::badbit);
-
-        var = VBBM_MAGIC_V2;
-        out.write((char*) &var, 4);
-        out.write((char*) &vbbm->vbCurrentSize, 4);
-        out.write((char*) &vbbm->nFiles, 4);
-
-        out.write((char*) files, sizeof(VBFileMetadata) * vbbm->nFiles);
-
-        for (i = 0; i < vbbm->vbCapacity; i++)
-            if (storage[i].lbid != -1)
-                out.write((char*)&storage[i], sizeof(VBBMEntry));
     }
+    
 
 #if 0
     cout << "saving... nfiles=" << vbbm->nFiles << "\n";

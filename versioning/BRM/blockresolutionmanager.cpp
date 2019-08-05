@@ -109,20 +109,9 @@ int BlockResolutionManager::saveState(string filename) throw()
         // truncate teh file if already exists since no truncate in HDFS.
         const char* filename = journalFilename.c_str();
 
-        if (true || IDBPolicy::useHdfs())
-        {
-            IDBDataFile* journal = IDBDataFile::open(
-                                       IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
-            delete journal;
-        }
-        else
-        {
-            ofstream journal;
-            uint32_t utmp = ::umask(0);
-            journal.open(filename, ios_base::out | ios_base::trunc | ios_base::binary);
-            journal.close();
-            ::umask(utmp);
-        }
+        IDBDataFile* journal = IDBDataFile::open(
+                                   IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
+        delete journal;
 
         vbbm.save(vbbmFilename);
         vss.save(vssFilename);

@@ -117,34 +117,6 @@ namespace BRM
 
 boost::mutex OIDServer::fMutex;
 
-#if 0
-void OIDServer::lockFile() const
-{
-    int err, errCount;
-
-    int errnoSave = 0;
-
-    for (errCount = 0, err = -1; err != 0 && errCount < MaxRetries;)
-    {
-        err = flock(fFd, LOCK_EX);
-
-        if (err < 0 && errno != EINTR)    // EINTR isn't really an error
-        {
-            errCount++;
-            errnoSave = errno; // save errno because perror may overwrite
-            perror("OIDServer::lockFile(): flock (retrying)");
-        }
-    }
-
-    if (errCount == MaxRetries)
-    {
-        ostringstream oss;
-        oss << "OIDServer::lockFile(): flock error:  " << strerror(errnoSave);
-        throw ios_base::failure(oss.str());
-    }
-}
-#endif
-
 void OIDServer::writeData(uint8_t* buf, off_t offset, int size) const
 {
     int errCount, err, progress;
@@ -153,72 +125,38 @@ void OIDServer::writeData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
-    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
-    if (true || IDBPolicy::useHdfs())
+    for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
     {
-        for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
-        {
-            seekerr = fFp->seek(offset, SEEK_SET);
+        seekerr = fFp->seek(offset, SEEK_SET);
 
-            if (seekerr >= 0)
-                seekerr = fFp->tell(); // IDBDataFile may use fseek for seek.
+        if (seekerr >= 0)
+            seekerr = fFp->tell(); // IDBDataFile may use fseek for seek.
 
-            if (seekerr < 0)
-                perror("OIDServer::writeDataHdfs(): lseek");
-        }
-
-        if (errCount == MaxRetries)
-            throw ios_base::failure("OIDServer::writeDataHdfs(): lseek failed "
-                                    "too many times");
-
-        for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
-        {
-            err = fFp->write(&buf[progress], size - progress);
-
-            if (err < 0)
-            {
-                if (errno != EINTR)    // EINTR isn't really an error
-                {
-                    errCount++;
-                    perror("OIDServer::writeDataHdfs(): write (retrying)");
-                }
-            }
-            else
-                progress += err;
-        }
-
-        fFp->tell();
+        if (seekerr < 0)
+            perror("OIDServer::writeData(): lseek");
     }
-    else
+
+    if (errCount == MaxRetries)
+        throw ios_base::failure("OIDServer::writeData(): lseek failed "
+                                "too many times");
+
+    for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
     {
-        for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
+        err = fFp->write(&buf[progress], size - progress);
+
+        if (err < 0)
         {
-            seekerr = lseek(fFd, offset, SEEK_SET);
-
-            if (seekerr < 0)
-                perror("OIDServer::writeData(): lseek");
-        }
-
-        if (errCount == MaxRetries)
-            throw ios_base::failure("OIDServer::writeData(): lseek failed "
-                                    "too many times");
-
-        for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
-        {
-            err = write(fFd, &buf[progress], size - progress);
-
-            if (err < 0)
+            if (errno != EINTR)    // EINTR isn't really an error
             {
-                if (errno != EINTR)    // EINTR isn't really an error
-                {
-                    errCount++;
-                    perror("OIDServer::writeData(): write (retrying)");
-                }
+                errCount++;
+                perror("OIDServer::writeData(): write (retrying)");
             }
-            else
-                progress += err;
         }
+        else
+            progress += err;
     }
+
+    fFp->tell();
 
     if (errCount == MaxRetries)
         throw ios_base::failure("OIDServer::writeData(): write error");
@@ -232,73 +170,37 @@ void OIDServer::readData(uint8_t* buf, off_t offset, int size) const
     if (size == 0)
         return;
 
-    // XXXPAT: Forcing the IDB* path.  Get rid of the fstream path when appropriate.
-    if (true || IDBPolicy::useHdfs())
+    for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
     {
-        for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
-        {
-            seekerr = fFp->seek(offset, SEEK_SET);
+        seekerr = fFp->seek(offset, SEEK_SET);
 
-            if (seekerr >= 0)
-                seekerr = fFp->tell(); // IDBDataFile may use fseek for seek.
+        if (seekerr >= 0)
+            seekerr = fFp->tell(); // IDBDataFile may use fseek for seek.
 
-            if (seekerr < 0)
-                perror("OIDServer::readDataHdfs(): lseek");
-        }
-
-        if (errCount == MaxRetries)
-            throw ios_base::failure("OIDServer::readDataHdfs(): lseek failed "
-                                    "too many times");
-
-        for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
-        {
-            err = fFp->read(&buf[progress], size - progress);
-
-            if (err < 0)
-            {
-                if (errno != EINTR)    // EINTR isn't really an error
-                {
-                    errCount++;
-                    perror("OIDServer::readDataHdfs(): read (retrying)");
-                }
-            }
-            else if (err == 0)
-                throw EOFException();
-            else
-                progress += err;
-        }
+        if (seekerr < 0)
+            perror("OIDServer::readData(): lseek");
     }
-    else
+
+    if (errCount == MaxRetries)
+        throw ios_base::failure("OIDServer::readData(): lseek failed "
+                                "too many times");
+
+    for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
     {
-        for (errCount = 0; errCount < MaxRetries && seekerr != offset; errCount++)
+        err = fFp->read(&buf[progress], size - progress);
+
+        if (err < 0)
         {
-            seekerr = lseek(fFd, offset, SEEK_SET);
-
-            if (seekerr < 0)
-                perror("OIDServer::readData(): lseek");
-        }
-
-        if (errCount == MaxRetries)
-            throw ios_base::failure("OIDServer::readData(): lseek failed "
-                                    "too many times");
-
-        for (progress = 0, errCount = 0; progress < size && errCount < MaxRetries;)
-        {
-            err = read(fFd, &buf[progress], size - progress);
-
-            if (err < 0)
+            if (errno != EINTR)    // EINTR isn't really an error
             {
-                if (errno != EINTR)    // EINTR isn't really an error
-                {
-                    errCount++;
-                    perror("OIDServer::readData(): read (retrying)");
-                }
+                errCount++;
+                perror("OIDServer::readData(): read (retrying)");
             }
-            else if (err == 0)
-                throw EOFException();
-            else
-                progress += err;
         }
+        else if (err == 0)
+            throw EOFException();
+        else
+            progress += err;
     }
 
     if (errCount == MaxRetries)
@@ -349,14 +251,8 @@ void OIDServer::initializeBitmap() const
     }
 
     writeData(buf, 0, HeaderSize);
-
-    // reset buf to all 0's and write the bitmap
-    //for (i = 0; i < HeaderSize; i++)
-    //    buf[i] = 0;
-
-    //for (i = 0; i < bitmapSize; i += HeaderSize)
-    //    writeData(buf, HeaderSize + i, (bitmapSize - i > HeaderSize ? HeaderSize : bitmapSize - i));
     
+    // write the new bitmap file
     uint8_t *bitmapbuf = new uint8_t[bitmapSize];
     memset(bitmapbuf, 0, bitmapSize);
     writeData(bitmapbuf, HeaderSize, bitmapSize);
@@ -389,118 +285,55 @@ OIDServer::OIDServer() : fFp(NULL), fFd(-1)
         throw runtime_error(os.str());
     }
 
-    // XXXPAT: Forcing the IDB* path.
-    if (true || IDBPolicy::useHdfs())
+    if (!IDBPolicy::exists(fFilename.c_str()))   //no bitmap file
     {
-        if (!IDBPolicy::exists(fFilename.c_str()))   //no bitmap file
+        BRM::DBRM em;
+
+        if (!em.isEMEmpty())
         {
-            BRM::DBRM em;
+            os << "Extent Map not empty and " << fFilename << " not found. Setting system to read-only";
+            cerr << os.str() << endl;
+            log(os.str());
+            em.setReadOnly(true);
+            throw runtime_error(os.str());
+        }
 
-            if (!em.isEMEmpty())
-            {
-                os << "Extent Map not empty and " << fFilename << " not found. Setting system to read-only";
-                cerr << os.str() << endl;
-                log(os.str());
-                em.setReadOnly(true);
-                throw runtime_error(os.str());
-            }
+        fFp = IDBDataFile::open(IDBPolicy::getType(fFilename.c_str(), IDBPolicy::WRITEENG),
+                                fFilename.c_str(), "w+b", 0, 1);
 
-            fFp = IDBDataFile::open(IDBPolicy::getType(fFilename.c_str(), IDBPolicy::WRITEENG),
-                                    fFilename.c_str(), "w+b", 0, 1);
-
-            if (!fFp)
-            {
-                os << "Couldn't create oid bitmap file " << fFilename << ": " <<
-                   strerror(errno);
-                log(os.str());
-                throw ios_base::failure(os.str());
-            }
+        if (!fFp)
+        {
+            os << "Couldn't create oid bitmap file " << fFilename << ": " <<
+               strerror(errno);
+            log(os.str());
+            throw ios_base::failure(os.str());
+        }
 
 #ifndef _MSC_VER
-
-            //FIXME:
-            //fchmod(fFd, 0666);   // XXXPAT: override umask at least for testing
-            if (fFp)
-                chmod(fFilename.c_str(), 0664);   // XXXPAT: override umask at least for testing
-
+        if (fFp)
+            chmod(fFilename.c_str(), 0664);   // XXXPAT: override umask at least for testing
 #endif
 
-            try
-            {
-                initializeBitmap();
-            }
-            catch (...)
-            {
-                delete fFp;
-                fFp = NULL;
-                throw;
-            }
-        }
-        else
+        try
         {
-            fFp = IDBDataFile::open(IDBPolicy::getType(fFilename.c_str(), IDBPolicy::WRITEENG),
-                                    fFilename.c_str(), "r+b", 0, 1);
-
-            if (!fFp)
-            {
-                ostringstream os;
-                os << "Couldn't open oid bitmap file" << fFilename << ": " <<
-                   strerror(errno);
-                log(os.str());
-                throw ios_base::failure(os.str());
-            }
+            initializeBitmap();
+        }
+        catch (...)
+        {
+            delete fFp;
+            fFp = NULL;
+            throw;
         }
     }
     else
     {
-        if (access(fFilename.c_str(), F_OK) != 0) //no bitmap file
+        fFp = IDBDataFile::open(IDBPolicy::getType(fFilename.c_str(), IDBPolicy::WRITEENG),
+                                fFilename.c_str(), "r+b", 0, 1);
+
+        if (!fFp)
         {
-            BRM::DBRM em;
-
-            if (!em.isEMEmpty())
-            {
-                os << "Extent Map not empty and " << fFilename << " not found. Setting system to read-only";
-                cerr << os.str() << endl;
-                log(os.str());
-                em.setReadOnly(true);
-                throw runtime_error(os.str());
-            }
-        }
-
-        fFd = open(fFilename.c_str(), O_CREAT | O_EXCL | O_RDWR | O_BINARY, 0664);
-
-        if (fFd >= 0)
-        {
-#ifndef _MSC_VER
-            //FIXME:
-            fchmod(fFd, 0666);   // XXXPAT: override umask at least for testing
-#endif
-
-            try
-            {
-                initializeBitmap();
-            }
-            catch (...)
-            {
-                close(fFd);
-                throw;
-            }
-        }
-        else if (errno == EEXIST)
-        {
-            fFd = open(fFilename.c_str(), O_RDWR | O_BINARY);
-
-            if (fFd < 0)
-            {
-                os << "Couldn't open oid bitmap file " << fFilename << ": " <<
-                   strerror(errno);
-                log(os.str());
-                throw ios_base::failure(os.str());
-            }
-        }
-        else
-        {
-            os << "Couldn't create oid bitmap file " << fFilename << ": " <<
+            ostringstream os;
+            os << "Couldn't open oid bitmap file" << fFilename << ": " <<
                strerror(errno);
             log(os.str());
             throw ios_base::failure(os.str());
@@ -622,8 +455,7 @@ retry:
     {
         writeData(buf, offset, byteSize);
 
-        if (true || IDBPolicy::useHdfs())
-            fFp->flush();
+        fFp->flush();
 
         delete [] buf;
         return;
@@ -669,8 +501,7 @@ retry:
     {
         writeData(buf, offset, byteSize);
 
-        if (true || IDBPolicy::useHdfs())
-            fFp->flush();
+        fFp->flush();
 
         delete [] buf;
         return;
@@ -790,9 +621,7 @@ void OIDServer::patchFreelist(struct FEntry* freelist, int start, int num) const
     if (changed)
     {
         writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
-
-        if (true || IDBPolicy::useHdfs())
-            fFp->flush();
+        fFp->flush();
     }
 }
 
@@ -819,8 +648,7 @@ int OIDServer::allocVBOID(uint16_t dbroot)
         throw;
     }
 
-    if (true || IDBPolicy::useHdfs())
-        fFp->flush();
+    fFp->flush();
 
     return ret;
 }
@@ -893,8 +721,7 @@ int OIDServer::allocOIDs(int num)
     writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
     flipOIDBlock(bestMatchBegin, num, 0);
 
-    if (true || IDBPolicy::useHdfs())
-        fFp->flush();
+    fFp->flush();
 
     return bestMatchBegin;
 }

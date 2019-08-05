@@ -85,7 +85,7 @@ const uint32_t SessionManagerServer::SS_FORCE				= 1 << 5;   // In combination w
 const uint32_t SessionManagerServer::SS_QUERY_READY			= 1 << 6;   // Set by ProcManager when system is ready for queries
 
 
-SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0), txnidfd(-1)
+SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0)
 {
     config::Config* conf;
     string stmp;
@@ -119,26 +119,6 @@ SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0), txnidfd
 
     txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 
-    if (false && !IDBPolicy::useHdfs())
-    {
-        txnidfd = open(txnidFilename.c_str(), O_RDWR | O_CREAT | O_BINARY, 0664);
-
-        if (txnidfd < 0)
-        {
-            perror("SessionManagerServer(): open");
-            throw runtime_error("SessionManagerServer: Could not open the transaction ID file");
-        }
-
-        //FIXME: do we need this on Win?
-#ifndef _MSC_VER
-        else
-        {
-            fchmod(txnidfd, 0664);
-        }
-
-#endif
-    }
-
     semValue = maxTxns;
     _verID = 0;
     _sysCatVerID = 0;
@@ -154,6 +134,9 @@ SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0), txnidfd
     }
 }
 
+SessionManagerServer::~SessionManagerServer()
+{
+}
 void SessionManagerServer::reset()
 {
     mutex.try_lock();
@@ -178,57 +161,7 @@ again:
     // If we fail to read a full four bytes for any value, then the
     // value isn't in the file, and we start with the default.
 
-    if (false && !IDBPolicy::useHdfs())
-    {
-        // Last transaction id
-        lseek(txnidfd, 0, SEEK_SET);
-        err = read(txnidfd, &lastTxnID, 4);
-
-        if (err < 0 && errno != EINTR)
-        {
-            perror("Sessionmanager::initSegment(): read");
-            throw runtime_error("SessionManagerServer: read failed, aborting");
-        }
-        else if (err < 0)
-            goto again;
-        else if (err == sizeof(int))
-            _verID = lastTxnID;
-
-        // last system catalog version id
-        err = read(txnidfd, &lastSysCatVerId, 4);
-
-        if (err < 0 && errno != EINTR)
-        {
-            perror("Sessionmanager::initSegment(): read");
-            throw runtime_error("SessionManagerServer: read failed, aborting");
-        }
-        else if (err < 0)
-            goto again;
-        else if (err == sizeof(int))
-            _sysCatVerID = lastSysCatVerId;
-
-        // System state. Contains flags regarding the suspend state of the system.
-        err = read(txnidfd, &systemState, 4);
-
-        if (err < 0 && errno == EINTR)
-        {
-            goto again;
-        }
-        else if (err == sizeof(int))
-        {
-            // Turn off the pending and force flags. They make no sense for a clean start.
-            // Turn off the ready flag. DMLProc will set it back on when
-            // initialized.
-            systemState &=
-                ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_ROLLBACK | SS_FORCE);
-        }
-        else
-        {
-            // else no problem. System state wasn't saved. Might be an upgraded system.
-            systemState = 0;
-        }
-    }
-    else if (IDBPolicy::exists(txnidFilename.c_str()))
+    if (IDBPolicy::exists(txnidFilename.c_str()))
     {
         scoped_ptr<IDBDataFile> txnidfp(IDBDataFile::open(
                                             IDBPolicy::getType(txnidFilename.c_str(),
@@ -297,26 +230,7 @@ again:
 */
 void SessionManagerServer::saveSystemState()
 {
-    if (false && !IDBPolicy::useHdfs())
-    {
-        int err = 0;
-        uint32_t lSystemState = systemState;
-
-        // We don't save the pending flags, the force flag or the ready flags.
-        lSystemState &= ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_FORCE);
-        lseek(txnidfd, 8, SEEK_SET);
-        err = write(txnidfd, &lSystemState, sizeof(int));
-
-        if (err < 0)
-        {
-            perror("SessionManagerServer::saveSystemState(): write(systemState)");
-            throw runtime_error("SessionManagerServer::saveSystemState(): write(systemState) failed");
-        }
-    }
-    else
-    {
         saveSMTxnIDAndState();
-    }
 }
 
 const QueryContext SessionManagerServer::verID()
@@ -377,25 +291,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
     if (isDDL)
         ++_sysCatVerID;
 
-    if (false && !IDBPolicy::useHdfs())
-    {
-        int filedata[2];
-        filedata[0] = _verID;
-        filedata[1] = _sysCatVerID;
-
-        lseek(txnidfd, 0, SEEK_SET);
-        int err = write(txnidfd, filedata, 8);
-
-        if (err < 0)
-        {
-            perror("SessionManagerServer::newTxnID(): write(verid)");
-            throw runtime_error("SessionManagerServer::newTxnID(): write(verid) failed");
-        }
-    }
-    else
-    {
-        saveSMTxnIDAndState();
-    }
+    saveSMTxnIDAndState();
 
     return ret;
 }

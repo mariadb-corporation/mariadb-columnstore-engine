@@ -125,10 +125,8 @@ private:
     std::string savefile;
     bool release, die, firstSlave, saveFileToggle, takeSnapshot, doSaveDelta, standalone, printOnly;
     messageqcpp::ByteStream delta;
-    int currentSaveFD;
     idbdatafile::IDBDataFile* currentSaveFile;
     std::string journalName;
-    std::fstream journal;
     idbdatafile::IDBDataFile* journalh;
     int64_t snapshotInterval, journalCount;
     struct timespec MSG_TIMEOUT;
