@@ -137,7 +137,6 @@ SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0)
 SessionManagerServer::~SessionManagerServer()
 {
 }
-
 void SessionManagerServer::reset()
 {
     mutex.try_lock();

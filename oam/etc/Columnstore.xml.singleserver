@@ -254,6 +254,7 @@
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
  		<hdfsRdwrScratch>/tmp/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+        <DataFilePlugin>$INSTALLDIR/lib/libcloudio.so</DataFilePlugin>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -538,4 +539,8 @@
 		<Host>127.0.0.1</Host>
 		<Port>0</Port>
 	</QueryTele>
+    <StorageManager>
+        <Enabled>N</Enabled>
+        <MaxSockets>30</MaxSockets>
+    </StorageManager>
 </Columnstore>

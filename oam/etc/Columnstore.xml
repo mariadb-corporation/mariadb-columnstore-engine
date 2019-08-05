@@ -270,6 +270,7 @@
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
  		<TempFileDir>/columnstore_tmp_files</TempFileDir>
  		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
+        <DataFilePlugin>$INSTALLDIR/lib/libcloudio.so</DataFilePlugin>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -547,5 +548,8 @@
 		<Host>127.0.0.1</Host>
 		<Port>0</Port>
 	</QueryTele>
+    <StorageManager>
+        <MaxSockets>30</MaxSockets>
+    </StorageManager>
 </Columnstore>
 

@@ -1354,6 +1354,7 @@ void VSS::save(string filename)
             progress += err;
         }
     }
+
 }
 
 // Ideally, we;d like to get in and out of this fcn as quickly as possible.
@@ -1468,6 +1469,7 @@ void VSS::load(string filename)
     //time2 = microsec_clock::local_time();
     //cout << "done loading " << time2 << " duration: " << time2-time1 << endl;
 }
+
 
 #ifdef BRM_DEBUG
 // read lock

@@ -1015,6 +1015,12 @@ int main(int argc, char** argv)
                                                (*listPtr).LogFile,
                                                initType);
 
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                        if (listPtr->ProcessName == "StorageManager")
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, listPtr->processID);
+                                               
                         string restartStatus;
 
                         if ( (*listPtr).processID == oam::API_MINOR_FAILURE ||
@@ -1066,6 +1072,12 @@ int main(int argc, char** argv)
                                        (*listPtr).LogFile,
                                        initType);
 
+                // StorageManager doesn't send the "I'm online" msg to Proc*.
+                // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                if (listPtr->ProcessName == "StorageManager")
+                    oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                    oam::ACTIVE, listPtr->processID);
+                                       
                 string restartStatus;
 
                 if ( (*listPtr).processID == oam::API_MINOR_FAILURE ||
@@ -1653,6 +1665,12 @@ static void chldHandleThread(MonitorConfig config)
                                                (*listPtr).LogFile,
                                                initStatus);
 
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                        if (listPtr->ProcessName == "StorageManager")
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, listPtr->processID);
+              
                         if ( (*listPtr).processID == oam::API_FAILURE )
                         {
                             // restart hard failure

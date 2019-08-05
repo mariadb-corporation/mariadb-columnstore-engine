@@ -258,6 +258,7 @@ void OIDServer::initializeBitmap() const
     writeData(bitmapbuf, HeaderSize, bitmapSize);
     delete[] bitmapbuf;
     
+
     flipOIDBlock(0, firstOID, 0);
 
     buf[0] = 0;

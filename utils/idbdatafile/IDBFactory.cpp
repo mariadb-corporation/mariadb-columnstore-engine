@@ -30,6 +30,8 @@
 #include "BufferedFileFactory.h"
 #include "UnbufferedFileFactory.h"
 #include "PosixFileSystem.h"
+#include "SMFileSystem.h"
+#include "SMFileFactory.h"
 #include "IDBLogger.h"
 
 using namespace std;
@@ -50,7 +52,11 @@ bool IDBFactory::installDefaultPlugins()
 
     s_plugins[IDBDataFile::BUFFERED] = FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(), new PosixFileSystem());
     s_plugins[IDBDataFile::UNBUFFERED] = FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered", new UnbufferedFileFactory(), new PosixFileSystem());
-
+    
+    // TODO: use the installPlugin fcn below instead of declaring this statically, then remove the dependency
+    // IDBDatafile -> cloudio
+    //s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
+    
     return false;
 }
 
@@ -92,6 +98,14 @@ bool IDBFactory::installPlugin(const std::string& plugin)
     IDBLogger::syslog(oss.str(), logging::LOG_TYPE_DEBUG);
     return true;
 #endif
+}
+
+vector<IDBDataFile::Types> IDBFactory::listPlugins()
+{
+    vector<IDBDataFile::Types> ret;
+    for (FactoryMap::iterator it = s_plugins.begin(); it != s_plugins.end(); ++it)
+        ret.push_back(it->first);
+    return ret;
 }
 
 IDBDataFile* IDBFactory::open(IDBDataFile::Types type, const char* fname, const char* mode, unsigned opts, unsigned colWidth)

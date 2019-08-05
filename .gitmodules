@@ -1,0 +1,3 @@
+[submodule "utils/cloudio/storage-manager"]
+	path = utils/cloudio/storage-manager
+	url = git@github.com:pleblanc1976/storage-manager

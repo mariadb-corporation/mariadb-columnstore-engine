@@ -22,6 +22,10 @@
  ***************************************************************************/
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include "columnstoreversion.h"
 #include "IDBDataFile.h"
@@ -40,6 +44,7 @@ using namespace logging;
 using namespace config;
 
 using namespace idbdatafile;
+namespace bf = boost::filesystem;
 
 extern string systemOAM;
 extern string dm_server;
@@ -291,6 +296,8 @@ void  MonitorConfig::buildList(string ProcessModuleType, string processName, str
 
     if ( processName == "mysqld" )
         return;
+        
+    // Might need to add a similar do-nothing clause for StorageManager?
 
     pthread_mutex_lock(&LIST_LOCK);
 
@@ -505,7 +512,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                         break;
                     }
-
                     processList::iterator listPtr;
                     processList* aPtr = config.monitoredListPtr();
                     listPtr = aPtr->begin();
@@ -658,6 +664,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                        initType,
                                                        actIndicator);
 
+                        // StorageManager doesn't send the "I'm online" msg to Proc*.
+                        // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                        if (processconfig.ProcessName == "StorageManager")
+                            oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                              oam::ACTIVE, processID);
+                        
                         if ( processID > oam::API_MAX )
                             processID = oam::API_SUCCESS;
 
@@ -753,6 +765,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).LogFile,
                                                                initType);
 
+                                // StorageManager doesn't send the "I'm online" msg to Proc*.
+                                // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                                if (listPtr->ProcessName == "StorageManager")
+                                    oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                      oam::ACTIVE, listPtr->processID);
+                      
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -1192,6 +1210,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                            (*listPtr).LogFile,
                                                            initType);
 
+                            // StorageManager doesn't send the "I'm online" msg to Proc*.
+                            // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                            if (listPtr->ProcessName == "StorageManager")
+                                oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                  oam::ACTIVE, processID);
+                          
                             if ( processID > oam::API_MAX )
                             {
                                 processID = oam::API_SUCCESS;
@@ -1258,6 +1282,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                                                (*listPtr).LogFile,
                                                                initType);
 
+                                // StorageManager doesn't send the "I'm online" msg to Proc*.
+                                // Just mark it active for now.  TODO: make it use the ping fcn in IDB* instead.
+                                if (listPtr->ProcessName == "StorageManager")
+                                    oam.setProcessStatus("StorageManager", boost::get<0>(oam.getModuleInfo()), 
+                                      oam::ACTIVE, processID);
+                         
                                 if ( processID > oam::API_MAX )
                                     processID = oam::API_SUCCESS;
 
@@ -2178,7 +2208,9 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
         status = API_SUCCESS;
     else
     {
-        if (actionIndicator == GRACEFUL)
+        // XXXPAT: StorageManager shouldn't be killed with KILL, or there's a chance of data corruption.
+        // once we minimize that chance, we could allow KILL to be sent.
+        if (actionIndicator == GRACEFUL || processName == "StorageManager")
         {
             status = kill(processID, SIGTERM);
         }
@@ -2198,6 +2230,25 @@ int ProcessMonitor::stopProcess(pid_t processID, std::string processName, std::s
         }
     }
 
+    // sending sigkill to StorageManager right after sigterm would not allow it to 
+    // exit gracefully.  This will wait until StorageManager goes down to prevent
+    // weirdness that I suspect will happen if we combine a slow connection with a restart
+    // command.
+    if (processName == "StorageManager" && processID != 0)
+    {
+        while (status == API_SUCCESS)
+        {
+            sleep(1);
+            ostringstream os;
+            os << "Waiting for StorageManager to exit gracefully... pid is " << processID;
+            log.writeLog(__LINE__, os.str(), LOG_TYPE_DEBUG);
+            status = kill(processID, SIGTERM);
+            break;
+        }
+    
+        return API_SUCCESS;
+    }
+    
     //now do a pkill on process just to make sure all is clean
     string::size_type pos = processLocation.find("bin/", 0);
     string procName = processLocation.substr(pos + 4, 15) + "\\*";
@@ -2228,6 +2279,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     Oam oam;
     SystemProcessStatus systemprocessstatus;
     ProcessStatus processstatus;
+    Config *cs_config = Config::makeConfig();
+    string DBRootStorageType = cs_config->getConfig("Installation", "DBRootStorageType");
 
     log.writeLog(__LINE__, "STARTING Process: " + processName, LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "Process location: " + processLocation, LOG_TYPE_DEBUG);
@@ -2526,7 +2579,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             system(cmd.c_str());
 
             // if Non Parent OAM Module, get the dbmr data from Parent OAM Module
-            if ( !gOAMParentModuleFlag && !HDFS )
+            if ( !gOAMParentModuleFlag && !HDFS)
             {
 
                 //create temp dbrm directory
@@ -2551,18 +2604,22 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 //				system(cmd.c_str());
 
                 // go request files from parent OAM module
-                if ( getDBRMdata() != oam::API_SUCCESS )
+                if ( getDBRMdata(&DBRMDir) != oam::API_SUCCESS )
                 {
                     log.writeLog(__LINE__, "Error: getDBRMdata failed", LOG_TYPE_ERROR);
                     sendAlarm("DBRM", DBRM_LOAD_DATA_ERROR, SET);
                     return oam::API_MINOR_FAILURE;
                 }
-
+                // DBRMDir might have changed, so need to change DBRMroot
+                bf::path tmp(DBRMroot);
+                tmp = tmp.filename();
+                DBRMroot = (bf::path(DBRMDir) / tmp).string();
+                
                 sendAlarm("DBRM", DBRM_LOAD_DATA_ERROR, CLEAR);
                 // change DBRMroot to temp DBRMDir path
 //				DBRMroot = tempDBRMDir + "/BRM_saves";
             }
-
+            
             //
             // run the 'load_brm' script first if files exist
             //
@@ -2634,9 +2691,15 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 // now delete the dbrm data from local disk
                 if ( !gOAMParentModuleFlag && !HDFS && DataRedundancyConfig == "n")
                 {
+                    IDBFileSystem &fs = IDBPolicy::getFs(DBRMDir);
+                    fs.remove(DBRMDir.c_str());
+                    log.writeLog(__LINE__, "removed downloaded DBRM files at " + DBRMDir, LOG_TYPE_DEBUG);
+                    
+                    #if 0
                     string cmd = "rm -f " + DBRMDir + "/*";
                     system(cmd.c_str());
                     log.writeLog(__LINE__, "removed DBRM file with command: " + cmd, LOG_TYPE_DEBUG);
+                    #endif
                 }
             }
             else
@@ -4267,7 +4330,7 @@ int ProcessMonitor::processRestarted( std::string processName, bool manual)
 *
 *
 ******************************************************************************************/
-int ProcessMonitor::getDBRMdata()
+int ProcessMonitor::getDBRMdata(string *path)
 {
     MonitorLog log;
 
@@ -4349,7 +4412,13 @@ int ProcessMonitor::getDBRMdata()
                     log.writeLog(__LINE__, oam.itoa(numFiles), LOG_TYPE_DEBUG);
 
                     bool journalFile = false;
-
+                    boost::uuids::uuid u = boost::uuids::random_generator()();
+                    bf::path pTmp = bf::path(*path) / boost::uuids::to_string(u);
+                    if (config::Config::makeConfig()->getConfig("Installation", "DBRootStorageType") != "storagemanager")
+                        bf::create_directories(pTmp);
+                    *path = pTmp.string();
+                    log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
+                    
                     for ( int i = 0 ; i < numFiles ; i ++ )
                     {
                         string fileName;
@@ -4390,11 +4459,14 @@ int ProcessMonitor::getDBRMdata()
 //								string temp1 = temp + "data" + fileName.substr(pos1,80);
 //								fileName = temp1;
 //							}
-
+                            bf::path pFilename(fileName);
+                            pFilename = pTmp / pFilename.filename();
+                            const char *cFilename = pFilename.string().c_str();
+                            
                             boost::scoped_ptr<IDBDataFile> out(IDBDataFile::open(
-                                                                   IDBPolicy::getType(fileName.c_str(),
+                                                                   IDBPolicy::getType(cFilename,
                                                                            IDBPolicy::WRITEENG),
-                                                                   fileName.c_str(), "w", 0));
+                                                                   cFilename, "w", 0));
 
                             // read file data
                             try
@@ -4429,8 +4501,12 @@ int ProcessMonitor::getDBRMdata()
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
-                        system(cmd.c_str());
+                        string journalFilename = startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(journalFilename.c_str(),
+                            IDBPolicy::WRITEENG), journalFilename.c_str(), "w", 0);
+                        delete idbJournalFile;
+                        //string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        //system(cmd.c_str());
                     }
 
                     returnStatus = oam::API_SUCCESS;
@@ -6075,7 +6151,7 @@ void ProcessMonitor::unmountExtraDBroots()
     {
         oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 
-        if ( DBRootStorageType == "hdfs" ||
+        if ( DBRootStorageType == "hdfs" || DBRootStorageType == "storagemanager" ||
                 ( DBRootStorageType == "internal" && DataRedundancyConfig == "n") )
             return;
     }
@@ -6279,7 +6355,12 @@ int ProcessMonitor::checkDataMount()
 
         return API_SUCCESS;
     }
-
+    else if (DBRootStorageType == "storagemanager")
+    {
+        /*  StorageManager isn't running yet.  Can't check for writability here. */
+        return API_SUCCESS;
+    }
+        
     //go unmount disk NOT assigned to this pm
     unmountExtraDBroots();
 

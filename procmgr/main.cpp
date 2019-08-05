@@ -31,7 +31,7 @@
 #include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
-
+#include "IDBPolicy.h"
 #include "utils_utf8.h"
 
 #include "crashtrace.h"
@@ -105,6 +105,8 @@ int main(int argc, char** argv)
 
     setlocale(LC_ALL, systemLang.c_str());
 
+    idbdatafile::IDBPolicy::configIDBPolicy();
+    
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("ProcMgr");
 
@@ -1898,6 +1900,7 @@ void pingDeviceThread()
                                         {
                                             DBRootConfigList::iterator pt = dbrootConfigList.begin();
 
+                                            // StorageManager: Need to do this for storagemanager as well?  What's it doing?
                                             if (( DBRootStorageType == "DataRedundancy") && (*pt == 1))
                                             {
                                                 log.writeLog(__LINE__, "stopModule, " + config.moduleName(), LOG_TYPE_DEBUG);
