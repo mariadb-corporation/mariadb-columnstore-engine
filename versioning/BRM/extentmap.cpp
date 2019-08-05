@@ -1310,7 +1310,6 @@ void ExtentMap::save(const string& filename)
 #endif
 
     int allocdSize, loadSize[3], i;
-    mode_t utmp;
 
     grabEMEntryTable(READ);
 
