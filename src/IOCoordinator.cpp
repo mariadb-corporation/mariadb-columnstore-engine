@@ -360,7 +360,7 @@ ssize_t IOCoordinator::_write(const char *filename, const uint8_t *data, off_t o
             synchronizer->newJournalEntry(firstDir, i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
-            iocBytesWritten += writeLength;
+            iocBytesWritten += writeLength + JOURNAL_ENTRY_HEADER_SIZE;
         }
     }
     // there is no overlapping data, or data goes beyond end of last object
@@ -476,7 +476,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             synchronizer->newJournalEntry(firstDir, i->key, writeLength+JOURNAL_ENTRY_HEADER_SIZE);
             count += writeLength;
             dataRemaining -= writeLength;
-            iocBytesWritten += writeLength;
+            iocBytesWritten += writeLength + JOURNAL_ENTRY_HEADER_SIZE;
         }
     }
     else if (objects.size() > 1)
