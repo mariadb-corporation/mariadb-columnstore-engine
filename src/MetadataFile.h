@@ -32,13 +32,13 @@ class MetadataFile
     public:
         struct no_create_t {};
         MetadataFile();
-        MetadataFile(const char* filename);
-        MetadataFile(const char* filename, no_create_t);   // this one won't create it if it doesn't exist
+        MetadataFile(const boost::filesystem::path &filename);
+        MetadataFile(const boost::filesystem::path &path, no_create_t,bool appendExt);   // this one won't create it if it doesn't exist
         
         // this ctor is 'special'.  It will take an absolute path, and it will assume it points to a metafile
         // meaning, that it doesn't need the metadata prefix prepended, or the .meta extension appended.
         // aside from that, it will behave like the no_create ctor variant above
-        MetadataFile(const boost::filesystem::path &path);
+        //MetadataFile(const boost::filesystem::path &path);
         ~MetadataFile();
 
         bool exists() const;
@@ -48,12 +48,12 @@ class MetadataFile
         // returns the objects needed to update
         std::vector<metadataObject> metadataRead(off_t offset, size_t length) const;
         // updates the metadatafile with new object
-        int writeMetadata(const char *filename);
+        int writeMetadata(const boost::filesystem::path &filename);
         
         // updates the name and length fields of an entry, given the offset
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
-        metadataObject addMetadataObject(const char *filename, size_t length);
+        metadataObject addMetadataObject(const boost::filesystem::path &filename, size_t length);
         bool getEntry(off_t offset, const metadataObject **out) const;
         void removeEntry(off_t offset);
         void removeAllEntries();
@@ -79,7 +79,7 @@ class MetadataFile
             public:
                 static MetadataConfig *get();
                 size_t mObjectSize;
-                std::string msMetadataPath;
+                boost::filesystem::path msMetadataPath;
             
             private:
                 MetadataConfig();
@@ -92,7 +92,7 @@ class MetadataFile
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;
-        std::string mFilename;
+        boost::filesystem::path mFilename;
         std::set<metadataObject> mObjects;
         bool _exists;
 };

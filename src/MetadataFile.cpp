@@ -90,17 +90,18 @@ MetadataFile::MetadataFile()
 }
 
 
-MetadataFile::MetadataFile(const char* filename)
+MetadataFile::MetadataFile(const boost::filesystem::path &filename)
 {
     mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
     _exists = true;
     
-    mFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
+    mFilename = mpConfig->msMetadataPath / (filename.string() + ".meta");
+
     if (boost::filesystem::exists(mFilename))
     {
         boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(mFilename, jsontree);
+        boost::property_tree::read_json(mFilename.string(), jsontree);
         metadataObject newObject;
         //try catch
         mVersion = jsontree.get<int>("version");
@@ -124,51 +125,21 @@ MetadataFile::MetadataFile(const char* filename)
     ++metadataFilesAccessed;
 }
 
-MetadataFile::MetadataFile(const char* filename, no_create_t)
+MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,bool appendExt)
 {
     mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
  
-    mFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
+    mFilename = mpConfig->msMetadataPath / filename;
+
+    if(appendExt)
+        mFilename = mFilename.string() + ".meta";
+
     if (boost::filesystem::exists(mFilename))
     {
         _exists = true;
         boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(mFilename, jsontree);
-        metadataObject newObject;
-        //try catch
-        mVersion = jsontree.get<int>("version");
-        mRevision = jsontree.get<int>("revision");
-
-        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree.get_child("objects"))
-        {
-            metadataObject newObject;
-            newObject.offset = v.second.get<uint64_t>("offset");
-            newObject.length = v.second.get<uint64_t>("length");
-            newObject.key = v.second.get<string>("key");
-            mObjects.insert(newObject);
-        }
-    }
-    else
-    {
-        mVersion = 1;
-        mRevision = 1;
-        _exists = false;
-    }
-    ++metadataFilesAccessed;
-}
-
-MetadataFile::MetadataFile(const boost::filesystem::path &path)
-{
-    mpConfig = MetadataConfig::get();
-    mpLogger = SMLogging::get();
- 
-    mFilename = path.string();
-    if (boost::filesystem::exists(path))
-    {
-        _exists = true;
-        boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(mFilename, jsontree);
+        boost::property_tree::read_json(mFilename.string(), jsontree);
         metadataObject newObject;
         //try catch
         mVersion = jsontree.get<int>("version");
@@ -262,7 +233,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     return ret;
 }
 
-metadataObject MetadataFile::addMetadataObject(const char *filename, size_t length)
+metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &filename, size_t length)
 {
     // this needs to handle if data write is beyond the end of the last object
     // but not at start of new object
@@ -278,7 +249,7 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
         addObject.offset = 0;
     }
     addObject.length = length;
-    string newObjectKey = getNewKey(filename, addObject.offset, addObject.length);
+    string newObjectKey = getNewKey(filename.string(), addObject.offset, addObject.length);
     addObject.key = string(newObjectKey);
     mObjects.insert(addObject);
 
@@ -286,12 +257,11 @@ metadataObject MetadataFile::addMetadataObject(const char *filename, size_t leng
 }
 
 
-int MetadataFile::writeMetadata(const char *filename)
+int MetadataFile::writeMetadata(const boost::filesystem::path &filename)
 {
     int error=0;
     
-    string metadataFilename = mpConfig->msMetadataPath + "/" + string(filename) + ".meta";
-    boost::filesystem::path pMetadataFilename = metadataFilename;
+    boost::filesystem::path pMetadataFilename = mpConfig->msMetadataPath/(filename.string() + ".meta");
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;
     jsontree.put("version",mVersion);
@@ -308,9 +278,9 @@ int MetadataFile::writeMetadata(const char *filename)
     
     if (!boost::filesystem::exists(pMetadataFilename.parent_path()))
         boost::filesystem::create_directories(pMetadataFilename.parent_path());
-    write_json(metadataFilename, jsontree);
+    write_json(pMetadataFilename.string(), jsontree);
     _exists = true;
-    mFilename = metadataFilename;
+    mFilename = pMetadataFilename;
 
     return error;
 }

@@ -851,7 +851,7 @@ bool copytask()
     assert(resp->returnCode == 0);
     
     // verify copytest2 is there
-    MetadataFile meta2(dest, MetadataFile::no_create_t());
+    MetadataFile meta2(dest, MetadataFile::no_create_t(),false);
     assert(meta2.exists());
     
     bf::path metaPath = IOCoordinator::get()->getMetadataPath();

@@ -423,7 +423,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     char buf[80];
     bool exists = false;
     int err;
-    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    MetadataFile md(sourceFile, MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
@@ -461,7 +461,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
     numBytesRead += mdEntry->length;
     numBytesUploaded += mdEntry->length;
-    replicator->remove((cachePath/key).string().c_str(), Replicator::NO_LOCAL);
+    replicator->remove((cachePath/key), Replicator::NO_LOCAL);
 }
 
 void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::iterator &it)
@@ -481,7 +481,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     bf::path prefix = key.substr(0, pos);
     string cloudKey = key.substr(pos + 1);
     
-    MetadataFile md(sourceFile.c_str(), MetadataFile::no_create_t());
+    MetadataFile md(sourceFile, MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
