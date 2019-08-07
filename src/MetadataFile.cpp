@@ -130,10 +130,10 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
     mpConfig = MetadataConfig::get();
     mpLogger = SMLogging::get();
  
-    mFilename = mpConfig->msMetadataPath / filename;
+    mFilename = filename;
 
     if(appendExt)
-        mFilename = mFilename.string() + ".meta";
+        mFilename = mpConfig->msMetadataPath /(mFilename.string() + ".meta");
 
     if (boost::filesystem::exists(mFilename))
     {

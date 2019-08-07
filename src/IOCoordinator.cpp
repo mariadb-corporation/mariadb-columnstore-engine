@@ -160,7 +160,7 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     */
     bf::path filename = ownership.get(_filename);
     const bf::path firstDir = *(filename.begin());
-    
+
     ScopedReadLock fileLock(this, filename.string());
     MetadataFile meta(filename, MetadataFile::no_create_t(),true);
     
@@ -853,7 +853,8 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     vector<pair<string, size_t> > newJournalEntries;
     ScopedReadLock lock(this, filename1);
     ScopedWriteLock lock2(this, filename2);
-    MetadataFile meta1(metaFile1);
+
+    MetadataFile meta1(metaFile1, MetadataFile::no_create_t(),false);
     MetadataFile meta2(metaFile2, MetadataFile::no_create_t(),false);
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
     bytesCopied += meta1.getLength();
