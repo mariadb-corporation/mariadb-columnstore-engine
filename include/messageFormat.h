@@ -1,8 +1,7 @@
-// Copyright (C) 2019 MariaDB Corporaton
+// Copyright (C) 2019 MariaDB Corporation
 
 
-// Eventually this will define stuff client code will use to
-// construct messages to StorageManager.
+// Defines stuff client code will use to construct messages to StorageManager.
 
 #ifndef MESSAGEFORMAT_H_
 #define MESSAGEFORMAT_H_
