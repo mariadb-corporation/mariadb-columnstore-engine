@@ -150,6 +150,8 @@ struct gp_walk_info
 
     // Kludge for MCOL-1472
     bool inCaseStmt;
+    bool cs_vtable_is_update_with_derive;
+    bool cs_vtable_impossible_where_on_union;
 
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
@@ -166,8 +168,10 @@ struct gp_walk_info
         lastSub(0),
         derivedTbCnt(0),
         recursionLevel(-1),
-				   recursionHWM(0),
-                   inCaseStmt(false)
+        recursionHWM(0),
+        inCaseStmt(false),
+        cs_vtable_is_update_with_derive(false),
+        cs_vtable_impossible_where_on_union(false)
     {}
 
     ~gp_walk_info() {}
@@ -286,6 +290,7 @@ struct cal_connection_info
     std::stack<sm::cpsm_conhdl_t*> cal_conn_hndl_st;
     int queryState;
     CalTableMap tableMap;
+    std::set<TABLE*> physTablesList;
     sm::tableid_t currentTable;
     uint32_t traceFlags;
     std::string queryStats;
@@ -337,14 +342,16 @@ const std::string infinidb_err_msg = "\nThe query includes syntax that is not su
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
 int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti);
 int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false);
+int cs_get_derived_plan(derived_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
+int cs_get_select_plan(select_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false, bool isPushdownHand = false);
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi, bool isUnion = false);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
 void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo, gp_walk_info* gwip = NULL);
 const std::string bestTableName(const Item_field* ifp);
-bool isInfiniDB(TABLE* table_ptr);
+bool isMCSTable(TABLE* table_ptr);
 
 // execution plan util functions prototypes
 execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
