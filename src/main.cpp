@@ -35,6 +35,7 @@ void printKPIs(int sig)
     Cache::get()->printKPIs();
     Synchronizer::get()->printKPIs();
     CloudStorage::get()->printKPIs();
+    Replicator::get()->printKPIs();
 }
 
 void shutdownSM(int sig)

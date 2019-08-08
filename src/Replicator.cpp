@@ -69,6 +69,7 @@ Replicator::Replicator()
         mpLogger->log(LOG_CRIT, "Failed to create %s, got: %s", msCachePath.c_str(), e.what());
         throw e;
     }
+    repUserDataWritten = repHeaderDataWritten = replicatorObjectsCreated = replicatorJournalsCreated = 0;
 }
 
 Replicator::~Replicator()
@@ -86,16 +87,26 @@ Replicator * Replicator::get()
     return rep;
 }
 
+void Replicator::printKPIs() const
+{
+    cout << "Replicator" << endl;
+    cout << "\treplicatorUserDataWritten = " << repUserDataWritten << endl;
+    cout << "\treplicatorHeaderDataWritten = " << repHeaderDataWritten << endl;
+
+    cout << "\treplicatorObjectsCreated = " << replicatorObjectsCreated << endl;
+    cout << "\treplicatorJournalsCreated = " << replicatorJournalsCreated << endl;
+}
+
 #define OPEN(name, mode) \
     fd = ::open(name, mode, 0600); \
     if (fd < 0) \
         return fd; \
     ScopedCloser sc(fd);
 
-int Replicator::newObject(const char *filename, const uint8_t *data, off_t offset, size_t length )
+int Replicator::newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length )
 {
     int fd, err;
-    string objectFilename = msCachePath + "/" + string(filename);
+    string objectFilename = msCachePath + "/" + filename.string();
 
     OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
     size_t count = 0;
@@ -110,18 +121,19 @@ int Replicator::newObject(const char *filename, const uint8_t *data, off_t offse
         }
         count += err;
     }
-
+    repUserDataWritten += count;
+    ++replicatorObjectsCreated;
     return count;
 }
 
-int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length)
+int Replicator::addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length)
 {
     int fd, err;
     uint64_t offlen[] = {(uint64_t) offset,length};
     size_t count = 0;
     int version = 1;
-    string journalFilename = msJournalPath + "/" + string(filename) + ".journal";
-    boost::filesystem::path firstDir = *(boost::filesystem::path(filename).begin());
+    string journalFilename = msJournalPath + "/" + filename.string() + ".journal";
+    boost::filesystem::path firstDir = *((filename).begin());
     uint64_t thisEntryMaxOffset = (offset + length - 1);
 
     bool exists = boost::filesystem::exists(journalFilename);
@@ -134,9 +146,11 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
         err = ::write(fd, header.c_str(), header.length() + 1);
         assert((uint) err == header.length() + 1);
+        repHeaderDataWritten += (header.length() + 1);
         if (err <= 0)
             return err;
         Cache::get()->newJournalEntry(firstDir, header.length() + 1);
+        ++replicatorJournalsCreated;
     }
     else
     {
@@ -154,6 +168,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
             string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
             err = ::pwrite(fd, header.c_str(), header.length() + 1,0);
             assert((uint) err == header.length() + 1);
+            repHeaderDataWritten += (header.length() + 1);
             if (err <= 0)
                 return err;
         }
@@ -166,6 +181,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
     
     err = ::write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
     assert(err == JOURNAL_ENTRY_HEADER_SIZE);
+    repHeaderDataWritten += JOURNAL_ENTRY_HEADER_SIZE;
     if (err <= 0)
         return err;
 
@@ -183,6 +199,7 @@ int Replicator::addJournalEntry(const char *filename, const uint8_t *data, off_t
         count += err;
     }
 
+    repUserDataWritten += count;
     return count;
 }
 
@@ -213,17 +230,7 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
     return ret;
 }
 
-
-int Replicator::remove(const char *filename, Flags flags)
-{
-    if (flags & NO_LOCAL)
-        return 0;   // not implemented yet
-        
-    boost::filesystem::path p(filename);
-    return remove(p);
-}
-
-int Replicator::updateMetadata(const char *filename, MetadataFile &meta)
+int Replicator::updateMetadata(const boost::filesystem::path &filename, MetadataFile &meta)
 {
     return meta.writeMetadata(filename);
 }

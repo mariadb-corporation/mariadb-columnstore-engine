@@ -29,12 +29,13 @@ class Replicator
             NO_LOCAL = 0x2
         };
         
-        int addJournalEntry(const char *filename, const uint8_t *data, off_t offset, size_t length);
-        int newObject(const char *filename, const uint8_t *data, off_t offset, size_t length);
-        int remove(const char *filename, Flags flags = NONE);
+        int addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
+        int newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
         int remove(const boost::filesystem::path &file, Flags flags = NONE);
         
-        int updateMetadata(const char *filename, MetadataFile &meta);
+        int updateMetadata(const boost::filesystem::path &filename, MetadataFile &meta);
+
+        void printKPIs() const;
 
     private:
         Replicator();
@@ -43,6 +44,10 @@ class Replicator
         std::string msJournalPath;
         std::string msCachePath;
         //ThreadPool threadPool;
+
+        size_t repUserDataWritten, repHeaderDataWritten;
+        size_t replicatorObjectsCreated, replicatorJournalsCreated;
+
 };
 
 }
