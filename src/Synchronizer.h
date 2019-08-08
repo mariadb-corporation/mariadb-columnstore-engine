@@ -100,7 +100,8 @@ class Synchronizer : public boost::noncopyable
         
         // some KPIs
         size_t numBytesRead, numBytesWritten, numBytesUploaded, numBytesDownloaded,
-            flushesTriggeredBySize, flushesTriggeredByTimer;
+            flushesTriggeredBySize, flushesTriggeredByTimer, journalsMerged, objectsSyncedWithNoJournal,
+            bytesReadBySync, bytesReadBySyncWithJournal;
         ssize_t mergeDiff;
         
         SMLogging *logger;

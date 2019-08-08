@@ -65,7 +65,7 @@ IOCoordinator::IOCoordinator()
     journalPath = cache->getJournalPath();
     
     bytesRead = bytesWritten = filesOpened = filesCreated = filesCopied = filesDeleted = 
-        bytesCopied = filesTruncated = listingCount = 0;
+        bytesCopied = filesTruncated = listingCount = callsToWrite = 0;
     iocFilesOpened = iocObjectsCreated = iocJournalsCreated = iocBytesWritten = iocFilesDeleted = 0;
 }
 
@@ -96,6 +96,7 @@ void IOCoordinator::printKPIs() const
     cout << "\t\tfilesCopied = " << filesCopied << endl;
     cout << "\t\tfilesDeleted = " << filesDeleted << endl;
     cout << "\t\tfilesTruncated = " << filesTruncated << endl;
+    cout << "\t\tcallsToWrite = " << callsToWrite << endl;
     cout << "\tIOC's POV" << endl;
     cout << "\t\tiocFilesOpened = " << iocFilesOpened << endl;
     cout << "\t\tiocObjectsCreated = " << iocObjectsCreated << endl;
@@ -282,6 +283,7 @@ out:
 
 ssize_t IOCoordinator::write(const char *_filename, const uint8_t *data, off_t offset, size_t length)
 {
+    ++callsToWrite;
     bf::path filename = ownership.get(_filename);
     const bf::path firstDir = *(filename.begin());
     bytesWritten += length;
@@ -822,7 +824,6 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     
     CloudStorage *cs = CloudStorage::get();
     Synchronizer *sync = Synchronizer::get();
-
     bf::path metaFile1 = metaPath/(p1.string() + ".meta");
     bf::path metaFile2 = metaPath/(p2.string() + ".meta");
     int err;
@@ -853,7 +854,6 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     vector<pair<string, size_t> > newJournalEntries;
     ScopedReadLock lock(this, filename1);
     ScopedWriteLock lock2(this, filename2);
-
     MetadataFile meta1(metaFile1, MetadataFile::no_create_t(),false);
     MetadataFile meta2(metaFile2, MetadataFile::no_create_t(),false);
     vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
@@ -967,9 +967,9 @@ const bf::path &IOCoordinator::getMetadataPath() const
 // first byte after the header.
 // update: had to make it also return the header; the boost json parser does not stop at either
 // a null char or the end of an object.
-boost::shared_array<char> seekToEndOfHeader1(int fd)
+boost::shared_array<char> seekToEndOfHeader1(int fd, size_t *_bytesRead)
 {
-    ::lseek(fd, 0, SEEK_SET);
+    //::lseek(fd, 0, SEEK_SET);
     boost::shared_array<char> ret(new char[100]);
     int err;
     
@@ -984,6 +984,7 @@ boost::shared_array<char> seekToEndOfHeader1(int fd)
         if (ret[i] == 0)
         {
             ::lseek(fd, i+1, SEEK_SET);
+            *_bytesRead = i + 1;
             return ret;
         }
     }
@@ -1013,7 +1014,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     // grab the journal header, make sure the version is 1, and get the max offset
 
-    boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);
+    boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
     stringstream ss;
     ss << headertxt.get();
     boost::property_tree::ptree header;
@@ -1024,7 +1025,8 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     // read the object into memory
     size_t count = 0;
-    ::lseek(objFD, offset, SEEK_SET);
+    if (offset != 0)
+        ::lseek(objFD, offset, SEEK_SET);
     while (count < len) {
         int err = ::read(objFD, &ret[count], len - count);
         if (err < 0)
@@ -1045,7 +1047,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         }
         count += err;
     }
-    l_bytesRead += len;
+    l_bytesRead += count;
     
     // start processing the entries
     while (1)
@@ -1066,7 +1068,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
             uint64_t startReadingAt = max(offlen[0], (uint64_t) offset);
             uint64_t lengthOfRead = min(lastBufOffset, lastJournalOffset) - startReadingAt;
             
-            //cout << "MJ: startReadingAt = " << startReadingAt << " lengthOfRead = " << lengthOfRead << endl;
+            //cout << "MJ: startReadingAt = " << startReadingAt << " offlen[0] = " << offlen[0] << endl;
             
             // seek to the portion of the entry to start reading at
             if (startReadingAt != offlen[0])
@@ -1117,7 +1119,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t> &objData, size
     ScopedCloser s(journalFD);
 
     // grab the journal header and make sure the version is 1
-    boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD);
+    boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
     stringstream ss;
     ss << headertxt.get();
     boost::property_tree::ptree header;

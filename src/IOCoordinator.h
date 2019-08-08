@@ -23,7 +23,7 @@
 namespace storagemanager
 {
 
-boost::shared_array<char> seekToEndOfHeader1(int fd);
+boost::shared_array<char> seekToEndOfHeader1(int fd, size_t *bytesRead);
 
 class IOCoordinator : public boost::noncopyable
 {
@@ -102,7 +102,7 @@ class IOCoordinator : public boost::noncopyable
         // some KPIs
         // from the user's POV...
         size_t bytesRead, bytesWritten, filesOpened, filesCreated, filesCopied;
-        size_t filesDeleted, bytesCopied, filesTruncated, listingCount;
+        size_t filesDeleted, bytesCopied, filesTruncated, listingCount, callsToWrite;
         
         // from IOC's pov...
         size_t iocFilesOpened, iocObjectsCreated, iocJournalsCreated, iocFilesDeleted;

@@ -43,7 +43,8 @@ Synchronizer::Synchronizer() : maxUploads(0)
     cs = CloudStorage::get();
     
     numBytesRead = numBytesWritten = numBytesUploaded = numBytesDownloaded = mergeDiff =
-        flushesTriggeredBySize = flushesTriggeredByTimer = 0;
+        flushesTriggeredBySize = flushesTriggeredByTimer = journalsMerged = 
+        objectsSyncedWithNoJournal = bytesReadBySync = bytesReadBySyncWithJournal = 0;
     
     string stmp = config->getValue("ObjectStorage", "max_concurrent_uploads");
     try
@@ -460,7 +461,9 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
     numBytesRead += mdEntry->length;
+    bytesReadBySync += mdEntry->length;
     numBytesUploaded += mdEntry->length;
+    ++objectsSyncedWithNoJournal;
     replicator->remove((cachePath/key), Replicator::NO_LOCAL);
 }
 
@@ -579,6 +582,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             return;
         }
         numBytesRead += _bytesRead;
+        bytesReadBySyncWithJournal += _bytesRead;
         originalSize += _bytesRead;
     }
     else
@@ -595,6 +599,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             return;
         }
         numBytesRead += _bytesRead;
+        bytesReadBySyncWithJournal += _bytesRead;
         originalSize = _bytesRead;
     }
     
@@ -647,6 +652,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     mergeDiff += size - originalSize;
+    ++journalsMerged;
     // update the metadata for the source file
     
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
@@ -696,12 +702,16 @@ void Synchronizer::printKPIs() const
 {
     cout << "Synchronizer" << endl;
     cout << "\tnumBytesRead: " << numBytesRead << endl;
+    cout << "\tbytesReadBySync: " << bytesReadBySync << endl;
+    cout << "\tbytesReadBySyncWithJournal: " << bytesReadBySyncWithJournal << endl;
     cout << "\tnumBytesWritten: " << numBytesWritten << endl;
     cout << "\tnumBytesUploaded: " << numBytesUploaded << endl;
     cout << "\tnumBytesDownloaded: " << numBytesDownloaded << endl;
     cout << "\tmergeDiff: " << mergeDiff << endl;
     cout << "\tflushesTriggeredBySize: " << flushesTriggeredBySize << endl;
     cout << "\tflushesTriggeredByTimer: " << flushesTriggeredByTimer << endl;
+    cout << "\tjournalsMerged: " << journalsMerged << endl;
+    cout << "\tobjectsSyncedWithNoJournal: " << objectsSyncedWithNoJournal << endl;
 }
     
 /* The helper objects & fcns */

@@ -156,7 +156,8 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
     {
         // read the existing header and check if max_offset needs to be updated
         //OPEN(journalFilename.c_str(), O_RDWR);
-        boost::shared_array<char> headertxt = seekToEndOfHeader1(fd);
+        size_t tmp;
+        boost::shared_array<char> headertxt = seekToEndOfHeader1(fd, &tmp);
         stringstream ss;
         ss << headertxt.get();
         boost::property_tree::ptree header;
