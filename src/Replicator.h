@@ -35,6 +35,8 @@ class Replicator
         
         int updateMetadata(const boost::filesystem::path &filename, MetadataFile &meta);
 
+        void printKPIs() const;
+
     private:
         Replicator();
         Config *mpConfig;
@@ -42,6 +44,10 @@ class Replicator
         std::string msJournalPath;
         std::string msCachePath;
         //ThreadPool threadPool;
+
+        size_t repUserDataWritten, repHeaderDataWritten;
+        size_t replicatorObjectsCreated, replicatorJournalsCreated;
+
 };
 
 }

@@ -69,6 +69,7 @@ Replicator::Replicator()
         mpLogger->log(LOG_CRIT, "Failed to create %s, got: %s", msCachePath.c_str(), e.what());
         throw e;
     }
+    repUserDataWritten = repHeaderDataWritten = replicatorObjectsCreated = replicatorJournalsCreated = 0;
 }
 
 Replicator::~Replicator()
@@ -84,6 +85,16 @@ Replicator * Replicator::get()
         return rep;
     rep = new Replicator();
     return rep;
+}
+
+void Replicator::printKPIs() const
+{
+    cout << "Replicator" << endl;
+    cout << "\treplicatorUserDataWritten = " << repUserDataWritten << endl;
+    cout << "\treplicatorHeaderDataWritten = " << repHeaderDataWritten << endl;
+
+    cout << "\treplicatorObjectsCreated = " << replicatorObjectsCreated << endl;
+    cout << "\treplicatorJournalsCreated = " << replicatorJournalsCreated << endl;
 }
 
 #define OPEN(name, mode) \
@@ -110,7 +121,8 @@ int Replicator::newObject(const boost::filesystem::path &filename, const uint8_t
         }
         count += err;
     }
-
+    repUserDataWritten += count;
+    ++replicatorObjectsCreated;
     return count;
 }
 
@@ -134,9 +146,11 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
         err = ::write(fd, header.c_str(), header.length() + 1);
         assert((uint) err == header.length() + 1);
+        repHeaderDataWritten += (header.length() + 1);
         if (err <= 0)
             return err;
         Cache::get()->newJournalEntry(firstDir, header.length() + 1);
+        ++replicatorJournalsCreated;
     }
     else
     {
@@ -154,6 +168,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
             string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
             err = ::pwrite(fd, header.c_str(), header.length() + 1,0);
             assert((uint) err == header.length() + 1);
+            repHeaderDataWritten += (header.length() + 1);
             if (err <= 0)
                 return err;
         }
@@ -166,6 +181,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
     
     err = ::write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
     assert(err == JOURNAL_ENTRY_HEADER_SIZE);
+    repHeaderDataWritten += JOURNAL_ENTRY_HEADER_SIZE;
     if (err <= 0)
         return err;
 
@@ -183,6 +199,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
         count += err;
     }
 
+    repUserDataWritten += count;
     return count;
 }
 
