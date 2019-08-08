@@ -278,12 +278,20 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &fi
     
     metadataObject addObject;
     auto &objects = jsontree->get_child("objects");
+    if (!objects.empty())
+    {
+        auto &lastObject = objects.back().second;
+        addObject.offset = lastObject.get<size_t>("offset") + lastObject.get<size_t>("length");
+    }
+    
+    /*
     BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, objects)
     {
         size_t entryOff = v.second.get<size_t>("offset"), entryLen = v.second.get<size_t>("length");
         if (addObject.offset < entryOff + entryLen)
             addObject.offset = entryOff + entryLen;
     }
+    */
     addObject.length = length;
     addObject.key = getNewKey(filename.string(), addObject.offset, addObject.length);
     boost::property_tree::ptree object;
@@ -573,13 +581,11 @@ void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
 
 off_t MetadataFile::getMetadataNewObjectOffset()
 {
-    off_t newObjectOffset = 0;
-    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
-    {
-        off_t possibility = v.second.get<off_t>("offset");
-        if (newObjectOffset < possibility)
-            newObjectOffset = possibility;
-    }
+    auto &objects = jsontree->get_child("objects");
+    if (objects.empty())
+        return 0;
+    auto &lastObject = jsontree->get_child("objects").back().second;
+    return lastObject.get<size_t>("offset") + lastObject.get<size_t>("length");
     
     /*
     if (!mObjects.empty())
@@ -589,7 +595,7 @@ off_t MetadataFile::getMetadataNewObjectOffset()
     }
     */
 
-    return newObjectOffset;
+    //return newObjectOffset;
 }
 
 metadataObject::metadataObject() : offset(0), length(0)
