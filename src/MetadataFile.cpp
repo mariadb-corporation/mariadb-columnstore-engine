@@ -16,6 +16,7 @@
 #define min(x, y) (x < y ? x : y)
 
 using namespace std;
+namespace bpt = boost::property_tree;
 
 namespace
 {   
@@ -100,14 +101,17 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
 
     if (boost::filesystem::exists(mFilename))
     {
-        boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(mFilename.string(), jsontree);
+        jsontree.reset(new bpt::ptree());
+        boost::property_tree::read_json(mFilename.string(), *jsontree);
+        mVersion = jsontree->get<int>("version");
+        mRevision = jsontree->get<int>("revision");
+        /*
         metadataObject newObject;
         //try catch
-        mVersion = jsontree.get<int>("version");
-        mRevision = jsontree.get<int>("revision");
+        mVersion = jsontree->get<int>("version");
+        mRevision = jsontree->get<int>("revision");
 
-        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree.get_child("objects"))
+        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
         {
             metadataObject newObject;
             newObject.offset = v.second.get<uint64_t>("offset");
@@ -115,11 +119,13 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
             newObject.key = v.second.get<string>("key");
             mObjects.insert(newObject);
         }
+        */
     }
     else
     {
         mVersion = 1;
         mRevision = 1;
+        makeEmptyJsonTree();
         writeMetadata(filename);
     }
     ++metadataFilesAccessed;
@@ -138,14 +144,18 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
     if (boost::filesystem::exists(mFilename))
     {
         _exists = true;
-        boost::property_tree::ptree jsontree;
-        boost::property_tree::read_json(mFilename.string(), jsontree);
+        jsontree.reset(new bpt::ptree());
+        boost::property_tree::read_json(mFilename.string(), *jsontree);
+        mVersion = jsontree->get<int>("version");
+        mRevision = jsontree->get<int>("revision");
+        
+        /*
         metadataObject newObject;
         //try catch
         mVersion = jsontree.get<int>("version");
         mRevision = jsontree.get<int>("revision");
 
-        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree.get_child("objects"))
+        BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
         {
             metadataObject newObject;
             newObject.offset = v.second.get<uint64_t>("offset");
@@ -153,18 +163,29 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
             newObject.key = v.second.get<string>("key");
             mObjects.insert(newObject);
         }
+        */
     }
     else
     {
         mVersion = 1;
         mRevision = 1;
         _exists = false;
+        makeEmptyJsonTree();
     }
     ++metadataFilesAccessed;
 }
 
 MetadataFile::~MetadataFile()
 {
+}
+
+void MetadataFile::makeEmptyJsonTree()
+{
+    jsontree.reset(new bpt::ptree());
+    boost::property_tree::ptree objs;
+    jsontree->put("version",mVersion);
+    jsontree->put("revision",mRevision);
+    jsontree->add_child("objects", objs);
 }
 
 void MetadataFile::printKPIs()
@@ -177,7 +198,7 @@ int MetadataFile::stat(struct stat *out) const
     int err = ::stat(mFilename.c_str(), out);
     if (err)
         return err;
-        
+    
     out->st_size = getLength();
     return 0;
 }
@@ -185,8 +206,14 @@ int MetadataFile::stat(struct stat *out) const
 size_t MetadataFile::getLength() const
 {
     size_t totalSize = 0;
+    /*
     for (auto &object : mObjects)
         totalSize += object.length;
+    */
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        totalSize += v.second.get<uint64_t>("length");
+    }
     return totalSize;
 }
 
@@ -200,6 +227,16 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
     // this version assumes mObjects is sorted by offset, and there are no gaps between objects
     vector<metadataObject> ret;
     size_t foundLen = 0;
+    
+    /* For first cut of optimizations, going to generate mObjects as it was to use the existing alg
+       rather than write a new alg.
+    */
+    set<metadataObject> mObjects;
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        mObjects.insert(metadataObject(v.second.get<uint64_t>("offset"), v.second.get<uint64_t>("length"),
+            v.second.get<string>("key")));
+    }
     
     if (mObjects.size() == 0)
         return ret;
@@ -238,6 +275,24 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &fi
     // this needs to handle if data write is beyond the end of the last object
     // but not at start of new object
     // 
+    
+    metadataObject addObject;
+    auto &objects = jsontree->get_child("objects");
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, objects)
+    {
+        size_t entryOff = v.second.get<size_t>("offset"), entryLen = v.second.get<size_t>("length");
+        if (addObject.offset < entryOff + entryLen)
+            addObject.offset = entryOff + entryLen;
+    }
+    addObject.length = length;
+    addObject.key = getNewKey(filename.string(), addObject.offset, addObject.length);
+    boost::property_tree::ptree object;
+    object.put("offset", addObject.offset);
+    object.put("length", addObject.length);
+    object.put("key", addObject.key);
+    objects.push_back(make_pair("", object));
+
+    /* 
     metadataObject addObject;
     if (!mObjects.empty())
     {
@@ -252,7 +307,7 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &fi
     string newObjectKey = getNewKey(filename.string(), addObject.offset, addObject.length);
     addObject.key = string(newObjectKey);
     mObjects.insert(addObject);
-
+    */
     return addObject;
 }
 
@@ -262,6 +317,8 @@ int MetadataFile::writeMetadata(const boost::filesystem::path &filename)
     int error=0;
     
     boost::filesystem::path pMetadataFilename = mpConfig->msMetadataPath/(filename.string() + ".meta");
+        
+    /*
     boost::property_tree::ptree jsontree;
     boost::property_tree::ptree objs;
     jsontree.put("version",mVersion);
@@ -275,18 +332,33 @@ int MetadataFile::writeMetadata(const boost::filesystem::path &filename)
         objs.push_back(std::make_pair("", object));
     }
     jsontree.add_child("objects", objs);
-    
+    */
+        
     if (!boost::filesystem::exists(pMetadataFilename.parent_path()))
         boost::filesystem::create_directories(pMetadataFilename.parent_path());
-    write_json(pMetadataFilename.string(), jsontree);
+    write_json(pMetadataFilename.string(), *jsontree);
     _exists = true;
     mFilename = pMetadataFilename;
 
     return error;
 }
 
-bool MetadataFile::getEntry(off_t offset, const metadataObject **out) const
+bool MetadataFile::getEntry(off_t offset, metadataObject *out) const
 {
+    metadataObject addObject;
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        if (v.second.get<size_t>("offset") == offset)
+        {
+            out->offset = offset;
+            out->length = v.second.get<size_t>("length");
+            out->key = v.second.get<string>("key");
+            return true;
+        }
+    }
+    return false;
+
+/*
     const auto &it = mObjects.find(offset);
     if (it != mObjects.end())
     {
@@ -295,19 +367,35 @@ bool MetadataFile::getEntry(off_t offset, const metadataObject **out) const
     }
     else
         return false;
+*/
 }
 
 void MetadataFile::removeEntry(off_t offset)
 {
+    bpt::ptree &objects = jsontree->get_child("objects");
+    for (bpt::ptree::iterator it = objects.begin(); it != objects.end(); ++it)
+    {
+        if (it->second.get<size_t>("offset") == offset)
+        {
+            objects.erase(it);
+            break;
+        }
+    }
+    
+/*
     const auto &it = mObjects.find(offset);
     assert(it != mObjects.end());
     
     mObjects.erase(it);
+*/
 }
 
 void MetadataFile::removeAllEntries()
 {
-    mObjects.clear();
+    bpt::ptree &objects = jsontree->get_child("objects");
+    objects.clear();
+
+    //mObjects.clear();
 }
 
 // There are more efficient ways to do it.  Optimize if necessary.
@@ -405,15 +493,41 @@ void MetadataFile::setLengthInKey(string &key, size_t newLength)
 
 void MetadataFile::printObjects() const
 {
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        printf("Name: %s Length: %lu Offset: %lu\n", v.second.get<string>("key").c_str(),
+            v.second.get<size_t>("length"), v.second.get<size_t>("offset"));
+    }
+
+/*
     printf("Version: %i Revision: %i\n",mVersion,mRevision);
     for (std::set<metadataObject>::const_iterator i = mObjects.begin(); i != mObjects.end(); ++i)
     {
         printf("Name: %s Length: %lu Offset: %lu\n",i->key.c_str(),i->length,i->offset);
     }
+*/
 }
 
 void MetadataFile::updateEntry(off_t offset, const string &newName, size_t newLength)
 {
+    for (auto &v : jsontree->get_child("objects"))
+
+    //BOOST_FOREACH(boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        if (v.second.get<size_t>("offset") == offset)
+        {
+            v.second.put("key", newName);
+            v.second.put("length", newLength);
+            return;
+        }
+    }
+ 
+    stringstream ss;
+    ss << "MetadataFile::updateEntry(): failed to find object at offset " << offset;
+    mpLogger->log(LOG_ERR, ss.str().c_str());
+    throw logic_error(ss.str());
+    
+    /*
     metadataObject lookup;
     lookup.offset = offset;
     set<metadataObject>::iterator updateObj = mObjects.find(lookup);
@@ -426,10 +540,22 @@ void MetadataFile::updateEntry(off_t offset, const string &newName, size_t newLe
     }
     updateObj->key = newName;
     updateObj->length = newLength;
+    */
 }
 
 void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
 {
+    for (auto &v : jsontree->get_child("objects"))
+    //BOOST_FOREACH(boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        if (v.second.get<size_t>("offset") == offset)
+        {
+            v.second.put("length", newLength);
+            break;
+        }
+    }
+
+/*
     metadataObject lookup;
     lookup.offset = offset;
     set<metadataObject>::iterator updateObj = mObjects.find(lookup);
@@ -441,24 +567,39 @@ void MetadataFile::updateEntryLength(off_t offset, size_t newLength)
         throw logic_error(ss.str());
     }
     updateObj->length = newLength;
+*/
+
 }
 
 off_t MetadataFile::getMetadataNewObjectOffset()
 {
     off_t newObjectOffset = 0;
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
+    {
+        off_t possibility = v.second.get<off_t>("offset");
+        if (newObjectOffset < possibility)
+            newObjectOffset = possibility;
+    }
+    
+    /*
     if (!mObjects.empty())
     {
         std::set<metadataObject>::reverse_iterator iLastObject = mObjects.rbegin();
         newObjectOffset = iLastObject->offset + iLastObject->length;
     }
+    */
 
     return newObjectOffset;
 }
 
-metadataObject::metadataObject()
+metadataObject::metadataObject() : offset(0), length(0)
 {}
 
-metadataObject::metadataObject(uint64_t _offset) : offset(_offset) 
+metadataObject::metadataObject(uint64_t _offset) : offset(_offset), length(0) 
+{}
+
+metadataObject::metadataObject(uint64_t _offset, uint64_t _length, const std::string &_key) :
+    offset(_offset), length(_length), key(_key)
 {}
 
 }

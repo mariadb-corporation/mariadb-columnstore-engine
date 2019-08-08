@@ -21,6 +21,7 @@ namespace storagemanager
 struct metadataObject {
     metadataObject();
     metadataObject(uint64_t offset);   // so we can search mObjects by integer
+    metadataObject(uint64_t offset, uint64_t length, const std::string &key);
     uint64_t offset;
     mutable uint64_t length;
     mutable std::string key;
@@ -54,7 +55,7 @@ class MetadataFile
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const boost::filesystem::path &filename, size_t length);
-        bool getEntry(off_t offset, const metadataObject **out) const;
+        bool getEntry(off_t offset, metadataObject *out) const;
         void removeEntry(off_t offset);
         void removeAllEntries();
         
@@ -93,8 +94,10 @@ class MetadataFile
         int mVersion;
         int mRevision;
         boost::filesystem::path mFilename;
-        std::set<metadataObject> mObjects;
+        boost::shared_ptr<boost::property_tree::ptree> jsontree;
+        //std::set<metadataObject> mObjects;
         bool _exists;
+        void makeEmptyJsonTree();
 };
 
 }
