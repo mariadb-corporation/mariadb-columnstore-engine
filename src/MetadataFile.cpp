@@ -30,44 +30,50 @@ uint64_t metadataFilesAccessed = 0;
 class MetadataCache
 {
 public:
+    typedef storagemanager::MetadataFile::Jsontree_t Jsontree_t;
     MetadataCache();
-    storagemanager::MetadataFile::Jsontree_t get(const boost::filesystem::path &);
-    void put(const boost::filesystem::path &, const storagemanager::MetadataFile::Jsontree_t &);
+    Jsontree_t get(const boost::filesystem::path &);
+    void put(const boost::filesystem::path &, const Jsontree_t &);
     void erase(const boost::filesystem::path &);
-    
+    boost::recursive_mutex &getMutex();
 private:
     // there's a more efficient way to do this, KISS for now.
     typedef std::list<std::string> Lru_t;
-    typedef std::unordered_map<std::string, 
-        std::pair<storagemanager::MetadataFile::Jsontree_t, Lru_t::iterator> > Lookup_t;
+    typedef std::unordered_map<std::string, std::pair<Jsontree_t, Lru_t::iterator> > Lookup_t;
     Lookup_t lookup;
     Lru_t lru;
     uint max_lru_size;
-    boost::mutex mutex;
+    boost::recursive_mutex mutex;
 };
     
 MetadataCache::MetadataCache() : max_lru_size(2000)
 {}
 
-storagemanager::MetadataFile::Jsontree_t MetadataCache::get(const bf::path &p)
+boost::recursive_mutex & MetadataCache::getMutex()
 {
-    boost::unique_lock<boost::mutex> s(mutex);
+    return mutex;
+}
+
+MetadataCache::Jsontree_t MetadataCache::get(const bf::path &p)
+{
+    boost::unique_lock<boost::recursive_mutex> s(mutex);
     
     auto it = lookup.find(p.string());
     if (it != lookup.end()) 
     {
         lru.splice(lru.end(), lru, it->second.second);
         return it->second.first;
-    }
+    }     
+    
     return storagemanager::MetadataFile::Jsontree_t();
 }
 
 // note, does not change an existing jsontree.  This should be OK.
-void MetadataCache::put(const bf::path &p, const storagemanager::MetadataFile::Jsontree_t &j)
+void MetadataCache::put(const bf::path &p, const Jsontree_t &j)
 {
     string sp(p.string());
     
-    boost::unique_lock<boost::mutex> s(mutex);
+    boost::unique_lock<boost::recursive_mutex> s(mutex);
     auto it = lookup.find(sp);
     if (it == lookup.end()) 
     {
@@ -86,7 +92,7 @@ void MetadataCache::put(const bf::path &p, const storagemanager::MetadataFile::J
 
 void MetadataCache::erase(const bf::path &p)
 {
-    boost::unique_lock<boost::mutex> s(mutex);
+    boost::unique_lock<boost::recursive_mutex> s(mutex);
     auto it = lookup.find(p.string());
     if (it != lookup.end())
     {
@@ -172,6 +178,7 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
     
     mFilename = mpConfig->msMetadataPath / (filename.string() + ".meta");
 
+    boost::unique_lock<boost::recursive_mutex> s(jsonCache.getMutex());
     jsontree = jsonCache.get(mFilename);
     if (!jsontree)
     {
@@ -179,6 +186,8 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
         {
             jsontree.reset(new bpt::ptree());
             boost::property_tree::read_json(mFilename.string(), *jsontree);
+            jsonCache.put(mFilename, jsontree);
+            s.unlock();
             mVersion = jsontree->get<int>("version");
             mRevision = jsontree->get<int>("revision");
         }
@@ -189,6 +198,12 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
             makeEmptyJsonTree();
             writeMetadata(filename);
         }
+    }
+    else
+    {  
+        s.unlock();
+        mVersion = jsontree->get<int>("version");
+        mRevision = jsontree->get<int>("revision");
     }
     ++metadataFilesAccessed;
 }
@@ -203,6 +218,7 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
     if(appendExt)
         mFilename = mpConfig->msMetadataPath /(mFilename.string() + ".meta");
 
+    boost::unique_lock<boost::recursive_mutex> s(jsonCache.getMutex());
     jsontree = jsonCache.get(mFilename);
     if (!jsontree)
     {
@@ -211,6 +227,8 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
             _exists = true;
             jsontree.reset(new bpt::ptree());
             boost::property_tree::read_json(mFilename.string(), *jsontree);
+            jsonCache.put(mFilename, jsontree);
+            s.unlock();
             mVersion = jsontree->get<int>("version");
             mRevision = jsontree->get<int>("revision");
         }
@@ -221,6 +239,13 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
             _exists = false;
             makeEmptyJsonTree();
         }
+    }
+    else
+    {
+        s.unlock();
+        _exists = true;
+        mVersion = jsontree->get<int>("version");
+        mRevision = jsontree->get<int>("revision");
     }
     ++metadataFilesAccessed;
 }

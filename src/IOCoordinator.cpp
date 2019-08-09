@@ -721,6 +721,7 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
         deletedObjects.push_back(object.key);
     }
     synchronizer->deletedObjects(firstDir, deletedObjects);
+    MetadataFile::deletedMeta(file);
 }
 
 void IOCoordinator::remove(const bf::path &p)
