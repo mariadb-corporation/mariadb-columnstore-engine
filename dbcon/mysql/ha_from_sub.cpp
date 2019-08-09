@@ -322,9 +322,12 @@ ParseTree* setDerivedFilter(THD* thd, ParseTree*& n,
 FromSubQuery::FromSubQuery(gp_walk_info& gwip) : SubQuery(gwip)
 {}
 
-FromSubQuery::FromSubQuery(gp_walk_info& gwip, SELECT_LEX* sub) :
-    SubQuery(gwip),
-    fFromSub(sub)
+FromSubQuery::FromSubQuery(gp_walk_info& gwip, 
+    SELECT_LEX* sub, 
+    bool isPushdownHandler) :
+        SubQuery(gwip),
+        fFromSub(sub),
+        fPushdownHand(isPushdownHandler)
 {}
 
 FromSubQuery::~FromSubQuery()
@@ -346,7 +349,7 @@ SCSEP FromSubQuery::transform()
     csep->derivedTbAlias(fAlias); // always lower case
     csep->derivedTbView(fGwip.viewName.alias);
 
-    if (getSelectPlan(gwi, *fFromSub, csep) != 0)
+    if (getSelectPlan(gwi, *fFromSub, csep, fPushdownHand) != 0)
     {
         fGwip.fatalParseError = true;
 

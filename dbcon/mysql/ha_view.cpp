@@ -102,14 +102,17 @@ void View::transform()
                 CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
                 gwi.tbList.push_back(tn);
                 gwi.tableMap[tn] = make_pair(0, table_ptr);
-                gwi.thd->infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+                // TODO MCOL-2178 isUnion member only assigned, never used
+                // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
             {
                 // for nested view, the view name is vout.vin... format
                 CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName);
                 gwi.viewName = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, viewName);
-                View* view = new View(table_ptr->view->select_lex, &gwi);
+                // WIP MCOL-2178 CS could mess with the SELECT_LEX unit so better
+                // use a copy.
+                View* view = new View(*table_ptr->view->first_select_lex(), &gwi);
                 view->viewName(gwi.viewName);
                 gwi.viewList.push_back(view);
                 view->transform();
@@ -117,7 +120,7 @@ void View::transform()
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)
