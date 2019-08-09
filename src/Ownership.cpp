@@ -56,19 +56,20 @@ Ownership::~Ownership()
 
 bf::path Ownership::get(const bf::path &p)
 {
-    bf::path ret, prefix;
+    bf::path ret, prefix, normalizedPath(p);
     bf::path::const_iterator pit;
     uint i;
- 
+
+    normalizedPath.normalize();
     //cerr << "Ownership::get() param = " << p.string() << endl;
     if (prefixDepth > 0)
     {
-        for (i = 0, pit = p.begin(); i <= prefixDepth && pit != p.end(); ++i, ++pit)
+        for (i = 0, pit = normalizedPath.begin(); i <= prefixDepth && pit != normalizedPath.end(); ++i, ++pit)
             ;
-        if (pit != p.end())
+        if (pit != normalizedPath.end())
             prefix = *pit;
         //cerr << "prefix is " << prefix.string() << endl;
-        for (; pit != p.end(); ++pit)
+        for (; pit != normalizedPath.end(); ++pit)
             ret /= *pit;
         if (ret.empty())
         {
@@ -78,8 +79,8 @@ bf::path Ownership::get(const bf::path &p)
     }
     else
     {
-        ret = p;
-        prefix = *(p.begin());
+        ret = normalizedPath;
+        prefix = *(normalizedPath.begin());
     }
          
     mutex.lock();
