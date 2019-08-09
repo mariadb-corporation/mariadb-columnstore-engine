@@ -148,7 +148,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
         string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
         err = ::write(fd, header.c_str(), header.length() + 1);
         repHeaderDataWritten += (header.length() + 1);
-        if (err != (header.length() + 1))
+        if ((uint)err != (header.length() + 1))
         {
             // return the error because the header for this entry on a new journal file failed
             mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Writing journal header failed.");
@@ -174,12 +174,12 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
             string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
             err = ::pwrite(fd, header.c_str(), header.length() + 1,0);
             repHeaderDataWritten += (header.length() + 1);
-            if (err != (header.length() + 1))
+            if ((uint)err != (header.length() + 1))
             {
                 // only the header was possibly changed rollback attempt
                 mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Updating journal header failed. Attempting to rollback and continue.");
                 int rollbackErr = ::pwrite(fd, headerRollback.c_str(), headerRollback.length() + 1,0);
-                if (rollbackErr == (headerRollback.length() + 1))
+                if ((uint)rollbackErr == (headerRollback.length() + 1))
                     mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header success.");
                 else
                     mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed!");
@@ -200,7 +200,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
             mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: write journal entry header failed. Attempting to rollback and continue.");
 			//attempt to rollback top level header
 			int rollbackErr = ::pwrite(fd, headerRollback.c_str(), headerRollback.length() + 1,0);
-			if (rollbackErr == (headerRollback.length() + 1))
+			if ((uint)rollbackErr == (headerRollback.length() + 1))
 			{
 				mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed!");
 				return err;
@@ -231,7 +231,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 				{
 					string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % thisEntryMaxOffset).str();
 					int rollbackErr = ::pwrite(fd, header.c_str(), header.length() + 1,0);
-					if (rollbackErr != (header.length() + 1))
+					if ((uint)rollbackErr != (header.length() + 1))
 					{
 						mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Update of journal header failed!");
 						return err;
@@ -240,7 +240,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 				// Update the journal entry header
 				offlen[1] = count;
 				int rollbackErr = ::pwrite(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE,entryHeaderOffset);
-				if (rollbackErr != JOURNAL_ENTRY_HEADER_SIZE)
+				if ((uint)rollbackErr != JOURNAL_ENTRY_HEADER_SIZE)
 				{
 					mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Update of journal entry header failed!");
 					return err;
@@ -262,7 +262,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 					//attempt to rollback top level header
 					string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % 0).str();
 					int rollbackErr = ::pwrite(fd, header.c_str(), header.length() + 1,0);
-					if (rollbackErr != (header.length() + 1))
+					if ((uint)rollbackErr != (header.length() + 1))
 					{
 						mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed!");
 						return err;

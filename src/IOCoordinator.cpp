@@ -347,7 +347,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
                 logger->log(LOG_ERR,"IOCoordinator::write(): Failed addJournalEntry. Journal file likely has partial write of data and incorrect length.");
                 return -1;
             }
-            else if (err < writeLength)
+            else if ((uint)err < writeLength)
             {
                 // XXXPAT: Count hasn't been updated yet, so I'm not sure what we're trying to do here.
                 // There's another block below that looks similar.  Also similar blocks in append().
@@ -411,7 +411,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             logger->log(LOG_ERR,"IOCoordinator::write(): Failed newObject.");
             return -1;
         }
-        else if (err < writeLength)
+        else if ((uint)err < writeLength)
         {
             dataRemaining -= err;
             count += err;
@@ -487,7 +487,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
                 logger->log(LOG_ERR,"IOCoordinator::append(): Failed addJournalEntry.");
                 return -1;
             }
-            else if (err < writeLength)
+            else if ((uint)err < writeLength)
             {
                 count += err;
                 dataRemaining -= err;
@@ -535,7 +535,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             logger->log(LOG_ERR,"IOCoordinator::append(): Failed newObject.");
             return -1;
         }
-        else if (err < writeLength)
+        else if ((uint)err < writeLength)
         {
             count += err;
             dataRemaining -= err;
