@@ -264,7 +264,7 @@ const string SimpleColumn::toString() const
            << cardinality() << '/'
            << joinInfo() << '/'
            << colSource() << '/'
-           << (isInfiniDB() ? "InfiniDB" : "ForeignEngine") << '/'
+           << (isInfiniDB() ? "ColumnStore" : "ForeignEngine") << '/'
            << colPosition() << endl;
 
     return output.str();

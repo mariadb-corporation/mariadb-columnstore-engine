@@ -5649,7 +5649,7 @@ const string CalpontSystemCatalog::TableName::toString() const
 ostream& operator<<(ostream& os, const CalpontSystemCatalog::TableAliasName& rhs)
 {
     os << rhs.schema << '.' << rhs.table << "(" << rhs.alias << "/" << rhs.view
-       << ") engineType=" << (rhs.fIsInfiniDB ? "Columnstore" : "ForeignEngine");
+       << ") engineType=" << (rhs.fIsInfiniDB ? "ColumnStore" : "ForeignEngine");
     return os;
 }
 

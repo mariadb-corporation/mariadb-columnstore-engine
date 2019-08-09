@@ -155,7 +155,7 @@ const string PseudoColumn::toString() const
            << cardinality() << '/'
            << joinInfo() << '/'
            << colSource() << '/'
-           << (isInfiniDB() ? "InfiniDB" : "ForeignEngine") << endl;
+           << (isInfiniDB() ? "ColumnStore" : "ForeignEngine") << endl;
 
     output << "Pseudotype=" << fPseudoType << endl;
     return output.str();
