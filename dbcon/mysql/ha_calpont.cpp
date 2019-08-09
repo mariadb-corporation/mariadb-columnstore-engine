@@ -83,9 +83,6 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
     DBUG_ENTER("calpont_discover");
     DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
-#ifdef INFINIDB_DEBUG
-    fprintf(stderr, "calpont_discover()\n");
-#endif
 
     uchar* frm_data = NULL;
     size_t frm_len = 0;
@@ -143,7 +140,7 @@ static int columnstore_init_func(void* p)
     mcs_hton->commit = calpont_commit;
     mcs_hton->rollback = calpont_rollback;
     mcs_hton->close_connection = calpont_close_connection;
-    //mcs_hton->create_group_by = create_calpont_group_by_handler;
+    mcs_hton->create_group_by = create_calpont_group_by_handler;
     mcs_hton->create_derived = create_columnstore_derived_handler;
     mcs_hton->create_select = create_columnstore_select_handler;
     DBUG_RETURN(0);
@@ -667,9 +664,6 @@ int ha_calpont::info(uint32_t flag)
     // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
     // the number again if the issue re-occurs
     stats.records = 2000;
-#ifdef INFINIDB_DEBUG
-    puts("info");
-#endif
     DBUG_RETURN(0);
 }
 
@@ -686,40 +680,6 @@ int ha_calpont::info(uint32_t flag)
 int ha_calpont::extra(enum ha_extra_function operation)
 {
     DBUG_ENTER("ha_calpont::extra");
-#ifdef INFINIDB_DEBUG
-    {
-        const char* hefs;
-
-        switch (operation)
-        {
-            case HA_EXTRA_NO_READCHECK:
-                hefs = "HA_EXTRA_NO_READCHECK";
-                break;
-
-            case HA_EXTRA_CACHE:
-                hefs = "HA_EXTRA_CACHE";
-                break;
-
-            case HA_EXTRA_NO_CACHE:
-                hefs = "HA_EXTRA_NO_CACHE";
-                break;
-
-            case HA_EXTRA_NO_IGNORE_DUP_KEY:
-                hefs = "HA_EXTRA_NO_IGNORE_DUP_KEY";
-                break;
-
-            case HA_EXTRA_PREPARE_FOR_RENAME:
-                hefs = "HA_EXTRA_PREPARE_FOR_RENAME";
-                break;
-
-            default:
-                hefs = "UNKNOWN ENUM!";
-                break;
-        }
-
-        fprintf(stderr, "ha_calpont::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
-    }
-#endif
     DBUG_RETURN(0);
 }
 
@@ -825,9 +785,6 @@ THR_LOCK_DATA** ha_calpont::store_lock(THD* thd,
     //if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
     //  lock.type=lock_type;
     //*to++= &lock;
-#ifdef INFINIDB_DEBUG
-    puts("store_lock");
-#endif
     return to;
 }
 

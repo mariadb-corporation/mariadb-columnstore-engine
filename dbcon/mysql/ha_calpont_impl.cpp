@@ -20,7 +20,6 @@
  * $Id: ha_calpont_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
  */
 
-//#define DEBUG_WALK_COND
 #include <my_config.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -436,18 +435,14 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
     {
 // @bug 2244. Always log this msg for now, as we try to track down when/why we are
 //			losing socket connection with ExeMgr
-//#ifdef INFINIDB_DEBUG
         tpl_scan_fetch_LogException( ti, ci, &ex);
-//#endif
         sm_stat = sm::CALPONT_INTERNAL_ERROR;
     }
     catch (...)
     {
 // @bug 2244. Always log this msg for now, as we try to track down when/why we are
 //			losing socket connection with ExeMgr
-//#ifdef INFINIDB_DEBUG
         tpl_scan_fetch_LogException( ti, ci, 0 );
-//#endif
         sm_stat = sm::CALPONT_INTERNAL_ERROR;
     }
 
@@ -764,7 +759,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3483, reserve enough space for the longest double value
                     // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 40;
+                    (*f)->field_length = 310;
 
                     f2->store(dl);
 
@@ -848,18 +843,11 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
         ti.tpl_scan_ctx->rowsreturned++;
         ti.c++;
-#ifdef INFINIDB_DEBUG
-
-        if ((ti.c % 1000000) == 0)
-            cerr << "fetchNextRow so far table " << ti.msTablePtr->s->table_name.str << " rows = " << ti.c << endl;
-
-#endif
         ti.moreRows = true;
         rc = 0;
     }
     else if (sm_stat == sm::SQL_NOT_FOUND)
     {
-        IDEBUG( cerr << "fetchNextRow done for table " << ti.msTablePtr->s->table_name.str << " rows = " << ti.c << endl );
         ti.c = 0;
         ti.moreRows = false;
         rc = HA_ERR_END_OF_FILE;
@@ -1596,8 +1584,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
     ci->tableOid = roPair.objnum;
     CalpontDMLPackage* pDMLPackage = 0;
-//	dmlStmt += ";";
-    IDEBUG( cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id <<  endl );
     VendorDMLStatement dmlStatement(dmlStmt, sessionID);
 
     if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
@@ -2231,14 +2217,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
 int ha_calpont_impl_open(const char* name, int mode, uint32_t test_if_locked)
 {
-    IDEBUG ( cout << "ha_calpont_impl_open: " << name << ", " << mode << ", " << test_if_locked << endl );
     Config::makeConfig();
     return 0;
 }
 
 int ha_calpont_impl_close(void)
 {
-    IDEBUG( cout << "ha_calpont_impl_close" << endl );
     return 0;
 }
 
@@ -2262,27 +2246,6 @@ int ha_calpont_impl_discover_existence(const char* schema, const char* name)
 
 int ha_calpont_impl_rnd_init(TABLE* table)
 {
-#ifdef DEBUG_SETENV
-    string home(getenv("HOME"));
-
-    if (!getenv("COLUMNSTORE_HOME"))
-    {
-        string calpontHome(home + "/Calpont/etc/");
-        setenv("COLUMNSTORE_HOME", calpontHome.c_str(), 1);
-    }
-
-    if (!getenv("COLUMNSTORE_CONFIG_FILE"))
-    {
-        string calpontConfigFile(home + "/mariadb/columnstore/etc/Columnstore.xml");
-        setenv("COLUMNSTORE_CONFIG_FILE", calpontConfigFile.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CSC_IDENT"))
-        setenv("CALPONT_CSC_IDENT", "dm", 1);
-
-#endif
-
-    IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
 
     gp_walk_info gwi;
@@ -2418,8 +2381,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
             cp_get_table_plan(thd, ti.csep, ti);
         }
 
-        IDEBUG( cerr << table->s->table_name.str << " send plan:" << endl );
-        IDEBUG( cerr << *ti.csep << endl );
         csep = ti.csep;
 
         // for ExeMgr logging sqltext. only log once for the query although multi plans may be sent
@@ -2664,7 +2625,7 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-// TODO MCOL-2178 This variable can never be true in the scope of this function
+// MCOL-2178 This variable can never be true in the scope of this function
 //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
 //        return HA_ERR_END_OF_FILE;
 
@@ -2758,7 +2719,7 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 
     // WIP MCOL-2178
     // Workaround because CS doesn't reset isUnion in a normal way.
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //    if (is_pushdown_hand)
 //    {
 //        MIGR::infinidb_vtable.isUnion = false;
@@ -2798,8 +2759,6 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
         ci->queryStats = "";
         return 0;
     }
-
-    IDEBUG( cerr << "rnd_end for table " << table->s->table_name.str << endl );
 
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
@@ -2891,10 +2850,6 @@ int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* c
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (string(name).find("@0024vtable") != string::npos)
-        return 0;
-
     //@Bug 1948. Mysql calls create table to create a new table with new signature.
     if (ci->alterTableState > 0) return 0;
 
@@ -2929,10 +2884,6 @@ int ha_calpont_impl_delete_table(const char* name)
 
     //if this is an InfiniDB tmp table ('#sql*.frm') just leave...
     if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length)) return 0;
-
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (string(name).find("@0024vtable") != string::npos)
-        return 0;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -2970,8 +2921,8 @@ int ha_calpont_impl_delete_table(const char* name)
         return 0;
     }
 
-    // @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-    if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
+    // @bug 1793. make vtable droppable in calpontsys.
+    if (strcmp(dbName, "calpontsys") == 0)
     {
         std::string stmt(idb_mysql_query_str(thd));
         boost::algorithm::to_upper(stmt);
@@ -3960,8 +3911,6 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
 
 int ha_calpont_impl_rename_table(const char* from, const char* to)
 {
-    IDEBUG( cout << "ha_calpont_impl_rename_table: " << from << " => " << to << endl );
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -3971,13 +3920,11 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
     if ( ci->alterTableState == cal_connection_info::ALTER_FIRST_RENAME )
     {
         ci->alterTableState = cal_connection_info::ALTER_SECOND_RENAME;
-        IDEBUG( cout << "ha_calpont_impl_rename_table: was in state ALTER_FIRST_RENAME, now in ALTER_SECOND_RENAME" << endl );
         return 0;
     }
     else if (ci->alterTableState == cal_connection_info::ALTER_SECOND_RENAME)
     {
         ci->alterTableState = cal_connection_info::NOT_ALTER;
-        IDEBUG( cout << "ha_calpont_impl_rename_table: was in state ALTER_SECOND_RENAME, now in NOT_ALTER" << endl );
         return 0;
     }
 
@@ -3987,7 +3934,6 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
 
 int ha_calpont_impl_delete_row(const uchar* buf)
 {
-    IDEBUG( cout << "ha_calpont_impl_delete_row" << endl );
     return 0;
 }
 
@@ -4003,7 +3949,6 @@ COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
 
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
-    IDEBUG( cout << "ha_calpont_impl_cond_push: " << alias << endl );
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4011,17 +3956,6 @@ COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     cal_table_info ti = ci->tableMap[table];
-
-#ifdef DEBUG_WALK_COND
-    {
-        gp_walk_info gwi;
-        gwi.condPush = true;
-        gwi.sessionid = tid2sid(thd->thread_id);
-        cout << "------------------ cond push -----------------------" << endl;
-        cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cout << "------------------------------------------------\n" << endl;
-    }
-#endif
 
     if (!ti.csep)
     {
@@ -4039,8 +3973,6 @@ COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
 
         if (gwi->fatalParseError)
         {
-            IDEBUG( cout << gwi->parseErrorText << endl );
-
             if (ti.condInfo)
             {
                 delete ti.condInfo;
@@ -4078,7 +4010,6 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
     // used for cleaning up the tableinfo.
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
-    IDEBUG( cout << "external_lock for " << alias << endl );
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4166,7 +4097,6 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 // for sorting length exceeds blob limit. Just error out for now.
 int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
 {
-    IDEBUG( cout << "ha_calpont_impl_rnd_pos" << endl);
     string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_TOO_BIG);
     setError(current_thd, ER_INTERNAL_ERROR, emsg);
     return ER_INTERNAL_ERROR;
@@ -4187,7 +4117,6 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
 int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table)
 {
     string tableName = group_hand->table_list->table->s->table_name.str;
-    IDEBUG( cout << "group_by_init for table " << tableName << endl );
     THD* thd = current_thd;
 
     //check whether the system is ready to process statement.
@@ -4362,7 +4291,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             return 0;
 
         // @bug 2547. don't need to send the plan if it's impossible where for all unions.
-// TODO MCOL-2178 commenting the below out since cp_get_group_plan does not modify this variable
+// MCOL-2178 commenting the below out since cp_get_group_plan does not modify this variable
 // which has a default value of false
 //        if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
 //            return 0;
@@ -4402,12 +4331,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             cerr << "---------------- EXECUTION PLAN ----------------" << endl;
             cerr << *csep << endl ;
             cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-        }
-        else
-        {
-            IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
-            IDEBUG( cerr << *csep << endl );
-            IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
         }
     }// end of execution plan generation
 
@@ -4632,7 +4555,7 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-// TODO MCOL-2178
+// MCOL-2178
 //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
 //        return HA_ERR_END_OF_FILE;
 
@@ -4728,7 +4651,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //    MIGR::infinidb_vtable.isUnion = false;
 
     if (get_fe_conn_info_ptr() != NULL)
@@ -4766,8 +4689,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 
         return 0;
     }
-
-    IDEBUG( cerr << "group_by_end for table " << table->s->table_name.str << endl );
 
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
@@ -4894,27 +4815,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
  ***********************************************************/
 int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 {
-#ifdef DEBUG_SETENV
-    string home(getenv("HOME"));
-
-    if (!getenv("CALPONT_HOME"))
-    {
-        string calpontHome(home + "/Calpont/etc/");
-        setenv("CALPONT_HOME", calpontHome.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CONFIG_FILE"))
-    {
-        string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
-        setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CSC_IDENT"))
-        setenv("CALPONT_CSC_IDENT", "dm", 1);
-
-#endif
-
-    IDEBUG( cout << "pushdown_init for table " << endl );
     THD* thd = current_thd;
 
     gp_walk_info gwi;
@@ -5137,12 +5037,6 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 cerr << "---------------- EXECUTION PLAN ----------------" << endl;
                 cerr << *csep << endl ;
                 cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-            }
-            else
-            {
-                IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
-                IDEBUG( cerr << *csep << endl );
-                IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
             }
         }
     }// end of execution plan generation

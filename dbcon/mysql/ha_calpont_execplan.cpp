@@ -21,7 +21,6 @@
  */
  
 /** @file */
-//#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -421,743 +420,6 @@ string getViewName(TABLE_LIST* table_ptr)
     return viewName;
 }
 
-#ifdef DEBUG_WALK_COND
-void debug_walk(const Item* item, void* arg)
-{
-    switch (item->type())
-    {
-        case Item::FIELD_ITEM:
-        {
-            Item_field* ifp = (Item_field*)item;
-            cerr << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
-                 '.' << ifp->field_name.str << endl;
-            break;
-        }
-        case Item::CONST_ITEM:
-        {
-            switch (item->cmp_type())
-            {
-                case INT_RESULT:
-                {
-                    Item_int* iip = (Item_int*)item;
-                    cerr << "INT_ITEM: ";
-
-                    if (iip->name.length) cerr << iip->name.str << " (from name string)" << endl;
-                    else cerr << iip->val_int() << endl;
-
-                    break;
-                }
-                case STRING_RESULT:
-                {
-                    Item_string* isp = (Item_string*)item;
-                    String val, *str = isp->val_str(&val);
-                    string valStr;
-                    valStr.assign(str->ptr(), str->length());
-                    cerr << "STRING_ITEM: >" << valStr << '<' << endl;
-                    break;
-                }
-                case REAL_RESULT:
-                {
-                    cerr << "REAL_ITEM" << endl;
-                    break;
-                }
-                case DECIMAL_RESULT:
-                {
-                    cerr << "DECIMAL_ITEM" << endl;
-                    break;
-                }
-                case TIME_RESULT:
-                {
-                    String val, *str = NULL;
-                    Item_temporal_literal* itp = (Item_temporal_literal*)item;
-                    str = itp->val_str(&val);
-                    cerr << "DATE ITEM: ";
-
-                    if (str)
-                        cerr << ": (" << str->ptr() << ')' << endl;
-                    else
-                        cerr << ": <NULL>" << endl;
-
-                    break;
-                }
-                default:
-                {
-                    cerr << ": Unknown cmp_type" << endl;
-                    break;
-                }
-            }
-            break;
-        }
-        case Item::FUNC_ITEM:
-        {
-            Item_func* ifp = (Item_func*)item;
-            Item_func_opt_neg* inp;
-            cerr << "FUNC_ITEM: ";
-
-            switch (ifp->functype())
-            {
-                case Item_func::UNKNOWN_FUNC: // 0
-                    cerr << ifp->func_name() << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::GT_FUNC: // 7
-                    cerr << '>' << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::EQ_FUNC: // 1
-                    cerr << '=' << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::GE_FUNC:
-                    cerr << ">=" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::LE_FUNC:
-                    cerr << "<=" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::LT_FUNC:
-                    cerr << '<' << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::NE_FUNC:
-                    cerr << "<>" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::NEG_FUNC: // 45
-                    cerr << "unary minus" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::IN_FUNC: // 16
-                    inp = (Item_func_opt_neg*)ifp;
-
-                    if (inp->negated) cerr << "not ";
-
-                    cerr << "in" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::BETWEEN:
-                    inp = (Item_func_opt_neg*)ifp;
-
-                    if (inp->negated) cerr << "not ";
-
-                    cerr << "between" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::ISNULL_FUNC: // 10
-                    cerr << "is null" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::ISNOTNULL_FUNC: // 11
-                    cerr << "is not null" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::NOT_ALL_FUNC:
-                    cerr << "not_all" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::NOT_FUNC:
-                    cerr << "not_func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::TRIG_COND_FUNC:
-                    cerr << "trig_cond_func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::ISNOTNULLTEST_FUNC:
-                    cerr << "isnotnulltest_func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::MULT_EQUAL_FUNC:
-                {
-                    cerr << "mult_equal_func:" << " (" << ifp->functype() << ")" << endl;
-                    Item_equal* item_eq = (Item_equal*)ifp;
-                    Item_equal_fields_iterator it(*item_eq);
-                    Item* item;
-
-                    while ((item = it++))
-                    {
-                        Field* equal_field = it.get_curr_field();
-                        cerr << equal_field->field_name.str << endl;
-                    }
-
-                    break;
-                }
-
-                case Item_func::EQUAL_FUNC:
-                    cerr << "equal func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::FT_FUNC:
-                    cerr << "ft func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::LIKE_FUNC:
-                    cerr << "like func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::COND_AND_FUNC:
-                    cerr << "cond and func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::COND_OR_FUNC:
-                    cerr << "cond or func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::XOR_FUNC:
-                    cerr << "xor func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::INTERVAL_FUNC:
-                    cerr << "interval func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_EQUALS_FUNC:
-                    cerr << "sp equals func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_DISJOINT_FUNC:
-                    cerr << "sp disjoint func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_INTERSECTS_FUNC:
-                    cerr << "sp intersects func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_TOUCHES_FUNC:
-                    cerr << "sp touches func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_CROSSES_FUNC:
-                    cerr << "sp crosses func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_WITHIN_FUNC:
-                    cerr << "sp within func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_CONTAINS_FUNC:
-                    cerr << "sp contains func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_OVERLAPS_FUNC:
-                    cerr << "sp overlaps func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_STARTPOINT:
-                    cerr << "sp startpoint func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_ENDPOINT:
-                    cerr << "sp endpoint func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_EXTERIORRING:
-                    cerr << "sp exteriorring func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_POINTN:
-                    cerr << "sp pointn func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_GEOMETRYN:
-                    cerr << "sp geometryn func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_INTERIORRINGN:
-                    cerr << "sp exteriorringn func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SP_RELATE_FUNC:
-                    cerr << "sp relate func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::NOW_FUNC:
-                    cerr << "now func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::SUSERVAR_FUNC:
-                    cerr << "suservar func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::GUSERVAR_FUNC:
-                    cerr << "guservar func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::COLLATE_FUNC:
-                    cerr << "collate func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::EXTRACT_FUNC:
-                    cerr << "extract func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::CHAR_TYPECAST_FUNC:
-                    cerr << "char typecast func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::FUNC_SP:
-                    cerr << "func sp func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::UDF_FUNC:
-                    cerr << "udf func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::GSYSVAR_FUNC:
-                    cerr << "gsysvar func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                case Item_func::DYNCOL_FUNC:
-                    cerr << "dyncol func" << " (" << ifp->functype() << ")" << endl;
-                    break;
-
-                default:
-                    cerr << "type=" << ifp->functype() << endl;
-                    break;
-            }
-
-            break;
-        }
-
-        case Item::COND_ITEM:
-        {
-            Item_cond* icp = (Item_cond*)item;
-            cerr << "COND_ITEM: " << icp->func_name() << endl;
-            break;
-        }
-
-        case Item::SUM_FUNC_ITEM:
-        {
-            Item_sum* isp = (Item_sum*)item;
-            char* item_name = const_cast<char*>(item->name.str);
-
-            // MCOL-1052 This is an extended SELECT list item
-            if (!item_name && isp->get_arg_count() && isp->get_arg(0)->name.length)
-            {
-                item_name = const_cast<char*>(isp->get_arg(0)->name.str);
-            }
-            else if (!item_name && isp->get_arg_count()
-                     && isp->get_arg(0)->type() == Item::CONST_ITEM
-                     && isp->get_arg(0)->cmp_type() == INT_RESULT)
-            {
-                item_name = (char*)"INT||*";
-            }
-            else if (!item_name)
-            {
-                item_name = (char*)"<NULL>";
-            }
-
-            switch (isp->sum_func())
-            {
-                case Item_sum::SUM_FUNC:
-                    cerr << "SUM_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::SUM_DISTINCT_FUNC:
-                    cerr << "SUM_DISTINCT_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::AVG_FUNC:
-                    cerr << "AVG_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::COUNT_FUNC:
-                    cerr << "COUNT_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::COUNT_DISTINCT_FUNC:
-                    cerr << "COUNT_DISTINCT_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::MIN_FUNC:
-                    cerr << "MIN_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::MAX_FUNC:
-                    cerr << "MAX_FUNC: " << item_name << endl;
-                    break;
-
-                case Item_sum::UDF_SUM_FUNC:
-                    cerr << "UDAF_FUNC: " << item_name << endl;
-                    break;
-
-                default:
-                    cerr << "SUM_FUNC_ITEM type=" << isp->sum_func() << endl;
-                    break;
-            }
-
-            break;
-        }
-
-        case Item::SUBSELECT_ITEM:
-        {
-            Item_subselect* sub = (Item_subselect*)item;
-            cerr << "SUBSELECT Item: ";
-
-            switch (sub->substype())
-            {
-                case Item_subselect::EXISTS_SUBS:
-                    cerr << "EXISTS";
-                    break;
-
-                case Item_subselect::IN_SUBS:
-                    cerr << "IN";
-                    break;
-
-                default:
-                    cerr << sub->substype();
-                    break;
-            }
-
-            cerr << endl;
-            JOIN* join = sub->get_select_lex()->join;
-
-            if (join)
-            {
-                Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
-
-                if (cond)
-                    cond->traverse_cond(debug_walk, arg, Item::POSTFIX);
-            }
-
-            cerr << "Finish subselect item traversing" << endl;
-            break;
-        }
-
-        case Item::REF_ITEM:
-        {
-            Item_ref* ref = (Item_ref*)item;
-
-            if (ref->real_item()->type() == Item::CACHE_ITEM)
-            {
-                Item* field = ((Item_cache*)ref->real_item())->get_example();
-
-                if (field->type() == Item::FIELD_ITEM)
-                {
-                    Item_field* ifp = (Item_field*)field;
-                    //ifp->cached_table->select_lex->select_number gives the select level.
-                    // could be used on alias.
-                    // could also be used to tell correlated join (equal level).
-                    cerr << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
-                         '.' << ifp->field_name.str << endl;
-                    break;
-                }
-                else if (field->type() == Item::FUNC_ITEM)
-                {
-                    Item_func* ifp = (Item_func*)field;
-                    cerr << "CACHED REF FUNC_ITEM " << ifp->func_name() << endl;
-                }
-                else if (field->type() == Item::REF_ITEM)
-                {
-                    Item_ref* ifr = (Item_ref*)field;
-                    string refType;
-                    string realType;
-
-                    switch (ifr->ref_type())
-                    {
-                        case Item_ref::REF:
-                            refType = "REF";
-                            break;
-
-                        case Item_ref::DIRECT_REF:
-                            refType = "DIRECT_REF";
-                            break;
-
-                        case Item_ref::VIEW_REF:
-                            refType = "VIEW_REF";
-                            break;
-
-                        case Item_ref::OUTER_REF:
-                            refType = "OUTER_REF";
-                            break;
-
-                        case Item_ref::AGGREGATE_REF:
-                            refType = "AGGREGATE_REF";
-                            break;
-
-                        default:
-                            refType = "UNKNOWN";
-                            break;
-                    }
-
-                    switch (ifr->real_type())
-                    {
-                        case Item::FIELD_ITEM:
-                        {
-                            Item_field* ifp = (Item_field*)(*(ifr->ref));
-                            realType = "FIELD_ITEM ";
-                            realType += ifp->db_name;
-                            realType += '.';
-                            realType += bestTableName(ifp);
-                            realType += '.';
-                            realType += ifp->field_name.str;
-                            break;
-                        }
-
-                        case Item::SUM_FUNC_ITEM:
-                        {
-                            Item_sum* isp = (Item_sum*)(*(ifr->ref));
-
-                            if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
-                                realType = "GROUP_CONCAT_FUNC";
-                            else
-                                realType = "SUM_FUNC_ITEM";
-
-                            break;
-                        }
-
-                        case Item::REF_ITEM:
-                            // Need recursion here
-                            realType = "REF_ITEM";
-                            break;
-
-                        case Item::FUNC_ITEM:
-                        {
-                            Item_func* ifp = (Item_func*)(*(ifr->ref));
-                            realType = "FUNC_ITEM ";
-                            realType += ifp->func_name();
-                            break;
-                        }
-
-                        default:
-                        {
-                            realType = "UNKNOWN";
-                        }
-                    }
-
-                    cerr << "CACHED REF_ITEM: ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
-                    break;
-                }
-                else
-                {
-                    cerr << "REF_ITEM with CACHE_ITEM type unknown " << field->type() << endl;
-                }
-            }
-            else if (ref->real_item()->type() == Item::FIELD_ITEM)
-            {
-                Item_field* ifp = (Item_field*)ref->real_item();
-
-                // MCOL-1052 The field referenced presumable came from
-                // extended SELECT list.
-                if ( !ifp->field_name.str )
-                {
-                    cerr << "REF extra FIELD_ITEM: " << ifp->name.str << endl;
-                }
-                else
-                {
-                    cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
-                         ifp->field_name.str << endl;
-                }
-
-                break;
-            }
-            else if (ref->real_item()->type() == Item::FUNC_ITEM)
-            {
-                Item_func* ifp = (Item_func*)ref->real_item();
-                cerr << "REF FUNC_ITEM " << ifp->func_name() << endl;
-            }
-            else if (ref->real_item()->type() == Item::WINDOW_FUNC_ITEM)
-            {
-                Item_window_func* ifp = (Item_window_func*)ref->real_item();
-                cerr << "REF WINDOW_FUNC_ITEM " << ifp->window_func()->func_name() << endl;
-            }
-            else
-            {
-                cerr << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
-            }
-
-            break;
-        }
-
-        case Item::ROW_ITEM:
-        {
-            Item_row* row = (Item_row*)item;
-            cerr << "ROW_ITEM: " << endl;
-
-            for (uint32_t i = 0; i < row->cols(); i++)
-                debug_walk(row->element_index(i), 0);
-
-            break;
-        }
-
-        case Item::EXPR_CACHE_ITEM:
-        {
-            cerr << "Expr Cache Item" << endl;
-            ((Item_cache_wrapper*)item)->get_orig_item()->traverse_cond(debug_walk, arg, Item::POSTFIX);
-            break;
-        }
-
-        case Item::CACHE_ITEM:
-        {
-            Item_cache* isp = (Item_cache*)item;
-            // MCOL-46 isp->val_str() can cause a call to execute a subquery. We're not set up
-            // to execute yet.
-#if 0
-
-            switch (item->result_type())
-            {
-                case STRING_RESULT:
-                    cerr << "CACHE_STRING_ITEM" << endl;
-                    break;
-
-                case REAL_RESULT:
-                    cerr << "CACHE_REAL_ITEM " << isp->val_real() << endl;
-                    break;
-
-                case INT_RESULT:
-                    cerr << "CACHE_INT_ITEM " << isp->val_int() << endl;
-                    break;
-
-                case ROW_RESULT:
-                    cerr << "CACHE_ROW_ITEM" << endl;
-                    break;
-
-                case DECIMAL_RESULT:
-                    cerr << "CACHE_DECIMAL_ITEM " << isp->val_decimal() << endl;
-                    break;
-
-                default:
-                    cerr << "CACHE_UNKNOWN_ITEM" << endl;
-                    break;
-            }
-
-#endif
-            Item* field = isp->get_example();
-
-            if (field->type() == Item::FIELD_ITEM)
-            {
-                Item_field* ifp = (Item_field*)field;
-                //ifp->cached_table->select_lex->select_number gives the select level.
-                // could be used on alias.
-                // could also be used to tell correlated join (equal level).
-                cerr << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
-                     '.' << ifp->field_name.str << endl;
-                break;
-            }
-            else if (field->type() == Item::REF_ITEM)
-            {
-                Item_ref* ifr = (Item_ref*)field;
-                string refType;
-                string realType;
-
-                switch (ifr->ref_type())
-                {
-                    case Item_ref::REF:
-                        refType = "REF";
-                        break;
-
-                    case Item_ref::DIRECT_REF:
-                        refType = "DIRECT_REF";
-                        break;
-
-                    case Item_ref::VIEW_REF:
-                        refType = "VIEW_REF";
-                        break;
-
-                    case Item_ref::OUTER_REF:
-                        refType = "OUTER_REF";
-                        break;
-
-                    case Item_ref::AGGREGATE_REF:
-                        refType = "AGGREGATE_REF";
-                        break;
-
-                    default:
-                        refType = "UNKNOWN";
-                        break;
-                }
-
-                switch (ifr->real_type())
-                {
-                    case Item::FIELD_ITEM:
-                    {
-                        Item_field* ifp = (Item_field*)(*(ifr->ref));
-                        realType = "FIELD_ITEM ";
-                        realType += ifp->db_name;
-                        realType += '.';
-                        realType += bestTableName(ifp);
-                        realType += '.';
-                        realType += ifp->field_name.str;
-                        break;
-                    }
-
-                    case Item::SUM_FUNC_ITEM:
-                    {
-                        Item_sum* isp = (Item_sum*)(*(ifr->ref));
-
-                        if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
-                            realType = "GROUP_CONCAT_FUNC";
-                        else
-                            realType = "SUM_FUNC_ITEM";
-
-                        break;
-                    }
-
-                    case Item::REF_ITEM:
-                        // Need recursion here
-                        realType = "REF_ITEM";
-                        break;
-
-                    case Item::FUNC_ITEM:
-                    {
-                        Item_func* ifp = (Item_func*)(*(ifr->ref));
-                        realType = "FUNC_ITEM ";
-                        realType += ifp->func_name();
-                        break;
-                    }
-
-                    default:
-                    {
-                        realType = "UNKNOWN";
-                    }
-                }
-
-                cerr << "CACHE_ITEM ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
-                break;
-            }
-            else if (field->type() == Item::FUNC_ITEM)
-            {
-                Item_func* ifp = (Item_func*)field;
-                cerr << "CACHE_ITEM FUNC_ITEM " << ifp->func_name() << endl;
-                break;
-            }
-            else
-            {
-                cerr << "CACHE_ITEM type unknown " << field->type() << endl;
-            }
-
-            break;
-        }
-
-        case Item::WINDOW_FUNC_ITEM:
-        {
-            Item_window_func* ifp = (Item_window_func*)item;
-            cerr << "Window Function Item " << ifp->window_func()->func_name() << endl;
-            break;
-        }
-
-        case Item::NULL_ITEM:
-        {
-            cerr << "NULL item" << endl;
-            break;
-        }
-
-        case Item::TYPE_HOLDER:
-        {
-            cerr << "TYPE_HOLDER item with cmp_type " << item->cmp_type() << endl;
-            break;
-        }
-
-        default:
-        {
-            cerr << "UNKNOWN_ITEM type " << item->type() << endl;
-            break;
-        }
-    }
-}
-#endif
-
 void buildNestedTableOuterJoin(gp_walk_info& gwi, TABLE_LIST* table_ptr)
 {
     TABLE_LIST* table;
@@ -1196,9 +458,6 @@ void buildNestedTableOuterJoin(gp_walk_info& gwi, TABLE_LIST* table_ptr)
         if (table->on_expr)
         {
             Item_cond* expr = reinterpret_cast<Item_cond*>(table->on_expr);
-#ifdef DEBUG_WALK_COND
-            expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-#endif
             expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
         }
 
@@ -1260,16 +519,6 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
                 }
             }
 
-#ifdef DEBUG_WALK_COND
-
-            if (table_ptr->alias.length)
-                cerr << table_ptr->alias.str;
-            else if (table_ptr->alias.length)
-                cerr << table_ptr->alias.str;
-
-            cerr << " outer table expression: " << endl;
-            expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
-#endif
             expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
         }
         else if (table_ptr->nested_join && &(table_ptr->nested_join->join_list))
@@ -1300,16 +549,6 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             embeddingSet.insert(table_ptr->embedding);
             Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->embedding->on_expr);
 
-#ifdef DEBUG_WALK_COND
-            cerr << "inner tables: " << endl;
-            set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
-
-            for (it = gwi_outer.innerTables.begin(); it != gwi_outer.innerTables.end(); ++it)
-                cerr << (*it) << " ";
-
-            cerr << endl;
-            expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
-#endif
             expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
         }
         // @bug 2849
@@ -1321,7 +560,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             {
                 if (gwi.thd->derived_tables_processing)
                 {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                    MIGR::infinidb_vtable.isUnion = false;
                     gwi.cs_vtable_is_update_with_derive = true;
                     return -1;
@@ -1346,10 +585,6 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
                     {
                         gwi_outer.innerTables.clear();
                         Item_cond* expr = reinterpret_cast<Item_cond*>(curr->on_expr);
-
-#ifdef DEBUG_WALK_COND
-                        expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
-#endif
                         expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
                     }
                 }
@@ -1741,7 +976,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         // @bug5811. This filter string is for cross engine to use.
         // Use real table name.
         ifp->print(&str, QT_ORDINARY);
-        IDEBUG(cerr << str.ptr() << endl);
 
         if (str.ptr())
             cf->data(str.c_ptr());
@@ -2115,7 +1349,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                  (current_thd->lex->sql_command == SQLCOM_DELETE) ||
                  (current_thd->lex->sql_command == SQLCOM_DELETE_MULTI)))
         {
-            IDEBUG( cerr << "deleted func with 2 const columns" << endl );
             delete rhs;
             delete lhs;
             return false;
@@ -2169,7 +1402,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             lhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_lhs << endl);
                         }
                     }
 
@@ -2186,7 +1418,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             rhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_rhs << endl );
                         }
                     }
 
@@ -2903,8 +2134,6 @@ CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field)
             break;
 
         default:
-            IDEBUG( cerr << "fieldType_MysqlToIDB:: Unknown result type of MySQL "
-                    << field->result_type() << endl );
             break;
     }
 
@@ -3021,8 +2250,6 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
             break;
 
         default:
-            IDEBUG( cerr << "colType_MysqlToIDB:: Unknown result type of MySQL "
-                    << item->result_type() << endl );
             break;
     }
 
@@ -4383,11 +3610,6 @@ ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
     ParseTree* pt = 0;
     Item_cond* icp = (Item_cond*)item;
-#ifdef DEBUG_WALK_COND
-    // debug
-    cerr << "Build Parsetree: " << endl;
-    icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-#endif
     //@bug5044. PPSTFIX walking should always be treated as WHERE clause filter
     ClauseType clauseType = gwi.clauseType;
     gwi.clauseType = WHERE;
@@ -5310,9 +4532,6 @@ void gp_walk(const Item* item, void* arg)
                 else
                     gwip->rcWorkStack.push(cc);
 
-                if (str)
-                    IDEBUG( cerr << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
-
                 break;
             }
 
@@ -5622,7 +4841,7 @@ void gp_walk(const Item* item, void* arg)
                 gwip->hasSubSelect = true;
                 gwip->subQuery = existsSub;
                 gwip->ptWorkStack.push(existsSub->transform());
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
                 // recover original
                 gwip->subQuery = orig;
@@ -5927,7 +5146,6 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
         {
             // item is a Item_cache_wrapper. Shouldn't get here.
             // WIP Why
-            IDEBUG(std::cerr << "EXPR_CACHE_ITEM in parse_item\n" << std::endl);
             gwi->fatalParseError = true;
             // DRRTUY The questionable error text. I've seen
             // ERR_CORRELATED_SUB_OR
@@ -5972,10 +5190,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     bool isUnion,
     bool isPushdownHand)
 {
-#ifdef DEBUG_WALK_COND
-    cerr << "getSelectPlan()" << endl;
-#endif
-
     // by pass the derived table resolve phase of mysql
     if ( !isPushdownHand &&
             !(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
@@ -5983,7 +5197,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //        MIGR::infinidb_vtable.isUnion = false;
         return -1;
     }
@@ -6057,18 +5271,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     TABLE_LIST* table_ptr = select_lex.get_table_list();
     CalpontSelectExecutionPlan::SelectList derivedTbList;
 
-// DEBUG
-#ifdef DEBUG_WALK_COND
-    List_iterator<TABLE_LIST> sj_list_it(select_lex.sj_nests);
-    TABLE_LIST* sj_nest;
-
-    while ((sj_nest = sj_list_it++))
-    {
-        cerr << sj_nest->db.str << "." << sj_nest->table_name.str << endl;
-    }
-
-#endif
-
     // @bug 1796. Remember table order on the FROM list.
     gwi.clauseType = FROM;
 
@@ -6118,7 +5320,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
@@ -6148,9 +5350,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, infiniDB);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-#ifdef DEBUG_WALK_COND
-                cerr << tn << endl;
-#endif
             }
         }
 
@@ -6190,7 +5389,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     // is_unit_op() give a segv for derived_handler's SELECT_LEX
     if (!isUnion && select_lex.master_unit()->is_unit_op())
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //        MIGR::infinidb_vtable.isUnion = true;
         CalpontSelectExecutionPlan::SelectList unionVec;
         SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
@@ -6233,17 +5432,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             if (sl == select_lex.master_unit()->union_distinct)
                 distUnionNum = unionVec.size();
 
-            /*#ifdef DEBUG_WALK_COND
-            			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
-            			JOIN* join = sl->join;
-            			Item_cond* icp = 0;
-            			if (join != 0)
-            				icp = reinterpret_cast<Item_cond*>(join->conds);
-            			if (icp)
-            				icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-            			IDEBUG ( cerr << *plan << endl );
-            			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
-            #endif*/
         }
 
         csep->unionVec(unionVec);
@@ -6267,11 +5455,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
 //#endif
         gwi.fatalParseError = false;
-#ifdef DEBUG_WALK_COND
-        cerr << "------------------ WHERE -----------------------" << endl;
-        icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cerr << "------------------------------------------------\n" << endl;
-#endif
 
         icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
@@ -6283,7 +5466,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = false;
                 gwi.cs_vtable_is_update_with_derive = true;
                 return -1;
@@ -6422,20 +5605,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     }
 
     gwi.clauseType = SELECT;
-#ifdef DEBUG_WALK_COND
-    {
-        cerr << "------------------- SELECT --------------------" << endl;
-        List_iterator_fast<Item> it(select_lex.item_list);
-        Item* item;
-
-        while ((item = it++))
-        {
-            debug_walk(item, 0);
-        }
-
-        cerr << "-----------------------------------------------\n" << endl;
-    }
-#endif
 
     // populate returnedcolumnlist and columnmap
     List_iterator_fast<Item> it(select_lex.item_list);
@@ -6841,20 +6010,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-#ifdef DEBUG_WALK_COND
-                cerr << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
-                JOIN* join = sub->get_select_lex()->join;
-
-                if (join)
-                {
-                    Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
-
-                    if (cond)
-                        cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-                }
-
-                cerr << "Finish SELECT clause subselect item traversing" << endl;
-#endif
                 SelectSubQuery* selectSub = new SelectSubQuery(gwi, sub);
                 //selectSub->gwip(&gwi);
                 SCSEP ssub = selectSub->transform();
@@ -6986,11 +6141,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     if (select_lex.having != 0)
     {
         Item_cond* having = reinterpret_cast<Item_cond*>(select_lex.having);
-#ifdef DEBUG_WALK_COND
-        cerr << "------------------- HAVING ---------------------" << endl;
-        having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cerr << "------------------------------------------------\n" << endl;
-#endif
         having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
         if (gwi.fatalParseError)
@@ -7999,12 +7149,6 @@ int cp_get_plan(THD* thd, SCSEP& csep)
     else if (status < 0)
         return status;
 
-#ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
-
     // Derived table projection and filter optimization.
     derivedTableOptimization(thd, csep);
 
@@ -8116,12 +7260,6 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     gwi.thd = thd;
     int status = getGroupPlan(gwi, *select_lex, csep, gi);
 
-#ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
-
     if (status > 0)
         return ER_INTERNAL_ERROR;
     else if (status < 0)
@@ -8142,11 +7280,6 @@ int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep, gp_walk
     else if (status < 0)
         return status;
 
-#ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_derived_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
     // Derived table projection and filter optimization.
     derivedTableOptimization(thd, csep);
     return 0;
@@ -8162,11 +7295,6 @@ int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep, gp_walk_i
     else if (status < 0)
         return status;
 
-#ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_select_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
     // Derived table projection and filter optimization.
     derivedTableOptimization(thd, csep);
 
@@ -8220,12 +7348,6 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
         // The filter could have any kind of op
         if ( originalSC->sameColumn(rc) )
         {
-#ifdef DEBUG_WALK_COND
-            cerr << "buildConstColFromFilter() replaced " << endl;
-            cerr << simpleCol->toString() << endl;
-            cerr << " with " << endl;
-            cerr << constCol << endl;
-#endif
             result = constCol;
         }
     }
@@ -8235,10 +7357,6 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
 
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_group_info& gi, bool isUnion)
 {
-#ifdef DEBUG_WALK_COND
-    cerr << "getGroupPlan()" << endl;
-#endif
-
     // rollup is currently not supported
     if (select_lex.olap == ROLLUP_TYPE)
     {
@@ -8290,18 +7408,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     TABLE_LIST* table_ptr = gi.groupByTables;
     CalpontSelectExecutionPlan::SelectList derivedTbList;
 
-// DEBUG
-#ifdef DEBUG_WALK_COND
-    List_iterator<TABLE_LIST> sj_list_it(select_lex.sj_nests);
-    TABLE_LIST* sj_nest;
-
-    while ((sj_nest = sj_list_it++))
-    {
-        cerr << sj_nest->db.str << "." << sj_nest->table_name.str << endl;
-    }
-
-#endif
-
     // @bug 1796. Remember table order on the FROM list.
     gwi.clauseType = FROM;
 
@@ -8352,7 +7458,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
@@ -8383,9 +7489,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, infiniDB);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-#ifdef DEBUG_WALK_COND
-                cerr << tn << endl;
-#endif
             }
         }
 
@@ -8435,11 +7538,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
 //#endif
         gwi.fatalParseError = false;
-#ifdef DEBUG_WALK_COND
-        cerr << "------------------ WHERE -----------------------" << endl;
-        icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cerr << "------------------------------------------------\n" << endl;
-#endif
 
         icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
@@ -8451,7 +7549,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = false;
                 return -1;
             }
@@ -8520,28 +7618,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     if (filters)
     {
         csep->filters(filters);
-#ifdef DEBUG_WALK_COND
-        std::string aTmpDir(startup::StartUp::tmpDir());
-        aTmpDir = aTmpDir + "/filter1.dot";
-        filters->drawTree(aTmpDir);
-#endif
     }
 
     gwi.clauseType = SELECT;
-#ifdef DEBUG_WALK_COND
-    {
-        cerr << "------------------- SELECT --------------------" << endl;
-        List_iterator_fast<Item> it(*gi.groupByFields);
-        Item* item;
-
-        while ((item = it++))
-        {
-            debug_walk(item, 0);
-        }
-
-        cerr << "-----------------------------------------------\n" << endl;
-    }
-#endif
 
     // populate returnedcolumnlist and columnmap
     List_iterator_fast<Item> it(*gi.groupByFields);
@@ -9007,20 +8086,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-#ifdef DEBUG_WALK_COND
-                cerr << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
-                JOIN* join = sub->get_select_lex()->join;
-
-                if (join)
-                {
-                    Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
-
-                    if (cond)
-                        cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-                }
-
-                cerr << "Finish SELECT clause subselect item traversing" << endl;
-#endif
                 SelectSubQuery* selectSub = new SelectSubQuery(gwi, sub);
                 //selectSub->gwip(&gwi);
                 SCSEP ssub = selectSub->transform();
@@ -9132,11 +8197,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     if (gi.groupByHaving != 0)
     {
         Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
-#ifdef DEBUG_WALK_COND
-        cerr << "------------------- HAVING ---------------------" << endl;
-        having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cerr << "------------------------------------------------\n" << endl;
-#endif
         having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
         if (gwi.fatalParseError)

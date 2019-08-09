@@ -2121,9 +2121,6 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
         return 0;
 
     std::string command("COMMIT");
-#ifdef INFINIDB_DEBUG
-    cout << "COMMIT" << endl;
-#endif
     rc = ProcessCommandStatement(thd, command, ci);
     return rc;
 }
@@ -2131,9 +2128,6 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
 int ha_calpont_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci)
 {
     int rc = 0;
-#ifdef INFINIDB_DEBUG
-    cout << "ROLLBACK" << endl;
-#endif
 
     if (useHdfs)
     {
@@ -2151,9 +2145,6 @@ int ha_calpont_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_connect
 int ha_calpont_impl_close_connection_ (handlerton* hton, THD* thd, cal_connection_info& ci )
 {
     int rc = 0;
-#ifdef INFINIDB_DEBUG
-    cout << "Close connection session ID " << thd->thread_id << endl;
-#endif
 
     if ( !ci.dmlProc )
     {

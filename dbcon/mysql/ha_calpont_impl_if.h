@@ -45,13 +45,6 @@ struct st_ha_create_information;
 #include "sm.h"
 #include "functor.h"
 
-/** Debug macro */
-#ifdef INFINIDB_DEBUG
-#define IDEBUG(x) {x;}
-#else
-#define IDEBUG(x) {}
-#endif
-
 namespace execplan
 {
 class ReturnedColumn;
@@ -388,9 +381,6 @@ execplan::ParseTree* setDerivedFilter(THD* thd, execplan::ParseTree*& n,
                                       execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
 void derivedTableOptimization(THD* thd, execplan::SCSEP& csep);
 
-#ifdef DEBUG_WALK_COND
-void debug_walk(const Item* item, void* arg);
-#endif
 }
 
 #endif
