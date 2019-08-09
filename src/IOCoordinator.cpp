@@ -307,7 +307,6 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
     MetadataFile metadata = MetadataFile(filename, MetadataFile::no_create_t(),true);
     if (!metadata.exists())
     {
-    	logger->log(LOG_CRIT,"IOCoordinator::write():metadata exist check failed.");
         errno = ENOENT;
         return -1;
     }
@@ -325,6 +324,8 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             {
                 // first object in the list so start at offset and
                 // write to end of oject or all the data
+                // XXXBEN: FIX code here so that writes will use greater of
+                // 			objectSize or i-> offset in case objectSize was decreased.
                 objectOffset = offset - i->offset;
                 writeLength = min((objectSize - objectOffset),dataRemaining);
             }
@@ -338,16 +339,27 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             err = replicator->addJournalEntry((firstDir/i->key),&data[count],objectOffset,writeLength);
-            assert((uint) err == writeLength);
+            //assert((uint) err == writeLength);
             
             if (err <= 0)
             {
+                //log error and abort
+                logger->log(LOG_ERR,"IOCoordinator::write(): Failed addJournalEntry. Journal file likely has partial write of data and incorrect length.");
+                return -1;
+            }
+            else if (err < writeLength)
+            {
                 // XXXPAT: Count hasn't been updated yet, so I'm not sure what we're trying to do here.
                 // There's another block below that looks similar.  Also similar blocks in append().
+                dataRemaining -= err;
+                count += err;
+                iocBytesWritten += err;
                 if ((count + objectOffset) > i->length)
                     metadata.updateEntryLength(i->offset, (count + objectOffset));
+                cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
+                synchronizer->newJournalEntry(firstDir, i->key, err+JOURNAL_ENTRY_HEADER_SIZE);
                 replicator->updateMetadata(filename, metadata);
-                logger->log(LOG_ERR,"IOCoordinator::write(): object failed to complete write, %u of %u bytes written.",count,length);
+                logger->log(LOG_ERR,"IOCoordinator::write(): addJournalEntry incomplete write, %u of %u bytes written.",count,length);
                 return count;
             }
 
@@ -392,18 +404,27 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
 
         // send to replicator
         err = replicator->newObject((firstDir/newObject.key),&data[count],objectOffset,writeLength);
-        assert((uint) err == writeLength);
+        //assert((uint) err == writeLength);
         if (err <= 0)
         {
-            // update metadataObject length to reflect what awas actually written
+            //log error and abort
+            logger->log(LOG_ERR,"IOCoordinator::write(): Failed newObject.");
+            return -1;
+        }
+        else if (err < writeLength)
+        {
+            dataRemaining -= err;
+            count += err;
+            iocBytesWritten += err;
             if ((count + objectOffset) > newObject.length)
                 metadata.updateEntryLength(newObject.offset, (count + objectOffset));
+            cache->newObject(firstDir, newObject.key,err + objectOffset);
+            newObjectKeys.push_back(newObject.key);
+            synchronizer->newObjects(firstDir, newObjectKeys);
             replicator->updateMetadata(filename, metadata);
-            logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
+            logger->log(LOG_ERR,"IOCoordinator::write(): newObject incomplete write, %u of %u bytes written.",count,length);
             return count;
-            //log error and abort
         }
-
         cache->newObject(firstDir, newObject.key,writeLength + objectOffset);
         newObjectKeys.push_back(newObject.key);
 
@@ -459,10 +480,21 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             //cache->makeSpace(writeLength+JOURNAL_ENTRY_HEADER_SIZE);
 
             err = replicator->addJournalEntry((firstDir/i->key),&data[count],i->length,writeLength);
-            assert((uint) err == writeLength);
+            //assert((uint) err == writeLength);
             if (err <= 0)
             {
+                //log error and abort
+                logger->log(LOG_ERR,"IOCoordinator::append(): Failed addJournalEntry.");
+                return -1;
+            }
+            else if (err < writeLength)
+            {
+                count += err;
+                dataRemaining -= err;
+                iocBytesWritten += err;
                 metadata.updateEntryLength(i->offset, (count + i->length));
+                cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
+                synchronizer->newJournalEntry(firstDir, i->key, err+JOURNAL_ENTRY_HEADER_SIZE);
                 replicator->updateMetadata(filename, metadata);
                 logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
                 goto out;
@@ -496,15 +528,26 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
 
         // write the new object
         err = replicator->newObject((firstDir/newObject.key),&data[count],0,writeLength);
-        assert((uint) err == writeLength);
+        //assert((uint) err == writeLength);
         if (err <= 0)
         {
+            //log error and abort
+            logger->log(LOG_ERR,"IOCoordinator::append(): Failed newObject.");
+            return -1;
+        }
+        else if (err < writeLength)
+        {
+            count += err;
+            dataRemaining -= err;
+            iocBytesWritten += err;
             // update metadataObject length to reflect what awas actually written
             metadata.updateEntryLength(newObject.offset, (count));
+            cache->newObject(firstDir, newObject.key,err);
+            newObjectKeys.push_back(newObject.key);
+            synchronizer->newObjects(firstDir, newObjectKeys);
             replicator->updateMetadata(filename, metadata);
             logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
             goto out;
-            //log error and abort
         }
         cache->newObject(firstDir, newObject.key,writeLength);
         newObjectKeys.push_back(newObject.key);
