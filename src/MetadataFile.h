@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <vector>
 #include <iostream>
-#include <set>
+#include <unordered_map>
 #include <boost/filesystem/path.hpp>
 
 namespace storagemanager
@@ -59,6 +59,9 @@ class MetadataFile
         void removeEntry(off_t offset);
         void removeAllEntries();
         
+        // removes p from the json cache.  p should include the .meta extension
+        static void deletedMeta(const boost::filesystem::path &p);
+        
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
         static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);
         static std::string getNewKey(std::string sourceName, size_t offset, size_t length);
@@ -88,17 +91,20 @@ class MetadataFile
   
         static void printKPIs();
               
+        typedef boost::shared_ptr<boost::property_tree::ptree> Jsontree_t;
     private:
         MetadataConfig *mpConfig;
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;
         boost::filesystem::path mFilename;
-        boost::shared_ptr<boost::property_tree::ptree> jsontree;
+        Jsontree_t jsontree;
         //std::set<metadataObject> mObjects;
         bool _exists;
         void makeEmptyJsonTree();
 };
+
+
 
 }
 

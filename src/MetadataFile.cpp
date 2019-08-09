@@ -17,12 +17,85 @@
 
 using namespace std;
 namespace bpt = boost::property_tree;
+namespace bf = boost::filesystem;
 
 namespace
 {   
+boost::mutex mutex;
+storagemanager::MetadataFile::MetadataConfig *inst = NULL;
+uint64_t metadataFilesAccessed = 0;
+
+
+/* better place to put this? */
+class MetadataCache
+{
+public:
+    MetadataCache();
+    storagemanager::MetadataFile::Jsontree_t get(const boost::filesystem::path &);
+    void put(const boost::filesystem::path &, const storagemanager::MetadataFile::Jsontree_t &);
+    void erase(const boost::filesystem::path &);
+    
+private:
+    // there's a more efficient way to do this, KISS for now.
+    typedef std::list<std::string> Lru_t;
+    typedef std::unordered_map<std::string, 
+        std::pair<storagemanager::MetadataFile::Jsontree_t, Lru_t::iterator> > Lookup_t;
+    Lookup_t lookup;
+    Lru_t lru;
+    uint max_lru_size;
     boost::mutex mutex;
-    storagemanager::MetadataFile::MetadataConfig *inst = NULL;
-    uint64_t metadataFilesAccessed = 0;
+};
+    
+MetadataCache::MetadataCache() : max_lru_size(2000)
+{}
+
+storagemanager::MetadataFile::Jsontree_t MetadataCache::get(const bf::path &p)
+{
+    boost::unique_lock<boost::mutex> s(mutex);
+    
+    auto it = lookup.find(p.string());
+    if (it != lookup.end()) 
+    {
+        lru.splice(lru.end(), lru, it->second.second);
+        return it->second.first;
+    }
+    return storagemanager::MetadataFile::Jsontree_t();
+}
+
+// note, does not change an existing jsontree.  This should be OK.
+void MetadataCache::put(const bf::path &p, const storagemanager::MetadataFile::Jsontree_t &j)
+{
+    string sp(p.string());
+    
+    boost::unique_lock<boost::mutex> s(mutex);
+    auto it = lookup.find(sp);
+    if (it == lookup.end()) 
+    {
+        while (lru.size() >= max_lru_size)
+        {
+            string &evict = lru.front();
+            lookup.erase(evict);
+            lru.pop_front();
+        }
+        lru.push_back(sp);
+        Lru_t::iterator last = lru.end();
+        --last;
+        lookup.insert(make_pair(sp, make_pair(j, last)));
+    }
+}
+
+void MetadataCache::erase(const bf::path &p)
+{
+    boost::unique_lock<boost::mutex> s(mutex);
+    auto it = lookup.find(p.string());
+    if (it != lookup.end())
+    {
+        lru.erase(it->second.second);
+        lookup.erase(it);
+    }
+}
+  
+MetadataCache jsonCache;    
 }
 
 namespace storagemanager
@@ -99,19 +172,23 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
     
     mFilename = mpConfig->msMetadataPath / (filename.string() + ".meta");
 
-    if (boost::filesystem::exists(mFilename))
+    jsontree = jsonCache.get(mFilename);
+    if (!jsontree)
     {
-        jsontree.reset(new bpt::ptree());
-        boost::property_tree::read_json(mFilename.string(), *jsontree);
-        mVersion = jsontree->get<int>("version");
-        mRevision = jsontree->get<int>("revision");
-    }
-    else
-    {
-        mVersion = 1;
-        mRevision = 1;
-        makeEmptyJsonTree();
-        writeMetadata(filename);
+        if (boost::filesystem::exists(mFilename))
+        {
+            jsontree.reset(new bpt::ptree());
+            boost::property_tree::read_json(mFilename.string(), *jsontree);
+            mVersion = jsontree->get<int>("version");
+            mRevision = jsontree->get<int>("revision");
+        }
+        else
+        {
+            mVersion = 1;
+            mRevision = 1;
+            makeEmptyJsonTree();
+            writeMetadata(filename);
+        }
     }
     ++metadataFilesAccessed;
 }
@@ -126,20 +203,24 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename, no_create_t,
     if(appendExt)
         mFilename = mpConfig->msMetadataPath /(mFilename.string() + ".meta");
 
-    if (boost::filesystem::exists(mFilename))
+    jsontree = jsonCache.get(mFilename);
+    if (!jsontree)
     {
-        _exists = true;
-        jsontree.reset(new bpt::ptree());
-        boost::property_tree::read_json(mFilename.string(), *jsontree);
-        mVersion = jsontree->get<int>("version");
-        mRevision = jsontree->get<int>("revision");
-    }
-    else
-    {
-        mVersion = 1;
-        mRevision = 1;
-        _exists = false;
-        makeEmptyJsonTree();
+        if (boost::filesystem::exists(mFilename))
+        {
+            _exists = true;
+            jsontree.reset(new bpt::ptree());
+            boost::property_tree::read_json(mFilename.string(), *jsontree);
+            mVersion = jsontree->get<int>("version");
+            mRevision = jsontree->get<int>("revision");
+        }
+        else
+        {
+            mVersion = 1;
+            mRevision = 1;
+            _exists = false;
+            makeEmptyJsonTree();
+        }
     }
     ++metadataFilesAccessed;
 }
@@ -272,7 +353,13 @@ int MetadataFile::writeMetadata(const boost::filesystem::path &filename)
         boost::filesystem::create_directories(pMetadataFilename.parent_path());
     write_json(pMetadataFilename.string(), *jsontree);
     _exists = true;
-    mFilename = pMetadataFilename;
+    if (mFilename != pMetadataFilename)
+    {
+        Jsontree_t newTree(new bpt::ptree(*jsontree));
+        jsontree = newTree;
+        mFilename = pMetadataFilename;
+    }
+    jsonCache.put(mFilename, jsontree);
 
     return error;
 }
@@ -309,6 +396,11 @@ void MetadataFile::removeEntry(off_t offset)
 void MetadataFile::removeAllEntries()
 {
     jsontree->get_child("objects").clear();
+}
+
+void MetadataFile::deletedMeta(const bf::path &p)
+{
+    jsonCache.erase(p);
 }
 
 // There are more efficient ways to do it.  Optimize if necessary.
