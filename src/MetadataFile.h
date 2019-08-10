@@ -49,7 +49,8 @@ class MetadataFile
         // returns the objects needed to update
         std::vector<metadataObject> metadataRead(off_t offset, size_t length) const;
         // updates the metadatafile with new object
-        int writeMetadata(const boost::filesystem::path &filename);
+        //int writeMetadata(const boost::filesystem::path &filename);
+        int writeMetadata();
         
         // updates the name and length fields of an entry, given the offset
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
@@ -59,7 +60,7 @@ class MetadataFile
         void removeEntry(off_t offset);
         void removeAllEntries();
         
-        // removes p from the json cache.  p should include the .meta extension
+        // removes p from the json cache.  p should be a fully qualified metadata file
         static void deletedMeta(const boost::filesystem::path &p);
         
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.

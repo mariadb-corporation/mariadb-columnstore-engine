@@ -348,7 +348,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
                 // There's another block below that looks similar.  Also similar blocks in append().
                 if ((count + objectOffset) > i->length)
                     metadata.updateEntryLength(i->offset, (count + objectOffset));
-                replicator->updateMetadata(filename, metadata);
+                replicator->updateMetadata(metadata);
                 logger->log(LOG_ERR,"IOCoordinator::write(): object failed to complete write, %u of %u bytes written.",count,length);
                 return count;
             }
@@ -400,7 +400,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             // update metadataObject length to reflect what awas actually written
             if ((count + objectOffset) > newObject.length)
                 metadata.updateEntryLength(newObject.offset, (count + objectOffset));
-            replicator->updateMetadata(filename, metadata);
+            replicator->updateMetadata(metadata);
             logger->log(LOG_ERR,"IOCoordinator::write(): newObject failed to complete write, %u of %u bytes written.",count,length);
             return count;
             //log error and abort
@@ -415,7 +415,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
     }
     synchronizer->newObjects(firstDir, newObjectKeys);
 
-    replicator->updateMetadata(filename, metadata);
+    replicator->updateMetadata(metadata);
 
     return count;
 }
@@ -465,7 +465,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             if (err <= 0)
             {
                 metadata.updateEntryLength(i->offset, (count + i->length));
-                replicator->updateMetadata(filename, metadata);
+                replicator->updateMetadata(metadata);
                 logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
                 goto out;
             }
@@ -503,7 +503,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         {
             // update metadataObject length to reflect what awas actually written
             metadata.updateEntryLength(newObject.offset, (count));
-            replicator->updateMetadata(filename, metadata);
+            replicator->updateMetadata(metadata);
             logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
             goto out;
             //log error and abort
@@ -516,7 +516,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         iocBytesWritten += writeLength;
     }
     synchronizer->newObjects(firstDir, newObjectKeys);
-    replicator->updateMetadata(filename, metadata);
+    replicator->updateMetadata(metadata);
     
     // had to add this hack to prevent deadlock
 out:
@@ -542,7 +542,7 @@ int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
     
     if ((openmode & O_CREAT) && !meta.exists()) {
         ++filesCreated;
-        replicator->updateMetadata(filename, meta);   // this will end up creating filename
+        replicator->updateMetadata(meta);   // this will end up creating filename
     }
     if ((openmode & O_TRUNC) && meta.exists())
         _truncate(filename, 0, s.get());
@@ -655,7 +655,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
     
-    err = replicator->updateMetadata(bfpath, meta);
+    err = replicator->updateMetadata(meta);
     if (err)
         return err;
     //lock.unlock();   <-- ifExistsThenDelete() needs the file lock held during the call
@@ -939,7 +939,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         return -1;
     }
     lock.unlock();
-    replicator->updateMetadata(filename2, meta2);
+    replicator->updateMetadata(meta2);
     lock2.unlock();
     
     for (auto &jEntry : newJournalEntries)

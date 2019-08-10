@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
-    for (int i=0; i<SIGRTMAX; i++)
+    for (int i=1; i<SIGRTMAX; i++)
     {
         sa.sa_handler = shutdownSM;
         if (i != SIGCONT && i != SIGKILL && i != SIGSTOP)

@@ -647,7 +647,7 @@ bool IOCTruncate()
     bf::path secondObjectPath = cloudPath / meta.addMetadataObject(testFile, 8192).key;
     bf::path cachedSecondObject = cachePath/secondObjectPath.filename();
     makeTestObject(secondObjectPath.string().c_str());
-    meta.writeMetadata(testFile);
+    meta.writeMetadata();
     
     // make sure there are 16k bytes, and the data is valid before going forward
     memset(buf, 0, 16384);
