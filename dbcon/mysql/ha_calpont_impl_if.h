@@ -45,13 +45,6 @@ struct st_ha_create_information;
 #include "sm.h"
 #include "functor.h"
 
-/** Debug macro */
-#ifdef INFINIDB_DEBUG
-#define IDEBUG(x) {x;}
-#else
-#define IDEBUG(x) {}
-#endif
-
 namespace execplan
 {
 class ReturnedColumn;

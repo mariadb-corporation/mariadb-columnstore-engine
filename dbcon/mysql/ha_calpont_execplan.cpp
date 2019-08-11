@@ -1321,7 +1321,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             {
                 if (gwi.thd->derived_tables_processing)
                 {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                    MIGR::infinidb_vtable.isUnion = false;
                     gwi.cs_vtable_is_update_with_derive = true;
                     return -1;
@@ -1741,7 +1741,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         // @bug5811. This filter string is for cross engine to use.
         // Use real table name.
         ifp->print(&str, QT_ORDINARY);
-        IDEBUG(cerr << str.ptr() << endl);
 
         if (str.ptr())
             cf->data(str.c_ptr());
@@ -2115,7 +2114,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                  (current_thd->lex->sql_command == SQLCOM_DELETE) ||
                  (current_thd->lex->sql_command == SQLCOM_DELETE_MULTI)))
         {
-            IDEBUG( cerr << "deleted func with 2 const columns" << endl );
             delete rhs;
             delete lhs;
             return false;
@@ -2169,7 +2167,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             lhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_lhs << endl);
                         }
                     }
 
@@ -2186,7 +2183,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             rhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_rhs << endl );
                         }
                     }
 
@@ -2903,8 +2899,6 @@ CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field)
             break;
 
         default:
-            IDEBUG( cerr << "fieldType_MysqlToIDB:: Unknown result type of MySQL "
-                    << field->result_type() << endl );
             break;
     }
 
@@ -3021,8 +3015,6 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
             break;
 
         default:
-            IDEBUG( cerr << "colType_MysqlToIDB:: Unknown result type of MySQL "
-                    << item->result_type() << endl );
             break;
     }
 
@@ -5310,9 +5302,6 @@ void gp_walk(const Item* item, void* arg)
                 else
                     gwip->rcWorkStack.push(cc);
 
-                if (str)
-                    IDEBUG( cerr << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
-
                 break;
             }
 
@@ -5622,7 +5611,7 @@ void gp_walk(const Item* item, void* arg)
                 gwip->hasSubSelect = true;
                 gwip->subQuery = existsSub;
                 gwip->ptWorkStack.push(existsSub->transform());
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
                 // recover original
                 gwip->subQuery = orig;
@@ -5927,7 +5916,6 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
         {
             // item is a Item_cache_wrapper. Shouldn't get here.
             // WIP Why
-            IDEBUG(std::cerr << "EXPR_CACHE_ITEM in parse_item\n" << std::endl);
             gwi->fatalParseError = true;
             // DRRTUY The questionable error text. I've seen
             // ERR_CORRELATED_SUB_OR
@@ -5983,7 +5971,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //        MIGR::infinidb_vtable.isUnion = false;
         return -1;
     }
@@ -6118,7 +6106,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
@@ -6190,7 +6178,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     // is_unit_op() give a segv for derived_handler's SELECT_LEX
     if (!isUnion && select_lex.master_unit()->is_unit_op())
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //        MIGR::infinidb_vtable.isUnion = true;
         CalpontSelectExecutionPlan::SelectList unionVec;
         SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
@@ -6234,15 +6222,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 distUnionNum = unionVec.size();
 
             /*#ifdef DEBUG_WALK_COND
-            			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
             			JOIN* join = sl->join;
             			Item_cond* icp = 0;
             			if (join != 0)
             				icp = reinterpret_cast<Item_cond*>(join->conds);
             			if (icp)
             				icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-            			IDEBUG ( cerr << *plan << endl );
-            			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
             #endif*/
         }
 
@@ -6283,7 +6268,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = false;
                 gwi.cs_vtable_is_update_with_derive = true;
                 return -1;
@@ -8352,7 +8337,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
@@ -8451,7 +8436,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
+// MCOL-2178 isUnion member only assigned, never used
 //                MIGR::infinidb_vtable.isUnion = false;
                 return -1;
             }

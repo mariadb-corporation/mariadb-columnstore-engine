@@ -51,13 +51,6 @@ using namespace logging;
 
 //#include "idb_mysql.h"
 
-/** Debug macro */
-#ifdef INFINIDB_DEBUG
-#define IDEBUG(x) {x;}
-#else
-#define IDEBUG(x) {}
-#endif
-
 #define LOG_TO_CERR
 
 namespace execplan
