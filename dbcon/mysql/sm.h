@@ -198,9 +198,9 @@ typedef boost::shared_ptr<cpsm_tplsch_t> sp_cpsm_tplsch_t;
 class cpsm_conhdl_t
 {
 public:
-    cpsm_conhdl_t(time_t v, const uint32_t sid, bool infinidb_local_query) :
+    cpsm_conhdl_t(time_t v, const uint32_t sid, bool columnstore_local_query) :
         value(v), sessionID(sid), queryState (NO_QUERY),
-        exeMgr( new execplan::ClientRotator(sid, "ExeMgr", infinidb_local_query)),
+        exeMgr( new execplan::ClientRotator(sid, "ExeMgr", columnstore_local_query)),
         tblinfo_idx(0), idxinfo_idx(0), curFetchTb (0)
     { }
 
@@ -275,7 +275,7 @@ struct cpsm_tid_t
     int value;
 };
 
-extern status_t sm_init(uint32_t, cpsm_conhdl_t**, uint32_t infinidb_local_query = false);
+extern status_t sm_init(uint32_t, cpsm_conhdl_t**, uint32_t columnstore_local_query = false);
 extern status_t sm_cleanup(cpsm_conhdl_t*);
 
 extern status_t tpl_open(tableid_t, cpsm_tplh_t*, cpsm_conhdl_t*);

@@ -53,7 +53,7 @@ bool sFlg;
 void usage()
 {
     cout << "usage: reset_locks [-vnh]" << endl;
-    cout << "   reset all InfiniDB shared memory locks" << endl;
+    cout << "   reset all ColumnStore shared memory locks" << endl;
     cout << "   -h display this help" << endl;
     cout << "   -v verbose output" << endl;
     cout << "   -s skip session mgr resets" << endl;

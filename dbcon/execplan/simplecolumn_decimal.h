@@ -60,7 +60,7 @@ public:
     SimpleColumn_Decimal(const std::string& schema,
                          const std::string& table,
                          const std::string& col,
-                         const bool isInfiniDB,
+                         const bool isColumnStore,
                          const uint32_t sessionID = 0);
     SimpleColumn_Decimal(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
@@ -107,9 +107,9 @@ template<int len>
 SimpleColumn_Decimal<len>::SimpleColumn_Decimal(const std::string& schema,
         const std::string& table,
         const std::string& col,
-        const bool isInfiniDB,
+        const bool isColumnStore,
         const uint32_t sessionID) :
-    SimpleColumn(schema, table, col, isInfiniDB, sessionID)
+    SimpleColumn(schema, table, col, isColumnStore, sessionID)
 {
     setNullVal();
 }

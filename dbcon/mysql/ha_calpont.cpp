@@ -71,7 +71,7 @@ pthread_mutex_t calpont_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* calpont_get_key(INFINIDB_SHARE* share, size_t* length,
+static uchar* calpont_get_key(COLUMNSTORE_SHARE* share, size_t* length,
                               my_bool not_used __attribute__((unused)))
 {
     *length = share->table_name_length;

@@ -134,7 +134,7 @@ static MYSQL_THDVAR_BOOL(
 static MYSQL_THDVAR_BOOL(
     double_for_decimal_math,
     PLUGIN_VAR_NOCMDARG,
-    "Enable/disable the InfiniDB to replace DECIMAL with DOUBLE in arithmetic operation.",
+    "Enable/disable for ColumnStore to replace DECIMAL with DOUBLE in arithmetic operation.",
     NULL,
     NULL,
     0
@@ -227,7 +227,7 @@ static MYSQL_THDVAR_ULONG(
 static MYSQL_THDVAR_ULONG(
     local_query,
     PLUGIN_VAR_RQCMDARG,
-    "Enable/disable the Infinidb local PM query only feature.",
+    "Enable/disable the ColumnStore local PM query only feature.",
     NULL,
     NULL,
     0,

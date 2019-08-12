@@ -509,7 +509,7 @@ int main(int argc, char** argv)
 
     if (brm.getSystemReady() < 1)
     {
-        std::cout << "System is not ready.  Verify that InfiniDB "
+        std::cout << "System is not ready.  Verify that ColumnStore "
                   "is up and ready before running this program" << std::endl;
         return 1;
     }

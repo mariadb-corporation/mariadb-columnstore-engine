@@ -5109,11 +5109,11 @@ int ProcessMonitor::changeMyCnf(std::string type)
         // set local query flag if on pm
         if ( (PMwithUM == "y") && config.moduleType() == "pm" )
         {
-            pos = buf.find("infinidb_local_query", 0);
+            pos = buf.find("columnstore_local_query", 0);
 
             if ( pos != string::npos )
             {
-                buf = "infinidb_local_query=1";
+                buf = "columnstore_local_query=1";
 
                 string command = "SET GLOBAL " + buf + ";";
 
@@ -5129,11 +5129,11 @@ int ProcessMonitor::changeMyCnf(std::string type)
         else
         {
             // disable, if needed
-            pos = buf.find("infinidb_local_query", 0);
+            pos = buf.find("columnstore_local_query", 0);
 
             if ( pos != string::npos )
             {
-                buf = "infinidb_local_query=0";
+                buf = "columnstore_local_query=0";
 
                 string command = "SET GLOBAL " + buf + ";";
                 int ret = runMariaDBCommandLine(command);

@@ -139,7 +139,7 @@ ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColu
 SimpleColumn::SimpleColumn():
     ReturnedColumn(),
     fOid (0),
-    fIsInfiniDB (true)
+    fisColumnStore (true)
 {
     fDistinct = false;
 }
@@ -148,7 +148,7 @@ SimpleColumn::SimpleColumn(const string& token, const uint32_t sessionID):
     ReturnedColumn(sessionID),
     fOid (0),
     fData(token),
-    fIsInfiniDB (true)
+    fisColumnStore (true)
 {
     parse (token);
     setOID();
@@ -163,7 +163,7 @@ SimpleColumn::SimpleColumn(const string& schemaName,
     fSchemaName (schemaName),
     fTableName (tableName),
     fColumnName (columnName),
-    fIsInfiniDB (true)
+    fisColumnStore (true)
 {
     setOID();
     fDistinct = false;
@@ -172,15 +172,15 @@ SimpleColumn::SimpleColumn(const string& schemaName,
 SimpleColumn::SimpleColumn(const string& schemaName,
                            const string& tableName,
                            const string& columnName,
-                           const bool isInfiniDB,
+                           const bool isColumnStore,
                            const uint32_t sessionID):
     ReturnedColumn(sessionID),
     fSchemaName (schemaName),
     fTableName (tableName),
     fColumnName (columnName),
-    fIsInfiniDB (isInfiniDB)
+    fisColumnStore (isColumnStore)
 {
-    if (isInfiniDB)
+    if (isColumnStore)
         setOID();
 
     fDistinct = false;
@@ -197,7 +197,7 @@ SimpleColumn::SimpleColumn (const SimpleColumn& rhs, const uint32_t sessionID):
     fIndexName (rhs.indexName()),
     fViewName (rhs.viewName()),
     fTimeZone (rhs.timeZone()),
-    fIsInfiniDB (rhs.isInfiniDB())
+    fisColumnStore (rhs.isColumnStore())
 {
 }
 
@@ -234,7 +234,7 @@ SimpleColumn& SimpleColumn::operator=(const SimpleColumn& rhs)
         fData = rhs.data();
         fSequence = rhs.sequence();
         fDistinct = rhs.distinct();
-        fIsInfiniDB = rhs.isInfiniDB();
+        fisColumnStore = rhs.isColumnStore();
     }
 
     return *this;
@@ -264,7 +264,7 @@ const string SimpleColumn::toString() const
            << cardinality() << '/'
            << joinInfo() << '/'
            << colSource() << '/'
-           << (isInfiniDB() ? "ColumnStore" : "ForeignEngine") << '/'
+           << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << '/'
            << colPosition() << endl;
 
     return output.str();
@@ -352,7 +352,7 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
     b << fData;
     b << fTableAlias;
     b << (uint32_t) fSequence;
-    b << static_cast<const ByteStream::doublebyte>(fIsInfiniDB);
+    b << static_cast<const ByteStream::doublebyte>(fisColumnStore);
 }
 
 void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
@@ -369,7 +369,7 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fData;
     b >> fTableAlias;
     b >> (uint32_t&) fSequence;
-    b >> reinterpret_cast< ByteStream::doublebyte&>(fIsInfiniDB);
+    b >> reinterpret_cast< ByteStream::doublebyte&>(fisColumnStore);
 }
 
 bool SimpleColumn::operator==(const SimpleColumn& t) const
@@ -412,7 +412,7 @@ bool SimpleColumn::operator==(const SimpleColumn& t) const
     if (fReturnAll != t.fReturnAll)
         return false;
 
-    if (fIsInfiniDB != t.fIsInfiniDB)
+    if (fisColumnStore != t.fisColumnStore)
         return false;
 
     return true;
@@ -452,7 +452,7 @@ bool SimpleColumn::sameColumn(const ReturnedColumn* rc) const
             fColumnName.compare(sc->columnName()) == 0 &&
             fTableAlias.compare(sc->tableAlias()) == 0 &&
             fViewName.compare(sc->viewName()) == 0 &&
-            fIsInfiniDB == sc->isInfiniDB());
+            fisColumnStore == sc->isColumnStore());
 }
 
 void SimpleColumn::setDerivedTable()

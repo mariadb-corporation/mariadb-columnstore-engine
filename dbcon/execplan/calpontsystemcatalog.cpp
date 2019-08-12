@@ -269,28 +269,28 @@ const CalpontSystemCatalog::TableName make_table(const string& s, const string& 
     return tn;
 }
 
-const CalpontSystemCatalog::TableAliasName make_aliastable(const string& s, const string& t, const string& a, const bool isInfiniDB)
+const CalpontSystemCatalog::TableAliasName make_aliastable(const string& s, const string& t, const string& a, const bool isColumnStore)
 {
     CalpontSystemCatalog::TableAliasName tn;
     tn.schema = s;
     tn.table = t;
     tn.alias = a;
     tn.view = "";
-    tn.fIsInfiniDB = isInfiniDB;
+    tn.fisColumnStore = isColumnStore;
     transform (tn.schema.begin(), tn.schema.end(), tn.schema.begin(), to_lower());
     transform (tn.table.begin(), tn.table.end(), tn.table.begin(), to_lower());
     transform (tn.alias.begin(), tn.alias.end(), tn.alias.begin(), to_lower());
     return tn;
 }
 
-const CalpontSystemCatalog::TableAliasName make_aliasview(const string& s, const string& t, const string& a, const string& v, const bool isInfiniDB)
+const CalpontSystemCatalog::TableAliasName make_aliasview(const string& s, const string& t, const string& a, const string& v, const bool isColumnStore)
 {
     CalpontSystemCatalog::TableAliasName tn;
     tn.schema = s;
     tn.table = t;
     tn.alias = a;
     tn.view = v;
-    tn.fIsInfiniDB = isInfiniDB;
+    tn.fisColumnStore = isColumnStore;
     transform (tn.schema.begin(), tn.schema.end(), tn.schema.begin(), to_lower());
     transform (tn.table.begin(), tn.table.end(), tn.table.begin(), to_lower());
     transform (tn.alias.begin(), tn.alias.end(), tn.alias.begin(), to_lower());
@@ -380,7 +380,7 @@ bool CalpontSystemCatalog::TableAliasName::operator<(const TableAliasName& rhs) 
                 }
                 else if (view == rhs.view)
                 {
-                    if (fIsInfiniDB < rhs.fIsInfiniDB)
+                    if (fisColumnStore < rhs.fisColumnStore)
                         return true;
                 }
             }
@@ -396,7 +396,7 @@ void CalpontSystemCatalog::TableAliasName::serialize(messageqcpp::ByteStream& b)
     b << table;
     b << alias;
     b << view;
-    b << static_cast<const ByteStream::doublebyte>(fIsInfiniDB);
+    b << static_cast<const ByteStream::doublebyte>(fisColumnStore);
 }
 
 void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& b)
@@ -405,7 +405,7 @@ void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& 
     b >> table;
     b >> alias;
     b >> view;
-    b >> reinterpret_cast< ByteStream::doublebyte&>(fIsInfiniDB);
+    b >> reinterpret_cast< ByteStream::doublebyte&>(fisColumnStore);
 }
 
 /*static*/
@@ -5649,7 +5649,7 @@ const string CalpontSystemCatalog::TableName::toString() const
 ostream& operator<<(ostream& os, const CalpontSystemCatalog::TableAliasName& rhs)
 {
     os << rhs.schema << '.' << rhs.table << "(" << rhs.alias << "/" << rhs.view
-       << ") engineType=" << (rhs.fIsInfiniDB ? "ColumnStore" : "ForeignEngine");
+       << ") engineType=" << (rhs.fisColumnStore ? "ColumnStore" : "ForeignEngine");
     return os;
 }
 

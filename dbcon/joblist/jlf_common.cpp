@@ -378,7 +378,7 @@ CalpontSystemCatalog::OID tableOid(const SimpleColumn* sc, boost::shared_ptr<Cal
     if (sc->schemaName().empty())
         return execplan::CNX_VTABLE_ID;
 
-    if (sc->isInfiniDB() == false)
+    if (sc->isColumnStore() == false)
         return 0;
 
     CalpontSystemCatalog::ROPair p = cat->tableRID(make_table(sc->schemaName(),
@@ -395,7 +395,7 @@ uint32_t getTupleKey(const JobInfo& jobInfo,
     return getTupleKey_(jobInfo, sc->oid(), sc->columnName(), extractTableAlias(sc),
                         sc->schemaName(), sc->viewName(),
                         ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0),
-                        pseudoType, (sc->isInfiniDB() ? 0 : 1));
+                        pseudoType, (sc->isColumnStore() ? 0 : 1));
 }
 
 
@@ -503,7 +503,7 @@ uint32_t makeTableKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc)
 {
     CalpontSystemCatalog::OID o = tableOid(sc, jobInfo.csc);
     return uniqTupleKey(jobInfo, o, o, "", "", sc->tableName(), extractTableAlias(sc),
-                        sc->schemaName(), sc->viewName(), 0, (sc->isInfiniDB() ? 0 : 1),
+                        sc->schemaName(), sc->viewName(), 0, (sc->isColumnStore() ? 0 : 1),
                         ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0));
 }
 
@@ -561,7 +561,7 @@ TupleInfo setTupleInfo(const execplan::CalpontSystemCatalog::ColType& ct,
     return setTupleInfo_(ct, col_oid, jobInfo, tbl_oid, sc->columnName(), sc->alias(),
                          sc->schemaName(), sc->tableName(), alias, sc->viewName(),
                          ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0),
-                         pseudoType, (sc->isInfiniDB() ? 0 : 1));
+                         pseudoType, (sc->isColumnStore() ? 0 : 1));
 }
 
 

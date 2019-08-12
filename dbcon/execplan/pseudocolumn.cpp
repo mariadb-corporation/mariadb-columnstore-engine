@@ -72,10 +72,10 @@ PseudoColumn::PseudoColumn(const string& schemaName,
 PseudoColumn::PseudoColumn(const string& schemaName,
                            const string& tableName,
                            const string& columnName,
-                           const bool isInfiniDB,
+                           const bool isColumnStore,
                            const uint32_t pseudoType,
                            const uint32_t sessionID):
-    SimpleColumn(schemaName, tableName, columnName, isInfiniDB, sessionID),
+    SimpleColumn(schemaName, tableName, columnName, isColumnStore, sessionID),
     fPseudoType(pseudoType)
 {
     adjustResultType();
@@ -122,7 +122,7 @@ PseudoColumn& PseudoColumn::operator=(const PseudoColumn& rhs)
         fData = rhs.data();
         fSequence = rhs.sequence();
         fDistinct = rhs.distinct();
-        fIsInfiniDB = rhs.isInfiniDB();
+        fisColumnStore = rhs.isColumnStore();
         fPseudoType = rhs.pseudoType();
     }
 
@@ -155,7 +155,7 @@ const string PseudoColumn::toString() const
            << cardinality() << '/'
            << joinInfo() << '/'
            << colSource() << '/'
-           << (isInfiniDB() ? "ColumnStore" : "ForeignEngine") << endl;
+           << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << endl;
 
     output << "Pseudotype=" << fPseudoType << endl;
     return output.str();
