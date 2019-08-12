@@ -103,6 +103,26 @@ class MetadataFile
         //std::set<metadataObject> mObjects;
         bool _exists;
         void makeEmptyJsonTree();
+        
+        class MetadataCache
+        {
+        public:
+            MetadataCache();
+            Jsontree_t get(const boost::filesystem::path &);
+            void put(const boost::filesystem::path &, const Jsontree_t &);
+            void erase(const boost::filesystem::path &);
+            boost::mutex &getMutex();
+        private:
+            // there's a more efficient way to do this, KISS for now.
+            typedef std::list<std::string> Lru_t;
+            typedef std::unordered_map<std::string, std::pair<Jsontree_t, Lru_t::iterator> > Lookup_t;
+            Lookup_t lookup;
+            Lru_t lru;
+            uint max_lru_size;
+            boost::mutex mutex;
+        };
+        static MetadataCache jsonCache;
+        
 };
 
 

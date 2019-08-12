@@ -21,79 +21,9 @@ namespace bf = boost::filesystem;
 
 namespace
 {   
-boost::mutex mutex;
-storagemanager::MetadataFile::MetadataConfig *inst = NULL;
-uint64_t metadataFilesAccessed = 0;
-
-/* better place to put this? */
-class MetadataCache
-{
-public:
-    typedef storagemanager::MetadataFile::Jsontree_t Jsontree_t;
-    MetadataCache();
-    Jsontree_t get(const boost::filesystem::path &);
-    void put(const boost::filesystem::path &, const Jsontree_t &);
-    void erase(const boost::filesystem::path &);
-    boost::mutex &getMutex();
-private:
-    // there's a more efficient way to do this, KISS for now.
-    typedef std::list<std::string> Lru_t;
-    typedef std::unordered_map<std::string, std::pair<Jsontree_t, Lru_t::iterator> > Lookup_t;
-    Lookup_t lookup;
-    Lru_t lru;
-    uint max_lru_size;
     boost::mutex mutex;
-};
-    
-MetadataCache::MetadataCache() : max_lru_size(2000)
-{}
-
-inline boost::mutex & MetadataCache::getMutex()
-{
-    return mutex;
-}
-
-MetadataCache::Jsontree_t MetadataCache::get(const bf::path &p)
-{
-    auto it = lookup.find(p.string());
-    if (it != lookup.end()) 
-    {
-        lru.splice(lru.end(), lru, it->second.second);
-        return it->second.first;
-    }     
-    
-    return storagemanager::MetadataFile::Jsontree_t();
-}
-
-// note, does not change an existing jsontree.  This should be OK.
-void MetadataCache::put(const bf::path &p, const Jsontree_t &j)
-{
-    string sp = p.string();
-    auto it = lookup.find(sp);
-    if (it == lookup.end()) 
-    {
-        while (lru.size() >= max_lru_size)
-        {
-            lookup.erase(lru.front());
-            lru.pop_front();
-        }
-        lru.push_back(sp);
-        Lru_t::iterator last = lru.end();
-        lookup.emplace(sp, make_pair(j, --last));
-    }
-}
-
-void MetadataCache::erase(const bf::path &p)
-{
-    auto it = lookup.find(p.string());
-    if (it != lookup.end())
-    {
-        lru.erase(it->second.second);
-        lookup.erase(it);
-    }
-}
-  
-MetadataCache jsonCache;    
+    storagemanager::MetadataFile::MetadataConfig *inst = NULL;
+    uint64_t metadataFilesAccessed = 0;   
 }
 
 namespace storagemanager
@@ -569,6 +499,58 @@ metadataObject::metadataObject(uint64_t _offset) : offset(_offset), length(0)
 metadataObject::metadataObject(uint64_t _offset, uint64_t _length, const std::string &_key) :
     offset(_offset), length(_length), key(_key)
 {}
+
+
+    
+MetadataFile::MetadataCache::MetadataCache() : max_lru_size(2000)    // 2000 is an arbitrary #.  Big enough for a large working set.
+{}
+
+inline boost::mutex & MetadataFile::MetadataCache::getMutex()
+{
+    return mutex;
+}
+
+MetadataFile::Jsontree_t MetadataFile::MetadataCache::get(const bf::path &p)
+{
+    auto it = lookup.find(p.string());
+    if (it != lookup.end()) 
+    {
+        lru.splice(lru.end(), lru, it->second.second);
+        return it->second.first;
+    }     
+    
+    return storagemanager::MetadataFile::Jsontree_t();
+}
+
+// note, does not change an existing jsontree.  This should be OK.
+void MetadataFile::MetadataCache::put(const bf::path &p, const Jsontree_t &j)
+{
+    string sp = p.string();
+    auto it = lookup.find(sp);
+    if (it == lookup.end()) 
+    {
+        while (lru.size() >= max_lru_size)
+        {
+            lookup.erase(lru.front());
+            lru.pop_front();
+        }
+        lru.push_back(sp);
+        Lru_t::iterator last = lru.end();
+        lookup.emplace(sp, make_pair(j, --last));
+    }
+}
+
+void MetadataFile::MetadataCache::erase(const bf::path &p)
+{
+    auto it = lookup.find(p.string());
+    if (it != lookup.end())
+    {
+        lru.erase(it->second.second);
+        lookup.erase(it);
+    }
+}
+
+MetadataFile::MetadataCache MetadataFile::jsonCache;
 
 }
 
