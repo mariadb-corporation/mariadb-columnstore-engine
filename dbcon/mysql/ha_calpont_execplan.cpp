@@ -207,7 +207,6 @@ bool nonConstFunc(Item_func* ifp)
  ***********************************************************/
 void getColNameFromItem(std::ostringstream& ostream, Item* item)
 {
-// MCOL-2121 WIP
 // Item_func doesn't have proper db.table.field values 
 // inherited from Item_ident. TBD what is the valid output.
 // !!!dynamic_cast fails compilation
@@ -1321,8 +1320,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             {
                 if (gwi.thd->derived_tables_processing)
                 {
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                    MIGR::infinidb_vtable.isUnion = false;
+                    // MCOL-2178 isUnion member only assigned, never used
+                    //MIGR::infinidb_vtable.isUnion = false;
                     gwi.cs_vtable_is_update_with_derive = true;
                     return -1;
                 }
@@ -5149,12 +5148,6 @@ void gp_walk(const Item* item, void* arg)
                     gwip->rcWorkStack.push(buildReturnedColumn(itp, *gwip, gwip->fatalParseError));
                     break;
                 }
-                /*case Item::VARBIN_ITEM:
-                {
-                    Item_hex_string* hdp = (Item_hex_string*)item;
-                gwip->rcWorkStack.push(buildReturnedColumn(hdp, *gwip, gwip->fatalParseError));
-                break;
-                }*/
                 default:
                 {
                     if (gwip->condPush)
@@ -5622,8 +5615,8 @@ void gp_walk(const Item* item, void* arg)
                 gwip->hasSubSelect = true;
                 gwip->subQuery = existsSub;
                 gwip->ptWorkStack.push(existsSub->transform());
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
+                // MCOL-2178 isUnion member only assigned, never used
+                //MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
                 // recover original
                 gwip->subQuery = orig;
                 gwip->lastSub = existsSub;
@@ -5718,20 +5711,7 @@ void gp_walk(const Item* item, void* arg)
             printf("********** received TRIGGER_FIELD_ITEM *********\n");
             break;
 
-        /* WIP MCOL-2178
-        case Item::XPATH_NODESET:
-            printf("********** received XPATH_NODESET *********\n");
-            break;
-
-        case Item::XPATH_NODESET_CMP:
-            printf("********** received XPATH_NODESET_CMP *********\n");
-            break;
-
-        case Item::VIEW_FIXER_ITEM:
-            printf("********** received VIEW_FIXER_ITEM *********\n");
-            break;
-        */
-        case Item::TYPE_HOLDER:
+       case Item::TYPE_HOLDER:
             std::cerr << "********** received TYPE_HOLDER *********" << std::endl;
             break;
         default:
@@ -5983,8 +5963,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
-//        MIGR::infinidb_vtable.isUnion = false;
+        // MCOL-2178 isUnion member only assigned, never used
+        //MIGR::infinidb_vtable.isUnion = false;
         return -1;
     }
 
@@ -6118,8 +6098,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+                // MCOL-2178 isUnion member only assigned, never used
+                //MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
             {
@@ -6190,8 +6170,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     // is_unit_op() give a segv for derived_handler's SELECT_LEX
     if (!isUnion && select_lex.master_unit()->is_unit_op())
     {
-// TODO MCOL-2178 isUnion member only assigned, never used
-//        MIGR::infinidb_vtable.isUnion = true;
+        // MCOL-2178 isUnion member only assigned, never used
+        //MIGR::infinidb_vtable.isUnion = true;
         CalpontSelectExecutionPlan::SelectList unionVec;
         SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
         unionSel = true;
@@ -6283,8 +6263,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                MIGR::infinidb_vtable.isUnion = false;
+                // MCOL-2178 isUnion member only assigned, never used
+                //MIGR::infinidb_vtable.isUnion = false;
                 gwi.cs_vtable_is_update_with_derive = true;
                 return -1;
             }
@@ -6442,9 +6422,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     Item* item;
     vector <Item_field*> funcFieldVec;
 
-    string sel_cols_in_select;
-    bool redo = false;
-
     // empty rcWorkStack and ptWorkStack. They should all be empty by now.
     clearStacks(gwi);
 
@@ -6509,12 +6486,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
                     }
 
-                    if (ifp->is_autogenerated_name)
-                        gwi.selectCols.push_back("`" + escapeBackTick(fullname.c_str()) + "`" + " `" +
-                                                 escapeBackTick(itemAlias.empty() ? ifp->name.str : itemAlias.c_str()) + "`");
-                    else
-                        gwi.selectCols.push_back("`" + escapeBackTick((itemAlias.empty() ? ifp->name.str : itemAlias.c_str())) + "`");
-
                     gwi.returnedCols.push_back(spsc);
 
                     gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), spsc));
@@ -6552,10 +6523,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
-                gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
-                String str(256);
-                item->print(&str, QT_ORDINARY);
-
                 break;
             }
 
@@ -6717,11 +6684,17 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 break;
             } // End of FUNC_ITEM
 
+            // DRRTUY Replace the whole section with typeid() checks or use
+            // reinterpret_cast here
             case Item::CONST_ITEM:
             {
                 switch(item->cmp_type())
                 {
                     case INT_RESULT:
+                    case STRING_RESULT:
+                    case DECIMAL_RESULT:
+                    case REAL_RESULT:
+                    case TIME_RESULT:
                     {
                         if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
                         { }
@@ -6738,71 +6711,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                                 srcp->alias(item->name.str);
 
                             gwi.returnedCols.push_back(srcp);
-
-                            Item_int* isp = reinterpret_cast<Item_int*>(item);
-                            ostringstream oss;
-                            oss << isp->value << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
-
-                            gwi.selectCols.push_back(oss.str());
                         }
 
                         break;
                     }
-
-                    case STRING_RESULT:
-                    {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                        { }
-                        else
-                        {
-                            SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-                            gwi.returnedCols.push_back(srcp);
-
-                            if (item->name.length)
-                                srcp->alias(item->name.str);
-
-                            Item_string* isp = reinterpret_cast<Item_string*>(item);
-                            String val, *str = isp->val_str(&val);
-                            string valStr;
-                            valStr.assign(str->ptr(), str->length());
-                            string name = "'" + valStr + "'" + " " + "`" + escapeBackTick(srcp->alias().c_str()) + "`";
-
-                            gwi.selectCols.push_back(name);
-                        }
-
-                        break;
-                    }
-
-                    case DECIMAL_RESULT:
-                    {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                        { }
-                        else
-                        {
-                            SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-                            gwi.returnedCols.push_back(srcp);
-
-                            if (item->name.length)
-                                srcp->alias(item->name.str);
-
-                            Item_decimal* isp = reinterpret_cast<Item_decimal*>(item);
-                            String val, *str = isp->val_str(&val);
-                            string valStr;
-                            valStr.assign(str->ptr(), str->length());
-                            ostringstream oss;
-                            oss << valStr.c_str() << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
-
-                            gwi.selectCols.push_back(oss.str());
-                        }
-
-                        break;
-                    }
-                    // WIP MCOL-2178 This switch doesn't handl
-                    // ROW_, TIME_, REAL_RESULT and if one couldn't
-                    // project the former two REAL is possible.
-                    // Need to test before commit.
+                    // MCOL-2178 This switch doesn't handl
+                    // ROW_
                     default: 
                     {
+                        IDEBUG(cerr << "Warning unsupported cmp_type() in projection" << endl);
                         //noop
                     }
                 }
@@ -6820,10 +6737,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
                     if (item->name.length)
                         srcp->alias(item->name.str);
-
-                    string name = string("null `") + escapeBackTick(srcp->alias().c_str()) + string("`") ;
-
-                    gwi.selectCols.push_back("null");
                 }
 
                 break;
@@ -6880,17 +6793,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     rc->alias(sub->name.str);
 
                 gwi.returnedCols.push_back(SRCP(rc));
-                String str;
-                sub->get_select_lex()->print(gwi.thd, &str, QT_ORDINARY);
-
-                if (sub->name.length)
-                {
-                    gwi.selectCols.push_back(sub->name.str);
-                }
-                else
-                {
-                    gwi.selectCols.push_back("`" + escapeBackTick(str.c_ptr()) + "`");
-                }
 
                 break;
             }
@@ -7437,14 +7339,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                         && ord_item->full_name() 
                         && !strcmp(ord_item->full_name(), "Not_used"))
                     {
-                            continue;
+                        continue;
                     }
                     else if (ord_item->type() == Item::CONST_ITEM
                             && ord_item->cmp_type() == INT_RESULT)
                     {
-                            // WIP MCOL-2178. We should seek smallest
-                            // column here and not just previous.
-                            rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
+                        // DRRTUY This section looks useless b/c there is no
+                        // way to put constant INT into an ORDER BY list
+                        rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
                     }
                     else if (ord_item->type() == Item::SUBSELECT_ITEM)
                     {
@@ -7484,6 +7386,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 gwi.orderByCols.push_back(SRCP(rc));
             }
         }
+        // DRRTUY The whole block is marked for removal in 1.4.1
+#if 0
         else if (!isUnion)
         {
             vector <Item_field*> fieldVec;
@@ -7590,11 +7494,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                         }
 
                     }
-
                 }
             }
-
-            redo = (redo || fieldVec.size() != 0);
 
             // populate string to be added to the select list for order by
             for (uint32_t i = 0; i < fieldVec.size(); i++)
@@ -7635,6 +7536,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 }
             }
         }
+#endif
 
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
         TableMap::iterator tb_iter = gwi.tableMap.begin();
@@ -7715,9 +7617,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         if (!isUnion && !gwi.hasWindowFunc
                 && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT )
         {
-            std::ostringstream vtb;
-            vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-
            {
                 if (unionSel)
                     order_list = select_lex.master_unit()->global_parameters()->order_list;
@@ -7760,12 +7659,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                             }
                         }
                     }
-                    else
-                    {
-                        String str;
-                        ord_item->print(&str, QT_ORDINARY);
-                    }
-
                 }
             }
 
@@ -7982,35 +7875,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     return 0;
 }
 
-int cp_get_plan(THD* thd, SCSEP& csep)
-{
-    LEX* lex = thd->lex;
-    idbassert(lex != 0);
-
-    gp_walk_info gwi;
-    gwi.thd = thd;
-
-    // WIP MCOL-2178 A questionable replacement.
-    SELECT_LEX select_lex = *lex->first_select_lex();
-    int status = getSelectPlan(gwi, select_lex, csep);
-
-    if (status > 0)
-        return ER_INTERNAL_ERROR;
-    else if (status < 0)
-        return status;
-
-#ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
-
-    // Derived table projection and filter optimization.
-    derivedTableOptimization(thd, csep);
-
-    return 0;
-}
-
 int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 {
     gp_walk_info* gwi = ti.condInfo;
@@ -8143,7 +8007,7 @@ int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep, gp_walk
         return status;
 
 #ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_derived_plan EXECUTION PLAN ----------------" << endl;
+    cerr << "---------------- cs_get_derived_plan EXECUTION PLAN ----------------" << endl;
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
@@ -8163,7 +8027,7 @@ int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep, gp_walk_i
         return status;
 
 #ifdef DEBUG_WALK_COND
-    cerr << "---------------- cp_get_select_plan EXECUTION PLAN ----------------" << endl;
+    cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
@@ -8352,12 +8216,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+                // MCOL-2178 isUnion member only assigned, never used
+                //MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
             {
-                // WIP MCOL-2178 A questionable replacement.
                 View* view = new View(*table_ptr->view->first_select_lex(), &gwi);
                 CalpontSystemCatalog::TableAliasName tn = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str);
                 view->viewName(tn);
@@ -8451,8 +8314,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             // processing.
             if (gwi.thd->derived_tables_processing)
             {
-// TODO MCOL-2178 isUnion member only assigned, never used
-//                MIGR::infinidb_vtable.isUnion = false;
+                // MCOL-2178 isUnion member only assigned, never used
+                //MIGR::infinidb_vtable.isUnion = false;
                 return -1;
             }
 
@@ -8622,12 +8485,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
                     }
 
-                    if (ifp->is_autogenerated_name)
-                        gwi.selectCols.push_back("`" + escapeBackTick(fullname.c_str()) + "`" + " `" +
-                                                 escapeBackTick(itemAlias.empty() ? ifp->name.str : itemAlias.c_str()) + "`");
-                    else
-                        gwi.selectCols.push_back("`" + escapeBackTick((itemAlias.empty() ? ifp->name.str : itemAlias.c_str())) + "`");
-
                     // MCOL-1052 Replace SimpleColumn with ConstantColumn,
                     // since it must have a single value only.
                     if (constCol)
@@ -8677,10 +8534,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.returnedCols.push_back(spac);
                 // This item could be used in projection or HAVING later.
                 gwi.extSelAggColsItems.push_back(item);                
-
-                gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
-                String str(256);
-                item->print(&str, QT_ORDINARY);
 
                 break;
             }
@@ -8741,34 +8594,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             continue;
                         }
 
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-                                ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-                                ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-                                ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
-                        { }
-                        else
-                        {
-                            redo = true;
-                            String str;
-                            ifp->print(&str, QT_ORDINARY);
-                            gwi.selectCols.push_back(string(str.c_ptr()) + " " + "`" + escapeBackTick(item->name.str) + "`");
-                        }
-
                         break;
                     }
 
-                    //SRCP srcp(rc);
                     gwi.returnedCols.push_back(srcp);
 
-                    if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                    { }
-                    else
-                    {
-                        String str(256);
-                        ifp->print(&str, QT_ORDINARY);
-
-                        gwi.selectCols.push_back("`" + escapeBackTick(ifp->name.str) + "`");
-                    }
                 }
                 else // InfiniDB Non support functions still go through post process for now
                 {
@@ -8860,18 +8690,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             return -1;
                         }
                     }
-
-                    //@Bug 3021. Bypass postprocess for update and delete.
-                    //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                    //{}
                     else
                     {
-                        // @bug 3881. Here is the real redo part.
-                        redo = true;
-                        // @bug 1706
-                        String funcStr;
-                        ifp->print(&funcStr, QT_ORDINARY);
-                        gwi.selectCols.push_back(string(funcStr.c_ptr()) + " `" + escapeBackTick(ifp->name.str) + "`");
                         // clear the error set by buildFunctionColumn
                         gwi.fatalParseError = false;
                         gwi.parseErrorText = "";
@@ -8881,11 +8701,17 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 break;
             }
 
+            // DRRTUY Replace the whole section with typeid() checks or use
+            // reinterpret_cast here
             case Item::CONST_ITEM:
             {
                 switch(item->cmp_type())
                 {
                     case INT_RESULT:
+                    case STRING_RESULT:
+                    case DECIMAL_RESULT:
+                    case REAL_RESULT:
+                    case TIME_RESULT:
                     {
                         if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
                         { }
@@ -8902,69 +8728,16 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                                 srcp->alias(item->name.str);
 
                             gwi.returnedCols.push_back(srcp);
-
-                            Item_int* isp = reinterpret_cast<Item_int*>(item);
-                            ostringstream oss;
-                            oss << isp->value << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
-
-                            gwi.selectCols.push_back(oss.str());
                         }
 
                         break;
                     }
 
-                    case STRING_RESULT:
-                    {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                        { }
-                        else
-                        {
-                            SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-                            gwi.returnedCols.push_back(srcp);
-
-                            if (item->name.length)
-                                srcp->alias(item->name.str);
-
-                            Item_string* isp = reinterpret_cast<Item_string*>(item);
-                            String val, *str = isp->val_str(&val);
-                            string valStr;
-                            valStr.assign(str->ptr(), str->length());
-                            string name = "'" + valStr + "'" + " " + "`" + escapeBackTick(srcp->alias().c_str()) + "`";
-
-                            gwi.selectCols.push_back(name);
-                        }
-
-                        break;
-                    }
-
-                    case DECIMAL_RESULT:
-                    {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
-                        { }
-                        else
-                        {
-                            SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-                            gwi.returnedCols.push_back(srcp);
-
-                            if (item->name.length)
-                                srcp->alias(item->name.str);
-
-                            Item_decimal* isp = reinterpret_cast<Item_decimal*>(item);
-                            String val, *str = isp->val_str(&val);
-                            string valStr;
-                            valStr.assign(str->ptr(), str->length());
-                            ostringstream oss;
-                            oss << valStr.c_str() << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
-
-                            gwi.selectCols.push_back(oss.str());
-                        }
-
-                        break;
-                    }
+                    // MCOL-2178 This switch doesn't handl
+                    // ROW_
                     default:
-                    // WIP MCOL-2178 Same thing as for getSelectPlan
                     {
-                        // noop
+                        IDEBUG(cerr << "Warning unsupported cmp_type() in projection" << endl);
                     }
                 }
                 break;
@@ -8972,25 +8745,16 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
             case Item::NULL_ITEM:
             {
-                // WIP MCOL-2178 Check for NULL in projection.
-                /*if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
                 { }
                 else
                 {
                     SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
                     gwi.returnedCols.push_back(srcp);
 
-                    if (item->name)
-                        srcp->alias(item->name);
-
-                    string name = string("null `") + escapeBackTick(srcp->alias().c_str()) + string("`") ;
-
-                    if (sel_cols_in_create.length() != 0)
-                        sel_cols_in_create += ", ";
-
-                    sel_cols_in_create += name;
-                    gwi.selectCols.push_back("null");
-                }*/
+                    if (item->name.length)
+                        srcp->alias(item->name.str);
+                }
 
                 break;
             }
@@ -9046,14 +8810,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     rc->alias(sub->name.str);
 
                 gwi.returnedCols.push_back(SRCP(rc));
-
-                if (sub->name.length)
-                {
-                    gwi.selectCols.push_back(sub->name.str);
-                }
-                else
-                {
-                }
 
                 break;
             }
@@ -9764,9 +9520,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
         {
-            std::ostringstream vtb;
-            vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-
             // re-construct the select query and redo phase 1
             if (redo)
             {

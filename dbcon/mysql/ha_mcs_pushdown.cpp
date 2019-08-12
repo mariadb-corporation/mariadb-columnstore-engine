@@ -149,16 +149,16 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
 
+    // same as thd->lex->current_select
+    SELECT_LEX *select_lex = query->from->select_lex;
+
     // MCOL-2178 Disable SP support in the group_by_handler for now
     // Check the session variable value to enable/disable use of
-    // group_by_handler
-    if (!get_group_by_handler(thd) || (thd->lex)->sphead)
+    // group_by_handler. There is no GBH if SH works for the query.
+    if (select_lex->select_h || !get_group_by_handler(thd) || (thd->lex)->sphead)
     {
         return handler;
     }
-
-    // same as thd->lex->current_select
-    SELECT_LEX *select_lex = query->from->select_lex;
 
     // Create a handler if query is valid. See comments for details.
     if ( query->group_by || select_lex->with_sum_func )
@@ -172,7 +172,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
             unsupported_feature = select_lex->is_correlated;
 
             // Impossible HAVING or WHERE
-            if ( ( !unsupported_feature && query->having && select_lex->having_value == Item::COND_FALSE )
+            if ( ( !unsupported_feature && select_lex->having_value == Item::COND_FALSE )
                 || ( select_lex->cond_count > 0
                     && select_lex->cond_value == Item::COND_FALSE ) )
             {
@@ -473,11 +473,10 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     }
 
     // Impossible HAVING or WHERE
-    // WIP replace with function call
+    // TODO replace with function call
     if ( unsupported_feature
-       || ( select_lex->having && select_lex->having_value == Item::COND_FALSE )
-        || ( select_lex->cond_count > 0
-            && select_lex->cond_value == Item::COND_FALSE ) )
+       || select_lex->having_value == Item::COND_FALSE
+        || select_lex->cond_value == Item::COND_FALSE )
     {
         unsupported_feature = true;
     }

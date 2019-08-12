@@ -764,7 +764,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3483, reserve enough space for the longest double value
                     // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 40;
+                    (*f)->field_length = 310;
 
                     f2->store(dl);
 
@@ -2262,26 +2262,6 @@ int ha_calpont_impl_discover_existence(const char* schema, const char* name)
 
 int ha_calpont_impl_rnd_init(TABLE* table)
 {
-#ifdef DEBUG_SETENV
-    string home(getenv("HOME"));
-
-    if (!getenv("COLUMNSTORE_HOME"))
-    {
-        string calpontHome(home + "/Calpont/etc/");
-        setenv("COLUMNSTORE_HOME", calpontHome.c_str(), 1);
-    }
-
-    if (!getenv("COLUMNSTORE_CONFIG_FILE"))
-    {
-        string calpontConfigFile(home + "/mariadb/columnstore/etc/Columnstore.xml");
-        setenv("COLUMNSTORE_CONFIG_FILE", calpontConfigFile.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CSC_IDENT"))
-        setenv("CALPONT_CSC_IDENT", "dm", 1);
-
-#endif
-
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
 
@@ -2664,9 +2644,9 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-// TODO MCOL-2178 This variable can never be true in the scope of this function
-//    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
-//        return HA_ERR_END_OF_FILE;
+    // MCOL-2178 This variable can never be true in the scope of this function
+    //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+    //        return HA_ERR_END_OF_FILE;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -2756,13 +2736,11 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
         return 0;
 
 
-    // WIP MCOL-2178
-    // Workaround because CS doesn't reset isUnion in a normal way.
-// TODO MCOL-2178 isUnion member only assigned, never used
-//    if (is_pushdown_hand)
-//    {
-//        MIGR::infinidb_vtable.isUnion = false;
-//    }
+    // MCOL-2178 isUnion member only assigned, never used
+    //    if (is_pushdown_hand)
+    //    {
+    //        MIGR::infinidb_vtable.isUnion = false;
+    //    }
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -2891,10 +2869,6 @@ int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* c
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (string(name).find("@0024vtable") != string::npos)
-        return 0;
-
     //@Bug 1948. Mysql calls create table to create a new table with new signature.
     if (ci->alterTableState > 0) return 0;
 
@@ -2930,10 +2904,6 @@ int ha_calpont_impl_delete_table(const char* name)
     //if this is an InfiniDB tmp table ('#sql*.frm') just leave...
     if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length)) return 0;
 
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (string(name).find("@0024vtable") != string::npos)
-        return 0;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -2968,22 +2938,6 @@ int ha_calpont_impl_delete_table(const char* name)
     {
         ci->isAlter = false;
         return 0;
-    }
-
-    // @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-    if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
-    {
-        std::string stmt(idb_mysql_query_str(thd));
-        boost::algorithm::to_upper(stmt);
-
-        //@Bug 2432. systables can be dropped with restrict
-        if (stmt.find(" RESTRICT") != string::npos)
-        {
-            return 0;
-        }
-
-        setError(thd, ER_INTERNAL_ERROR, "Calpont system tables can only be dropped with restrict.");
-        return 1;
     }
 
     int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
@@ -4355,17 +4309,16 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         // send plan whenever group_init is called
         int status = cp_get_group_plan(thd, csep, gi);
 
-        // WIP MCOL-2178 This could be a problem
-        if (status > 0)
+        // Never proceed if status != 0 to avoid empty DA
+        // crashes on later stages
+        if (status != 0)
             goto internal_error;
-        else if (status < 0)
-            return 0;
 
         // @bug 2547. don't need to send the plan if it's impossible where for all unions.
-// TODO MCOL-2178 commenting the below out since cp_get_group_plan does not modify this variable
-// which has a default value of false
-//        if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
-//            return 0;
+        // MCOL-2178 commenting the below out since cp_get_group_plan does not modify this variable
+        // which has a default value of false
+        //if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+        //  return 0;
 
         string query;
         // Set the query text only once if the server executes
@@ -4632,9 +4585,9 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-// TODO MCOL-2178
-//    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
-//        return HA_ERR_END_OF_FILE;
+    //  MCOL-2178
+    //  if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+    //    return HA_ERR_END_OF_FILE;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4728,8 +4681,8 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-// TODO MCOL-2178 isUnion member only assigned, never used
-//    MIGR::infinidb_vtable.isUnion = false;
+    // MCOL-2178 isUnion member only assigned, never used
+    //    MIGR::infinidb_vtable.isUnion = false;
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4894,26 +4847,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
  ***********************************************************/
 int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 {
-#ifdef DEBUG_SETENV
-    string home(getenv("HOME"));
-
-    if (!getenv("CALPONT_HOME"))
-    {
-        string calpontHome(home + "/Calpont/etc/");
-        setenv("CALPONT_HOME", calpontHome.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CONFIG_FILE"))
-    {
-        string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
-        setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CSC_IDENT"))
-        setenv("CALPONT_CSC_IDENT", "dm", 1);
-
-#endif
-
     IDEBUG( cout << "pushdown_init for table " << endl );
     THD* thd = current_thd;
 
@@ -5052,8 +4985,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 
         hndl = ci->cal_conn_hndl;
 
-        // WIP MCOL-2178
-        std::cout << idb_mysql_query_str(thd) << std::endl;
+        IDEBUG( std::cout << idb_mysql_query_str(thd) << std::endl );
 
         {
             if (!csep)
@@ -5094,15 +5026,10 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 status = cs_get_derived_plan(dh, thd, csep, gwi);
             }
    
-            // WIP MCOL-2178 Remove this 
-            std::cout << "pushdown_init get_plan status " << status << std::endl;
-
             // Return an error to avoid MDB crash later in end_statement 
             if (status != 0)
                 goto internal_error;
 
-            // WIP MCOL-2178 Remove this 
-            std::cout << "pushdown_init impossibleWhereOnUnion " << status << std::endl;
             // @bug 2547. don't need to send the plan if it's impossible where for all unions.
             if (gwi.cs_vtable_impossible_where_on_union)
             {
@@ -5123,6 +5050,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
             }
 
+// DRRTUY Make this runtime configureable
 #ifdef PLAN_HEX_FILE
             // plan serialization
             ifstream ifs("/tmp/li1-plan.hex");
