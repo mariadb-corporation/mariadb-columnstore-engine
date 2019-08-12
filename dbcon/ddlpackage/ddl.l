@@ -65,7 +65,7 @@ double_quote \"
 grave_accent `
 
 comment ("--"{non_newline}*)
-extended_ident_cont [A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
+extended_ident_cont [ A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
 
@@ -75,10 +75,8 @@ ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
 extended_identifier {ident_start}{extended_ident_cont}*
 /* fully qualified names regexes */
-ident_w_spaces {identifier}\x20*
 identifier_quoted {grave_accent}{extended_identifier}{grave_accent}
 identifier_double_quoted {double_quote}{extended_identifier}{double_quote}
-column_ident_quoted {grave_accent}{ident_w_spaces}+{grave_accent}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
@@ -189,8 +187,6 @@ BOOL {return BOOL;}
 BOOLEAN {return BOOLEAN;}
 
 \n { lineno++;}
-
-{column_ident_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES); return IDENT;}
 
 {whitespace} {
     /* ignore */
