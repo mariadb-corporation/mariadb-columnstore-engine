@@ -656,7 +656,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     // update the metadata for the source file
     
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
-    replicator->updateMetadata(sourceFile.c_str(), md);
+    replicator->updateMetadata(md);
 
     rename(key, newKey);
     
