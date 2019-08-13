@@ -184,12 +184,43 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
     {
         // read the existing header and check if max_offset needs to be updated
         size_t tmp;
-        boost::shared_array<char> headertxt = seekToEndOfHeader1(fd, &tmp);
+		boost::shared_array<char> headertxt;
+		try
+		{
+			headertxt = seekToEndOfHeader1(fd, &tmp);
+		}
+		catch (std::runtime_error& e)
+		{
+			mpLogger->log(LOG_CRIT,"%s",e.what());
+			errno = EIO;
+			return -1;
+		}
+		catch (...)
+		{
+			mpLogger->log(LOG_CRIT,"Unknown exception caught during seekToEndOfHeader1.");
+			errno = EIO;
+			return -1;
+		}
         stringstream ss;
         ss << headertxt.get();
         headerRollback = headertxt.get();
-        boost::property_tree::ptree header;
-        boost::property_tree::json_parser::read_json(ss, header);
+		boost::property_tree::ptree header;
+		try
+		{
+			boost::property_tree::json_parser::read_json(ss, header);
+		}
+		catch (const boost::property_tree::json_parser::json_parser_error& e)
+		{
+			mpLogger->log(LOG_CRIT,"%s",e.what());
+			errno = EIO;
+			return -1;
+		}
+		catch (...)
+		{
+			mpLogger->log(LOG_CRIT,"Unknown exception caught during read_json.");
+			errno = EIO;
+			return -1;
+		}
         assert(header.get<int>("version") == 1);
         uint64_t currentMaxOffset = header.get<uint64_t>("max_offset");
         if (thisEntryMaxOffset > currentMaxOffset)
