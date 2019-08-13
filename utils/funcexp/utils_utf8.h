@@ -36,7 +36,6 @@
 #include <cstdlib>
 
 #include <clocale>
-
 #include "alarmmanager.h"
 using namespace alarmmanager;
 
@@ -55,7 +54,7 @@ extern bool JPcodePoint;		// code point ordering (Japanese UTF) flag, used in id
 const int MAX_UTF8_BYTES_PER_CHAR = 4;
 
 // A global loc object so we don't construct one at every compare
-static std::locale loc;
+extern std::locale loc;
 // Is there a way to construct a global reference to a facet?
 // const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
 
@@ -79,8 +78,6 @@ std::string idb_setlocale()
     }
 
     char* pLoc = setlocale(LC_ALL, systemLang.c_str());
-    // MCOL-1559 also set the C++ locale
-    std::locale::global(std::locale(pLoc));
 
     if (pLoc == NULL)
     {
@@ -121,7 +118,8 @@ std::string idb_setlocale()
     if (systemLang.find("ja_JP") != std::string::npos)
         JPcodePoint = true;
 
-    std::locale localloc;
+    // MCOL-1559 Save off the locale to save runtime cpus
+    std::locale localloc(systemLang.c_str());
     loc = localloc;
 
     return systemLang;
@@ -148,6 +146,7 @@ int idb_strtrimcoll(const std::string& str1, const std::string& str2)
     static const std::string whitespaces (" ");
     const char* s1 = str1.c_str();
     const char* s2 = str2.c_str();
+
     // Set found1 to the last non-whitespace char in str1
     std::size_t found1 = str1.find_last_not_of(whitespaces);
     // Set found2 to the first whitespace char in str2
