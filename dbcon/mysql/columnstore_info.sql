@@ -101,7 +101,7 @@ END //
 create procedure columnstore_upgrade()
 `columnstore_upgrade`: BEGIN
     DECLARE done INTEGER DEFAULT 0;
-    DECLARE schema_table VARCHAR(100) DEFAULT "";
+    DECLARE schema_table VARCHAR(100) CHARACTER SET utf8 DEFAULT "";
     DECLARE table_list CURSOR FOR select concat('`', table_schema,'`.`',table_name,'`') from information_schema.tables where engine='columnstore';
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
     OPEN table_list;
@@ -115,6 +115,5 @@ create procedure columnstore_upgrade()
         DEALLOCATE PREPARE stmt;
     END LOOP;
 END //
-delimiter ;
 
 DELIMITER ;

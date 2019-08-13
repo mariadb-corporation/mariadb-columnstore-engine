@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -267,7 +267,7 @@ void diskMonitor()
 
                     blksize = buf.f_bsize;
                     blocks = buf.f_blocks;
-                    freeblks = buf.f_bfree;
+					freeblks = buf.f_bavail; 
 
                     totalBlocks = blocks * blksize;
                     free = freeblks * blksize;
@@ -396,7 +396,7 @@ void diskMonitor()
 
                             blksize = buf.f_bsize;
                             blocks = buf.f_blocks;
-                            freeblks = buf.f_bfree;
+							freeblks = buf.f_bavail; 
 
                             totalBlocks = blocks * blksize;
                             free = freeblks * blksize;

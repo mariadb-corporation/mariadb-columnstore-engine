@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -36,7 +36,6 @@
 #endif
 #include <cstring>
 #include <boost/regex.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
 #include "expressionparser.h"
 #include "returnedcolumn.h"
@@ -486,20 +485,16 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return !ret;
             }
 
-            // MCOL-1559
-	    std::string val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
 
-            std::string val2 = rop->getStrVal(row, isNull);
+            const std::string& val1 = lop->getStrVal(row, isNull);
+
             if (isNull)
                 return false;
 
-            boost::trim_right_if(val1, boost::is_any_of(" "));
-            boost::trim_right_if(val2, boost::is_any_of(" "));
-
-            return strCompare(val1, val2);
-	}
+            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+        }
 
         //FIXME: ???
         case execplan::CalpontSystemCatalog::VARBINARY:

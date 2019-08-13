@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -347,6 +347,7 @@ SCSEP FromSubQuery::transform()
     gwi.subQuery = this;
     gwi.viewName = fGwip.viewName;
     csep->derivedTbAlias(fAlias); // always lower case
+    csep->derivedTbView(fGwip.viewName.alias);
 
     if (getSelectPlan(gwi, *fFromSub, csep, fPushdownHand) != 0)
     {

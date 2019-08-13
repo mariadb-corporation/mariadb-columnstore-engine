@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -386,19 +386,59 @@ CalpontSystemCatalog::OID tableOid(const SimpleColumn* sc, boost::shared_ptr<Cal
     return p.objnum;
 }
 
-
-uint32_t getTupleKey(const JobInfo& jobInfo,
-                     const execplan::SimpleColumn* sc)
+uint32_t getTupleKey(JobInfo& jobInfo,
+                     const execplan::SimpleColumn* sc,
+                     bool add)
 {
+    int key = -1;
     const PseudoColumn* pc = dynamic_cast<const execplan::PseudoColumn*>(sc);
     uint32_t pseudoType = (pc) ? pc->pseudoType() : execplan::PSEUDO_UNKNOWN;
-    return getTupleKey_(jobInfo, sc->oid(), sc->columnName(), extractTableAlias(sc),
-                        sc->schemaName(), sc->viewName(),
-                        ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0),
-                        pseudoType, (sc->isColumnStore() ? 0 : 1));
+
+    if (sc == NULL)
+    {
+        return -1;
+    }
+    
+    if (add)
+    {
+        // setTupleInfo first if add is true, ok if already set.
+        if (sc->schemaName().empty())
+        {
+            SimpleColumn tmp(*sc, jobInfo.sessionId);
+            tmp.oid(tableOid(sc, jobInfo.csc) + 1 + sc->colPosition());
+            key = getTupleKey(jobInfo, &tmp); // sub-query should be there
+        }
+        else
+        {
+            CalpontSystemCatalog::ColType ct = sc->colType();
+            string alias(extractTableAlias(sc));
+            CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
+            TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc, alias));
+            key = ti.key;
+
+
+            CalpontSystemCatalog::OID dictOid = isDictCol(ct);
+
+            if (dictOid > 0)
+            {
+                ti = setTupleInfo(ct, dictOid, jobInfo, tblOid, sc, alias);
+                jobInfo.keyInfo->dictKeyMap[key] = ti.key;
+                key = ti.key;
+            }
+        }
+    }
+    else
+    {
+        // TupleInfo is expected to be set already
+        return getTupleKey_(jobInfo, sc->oid(), sc->columnName(), extractTableAlias(sc),
+                            sc->schemaName(), sc->viewName(),
+                            ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0),
+                            pseudoType, (sc->isColumnStore() ? 0 : 1));
+    }
+
+    return key;
 }
-
-
+    
 uint32_t getTupleKey(JobInfo& jobInfo, const SRCP& srcp, bool add)
 {
     int key = -1;
@@ -608,7 +648,7 @@ uint32_t getExpTupleKey(const JobInfo& jobInfo, uint64_t eid, bool cr)
 }
 
 
-void addAggregateColumn(AggregateColumn* agc, int idx, RetColsVector& vec, JobInfo& jobInfo)
+void addAggregateColumn(ReturnedColumn* agc, int idx, RetColsVector& vec, JobInfo& jobInfo)
 {
     uint32_t eid = agc->expressionId();
     setExpTupleInfo(agc->resultType(), eid, agc->alias(), jobInfo);
