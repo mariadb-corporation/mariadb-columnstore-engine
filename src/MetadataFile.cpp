@@ -308,7 +308,7 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &fi
     return addObject;
 }
 
-
+// TODO: Error handling...s
 int MetadataFile::writeMetadata()
 {
     if (!boost::filesystem::exists(mFilename.parent_path()))

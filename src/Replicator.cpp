@@ -382,7 +382,6 @@ int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
     return ret;
 }
 
-// XXXPAT: need to get rid of the filename param
 int Replicator::updateMetadata(MetadataFile &meta)
 {
     return meta.writeMetadata();
