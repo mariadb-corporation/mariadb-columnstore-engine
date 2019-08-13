@@ -1,6 +1,6 @@
 # List of my.cnf arguments that should be checked and saved during upgrade install
 #
-infinidb_local_query
+columnstore_local_query
 log-bin
 server-id
 max_length_for_sort_data

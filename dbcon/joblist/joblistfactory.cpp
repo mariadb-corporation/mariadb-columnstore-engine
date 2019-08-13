@@ -127,7 +127,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-        if (sc->isInfiniDB() && !pc)
+        if (sc->isColumnStore() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -710,7 +710,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 ct = sc->colType();
 
 //XXX use this before connector sets colType in sc correctly.
-                if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                     ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -996,7 +996,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                             ct = sc->colType();
 
                             //XXX use this before connector sets colType in sc correctly.
-                            if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                            if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                                 ct = jobInfo.csc->colType(sc->oid());
 
                             //X
@@ -1149,7 +1149,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     ct = sc->colType();
 
                     //XXX use this before connector sets colType in sc correctly.
-                    if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                    if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                         ct = jobInfo.csc->colType(sc->oid());
 
                     //X
@@ -1635,7 +1635,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
             CalpontSystemCatalog::ColType ct = sc->colType();
 
 //XXX use this before connector sets colType in sc correctly.
-            if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+            if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                 ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -1771,7 +1771,7 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
 
         if (it->schema.empty())
             oid = doFromSubquery(fromSubquery[i++].get(), it->alias, it->view, jobInfo);
-        else if (it->fIsInfiniDB)
+        else if (it->fisColumnStore)
             oid = jobInfo.csc->tableRID(*it).objnum;
         else
             oid = 0;

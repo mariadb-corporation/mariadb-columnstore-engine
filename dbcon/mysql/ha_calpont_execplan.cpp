@@ -2376,7 +2376,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
                     sc->hasAggregate(cols[j]->hasAggregate());
 
                     if (col)
-                        sc->isInfiniDB(col->isInfiniDB());
+                        sc->isColumnStore(col->isColumnStore());
 
                     // @bug5634, @bug5635. mark used derived col on derived table.
                     // outer join inner table filter can not be moved in
@@ -2829,14 +2829,14 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     }
 
     // check engine type
-    if (!tan.fIsInfiniDB)
+    if (!tan.fisColumnStore)
     {
         // get the first column to project. @todo optimization to get the smallest one for foreign engine.
         Field* field = *(table->field);
-        SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name.str, tan.fIsInfiniDB, gwi.sessionid);
+        SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name.str, tan.fisColumnStore, gwi.sessionid);
         string alias(table->alias.ptr());
         sc->tableAlias(lower(alias));
-        sc->isInfiniDB(false);
+        sc->isColumnStore(false);
         sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
         sc->resultType(fieldType_MysqlToIDB(field));
         sc->oid(field->field_index + 1);
@@ -4188,16 +4188,16 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
 {
     Item_decimal* idp = (Item_decimal*)item;
-    IDB_Decimal infinidb_decimal;
+    IDB_Decimal columnstore_decimal;
     String val, *str = item->val_str(&val);
     string valStr;
     valStr.assign(str->ptr(), str->length());
-    ostringstream infinidb_decimal_val;
+    ostringstream columnstore_decimal_val;
     uint32_t i = 0;
 
     if (str->ptr()[0] == '+' || str->ptr()[0] == '-')
     {
-        infinidb_decimal_val << str->ptr()[0];
+        columnstore_decimal_val << str->ptr()[0];
         i = 1;
     }
 
@@ -4206,22 +4206,22 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         if (str->ptr()[i] == '.')
             continue;
 
-        infinidb_decimal_val << str->ptr()[i];
+        columnstore_decimal_val << str->ptr()[i];
     }
 
-    infinidb_decimal.value = strtoll(infinidb_decimal_val.str().c_str(), 0, 10);
+    columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
 
     if (gwi.internalDecimalScale >= 0 && idp->decimals > (uint)gwi.internalDecimalScale)
     {
-        infinidb_decimal.scale = gwi.internalDecimalScale;
-        double val = (double)(infinidb_decimal.value / pow((double)10, idp->decimals - gwi.internalDecimalScale));
-        infinidb_decimal.value = (int64_t)(val > 0 ? val + 0.5 : val - 0.5);
+        columnstore_decimal.scale = gwi.internalDecimalScale;
+        double val = (double)(columnstore_decimal.value / pow((double)10, idp->decimals - gwi.internalDecimalScale));
+        columnstore_decimal.value = (int64_t)(val > 0 ? val + 0.5 : val - 0.5);
     }
     else
-        infinidb_decimal.scale = idp->decimals;
+        columnstore_decimal.scale = idp->decimals;
 
-    infinidb_decimal.precision = idp->max_length - idp->decimals;
-    ConstantColumn* cc = new ConstantColumn(valStr, infinidb_decimal);
+    columnstore_decimal.precision = idp->max_length - idp->decimals;
+    ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     return cc;
 }
@@ -4245,18 +4245,18 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         return buildSimpleColFromDerivedTable(gwi, ifp);
 
     CalpontSystemCatalog::ColType ct;
-    bool infiniDB = true;
+    bool columnStore = true;
 
     try
     {
         // check foreign engine
         if (ifp->cached_table && ifp->cached_table->table)
-            infiniDB = isMCSTable(ifp->cached_table->table);
+            columnStore = isMCSTable(ifp->cached_table->table);
         // @bug4509. ifp->cached_table could be null for myisam sometimes
         else if (ifp->field && ifp->field->table)
-            infiniDB = isMCSTable(ifp->field->table);
+            columnStore = isMCSTable(ifp->field->table);
 
-        if (infiniDB)
+        if (columnStore)
         {
             ct = gwi.csc->colType(
                      gwi.csc->lookupOID(make_tcn(ifp->db_name, bestTableName(ifp), ifp->field_name.str)));
@@ -4279,10 +4279,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     {
         case CalpontSystemCatalog::TINYINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_INT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4290,10 +4290,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
         case CalpontSystemCatalog::SMALLINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_INT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4302,10 +4302,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::MEDINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_INT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4313,34 +4313,34 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
         case CalpontSystemCatalog::BIGINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_INT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
             break;
 
         case CalpontSystemCatalog::UTINYINT:
-            sc = new SimpleColumn_UINT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+            sc = new SimpleColumn_UINT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::USMALLINT:
-            sc = new SimpleColumn_UINT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+            sc = new SimpleColumn_UINT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
-            sc = new SimpleColumn_UINT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+            sc = new SimpleColumn_UINT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::UBIGINT:
-            sc = new SimpleColumn_UINT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+            sc = new SimpleColumn_UINT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         default:
-            sc = new SimpleColumn(ifp->db_name, bestTableName(ifp), ifp->field_name.str, infiniDB, gwi.sessionid);
+            sc = new SimpleColumn(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
     }
 
     sc->resultType(ct);
@@ -4358,10 +4358,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     sc->viewName(lower(getViewName(ifp->cached_table)));
 
     sc->alias(ifp->name.str);
-    sc->isInfiniDB(infiniDB);
+    sc->isColumnStore(columnStore);
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
-    if (!infiniDB && ifp->field)
+    if (!columnStore && ifp->field)
         sc->oid(ifp->field->field_index + 1); // ExeMgr requires offset started from 1
 
     if (ifp->depended_from)
@@ -4590,7 +4590,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                         parm.reset(sc);
                         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), parm));
                         TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
-                        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] = make_pair(1, tmp);
+                        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] = make_pair(1, tmp);
                         break;
                     }
 
@@ -5090,7 +5090,7 @@ void gp_walk(const Item* item, void* arg)
                 if (!((scp->joinInfo() & JOIN_CORRELATED) || scp->colType().colDataType == CalpontSystemCatalog::VARBINARY))
                 {
                     TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
-                    gwip->tableMap[make_aliastable(scp->schemaName(), scp->tableName(), scp->tableAlias(), scp->isInfiniDB())] =
+                    gwip->tableMap[make_aliastable(scp->schemaName(), scp->tableName(), scp->tableAlias(), scp->isColumnStore())] =
                         make_pair(1, tmp);
                 }
             }
@@ -6119,10 +6119,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+                bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
-                if (infiniDB)
+                if (columnStore)
                     csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
 
                 string table_name = table_ptr->table_name.str;
@@ -6131,9 +6131,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 if (table_ptr->db.length && strcmp(table_ptr->db.str, "information_schema") == 0)
                     table_name = (table_ptr->schema_table_name.length ? table_ptr->schema_table_name.str : table_ptr->alias.str);
 
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, infiniDB);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore);
                 gwi.tbList.push_back(tn);
-                CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, infiniDB);
+                CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, columnStore);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
                 cerr << tn << endl;
@@ -6501,7 +6501,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     if (ifp->cached_table)
                         tmp = ifp->cached_table;
 
-                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
                         make_pair(1, tmp);
                 }
                 else
@@ -6999,7 +6999,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             string fullname;
             fullname = str.c_ptr();
             TABLE_LIST* tmp = (funcFieldVec[i]->cached_table ? funcFieldVec[i]->cached_table : 0);
-            gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+            gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
                 make_pair(1, tmp);
         }
     }
@@ -7538,7 +7538,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     gwi.returnedCols.push_back(srcp);
                     gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(fieldVec[i]->field_name.str), srcp));
                     TABLE_LIST* tmp = (fieldVec[i]->cached_table ? fieldVec[i]->cached_table : 0);
-                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
                         make_pair(1, tmp);
                 }
             }
@@ -8237,10 +8237,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+                bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
-                if (infiniDB)
+                if (columnStore)
                     csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
 
                 string table_name = table_ptr->table_name.str;
@@ -8249,9 +8249,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 if (table_ptr->db.length && strcmp(table_ptr->db.str, "information_schema") == 0)
                     table_name = (table_ptr->schema_table_name.length ? table_ptr->schema_table_name.str : table_ptr->alias.str);
 
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, infiniDB);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore);
                 gwi.tbList.push_back(tn);
-                CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, infiniDB);
+                CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db.str, table_name, table_ptr->alias.str, columnStore);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
                 cerr << tn << endl;
@@ -8510,7 +8510,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     if (ifp->cached_table)
                         tmp = ifp->cached_table;
 
-                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
                         make_pair(1, tmp);
                 }
                 else
@@ -8998,7 +8998,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             string fullname;
             fullname = str.c_ptr();
             TABLE_LIST* tmp = (funcFieldVec[i]->cached_table ? funcFieldVec[i]->cached_table : 0);
-            gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+            gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
                 make_pair(1, tmp);
         }
     }

@@ -94,7 +94,7 @@ public:
  * derived_handler API methods. Could be used by the server
  * tp process sub-queries.
  * More details in server/sql/dervied_handler.h
- * INFINIDB_SHARE* hton share
+ * COLUMNSTORE_SHARE* hton share
  * tbl in the constructor is the list of the tables involved.
  * Methods:
  * init_scan - get plan and send it to ExeMgr. Get the execution result.
@@ -104,7 +104,7 @@ public:
 class ha_columnstore_derived_handler: public derived_handler
 {
 private:
-  INFINIDB_SHARE *share;
+  COLUMNSTORE_SHARE *share;
 
 public:
   ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST *tbl);
@@ -121,7 +121,7 @@ public:
  * select_handler API methods. Could be used by the server
  * tp pushdown the whole query described by SELECT_LEX.
  * More details in server/sql/select_handler.h
- * INFINIDB_SHARE* hton share
+ * COLUMNSTORE_SHARE* hton share
  * sel in the constructor is the semantic tree for the query.
  * Methods:
  * init_scan - get plan and send it to ExeMgr. Get the execution result.
@@ -131,7 +131,7 @@ public:
 class ha_columnstore_select_handler: public select_handler
 {
 private:
-  INFINIDB_SHARE *share;
+  COLUMNSTORE_SHARE *share;
 
 public:
   ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel);

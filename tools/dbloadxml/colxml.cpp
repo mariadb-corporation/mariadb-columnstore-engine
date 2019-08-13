@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     if (dbrm.getSystemReady() < 1)
     {
         std::string errMsg(
-            "System is not ready.  Verify that InfiniDB is up and ready "
+            "System is not ready.  Verify that ColumnStore is up and ready "
             "before running colxml.");
 
         if (bUseLogFile)

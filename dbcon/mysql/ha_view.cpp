@@ -120,13 +120,13 @@ void View::transform()
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+                bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
-                if (infiniDB)
+                if (columnStore)
                     csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
 
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, infiniDB);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, columnStore);
                 gwi.tbList.push_back(tn);
                 gwi.tableMap[tn] = make_pair(0, table_ptr);
                 fParentGwip->tableMap[tn] = make_pair(0, table_ptr);

@@ -58,7 +58,7 @@ public:
     SimpleColumn_INT(const std::string& schema,
                      const std::string& table,
                      const std::string& col,
-                     const bool isInfiniDB,
+                     const bool isColumnStore,
                      const uint32_t sessionID = 0);
     SimpleColumn_INT(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
@@ -106,9 +106,9 @@ template<int len>
 SimpleColumn_INT<len>::SimpleColumn_INT(const std::string& schema,
                                         const std::string& table,
                                         const std::string& col,
-                                        const bool isInfiniDB,
+                                        const bool isColumnStore,
                                         const uint32_t sessionID) :
-    SimpleColumn(schema, table, col, isInfiniDB, sessionID)
+    SimpleColumn(schema, table, col, isColumnStore, sessionID)
 {
     setNullVal();
 }

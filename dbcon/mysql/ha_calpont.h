@@ -25,7 +25,7 @@ extern handlerton* calpont_hton;
 extern handlerton* mcs_hton;
 
 /** @brief
-  INFINIDB_SHARE is a structure that will be shared among all open handlers.
+  COLUMNSTORE_SHARE is a structure that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
 */
 typedef struct st_calpont_share
@@ -34,7 +34,7 @@ typedef struct st_calpont_share
     uint32_t table_name_length, use_count;
     pthread_mutex_t mutex;
     THR_LOCK lock;
-} INFINIDB_SHARE;
+} COLUMNSTORE_SHARE;
 
 /** @brief
   Class definition for the storage engine
@@ -42,7 +42,7 @@ typedef struct st_calpont_share
 class ha_calpont: public handler
 {
     THR_LOCK_DATA lock;      ///< MySQL lock
-    INFINIDB_SHARE* share;    ///< Shared lock info
+    COLUMNSTORE_SHARE* share;    ///< Shared lock info
     ulonglong int_table_flags;
 
 public:

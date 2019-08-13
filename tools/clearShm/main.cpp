@@ -123,9 +123,9 @@ void semDoit(key_t sem_key, const string& label)
 void usage()
 {
     cout << "usage: clearShm [-cvnh]" << endl;
-    cout << "   delete all InfiniDB shared memory data" << endl;
+    cout << "   delete all ColumnStore shared memory data" << endl;
     cout << "   -h display this help" << endl;
-    cout << "   -c only clear InfiniDB Engine data, leave OAM intact" << endl;
+    cout << "   -c only clear ColumnStore Engine data, leave OAM intact" << endl;
     cout << "   -v verbose output" << endl;
     cout << "   -n don't actually delete anything (implies -v)" << endl;
 }

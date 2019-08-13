@@ -70,7 +70,7 @@ public:
     SimpleColumn(const std::string& schema,
                  const std::string& table,
                  const std::string& col,
-                 const bool isInfiniDB,
+                 const bool isColumnStore,
                  const uint32_t sessionID = 0);
     SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
@@ -160,13 +160,13 @@ public:
     {
         fTimeZone = timeZone;
     }
-    inline const bool isInfiniDB() const
+    inline const bool isColumnStore() const
     {
-        return fIsInfiniDB;
+        return fisColumnStore;
     }
-    inline void isInfiniDB(const bool isInfiniDB)
+    inline void isColumnStore(const bool isColumnStore)
     {
-        fIsInfiniDB = isInfiniDB;
+        fisColumnStore = isColumnStore;
     }
 
     /** return a copy of this pointer
@@ -261,7 +261,7 @@ protected:
     // if belong to view, view name is non-empty
     std::string fViewName;
     std::string fTimeZone;
-    bool fIsInfiniDB;
+    bool fisColumnStore;
 
     /** @brief parse SimpleColumn text
      *

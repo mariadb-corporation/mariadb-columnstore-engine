@@ -802,7 +802,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-                if (sc->isInfiniDB() && !(dynamic_cast<PseudoColumn*>(sc)))
+                if (sc->isColumnStore() && !(dynamic_cast<PseudoColumn*>(sc)))
                     ct = jobInfo.csc->colType(sc->oid());
 
 //X

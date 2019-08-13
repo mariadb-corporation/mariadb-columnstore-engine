@@ -48,7 +48,7 @@ using namespace execplan;
 namespace WriteEngine
 {
 // Maximum saturation value for DECIMAL types based on precision
-const long long infinidb_precision[19] =
+const long long columnstore_precision[19] =
 {
     0,
     9,
@@ -759,14 +759,14 @@ void XMLJob::initSatLimits( JobColumn& curColumn ) const
     else if ( curColumn.typeName ==
               ColDataTypeStr[CalpontSystemCatalog::DECIMAL] )
     {
-        curColumn.fMinIntSat = -infinidb_precision[curColumn.precision];
-        curColumn.fMaxIntSat = infinidb_precision[curColumn.precision];
+        curColumn.fMinIntSat = -columnstore_precision[curColumn.precision];
+        curColumn.fMaxIntSat = columnstore_precision[curColumn.precision];
     }
     else if ( curColumn.typeName ==
               ColDataTypeStr[CalpontSystemCatalog::UDECIMAL] )
     {
         curColumn.fMinIntSat = 0;
-        curColumn.fMaxIntSat = infinidb_precision[curColumn.precision];
+        curColumn.fMaxIntSat = columnstore_precision[curColumn.precision];
     }
     else if ( curColumn.typeName ==
               ColDataTypeStr[CalpontSystemCatalog::FLOAT] )

@@ -454,7 +454,7 @@ tpl_close ( cpsm_tplh_t* ntplh,
 status_t
 sm_init ( uint32_t sid,
           cpsm_conhdl_t** conn_hdl,
-          uint32_t infinidb_local_query)
+          uint32_t columnstore_local_query)
 {
     // clear file content
 #if IDB_SM_DEBUG
@@ -465,7 +465,7 @@ sm_init ( uint32_t sid,
 
     // @bug5660 Connection changes related to the local pm setting
     /**
-     * when local PM is detected, or infinidb_local_query is set:
+     * when local PM is detected, or columnstore_local_query is set:
      * 1. SELECT query connect to local ExeMgr 127.0.0.1:8601;
      * 2. DML/DDL is disallowed.
      * once local connection is determined, no need to check
@@ -474,14 +474,14 @@ sm_init ( uint32_t sid,
     if (*conn_hdl)
     {
         // existing connection is local, ok.
-        if ((*conn_hdl)->exeMgr->localQuery() || ! infinidb_local_query)
+        if ((*conn_hdl)->exeMgr->localQuery() || ! columnstore_local_query)
             return STATUS_OK;
         // if session variable changes to local, re-establish the connection to loopback.
         else
             sm_cleanup(*conn_hdl);
     }
 
-    cpsm_conhdl_t* hndl = new cpsm_conhdl_t(time(0), sid, infinidb_local_query);
+    cpsm_conhdl_t* hndl = new cpsm_conhdl_t(time(0), sid, columnstore_local_query);
     *conn_hdl = hndl;
     hndl->sessionID = sid;
 

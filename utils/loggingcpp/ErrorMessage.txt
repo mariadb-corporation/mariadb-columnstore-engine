@@ -86,13 +86,13 @@
 2045	ERR_PRIMPROC_DOWN	At least one PrimProc closed the connection unexpectedly.
 
 2046	ERR_READ_INPUT_DATALIST	Input datalist read error.
-2047	ERR_LOCAL_QUERY_UM	Query attempted on UM (no PM) with infinidb_local_query set.
+2047	ERR_LOCAL_QUERY_UM	Query attempted on UM (no PM) with columnstore_local_query set.
 
 # disk-based join runtime errors from supported queries
 2048	ERR_DBJ_FILE_IO_ERROR	There was an IO error doing a disk-based join.
 2049	ERR_DBJ_UNKNOWN_ERROR	An unknown error error occured doing a disk-based join.  Check the error log & contact support.
-2050	ERR_DBJ_DISK_USAGE_LIMIT	This query exceeded the temp disk usage limit.  Raise infinidb_diskjoin_smallsidelimit if possible and try again.
-2051	ERR_DBJ_DATA_DISTRIBUTION	The data distribution in this query overflowed a disk-based join bucket.  If possible, raise infinidb_diskjoin_bucketsize and try again.
+2050	ERR_DBJ_DISK_USAGE_LIMIT	This query exceeded the temp disk usage limit.  Raise columnstore_diskjoin_smallsidelimit if possible and try again.
+2051	ERR_DBJ_DATA_DISTRIBUTION	The data distribution in this query overflowed a disk-based join bucket.  If possible, raise columnstore_diskjoin_bucketsize and try again.
 2052	INFO_SWITCHING_TO_DJS	Out of UM memory, switching to disk-based join.
 
 2053	ERR_FUNC_OUT_OF_RANGE_RESULT	The result is out of range for function %1% using value(s): %2% %3%
@@ -141,7 +141,7 @@
 4014	ERR_CONSTRAINTS	Constraints are currently not supported in Columnstore.
 4015	ERR_NOT_NULL_CONSTRAINTS	Column '%1%' cannot be null.
 4016	ERR_DML_DDL_SLAVE	DML and DDL statements for Columnstore tables can only be run from the replication master.
-4017	ERR_DML_DDL_LOCAL	DML and DDL statements are not allowed when infinidb_local_query is greater than 0.
+4017	ERR_DML_DDL_LOCAL	DML and DDL statements are not allowed when columnstore_local_query is greater than 0.
 4018	ERR_NON_SUPPORT_SYNTAX	The statement is not supported in Columnstore.
 
 # UDF
