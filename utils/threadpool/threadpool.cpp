@@ -409,6 +409,24 @@ void ThreadPool::beginThread() throw()
                     --fIssued;
                     --waitingFunctorsSize;
                     fWaitingFunctors.erase(todo);
+                    if (fDebug)
+                    {
+                        ostringstream oss;
+                        oss << "Ending thread " << " on " << fName
+                        << " max " << fMaxThreads
+                        << " queue " << fQueueSize
+                        << " threads " << fThreadCount
+                        << " running " << fIssued
+                        << " waiting " << (waitingFunctorsSize - fIssued)
+                        << " total " << waitingFunctorsSize;
+                        logging::Message::Args args;
+                        logging::Message message(0);
+                        args.add(oss.str());
+                        message.format( args );
+                        logging::LoggingID lid(22);
+                        logging::MessageLog ml(lid);
+                        ml.logWarningMessage( message );
+                    }
                 }
 
                 timeout = boost::get_system_time() + boost::posix_time::minutes(10);
@@ -536,6 +554,8 @@ void ThreadPoolMonitor::operator()()
                 << setw(4) << tv.tv_usec / 100
                 << " Name " << fPool->fName
                 << " Active " << fPool->waitingFunctorsSize
+        << " running " << fPool->fIssued
+        << " waiting " << (fPool->waitingFunctorsSize - fPool->fIssued)
                 << " ThdCnt " << fPool->fThreadCount
                 << " Max " << fPool->fMaxThreads
                 << " Q " << fPool->fQueueSize

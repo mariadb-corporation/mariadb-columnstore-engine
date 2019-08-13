@@ -347,6 +347,7 @@ SCSEP FromSubQuery::transform()
     gwi.subQuery = this;
     gwi.viewName = fGwip.viewName;
     csep->derivedTbAlias(fAlias); // always lower case
+    csep->derivedTbView(fGwip.viewName.alias);
 
     if (getSelectPlan(gwi, *fFromSub, csep, fPushdownHand) != 0)
     {

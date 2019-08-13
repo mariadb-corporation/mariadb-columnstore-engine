@@ -1340,16 +1340,13 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             else
                 schemaName = string(item->db_name);
 
+            columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             if (item->field_type() == MYSQL_TYPE_TIMESTAMP ||
                 item->field_type() == MYSQL_TYPE_TIMESTAMP2)
             {
                 timeStampColumnNames.insert(string(item->name.str));
             }
 
-            columnAssignmentPtr = new ColumnAssignment();
-            columnAssignmentPtr->fColumn = string(item->name.str);
-            columnAssignmentPtr->fOperator = "=";
-            columnAssignmentPtr->fFuncScale = 0;
             Item* value = value_it++;
 
             if (value->type() ==  Item::CONST_ITEM)
@@ -1468,8 +1465,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             else if ( value->type() ==  Item::NULL_ITEM )
             {
 //                dmlStmt += "NULL";
-                columnAssignmentPtr->fScalarExpression = "NULL";
+                columnAssignmentPtr->fScalarExpression = "";
                 columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr->fIsNull = true;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {
@@ -1535,11 +1533,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
         {
             if (timeStampColumnNames.find(onUpdateTimeStampColumns[i]) == timeStampColumnNames.end())
             {
-                columnAssignmentPtr = new ColumnAssignment();
-                columnAssignmentPtr->fColumn = string(onUpdateTimeStampColumns[i]);
-                columnAssignmentPtr->fOperator = "=";
-                columnAssignmentPtr->fFuncScale = 0;
-                columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr = new ColumnAssignment(string(onUpdateTimeStampColumns[i]), "=", "");
                 struct timeval tv;
                 char buf[64];
                 gettimeofday(&tv, 0);

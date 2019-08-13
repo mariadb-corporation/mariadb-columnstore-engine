@@ -423,8 +423,7 @@ int Dctnry::closeDctnry(bool realClose)
         return rc;
 
     //cout <<"Init called! m_dctnryOID ="  << m_dctnryOID << endl;
-    if (realClose)
-        freeStringCache( );
+    freeStringCache( );
 
     return NO_ERROR;
 }

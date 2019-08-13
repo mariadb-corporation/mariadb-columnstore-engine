@@ -320,6 +320,41 @@ const string WindowFunctionStep::toString() const
     return oss.str();
 }
 
+void WindowFunctionStep::AddSimplColumn(const vector<SimpleColumn*>& scs,
+                                     JobInfo& jobInfo)
+{
+    // append the simple columns if not already projected
+    set<UniqId> scProjected;
+
+    for (RetColsVector::iterator i  = jobInfo.projectionCols.begin();
+            i != jobInfo.projectionCols.end();
+            i++)
+    {
+        SimpleColumn* sc = dynamic_cast<SimpleColumn*>(i->get());
+
+        if (sc != NULL)
+        {
+            if (sc->schemaName().empty())
+                sc->oid(joblist::tableOid(sc, jobInfo.csc) + 1 + sc->colPosition());
+
+            scProjected.insert(UniqId(sc));
+        }
+    }
+
+    for (vector<SimpleColumn*>::const_iterator i = scs.begin(); i != scs.end(); i++)
+    {
+        if (scProjected.find(UniqId(*i)) == scProjected.end())
+        {
+            jobInfo.windowDels.push_back(SRCP((*i)->clone()));
+// MCOL-3343 Enable this if we decide to allow Window Functions to run with
+// aggregates with no group by. MariaDB allows this. Nobody else in the world does.
+// There will be more work to get it to function if we try this.                
+//            jobInfo.windowSet.insert(getTupleKey(jobInfo, *i, true));
+            scProjected.insert(UniqId(*i));
+        }
+    }
+}
+
 void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
     // window functions in select clause, selected or in expression
@@ -404,6 +439,23 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
     if (jobInfo.windowCols.empty())
         return;
 
+    // Add in the non-window side of arithmetic columns and functions
+    for (uint64_t i = 0; i < jobInfo.windowExps.size(); i++)
+    {
+        const ArithmeticColumn* ac =
+            dynamic_cast<const ArithmeticColumn*>(jobInfo.windowExps[i].get());
+        const FunctionColumn* fc =
+            dynamic_cast<const FunctionColumn*>(jobInfo.windowExps[i].get());
+
+        if (ac != NULL && ac->windowfunctionColumnList().size() > 0)
+        {
+            AddSimplColumn(ac->simpleColumnList(), jobInfo);
+        }
+        else if (fc != NULL && fc->windowfunctionColumnList().size() > 0)
+        {
+            AddSimplColumn(fc->simpleColumnList(), jobInfo);
+        }
+    }
     // reconstruct the delivered column list with auxiliary columns
     set<uint64_t> colSet;
     jobInfo.deliveredCols.resize(0);
@@ -445,7 +497,13 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
             key = getTupleKey(jobInfo, *j, true);
 
             if (colSet.find(key) == colSet.end())
+            {
                 jobInfo.deliveredCols.push_back(*j);
+// MCOL-3343 Enable this if we decide to allow Window Functions to run with
+// aggregates with no group by. MariaDB allows this. Nobody else in the world does.
+// There will be more work to get it to function if we try this.                
+//                jobInfo.windowSet.insert(getTupleKey(jobInfo, *j, true));
+            }
 
             colSet.insert(key);
         }
