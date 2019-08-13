@@ -2937,7 +2937,7 @@ int ha_calpont_impl_delete_table(const char* name)
     int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
     return rc;
 }
-int ha_calpont_impl_write_row(uchar* buf, TABLE* table)
+int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
     //sleep(100);

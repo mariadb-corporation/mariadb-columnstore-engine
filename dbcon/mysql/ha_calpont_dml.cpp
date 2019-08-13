@@ -653,7 +653,7 @@ int ha_calpont_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool
 
 }
 
-int ha_calpont_impl_write_row_(uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
+int ha_calpont_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
 {
     int rc = 0;
     //timer.start( "buildValueList");
@@ -743,13 +743,13 @@ int ha_calpont_impl_write_row_(uchar* buf, TABLE* table, cal_connection_info& ci
     }
 }
 
-int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
+int ha_calpont_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
 {
     ByteStream rowData;
     int rc = 0;
     //std::ostringstream  data;
     bool nullVal = false;
-    uchar* bufHdr = buf;	// bit flag indicating a field is null. Only those fields that are nullable are represented.
+    const uchar* bufHdr = buf;	// bit flag indicating a field is null. Only those fields that are nullable are represented.
     int32_t headerByte = 0; // Current byte in the bufHdr
     int32_t headerBit = 0;  // current bit in the bufHdr current byte.
     uint16_t colpos = 0;
@@ -815,7 +815,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                     }
                     else
                     {
-                        uchar* tmp1 = buf;
+                        const uchar* tmp1 = buf;
                         uint32_t tmp = (tmp1[2] << 16) + (tmp1[1] << 8) + tmp1[0];
 
                         int day = tmp & 0x0000001fl;
@@ -1491,11 +1491,12 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
 
                         if (ci.columnTypes[colpos].scale == 0)
                         {
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
                             //test flag bit for sign
                             bool posNum  = tmpBuf[0] & (0x80);
-                            tmpBuf[0] ^= 0x80; //flip the bit
-                            int32_t tmp1 = tmpBuf[0];
+                            uchar tmpChr = tmpBuf[0];
+                            tmpChr ^= 0x80; //flip the bit
+                            int32_t tmp1 = tmpChr;
 
                             if (totalBytes > 4)
                             {
@@ -1589,11 +1590,12 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         }
                         else
                         {
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
                             //test flag bit for sign
                             bool posNum  = tmpBuf[0] & (0x80);
-                            tmpBuf[0] ^= 0x80; //flip the bit
-                            int32_t tmp1 = tmpBuf[0];
+                            uchar tmpChr = tmpBuf[0];
+                            tmpChr ^= 0x80; //flip the bit
+                            int32_t tmp1 = tmpChr;
 
                             //fetch the digits before decimal point
                             if (bytesBefore == 0)
@@ -1805,7 +1807,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                                 buf = buf + 2 ;
                             }
 
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
 
                             for (int32_t i = 0; i < dataLength; i++)
                             {
@@ -1831,7 +1833,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                             if ( dataLength > ci.columnTypes[colpos].colWidth)
                                 dataLength = ci.columnTypes[colpos].colWidth;
 
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
 
                             for (int32_t i = 0; i < dataLength; i++)
                             {

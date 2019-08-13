@@ -305,7 +305,7 @@ int ha_calpont::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_calpont::write_row(uchar* buf)
+int ha_calpont::write_row(const uchar* buf)
 {
     DBUG_ENTER("ha_calpont::write_row");
     int rc = ha_calpont_impl_write_row(buf, table);
