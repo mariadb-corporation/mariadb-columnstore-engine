@@ -432,9 +432,9 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
     }
     
-    const metadataObject *mdEntry;
+    metadataObject mdEntry;
     bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!entryExists || cloudKey != mdEntry->key)
+    if (!entryExists || cloudKey != mdEntry.key)
     {
         logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
@@ -460,9 +460,9 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     err = cs->putObject((cachePath / key).string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
-    numBytesRead += mdEntry->length;
-    bytesReadBySync += mdEntry->length;
-    numBytesUploaded += mdEntry->length;
+    numBytesRead += mdEntry.length;
+    bytesReadBySync += mdEntry.length;
+    numBytesUploaded += mdEntry.length;
     ++objectsSyncedWithNoJournal;
     replicator->remove((cachePath/key), Replicator::NO_LOCAL);
 }
@@ -492,9 +492,9 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         return;
     }
     
-    const metadataObject *mdEntry;
+    metadataObject mdEntry;
     bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
-    if (!metaExists || cloudKey != mdEntry->key)
+    if (!metaExists || cloudKey != mdEntry.key)
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
         return;
@@ -537,7 +537,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     
     int err;
     boost::shared_array<uint8_t> data;
-    size_t count = 0, size = mdEntry->length, originalSize = 0;
+    size_t count = 0, size = mdEntry.length, originalSize = 0;
     
     bool oldObjIsCached = cache->exists(prefix, cloudKey);
     
@@ -561,14 +561,14 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         
         //TODO!!  This sucks.  Need a way to pass in a larger array to cloud storage, and also have it not
         // do any add'l alloc'ing or copying
-        if (size < mdEntry->length)
+        if (size < mdEntry.length)
         {
-            boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry->length]());
+            boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry.length]());
             memcpy(tmp.get(), data.get(), size);
-            memset(&tmp[size], 0, mdEntry->length - size);
+            memset(&tmp[size], 0, mdEntry.length - size);
             data.swap(tmp);
         }
-        size = mdEntry->length;    // reset length.  Using the metadata as a source of truth (truncation), not actual file length.
+        size = mdEntry.length;    // reset length.  Using the metadata as a source of truth (truncation), not actual file length.
         
         size_t _bytesRead = 0;
         err = ioc->mergeJournalInMem(data, size, journalName.c_str(), &_bytesRead);
@@ -656,7 +656,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     // update the metadata for the source file
     
     md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
-    replicator->updateMetadata(sourceFile.c_str(), md);
+    replicator->updateMetadata(md);
 
     rename(key, newKey);
     

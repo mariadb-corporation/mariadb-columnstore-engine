@@ -360,7 +360,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
                     metadata.updateEntryLength(i->offset, (count + objectOffset));
                 cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
                 synchronizer->newJournalEntry(firstDir, i->key, err+JOURNAL_ENTRY_HEADER_SIZE);
-                replicator->updateMetadata(filename, metadata);
+                replicator->updateMetadata(metadata);
                 logger->log(LOG_ERR,"IOCoordinator::write(): addJournalEntry incomplete write, %u of %u bytes written.",count,length);
                 return count;
             }
@@ -423,10 +423,11 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
             synchronizer->newObjects(firstDir, newObjectKeys);
-            replicator->updateMetadata(filename, metadata);
+            replicator->updateMetadata(metadata);
             logger->log(LOG_ERR,"IOCoordinator::write(): newObject incomplete write, %u of %u bytes written.",count,length);
             return count;
         }
+
         cache->newObject(firstDir, newObject.key,writeLength + objectOffset);
         newObjectKeys.push_back(newObject.key);
 
@@ -436,7 +437,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
     }
     synchronizer->newObjects(firstDir, newObjectKeys);
 
-    replicator->updateMetadata(filename, metadata);
+    replicator->updateMetadata(metadata);
 
     return count;
 }
@@ -497,7 +498,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
                 metadata.updateEntryLength(i->offset, (count + i->length));
                 cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
                 synchronizer->newJournalEntry(firstDir, i->key, err+JOURNAL_ENTRY_HEADER_SIZE);
-                replicator->updateMetadata(filename, metadata);
+                replicator->updateMetadata(metadata);
                 logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
                 goto out;
             }
@@ -547,7 +548,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             cache->newObject(firstDir, newObject.key,err);
             newObjectKeys.push_back(newObject.key);
             synchronizer->newObjects(firstDir, newObjectKeys);
-            replicator->updateMetadata(filename, metadata);
+            replicator->updateMetadata(metadata);
             logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
             goto out;
         }
@@ -559,7 +560,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         iocBytesWritten += writeLength;
     }
     synchronizer->newObjects(firstDir, newObjectKeys);
-    replicator->updateMetadata(filename, metadata);
+    replicator->updateMetadata(metadata);
     
     // had to add this hack to prevent deadlock
 out:
@@ -585,7 +586,7 @@ int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
     
     if ((openmode & O_CREAT) && !meta.exists()) {
         ++filesCreated;
-        replicator->updateMetadata(filename, meta);   // this will end up creating filename
+        replicator->updateMetadata(meta);   // this will end up creating filename
     }
     if ((openmode & O_TRUNC) && meta.exists())
         _truncate(filename, 0, s.get());
@@ -698,7 +699,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
     
-    err = replicator->updateMetadata(bfpath, meta);
+    err = replicator->updateMetadata(meta);
     if (err)
         return err;
     //lock.unlock();   <-- ifExistsThenDelete() needs the file lock held during the call
@@ -764,6 +765,7 @@ void IOCoordinator::deleteMetaFile(const bf::path &file)
         deletedObjects.push_back(object.key);
     }
     synchronizer->deletedObjects(firstDir, deletedObjects);
+    MetadataFile::deletedMeta(file);
 }
 
 void IOCoordinator::remove(const bf::path &p)
@@ -981,7 +983,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         return -1;
     }
     lock.unlock();
-    replicator->updateMetadata(filename2, meta2);
+    replicator->updateMetadata(meta2);
     lock2.unlock();
     
     for (auto &jEntry : newJournalEntries)

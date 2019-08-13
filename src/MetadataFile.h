@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <vector>
 #include <iostream>
-#include <set>
+#include <unordered_map>
 #include <boost/filesystem/path.hpp>
 
 namespace storagemanager
@@ -21,6 +21,7 @@ namespace storagemanager
 struct metadataObject {
     metadataObject();
     metadataObject(uint64_t offset);   // so we can search mObjects by integer
+    metadataObject(uint64_t offset, uint64_t length, const std::string &key);
     uint64_t offset;
     mutable uint64_t length;
     mutable std::string key;
@@ -48,15 +49,19 @@ class MetadataFile
         // returns the objects needed to update
         std::vector<metadataObject> metadataRead(off_t offset, size_t length) const;
         // updates the metadatafile with new object
-        int writeMetadata(const boost::filesystem::path &filename);
+        //int writeMetadata(const boost::filesystem::path &filename);
+        int writeMetadata();
         
         // updates the name and length fields of an entry, given the offset
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
         metadataObject addMetadataObject(const boost::filesystem::path &filename, size_t length);
-        bool getEntry(off_t offset, const metadataObject **out) const;
+        bool getEntry(off_t offset, metadataObject *out) const;
         void removeEntry(off_t offset);
         void removeAllEntries();
+        
+        // removes p from the json cache.  p should be a fully qualified metadata file
+        static void deletedMeta(const boost::filesystem::path &p);
         
         // TBD: this may have to go; there may be no use case where only the uuid needs to change.
         static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);
@@ -87,15 +92,40 @@ class MetadataFile
   
         static void printKPIs();
               
+        typedef boost::shared_ptr<boost::property_tree::ptree> Jsontree_t;
     private:
         MetadataConfig *mpConfig;
         SMLogging *mpLogger;
         int mVersion;
         int mRevision;
         boost::filesystem::path mFilename;
-        std::set<metadataObject> mObjects;
+        Jsontree_t jsontree;
+        //std::set<metadataObject> mObjects;
         bool _exists;
+        void makeEmptyJsonTree();
+        
+        class MetadataCache
+        {
+        public:
+            MetadataCache();
+            Jsontree_t get(const boost::filesystem::path &);
+            void put(const boost::filesystem::path &, const Jsontree_t &);
+            void erase(const boost::filesystem::path &);
+            boost::mutex &getMutex();
+        private:
+            // there's a more efficient way to do this, KISS for now.
+            typedef std::list<std::string> Lru_t;
+            typedef std::unordered_map<std::string, std::pair<Jsontree_t, Lru_t::iterator> > Lookup_t;
+            Lookup_t lookup;
+            Lru_t lru;
+            uint max_lru_size;
+            boost::mutex mutex;
+        };
+        static MetadataCache jsonCache;
+        
 };
+
+
 
 }
 

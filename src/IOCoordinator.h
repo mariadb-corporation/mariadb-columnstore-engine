@@ -31,7 +31,6 @@ class IOCoordinator : public boost::noncopyable
         static IOCoordinator *get();
         virtual ~IOCoordinator();
 
-        /* TODO: make read, write, append return a ssize_t */
         ssize_t read(const char *filename, uint8_t *data, off_t offset, size_t length);
         ssize_t write(const char *filename, const uint8_t *data, off_t offset, size_t length);
         ssize_t append(const char *filename, const uint8_t *data, size_t length);

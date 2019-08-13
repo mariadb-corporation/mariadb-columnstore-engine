@@ -33,7 +33,7 @@ class Replicator
         int newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
         int remove(const boost::filesystem::path &file, Flags flags = NONE);
         
-        int updateMetadata(const boost::filesystem::path &filename, MetadataFile &meta);
+        int updateMetadata(MetadataFile &meta);
 
         void printKPIs() const;
 
