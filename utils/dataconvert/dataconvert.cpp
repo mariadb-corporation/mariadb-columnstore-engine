@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -53,7 +53,7 @@ using namespace logging;
 namespace
 {
 
-const int64_t infinidb_precision[19] =
+const int64_t columnstore_precision[19] =
 {
     0,
     9,
@@ -415,7 +415,7 @@ int64_t number_int_value(const string& data,
             (ct.colDataType == CalpontSystemCatalog::UDECIMAL) ||
             (ct.scale > 0))
     {
-        int64_t rangeUp = infinidb_precision[ct.precision];
+        int64_t rangeUp = columnstore_precision[ct.precision];
         int64_t rangeLow = -rangeUp;
 
         if (intVal > rangeUp)

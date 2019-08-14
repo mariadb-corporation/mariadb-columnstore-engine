@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -88,109 +88,6 @@ inline uint32_t tid2sid(const uint32_t tid)
 }
 
 //StopWatch timer;
-int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
-{
-    char attribute_buffer[1024];
-    String attribute(attribute_buffer, sizeof(attribute_buffer),
-                     &my_charset_bin);
-
-    std::string cols = " (";
-    std::string vals = " values (";
-    columns = 0;
-
-    for (Field** field = table->field; *field; field++)
-    {
-        const char* ptr;
-        const char* end_ptr;
-
-        if ((*field)->is_null())
-            ptr = end_ptr = 0;
-        else
-        {
-            bitmap_set_bit(table->read_set, (*field)->field_index);
-            (*field)->val_str(&attribute, &attribute);
-            ptr = attribute.ptr();
-            end_ptr = attribute.length() + ptr;
-        }
-
-        if (columns > 0)
-        {
-            cols.append(",");
-            vals.append(",");
-        }
-
-        columns++;
-
-        cols.append((*field)->field_name.str);
-
-        if (ptr == end_ptr)
-        {
-            vals.append ("NULL");
-        }
-        else
-        {
-
-            if ( (*field)->type() == MYSQL_TYPE_VARCHAR ||
-                    /*FIXME: (*field)->type() == MYSQL_TYPE_VARBINARY || */
-                    (*field)->type() == MYSQL_TYPE_VAR_STRING ||
-                    (*field)->type() == MYSQL_TYPE_STRING ||
-                    (*field)->type() == MYSQL_TYPE_DATE ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
-                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
-                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
-                    (*field)->type() == MYSQL_TYPE_TIME )
-                vals.append("'");
-
-            while (ptr < end_ptr)
-            {
-
-                if (*ptr == '\r')
-                {
-                    ptr++;
-                }
-                else if (*ptr == '\n')
-                {
-                    ptr++;
-                }
-                else if (*ptr == '\'' )
-                {
-                    //@Bug 1820. Replace apostrophe with strange character to pass parser.
-                    vals += '\252';
-                    ptr++;
-                }
-                else
-                    vals += *ptr++;
-            }
-
-            if ( (*field)->type() == MYSQL_TYPE_VARCHAR ||
-                    /*FIXME: (*field)->type() == MYSQL_TYPE_VARBINARY || */
-                    (*field)->type() == MYSQL_TYPE_VAR_STRING ||
-                    (*field)->type() == MYSQL_TYPE_STRING ||
-                    (*field)->type() == MYSQL_TYPE_DATE ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
-                    (*field)->type() == MYSQL_TYPE_TIMESTAMP ||
-                    (*field)->type() == MYSQL_TYPE_TIMESTAMP2 ||
-                    (*field)->type() == MYSQL_TYPE_TIME )
-                vals.append("'");
-        }
-    }
-
-    if (columns)
-    {
-        cols.append(") ");
-        vals.append(") ");
-        buffer = "INSERT INTO ";
-        buffer.append(table->s->table_name.str);
-        buffer.append(cols);
-        buffer.append(vals);
-    }
-
-    return columns;
-}
-
-
 uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
 {
     char attribute_buffer[1024];
@@ -653,7 +550,7 @@ int ha_calpont_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool
 
 }
 
-int ha_calpont_impl_write_row_(uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
+int ha_calpont_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
 {
     int rc = 0;
     //timer.start( "buildValueList");
@@ -743,13 +640,13 @@ int ha_calpont_impl_write_row_(uchar* buf, TABLE* table, cal_connection_info& ci
     }
 }
 
-int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
+int ha_calpont_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
 {
     ByteStream rowData;
     int rc = 0;
     //std::ostringstream  data;
     bool nullVal = false;
-    uchar* bufHdr = buf;	// bit flag indicating a field is null. Only those fields that are nullable are represented.
+    const uchar* bufHdr = buf;	// bit flag indicating a field is null. Only those fields that are nullable are represented.
     int32_t headerByte = 0; // Current byte in the bufHdr
     int32_t headerBit = 0;  // current bit in the bufHdr current byte.
     uint16_t colpos = 0;
@@ -815,7 +712,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                     }
                     else
                     {
-                        uchar* tmp1 = buf;
+                        const uchar* tmp1 = buf;
                         uint32_t tmp = (tmp1[2] << 16) + (tmp1[1] << 8) + tmp1[0];
 
                         int day = tmp & 0x0000001fl;
@@ -1043,7 +940,6 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                                 dataLength = *(uint16_t*) buf;
                                 buf = buf + 2 ;
                             }
-
                             escape.assign((char*)buf, dataLength);
                             boost::replace_all(escape, "\\", "\\\\");
                             fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter);
@@ -1061,22 +957,16 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                                 buf = buf + 2 ;
                             }
 
-                            if ( dataLength > ci.columnTypes[colpos].colWidth)
-                                dataLength = ci.columnTypes[colpos].colWidth;
-
                             escape.assign((char*)buf, dataLength);
                             boost::replace_all(escape, "\\", "\\\\");
 
                             fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter);
                         }
                     }
-
-                    //buf += ci.columnTypes[colpos].colWidth;
                     if (ci.utf8)
                         buf += (ci.columnTypes[colpos].colWidth * 3);
                     else
                         buf += ci.columnTypes[colpos].colWidth;
-
                     break;
                 }
 
@@ -1498,11 +1388,12 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
 
                         if (ci.columnTypes[colpos].scale == 0)
                         {
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
                             //test flag bit for sign
                             bool posNum  = tmpBuf[0] & (0x80);
-                            tmpBuf[0] ^= 0x80; //flip the bit
-                            int32_t tmp1 = tmpBuf[0];
+                            uchar tmpChr = tmpBuf[0];
+                            tmpChr ^= 0x80; //flip the bit
+                            int32_t tmp1 = tmpChr;
 
                             if (totalBytes > 4)
                             {
@@ -1596,11 +1487,12 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         }
                         else
                         {
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
                             //test flag bit for sign
                             bool posNum  = tmpBuf[0] & (0x80);
-                            tmpBuf[0] ^= 0x80; //flip the bit
-                            int32_t tmp1 = tmpBuf[0];
+                            uchar tmpChr = tmpBuf[0];
+                            tmpChr ^= 0x80; //flip the bit
+                            int32_t tmp1 = tmpChr;
 
                             //fetch the digits before decimal point
                             if (bytesBefore == 0)
@@ -1812,7 +1704,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                                 buf = buf + 2 ;
                             }
 
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
 
                             for (int32_t i = 0; i < dataLength; i++)
                             {
@@ -1838,7 +1730,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                             if ( dataLength > ci.columnTypes[colpos].colWidth)
                                 dataLength = ci.columnTypes[colpos].colWidth;
 
-                            uchar* tmpBuf = buf;
+                            const uchar* tmpBuf = buf;
 
                             for (int32_t i = 0; i < dataLength; i++)
                             {
@@ -2116,10 +2008,6 @@ std::string  ha_calpont_impl_cleartablelock(
 int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci )
 {
     int rc = 0;
-
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE ||
-            thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE )
-        return rc;
 
     if (thd->slave_thread && !ci.replicationEnabled)
         return 0;

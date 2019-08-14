@@ -373,17 +373,16 @@ status_t
 tpl_close ( cpsm_tplh_t* ntplh,
             cpsm_conhdl_t** conn_hdl,
             QueryStats& stats,
+            bool ask_4_stats,
             bool clear_scan_ctx)
 {
     cpsm_conhdl_t* hndl = *conn_hdl;
-#if IDB_SM_DEBUG
     SMDEBUGLOG << "tpl_close: hndl" << hndl << " ntplh " << ntplh;
 
     if (ntplh)
         SMDEBUGLOG << " tableid: " << ntplh->tableid;
 
     SMDEBUGLOG << endl;
-#endif
     delete ntplh;
 
     // determine end of result set and end of statement execution
@@ -391,57 +390,60 @@ tpl_close ( cpsm_tplh_t* ntplh,
     {
         // Get the query stats
         ByteStream bs;
-        ByteStream::quadbyte qb = 3;
-        bs << qb;
-        hndl->write(bs);
-        
+        // Ask for a stats only if a user explicitly asks
+        if(ask_4_stats)
+        {
+            ByteStream::quadbyte qb = 3;
+            bs << qb;
+            hndl->write(bs);
+        }
         // MCOL-1601 Dispose of unused empty RowGroup
         if (clear_scan_ctx)
         {
+            std::cout << "tpl_close() clear_scan_ctx read" << std::endl;
             bs = hndl->exeMgr->read();
         }
 
-#if IDB_SM_DEBUG
         SMDEBUGLOG << "tpl_close hndl->exeMgr: " << hndl->exeMgr << endl;
-#endif
         //keep reading until we get a string
-        //TODO: really need to fix this! Why is ExeMgr sending other stuff?
-        for (int tries = 0; tries < 10; tries++)
+        // Ask for a stats only if a user explicitly asks
+        if(ask_4_stats)
         {
-            bs = hndl->exeMgr->read();
+            for (int tries = 0; tries < 10; tries++)
+            {
+                bs = hndl->exeMgr->read();
 
-            if (bs.length() == 0) break;
+                if (bs.length() == 0) break;
 
-            try
-            {
-                bs >> hndl->queryStats;
-                bs >> hndl->extendedStats;
-                bs >> hndl->miniStats;
-                stats.unserialize(bs);
-                stats.setEndTime();
-                stats.insert();
-                break;
+                try
+                {
+                    bs >> hndl->queryStats;
+                    bs >> hndl->extendedStats;
+                    bs >> hndl->miniStats;
+                    stats.unserialize(bs);
+                    stats.setEndTime();
+                    stats.insert();
+                    break;
+                }
+                catch (IDBExcept&)
+                {
+                    // @bug4732
+                    end_query(hndl);
+                    throw;
+                }
+                catch (...)
+                {
+                    // querystats messed up. close connection.
+                    // no need to throw for querystats protocol error, like for tablemode.
+                    SMDEBUGLOG << "tpl_close() exception whilst getting stats" << endl;
+                    end_query(hndl);
+                    sm_cleanup(hndl);
+                    *conn_hdl = 0;
+                    return STATUS_OK;
+                    //throw runtime_error(string("tbl_close catch exception: ") + e.what());
+                }
             }
-            catch (IDBExcept&)
-            {
-                // @bug4732
-                end_query(hndl);
-                throw;
-            }
-            catch (...)
-            {
-                // querystats messed up. close connection.
-                // no need to throw for querystats protocol error, like for tablemode.
-#if IDB_SM_DEBUG
-                SMDEBUGLOG << "tpl_close() exception whilst getting stats" << endl;
-#endif
-                end_query(hndl);
-                sm_cleanup(hndl);
-                *conn_hdl = 0;
-                return STATUS_OK;
-                //throw runtime_error(string("tbl_close catch exception: ") + e.what());
-            }
-        }
+        } //stats
 
         end_query(hndl);
     }
@@ -452,7 +454,7 @@ tpl_close ( cpsm_tplh_t* ntplh,
 status_t
 sm_init ( uint32_t sid,
           cpsm_conhdl_t** conn_hdl,
-          uint32_t infinidb_local_query)
+          uint32_t columnstore_local_query)
 {
     // clear file content
 #if IDB_SM_DEBUG
@@ -463,7 +465,7 @@ sm_init ( uint32_t sid,
 
     // @bug5660 Connection changes related to the local pm setting
     /**
-     * when local PM is detected, or infinidb_local_query is set:
+     * when local PM is detected, or columnstore_local_query is set:
      * 1. SELECT query connect to local ExeMgr 127.0.0.1:8601;
      * 2. DML/DDL is disallowed.
      * once local connection is determined, no need to check
@@ -472,14 +474,14 @@ sm_init ( uint32_t sid,
     if (*conn_hdl)
     {
         // existing connection is local, ok.
-        if ((*conn_hdl)->exeMgr->localQuery() || ! infinidb_local_query)
+        if ((*conn_hdl)->exeMgr->localQuery() || ! columnstore_local_query)
             return STATUS_OK;
         // if session variable changes to local, re-establish the connection to loopback.
         else
             sm_cleanup(*conn_hdl);
     }
 
-    cpsm_conhdl_t* hndl = new cpsm_conhdl_t(time(0), sid, infinidb_local_query);
+    cpsm_conhdl_t* hndl = new cpsm_conhdl_t(time(0), sid, columnstore_local_query);
     *conn_hdl = hndl;
     hndl->sessionID = sid;
 

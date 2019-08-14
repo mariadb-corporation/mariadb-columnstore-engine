@@ -649,10 +649,10 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-    if (!sc1->schemaName().empty() && sc1->isInfiniDB() && !pc1)
+    if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
         ct1 = jobInfo.csc->colType(sc1->oid());
 
-    if (!sc2->schemaName().empty() && sc2->isInfiniDB() && !pc2)
+    if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
         ct2 = jobInfo.csc->colType(sc2->oid());
 
 //X
@@ -1074,10 +1074,10 @@ const JobStepVector doJoin(
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-    if (!sc1->schemaName().empty() && sc1->isInfiniDB() && !pc1)
+    if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
         ct1 = jobInfo.csc->colType(sc1->oid());
 
-    if (!sc2->schemaName().empty() && sc2->isInfiniDB() && !pc2)
+    if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
         ct2 = jobInfo.csc->colType(sc2->oid());
 
 //X
@@ -1341,7 +1341,7 @@ const JobStepVector doSemiJoin(const SimpleColumn* sc, const ReturnedColumn* rc,
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-    if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc1)
+    if (!sc->schemaName().empty() && sc->isColumnStore() && !pc1)
         ct1 = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -1644,13 +1644,14 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         string constval(cc->constval());
 
+
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
         const PseudoColumn* pc = dynamic_cast<const PseudoColumn*>(sc);
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-        if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
+        if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -1902,7 +1903,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                 else
                     pcs = new PseudoColStep(sc->oid(), tbl_oid, pc->pseudoType(), ct, jobInfo);
 
-                if (sc->isInfiniDB())
+                if (sc->isColumnStore())
                     pcs->addFilter(cop, value, rf);
 
                 pcs->alias(alias);
@@ -2339,7 +2340,7 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
                     // MCOL-1182 if we are doing a join between a cross engine
                     // step and a constant then keep the filter for the cross
                     // engine step instead of deleting it further down.
-                    if (!sc->isInfiniDB())
+                    if (!sc->isColumnStore())
                     {
                         keepFilters = true;
                     }
@@ -2724,7 +2725,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-        if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
+        if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -2950,7 +2951,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
             pcs->name(sc->columnName());
             pcs->schema(sc->schemaName());
 
-            if (sc->isInfiniDB())
+            if (sc->isColumnStore())
             {
                 if (op)
                     pcs->setBOP(bop2num(op));
@@ -3001,7 +3002,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 //XXX use this before connector sets colType in sc correctly.
             CalpontSystemCatalog::ColType ct = sc->colType();
 
-            if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
+            if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
                 ct = jobInfo.csc->colType(sc->oid());
 
             TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc.get(), alias));

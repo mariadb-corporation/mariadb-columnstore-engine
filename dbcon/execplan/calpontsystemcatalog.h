@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -429,16 +429,16 @@ public:
      */
     struct TableAliasName
     {
-        TableAliasName (): fIsInfiniDB (true) {}
+        TableAliasName (): fisColumnStore (true) {}
         TableAliasName (std::string sch, std::string tb, std::string al) :
-            schema (sch), table (tb), alias (al), fIsInfiniDB(true) {}
+            schema (sch), table (tb), alias (al), fisColumnStore(true) {}
         TableAliasName (std::string sch, std::string tb, std::string al, std::string v) :
-            schema (sch), table (tb), alias (al), view(v), fIsInfiniDB(true) {}
+            schema (sch), table (tb), alias (al), view(v), fisColumnStore(true) {}
         std::string schema;
         std::string table;
         std::string alias;
         std::string view;
-        bool fIsInfiniDB;
+        bool fisColumnStore;
         void clear();
         bool operator<(const TableAliasName& rhs) const;
         bool operator>=(const TableAliasName& rhs) const
@@ -451,7 +451,7 @@ public:
                     table == rhs.table &&
                     alias == rhs.alias &&
                     view == rhs.view &&
-                    fIsInfiniDB == rhs.fIsInfiniDB);
+                    fisColumnStore == rhs.fisColumnStore);
         }
         bool operator!=(const TableAliasName& rhs) const
         {
@@ -962,8 +962,8 @@ const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const st
  */
 const CalpontSystemCatalog::TableName make_table(const std::string& s, const std::string& t);
 const CalpontSystemCatalog::TableAliasName make_aliastable(const std::string& s, const std::string& t, const std::string& a,
-        const bool fIsInfiniDB = true);
-const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v, const bool fIsInfiniDB = true);
+        const bool fisColumnStore = true);
+const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v, const bool fisColumnStore = true);
 
 /** convenience function to determine if column type is a char
  *  type

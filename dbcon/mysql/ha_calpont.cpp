@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
+#include "ha_mcs_pushdown.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -30,10 +31,18 @@ static int calpont_commit(handlerton* hton, THD* thd, bool all);
 
 static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
-handlerton* calpont_hton;
+handlerton* mcs_hton;
 
+// handlers creation function for hton.
+// Look into ha_mcs_pushdown.* for more details.
 static group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query);
+
+static derived_handler*
+create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived);
+
+static select_handler*
+create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
 
 /* Variables for example share methods */
 
@@ -61,13 +70,14 @@ pthread_mutex_t calpont_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* calpont_get_key(INFINIDB_SHARE* share, size_t* length,
+static uchar* calpont_get_key(COLUMNSTORE_SHARE* share, size_t* length,
                               my_bool not_used __attribute__((unused)))
 {
     *length = share->table_name_length;
     return (uchar*) share->table_name;
 }
 
+// This one is unused
 int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
     DBUG_ENTER("calpont_discover");
@@ -94,6 +104,7 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
     DBUG_RETURN(my_errno);
 }
 
+// This f() is also unused
 int calpont_discover_existence(handlerton* hton, const char* db,
                                const char* table_name)
 {
@@ -107,6 +118,7 @@ static int columnstore_init_func(void* p)
     struct tm tm;
     time_t t;
 
+
     time(&t);
     localtime_r(&t, &tm);
     fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ",
@@ -115,53 +127,26 @@ static int columnstore_init_func(void* p)
 
     fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
-    calpont_hton = (handlerton*)p;
+    mcs_hton = (handlerton*)p;
 #ifndef _MSC_VER
     (void) pthread_mutex_init(&calpont_mutex, MY_MUTEX_INIT_FAST);
 #endif
     (void) my_hash_init(&calpont_open_tables, system_charset_info, 32, 0, 0,
                         (my_hash_get_key) calpont_get_key, 0, 0);
 
-    calpont_hton->state =   SHOW_OPTION_YES;
-    calpont_hton->create =  calpont_create_handler;
-    calpont_hton->flags =   HTON_CAN_RECREATE;
-//  calpont_hton->discover_table= calpont_discover;
-//  calpont_hton->discover_table_existence= calpont_discover_existence;
-    calpont_hton->commit = calpont_commit;
-    calpont_hton->rollback = calpont_rollback;
-    calpont_hton->close_connection = calpont_close_connection;
-    calpont_hton->create_group_by = create_calpont_group_by_handler;
+    mcs_hton->state =   SHOW_OPTION_YES;
+    mcs_hton->create =  calpont_create_handler;
+    mcs_hton->flags =   HTON_CAN_RECREATE;
+//  mcs_hton->discover_table= calpont_discover;
+//  mcs_hton->discover_table_existence= calpont_discover_existence;
+    mcs_hton->commit = calpont_commit;
+    mcs_hton->rollback = calpont_rollback;
+    mcs_hton->close_connection = calpont_close_connection;
+    mcs_hton->create_group_by = create_calpont_group_by_handler;
+    mcs_hton->create_derived = create_columnstore_derived_handler;
+    mcs_hton->create_select = create_columnstore_select_handler;
     DBUG_RETURN(0);
 }
-
-static int infinidb_init_func(void* p)
-{
-    DBUG_ENTER("infinidb_init_func");
-
-    struct tm tm;
-    time_t t;
-
-    time(&t);
-    localtime_r(&t, &tm);
-    fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ",
-            tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-            tm.tm_hour, tm.tm_min, tm.tm_sec);
-
-    fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
-
-    calpont_hton = (handlerton*)p;
-
-    calpont_hton->state =   SHOW_OPTION_YES;
-    calpont_hton->create =  calpont_create_handler;
-    calpont_hton->flags =   HTON_CAN_RECREATE;
-//  calpont_hton->discover_table= calpont_discover;
-//  calpont_hton->discover_table_existence= calpont_discover_existence;
-    calpont_hton->commit = calpont_commit;
-    calpont_hton->rollback = calpont_rollback;
-    calpont_hton->close_connection = calpont_close_connection;
-    DBUG_RETURN(0);
-}
-
 
 static int columnstore_done_func(void* p)
 {
@@ -171,13 +156,6 @@ static int columnstore_done_func(void* p)
 #ifndef _MSC_VER
     pthread_mutex_destroy(&calpont_mutex);
 #endif
-    DBUG_RETURN(0);
-}
-
-static int infinidb_done_func(void* p)
-{
-    DBUG_ENTER("calpont_done_func");
-
     DBUG_RETURN(0);
 }
 
@@ -264,10 +242,6 @@ int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
 {
     DBUG_ENTER("ha_calpont::open");
 
-    //if (!(share = get_share(name, table)))
-    //  DBUG_RETURN(1);
-    //thr_lock_data_init(&share->lock,&lock,NULL);
-
     int rc = ha_calpont_impl_open(name, mode, test_if_locked);
 
     DBUG_RETURN(rc);
@@ -293,7 +267,6 @@ int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
 int ha_calpont::close(void)
 {
     DBUG_ENTER("ha_calpont::close");
-    //DBUG_RETURN(free_share(share));
 
     int rc = ha_calpont_impl_close();
 
@@ -331,7 +304,7 @@ int ha_calpont::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_calpont::write_row(uchar* buf)
+int ha_calpont::write_row(const uchar* buf)
 {
     DBUG_ENTER("ha_calpont::write_row");
     int rc = ha_calpont_impl_write_row(buf, table);
@@ -511,7 +484,11 @@ int ha_calpont::rnd_init(bool scan)
 {
     DBUG_ENTER("ha_calpont::rnd_init");
 
-    int rc = ha_calpont_impl_rnd_init(table);
+    int rc = 0;
+    if(scan)
+    {
+        rc = ha_calpont_impl_rnd_init(table);
+    }
 
     DBUG_RETURN(rc);
 }
@@ -755,7 +732,7 @@ int ha_calpont::external_lock(THD* thd, int lock_type)
 
     //@Bug 2526 Only register the transaction when autocommit is off
     if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-        trans_register_ha( thd, true, calpont_hton);
+        trans_register_ha( thd, true, mcs_hton);
 
     int rc = ha_calpont_impl_external_lock(thd, table, lock_type);
     DBUG_RETURN(rc);
@@ -926,259 +903,7 @@ const COND* ha_calpont::cond_push(const COND* cond)
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
-struct st_mysql_storage_engine infinidb_storage_engine =
-{ MYSQL_HANDLERTON_INTERFACE_VERSION };
-
-/*@brief  check_walk - It traverses filter conditions*/
-/************************************************************
- * DESCRIPTION:
- * It traverses filter predicates looking for unsupported
- * JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
- * logical OR.
- * PARAMETERS:
- *    thd - THD pointer.
- *    derived - TABLE_LIST* to work with.
- * RETURN:
- *    derived_handler if possible
- *    NULL in other case
- ***********************************************************/
-void check_walk(const Item* item, void* arg)
-{
-    bool* unsupported_feature  = static_cast<bool*>(arg);
-    if ( *unsupported_feature )
-        return;
-    switch (item->type())
-    {
-        case Item::FUNC_ITEM:
-        {
-            const Item_func* ifp = static_cast<const Item_func*>(item);
-
-            if ( ifp->functype() != Item_func::EQ_FUNC ) // NON-equi JOIN
-            {
-                if ( ifp->argument_count() == 2 &&
-                    ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
-                    ifp->arguments()[1]->type() == Item::FIELD_ITEM )
-                {
-                    Item_field* left= static_cast<Item_field*>(ifp->arguments()[0]);
-                    Item_field* right= static_cast<Item_field*>(ifp->arguments()[1]);
-
-                    if ( left->field->table != right->field->table )
-                    {
-                        *unsupported_feature = true;
-                        return;
-                    }
-                }
-                else // IN + correlated subquery 
-                {
-                    if ( ifp->functype() == Item_func::NOT_FUNC
-                        && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM )
-                    {
-                        check_walk(ifp->arguments()[0], arg);
-                    }
-                }
-            }
-            break;
-        }
-        
-        case Item::EXPR_CACHE_ITEM: // IN + correlated subquery
-        {
-            const Item_cache_wrapper* icw = static_cast<const Item_cache_wrapper*>(item);
-            if ( icw->get_orig_item()->type() == Item::FUNC_ITEM )
-            {
-                const Item_func *ifp = static_cast<const Item_func*>(icw->get_orig_item());
-                if ( ifp->argument_count() == 2 &&
-                    ( ifp->arguments()[0]->type() == Item::Item::SUBSELECT_ITEM
-                    || ifp->arguments()[1]->type() == Item::Item::SUBSELECT_ITEM ))
-                {
-                    *unsupported_feature = true;
-                    return;
-                }
-            }
-            break;
-        }
-
-        case Item::COND_ITEM: // OR in cods is unsupported yet
-        {
-            Item_cond* icp = (Item_cond*)item;
-            if ( is_cond_or(icp) )
-            {
-                *unsupported_feature = true;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-}
-
-/*@brief  create_calpont_group_by_handler- Creates handler*/
-/***********************************************************
- * DESCRIPTION:
- * Creates a group_by pushdown handler if there is no:
- *  non-equi JOIN, e.g * t1.c1 > t2.c2
- *  logical OR in the filter predicates
- *  Impossible WHERE
- *  Impossible HAVING
- * and there is either GROUP BY or aggregation function
- * exists at the top level.
- * Valid queries with the last two crashes the server if
- * processed.
- * Details are in server/sql/group_by_handler.h
- * PARAMETERS:
- *    thd - THD pointer
- *    query - Query structure LFM in group_by_handler.h
- * RETURN:
- *    group_by_handler if success
- *    NULL in other case
- ***********************************************************/
-static group_by_handler*
-create_calpont_group_by_handler(THD* thd, Query* query)
-{
-    ha_calpont_group_by_handler* handler = NULL;
-    // same as thd->lex->current_select
-    SELECT_LEX *select_lex = query->from->select_lex;
-
-    // Create a handler if query is valid. See comments for details.
-    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
-        && ( thd->variables.infinidb_vtable_mode == 0
-            || thd->variables.infinidb_vtable_mode == 2 )
-        && ( query->group_by || select_lex->with_sum_func ) )
-    {
-        bool unsupported_feature = false;
-        // revisit SELECT_LEX for all units
-        for(TABLE_LIST* tl = query->from; !unsupported_feature && tl; tl = tl->next_global)
-        {
-            select_lex = tl->select_lex;
-            // Correlation subquery. Comming soon so fail on this yet.
-            unsupported_feature = select_lex->is_correlated;
-
-            // Impossible HAVING or WHERE
-            if ( ( !unsupported_feature && query->having && select_lex->having_value == Item::COND_FALSE )
-                || ( select_lex->cond_count > 0
-                    && select_lex->cond_value == Item::COND_FALSE ) )
-            {
-                unsupported_feature = true;
-            }
-
-            // Unsupported JOIN conditions
-            if ( !unsupported_feature )
-            {
-                JOIN *join = select_lex->join;
-                Item_cond *icp = 0;
-
-                if (join != 0)
-                    icp = reinterpret_cast<Item_cond*>(join->conds);
-
-                if ( unsupported_feature == false
-                    && icp )
-                {
-                    icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-                }
-
-                // Optimizer could move some join conditions into where
-                if (select_lex->where != 0)
-                    icp = reinterpret_cast<Item_cond*>(select_lex->where);
-
-                if ( unsupported_feature == false
-                    && icp )
-                {
-                    icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-                }
-
-            }
-        } // unsupported features check ends here
-
-        if ( !unsupported_feature )
-        {
-            handler = new ha_calpont_group_by_handler(thd, query);
-
-            // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
-            query->group_by = NULL;
-            query->order_by = NULL;
-            query->having = NULL;
-        }
-    }
-
-    return handler;
-}
-
-/***********************************************************
- * DESCRIPTION:
- * GROUP BY handler constructor
- * PARAMETERS:
- *    thd - THD pointer.
- *    query - Query describing structure
- ***********************************************************/
-ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
-        : group_by_handler(thd_arg, calpont_hton),
-          select(query->select),
-          table_list(query->from),
-          distinct(query->distinct),
-          where(query->where),
-          group_by(query->group_by),
-          order_by(query->order_by),
-          having(query->having)
-{
-}
-
-/***********************************************************
- * DESCRIPTION:
- * GROUP BY destructor
- ***********************************************************/
-ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
-{
-}
-
-/***********************************************************
- * DESCRIPTION:
- * Makes the plan and prepares the data
- * RETURN:
- *    int rc
- ***********************************************************/
-int ha_calpont_group_by_handler::init_scan()
-{
-    DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
-
-    // Save vtable_state to restore the after we inited.
-    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
-    // MCOL-1052 Should be removed after cleaning the code up.
-    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
-    int rc = ha_calpont_impl_group_by_init(this, table);
-    thd->infinidb_vtable.vtable_state = oldState;
-
-    DBUG_RETURN(rc);
-}
-
-/***********************************************************
- * DESCRIPTION:
- * Fetches a row and saves it to a temporary table.
- * RETURN:
- *    int rc
- ***********************************************************/
-int ha_calpont_group_by_handler::next_row()
-{
-    DBUG_ENTER("ha_calpont_group_by_handler::next_row");
-    int rc = ha_calpont_impl_group_by_next(this, table);
-
-    DBUG_RETURN(rc);
-}
-
-/***********************************************************
- * DESCRIPTION:
- * Shuts the scan down.
- * RETURN:
- *    int rc
- ***********************************************************/
-int ha_calpont_group_by_handler::end_scan()
-{
-    DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
-
-    int rc = ha_calpont_impl_group_by_end(this, table);
-
-    DBUG_RETURN(rc);
-}
+#include "ha_mcs_pushdown.cpp"
 
 mysql_declare_plugin(columnstore)
 {
@@ -1190,21 +915,6 @@ mysql_declare_plugin(columnstore)
     PLUGIN_LICENSE_GPL,
     columnstore_init_func,                        /* Plugin Init */
     columnstore_done_func,                        /* Plugin Deinit */
-    0x0100 /* 1.0 */,
-    NULL,                                         /* status variables */
-    mcs_system_variables,                         /* system variables */
-    NULL,                                         /* reserved */
-    0                                             /* config flags */
-},
-{
-    MYSQL_STORAGE_ENGINE_PLUGIN,
-    &infinidb_storage_engine,
-    "InfiniDB",
-    "MariaDB",
-    "Columnstore storage engine (deprecated: use columnstore)",
-    PLUGIN_LICENSE_GPL,
-    infinidb_init_func,                           /* Plugin Init */
-    infinidb_done_func,                            /* Plugin Deinit */
     0x0100 /* 1.0 */,
     NULL,                                         /* status variables */
     mcs_system_variables,                         /* system variables */
@@ -1227,21 +937,6 @@ maria_declare_plugin(columnstore)
   mcs_system_variables,          /* system variables                */
   "1.0",                         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
-},
-{
-  MYSQL_STORAGE_ENGINE_PLUGIN,
-  &infinidb_storage_engine,
-  "InfiniDB",
-  "MariaDB",
-  "Columnstore storage engine (deprecated: use columnstore)",
-  PLUGIN_LICENSE_GPL,
-  infinidb_init_func,
-  infinidb_done_func,
-  0x0100, /* 1.0 */
-  NULL,                           /* status variables                */
-  mcs_system_variables,           /* system variables                */
-  "1.0",                          /* string version */
-  MariaDB_PLUGIN_MATURITY_STABLE  /* maturity */
 }
 maria_declare_plugin_end;
 

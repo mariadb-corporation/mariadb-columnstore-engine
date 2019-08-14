@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -322,9 +322,12 @@ ParseTree* setDerivedFilter(THD* thd, ParseTree*& n,
 FromSubQuery::FromSubQuery(gp_walk_info& gwip) : SubQuery(gwip)
 {}
 
-FromSubQuery::FromSubQuery(gp_walk_info& gwip, SELECT_LEX* sub) :
-    SubQuery(gwip),
-    fFromSub(sub)
+FromSubQuery::FromSubQuery(gp_walk_info& gwip, 
+    SELECT_LEX* sub, 
+    bool isPushdownHandler) :
+        SubQuery(gwip),
+        fFromSub(sub),
+        fPushdownHand(isPushdownHandler)
 {}
 
 FromSubQuery::~FromSubQuery()
@@ -344,8 +347,9 @@ SCSEP FromSubQuery::transform()
     gwi.subQuery = this;
     gwi.viewName = fGwip.viewName;
     csep->derivedTbAlias(fAlias); // always lower case
+    csep->derivedTbView(fGwip.viewName.alias);
 
-    if (getSelectPlan(gwi, *fFromSub, csep) != 0)
+    if (getSelectPlan(gwi, *fFromSub, csep, fPushdownHand) != 0)
     {
         fGwip.fatalParseError = true;
 

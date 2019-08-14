@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -60,7 +60,7 @@ public:
     SimpleColumn_Decimal(const std::string& schema,
                          const std::string& table,
                          const std::string& col,
-                         const bool isInfiniDB,
+                         const bool isColumnStore,
                          const uint32_t sessionID = 0);
     SimpleColumn_Decimal(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
@@ -107,9 +107,9 @@ template<int len>
 SimpleColumn_Decimal<len>::SimpleColumn_Decimal(const std::string& schema,
         const std::string& table,
         const std::string& col,
-        const bool isInfiniDB,
+        const bool isColumnStore,
         const uint32_t sessionID) :
-    SimpleColumn(schema, table, col, isInfiniDB, sessionID)
+    SimpleColumn(schema, table, col, isColumnStore, sessionID)
 {
     setNullVal();
 }

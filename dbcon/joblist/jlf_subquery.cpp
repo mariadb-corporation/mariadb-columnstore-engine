@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -802,7 +802,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-                if (sc->isInfiniDB() && !(dynamic_cast<PseudoColumn*>(sc)))
+                if (sc->isColumnStore() && !(dynamic_cast<PseudoColumn*>(sc)))
                     ct = jobInfo.csc->colType(sc->oid());
 
 //X

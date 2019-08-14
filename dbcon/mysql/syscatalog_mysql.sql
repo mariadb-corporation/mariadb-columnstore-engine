@@ -3,6 +3,9 @@ create database if not exists calpontsys;
 
 use calpontsys;
 
+drop table if exists systable restrict;
+drop table if exists syscolumn restrict;
+
 create table if not exists systable (tablename varchar(128),
                        `schema` varchar(128),
                        objectid int,
@@ -13,7 +16,7 @@ create table if not exists systable (tablename varchar(128),
                        numofrows int,
                        avgrowlen int,
                        numofblocks int,
-					   autoincrement int) engine=infinidb comment='SCHEMA SYNC ONLY';
+					   autoincrement int) engine=columnstore comment='SCHEMA SYNC ONLY';
 
 -- SYSCOLUMN
 create table if not exists syscolumn (`schema` varchar(128),
@@ -37,4 +40,4 @@ create table if not exists syscolumn (`schema` varchar(128),
                         minvalue varchar(64),
                         `maxvalue` varchar(64),
                         compressiontype integer,
-						nextvalue bigint) engine=infinidb comment='SCHEMA SYNC ONLY';
+						nextvalue bigint) engine=columnstore comment='SCHEMA SYNC ONLY';

@@ -387,7 +387,7 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
         sc->oid(tblOid + 1 + sc->colPosition());
         ct = sc->resultType();
     }
-    else if (sc->isInfiniDB() == false)
+    else if (sc->isColumnStore() == false)
     {
         ct = sc->colType();
     }
@@ -515,7 +515,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
             {
                 ct = sc->resultType();
             }
-            else if (sc->isInfiniDB() == false)
+            else if (sc->isColumnStore() == false)
             {
                 ct = sc->colType();
             }

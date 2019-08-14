@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -127,7 +127,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-        if (sc->isInfiniDB() && !pc)
+        if (sc->isColumnStore() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -275,9 +275,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 
             if (retCols[i]->windowfunctionColumnList().size() > 0)
                 jobInfo.expressionVec.push_back(key);
-            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
-                     jobInfo.expressionVec.end())
+            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) 
+                     == jobInfo.expressionVec.end())
+            {
                 jobInfo.returnedExpressions.push_back(sjstep);
+            }
 
             //put place hold column in projection list
             jobInfo.pjColList.push_back(ti);
@@ -427,7 +429,7 @@ void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs,
         }
     }
 
-    // append the aggregate columns in arithmetic/function cloulmn to the projection list
+    // append the aggregate columns in arithmetic/function column to the projection list
     for (vector<AggregateColumn*>::const_iterator i = aggs.begin(); i != aggs.end(); i++)
     {
         addAggregateColumn(*i, -1, jobInfo.projectionCols, jobInfo);
@@ -708,7 +710,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 ct = sc->colType();
 
 //XXX use this before connector sets colType in sc correctly.
-                if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                     ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -994,7 +996,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                             ct = sc->colType();
 
                             //XXX use this before connector sets colType in sc correctly.
-                            if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                            if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                                 ct = jobInfo.csc->colType(sc->oid());
 
                             //X
@@ -1043,16 +1045,21 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         const FunctionColumn* fc = NULL;
                         const WindowFunctionColumn* wc = NULL;
                         bool hasAggCols = false;
+                        bool hasWndCols = false;
 
                         if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
                         {
                             if (ac->aggColumnList().size() > 0)
                                 hasAggCols = true;
+                            if (ac->windowfunctionColumnList().size() > 0)
+                                hasWndCols = true;
                         }
                         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
                         {
                             if (fc->aggColumnList().size() > 0)
                                 hasAggCols = true;
+                            if (fc->windowfunctionColumnList().size() > 0)
+                                hasWndCols = true;
                         }
                         else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
                         {
@@ -1077,7 +1084,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
                         tupleKey = ti.key;
 
-                        if (hasAggCols)
+                        if (hasAggCols && !hasWndCols)
                             jobInfo.expressionVec.push_back(tupleKey);
                     }
 
@@ -1142,7 +1149,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     ct = sc->colType();
 
                     //XXX use this before connector sets colType in sc correctly.
-                    if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                    if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                         ct = jobInfo.csc->colType(sc->oid());
 
                     //X
@@ -1191,16 +1198,21 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 const FunctionColumn* fc = NULL;
                 const WindowFunctionColumn* wc = NULL;
                 bool hasAggCols = false;
+                bool hasWndCols = false;
 
                 if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
                 {
                     if (ac->aggColumnList().size() > 0)
                         hasAggCols = true;
+                    if (ac->windowfunctionColumnList().size() > 0)
+                        hasWndCols = true;
                 }
                 else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
                 {
                     if (fc->aggColumnList().size() > 0)
                         hasAggCols = true;
+                    if (fc->windowfunctionColumnList().size() > 0)
+                        hasWndCols = true;
                 }
                 else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
                 {
@@ -1225,7 +1237,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
                 tupleKey = ti.key;
 
-                if (hasAggCols)
+                if (hasAggCols && !hasWndCols)
                     jobInfo.expressionVec.push_back(tupleKey);
             }
 
@@ -1623,7 +1635,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
             CalpontSystemCatalog::ColType ct = sc->colType();
 
 //XXX use this before connector sets colType in sc correctly.
-            if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+            if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                 ct = jobInfo.csc->colType(sc->oid());
 
 //X
@@ -1759,7 +1771,7 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
 
         if (it->schema.empty())
             oid = doFromSubquery(fromSubquery[i++].get(), it->alias, it->view, jobInfo);
-        else if (it->fIsInfiniDB)
+        else if (it->fisColumnStore)
             oid = jobInfo.csc->tableRID(*it).objnum;
         else
             oid = 0;

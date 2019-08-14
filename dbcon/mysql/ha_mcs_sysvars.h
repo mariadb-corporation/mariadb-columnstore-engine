@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -40,8 +40,17 @@ void set_compression_type(THD* thd, ulong value);
 void* get_fe_conn_info_ptr(THD* thd = NULL);
 void set_fe_conn_info_ptr(void* ptr, THD* thd = NULL);
 
-bool get_use_legacy_sysvars(THD* thd);
-void set_use_legacy_sysvars(THD* thd, bool value);
+ulonglong get_original_optimizer_flags(THD* thd = NULL);
+void set_original_optimizer_flags(ulonglong ptr, THD* thd = NULL);
+
+bool get_select_handler(THD* thd);
+void set_select_handler(THD* thd, bool value);
+
+bool get_derived_handler(THD* thd);
+void set_derived_handler(THD* thd, bool value);
+
+bool get_group_by_handler(THD* thd);
+void set_group_by_handler(THD* thd, bool value);
 
 bool get_use_decimal_scale(THD* thd);
 void set_use_decimal_scale(THD* thd, bool value);

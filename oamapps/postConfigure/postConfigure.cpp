@@ -215,13 +215,11 @@ typedef struct _thread_data_t
 
 int main(int argc, char* argv[])
 {
-
 // print a warning if this is a developer build
 #ifdef SKIP_OAM_INIT
     cout << "SKIP_OAM_INIT is set" << endl;
     sleep(2);
 #endif
-
     Oam oam;
     string parentOAMModuleHostName;
     ChildModuleList childmodulelist;
@@ -5397,7 +5395,7 @@ bool storageSetup(bool amazonInstall)
 
     if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
     {
-        cout << "There are 4 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
+        cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
         prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
     }
 

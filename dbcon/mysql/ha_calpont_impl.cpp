@@ -1,5 +1,5 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+ /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -80,6 +80,7 @@ using namespace execplan;
 using namespace dataconvert;
 
 #include "sm.h"
+#include "ha_mcs_pushdown.h"
 
 #include "bytestream.h"
 #include "messagequeue.h"
@@ -168,8 +169,6 @@ static const string interval_names[] =
 
 const unsigned NONSUPPORTED_ERR_THRESH = 2000;
 
-//TODO: make this session-safe (put in connMap?)
-//vector<RMParam> rmParms;
 ResourceManager* rm = ResourceManager::instance();
 bool useHdfs = rm->useHdfs();
 
@@ -272,8 +271,8 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
 
             // @bug4388 stick to InfiniDB's scale in case mysql gives wrong scale due
             // to create vtable limitation.
-            if (f2->dec < ct.scale)
-                f2->dec = ct.scale;
+            //if (f2->dec < ct.scale)
+            //    f2->dec = ct.scale;
 
             char buf[256];
             dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, buf, 256, ct.colDataType);
@@ -578,10 +577,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                      * At a later date we should set this more intelligently
                      * based on the result set.
                      */
-                    /* MCOL-683: UTF-8 datetime no msecs is 57, this sometimes happens! */
-//                    if (((*f)->field_length > 19) && ((*f)->field_length != 57))
-//                        (*f)->field_length = strlen(tmp);
-
                     Field_varstring* f2 = (Field_varstring*)*f;
                     f2->store(tmp, strlen(tmp), f2->charset());
                     break;
@@ -743,18 +738,11 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     if (dl == std::numeric_limits<float>::infinity())
                         continue;
 
-                    //int64_t* icvp = (int64_t*)&dl;
-                    //intColVal = *icvp;
                     Field_float* f2 = (Field_float*)*f;
                     // bug 3485, reserve enough space for the longest float value
                     // -3.402823466E+38 to -1.175494351E-38, 0, and
                     // 1.175494351E-38 to 3.402823466E+38.
                     (*f)->field_length = 40;
-
-                    //float float_val = *(float*)(&value);
-                    //f2->store(float_val);
-                    if (f2->decimals() < (uint32_t)row.getScale(s))
-                        f2->dec = (uint32_t)row.getScale(s);
 
                     f2->store(dl);
 
@@ -762,9 +750,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     break;
-
-                    //storeNumericField(f, intColVal, colType);
-                    //break;
                 }
 
                 case CalpontSystemCatalog::DOUBLE:
@@ -781,26 +766,12 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
                     (*f)->field_length = 310;
 
-                    //double double_val = *(double*)(&value);
-                    //f2->store(double_val);
-                    if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                            || f2->decimals() < row.getScale(s))
-                    {
-                        f2->dec = row.getScale(s);
-                    }
-
                     f2->store(dl);
 
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     break;
-
-
-                    //int64_t* icvp = (int64_t*)&dl;
-                    //intColVal = *icvp;
-                    //storeNumericField(f, intColVal, colType);
-                    //break;
                 }
 
                 case CalpontSystemCatalog::LONGDOUBLE:
@@ -817,12 +788,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         {
                             char buf[310];
                             Field_new_decimal* f2 = (Field_new_decimal*)*f;
-                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                                    || f2->decimals() < row.getScale(s))
-                            {
-                                f2->dec = row.getScale(s);
-                            }
-//                            dl /= pow(10.0, (double)f2->dec);
                             snprintf(buf, 310, "%.20Lg", dl);
                             f2->store(buf, strlen(buf), f2->charset());
                             if ((*f)->null_ptr)
@@ -837,12 +802,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                             // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                             // 2.2250738585072014E-308 to 1.7976931348623157E+308.
                             (*f)->field_length = 310;
-
-                            if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                                    || f2->decimals() < row.getScale(s))
-                            {
-                                f2->dec = row.getScale(s);
-                            }
 
                             f2->store(static_cast<double>(dl));
                             if ((*f)->null_ptr)
@@ -1217,7 +1176,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
     return returnVal;
 }
 
-uint32_t doUpdateDelete(THD* thd)
+uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -1234,7 +1193,6 @@ uint32_t doUpdateDelete(THD* thd)
     //@Bug 4387. Check BRM status before start statement.
     boost::scoped_ptr<DBRM> dbrmp(new DBRM());
     int rc = dbrmp->isReadWrite();
-    thd->infinidb_vtable.isInfiniDBDML = true;
 
     if (rc != 0 )
     {
@@ -1316,7 +1274,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
 
     // @bug 1127. Re-construct update stmt using lex instead of using the original query.
-//	string dmlStmt="";
     string dmlStmt = string(idb_mysql_query_str(thd));
     string schemaName;
     string tableName("");
@@ -1334,28 +1291,16 @@ uint32_t doUpdateDelete(THD* thd)
     {
         ColumnAssignment* columnAssignmentPtr;
         Item_field* item;
-//		TABLE_LIST* table_ptr = thd->lex->select_lex.get_table_list();
-        List_iterator_fast<Item> field_it(thd->lex->select_lex.item_list);
+        List_iterator_fast<Item> field_it(thd->lex->first_select_lex()->item_list);
         List_iterator_fast<Item> value_it(thd->lex->value_list);
-//      dmlStmt += "update ";
         updateCP->queryType(CalpontSelectExecutionPlan::UPDATE);
         ci->stats.fQueryType = updateCP->queryType();
         uint32_t cnt = 0;
         tr1::unordered_set<string> timeStampColumnNames;
 
-//        for (; table_ptr; table_ptr= table_ptr->next_local)
-//        {
-//            dmlStmt += string(table_ptr->table_name);
-//            if (table_ptr->next_local)
-//                dmlStmt += ", ";
-//        }
-
-//		dmlStmt += " set ";
-
         while ((item = (Item_field*) field_it++))
         {
             cnt++;
-//            dmlStmt += string(item->name) + "=";
 
             string tmpTableName = bestTableName(item);
 
@@ -1395,34 +1340,43 @@ uint32_t doUpdateDelete(THD* thd)
             else
                 schemaName = string(item->db_name);
 
+            columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             if (item->field_type() == MYSQL_TYPE_TIMESTAMP ||
                 item->field_type() == MYSQL_TYPE_TIMESTAMP2)
             {
                 timeStampColumnNames.insert(string(item->name.str));
             }
 
-            columnAssignmentPtr = new ColumnAssignment();
-            columnAssignmentPtr->fColumn = string(item->name.str);
-            columnAssignmentPtr->fOperator = "=";
-            columnAssignmentPtr->fFuncScale = 0;
             Item* value = value_it++;
 
-            if (value->type() ==  Item::STRING_ITEM)
+            if (value->type() ==  Item::CONST_ITEM)
             {
-                //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
-                String val, *str;
-                str = value->val_str(&val);
-                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
-                columnAssignmentPtr->fFromCol = false;
+                if (value->cmp_type() == STRING_RESULT)
+                {
+                    //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
+                    String val, *str;
+                    str = value->val_str(&val);
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
+                    columnAssignmentPtr->fFromCol = false;
+                }
+                else if (value->cmp_type() ==  INT_RESULT)
+                {
+                    std::ostringstream oss;
+
+                    if (value->unsigned_flag)
+                    {
+                        oss << value->val_uint();
+                    }
+                    else
+                    {
+                        oss << value->val_int();
+                    }
+
+                    columnAssignmentPtr->fScalarExpression = oss.str();
+                    columnAssignmentPtr->fFromCol = false;
+                }
             }
-            else if ( value->type() ==  Item::VARBIN_ITEM )
-            {
-                String val, *str;
-                str = value->val_str(&val);
-                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
-                columnAssignmentPtr->fFromCol = false;
-            }
-            else if ( value->type() ==  Item::FUNC_ITEM )
+           else if ( value->type() ==  Item::FUNC_ITEM )
             {
                 //Bug 2092 handle negative values
                 Item_func* ifp = (Item_func*)value;
@@ -1487,23 +1441,6 @@ uint32_t doUpdateDelete(THD* thd)
                     }
                 }
             }
-            else if ( value->type() ==  Item::INT_ITEM )
-            {
-                std::ostringstream oss;
-
-                if (value->unsigned_flag)
-                {
-                    oss << value->val_uint();
-                }
-                else
-                {
-                    oss << value->val_int();
-                }
-
-//                dmlStmt += oss.str();
-                columnAssignmentPtr->fScalarExpression = oss.str();
-                columnAssignmentPtr->fFromCol = false;
-            }
             else if ( value->type() ==  Item::FIELD_ITEM)
             {
                 isFromCol = true;
@@ -1528,8 +1465,9 @@ uint32_t doUpdateDelete(THD* thd)
             else if ( value->type() ==  Item::NULL_ITEM )
             {
 //                dmlStmt += "NULL";
-                columnAssignmentPtr->fScalarExpression = "NULL";
+                columnAssignmentPtr->fScalarExpression = "";
                 columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr->fIsNull = true;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {
@@ -1566,7 +1504,6 @@ uint32_t doUpdateDelete(THD* thd)
                 setError(thd, ER_INTERNAL_ERROR,
                          logging::IDBErrorInfo::instance()->errorMsg(ERR_WF_UPDATE));
                 return ER_CHECK_NOT_IMPLEMENTED;
-                //return 0;
             }
             else
             {
@@ -1586,8 +1523,6 @@ uint32_t doUpdateDelete(THD* thd)
             }
 
             colAssignmentListPtr->push_back ( columnAssignmentPtr );
-//            if (cnt < thd->lex->select_lex.item_list.elements)
-//                dmlStmt += ", ";
         }
 
         // Support for on update current_timestamp() for timestamp fields
@@ -1598,11 +1533,7 @@ uint32_t doUpdateDelete(THD* thd)
         {
             if (timeStampColumnNames.find(onUpdateTimeStampColumns[i]) == timeStampColumnNames.end())
             {
-                columnAssignmentPtr = new ColumnAssignment();
-                columnAssignmentPtr->fColumn = string(onUpdateTimeStampColumns[i]);
-                columnAssignmentPtr->fOperator = "=";
-                columnAssignmentPtr->fFuncScale = 0;
-                columnAssignmentPtr->fFromCol = false;
+                columnAssignmentPtr = new ColumnAssignment(string(onUpdateTimeStampColumns[i]), "=", "");
                 struct timeval tv;
                 char buf[64];
                 gettimeofday(&tv, 0);
@@ -1616,7 +1547,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-//		dmlStmt = string(idb_mysql_query_str(thd));
         updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
         ci->stats.fQueryType = updateCP->queryType();
     }
@@ -1635,7 +1565,7 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-        first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+        first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         aTableName.schema = first_table->table->s->db.str;
         aTableName.table = first_table->table->s->table_name.str;
     }
@@ -1648,7 +1578,6 @@ uint32_t doUpdateDelete(THD* thd)
     }
     catch (IDBExcept& ie)
     {
-//		setError(thd, ER_UNKNOWN_TABLE, ie.what());
         setError(thd, ER_INTERNAL_ERROR, ie.what());
         return ER_INTERNAL_ERROR;
     }
@@ -1686,9 +1615,9 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else if ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) //@Bug 6121 error out on multi tables delete.
     {
-        if ( (thd->lex->select_lex.join) != 0)
+        if ( (thd->lex->first_select_lex()->join) != 0)
         {
-            multi_delete* deleteTable = (multi_delete*)((thd->lex->select_lex.join)->result);
+            multi_delete* deleteTable = (multi_delete*)((thd->lex->first_select_lex()->join)->result);
             first_table = (TABLE_LIST*) deleteTable->get_tables();
 
             if (deleteTable->get_num_of_tables() == 1)
@@ -1711,7 +1640,7 @@ uint32_t doUpdateDelete(THD* thd)
         }
         else
         {
-            first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+            first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
             schemaName = first_table->table->s->db.str;
             tableName = first_table->table->s->table_name.str;
             aliasName = first_table->alias.str;
@@ -1722,7 +1651,7 @@ uint32_t doUpdateDelete(THD* thd)
     }
     else
     {
-        first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+        first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         schemaName = first_table->table->s->db.str;
         tableName = first_table->table->s->table_name.str;
         aliasName = first_table->alias.str;
@@ -1755,16 +1684,16 @@ uint32_t doUpdateDelete(THD* thd)
 
     if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
     {
-        items = (thd->lex->select_lex.item_list);
-        thd->lex->select_lex.item_list = thd->lex->value_list;
+        items = (thd->lex->first_select_lex()->item_list);
+        thd->lex->first_select_lex()->item_list = thd->lex->value_list;
     }
 
-    select_lex = lex->select_lex;
+    select_lex = *lex->first_select_lex();
 
 
     //@Bug 2808 Error out on order by or limit clause
     //@bug5096. support dml limit.
-    if (/*( select_lex.explicit_limit ) || */( select_lex.order_list.elements != 0 ) )
+    if (( thd->lex->first_select_lex()->order_list.elements != 0 ) )
     {
         string emsg("DML Statement with order by clause is not currently supported.");
         thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
@@ -1773,13 +1702,8 @@ uint32_t doUpdateDelete(THD* thd)
         return 0;
     }
 
-    //thd->infinidb_vtable.isInfiniDBDML = true;
-    THD::infinidb_state origState = thd->infinidb_vtable.vtable_state;
     //if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
     {
-        gp_walk_info gwi;
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
-        gwi.thd = thd;
         //updateCP->subType (CalpontSelectExecutionPlan::SINGLEROW_SUBS); //set scalar
         updateCP->subType (CalpontSelectExecutionPlan::SELECT_SUBS);
         //@Bug 2975.
@@ -1813,15 +1737,14 @@ uint32_t doUpdateDelete(THD* thd)
 
         gwi.clauseType = WHERE;
 
-        if (getSelectPlan(gwi, select_lex, updateCP) != 0) //@Bug 3030 Modify the error message for unsupported functions
+        if (getSelectPlan(gwi, select_lex, updateCP, false, true) != 0) //@Bug 3030 Modify the error message for unsupported functions
         {
-            if (thd->infinidb_vtable.isUpdateWithDerive)
+            if (gwi.cs_vtable_is_update_with_derive)
             {
                 // @bug 4457. MySQL inconsistence! for some queries, some structures are only available
                 // in the derived_tables_processing phase. So by pass the phase for DML only when the
                 // execution plan can not be successfully generated. recover lex before returning;
-                thd->lex->select_lex.item_list = items;
-                thd->infinidb_vtable.vtable_state = origState;
+                thd->lex->first_select_lex()->item_list = items;
                 return 0;
             }
 
@@ -1971,7 +1894,7 @@ uint32_t doUpdateDelete(THD* thd)
 
             //cout<< "Plan is " << endl << *updateCP << endl;
             if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
-                thd->lex->select_lex.item_list = items;
+                thd->lex->first_select_lex()->item_list = items;
         }
 
         //cout<< "Plan is " << endl << *updateCP << endl;
@@ -1987,8 +1910,6 @@ uint32_t doUpdateDelete(THD* thd)
     boost::shared_ptr<messageqcpp::ByteStream> plan = pDMLPackage->get_ExecutionPlan();
     updateCP->rmParms(ci->rmParms);
     updateCP->serialize(*plan);
-    // recover original vtable state
-    thd->infinidb_vtable.vtable_state = origState;
     //cout << "plan has bytes " << plan->length() << endl;
     pDMLPackage->write(bytestream);
 
@@ -2335,28 +2256,11 @@ int ha_calpont_impl_discover_existence(const char* schema, const char* name)
 
 int ha_calpont_impl_rnd_init(TABLE* table)
 {
-#ifdef DEBUG_SETENV
-    string home(getenv("HOME"));
-
-    if (!getenv("COLUMNSTORE_HOME"))
-    {
-        string calpontHome(home + "/Calpont/etc/");
-        setenv("COLUMNSTORE_HOME", calpontHome.c_str(), 1);
-    }
-
-    if (!getenv("COLUMNSTORE_CONFIG_FILE"))
-    {
-        string calpontConfigFile(home + "/mariadb/columnstore/etc/Columnstore.xml");
-        setenv("COLUMNSTORE_CONFIG_FILE", calpontConfigFile.c_str(), 1);
-    }
-
-    if (!getenv("CALPONT_CSC_IDENT"))
-        setenv("CALPONT_CSC_IDENT", "dm", 1);
-
-#endif
-
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
+
+    gp_walk_info gwi;
+    gwi.thd = thd;
 
     //check whether the system is ready to process statement.
 #ifndef _MSC_VER
@@ -2367,20 +2271,22 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     {
         // Still not ready
         setError(thd, ER_INTERNAL_ERROR, "The system is not yet ready to accept queries");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
     else if (bSystemQueryReady < 0)
     {
         // Still not ready
         setError(thd, ER_INTERNAL_ERROR, "DBRM is not responding. Cannot accept queries");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
-
 #endif
-    // prevent "create table as select" from running on slave
-    thd->infinidb_vtable.hasInfiniDBTable = true;
+
+    // Set this to close all outstanding FEP connections on
+    // client disconnect in handlerton::closecon_handlerton().
+    if ( !thd_get_ha_data(thd, mcs_hton))
+    {
+        thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2395,40 +2301,12 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    // @bug 3005. if the table is not $vtable, then this could be a UDF defined on the connector.
-    // watch this for other complications
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            string(table->s->table_name.str).find("$vtable") != 0)
-        return 0;
-
-    // return error is error status is already set
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-        return ER_INTERNAL_ERROR;
-
-    // by pass the extra union trips. return 0
-    if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        return 0;
-
-    // @bug 2232. Basic SP support. Error out non support sp cases.
-    // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
-    if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
-    {
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-        return ER_INTERNAL_ERROR;
-    }
-
-    // mysql reads table twice for order by
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1 ||
-            thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY)
-        return 0;
-
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return 0;
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd);
+        return doUpdateDelete(thd, gwi);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
@@ -2438,12 +2316,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     idbassert(ci != 0);
-
-    // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE &&
-            !thd->infinidb_vtable.isNewQuery)
-        return 0;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -2456,24 +2328,12 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
-    // update traceFlags according to the autoswitch state. replication query
-    // on slave are in table mode (create table as...)
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE ||
-            (thd->slave_thread && thd->infinidb_vtable.vtable_state == THD::INFINIDB_INIT))
-    {
-        ci->traceFlags |= CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_DISABLE_VTABLE;
-    }
-    else
-    {
-        ci->traceFlags = (ci->traceFlags | CalpontSelectExecutionPlan::TRACE_TUPLE_OFF)^
-                         CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
-    }
+    // update traceFlags according to the autoswitch state.
+    ci->traceFlags |= CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
 
     bool localQuery = get_local_query(thd);
 
     // table mode
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
     {
         ti = ci->tableMap[table];
 
@@ -2538,154 +2398,15 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
         // for ExeMgr logging sqltext. only log once for the query although multi plans may be sent
         if (ci->tableMap.size() == 1)
+        {
             ti.csep->data(idb_mysql_query_str(thd));
+        }
+        else
+        {
+            ti.csep->data("<part of the query executed in table mode>");
+        }
     }
-    // vtable mode
-    else
-    {
-        //if (!ci->cal_conn_hndl || thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        {
-            ci->stats.reset(); // reset query stats
-            ci->stats.setStartTime();
-            if (thd->main_security_ctx.user)
-            {
-                ci->stats.fUser = thd->main_security_ctx.user;
-            }
-            else
-            {
-                ci->stats.fUser = "";
-            }
 
-            if (thd->main_security_ctx.host)
-                ci->stats.fHost = thd->main_security_ctx.host;
-            else if (thd->main_security_ctx.host_or_ip)
-                ci->stats.fHost = thd->main_security_ctx.host_or_ip;
-            else
-                ci->stats.fHost = "unknown";
-
-            try
-            {
-                ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
-            }
-            catch (std::exception& e)
-            {
-                string msg = string("Columnstore User Priority - ") + e.what();
-                ci->warningMsg = msg;
-            }
-
-            // if the previous query has error, re-establish the connection
-            if (ci->queryState != 0)
-            {
-                sm::sm_cleanup(ci->cal_conn_hndl);
-                ci->cal_conn_hndl = 0;
-            }
-        }
-
-        sm::sm_init(sessionID, &ci->cal_conn_hndl, localQuery);
-        idbassert(ci->cal_conn_hndl != 0);
-        ci->cal_conn_hndl->csc = csc;
-        idbassert(ci->cal_conn_hndl->exeMgr != 0);
-
-        try
-        {
-            ci->cal_conn_hndl->connect();
-        }
-        catch (...)
-        {
-            setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
-            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-            goto error;
-        }
-
-        hndl = ci->cal_conn_hndl;
-
-        if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_SELECT_VTABLE)
-        {
-            //CalpontSelectExecutionPlan csep;
-            if (!csep)
-                csep.reset(new CalpontSelectExecutionPlan());
-
-            SessionManager sm;
-            BRM::TxnID txnID;
-            txnID = sm.getTxnID(sessionID);
-
-            if (!txnID.valid)
-            {
-                txnID.id = 0;
-                txnID.valid = true;
-            }
-
-            QueryContext verID;
-            verID = sm.verID();
-
-            csep->txnID(txnID.id);
-            csep->verID(verID);
-            csep->sessionID(sessionID);
-
-            if (thd->db.length)
-                csep->schemaName(thd->db.str);
-
-            csep->traceFlags(ci->traceFlags);
-
-            if (thd->infinidb_vtable.isInsertSelect)
-                csep->queryType(CalpontSelectExecutionPlan::INSERT_SELECT);
-
-            //get plan
-            int status = cp_get_plan(thd, csep);
-
-            //if (cp_get_plan(thd, csep) != 0)
-            if (status > 0)
-                goto internal_error;
-            else if (status < 0)
-                return 0;
-
-            // @bug 2547. don't need to send the plan if it's impossible where for all unions.
-            if (thd->infinidb_vtable.impossibleWhereOnUnion)
-                return 0;
-
-            string query;
-            query.assign(thd->infinidb_vtable.original_query.ptr(),
-                         thd->infinidb_vtable.original_query.length());
-            csep->data(query);
-
-            try
-            {
-                csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
-            }
-            catch (std::exception& e)
-            {
-                string msg = string("Columnstore User Priority - ") + e.what();
-                push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
-            }
-
-#ifdef PLAN_HEX_FILE
-            // plan serialization
-            string tmpDir = aTmpDir + "/li1-plan.hex";
-
-            ifstream ifs(tmpDir.c_str());
-            ByteStream bs1;
-            ifs >> bs1;
-            ifs.close();
-            csep->unserialize(bs1);
-#endif
-
-            if (ci->traceFlags & 1)
-            {
-                cerr << "---------------- EXECUTION PLAN ----------------" << endl;
-                cerr << *csep << endl ;
-                cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-            }
-            else
-            {
-                IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
-                IDEBUG( cerr << *csep << endl );
-                IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
-            }
-        }
-    }// end of execution plan generation
-
-    if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_SELECT_VTABLE)
     {
         ByteStream msg;
         ByteStream emsgBs;
@@ -2760,14 +2481,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
                 ci->rmParms.clear();
 
-                if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-                {
-                    ci->tableMap[table] = ti;
-                }
-                else
-                {
-                    ci->queryState = 1;
-                }
+                ci->tableMap[table] = ti;
 
                 break;
             }
@@ -2780,10 +2494,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 idbassert(hndl != 0);
                 hndl->csc = csc;
 
-                if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-                    ti.conn_hndl = hndl;
-                else
-                    ci->cal_conn_hndl = hndl;
+                ti.conn_hndl = hndl;
 
                 try
                 {
@@ -2801,92 +2512,81 @@ int ha_calpont_impl_rnd_init(TABLE* table)
         }
     }
 
-    // set query state to be in_process. Sometimes mysql calls rnd_init multiple
-    // times, this makes sure plan only being generated and sent once. It will be
-    // reset when query finishes in sm::end_query
-    thd->infinidb_vtable.isNewQuery = false;
-
     // common path for both vtable select phase and table mode -- open scan handle
     ti = ci->tableMap[table];
     ti.msTablePtr = table;
 
-    if ((thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE) ||
-            (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE) ||
-            (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_QUERY))
+    if (ti.tpl_ctx == 0)
     {
-        if (ti.tpl_ctx == 0)
+        ti.tpl_ctx = new sm::cpsm_tplh_t();
+        ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+    }
+
+    // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
+    // call rnd_init for a table more than once.
+    ti.tpl_scan_ctx->rowGroup = NULL;
+
+    try
+    {
+        tableid = execplan::IDB_VTABLE_ID;
+    }
+    catch (...)
+    {
+        string emsg = "No table ID found for table " + string(table->s->table_name.str);
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        goto internal_error;
+    }
+
+    try
+    {
+        sm::tpl_open(tableid, ti.tpl_ctx, hndl);
+        sm::tpl_scan_open(tableid, ti.tpl_scan_ctx, hndl);
+    }
+    catch (std::exception& e)
+    {
+        string emsg = "table can not be opened: " + string(e.what());
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        goto internal_error;
+    }
+    catch (...)
+    {
+        string emsg = "table can not be opened";
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        goto internal_error;
+    }
+
+    ti.tpl_scan_ctx->traceFlags = ci->traceFlags;
+
+    if ((ti.tpl_scan_ctx->ctp).size() == 0)
+    {
+        uint32_t num_attr = table->s->fields;
+
+        for (uint32_t i = 0; i < num_attr; i++)
         {
-            ti.tpl_ctx = new sm::cpsm_tplh_t();
-            ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+            CalpontSystemCatalog::ColType ctype;
+            ti.tpl_scan_ctx->ctp.push_back(ctype);
         }
 
-        // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
-        // call rnd_init for a table more than once.
-        ti.tpl_scan_ctx->rowGroup = NULL;
+        // populate coltypes here for table mode because tableband gives treeoid for dictionary column
+        {
+            CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
 
-        try
-        {
-            tableid = execplan::IDB_VTABLE_ID;
-        }
-        catch (...)
-        {
-            string emsg = "No table ID found for table " + string(table->s->table_name.str);
-            setError(thd, ER_INTERNAL_ERROR, emsg);
-            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-            goto internal_error;
-        }
-
-        try
-        {
-            sm::tpl_open(tableid, ti.tpl_ctx, hndl);
-            sm::tpl_scan_open(tableid, ti.tpl_scan_ctx, hndl);
-        }
-        catch (std::exception& e)
-        {
-            string emsg = "table can not be opened: " + string(e.what());
-            setError(thd, ER_INTERNAL_ERROR, emsg);
-            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-            goto internal_error;
-        }
-        catch (...)
-        {
-            string emsg = "table can not be opened";
-            setError(thd, ER_INTERNAL_ERROR, emsg);
-            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-            goto internal_error;
-        }
-
-        ti.tpl_scan_ctx->traceFlags = ci->traceFlags;
-
-        if ((ti.tpl_scan_ctx->ctp).size() == 0)
-        {
-            uint32_t num_attr = table->s->fields;
-
-            for (uint32_t i = 0; i < num_attr; i++)
+            if (oidlist.size() != num_attr)
             {
-                CalpontSystemCatalog::ColType ctype;
-                ti.tpl_scan_ctx->ctp.push_back(ctype);
+                string emsg = "Size mismatch probably caused by front end out of sync";
+                setError(thd, ER_INTERNAL_ERROR, emsg);
+                CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+                goto internal_error;
             }
 
-            // populate coltypes here for table mode because tableband gives treeoid for dictionary column
-            if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
+            for (unsigned int j = 0; j < oidlist.size(); j++)
             {
-                CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
-
-                if (oidlist.size() != num_attr)
-                {
-                    string emsg = "Size mismatch probably caused by front end out of sync";
-                    setError(thd, ER_INTERNAL_ERROR, emsg);
-                    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-                    goto internal_error;
-                }
-
-                for (unsigned int j = 0; j < oidlist.size(); j++)
-                {
-                    CalpontSystemCatalog::ColType ctype = csc->colType(oidlist[j].objnum);
-                    ti.tpl_scan_ctx->ctp[ctype.colPosition] = ctype;
-                    ti.tpl_scan_ctx->ctp[ctype.colPosition].colPosition = -1;
-                }
+                CalpontSystemCatalog::ColType ctype = csc->colType(oidlist[j].objnum);
+                ti.tpl_scan_ctx->ctp[ctype.colPosition] = ctype;
+                ti.tpl_scan_ctx->ctp[ctype.colPosition].colPosition = -1;
             }
         }
     }
@@ -2895,14 +2595,14 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     return 0;
 
 error:
-
+    // CS doesn't need to close the actual sockets
+    // b/c it tries to reuse it running next query.
     if (ci->cal_conn_hndl)
     {
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
 
-    // do we need to close all connection handle of the table map?
     return ER_INTERNAL_ERROR;
 
 internal_error:
@@ -2933,30 +2633,14 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-        return ER_INTERNAL_ERROR;
-
-    // @bug 3005
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            string(table->s->table_name.str).find("$vtable") != 0)
-        return HA_ERR_END_OF_FILE;
-
     if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-    if (thd->infinidb_vtable.impossibleWhereOnUnion)
-        return HA_ERR_END_OF_FILE;
-
-    // @bug 2232. Basic SP support
-    // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
-    if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
-    {
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-        return ER_INTERNAL_ERROR;
-    }
+    // MCOL-2178 This variable can never be true in the scope of this function
+    //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+    //        return HA_ERR_END_OF_FILE;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3019,15 +2703,15 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_rnd_end(TABLE* table)
+int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 {
     int rc = 0;
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
     bool replicationEnabled = false;
 
-    if (thd->infinidb_vtable.cal_conn_info)
-        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    if (get_fe_conn_info_ptr() != NULL)
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (ci && ci->replicationEnabled)
     {
@@ -3045,19 +2729,15 @@ int ha_calpont_impl_rnd_end(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    thd->infinidb_vtable.isNewQuery = true;
+
+    // MCOL-2178 isUnion member only assigned, never used
+    //    if (is_pushdown_hand)
+    //    {
+    //        MIGR::infinidb_vtable.isUnion = false;
+    //    }
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
-    {
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;	// flip back to normal state
-        return rc;
-    }
-
-//	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
-//		return rc;
-
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
 
@@ -3096,7 +2776,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
+    if (!is_pushdown_hand)
         hndl = ti.conn_hndl;
     else
         hndl = ci->cal_conn_hndl;
@@ -3119,10 +2799,13 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 
         try
         {
-            sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
+            {
+                bool ask_4_stats = (ci->traceFlags) ? true : false;
+                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats);
+            }
 
             // set conn hndl back. could be changed in tpl_close
-            if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
+            if (!is_pushdown_hand)
                 ti.conn_hndl = hndl;
             else
                 ci->cal_conn_hndl = hndl;
@@ -3156,10 +2839,6 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 
     ti.tpl_ctx = 0;
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            thd->infinidb_vtable.has_order_by)
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ORDER_BY;
-
     ci->tableMap[table] = ti;
 
     // push warnings from CREATE phase
@@ -3169,6 +2848,8 @@ int ha_calpont_impl_rnd_end(TABLE* table)
     ci->warningMsg.clear();
     // reset expressionId just in case
     ci->expressionId = 0;
+
+    thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(ci));
 
     return rc;
 }
@@ -3181,11 +2862,6 @@ int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* c
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE ||
-            string(name).find("@0024vtable") != string::npos)
-        return 0;
 
     //@Bug 1948. Mysql calls create table to create a new table with new signature.
     if (ci->alterTableState > 0) return 0;
@@ -3222,10 +2898,6 @@ int ha_calpont_impl_delete_table(const char* name)
     //if this is an InfiniDB tmp table ('#sql*.frm') just leave...
     if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length)) return 0;
 
-    // @bug1940 Do nothing for select query. Support of set default engine to IDB.
-    if (string(name).find("@0024vtable") != string::npos)
-        return 0;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -3243,7 +2915,7 @@ int ha_calpont_impl_delete_table(const char* name)
     }
     else
     {
-        TABLE_LIST* first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+        TABLE_LIST* first_table = (TABLE_LIST*) thd->lex->first_select_lex()->table_list.first;
         dbName = const_cast<char*>(first_table->db.str);
     }
 
@@ -3262,26 +2934,10 @@ int ha_calpont_impl_delete_table(const char* name)
         return 0;
     }
 
-    // @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-    if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
-    {
-        std::string stmt(idb_mysql_query_str(thd));
-        boost::algorithm::to_upper(stmt);
-
-        //@Bug 2432. systables can be dropped with restrict
-        if (stmt.find(" RESTRICT") != string::npos)
-        {
-            return 0;
-        }
-
-        setError(thd, ER_INTERNAL_ERROR, "Calpont system tables can only be dropped with restrict.");
-        return 1;
-    }
-
     int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
     return rc;
 }
-int ha_calpont_impl_write_row(uchar* buf, TABLE* table)
+int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
     //sleep(100);
@@ -3384,14 +3040,11 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 
     if (ci->alterTableState > 0) return;
 
-    if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
-        thd->infinidb_vtable.isInfiniDBDML = true;
-
     if (thd->slave_thread && !ci->replicationEnabled)
         return;
 
     //@bug 5660. Error out DDL/DML on slave node, or on local query node
-    if (ci->isSlaveNode && thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
+    if (ci->isSlaveNode)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
         setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
@@ -4159,12 +3812,6 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 
 int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
 {
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE ||
-            thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE ||
-            thd->infinidb_vtable.vtable_state == THD::INFINIDB_DROP_VTABLE ||
-            thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
-        return 0;
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4197,15 +3844,6 @@ int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
 
 int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
 {
-    // @bug 1738. no need to rollback for select. This is to avoid concurrent session
-    // conflict because DML is not thread safe.
-    //comment out for bug 3874. Select should never come to rollback. If there is no active transaction,
-    //rollback in DMLProc is not doing anything anyway
-    //if (!(current_thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-    //{
-    //	return 0;
-    //}
-
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4215,7 +3853,6 @@ int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
     {
 
         ci->dmlProc = new MessageQueueClient("DMLProc");
-        //cout << "rollback starts a client " << ci->dmlProc << " for session " << thd->thread_id << endl;
     }
 
     int rc = ha_calpont_impl_rollback_(hton, thd, all, *ci);
@@ -4242,7 +3879,7 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
     // An ugly way. I will use ha_data w/o external_lock.
     // This in MCOL-2178
     cal_connection_info* ci = NULL;
-    if(thd_get_ha_data(thd, hton))
+    if(thd_get_ha_data(thd, hton) != (void*)0x42) // 0x42 is the magic CS sets when setup hton
     {
         ci = reinterpret_cast<cal_connection_info*>(thd_get_ha_data(thd, hton));
     }
@@ -4264,13 +3901,14 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
         ci->cal_conn_hndl = 0;
     }
 
+    thd_set_ha_data(thd, hton, NULL);
+
     return rc;
 }
 
 int ha_calpont_impl_rename_table(const char* from, const char* to)
 {
     IDEBUG( cout << "ha_calpont_impl_rename_table: " << from << " => " << to << endl );
-    THD* thd = current_thd;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4290,8 +3928,6 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
         IDEBUG( cout << "ha_calpont_impl_rename_table: was in state ALTER_SECOND_RENAME, now in NOT_ALTER" << endl );
         return 0;
     }
-    else if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE )
-        return 0;
 
     int rc = ha_calpont_impl_rename_table_(from, to, *ci);
     return rc;
@@ -4306,12 +3942,6 @@ int ha_calpont_impl_delete_row(const uchar* buf)
 COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
 {
     THD* thd = current_thd;
-
-    if (thd->slave_thread && thd->infinidb_vtable.vtable_state == THD::INFINIDB_INIT)
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_DISABLE_VTABLE;
-
-    if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE)
-        return cond;
 
     if (((thd->lex)->sql_command == SQLCOM_UPDATE) ||
             ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
@@ -4397,12 +4027,6 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
     IDEBUG( cout << "external_lock for " << alias << endl );
-    idbassert((thd->infinidb_vtable.vtable_state >= THD::INFINIDB_INIT_CONNECT &&
-               thd->infinidb_vtable.vtable_state <= THD::INFINIDB_REDO_QUERY) ||
-              thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR);
-
-    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_INIT  )
-        return 0;
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4411,51 +4035,56 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
+        ci->physTablesList.clear();
+        ci->tableMap.clear();
         force_close_fep_conn(thd, ci);
         return 0;
     }
 
-    CalTableMap::iterator mapiter = ci->tableMap.find(table);
-#ifdef _MSC_VER
 
-    //FIXME: fix this! (must be related to F_UNLCK define in winport)
-    if (mapiter != ci->tableMap.end() && lock_type == 0) // make sure it's the release lock (2nd) call
-#else
+    CalTableMap::iterator mapiter = ci->tableMap.find(table);
     if (mapiter != ci->tableMap.end() && lock_type == 2) // make sure it's the release lock (2nd) call
-#endif
     {
         // table mode
-        if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
+        if (mapiter->second.conn_hndl)
         {
-            if (mapiter->second.conn_hndl)
-            {
-                if (ci->traceFlags & 1)
-                    push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
+            if (ci->traceFlags & 1)
+                push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
 
-                ci->queryStats = mapiter->second.conn_hndl->queryStats;
-                ci->extendedStats = mapiter->second.conn_hndl->extendedStats;
-                ci->miniStats = mapiter->second.conn_hndl->miniStats;
-                sm::sm_cleanup(mapiter->second.conn_hndl);
-                mapiter->second.conn_hndl = 0;
-            }
-
-            if (mapiter->second.condInfo)
-            {
-                delete mapiter->second.condInfo;
-                mapiter->second.condInfo = 0;
-            }
-
-            // only push this warning for once
-            if (ci->tableMap.size() == 1 &&
-                    thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE && thd->infinidb_vtable.autoswitch)
-            {
-                push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, infinidb_autoswitch_warning.c_str());
-            }
-            ci->queryState = 0;
+            ci->queryStats = mapiter->second.conn_hndl->queryStats;
+            ci->extendedStats = mapiter->second.conn_hndl->extendedStats;
+            ci->miniStats = mapiter->second.conn_hndl->miniStats;
+            sm::sm_cleanup(mapiter->second.conn_hndl);
+            mapiter->second.conn_hndl = 0;
         }
-        else // vtable mode
+
+        if (mapiter->second.condInfo)
         {
-            if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE)
+            delete mapiter->second.condInfo;
+            mapiter->second.condInfo = 0;
+        }
+
+        // MCOL-2178 Check for tableMap size to set this only once.
+        ci->queryState = 0;
+        ci->tableMap.erase(table);
+    }
+    else
+    {
+        if (lock_type == 0) 
+        {
+            ci->physTablesList.insert(table);
+            // MCOL-2178 Disable Conversion of Big IN Predicates Into Subqueries
+            thd->variables.in_subquery_conversion_threshold=~0;
+        }
+        else if (lock_type == 2)
+        {
+            std::set<TABLE*>::iterator iter = ci->physTablesList.find(table);
+            if ( iter != ci->physTablesList.end() )
+            {
+                ci->physTablesList.erase(table);
+            }
+
+            if ( iter != ci->physTablesList.end() && ci->physTablesList.empty() )
             {
                 if (!ci->cal_conn_hndl)
                     return 0;
@@ -4467,14 +4096,16 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 ci->extendedStats = ci->cal_conn_hndl->extendedStats;
                 ci->miniStats = ci->cal_conn_hndl->miniStats;
                 ci->queryState = 0;
-                thd->infinidb_vtable.override_largeside_estimate = false;
                 // MCOL-3247 Use THD::ha_data as a per-plugin per-session
-                // storage for cal_conn_hndl to use it later in close_connection 
-                thd_set_ha_data(thd, calpont_hton, get_fe_conn_info_ptr());
+                // storage for cal_conn_hndl to use it later in close_connection
+                thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+                ci->tableMap.clear();
+                // MCOL-2178 Enable Conversion of Big IN Predicates Into Subqueries
+                thd->variables.in_subquery_conversion_threshold = IN_SUBQUERY_CONVERSION_THRESHOLD;
+                restore_optimizer_flags(thd);
             }
-        }
 
-        ci->tableMap.erase(table);
+        }
     }
 
     return 0;
@@ -4516,38 +4147,16 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     {
         // Still not ready
         setError(thd, ER_INTERNAL_ERROR, "The system is not yet ready to accept queries");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
     else if (bSystemQueryReady < 0)
     {
         // Still not ready
         setError(thd, ER_INTERNAL_ERROR, "DBRM is not responding. Cannot accept queries");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
     }
 
 #endif
-    // prevent "create table as select" from running on slave
-    thd->infinidb_vtable.hasInfiniDBTable = true;
-
-    // return error if error status has been already set
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-        return ER_INTERNAL_ERROR;
-
-    // MCOL-1052
-    // by pass the extra union trips. return 0
-    //if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-    //    return 0;
-
-    // @bug 2232. Basic SP support. Error out non support sp cases.
-    // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
-    if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
-    {
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-        return ER_INTERNAL_ERROR;
-    }
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
@@ -4560,12 +4169,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
     idbassert(ci != 0);
 
-
-    // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE &&
-            !thd->infinidb_vtable.isNewQuery)
-        return 0;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -4700,14 +4303,16 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         // send plan whenever group_init is called
         int status = cp_get_group_plan(thd, csep, gi);
 
-        if (status > 0)
+        // Never proceed if status != 0 to avoid empty DA
+        // crashes on later stages
+        if (status != 0)
             goto internal_error;
-        else if (status < 0)
-            return 0;
 
         // @bug 2547. don't need to send the plan if it's impossible where for all unions.
-        if (thd->infinidb_vtable.impossibleWhereOnUnion)
-            return 0;
+        // MCOL-2178 commenting the below out since cp_get_group_plan does not modify this variable
+        // which has a default value of false
+        //if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+        //  return 0;
 
         string query;
         // Set the query text only once if the server executes
@@ -4827,14 +4432,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
                 ci->rmParms.clear();
 
-                if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-                {
-                    ci->tableMap[table] = ti;
-                }
-                else
-                {
-                    ci->queryState = 1;
-                }
+                ci->queryState = 1;
 
                 break;
             }
@@ -4847,15 +4445,9 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 idbassert(hndl != 0);
                 hndl->csc = csc;
 
-                // The next section is useless
-                if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-                    ti.conn_hndl = hndl;
-                else
-                {
-                    ci->cal_conn_hndl = hndl;
-                    ci->cal_conn_hndl_st.pop();
-                    ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
-                }
+                ci->cal_conn_hndl = hndl;
+                ci->cal_conn_hndl_st.pop();
+                ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
                 try
                 {
                     hndl->connect();
@@ -4875,18 +4467,11 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     // set query state to be in_process. Sometimes mysql calls rnd_init multiple
     // times, this makes sure plan only being generated and sent once. It will be
     // reset when query finishes in sm::end_query
-    thd->infinidb_vtable.isNewQuery = false;
 
     // common path for both vtable select phase and table mode -- open scan handle
     ti = ci->tableMap[table];
     ti.msTablePtr = table;
 
-    // MCOL-1052
-    thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;
-
-    if ((thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE) ||
-            (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE) ||
-            (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_QUERY))
     {
         // MCOL-1601 Using stacks of ExeMgr conn hndls, table and scan contexts.
         ti.tpl_ctx = new sm::cpsm_tplh_t();
@@ -4941,27 +4526,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 CalpontSystemCatalog::ColType ctype;
                 ti.tpl_scan_ctx->ctp.push_back(ctype);
             }
-
-            // populate coltypes here for table mode because tableband gives treeoid for dictionary column
-            if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-            {
-                CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
-
-                if (oidlist.size() != num_attr)
-                {
-                    string emsg = "Size mismatch probably caused by front end out of sync";
-                    setError(thd, ER_INTERNAL_ERROR, emsg);
-                    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-                    goto internal_error;
-                }
-
-                for (unsigned int j = 0; j < oidlist.size(); j++)
-                {
-                    CalpontSystemCatalog::ColType ctype = csc->colType(oidlist[j].objnum);
-                    ti.tpl_scan_ctx->ctp[ctype.colPosition] = ctype;
-                    ti.tpl_scan_ctx->ctp[ctype.colPosition].colPosition = -1;
-                }
-            }
         }
     }
 
@@ -5010,26 +4574,15 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
 {
     THD* thd = current_thd;
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-        return ER_INTERNAL_ERROR;
-
     if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
-    if (thd->infinidb_vtable.impossibleWhereOnUnion)
-        return HA_ERR_END_OF_FILE;
+    //  MCOL-2178
+    //  if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
+    //    return HA_ERR_END_OF_FILE;
 
-    // @bug 2232. Basic SP support
-    // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
-    /*if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
-    {
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-        return ER_INTERNAL_ERROR;
-    }
-    */
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -5111,18 +4664,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
 
-    thd->infinidb_vtable.isNewQuery = true;
-    thd->infinidb_vtable.isUnion = false;
-
-    if (get_fe_conn_info_ptr() != NULL)
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-    if (!ci)
-    {
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
-        ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
-    }
-
     if (thd->slave_thread && !ci->replicationEnabled && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
@@ -5134,7 +4675,13 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-   if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
+    // MCOL-2178 isUnion member only assigned, never used
+    //    MIGR::infinidb_vtable.isUnion = false;
+
+    if (get_fe_conn_info_ptr() != NULL)
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
         force_close_fep_conn(thd, ci, true); // with checking prev command rc
@@ -5202,7 +4749,10 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         {
             if(hndl)
             {
-                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, clearScanCtx);
+                {
+                    bool ask_4_stats = (ci->traceFlags) ? true : false;
+                    sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats, clearScanCtx);
+                }
 // Normaly stats variables are set in external_lock method but we set it here
 // since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
 // We sum the stats up here since server could run a number of
@@ -5275,4 +4825,450 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     return rc;
 }
 
+
+/*@brief  Initiate the query for derived_handler           */
+/***********************************************************
+ * DESCRIPTION:
+ * Execute the query and saves derived table query.
+ * There is an extra handler argument so I ended up with a
+ * new init function. The code is a copy of
+ * ha_calpont_impl_rnd_init() mostly. 
+ * PARAMETERS:
+ * mcs_handler_info* pnt to an envelope struct 
+ * TABLE* table - dest table to put the results into
+ * RETURN:
+ *    rc as int
+ ***********************************************************/
+int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
+{
+    IDEBUG( cout << "pushdown_init for table " << endl );
+    THD* thd = current_thd;
+
+    gp_walk_info gwi;
+    gwi.thd = thd;
+
+    //check whether the system is ready to process statement.
+#ifndef _MSC_VER
+    static DBRM dbrm(true);
+    int bSystemQueryReady = dbrm.getSystemQueryReady();
+
+    if (bSystemQueryReady == 0)
+    {
+        // Still not ready
+        setError(thd, ER_INTERNAL_ERROR, "The system is not yet ready to accept queries");
+        return ER_INTERNAL_ERROR;
+    }
+    else if (bSystemQueryReady < 0)
+    {
+        // Still not ready
+        setError(thd, ER_INTERNAL_ERROR, "DBRM is not responding. Cannot accept queries");
+        return ER_INTERNAL_ERROR;
+    }
+#endif
+
+    // Set this to close all outstanding FEP connections on
+    // client disconnect in handlerton::closecon_handlerton().
+    if ( !thd_get_ha_data(thd, mcs_hton))
+    {
+        thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
+    }
+
+    if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
+    {
+        return 0;
+    }
+
+    //Update and delete code
+    if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+        return doUpdateDelete(thd, gwi);
+
+    uint32_t sessionID = tid2sid(thd->thread_id);
+    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    csc->identity(CalpontSystemCatalog::FE);
+
+    if (!get_fe_conn_info_ptr())
+        set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    idbassert(ci != 0);
+
+    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
+    {
+        if (ci->cal_conn_hndl)
+        {
+            // send ExeMgr a signal before closing the connection
+            ByteStream msg;
+            ByteStream::quadbyte qb = 0;
+            msg << qb;
+
+            try
+            {
+                ci->cal_conn_hndl->exeMgr->write(msg);
+            }
+            catch (...)
+            {
+                // canceling query. ignore connection failure.
+            }
+
+            sm::sm_cleanup(ci->cal_conn_hndl);
+            ci->cal_conn_hndl = 0;
+        }
+
+        return 0;
+    }
+
+    sm::tableid_t tableid = 0;
+    cal_table_info ti;
+    sm::cpsm_conhdl_t* hndl;
+    SCSEP csep;
+    // Declare handlers ptrs in this scope for future use.
+    select_handler* sh = NULL;
+    derived_handler* dh = NULL;
+
+    // update traceFlags according to the autoswitch state.
+    ci->traceFlags = (ci->traceFlags | CalpontSelectExecutionPlan::TRACE_TUPLE_OFF)^
+                     CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
+
+    bool localQuery = (get_local_query(thd) > 0 ? true : false);
+
+    {
+        ci->stats.reset(); // reset query stats
+        ci->stats.setStartTime();
+        ci->stats.fUser = thd->main_security_ctx.user;
+
+        if (thd->main_security_ctx.host)
+            ci->stats.fHost = thd->main_security_ctx.host;
+        else if (thd->main_security_ctx.host_or_ip)
+            ci->stats.fHost = thd->main_security_ctx.host_or_ip;
+        else
+            ci->stats.fHost = "unknown";
+
+        try
+        {
+            ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
+        }
+        catch (std::exception& e)
+        {
+            string msg = string("Columnstore User Priority - ") + e.what();
+            ci->warningMsg = msg;
+        }
+
+        // if the previous query has error, re-establish the connection
+        if (ci->queryState != 0)
+        {
+            sm::sm_cleanup(ci->cal_conn_hndl);
+            ci->cal_conn_hndl = 0;
+        }
+
+        sm::sm_init(sessionID, &ci->cal_conn_hndl, localQuery);
+        idbassert(ci->cal_conn_hndl != 0);
+        ci->cal_conn_hndl->csc = csc;
+        idbassert(ci->cal_conn_hndl->exeMgr != 0);
+
+        try
+        {
+            ci->cal_conn_hndl->connect();
+        }
+        catch (...)
+        {
+            setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto error;
+        }
+
+        hndl = ci->cal_conn_hndl;
+
+        IDEBUG( std::cout << idb_mysql_query_str(thd) << std::endl );
+
+        {
+            if (!csep)
+                csep.reset(new CalpontSelectExecutionPlan());
+
+            SessionManager sm;
+            BRM::TxnID txnID;
+            txnID = sm.getTxnID(sessionID);
+
+            if (!txnID.valid)
+            {
+                txnID.id = 0;
+                txnID.valid = true;
+            }
+
+            QueryContext verID;
+            verID = sm.verID();
+
+            csep->txnID(txnID.id);
+            csep->verID(verID);
+            csep->sessionID(sessionID);
+
+            if (thd->db.length)
+                csep->schemaName(thd->db.str);
+
+            csep->traceFlags(ci->traceFlags);
+
+            // cast the handler and get a plan.
+            int status = 42;
+            if (handler_info->hndl_type == mcs_handler_types_t::SELECT)
+            {
+                sh = reinterpret_cast<select_handler*>(handler_info->hndl_ptr);
+                status = cs_get_select_plan(sh, thd, csep, gwi);
+            }
+            else if (handler_info->hndl_type == DERIVED)
+            {
+                dh = reinterpret_cast<derived_handler*>(handler_info->hndl_ptr);
+                status = cs_get_derived_plan(dh, thd, csep, gwi);
+            }
+   
+            // Return an error to avoid MDB crash later in end_statement 
+            if (status != 0)
+                goto internal_error;
+
+            // @bug 2547. don't need to send the plan if it's impossible where for all unions.
+            if (gwi.cs_vtable_impossible_where_on_union)
+            {
+                return 0;
+            }
+
+            string query;
+            query.assign(idb_mysql_query_str(thd));
+            csep->data(query);
+
+            try
+            {
+                csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
+            }
+            catch (std::exception& e)
+            {
+                string msg = string("Columnstore User Priority - ") + e.what();
+                push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
+            }
+
+// DRRTUY Make this runtime configureable
+#ifdef PLAN_HEX_FILE
+            // plan serialization
+            ifstream ifs("/tmp/li1-plan.hex");
+            ByteStream bs1;
+            ifs >> bs1;
+            ifs.close();
+            csep->unserialize(bs1);
+#endif
+
+            if (ci->traceFlags & 1)
+            {
+                cerr << "---------------- EXECUTION PLAN ----------------" << endl;
+                cerr << *csep << endl ;
+                cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+            }
+            else
+            {
+                IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
+                IDEBUG( cerr << *csep << endl );
+                IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
+            }
+        }
+    }// end of execution plan generation
+
+    {
+        ByteStream msg;
+        ByteStream emsgBs;
+
+        while (true)
+        {
+            try
+            {
+                ByteStream::quadbyte qb = 4;
+                msg << qb;
+                hndl->exeMgr->write(msg);
+                msg.restart();
+                csep->rmParms(ci->rmParms);
+
+                //send plan
+                csep->serialize(msg);
+                hndl->exeMgr->write(msg);
+
+                //get ExeMgr status back to indicate a vtable joblist success or not
+                msg.restart();
+                emsgBs.restart();
+                msg = hndl->exeMgr->read();
+                emsgBs = hndl->exeMgr->read();
+                string emsg;
+
+                if (msg.length() == 0 || emsgBs.length() == 0)
+                {
+                    emsg = "Lost connection to ExeMgr. Please contact your administrator";
+                    setError(thd, ER_INTERNAL_ERROR, emsg);
+                    return ER_INTERNAL_ERROR;
+                }
+
+                string emsgStr;
+                emsgBs >> emsgStr;
+                bool err = false;
+
+                if (msg.length() == 4)
+                {
+                    msg >> qb;
+
+                    if (qb != 0)
+                    {
+                        err = true;
+                        // for makejoblist error, stats contains only error code and insert from here
+                        // because table fetch is not started
+                        ci->stats.setEndTime();
+                        ci->stats.fQuery = csep->data();
+                        ci->stats.fQueryType = csep->queryType();
+                        ci->stats.fErrorNo = qb;
+
+                        try
+                        {
+                            ci->stats.insert();
+                        }
+                        catch (std::exception& e)
+                        {
+                            string msg = string("Columnstore Query Stats - ") + e.what();
+                            push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
+                        }
+                    }
+                }
+                else
+                {
+                    err = true;
+                }
+
+                if (err)
+                {
+                    setError(thd, ER_INTERNAL_ERROR, emsgStr);
+                    return ER_INTERNAL_ERROR;
+                }
+
+                ci->rmParms.clear();
+
+                ci->queryState = 1;
+
+                break;
+            }
+            catch (...)
+            {
+                sm::sm_cleanup(hndl);
+                hndl = 0;
+
+                sm::sm_init(sessionID, &hndl, localQuery);
+                idbassert(hndl != 0);
+                hndl->csc = csc;
+
+                ci->cal_conn_hndl = hndl;
+
+                try
+                {
+                    hndl->connect();
+                }
+                catch (...)
+                {
+                    setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+                    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+                    goto error;
+                }
+
+                msg.restart();
+            }
+        }
+    }
+
+    // set query state to be in_process. Sometimes mysql calls rnd_init multiple
+    // times, this makes sure plan only being generated and sent once. It will be
+    // reset when query finishes in sm::end_query
+
+    // common path for both vtable select phase and table mode -- open scan handle
+    ti = ci->tableMap[table];
+    // This is the server's temp table for the result.
+    if(sh)
+    {
+        ti.msTablePtr = sh->table;
+    }
+    else
+    {
+        ti.msTablePtr = dh->table;
+    }
+
+    {
+        if (ti.tpl_ctx == 0)
+        {
+            ti.tpl_ctx = new sm::cpsm_tplh_t();
+            ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+        }
+
+        // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
+        // call rnd_init for a table more than once.
+        ti.tpl_scan_ctx->rowGroup = NULL;
+
+        try
+        {
+            tableid = execplan::IDB_VTABLE_ID;
+        }
+        catch (...)
+        {
+            string emsg = "No table ID found for table " + string(table->s->table_name.str);
+            setError(thd, ER_INTERNAL_ERROR, emsg);
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto internal_error;
+        }
+
+        try
+        {
+            sm::tpl_open(tableid, ti.tpl_ctx, hndl);
+            sm::tpl_scan_open(tableid, ti.tpl_scan_ctx, hndl);
+        }
+        catch (std::exception& e)
+        {
+            string emsg = "table can not be opened: " + string(e.what());
+            setError(thd, ER_INTERNAL_ERROR, emsg);
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto internal_error;
+        }
+        catch (...)
+        {
+            string emsg = "table can not be opened";
+            setError(thd, ER_INTERNAL_ERROR, emsg);
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto internal_error;
+        }
+
+        ti.tpl_scan_ctx->traceFlags = ci->traceFlags;
+
+        if ((ti.tpl_scan_ctx->ctp).size() == 0)
+        {
+            uint32_t num_attr = table->s->fields;
+
+            for (uint32_t i = 0; i < num_attr; i++)
+            {
+                CalpontSystemCatalog::ColType ctype;
+                ti.tpl_scan_ctx->ctp.push_back(ctype);
+            }
+        }
+    }
+
+    ci->tableMap[table] = ti;
+    return 0;
+
+error:
+
+    if (ci->cal_conn_hndl)
+    {
+        sm::sm_cleanup(ci->cal_conn_hndl);
+        ci->cal_conn_hndl = 0;
+    }
+
+    // do we need to close all connection handle of the table map
+    return ER_INTERNAL_ERROR;
+
+internal_error:
+
+    if (ci->cal_conn_hndl)
+    {
+        sm::sm_cleanup(ci->cal_conn_hndl);
+        ci->cal_conn_hndl = 0;
+    }
+
+    return ER_INTERNAL_ERROR;
+}
 // vim:sw=4 ts=4:

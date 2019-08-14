@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -45,7 +45,10 @@ namespace cal_impl_if
 class SubQuery
 {
 public:
-    SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false) {}
+    SubQuery(gp_walk_info& gwip) : 
+        fGwip(gwip), 
+        fCorrelated(false)
+     {}
     virtual ~SubQuery() {}
     virtual gp_walk_info& gwip() const
     {
@@ -178,7 +181,7 @@ class FromSubQuery : public SubQuery
 {
 public:
     FromSubQuery(gp_walk_info&);
-    FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub);
+    FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub, bool isPushdownHand=false);
     ~FromSubQuery();
     const SELECT_LEX* fromSub() const
     {
@@ -200,6 +203,7 @@ public:
 private:
     SELECT_LEX* fFromSub;
     std::string fAlias;
+    bool fPushdownHand;
 };
 
 class SelectSubQuery :  public SubQuery

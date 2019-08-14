@@ -540,7 +540,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
     {
         SRCP srcp(sc);
         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
-        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
+        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
             make_pair(1, field->cached_table);
     }
     else if (!gwi.rcWorkStack.empty())

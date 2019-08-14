@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -360,7 +360,19 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    //setup System Language
+    // WaitPeriod
+    try
+    {
+        string waitPeriod = sysConfigOld->getConfig(SystemSection, "WaitPeriod");
+        if (waitPeriod.length() > 0)
+        {
+            sysConfigNew->setConfig(SystemSection, "WaitPeriod", waitPeriod);
+        }
+    }
+    catch (...)
+    { }
+                          
+                          	//setup System Language
     string systemLang = "C";
 
     try

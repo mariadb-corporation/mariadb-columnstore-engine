@@ -11,9 +11,6 @@ ADD_CUSTOM_COMMAND(
 
 set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
-# Parser puts extra info to stderr.
-MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG=1" DEBUG)
-
 ########### next target ###############
 
 ADD_LIBRARY(ddlpackage SHARED

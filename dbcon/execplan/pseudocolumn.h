@@ -78,7 +78,7 @@ public:
     PseudoColumn(const std::string& schema,
                  const std::string& table,
                  const std::string& col,
-                 const bool isInfiniDB,
+                 const bool isColumnStore,
                  const uint32_t pseudoType,
                  const uint32_t sessionID = 0);
     PseudoColumn(const SimpleColumn& rhs, const uint32_t pseudoType, const uint32_t sessionID = 0);

@@ -394,12 +394,12 @@ int main(int argc, char** argv)
             // check if standby never replied, if so, shutdown
             if ( count >= 120 )
             {
-                log.writeLog(__LINE__, "Standby PM not responding, infinidb shutting down", LOG_TYPE_CRITICAL);
+                log.writeLog(__LINE__, "Standby PM not responding, ColumnStore shutting down", LOG_TYPE_CRITICAL);
                 //Set the alarm
 		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//		sleep (1);
 
-                string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+                string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 
                 system(cmd.c_str());
             }

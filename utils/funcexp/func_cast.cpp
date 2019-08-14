@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporaton
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1168,7 +1168,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
     int32_t	decimals = parm[1]->data()->getIntVal(row, isNull);
     int64_t max_length = parm[2]->data()->getIntVal(row, isNull);
 
-    // As of 2.0, max length infiniDB can support is 18
+    // As of 2.0, max length columnStore can support is 18
     // decimal(0,0) is valid, and no limit on integer number
     if (max_length > 18 || max_length <= 0)
         max_length = 18;

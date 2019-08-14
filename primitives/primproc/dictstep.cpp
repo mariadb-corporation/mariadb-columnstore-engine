@@ -30,7 +30,6 @@
 
 #include <unistd.h>
 #include <algorithm>
-#include <boost/algorithm/string/trim.hpp>
 
 #include "bpp.h"
 #include "primitiveserver.h"
@@ -94,7 +93,6 @@ void DictStep::createCommand(ByteStream& bs)
         for (uint32_t i = 0; i < filterCount; i++)
         {
             bs >> strTmp;
-            boost::trim_right_if(strTmp, boost::is_any_of(" "));
             //cout << "  " << strTmp << endl;
             eqFilter->insert(strTmp);
         }

@@ -906,9 +906,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
+			else if (_strnicmp(arguments[1].c_str(), "stop", 4) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
+			else if (strncasecmp(arguments[1].c_str(), "stop", 4) == 0)
 #endif
             {
                 ByteStream bs;
@@ -920,9 +920,9 @@ int processCommand(string* arguments)
                 SendToWES(oam, bs);
             }
 #if _MSC_VER
-			if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
+			else if (_strnicmp(arguments[1].c_str(), "status", 6) == 0))
 #else
-			if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
+			else if (strncasecmp(arguments[1].c_str(), "status", 6) == 0)
 #endif
             {
                 ByteStream bs;
