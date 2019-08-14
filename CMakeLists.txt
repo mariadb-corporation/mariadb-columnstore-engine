@@ -315,6 +315,7 @@ ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
+ADD_SUBDIRECTORY(storage-manager)
 
 # WriteEngine component tests
 IF( WITH_SHARED_COMP_TESTS )
