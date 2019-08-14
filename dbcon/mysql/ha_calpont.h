@@ -21,7 +21,6 @@
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
 
-extern handlerton* calpont_hton;
 extern handlerton* mcs_hton;
 
 /** @brief

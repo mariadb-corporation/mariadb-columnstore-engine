@@ -31,7 +31,6 @@ static int calpont_commit(handlerton* hton, THD* thd, bool all);
 
 static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
-handlerton* calpont_hton;
 handlerton* mcs_hton;
 
 // handlers creation function for hton.
@@ -733,7 +732,7 @@ int ha_calpont::external_lock(THD* thd, int lock_type)
 
     //@Bug 2526 Only register the transaction when autocommit is off
     if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-        trans_register_ha( thd, true, calpont_hton);
+        trans_register_ha( thd, true, mcs_hton);
 
     int rc = ha_calpont_impl_external_lock(thd, table, lock_type);
     DBUG_RETURN(rc);
