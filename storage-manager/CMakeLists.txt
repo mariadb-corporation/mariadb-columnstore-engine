@@ -105,7 +105,7 @@ if (SM_LOG_TO_STDERR)
     add_definitions(-DDEBUG)
 endif()
 
-set(S3API_DIR ${CMAKE_SOURCE_DIR}/libmarias3)
+set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
 
 include(ExternalProject)
 ExternalProject_Add(ms3
@@ -113,7 +113,7 @@ ExternalProject_Add(ms3
     CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_BINARY_DIR} ${S3_CONFIGURE_OPT}
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
-    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+    INSTALL_DIR ${INSTALL_ENGINE}
     EXCLUDE_FROM_ALL TRUE
 )
 
@@ -138,7 +138,7 @@ set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 # There's probably a better way to do this, but this works, so moving on
 # for now.
 add_custom_target(test_files
-    mkdir -p ${CMAKE_BINARY_DIR}/test_data && cp -R ${CMAKE_SOURCE_DIR}/test_data/* ${CMAKE_BINARY_DIR}/test_data
+    mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/test_data && cp -R ${CMAKE_CURRENT_SOURCE_DIR}/test_data/* ${CMAKE_CURRENT_BINARY_DIR}/test_data
 )
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
@@ -159,19 +159,21 @@ add_executable(smrm src/smrm.cpp)
 target_link_libraries(smrm storagemanager)
 
 install(TARGETS StorageManager smcat smput smls smrm storagemanager
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    RUNTIME DESTINATION ${INSTALL_ENGINE}/bin
+    LIBRARY DESTINATION ${INSTALL_ENGINE}/lib
     COMPONENT platform
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/lib 
-    DESTINATION ${CMAKE_INSTALL_PREFIX} 
-    FILES_MATCHING PATTERN "libmarias3*" 
+install(FILES 
+        ${CMAKE_BINARY_DIR}/lib/libmarias3.so
+        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.2
+        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.2.1.0
+    DESTINATION ${INSTALL_ENGINE}/lib
     COMPONENT platform
 )
 
 install(FILES storagemanager.cnf 
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/etc 
+    DESTINATION ${INSTALL_ENGINE}/etc 
     COMPONENT platform)
 
 #SET(CPACK_PACKAGE_NAME "mariadb-storagemanager")
