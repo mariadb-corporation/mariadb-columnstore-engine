@@ -284,7 +284,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
  ***********************************************************/
 ha_columnstore_derived_handler::ha_columnstore_derived_handler(THD *thd,
                                                              TABLE_LIST *dt)
-  : derived_handler(thd, calpont_hton)
+  : derived_handler(thd, mcs_hton)
 {
   derived = dt;
 }
@@ -373,7 +373,7 @@ void ha_columnstore_derived_handler::print_error(int, unsigned long)
  *    query - Query describing structure
  ***********************************************************/
 ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
-        : group_by_handler(thd_arg, calpont_hton),
+        : group_by_handler(thd_arg, mcs_hton),
           select(query->select),
           table_list(query->from),
           distinct(query->distinct),
@@ -538,7 +538,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
  ***********************************************************/
 ha_columnstore_select_handler::ha_columnstore_select_handler(THD *thd,
                                                              SELECT_LEX* select_lex)
-  : select_handler(thd, calpont_hton)
+  : select_handler(thd, mcs_hton)
 {
   select = select_lex;
 }
