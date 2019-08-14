@@ -470,6 +470,27 @@ bool SimpleFilter::operator==(const SimpleFilter& t) const
     return true;
 }
 
+bool SimpleFilter::semanticEq(const SimpleFilter& t) const
+{
+    if (fOp != NULL)
+    {
+        if (*fOp != *t.fOp)
+            return false;
+    }
+    if (fLhs != NULL)
+    {
+        if (*fLhs != t.fLhs && *fLhs != *t.fRhs)
+            return false;
+    }
+    if (fRhs != NULL)
+    {
+        if (*fRhs != t.fRhs && *fRhs != *t.fLhs)
+            return false;
+    }
+ 
+    return true;
+}
+
 bool SimpleFilter::operator==(const TreeNode* t) const
 {
     const SimpleFilter* o;

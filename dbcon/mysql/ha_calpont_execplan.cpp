@@ -395,6 +395,40 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
     return result;
 }
 
+/*@brief  isDuplicateSF - search for a duplicate SimpleFilter*/
+/***********************************************************
+ * DESCRIPTION:
+ * As of 1.4 CS potentially has duplicate filter predicates
+ * in both join->conds and join->cond_equal. This utility f()
+ * searches for semantically equal SF in the list of already
+ * applied equi predicates.
+ * TODO
+ *  We must move find_select_handler to either future or 
+ *  later execution phase.
+ * PARAMETERS:
+ *  gwi           main structure
+ *  sf            SimpleFilter * to find
+ * RETURNS
+ *  true          if sf has been found in the applied SF list
+ *  false         otherwise
+ * USED
+ *  buildPredicateItem()
+ ***********************************************************/
+bool isDuplicateSF(gp_walk_info *gwip, execplan::SimpleFilter *sfp)
+{
+    List_iterator<execplan::SimpleFilter> it(gwip->equiCondSFList);
+    execplan::SimpleFilter *isfp;
+    while((isfp = it++))
+    {
+        if (sfp->semanticEq(*isfp))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 string getViewName(TABLE_LIST* table_ptr)
 {
     string viewName = "";
@@ -1941,34 +1975,35 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
     else if (ifp->functype() == Item_func::MULT_EQUAL_FUNC)
     {
-#if 0 // MYSQL_5.6
-        Item_equal* item_eq = (Item_equal*)ifp;
-        // This code is for mysql 5.6. Need to convert to MariaDB 10.1
-        List_iterator_fast<Item_field> it(item_eq->fields);
-        idbassert(item_eq->fields.elements == 2);
-
-        // @todo handle more than 2 equal fields
-        Item* item_field = it++;
-        ReturnedColumn* lhs = buildReturnedColumn(item_field, *gwip, gwip->fatalParseError);
-        item_field = it++;
-        ReturnedColumn* rhs = buildReturnedColumn(item_field, *gwip, gwip->fatalParseError);
-
-        if (!rhs || !lhs)
+        Item_equal *cur_item_eq = (Item_equal*)ifp;
+        Item *lhs_item, *rhs_item;
+        // There must be at least two items
+        Item_equal_fields_iterator lhs_it(*cur_item_eq);
+        Item_equal_fields_iterator rhs_it(*cur_item_eq); rhs_it++;
+        while ((lhs_item = lhs_it++) && (rhs_item = rhs_it++))
         {
-            gwip->fatalParseError = true;
-            gwip->parseErrorText = "Unsupport elements in MULT_EQUAL item";
-            delete rhs;
-            delete lhs;
-            return false;
+            ReturnedColumn* lhs = buildReturnedColumn(lhs_item, *gwip, gwip->fatalParseError);
+            ReturnedColumn* rhs = buildReturnedColumn(rhs_item, *gwip, gwip->fatalParseError);
+            if (!rhs || !lhs)
+            {
+                gwip->fatalParseError = true;
+                gwip->parseErrorText = "Unsupport elements in MULT_EQUAL item";
+                delete rhs;
+                delete lhs;
+                return false;
+            }
+            PredicateOperator* po = new PredicateOperator("=");
+            boost::shared_ptr<Operator> sop(po);
+            sop->setOpType(lhs->resultType(), rhs->resultType());
+            SimpleFilter* sf = new SimpleFilter(sop, lhs, rhs);
+            // Search in ptWorkStack for duplicates of the SF
+            // before we push the SF
+            if (!isDuplicateSF(gwip, sf))
+            {
+                ParseTree* pt = new ParseTree(sf);
+                gwip->ptWorkStack.push(pt);
+            }
         }
-
-        PredicateOperator* po = new PredicateOperator("=");
-        boost::shared_ptr<Operator> sop(po);
-        sop->setOpType(lhs->resultType(), rhs->resultType());
-        SimpleFilter* sf = new SimpleFilter(sop, lhs, rhs);
-        ParseTree* pt = new ParseTree(sf);
-        gwip->ptWorkStack.push(pt);
-#endif
     }
     else if (ifp->functype() == Item_func::EQUAL_FUNC)
     {
@@ -2187,6 +2222,11 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                             rhs->returnAll(true);
                             IDEBUG( cerr << "setting returnAll on " << tan_rhs << endl );
                         }
+                    }
+
+                    if (ifp->functype() == Item_func::EQ_FUNC)
+                    {
+                        gwip->equiCondSFList.push_back(sf);
                     }
 
                     ParseTree* ptp = new ParseTree(sf);
@@ -3570,7 +3610,7 @@ ReturnedColumn* buildFunctionColumn(
         return rc;
     }
 
-    // TODO MariaDB 10.1: Until we figure out what to do with this
+    // Item_equal is supported by buildPredicateItem()
     if (funcName == "multiple equal")
         return NULL;
 
@@ -5077,9 +5117,7 @@ void gp_walk(const Item* item, void* arg)
                 string aliasTableName(scp->tableAlias());
                 scp->tableAlias(lower(aliasTableName));
                 gwip->rcWorkStack.push(scp->clone());
-                //gwip->rcWorkStack.push(scp);
                 boost::shared_ptr<SimpleColumn> scsp(scp);
-                //boost::shared_ptr<SimpleColumn> scsp(scp->clone());
                 gwip->scsp = scsp;
 
                 gwip->funcName.clear();
@@ -6257,6 +6295,27 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 #ifdef DEBUG_WALK_COND
         cerr << "------------------ WHERE -----------------------" << endl;
         icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+        if (join && join->cond_equal)
+        {
+            List_iterator<Item_equal> li(join->cond_equal->current_level);
+            Item_equal *cur_item_eq;
+            while ((cur_item_eq= li++))
+            {
+                // WIP replace the block with 
+                //cur_item_eq->traverse_cond(debug_walk, gwip, Item::POSTFIX);
+                std::cerr << "item_equal(";
+                Item *item;
+                Item_equal_fields_iterator it(*cur_item_eq);
+                while ((item= it++))
+                {
+                    std::ostringstream ostream;
+                    std::ostringstream& osr = ostream;
+                    getColNameFromItem(osr, item);
+                    std::cerr << osr.str() << ",";
+                }
+                std::cerr << ")" << std::endl;
+            }
+        }
         cerr << "------------------------------------------------\n" << endl;
 #endif
 
@@ -6279,6 +6338,19 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_INTERNAL_ERROR;
         }
+       
+        // MCOL-3416 support for EQUAL_COND in MDB >= 10.1
+        if (join && join->cond_equal)
+        {
+            // TODO MCOL-3416 This must traverse all levels not current_level only
+            List_iterator<Item_equal> li(join->cond_equal->current_level);
+            Item_equal *cur_item_eq;
+            while ((cur_item_eq= li++))
+            {
+                cur_item_eq->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+            }
+        }
+
     }
     else if (join && join->zero_result_cause)
     {

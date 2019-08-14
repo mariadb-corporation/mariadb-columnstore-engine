@@ -138,28 +138,36 @@ public:
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
      *
      * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     * @return true if every member of t is a duplicate copy of every member of this; false otherwise
      */
     virtual bool operator==(const TreeNode* t) const;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
      *
      * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     * @return true if every member of t is a duplicate copy of every member of this; false otherwise
      */
     bool operator==(const SimpleFilter& t) const;
+
+    /** @brief Do a semantic equivalence test
+     *
+     * Do a semantic equivalence test.
+     * @return true if filter operation are the same and 
+     * the sets of arguments are the same; false otherwise
+     */
+    bool semanticEq(const SimpleFilter& t) const;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
      *
      * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     * @return false if every member of t is a duplicate copy of every member of this; true otherwise
      */
     virtual bool operator!=(const TreeNode* t) const;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
      *
      * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     * @return false if every member of t is a duplicate copy of every member of this; true otherwise
      */
     bool operator!=(const SimpleFilter& t) const;
 
