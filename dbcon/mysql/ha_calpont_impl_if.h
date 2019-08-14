@@ -143,6 +143,9 @@ struct gp_walk_info
     std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;
     uint32_t derivedTbCnt;
     std::vector<execplan::SCSEP> subselectList;
+    // Workaround for duplicate equi-JOIN predicates
+    // See isDuplicateSF() for more info.
+    List<execplan::SimpleFilter> equiCondSFList;
 
     // Kludge for Bug 750
     int32_t recursionLevel;
