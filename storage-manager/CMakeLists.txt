@@ -66,7 +66,7 @@ ExternalProject_Add(ms3
 #add_library(marias3 SHARED IMPORTED)
 #set_property(TARGET marias3 PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.0.2)
 
-set(S3API_DEPS marias3 curl xml2 mhash)
+set(S3API_DEPS marias3 curl xml2)
 
 # get linkage right
 link_directories(${CMAKE_BINARY_DIR}/lib)
