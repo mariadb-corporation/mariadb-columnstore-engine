@@ -760,7 +760,7 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 uint64_t GroupConcatOrderBy::getKeyLength() const
 {
     // only distinct the concatenated columns
-    return fConcatColumns.size() - 1; // cols 0 to fConcatColumns will be conpared
+    return fConcatColumns.size(); // cols 0 to fConcatColumns.size() - 1 will be compared
 }
 
 
