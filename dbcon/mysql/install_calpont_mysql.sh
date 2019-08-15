@@ -32,74 +32,7 @@ INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
 INSTALL PLUGIN columnstore_columns SONAME 'is_columnstore_columns.so';
 INSTALL PLUGIN columnstore_extents SONAME 'is_columnstore_extents.so';
 INSTALL PLUGIN columnstore_files SONAME 'is_columnstore_files.so';
--- these are deprecated names
-DELETE FROM mysql.func WHERE name='caldisablepartition';
-DELETE FROM mysql.func WHERE name='caldroppartition';
-DELETE FROM mysql.func WHERE name='calenablepartition';
-DELETE FROM mysql.func WHERE name='caldisablepartitions';
-DELETE FROM mysql.func WHERE name='calenablepartitions';
-DELETE FROM mysql.func WHERE name='caldroppartitions';
-DELETE FROM mysql.func WHERE name='calshowpartitions';
-DELETE FROM mysql.func WHERE name='caldroppartitionsbyvalue';
-DELETE FROM mysql.func WHERE name='caldisablepartitionsbyvalue';
-DELETE FROM mysql.func WHERE name='calenablepartitionsbyvalue';
-DELETE FROM mysql.func WHERE name='calshowpartitionsbyvalue';
--- these functions moved libs
-DROP FUNCTION caldisablepartitions;
-DROP FUNCTION calenablepartitions;
-DROP FUNCTION caldroppartitions;
-DROP FUNCTION calshowpartitions;
-DROP FUNCTION caldroppartitionsbyvalue;
-DROP FUNCTION caldisablepartitionsbyvalue;
-DROP FUNCTION calenablepartitionsbyvalue;
-DROP FUNCTION calshowpartitionsbyvalue;
-CREATE FUNCTION calgetstats RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calsettrace RETURNS INTEGER SONAME 'libcalmysql.so';
-CREATE FUNCTION calsetparms RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calflushcache RETURNS INTEGER SONAME 'libcalmysql.so';
-CREATE FUNCTION calgettrace RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calgetversion RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calonlinealter RETURNS INTEGER SONAME 'libcalmysql.so';
-CREATE FUNCTION calviewtablelock RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calcleartablelock RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION caldisablepartitions RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calenablepartitions RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION caldroppartitions RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calshowpartitions RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION callastinsertid RETURNS INTEGER SONAME 'libcalmysql.so';
-CREATE FUNCTION caldroppartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION caldisablepartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calenablepartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calshowpartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION calgetsqlcount RETURNS STRING SONAME 'libcalmysql.so';
-CREATE FUNCTION idbpm RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbdbroot RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbsegment RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbsegmentdir RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbextentrelativerid RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbblockid RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbextentid RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION idbextentmin RETURNS STRING soname 'libcalmysql.so';
-CREATE FUNCTION idbextentmax RETURNS STRING soname 'libcalmysql.so';
-CREATE FUNCTION idbpartition RETURNS STRING soname 'libcalmysql.so';
-CREATE FUNCTION idblocalpm RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION mcssystemready RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION mcssystemreadonly RETURNS INTEGER soname 'libcalmysql.so';
-CREATE FUNCTION mcssystemprimary RETURNS INTEGER soname 'libcalmysql.so';
-CREATE AGGREGATE FUNCTION regr_avgx RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_avgy RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_count RETURNS INTEGER soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_slope RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_intercept RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_r2 RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION corr RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_sxx RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_syy RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION regr_sxy RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION covar_pop RETURNS REAL soname 'libregr_mysql.so';
-CREATE AGGREGATE FUNCTION covar_samp RETURNS REAL soname 'libregr_mysql.so';
-
-CREATE AGGREGATE FUNCTION distinct_count RETURNS INTEGER soname 'libudf_mysql.so';
+INSERT INTO mysql.func VALUES ('calgetstats',0,'libcalmysql.so','function'),('calsettrace',2,'libcalmysql.so','function'),('calsetparms',0,'libcalmysql.so','function'),('calflushcache',2,'libcalmysql.so','function'),('calgettrace',0,'libcalmysql.so','function'),('calgetversion',0,'libcalmysql.so','function'),('calonlinealter',2,'libcalmysql.so','function'),('calviewtablelock',0,'libcalmysql.so','function'),('calcleartablelock',0,'libcalmysql.so','function'),('callastinsertid',2,'libcalmysql.so','function'),('calgetsqlcount',0,'libcalmysql.so','function'),('idbpm',2,'libcalmysql.so','function'),('idbdbroot',2,'libcalmysql.so','function'),('idbsegment',2,'libcalmysql.so','function'),('idbsegmentdir',2,'libcalmysql.so','function'),('idbextentrelativerid',2,'libcalmysql.so','function'),('idbblockid',2,'libcalmysql.so','function'),('idbextentid',2,'libcalmysql.so','function'),('idbextentmin',0,'libcalmysql.so','function'),('idbextentmax',0,'libcalmysql.so','function'),('idbpartition',0,'libcalmysql.so','function'),('idblocalpm',2,'libcalmysql.so','function'),('mcssystemready',2,'libcalmysql.so','function'),('mcssystemreadonly',2,'libcalmysql.so','function'),('mcssystemprimary',2,'libcalmysql.so','function'),('regr_avgx',1,'libregr_mysql.so','aggregate'),('regr_avgy',1,'libregr_mysql.so','aggregate'),('regr_count',2,'libregr_mysql.so','aggregate'),('regr_slope',1,'libregr_mysql.so','aggregate'),('regr_intercept',1,'libregr_mysql.so','aggregate'),('regr_r2',1,'libregr_mysql.so','aggregate'),('corr',1,'libregr_mysql.so','aggregate'),('regr_sxx',1,'libregr_mysql.so','aggregate'),('regr_syy',1,'libregr_mysql.so','aggregate'),('regr_sxy',1,'libregr_mysql.so','aggregate'),('covar_pop',1,'libregr_mysql.so','aggregate'),('covar_samp',1,'libregr_mysql.so','aggregate'),('distinct_count',2,'libudf_mysql.so','aggregate');
 
 CREATE DATABASE IF NOT EXISTS infinidb_vtable;
 CREATE DATABASE IF NOT EXISTS infinidb_querystats;
@@ -150,6 +83,4 @@ $installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/
 $installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
 $installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
 $installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
-
-sed -i 's/infinidb_compression_type=1/infinidb_compression_type=2/' $installdir/mysql/my.cnf >/dev/null 2>&1
 

@@ -84,7 +84,7 @@ if [ -d $installdir/mysql/db/calpontsys ]; then
 		# Restart in the same way that mysqld will be started normally.
 		$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
 		sleep 2
-		$installdir/mysql/mysql-Columnstore start
+		$installdir/mysql/mysql-Columnstore start --skip-grant-tables
 
 		sleep 5
 		
