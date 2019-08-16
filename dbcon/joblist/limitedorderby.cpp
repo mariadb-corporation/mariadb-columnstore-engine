@@ -101,7 +101,7 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool
 // not just a column count.
 uint64_t LimitedOrderBy::getKeyLength() const
 {
-    return fOrderByCond.size();
+    return fRow0.getColumnCount();
 }
 
 
