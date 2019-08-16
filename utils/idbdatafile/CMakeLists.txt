@@ -1,6 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
+include_directories( ${ENGINE_COMMON_INCLUDES} ../cloudio)
 
 ########### next target ###############
 

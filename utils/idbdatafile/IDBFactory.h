@@ -20,6 +20,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <stdexcept>
 
 #include "IDBDataFile.h"
@@ -81,6 +82,11 @@ public:
     static bool installPlugin(const std::string& plugin);
 
     /**
+     * This method lists the loaded plugins by type.
+     */
+    static std::vector<IDBDataFile::Types> listPlugins();
+    
+    /**
      * This method calls the Factory for the specified type
      */
     static IDBDataFile* open(IDBDataFile::Types type, const char* fname, const char* mode, unsigned opts, unsigned colWidth);
@@ -94,7 +100,7 @@ public:
      * This retrieves the IDBFileSystem for the specified type
      */
     static const std::string& name(IDBDataFile::Types type);
-
+    
 private:
     typedef std::map<IDBDataFile::Types, FileFactoryEnt> FactoryMap;
     typedef FactoryMap::const_iterator FactoryMapCIter;

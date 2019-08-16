@@ -108,6 +108,7 @@ int BlockResolutionManager::saveState(string filename) throw()
 
         // truncate teh file if already exists since no truncate in HDFS.
         const char* filename = journalFilename.c_str();
+
         IDBDataFile* journal = IDBDataFile::open(
                                    IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
         delete journal;

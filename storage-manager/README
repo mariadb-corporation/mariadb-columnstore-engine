@@ -1,0 +1,10 @@
+Note, this used to be a seperate repo (SM).  To merge it into the ColumnStore
+repo (CS), all of the files in SM were moved to the dir we want them in after 
+they are merged into the CS repo, using 'git mv'.
+
+'git mv' sort of nukes and sort of preserves history.  'git log' by default
+does not follow history past renames.  'git log --follow' does, but
+only for single files.  If for some reason you need the history of a file,
+use 'git log --follow'.  If you need the history of a wider scope,
+look at the original SM repo at http://github.com/pleblanc1976/storage-manager.
+

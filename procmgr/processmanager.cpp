@@ -30,6 +30,11 @@
 #include "dbrm.h"
 #include "cacheutils.h"
 #include "ddlcleanuputil.h"
+#include "IDBFileSystem.h"
+#include "IDBDataFile.h"
+#include "IDBPolicy.h"
+#include <boost/filesystem/path.hpp>
+
 using namespace cacheutils;
 
 using namespace std;
@@ -39,6 +44,7 @@ using namespace oam;
 using namespace logging;
 using namespace alarmmanager;
 using namespace config;
+using namespace idbdatafile;
 
 pthread_mutex_t STATUS_LOCK;
 pthread_mutex_t THREAD_LOCK;
@@ -1331,11 +1337,27 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                         }
                         else
                         {
+                            /* XXXPAT: saveBRM requires StorageManager being up at the time.
+                            A couple options. 1) start/stop SM around saveBRM().  Will work but it means SM would go
+                            down-up-down for this single operation.  2) add a special path to stopModule()
+                            to NOT stop SM in the first call, then after saveBRM(), stop SM.
+                            
+                            Neither option is great.  The least invasive is option 1, so going with that
+                            for now.
+                            */
+                            
                             //now stop local module
                             processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
                             //run save brm script
+                            string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+                            if (storageType == "storagemanager")
+                                processManager.startProcess(config.moduleName(), "StorageManager", FORCEFUL);
+                                
                             processManager.saveBRM(false);
+                            
+                            if (storageType == "storagemanager")
+                                processManager.stopProcess(config.moduleName(), "StorageManager", GRACEFUL, false);
 
                             log.writeLog(__LINE__, "Stop System Completed Success", LOG_TYPE_INFO);
 
@@ -1766,7 +1788,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
                     //run save.brm script
+                    string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+                    if (storageType == "storagemanager")
+                        processManager.startProcess(config.moduleName(), "StorageManager", FORCEFUL);
+                        
                     processManager.saveBRM(false);
+                    
+                    if (storageType == "storagemanager")
+                        processManager.stopProcess(config.moduleName(), "StorageManager", GRACEFUL, false);
+                    
 
                     log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor for stopModule requests, return status = " + oam.itoa(status));
 
@@ -7049,7 +7079,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
     int rtnCode = system(cmd.c_str());
     log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
-
+    
     log.writeLog(__LINE__, "Running DBRM save_brm", LOG_TYPE_DEBUG);
 
     cmd = startup::StartUp::installDir() + "/bin/save_brm > " + logdir + "/save_brm.log1 2>&1";
@@ -7061,7 +7091,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     }
     else
         log.writeLog(__LINE__, "Error running DBRM save_brm", LOG_TYPE_ERROR);
-
+        
     if ( clearshm )
     {
         cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
@@ -9169,13 +9199,24 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     string oidFile;
     oam.getSystemConfig("OIDBitmapFile", oidFile);
 
+    // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
+    // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
-    ifstream oldFile (currentFileName.c_str());
+    log.writeLog(__LINE__, "I declare that I am ProcMgr, and I am running getDBRMData!", LOG_TYPE_DEBUG);
+    IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
+    boost::scoped_ptr<IDBDataFile> oldFile(IDBDataFile::open(IDBPolicy::getType(currentFileName.c_str(),
+                                                         IDBPolicy::WRITEENG),
+                                                         currentFileName.c_str(), "r", 0));
+    //ifstream oldFile (currentFileName.c_str());
 
-    if (oldFile)
+    if (fs.exists(currentFileName.c_str()))
     {
         // current file found, check for OIDBitmapFile
-        ifstream mapFile (oidFile.c_str());
+        boost::scoped_ptr<IDBDataFile> mapFile(IDBDataFile::open(IDBPolicy::getType(oidFile.c_str(),
+                                                     IDBPolicy::WRITEENG),
+                                                     oidFile.c_str(), "r", 0));
+        
+        //ifstream mapFile (oidFile.c_str());
 
         if (!mapFile)
         {
@@ -9186,7 +9227,13 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
 
         char line[200];
-        oldFile.getline(line, 200);
+        memset(line, 0, 200);
+        int err = oldFile->read(line, 200);
+        // XXXPAT.  HACK!  This is brittle, need to fix later.  Need to eat a \n char.  Need to move forward now.
+        if (err > 0)
+            line[err-1] = 0;
+        
+        //oldFile.getline(line, 200);
         // MCOL-1558.  Handle absolute and relative paths.
         if (line[0] == '/')
             currentDbrmFile = line;
@@ -9210,7 +9257,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             returnStatus = oam::API_FAILURE;
         }
 
@@ -9218,10 +9265,35 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         return returnStatus;
     }
 
-    string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
-    unlink(fileName.c_str());
+    //string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
+    //unlink(fileName.c_str());
 
-    string cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    // this replaces the stuff that's if-0'd below
+    boost::filesystem::path pCurrentDbrmFile(currentDbrmFile + "_");
+    boost::filesystem::path dbrmDir(pCurrentDbrmFile.parent_path());
+    list<string> fileListing;
+    vector<string> dbrmFiles;
+    fs.listDirectory(dbrmDir.string().c_str(), fileListing);
+    for (const auto &file : fileListing)
+    {
+        if (file.find(pCurrentDbrmFile.filename().string()) == 0 &&
+          fs.size((dbrmDir / file).string().c_str()) != 0)
+          {
+            log.writeLog(__LINE__, "adding " + (dbrmDir/file).string() + " to dbrmFiles", LOG_TYPE_DEBUG);
+            dbrmFiles.push_back((dbrmDir / file).string());
+          }
+    }
+    fileListing.clear();
+    
+    #if 0
+    string cmd;
+    string storageType = config::Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+    if (storageType == "storagemanager")
+        cmd = startup::StartUp::installDir() + "/bin/smls " + currentDbrmFile + "_* | awk '// { print $3 }' >> " +
+            startup::StartUp::installDir() + "/local/dbrmfiles";
+    else
+        cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    log.writeLog(__LINE__, "Running '" + cmd + "'", LOG_TYPE_DEBUG);
     system(cmd.c_str());
 
     ifstream file (fileName.c_str());
@@ -9251,6 +9323,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         return returnStatus;
     }
 
+    
     vector <string> dbrmFiles;
 
     char line[200];
@@ -9263,6 +9336,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     file.close();
+    #endif
 
     if ( dbrmFiles.size() < 1 )
     {
@@ -9281,7 +9355,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             returnStatus = oam::API_FAILURE;
         }
 
@@ -9292,14 +9366,9 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // put oid file and current file in list
     dbrmFiles.push_back(currentFileName);
 
-    ifstream file1 (journalFileName.c_str());
-
-    if (file1)
+    if (fs.exists(journalFileName.c_str()) && fs.size(journalFileName.c_str()) > 0)
         dbrmFiles.push_back(journalFileName);
-
-    ifstream file2 (oidFile.c_str());
-
-    if (file2)
+    if (fs.exists(oidFile.c_str()) && fs.size(oidFile.c_str()) > 0)
         dbrmFiles.push_back(oidFile);
 
     //type
@@ -9316,25 +9385,21 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
         pthread_mutex_unlock(&THREAD_LOCK);
         return oam::API_FAILURE;
     }
 
     //remove any file of size 0
+    
     std::vector<std::string>::iterator pt1 = dbrmFiles.begin();
-
+    #if 0
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {
-        string fileName = *pt1;
-        ifstream in(fileName.c_str());
-
-        in.seekg(0, std::ios::end);
-        int size = in.tellg();
-
-        if ( size == 0 )
+        if (fs.size(pt1->c_str()) == 0)
             dbrmFiles.erase(pt1);
     }
+    #endif
 
     ByteStream fcmsg;
 
@@ -9352,23 +9417,62 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
         pthread_mutex_unlock(&THREAD_LOCK);
         return oam::API_FAILURE;
     }
 
     pt1 = dbrmFiles.begin();
-
     for ( ; pt1 != dbrmFiles.end() ; pt1++)
     {
         ByteStream fnmsg, fdmsg;
 
         string fileName = *pt1;
-        ifstream in(fileName.c_str());
 
+        //Goal of the stuff below is to load a file's data into fdmsg
+        //and it's filename into fnmsg.
+            
+        boost::scoped_ptr<IDBDataFile> in(IDBDataFile::open(
+                                                IDBPolicy::getType(fileName.c_str(),
+                                                IDBPolicy::WRITEENG),
+                                                fileName.c_str(), "r", 0));
+        
+        ssize_t size = in->size();
+        fdmsg.needAtLeast(size);
+        uint8_t *buf = fdmsg.getInputPtr();
+        ssize_t progress = 0;
+        ssize_t err;
+        char errbuf[80];
+        while (progress < size)
+        {
+            err = in->read(&buf[progress], size - progress);
+            if (err < 0)
+            {
+                int saved_errno = errno;
+                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got " + 
+                    strerror_r(saved_errno, errbuf, 80), LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return oam::API_FAILURE;
+            }
+            else if (err == 0)
+            {
+                log.writeLog(__LINE__, "getDBRMData(): failed reading " + fileName + ", got early EOF", LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return oam::API_FAILURE;
+            }
+            progress += err;
+        }
+        fdmsg.advanceInputPtr(size);
+        
+        log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
+        fnmsg << fileName;
+        
+        #if 0
+        ifstream in(fileName.c_str());
+                
         //skip any file of size 0
         in.seekg(0, std::ios::end);
-        int size = in.tellg();
+        size = in.tellg();
 
         if ( size == 0 )
             continue;
@@ -9377,7 +9481,8 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
         log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
         fnmsg << fileName;
-
+        #endif
+        
         try
         {
             cfIos.write(fnmsg);
@@ -9391,13 +9496,14 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             pthread_mutex_unlock(&THREAD_LOCK);
             return oam::API_FAILURE;
         }
 
-        in >> fdmsg;
-
+        //in >> fdmsg;
+        
+        log.writeLog(__LINE__, "Sending " + to_string(fdmsg.length()) + " bytes.", LOG_TYPE_DEBUG);
         try
         {
             cfIos.write(fdmsg);
@@ -9411,7 +9517,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             pthread_mutex_unlock(&THREAD_LOCK);
             return oam::API_FAILURE;
         }
@@ -9428,7 +9534,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
         returnStatus = oam::API_FAILURE;
     }
 
@@ -11055,6 +11161,8 @@ void ProcessManager::stopProcessTypes(bool manualFlag)
     //dbrm
     processManager.stopProcessType("DBRMControllerNode", manualFlag);
     processManager.stopProcessType("DBRMWorkerNode", manualFlag);
+    
+    processManager.stopProcessType("StorageManager", manualFlag);
 
     log.writeLog(__LINE__, "stopProcessTypes Completed");
 }

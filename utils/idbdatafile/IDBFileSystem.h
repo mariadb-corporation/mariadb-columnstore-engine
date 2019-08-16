@@ -41,7 +41,8 @@ public:
     {
         UNKNOWN = 0x00,
         POSIX = 0x0001,
-        HDFS  = 0x0002
+        HDFS  = 0x0002,
+        CLOUD = 0x0003
     };
 
     /**

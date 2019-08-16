@@ -1974,7 +1974,11 @@ void Oam::getProcessConfig(SystemProcessConfig& systemprocessconfig)
     systemprocessconfig.processconfig.clear();
 
     Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
-
+    Config *csConfig = Config::makeConfig();
+    string strStorageManagerEnabled = csConfig->getConfig("StorageManager", "Enabled");
+    bool storageManagerEnabled = !strStorageManagerEnabled.empty() && (strStorageManagerEnabled[0] == 'Y' || 
+        strStorageManagerEnabled[0] == 'y' || strStorageManagerEnabled[0] == 'T' || strStorageManagerEnabled[0] == 't');
+    
     for (int processID = 1; processID < MAX_PROCESS + 1; processID++)
     {
         ProcessConfig processconfig;
@@ -1987,7 +1991,9 @@ void Oam::getProcessConfig(SystemProcessConfig& systemprocessconfig)
                               proConfig->getConfig(sectionName, "ModuleType"),
                               processconfig );
 
-        if (processconfig.ProcessName.empty())
+        // hide StorageManager from everything else if it is disabled
+        if (processconfig.ProcessName.empty() || 
+          (!storageManagerEnabled && processconfig.ProcessName == "StorageManager"))
             continue;
 
         systemprocessconfig.processconfig.push_back(processconfig);
@@ -10763,6 +10769,10 @@ void Oam::mountDBRoot(dbrootList dbrootConfigList, bool mount)
     }
     catch (...) {}
 
+    // nothing to do here
+    if (DBRootStorageType == "storagemanager")
+        return;
+    
     string DataRedundancyConfig = "n";
 
     try

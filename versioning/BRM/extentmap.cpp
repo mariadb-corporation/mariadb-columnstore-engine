@@ -1133,6 +1133,7 @@ void ExtentMap::reserveLBIDRange(LBID_t start, uint8_t size)
 	    ...   (* numFL)
 */
 
+
 void ExtentMap::loadVersion4(IDBDataFile* in)
 {
     int emNumElements = 0, flNumElements = 0;
@@ -1197,7 +1198,6 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
                 fExtentMap[i].status > EXTENTSTATUSMAX)
             fExtentMap[i].status = EXTENTAVAILABLE;
     }
-    
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
 
@@ -1310,7 +1310,6 @@ void ExtentMap::save(const string& filename)
 #endif
 
     int allocdSize, loadSize[3], i;
-    mode_t utmp;
 
     grabEMEntryTable(READ);
 
@@ -1394,6 +1393,7 @@ void ExtentMap::save(const string& filename)
             }
             first = -1;
         }
+
     }
     if (first != -1)
     {
@@ -1428,6 +1428,7 @@ void ExtentMap::save(const string& filename)
             releaseEMEntryTable(READ);
             throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
         }
+
         progress += err;
     }
 

@@ -313,9 +313,14 @@ int main (int argc, char** argv)
             pthread_t cpuMonitorThread;
             pthread_create (&cpuMonitorThread, NULL, (void* (*)(void*)) &cpuMonitor, NULL);
 
-            //Launch Disk Monitor Thread
-            pthread_t diskMonitorThread;
-            pthread_create (&diskMonitorThread, NULL, (void* (*)(void*)) &diskMonitor, NULL);
+            //Launch Disk Monitor Thread if it's not a storagemanager cluster
+            config::Config *_config = config::Config::makeConfig();
+            string storageType = _config->getConfig("Installation", "DBRootStorageType");
+            if (storageType != "storagemanager")
+            {
+                pthread_t diskMonitorThread;
+                pthread_create (&diskMonitorThread, NULL, (void* (*)(void*)) &diskMonitor, NULL);
+            }
 
             //Launch DB Health Check Thread
 //			pthread_t dbhealthMonitorThread;

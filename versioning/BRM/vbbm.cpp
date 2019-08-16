@@ -979,6 +979,7 @@ void VBBM::setReadOnly()
  * 		struct VBBMEntry * numEntries
  */
 
+
 void VBBM::loadVersion2(IDBDataFile* in)
 {
     int vbbmEntries;
@@ -1041,6 +1042,7 @@ void VBBM::loadVersion2(IDBDataFile* in)
     for (i = 0; i < vbbmEntries; i++)
         insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbOID,
           loadedEntries[i].vbFBO, true);
+
 }
 
 //#include "boost/date_time/posix_time/posix_time.hpp"
@@ -1074,6 +1076,7 @@ void VBBM::load(string filename)
 
     switch (magic)
     {
+
         case VBBM_MAGIC_V2:
             loadVersion2(in.get());
             break;
@@ -1139,6 +1142,7 @@ void VBBM::save(string filename)
             }
             first = -1;
         }
+
     }
     if (first != -1)
     {
@@ -1157,6 +1161,7 @@ void VBBM::save(string filename)
         }
     }
     
+
 #if 0
     cout << "saving... nfiles=" << vbbm->nFiles << "\n";
 

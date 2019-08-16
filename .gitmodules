@@ -1,0 +1,3 @@
+[submodule "storage-manager/libmarias3"]
+	path = storage-manager/libmarias3
+	url = https://github.com/mariadb-corporation/libmarias3.git

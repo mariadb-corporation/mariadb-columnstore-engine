@@ -538,4 +538,7 @@
 		<Host>127.0.0.1</Host>
 		<Port>0</Port>
 	</QueryTele>
+    <StorageManager>
+        <MaxSockets>30</MaxSockets>
+    </StorageManager>
 </Columnstore>

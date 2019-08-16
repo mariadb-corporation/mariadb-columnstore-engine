@@ -140,7 +140,7 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         const char* filename = journalName.c_str();
 
         journalh = IDBDataFile::open(
-                       IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "w+b", 0);
+                       IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0);
         if (journalh == NULL)
             throw runtime_error("Could not open the BRM journal for writing!");
     }
@@ -2009,6 +2009,7 @@ void SlaveComm::do_confirm()
             log(os.str());
             throw runtime_error(os.str());
         }
+
         
         tmp = savefile + (saveFileToggle ? 'A' : 'B');
         slave->saveState(tmp);
@@ -2216,6 +2217,7 @@ int SlaveComm::replayJournal(string prefix)
 
         if (readIn > 0)
         {
+
             cmd.needAtLeast(len);
             readIn = journalf->read((char*) cmd.getInputPtr(), len);
             cmd.advanceInputPtr(len);
@@ -2263,6 +2265,7 @@ void SlaveComm::saveDelta()
     try
     {
         uint32_t len = delta.length();
+
         
         journalh->write((const char*) &len, sizeof(len));
         journalh->write((const char*) delta.buf(), delta.length());
