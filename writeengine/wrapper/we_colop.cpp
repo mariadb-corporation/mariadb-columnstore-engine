@@ -174,7 +174,23 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                     }
                 }
 
-                RETURN_ON_ERROR(readBlock(column.dataFile.pFile, buf, hwm));
+                rc = readBlock(column.dataFile.pFile, buf, hwm);
+   
+                // MCOL-498 add a block.
+                // DRRTUY TODO Given there is no more hwm pre-allocated we
+                // could extend the file once to accomodate all records.
+                if (rc != NO_ERROR)
+                {
+                    if (rc == ERR_FILE_EOF)
+                    {
+                        uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+                        setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, column.colWidth);
+                        RETURN_ON_ERROR(saveBlock(column.dataFile.pFile, buf, hwm));
+                    } else
+                    {
+                        return rc;
+                    }
+                }
 
                 for (j = 0; j < totalRowPerBlock; j++)
                 {
@@ -197,8 +213,6 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
         if ((rowsallocated == 0) && isFirstBatchPm)
         {
             TableMetaData::removeTableMetaData(tableOid);
-            //TableMetaData* tableMetaData= TableMetaData::makeTableMetaData(tableOid);
-
         }
 
         //Check if a new extent is needed
@@ -335,11 +349,6 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                 vector<BRM::LBID_t> lbids;
                 vector<CalpontSystemCatalog::ColDataType> colDataTypes;
 
-                //BRM::CPInfoList_t cpinfoList;
-                //BRM::CPInfo cpInfo;
-                //cpInfo.max = numeric_limits<int64_t>::min();
-                //cpInfo.min = numeric_limits<int64_t>::max();
-                //cpInfo.seqNum = -1;
                 for ( i = 0; i < extents.size(); i++)
                 {
                     setColParam(newCol, 0, newColStructList[i].colWidth, newColStructList[i].colDataType, newColStructList[i].colType,
@@ -352,8 +361,6 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                     if (rc != NO_ERROR)
                         return rc;
 
-                    //cpInfo.firstLbid = extents[i].startLbid;
-                    //cpinfoList.push_back(cpInfo);
                     newColStructList[i].fColPartition = partition;
                     newColStructList[i].fColSegment = segment;
                     newColStructList[i].fColDbRoot = dbRoot;
@@ -365,7 +372,6 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                 }
 
                 //mark the extents to updating
-//rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList);
                 rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
 
                 if (rc != NO_ERROR)
@@ -470,17 +476,21 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
             //..Search first block of new extent for empty rows
             rc = readBlock(newCol.dataFile.pFile, buf, newHwm);
 
-            if ( rc != NO_ERROR)
-                return rc;
-
-            // MCOL-498 This must be a first block in a new extent so
-            // fill the block up to its boundary with empties. Otherwise
-            // there could be fantom values.
+            // MCOL-498 add a block.
+            // DRRTUY TODO Given there is no more hwm pre-allocated we
+            // could extend the file once to accomodate all records.
+            if (rc != NO_ERROR)
             {
-                uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
-                setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, column.colWidth);
+                if (rc == ERR_FILE_EOF)
+                {
+                    uint64_t emptyVal = getEmptyRowValue(newCol.colDataType, newCol.colWidth);
+                    setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, newCol.colWidth);
+                    RETURN_ON_ERROR(saveBlock(newCol.dataFile.pFile, buf, newHwm));
+                } else
+                {
+                    return rc;
+                }
             }
-
 
             for (j = 0; j < totalRowPerBlock; j++)
             {
@@ -507,14 +517,27 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                 {
                     rc = readBlock(newCol.dataFile.pFile, buf, newHwm);
 
-                    if ( rc != NO_ERROR)
-                        return rc;
+                    // MCOL-498 add a block.
+                    // DRRTUY TODO Given there is no more hwm pre-allocated we
+                    // could extend the file once to accomodate all records.
+                    if (rc != NO_ERROR)
+                    {
+                        if (rc == ERR_FILE_EOF)
+                        {
+                            uint64_t emptyVal = getEmptyRowValue(newCol.colDataType, newCol.colWidth);
+                            setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, newCol.colWidth);
+                            RETURN_ON_ERROR(saveBlock(newCol.dataFile.pFile, buf, newHwm));
+                        } else
+                        {
+                            return rc;
+                        }
+                    }
 
                     for (j = 0; j < totalRowPerBlock; j++)
                     {
                         if (isEmptyRow(buf, j, column))
                         {
-                            rowIdArray[counter] = getRowId(newHwm, column.colWidth, j);
+                            rowIdArray[counter] = getRowId(newHwm, newCol.colWidth, j);
                             rowsallocated++;
                             rowsLeft++;
                             counter++;
@@ -1542,13 +1565,9 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     unsigned char  dataBuf[BYTE_PER_BLOCK];
     bool     bExit = false, bDataDirty = false;
     void*    pVal = 0;
-//      void*    pOldVal;
     char     charTmpBuf[8];
     uint64_t  emptyVal;
     int rc = NO_ERROR;
-    bool fillUpWEmptyVals = false;
-    bool firstRowInBlock = false;
-    bool lastRowInBlock = false;
     uint16_t rowsInBlock = BYTE_PER_BLOCK / curCol.colWidth;
 
     while (!bExit)
@@ -1568,17 +1587,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                     return rc;
 
                 bDataDirty = false;
-                // MCOL-498 We got into the next block, so the row is first in that block
-                // - fill the block up with empty magics.
-                if ( curDataFbo != -1 && !bDelete )
-                    fillUpWEmptyVals = true;
             }
-
-            // MCOL-498 CS hasn't touched any block yet,
-            // but the row filled will be the first in the block.
-            firstRowInBlock = ( !(curRowId % (rowsInBlock)) ) ? true : false;
-            if( firstRowInBlock && !bDelete )
-                fillUpWEmptyVals = true;
 
             curDataFbo = dataFbo;
             rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
@@ -1593,17 +1602,14 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
         // How about pVal = valArray + i*curCol.colWidth?
         switch (curCol.colType)
         {
-//               case WriteEngine::WR_LONG :   pVal = &((long *) valArray)[i]; break;
             case WriteEngine::WR_FLOAT :
                 if (!bDelete) pVal = &((float*) valArray)[i];
 
-                //pOldVal = &((float *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_DOUBLE :
                 if (!bDelete) pVal = &((double*) valArray)[i];
 
-                //pOldVal = &((double *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_VARBINARY :   // treat same as char for now
@@ -1615,76 +1621,51 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                     memcpy(charTmpBuf, (char*)valArray + i * 8, 8);
                     pVal = charTmpBuf;
                 }
-
-                //pOldVal = (char*)oldValArray + i*8;
                 break;
 
-//            case WriteEngine::WR_BIT :    pVal = &((bool *) valArray)[i]; break;
             case WriteEngine::WR_SHORT :
                 if (!bDelete) pVal = &((short*) valArray)[i];
 
-                //pOldVal = &((short *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_BYTE :
                 if (!bDelete) pVal = &((char*) valArray)[i];
-
-                //pOldVal = &((char *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_LONGLONG:
                 if (!bDelete) pVal = &((long long*) valArray)[i];
-
-                //pOldVal = &((long long *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_TOKEN:
                 if (!bDelete) pVal = &((Token*) valArray)[i];
-
-                //pOldVal = &((Token *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_INT :
             case WriteEngine::WR_MEDINT :
                 if (!bDelete) pVal = &((int*) valArray)[i];
-
-                //pOldVal = &((int *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_USHORT:
                 if (!bDelete) pVal = &((uint16_t*) valArray)[i];
-
-                //pOldVal = &((uint16_t *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_UBYTE :
                 if (!bDelete) pVal = &((uint8_t*) valArray)[i];
-
-                //pOldVal = &((uint8_t *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_UINT :
             case WriteEngine::WR_UMEDINT :
                 if (!bDelete) pVal = &((uint32_t*) valArray)[i];
-
-                //pOldVal = &((uint8_t *) oldValArray)[i];
                 break;
 
             case WriteEngine::WR_ULONGLONG:
                 if (!bDelete) pVal = &((uint64_t*) valArray)[i];
-
-                //pOldVal = &((uint64_t *) oldValArray)[i];
                 break;
 
             default  :
                 if (!bDelete) pVal = &((int*) valArray)[i];
-
-                //pOldVal = &((int *) oldValArray)[i];
                 break;
         }
-
-        // This is the stuff to retrieve old value
-        //memcpy(pOldVal, dataBuf + dataBio, curCol.colWidth);
 
         if (bDelete)
         {
@@ -1704,51 +1685,10 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     // take care of the cleanup
     if (bDataDirty && curDataFbo >= 0)
     {
-        if ( fillUpWEmptyVals )
-        {
-            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-            int writeSize = BYTE_PER_BLOCK - ( dataBio + curCol.colWidth );
-            // MCOL-498 Add the check though this is unlikely at the moment of writing.
-            if ( writeSize )
-                setEmptyBuf( dataBuf + dataBio + curCol.colWidth, writeSize,
-                            emptyVal, curCol.colWidth );
-        }
-
         rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
 
         if ( rc != NO_ERROR)
             return rc;
-
-        // MCOL-498 If it was the last row in a block fill the next block with
-        // empty vals, otherwise next ColumnOp::allocRowId()
-        // will fail on the next block.
-        lastRowInBlock = ( rowsInBlock - ( curRowId % rowsInBlock ) == 1 ) ? true : false;
-        if ( lastRowInBlock )
-        {
-            if( !fillUpWEmptyVals )
-                emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-            // MCOL-498 Skip if this is the last block in an extent.
-            if ( curDataFbo % MAX_NBLOCKS !=  MAX_NBLOCKS - 1 )
-            {
-                rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
-                if ( rc != NO_ERROR)
-                    return rc;
-
-                curDataFbo += 1;
-                rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
-                if ( rc != NO_ERROR)
-                    return rc;
-
-                unsigned char zeroSubBlock[BYTE_PER_SUBBLOCK];
-                std::memset(zeroSubBlock, 0, BYTE_PER_SUBBLOCK);
-                // The first subblock is made of 0 - fill the block with empty vals.
-                if ( !std::memcmp(dataBuf, zeroSubBlock, BYTE_PER_SUBBLOCK) )
-                {
-                    setEmptyBuf(dataBuf, BYTE_PER_BLOCK, emptyVal, curCol.colWidth);
-                    rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
-                }
-            }
-        }
 
     }
     return rc;
