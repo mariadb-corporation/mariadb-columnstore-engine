@@ -4368,6 +4368,7 @@ int ProcessMonitor::getDBRMdata(string *path)
 
                     boost::uuids::uuid u = boost::uuids::random_generator()();
                     bf::path pTmp = bf::path(*path) / boost::uuids::to_string(u);
+                    bf::create_directories(pTmp);
                     *path = pTmp.string();
                     log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
                     
