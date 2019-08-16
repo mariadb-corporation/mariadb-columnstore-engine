@@ -44,7 +44,7 @@ bool SMOnline()
     int err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
     if (err >= 0)
     {
-        ::close(err);
+        ::close(clientSocket);
         return true;
     }
     return false;
@@ -55,7 +55,7 @@ void catFileOffline(const char *filename)
     uint8_t data[8192];
     off_t offset = 0;
     int read_err, write_err, count;
-    IOCoordinator *ioc = IOCoordinator::get();
+    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
     
     do {
         count = 0;
@@ -79,7 +79,6 @@ void catFileOffline(const char *filename)
         }
         offset += read_err;
     } while (read_err > 0);
-    delete ioc;
 }
 
 void catFileOnline(const char *filename)

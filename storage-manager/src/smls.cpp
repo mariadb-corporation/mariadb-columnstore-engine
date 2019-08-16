@@ -48,7 +48,7 @@ bool SMOnline()
     int err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
     if (err >= 0)
     {
-        ::close(err);
+        ::close(clientSocket);
         return true;
     }
     return false;
@@ -56,16 +56,12 @@ bool SMOnline()
 
 void lsOffline(const char *path)
 {
-    IOCoordinator *ioc = IOCoordinator::get();
+    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
     vector<string> listing;
-    char buf[80];
+    
     int err = ioc->listDirectory(path, &listing);
     if (err)
-    {
-        int l_errno = errno;
-        cerr << strerror_r(l_errno, buf, 80) << endl;
         exit(1);
-    }
     
     struct stat _stat;
     boost::filesystem::path base(path);
@@ -92,22 +88,16 @@ void lsOffline(const char *path)
             cout << right << "error" << left <<  " " << entry << endl;
         }
     }
-    delete ioc;
 }
 
 void lsOnline(const char *path)
 {
     idbdatafile::SMFileSystem fs;
     list<string> listing;
-    char buf[80];
     
     int err = fs.listDirectory(path, listing);
     if (err)
-    {
-        int l_errno = errno;
-        cerr << strerror_r(l_errno, buf, 80) << endl;
         exit(1);
-    }
     
     boost::filesystem::path base(path);
     boost::filesystem::path p;
@@ -130,7 +120,6 @@ void lsOnline(const char *path)
         }
         else
         {
-            cout << strerror_r(errno, buf, 80) << endl;
             cout.width(15);
             cout << right << "error" << left <<  " " << entry << endl;
         }
