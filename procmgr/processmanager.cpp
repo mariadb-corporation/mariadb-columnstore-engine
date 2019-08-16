@@ -9210,7 +9210,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             returnStatus = oam::API_FAILURE;
         }
 
@@ -9281,7 +9281,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             returnStatus = oam::API_FAILURE;
         }
 
@@ -9316,7 +9316,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
         pthread_mutex_unlock(&THREAD_LOCK);
         return oam::API_FAILURE;
     }
@@ -9391,7 +9391,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             pthread_mutex_unlock(&THREAD_LOCK);
             return oam::API_FAILURE;
         }
@@ -9411,7 +9411,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
         }
         catch (...)
         {
-            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
             pthread_mutex_unlock(&THREAD_LOCK);
             return oam::API_FAILURE;
         }
@@ -9428,7 +9428,7 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknown exception", LOG_TYPE_ERROR);
         returnStatus = oam::API_FAILURE;
     }
 
