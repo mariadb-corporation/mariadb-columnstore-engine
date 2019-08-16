@@ -25,7 +25,7 @@ checkForError() {
         $installdir/mysql/bin/mysql \
                 --defaults-extra-file=$installdir/mysql/my.cnf \
                 --user=root \
-                --execute='show engines;' \
+                --execute='select * from mysql.plugin where name="columnstore";' \
                 calpontsys | grep -i columnstore
 
         #
@@ -100,7 +100,7 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 	# Restart in the same way that mysqld will be started normally.
 	$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
 	sleep 2
-	$installdir/mysql/mysql-Columnstore start
+	$installdir/mysql/mysql-Columnstore start --skip-grant-tables
 
 	sleep 5
 	
@@ -108,18 +108,14 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
 	checkForError
 	if [ $? -ne 0 ]; then
-	# retry
-		$installdir/mysql/install_calpont_mysql.sh --installdir=$installdir --tmpdir=$tmpdir
-		checkForError
-		if [ $? -ne 0 ]; then
-			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
-			$installdir/mysql/mysql-Columnstore stop
-			sleep 2
-			exit 2;
-		fi
+		echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+		$installdir/mysql/mysql-Columnstore stop
+		sleep 2
+		exit 2;
 	fi
 
 	$installdir/mysql/mysql-Columnstore stop
+
 fi
 
 exit 0
