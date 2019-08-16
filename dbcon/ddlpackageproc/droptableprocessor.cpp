@@ -289,9 +289,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
 
         //get a unique number
         VERBOSE_INFO("Removing the SYSTABLE meta data");
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
         cout << fTxnid.id << " Removing the SYSTABLEs meta data" << endl;
-//#endif
+#endif
         bytestream << (ByteStream::byte)WE_SVR_DELETE_SYSTABLE;
         bytestream << uniqueId;
         bytestream << (uint32_t) dropTableStmt.fSessionID;
@@ -324,9 +324,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
 
         try
         {
-// #ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table sending WE_SVR_DELETE_SYSTABLES to pm " << pmNum << endl;
-//#endif
+#endif
             //cout << "deleting systable entries with txnid " << txnID.id << endl;
             fWEClient->write(bytestream, (uint32_t)pmNum);
 
@@ -356,18 +356,18 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
         }
         catch (runtime_error& ex) //write error
         {
-// #ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table got exception" << endl;
-// #endif
+#endif
             rc = NETWORK_ERROR;
             errorMsg = ex.what();
         }
         catch (...)
         {
             rc = NETWORK_ERROR;
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table got unknown exception" << endl;
-//#endif
+#endif
         }
 
         if (rc != 0)
@@ -417,9 +417,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
 
         try
         {
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table sending WE_SVR_DELETE_SYSCOLUMN to pm " << pmNum << endl;
-//#endif
+#endif
             fWEClient->write(bytestream, (unsigned)pmNum);
 
             while (1)
@@ -448,18 +448,18 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
         }
         catch (runtime_error& ex) //write error
         {
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table got exception" << endl;
-//#endif
+#endif
             rc = NETWORK_ERROR;
             errorMsg = ex.what();
         }
         catch (...)
         {
             rc = NETWORK_ERROR;
-// #ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
             cout << fTxnid.id << " Drop table got unknown exception" << endl;
-//#endif
+#endif
         }
 
         if (rc != 0)
@@ -612,9 +612,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
         bytestream << (uint32_t) oidList[i];
     }
 
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
     cout << fTxnid.id << " Drop table removing column files" << endl;
-//#endif
+#endif
     uint32_t msgRecived = 0;
 
     try
@@ -686,9 +686,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
     //Flush primProc cache
     rc = cacheutils::flushOIDsFromCache( oidList );
     //Delete extents from extent map
-//#ifdef IDB_DDL_DEBUG
+#ifdef IDB_DDL_DEBUG
     cout << fTxnid.id << " Drop table deleteOIDs" << endl;
-//#endif
+#endif
     rc = fDbrm->deleteOIDs(oidList);
 
     if (rc != 0)

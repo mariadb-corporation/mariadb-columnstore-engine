@@ -2603,8 +2603,16 @@ int FileOp::readFile( IDBDataFile* pFile, unsigned char* readBuf,
 {
     if ( pFile != NULL )
     {
-        if ( pFile->read( readBuf, readSize ) != readSize )
+        int bc = pFile->read( readBuf, readSize );
+        if (bc != readSize) 
+        {
+            // MCOL-498 EOF if a next block is empty
+            if (bc == 0)
+            {
+                return ERR_FILE_EOF;
+            }
             return ERR_FILE_READ;
+        }
     }
     else
         return ERR_FILE_NULL;
