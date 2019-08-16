@@ -2530,7 +2530,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             system(cmd.c_str());
 
             // if Non Parent OAM Module, get the dbmr data from Parent OAM Module
-            if ( !gOAMParentModuleFlag && !HDFS && DBRootStorageType != "storagemanager")
+            if ( !gOAMParentModuleFlag && !HDFS)
             {
 
                 //create temp dbrm directory
