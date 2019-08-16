@@ -146,17 +146,37 @@ add_dependencies(unit_tests test_files)
 target_link_libraries(unit_tests storagemanager)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 
+# The includes and lib linkages required to link against cloudio ... 
+# pretty crazy.  When lib dependencies are eventually config'd right,
+# change this to only include and link against cloudio.
+include_directories(${CMAKE_SOURCE_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
 add_executable(smcat src/smcat.cpp)
-target_link_libraries(smcat storagemanager)
+target_link_libraries(smcat storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+    ${MARIADB_CLIENT_LIBS}
+)
 
 add_executable(smput src/smput.cpp)
-target_link_libraries(smput storagemanager)
+target_link_libraries(smput storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+    ${MARIADB_CLIENT_LIBS}
+)
 
 add_executable(smls src/smls.cpp)
-target_link_libraries(smls storagemanager)
+target_link_libraries(smls storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+    ${MARIADB_CLIENT_LIBS}
+)
 
 add_executable(smrm src/smrm.cpp)
-target_link_libraries(smrm storagemanager)
+target_link_libraries(smrm storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+    ${MARIADB_CLIENT_LIBS}
+)
 
 install(TARGETS StorageManager smcat smput smls smrm storagemanager
     RUNTIME DESTINATION ${INSTALL_ENGINE}/bin
