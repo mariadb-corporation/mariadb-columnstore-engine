@@ -192,7 +192,6 @@ void Ownership::releaseOwnership(const bf::path &p, bool isDtor)
 void Ownership::_takeOwnership(const bf::path &p)
 {
     logger->log(LOG_DEBUG, "Ownership: taking ownership of %s", p.string().c_str());
-    //bf::create_directories(metadataPrefix/p);
     DELETE(p, "FLUSHING");
     DELETE(p, "REQUEST_TRANSFER");
     // TODO: need to consider errors taking ownership
@@ -206,7 +205,8 @@ void Ownership::_takeOwnership(const bf::path &p)
 
 void Ownership::takeOwnership(const bf::path &p)
 {
-   if (!bf::is_directory(metadataPrefix/p))
+    // If the prefix doesn't exist, ownership isn't possible yet.
+    if (!bf::is_directory(metadataPrefix/p))
         return;
 
     boost::unique_lock<boost::mutex> s(mutex);
