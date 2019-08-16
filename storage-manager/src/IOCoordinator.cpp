@@ -658,7 +658,7 @@ int IOCoordinator::stat(const char *_path, struct stat *out)
 {
     bf::path filename = ownership.get(_path);
     
-    if (bf::exists(metaPath/filename))
+    if (bf::is_directory(metaPath/filename))
         return ::stat((metaPath/filename).string().c_str(), out);
 
     ScopedReadLock s(this, filename.string());
