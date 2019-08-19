@@ -75,7 +75,7 @@ bf::path Ownership::get(const bf::path &p)
 {
     bf::path ret, prefix, normalizedPath(p);
     bf::path::const_iterator pit;
-    uint i;
+    uint i, levels;
 
     normalizedPath.normalize();
     //cerr << "Ownership::get() param = " << p.string() << endl;
@@ -86,13 +86,15 @@ bf::path Ownership::get(const bf::path &p)
         if (pit != normalizedPath.end())
             prefix = *pit;
         //cerr << "prefix is " << prefix.string() << endl;
-        for (; pit != normalizedPath.end(); ++pit)
+        for (levels = 0; pit != normalizedPath.end(); ++levels, ++pit)
             ret /= *pit;
         if (ret.empty())
         {
             //cerr << "returning ''" << endl;
             return ret;
         }
+        else if (levels == 1)
+            throw runtime_error("Ownership: given path " + p.string() + " does not have minimum number of directories");
     }
     else
     {
