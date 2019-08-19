@@ -531,7 +531,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             metadata.updateEntryLength(i->offset, (err + i->length));
             cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
             synchronizer->newJournalEntry(firstDir, i->key, err+JOURNAL_ENTRY_HEADER_SIZE);
-            if (err < writeLength)
+            if (err < (int64_t) writeLength)
             {
                 //logger->log(LOG_ERR,"IOCoordinator::append(): journal failed to complete write, %u of %u bytes written.",count,length);
                 goto out;
@@ -583,7 +583,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
 
-        if (err < writeLength)
+        if (err < (int64_t) writeLength)
         {
             //logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
             // make the object reflect length actually written
@@ -608,7 +608,7 @@ int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
     bf::path filename = ownership.get(_filename);
     boost::scoped_ptr<ScopedFileLock> s;
     
-    if (openmode & O_CREAT || openmode | O_TRUNC)
+    if (openmode & O_CREAT || openmode & O_TRUNC)
         s.reset(new ScopedWriteLock(this, filename.string()));
     else
         s.reset(new ScopedReadLock(this, filename.string()));

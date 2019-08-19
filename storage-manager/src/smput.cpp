@@ -18,19 +18,120 @@
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include "IOCoordinator.h"
-
+#include "SMFileFactory.h"
+#include "SMDataFile.h"
+#include "messageFormat.h"
+#include "boost/scoped_ptr.hpp"
 
 using namespace std;
 using namespace storagemanager;
-
-
-
 
 void usage(const char *progname)
 {
     cerr << progname << " reads from stdin and puts it in a file managed by StorageManager" << endl;
     cerr << "Usage: " << progname << " output_file" << endl;
+}
+
+bool SMOnline()
+{
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strcpy(&addr.sun_path[1], &socket_name[1]);   // first char is null...
+    int clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    int err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
+    if (err >= 0)
+    {
+        ::close(clientSocket);
+        return true;
+    }
+    return false;
+}
+
+void putOffline(const char *fname)
+{
+    uint8_t data[8192];
+    int read_err, write_err;
+    ssize_t count, offset = 0;
+    
+    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
+    struct stat _stat;
+    read_err = ioc->open(fname, O_CREAT | O_TRUNC | O_WRONLY, &_stat);
+    if (read_err < 0)
+    {
+        int l_errno = errno;
+        cerr << "Failed to open/create " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+        exit(1);
+    }
+    
+    do
+    {
+        read_err = ::read(STDIN_FILENO, data, 8192);
+        if (read_err < 0)
+        {
+            int l_errno = errno;
+            cerr << "Error reading stdin: " << strerror_r(l_errno, (char *) data, 8192) << endl;
+            exit(1);
+        }
+        count = 0;
+        while (count < read_err)
+        {
+            write_err = ioc->write(fname, &data[count], offset + count, read_err - count);
+            if (write_err < 0)
+            {
+                int l_errno = errno;
+                cerr << "Error writing to " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+                exit(1);
+            }
+            count += write_err;
+        }
+        offset += read_err;
+    } while (read_err > 0);
+}
+
+void putOnline(const char *fname)
+{
+    uint8_t data[8192];
+    int read_err, write_err;
+    ssize_t count;
+    
+    idbdatafile::SMFileFactory ffactory;
+    boost::scoped_ptr<idbdatafile::SMDataFile> df(
+        dynamic_cast<idbdatafile::SMDataFile *>(ffactory.open(fname, "w", 0, 0)));
+
+    if (!df)
+    {
+        int l_errno = errno;
+        cerr << "Failed to open/create " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+        exit(1);
+    }
+    
+    do
+    {
+        read_err = ::read(STDIN_FILENO, data, 8192);
+        if (read_err < 0)
+        {
+            int l_errno = errno;
+            cerr << "Error reading stdin: " << strerror_r(l_errno, (char *) data, 8192) << endl;
+            exit(1);
+        }
+        count = 0;
+        while (count < read_err)
+        {
+            write_err = df->write(&data[count], read_err - count);
+            if (write_err < 0)
+            {
+                int l_errno = errno;
+                cerr << "Error writing to " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+                exit(1);
+            }
+            count += write_err;
+        }
+    } while (read_err > 0);
 }
 
 int main(int argc, char **argv)
@@ -41,43 +142,11 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    uint8_t data[8192];
-    int read_err, write_err;
-    ssize_t count, offset = 0;
-    
-    IOCoordinator *ioc = IOCoordinator::get();
-    struct stat _stat;
-    read_err = ioc->open(argv[1], O_CREAT | O_TRUNC | O_WRONLY, &_stat);
-    if (read_err < 0)
-    {
-        int l_errno = errno;
-        cerr << "Failed to open/create " << argv[1] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
-        return 1;
-    }
-    
-    do
-    {
-        read_err = ::read(STDIN_FILENO, data, 8192);
-        if (read_err < 0)
-        {
-            int l_errno = errno;
-            cerr << "Error reading stdin: " << strerror_r(l_errno, (char *) data, 8192) << endl;
-            return 1;
-        }
-        count = 0;
-        while (count < read_err)
-        {
-            write_err = ioc->write(argv[1], &data[count], offset + count, read_err - count);
-            if (write_err < 0)
-            {
-                int l_errno = errno;
-                cerr << "Error writing to " << argv[1] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
-                return 1;
-            }
-            count += write_err;
-        }
-        offset += read_err;
-    } while (read_err > 0);
-    
+    if (SMOnline())
+        putOnline(argv[1]);
+    else
+        putOffline(argv[1]);
     return 0;
 }
+    
+    
