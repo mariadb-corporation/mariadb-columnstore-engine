@@ -485,7 +485,7 @@ bool Func_simple_case::getBoolVal(Row& row,
     uint64_t i = simple_case_cmp(row, parm, isNull, operationColType);
 
     if (isNull)
-        return joblist::BIGINTNULL;
+        return false;
 
     ParseTree* lop = parm[i]->left();
     ParseTree* rop = parm[i]->right();
@@ -651,7 +651,7 @@ bool Func_searched_case::getBoolVal(Row& row,
     uint64_t i = searched_case_cmp(row, parm, isNull);
 
     if (isNull)
-        return joblist::BIGINTNULL;
+        return false;
 
     ParseTree* lop = parm[i]->left();
     ParseTree* rop = parm[i]->right();
