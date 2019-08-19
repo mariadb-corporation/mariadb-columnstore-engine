@@ -648,7 +648,7 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
     {
         if (bf::is_directory(it->path()))
             listing->push_back(it->path().filename().string());
-        else
+        else if (it->path().extension() == ".meta")
             listing->push_back(it->path().stem().string());
     }
     return 0;
