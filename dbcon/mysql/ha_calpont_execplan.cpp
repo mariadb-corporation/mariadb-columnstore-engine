@@ -5237,6 +5237,11 @@ void gp_walk(const Item* item, void* arg)
 
             if (!gwip->condPush)
             {
+                if (!ifp->is_fixed())
+                {
+                    ifp->fix_fields(gwip->thd, reinterpret_cast<Item**>(&ifp));
+                }
+
                 if (ifp->with_subquery() || funcName == "<in_optimizer>")
                 {
                     buildSubselectFunc(ifp, gwip);
