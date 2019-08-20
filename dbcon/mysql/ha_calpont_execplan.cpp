@@ -3576,7 +3576,8 @@ ReturnedColumn* buildFunctionColumn(
     Item_func* ifp,
     gp_walk_info& gwi,
     bool& nonSupport,
-    bool pushdownHand)
+    bool pushdownHand,
+    bool selectBetweenIn)
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3643,9 +3644,9 @@ ReturnedColumn* buildFunctionColumn(
                 return NULL;
             }
 
-            if (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
+            if (!selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
                     (ifp->arguments()[0]->type() == Item::REF_ITEM &&
-                     (*(((Item_ref*)ifp->arguments()[0])->ref))->type() == Item::FIELD_ITEM))
+                     (*(((Item_ref*)ifp->arguments()[0])->ref))->type() == Item::FIELD_ITEM)))
             {
                 bool fe = false;
 
@@ -6642,7 +6643,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-                ReturnedColumn* rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
+                // if "IN" or "BETWEEN" are in the SELECT clause, build function column
+                string funcName = ifp->func_name();
+                ReturnedColumn* rc;
+                if (funcName == "in" || funcName == " IN " || funcName == "between")
+                {
+                    rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, false, true);
+                }
+                else
+                {
+                    rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
+                }
+
                 SRCP srcp(rc);
 
                 if (rc)

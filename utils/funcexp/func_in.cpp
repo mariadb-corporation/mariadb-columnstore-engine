@@ -315,7 +315,6 @@ CalpontSystemCatalog::ColType Func_in::operationType( FunctionParm& fp, CalpontS
         ct = fp[0]->data()->resultType();
 
     bool allString = true;
-    bool allNonToken = true;
 
     for (uint32_t i = 0; i < fp.size(); i++)
     {
@@ -328,30 +327,13 @@ CalpontSystemCatalog::ColType Func_in::operationType( FunctionParm& fp, CalpontS
             op.setOpType(ct, fp[i]->data()->resultType());
             ct = op.operationType();
         }
-        else
-        {
-            if ((fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR &&
-                    fp[i]->data()->resultType().colWidth > 8) ||
-                    (fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR &&
-                     fp[i]->data()->resultType().colWidth >= 8) ||
-                    (fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT &&
-                     fp[i]->data()->resultType().colWidth >= 8))
-                allNonToken = false;
-        }
     }
 
-    if (allString && !allNonToken)
+    if (allString)
     {
         ct.colDataType = CalpontSystemCatalog::VARCHAR;
         ct.colWidth = 255;
     }
-
-    else if (allString && allNonToken)
-    {
-        ct.colDataType = CalpontSystemCatalog::BIGINT;
-        ct.colWidth = 8;
-    }
-
 
     // convert date const value according to the compare type here.
     if (op.operationType().colDataType == CalpontSystemCatalog::DATE)

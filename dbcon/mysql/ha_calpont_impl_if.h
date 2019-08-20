@@ -359,7 +359,7 @@ bool isMCSTable(TABLE* table_ptr);
 
 // execution plan util functions prototypes
 execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
-execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false, bool selectBetweenIn = false);
 execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
 execplan::ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi);
 execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
