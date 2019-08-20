@@ -399,6 +399,7 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 
 void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs,
                                      const vector<AggregateColumn*>& aggs,
+                                     const vector<WindowFunctionColumn*>& wcs,
                                      JobInfo& jobInfo)
 {
     // append the simple columns if not already projected
@@ -432,6 +433,10 @@ void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs,
     for (vector<AggregateColumn*>::const_iterator i = aggs.begin(); i != aggs.end(); i++)
     {
         addAggregateColumn(*i, -1, jobInfo.projectionCols, jobInfo);
+        if (wcs.size() > 0)
+        {
+            jobInfo.nonConstDelCols.push_back(SRCP((*i)->clone()));
+        }
     }
 }
 
@@ -483,12 +488,12 @@ void checkReturnedColumns(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
         if (ac != NULL && ac->aggColumnList().size() > 0)
         {
             jobInfo.nonConstCols[i]->outputIndex(i);
-            preProcessFunctionOnAggregation(ac->simpleColumnList(), ac->aggColumnList(), jobInfo);
+            preProcessFunctionOnAggregation(ac->simpleColumnList(), ac->aggColumnList(), ac->windowfunctionColumnList(), jobInfo);
         }
         else if (fc != NULL && fc->aggColumnList().size() > 0)
         {
             jobInfo.nonConstCols[i]->outputIndex(i);
-            preProcessFunctionOnAggregation(fc->simpleColumnList(), fc->aggColumnList(), jobInfo);
+            preProcessFunctionOnAggregation(fc->simpleColumnList(), fc->aggColumnList(), fc->windowfunctionColumnList(), jobInfo);
         }
     }
 }
