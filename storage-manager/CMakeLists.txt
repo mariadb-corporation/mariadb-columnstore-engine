@@ -82,11 +82,15 @@ add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
-# There's probably a better way to do this, but this works, so moving on
-# for now.
-add_custom_target(test_files
-    mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/test_data && cp -R ${CMAKE_CURRENT_SOURCE_DIR}/test_data/* ${CMAKE_CURRENT_BINARY_DIR}/test_data
-)
+add_custom_command(
+	TARGET StorageManager PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory
+		${CMAKE_CURRENT_BINARY_DIR}/storage-manager/test_data)
+add_custom_command(
+	TARGET StorageManager POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/storage-manager/test_data
+		${CMAKE_CURRENT_BINARY_DIR}/storage-manager/test_data)
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 add_dependencies(unit_tests test_files)
