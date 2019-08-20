@@ -37,8 +37,10 @@ class Ownership : public boost::noncopyable
 
         bool sharedFS();
         // returns the path "right shifted" by prefixDepth, and with ownership of that path.
-        // on error it returns an empty path.
-        boost::filesystem::path get(const boost::filesystem::path &);
+        // on error it throws a runtime exception
+        // setting getOwnership to false will return the modified path but not also take ownership
+        // of the returned prefix.
+        boost::filesystem::path get(const boost::filesystem::path &, bool getOwnership=true);
         
         
     private:

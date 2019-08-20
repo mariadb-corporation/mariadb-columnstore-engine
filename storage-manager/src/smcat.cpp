@@ -50,7 +50,7 @@ bool SMOnline()
     return false;
 }
 
-void catFileOffline(const char *filename)
+void catFileOffline(const char *filename, int prefixlen)
 {
     uint8_t data[8192];
     off_t offset = 0;
@@ -63,7 +63,7 @@ void catFileOffline(const char *filename)
         if (read_err < 0)
         {
             int l_errno = errno;
-            cerr << "Error reading " << filename << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+            cerr << "Error reading " << &filename[prefixlen] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
         }
 
         while (count < read_err)
@@ -81,7 +81,7 @@ void catFileOffline(const char *filename)
     } while (read_err > 0);
 }
 
-void catFileOnline(const char *filename)
+void catFileOnline(const char *filename, int prefixlen)
 {
     uint8_t data[8192];
     off_t offset = 0;
@@ -94,7 +94,7 @@ void catFileOnline(const char *filename)
         if (read_err < 0)
         {
             int l_errno = errno;
-            cerr << "Error reading " << filename << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+            cerr << "Error reading " << &filename[prefixlen] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
         }
 
         while (count < read_err)
@@ -112,6 +112,28 @@ void catFileOnline(const char *filename)
     } while (read_err > 0);
 }
 
+int makePathPrefix(char *target, int targetlen)
+{
+    // MCOL-3438 -> add bogus directories to the front of each param
+    Config *config = Config::get();
+    int prefixDepth = stoi(config->getValue("ObjectStorage", "common_prefix_depth"));
+    target[0] = '/';
+    target[1] = 0;
+    int bufpos = 1;
+    
+    for (int i = 0; i < prefixDepth; i++)
+    {
+        if (bufpos + 3 >= targetlen)
+        {
+            cerr << "invalid prefix depth in ObjectStorage/common_prefix_depth";
+            exit(1);
+        }
+        memcpy(&target[bufpos], "x/\0", 3);
+        bufpos += 2;
+    }
+    return bufpos;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -119,13 +141,18 @@ int main(int argc, char **argv)
         usage(argv[0]);
         return 1;
     }
+    
+    char prefix[8192];
+    int prefixlen = makePathPrefix(prefix, 8192);
 
     for (int i = 1; i < argc; i++)
     {
+        strncat(&prefix[prefixlen], argv[i], 8192 - prefixlen);
+    
         if (SMOnline())
-            catFileOnline(argv[i]);
+            catFileOnline(prefix, prefixlen);
         else
-            catFileOffline(argv[i]);
+            catFileOffline(prefix, prefixlen);
     }
     
     return 0;

@@ -50,19 +50,54 @@ bool SMOnline()
     return false;
 }
 
-void rmOffline(int argCount, const char **args)
+#define min(x, y) (x < y ? x : y)
+
+void rmOffline(int argCount, const char **args, const char *prefix, uint prefixlen)
 {
     boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
-    for (int i = 1; i < argCount; i++)
-        ioc->unlink(args[i]);
-}
-
-void rmOnline(int argCount, const char **args)
-{
-    idbdatafile::SMFileSystem fs;
+    char buf[16384];
+    strncpy(buf, prefix, prefixlen);
     
     for (int i = 1; i < argCount; i++)
-        fs.remove(args[i]);
+    {
+        memcpy(&buf[prefixlen], args[i], min(16383 - prefixlen, strlen(args[i])) + 1);
+        ioc->unlink(buf);
+    }
+}
+
+void rmOnline(int argCount, const char **args, const char *prefix, uint prefixlen)
+{
+    idbdatafile::SMFileSystem fs;
+    char buf[16384];
+    strncpy(buf, prefix, prefixlen);
+    
+    for (int i = 1; i < argCount; i++)
+    {
+        memcpy(&buf[prefixlen], args[i], min(16383 - prefixlen, strlen(args[i])) + 1);
+        fs.remove((char *) memcpy(&buf[prefixlen], args[i], min(16383 - prefixlen, strlen(args[i])) + 1));
+    }
+}
+
+int makePathPrefix(char *target, int targetlen)
+{
+    // MCOL-3438 -> add bogus directories to the front of each param
+    Config *config = Config::get();
+    int prefixDepth = stoi(config->getValue("ObjectStorage", "common_prefix_depth"));
+    target[0] = '/';
+    target[1] = 0;
+    int bufpos = 1;
+    
+    for (int i = 0; i < prefixDepth; i++)
+    {
+        if (bufpos + 3 >= targetlen)
+        {
+            cerr << "invalid prefix depth in ObjectStorage/common_prefix_depth";
+            exit(1);
+        }
+        memcpy(&target[bufpos], "x/\0", 3);
+        bufpos += 2;
+    }
+    return bufpos;
 }
 
 int main(int argc, const char **argv)
@@ -73,9 +108,12 @@ int main(int argc, const char **argv)
         return 1;
     }
     
+    char prefix[8192];
+    uint prefixlen = makePathPrefix(prefix, 8192);
+    
     if (SMOnline())
-        rmOnline(argc, argv);
+        rmOnline(argc, argv, prefix, prefixlen);
     else
-        rmOffline(argc, argv);
+        rmOffline(argc, argv, prefix, prefixlen);
     return 0;
 }

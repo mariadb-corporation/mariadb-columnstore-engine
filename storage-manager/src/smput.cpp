@@ -52,7 +52,7 @@ bool SMOnline()
     return false;
 }
 
-void putOffline(const char *fname)
+void putOffline(const char *fname, int prefixlen)
 {
     uint8_t data[8192];
     int read_err, write_err;
@@ -64,7 +64,8 @@ void putOffline(const char *fname)
     if (read_err < 0)
     {
         int l_errno = errno;
-        cerr << "Failed to open/create " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+        cerr << "Failed to open/create " << &fname[prefixlen] << ": " << 
+            strerror_r(l_errno, (char *) data, 8192) << endl;
         exit(1);
     }
     
@@ -84,7 +85,8 @@ void putOffline(const char *fname)
             if (write_err < 0)
             {
                 int l_errno = errno;
-                cerr << "Error writing to " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+                cerr << "Error writing to " << &fname[prefixlen] << ": " << 
+                    strerror_r(l_errno, (char *) data, 8192) << endl;
                 exit(1);
             }
             count += write_err;
@@ -93,7 +95,7 @@ void putOffline(const char *fname)
     } while (read_err > 0);
 }
 
-void putOnline(const char *fname)
+void putOnline(const char *fname, int prefixlen)
 {
     uint8_t data[8192];
     int read_err, write_err;
@@ -106,7 +108,8 @@ void putOnline(const char *fname)
     if (!df)
     {
         int l_errno = errno;
-        cerr << "Failed to open/create " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+        cerr << "Failed to open/create " << &fname[prefixlen] << ": " << 
+            strerror_r(l_errno, (char *) data, 8192) << endl;
         exit(1);
     }
     
@@ -126,12 +129,35 @@ void putOnline(const char *fname)
             if (write_err < 0)
             {
                 int l_errno = errno;
-                cerr << "Error writing to " << fname << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
+                cerr << "Error writing to " << &fname[prefixlen] << ": " << 
+                    strerror_r(l_errno, (char *) data, 8192) << endl;
                 exit(1);
             }
             count += write_err;
         }
     } while (read_err > 0);
+}
+
+int makePathPrefix(char *target, int targetlen)
+{
+    // MCOL-3438 -> add bogus directories to the front of each param
+    Config *config = Config::get();
+    int prefixDepth = stoi(config->getValue("ObjectStorage", "common_prefix_depth"));
+    target[0] = '/';
+    target[1] = 0;
+    int bufpos = 1;
+    
+    for (int i = 0; i < prefixDepth; i++)
+    {
+        if (bufpos + 3 >= targetlen)
+        {
+            cerr << "invalid prefix depth in ObjectStorage/common_prefix_depth";
+            exit(1);
+        }
+        memcpy(&target[bufpos], "x/\0", 3);
+        bufpos += 2;
+    }
+    return bufpos;
 }
 
 int main(int argc, char **argv)
@@ -142,10 +168,13 @@ int main(int argc, char **argv)
         return 1;
     }
     
+    char prefix[8192];
+    int prefixlen = makePathPrefix(prefix, 8192);
+    
     if (SMOnline())
-        putOnline(argv[1]);
+        putOnline(strncat(prefix, argv[1], 8192), prefixlen);
     else
-        putOffline(argv[1]);
+        putOffline(strncat(prefix, argv[1], 8192), prefixlen);
     return 0;
 }
     
