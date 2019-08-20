@@ -113,8 +113,8 @@ install(TARGETS StorageManager smcat smput smls smrm storagemanager
 
 install(FILES 
         ${CMAKE_BINARY_DIR}/lib/libmarias3.so
-        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.2
-        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.2.1.0
+        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
+        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
     DESTINATION ${INSTALL_ENGINE}/lib
     COMPONENT platform
 )
