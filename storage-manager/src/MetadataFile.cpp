@@ -135,6 +135,7 @@ MetadataFile::MetadataFile(const boost::filesystem::path &filename)
             mVersion = 1;
             mRevision = 1;
             makeEmptyJsonTree();
+            s.unlock();
             writeMetadata();
         }
     }
@@ -278,7 +279,7 @@ vector<metadataObject> MetadataFile::metadataRead(off_t offset, size_t length) c
         foundLen += i->length;
         ++i;
     }
-    
+
     assert(!(offset == 0 && length == getLength()) || (ret.size() == mObjects.size()));
     return ret;
 }
