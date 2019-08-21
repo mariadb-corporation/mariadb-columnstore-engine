@@ -83,7 +83,7 @@ IOCoordinator::IOCoordinator()
     
     bytesRead = bytesWritten = filesOpened = filesCreated = filesCopied = filesDeleted = 
         bytesCopied = filesTruncated = listingCount = callsToWrite = 0;
-    iocFilesOpened = iocObjectsCreated = iocJournalsCreated = iocBytesWritten = iocFilesDeleted = 0;
+    iocFilesOpened = iocObjectsCreated = iocJournalsCreated = iocBytesWritten = iocFilesDeleted = iocBytesRead = 0;
 }
 
 IOCoordinator::~IOCoordinator()
