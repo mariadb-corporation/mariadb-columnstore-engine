@@ -38,7 +38,7 @@ set(storagemanager_SRCS
 
 option(SM_TRACE "Enable some tracing output" OFF)
 option(SM_LOG_TO_STDERR "Make the logging system also print to stderr" OFF)
-if (TRACE)
+if (SM_TRACE)
     add_definitions(-DSM_TRACE)
 endif()
 
