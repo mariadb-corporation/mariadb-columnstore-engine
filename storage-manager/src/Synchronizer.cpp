@@ -375,7 +375,12 @@ void Synchronizer::process(list<string>::iterator name)
         objNames.erase(name);
         return;    // the one in pending will have to wait until the next time to avoid clobbering waiting threads
     }
-    string sourceFile = MetadataFile::getSourceFromKey(*name);
+    
+    // Because of the ownership thing and the odd set of changes that it required,
+    // we need to strip the prefix from key.
+    size_t first_slash_pos = key.find_first_of('/');
+    string realKey = key.substr(first_slash_pos + 1);
+    string sourceFile = MetadataFile::getSourceFromKey(realKey);
     pendingOps.erase(it);
     s.unlock();
     
@@ -450,7 +455,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     }
     
     metadataObject mdEntry;
-    bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
+    bool entryExists = md.getEntry(MetadataFile::getOffsetFromKey(cloudKey), &mdEntry);
     if (!entryExists || cloudKey != mdEntry.key)
     {
         logger->log(LOG_DEBUG, "synchronize(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
@@ -510,7 +515,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     }
     
     metadataObject mdEntry;
-    bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(key), &mdEntry);
+    bool metaExists = md.getEntry(MetadataFile::getOffsetFromKey(cloudKey), &mdEntry);
     if (!metaExists || cloudKey != mdEntry.key)
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): %s does not exist in metadata for %s.  This suggests truncation.", key.c_str(), sourceFile.c_str());
@@ -623,7 +628,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     // original size here should be == objectsize + journalsize
     
     // get a new key for the resolved version & upload it
-    string newCloudKey = MetadataFile::getNewKeyFromOldKey(key, size);
+    string newCloudKey = MetadataFile::getNewKeyFromOldKey(cloudKey, size);
     string newKey = (prefix/newCloudKey).string();
     err = cs->putObject(data, size, newCloudKey);
     if (err)
@@ -672,7 +677,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     ++journalsMerged;
     // update the metadata for the source file
     
-    md.updateEntry(MetadataFile::getOffsetFromKey(key), newCloudKey, size);
+    md.updateEntry(MetadataFile::getOffsetFromKey(cloudKey), newCloudKey, size);
     replicator->updateMetadata(md);
 
     rename(key, newKey);

@@ -71,14 +71,14 @@ Ownership::~Ownership()
         releaseOwnership(it.first, true);
 }
 
-bf::path Ownership::get(const bf::path &p)
+bf::path Ownership::get(const bf::path &p, bool getOwnership)
 {
     bf::path ret, prefix, normalizedPath(p);
     bf::path::const_iterator pit;
-    uint i;
+    uint i, levels;
 
     normalizedPath.normalize();
-    //cerr << "Ownership::get() param = " << p.string() << endl;
+    //cerr << "Ownership::get() param = " << normalizedPath.string() << endl;
     if (prefixDepth > 0)
     {
         for (i = 0, pit = normalizedPath.begin(); i <= prefixDepth && pit != normalizedPath.end(); ++i, ++pit)
@@ -86,19 +86,22 @@ bf::path Ownership::get(const bf::path &p)
         if (pit != normalizedPath.end())
             prefix = *pit;
         //cerr << "prefix is " << prefix.string() << endl;
-        for (; pit != normalizedPath.end(); ++pit)
+        for (levels = 0; pit != normalizedPath.end(); ++levels, ++pit)
             ret /= *pit;
-        if (ret.empty())
-        {
-            //cerr << "returning ''" << endl;
+        if (!getOwnership)
             return ret;
-        }
+        if (levels <= 1)
+            throw runtime_error("Ownership: given path " + normalizedPath.string() + 
+                " does not have minimum number of directories");
     }
     else
     {
         ret = normalizedPath;
         prefix = *(normalizedPath.begin());
     }
+    
+    if (!getOwnership)
+        return ret;
     
     mutex.lock();
     if (ownedPrefixes.find(prefix) == ownedPrefixes.end())

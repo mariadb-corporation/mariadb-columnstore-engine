@@ -628,7 +628,7 @@ int IOCoordinator::open(const char *_filename, int openmode, struct stat *out)
 
 int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 {
-    bf::path p(metaPath / ownership.get(dirname));
+    bf::path p(metaPath / ownership.get(dirname, false));
     ++listingCount;
     
     listing->clear();
@@ -648,7 +648,7 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
     {
         if (bf::is_directory(it->path()))
             listing->push_back(it->path().filename().string());
-        else
+        else if (it->path().extension() == ".meta")
             listing->push_back(it->path().stem().string());
     }
     return 0;
@@ -656,7 +656,7 @@ int IOCoordinator::listDirectory(const char *dirname, vector<string> *listing)
 
 int IOCoordinator::stat(const char *_path, struct stat *out)
 {
-    bf::path filename = ownership.get(_path);
+    bf::path filename = ownership.get(_path, false);
     
     if (bf::is_directory(metaPath/filename))
         return ::stat((metaPath/filename).string().c_str(), out);

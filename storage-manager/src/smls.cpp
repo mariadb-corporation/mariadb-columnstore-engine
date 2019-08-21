@@ -126,6 +126,28 @@ void lsOnline(const char *path)
     }
 }
 
+int makePathPrefix(char *target, int targetlen)
+{
+    // MCOL-3438 -> add bogus directories to the front of each param
+    Config *config = Config::get();
+    int prefixDepth = stoi(config->getValue("ObjectStorage", "common_prefix_depth"));
+    target[0] = '/';
+    target[1] = 0;
+    int bufpos = 1;
+    
+    for (int i = 0; i < prefixDepth; i++)
+    {
+        if (bufpos + 3 >= targetlen)
+        {
+            cerr << "invalid prefix depth in ObjectStorage/common_prefix_depth";
+            exit(1);
+        }
+        memcpy(&target[bufpos], "x/\0", 3);
+        bufpos += 2;
+    }
+    return bufpos;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -134,13 +156,13 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    // todo.  need to sanitize the input.  Ownership will remove X directories from the front
-    // of whatever is passed to it, possibly giving a nonsensical answer.
+    char prefix[8192];
+    makePathPrefix(prefix, 8192);
     
     if (SMOnline())
-        lsOnline(argv[1]);
+        lsOnline(strncat(prefix, argv[1], 8192));
     else
-        lsOffline(argv[1]);
+        lsOffline(strncat(prefix, argv[1], 8192));
     
     return 0;
 }
