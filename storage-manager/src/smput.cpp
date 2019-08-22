@@ -172,9 +172,9 @@ int main(int argc, char **argv)
     int prefixlen = makePathPrefix(prefix, 8192);
     
     if (SMOnline())
-        putOnline(strncat(prefix, argv[1], 8192), prefixlen);
+        putOnline(strncat(prefix, argv[1], 8192 - prefixlen), prefixlen);
     else
-        putOffline(strncat(prefix, argv[1], 8192), prefixlen);
+        putOffline(strncat(prefix, argv[1], 8192 - prefixlen), prefixlen);
     return 0;
 }
     

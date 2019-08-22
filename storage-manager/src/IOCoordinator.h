@@ -63,8 +63,13 @@ class IOCoordinator : public boost::noncopyable
         boost::shared_array<uint8_t> mergeJournal(const char *objectPath, const char *journalPath, off_t offset, 
             size_t len, size_t *sizeRead) const;
         
-        // this version modifies object data in memory, given the journal filename
+        // this version modifies object data in memory, given the journal filename.  Processes the whole object
+        // and whole journal file.
         int mergeJournalInMem(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath, 
+            size_t *sizeRead) const;
+        
+        // this version of MJIM has a higher IOPS requirement and lower mem usage.
+        int mergeJournalInMem_bigJ(boost::shared_array<uint8_t> &objData, size_t len, const char *journalPath, 
             size_t *sizeRead) const;
         
         // this version takes already-open file descriptors, and an already-allocated buffer as input.
