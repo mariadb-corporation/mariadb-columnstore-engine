@@ -182,7 +182,7 @@ int64_t Func_cast_signed::getIntVal(Row& row,
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
             double dscale = d.scale;
             int64_t value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( value >= 0 && lefto > 4 )
                 value++;
@@ -337,7 +337,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
             }
 
             uint64_t value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( value >= 0 && lefto > 4 )
                 value++;

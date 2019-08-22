@@ -76,7 +76,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
             double dscale = d.scale;
             hour = d.value / pow(10.0, dscale);
-            int lefto = (d.value - hour * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - hour * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( hour >= 0 && lefto > 4 )
                 hour++;
@@ -116,7 +116,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
             double dscale = d.scale;
             min = d.value / pow(10.0, dscale);
-            int lefto = (d.value - min * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - min * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( min >= 0 && lefto > 4 )
                 min++;
@@ -162,7 +162,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
             IDB_Decimal d = parm[2]->data()->getDecimalVal(row, isNull);
             double dscale = d.scale;
             sec = d.value / pow(10.0, dscale);
-            int lefto = (d.value - sec * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - sec * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( sec >= 0 && lefto > 4 )
                 sec++;

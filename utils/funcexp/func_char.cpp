@@ -159,7 +159,7 @@ string Func_char::getStrVal(Row& row,
             double dscale = d.scale;
             // get decimal and round up
             int value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( lefto > 4 )
                 value++;

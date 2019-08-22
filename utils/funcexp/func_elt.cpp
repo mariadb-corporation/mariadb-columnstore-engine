@@ -73,7 +73,7 @@ string Func_elt::getStrVal(rowgroup::Row& row,
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
             double dscale = d.scale;
             number = d.value / pow(10.0, dscale);
-            int lefto = (d.value - number * pow(10.0, dscale)) / pow(dscale - 1);
+            int lefto = (d.value - number * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( number >= 0 && lefto > 4 )
                 number++;

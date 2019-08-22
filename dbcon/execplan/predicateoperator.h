@@ -35,6 +35,7 @@
 #include <alloca.h>
 #endif
 #include <cstring>
+#include <cmath>
 #include <boost/regex.hpp>
 
 #include "expressionparser.h"
