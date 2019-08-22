@@ -44,7 +44,7 @@ class Ownership : public boost::noncopyable
         
         
     private:
-        uint prefixDepth;
+        int prefixDepth;
         boost::filesystem::path metadataPrefix;
         SMLogging *logger;
         
