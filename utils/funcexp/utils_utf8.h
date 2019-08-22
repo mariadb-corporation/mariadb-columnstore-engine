@@ -54,6 +54,10 @@ extern bool JPcodePoint;		// code point ordering (Japanese UTF) flag, used in id
 
 const int MAX_UTF8_BYTES_PER_CHAR = 4;
 
+// A global loc object so we don't construct one at every compare
+static std::locale loc;
+// Is there a way to construct a global reference to a facet?
+// const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
 
 //Infinidb version of strlocale  BUG 5362
 //set System Locale "C" by default
@@ -75,6 +79,8 @@ std::string idb_setlocale()
     }
 
     char* pLoc = setlocale(LC_ALL, systemLang.c_str());
+    // MCOL-1559 also set the C++ locale
+    std::locale::global(std::locale(pLoc));
 
     if (pLoc == NULL)
     {
@@ -115,6 +121,9 @@ std::string idb_setlocale()
     if (systemLang.find("ja_JP") != std::string::npos)
         JPcodePoint = true;
 
+    std::locale localloc;
+    loc = localloc;
+
     return systemLang;
 }
 
@@ -130,6 +139,50 @@ int idb_strcoll(const char* str1, const char* str2)
         return strcoll(str1, str2);
 }
 
+// MCOL-1559 Add a trimmed version of strcoll
+// The intent here is to make no copy of the original strings and
+// not modify them, so we can't use trim to deal with the spaces.
+inline
+int idb_strtrimcoll(const std::string& str1, const std::string& str2)
+{
+    static const std::string whitespaces (" ");
+    const char* s1 = str1.c_str();
+    const char* s2 = str2.c_str();
+    // Set found1 to the last non-whitespace char in str1
+    std::size_t found1 = str1.find_last_not_of(whitespaces);
+    // Set found2 to the first whitespace char in str2
+    std::size_t found2 = str2.find_last_not_of(whitespaces);
+
+     // Are both strings empty or all whitespace?
+    if (found1 == std::string::npos && found2 == std::string::npos)
+    {
+        return 0; // they match
+    }
+    // If str1 is empty or all spaces
+    if (found1 == std::string::npos)
+    {
+        return -1;
+    }
+    // If str2 is empty or all spaces
+    if (found2 == std::string::npos)
+    {
+        return 1;
+    }
+
+    // found1 and found2 point to the character that is not a space. 
+    // compare wants it to point to one past.
+    found1 += 1;
+    found2 += 1;
+    // If no trimming needs doing, then strcoll is faster
+    if (found1 == str1.size() && found2 == str2.size())
+    {
+        return idb_strcoll(s1, s2);
+    }
+    // Compare the (trimmed) strings
+    const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+    int rtn = coll.compare(s1, s1+found1, s2, s2+found2);
+    return rtn;
+}
 
 // BUG 5241
 // Infinidb specific mbstowcs(). This will handle both windows and unix platforms

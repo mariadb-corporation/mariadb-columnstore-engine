@@ -1636,7 +1636,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         string constval(cc->constval());
 
-
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
         const PseudoColumn* pc = dynamic_cast<const PseudoColumn*>(sc);
@@ -1645,8 +1644,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 //    type of pseudo column is set by connector
         if (!sc->schemaName().empty() && sc->isInfiniDB() && !pc)
             ct = jobInfo.csc->colType(sc->oid());
-
 //X
+
+        // Because, on a filter, we want to compare ignoring trailing spaces in many cases
+        if (sf->op()->op() != execplan::OP_LIKE)
+        {
+            boost::algorithm::trim_right_if(constval, boost::is_any_of(" "));
+        }
         //@bug 339 nulls are not stored in dictionary
         if ((dictOid = isDictCol(ct)) > 0  && ConstantColumn::NULLDATA != cc->type())
         {
@@ -2770,7 +2774,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                         cop = COMPARE_NIL;
 
                     string value = cc->constval();
-
+                    // Because, on a filter, we want to compare ignoring trailing spaces
+                    boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
                     pds->addFilter(cop, value);
                 }
@@ -2853,7 +2858,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                         cop = COMPARE_NIL;
 
                     string value = cc->constval();
-
+                    // Because, on a filter, we want to compare ignoring trailing spaces
+                    boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
                     pds->addFilter(cop, value);
                 }
@@ -2959,7 +2965,6 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     int8_t cop = op2num(sop);
                     int64_t value = 0;
                     string constval = cc->constval();
-
 
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;
