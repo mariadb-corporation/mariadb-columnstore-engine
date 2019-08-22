@@ -46,6 +46,9 @@ namespace funcexp
 {
 namespace utf8
 {
+// A global loc object so we don't construct one at every compare
+std::locale loc;
+
 bool JPcodePoint = false;		// extern-ed in utils_utf8.h
 }
 
