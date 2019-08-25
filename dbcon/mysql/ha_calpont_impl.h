@@ -47,6 +47,7 @@ extern int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand
 extern int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info , TABLE* table);
+extern int ha_cs_impl_select_next(uchar *buf, TABLE *table);
 
 #endif
 

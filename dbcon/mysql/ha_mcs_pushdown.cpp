@@ -14,12 +14,13 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-
 // ha_calpont.cpp includes this file.
+
+void check_walk(const Item* item, void* arg);
 
 void mutate_optimizer_flags(THD *thd_)
 {
-   // MCOL-2178 Disable all optimizer flags as it was in the fork.
+    // MCOL-2178 Disable all optimizer flags as it was in the fork.
     // CS restores it later in SH::scan_end() and in case of an error
     // in SH::scan_init()
     set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
@@ -38,65 +39,196 @@ void restore_optimizer_flags(THD *thd_)
         set_original_optimizer_flags(0, thd_);
     }
 }
- 
 
-/*@brief  check_walk - It traverses filter conditions*/
-/************************************************************
- * DESCRIPTION:
- * It traverses filter predicates looking for unsupported
- * JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
- * logical OR.
- * PARAMETERS:
- *    thd - THD pointer.
- *    derived - TABLE_LIST* to work with.
- * RETURN:
- *    derived_handler if possible
- *    NULL in other case
- ***********************************************************/
-void check_walk(const Item* item, void* arg)
+/*@brief  find_tables - This traverses Item              */
+/**********************************************************
+* DESCRIPTION:
+* This f() pushes TABLE of an Item_field to a list
+* provided. The list is used for JOIN predicate check in
+* is_joinkeys_predicate().
+* PARAMETERS:
+*    Item * Item to check
+* RETURN:
+***********************************************************/
+void find_tables(const Item* item, void* arg)
 {
-    bool* unsupported_feature  = static_cast<bool*>(arg);
+    if (typeid(*item) == typeid(Item_field))
+    {
+        Item_field *ifp= (Item_field*)item;
+        List<TABLE> *tables_list= (List<TABLE>*)arg;
+        tables_list->push_back(ifp->field->table);
+    }
+}
+
+/*@brief  is_joinkeys_predicate - This traverses Item_func*/
+/***********************************************************
+* DESCRIPTION:
+* This f() walks Item_func and checks whether it contains
+* JOIN predicate 
+* PARAMETERS:
+*    Item_func * Item to walk
+* RETURN:
+*    BOOL false if Item_func isn't a JOIN predicate
+*    BOOL true otherwise
+***********************************************************/
+bool is_joinkeys_predicate(const Item_func *ifp)
+{
+    bool result = false;
+    if(ifp->argument_count() == 2)
+    {
+        if (ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
+          ifp->arguments()[1]->type() == Item::FIELD_ITEM)
+        {
+            Item_field* left= reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+            Item_field* right= reinterpret_cast<Item_field*>(ifp->arguments()[1]);
+
+            // If MDB crashes here with non-fixed Item_field and field == NULL
+            // there must be a check over on_expr for a different SELECT_LEX.
+            // e.g. checking subquery with ON from upper query. 
+            if (left->field->table != right->field->table)
+            {
+                result= true;
+            }
+        }
+        else
+        {
+            List<TABLE>llt; List<TABLE>rlt;
+            Item *left= ifp->arguments()[0];
+            Item *right= ifp->arguments()[1];
+            // Search for tables inside left and right expressions
+            // and compare them
+            left->traverse_cond(find_tables, (void*)&llt, Item::POSTFIX);
+            right->traverse_cond(find_tables, (void*)&rlt, Item::POSTFIX);
+            // TODO Find the way to have more then one element or prove
+            // the idea is useless.
+            if (llt.elements && rlt.elements && (llt.elem(0) != rlt.elem(0)))
+            {
+                result= true;
+            }
+        }
+    }
+    return result;
+}
+
+/*@brief  find_nonequi_join - This traverses Item          */
+/************************************************************
+* DESCRIPTION:
+* This f() walks Item and looks for a non-equi join
+* predicates
+* PARAMETERS:
+*    Item * Item to walk
+* RETURN:
+***********************************************************/
+void find_nonequi_join(const Item* item, void *arg)
+{
+    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
     if ( *unsupported_feature )
         return;
+
+    if (item->type() == Item::FUNC_ITEM)
+    {
+        const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
+        //TODO Check for IN
+        //NOT IN + correlated subquery
+        if (ifp->functype() != Item_func::EQ_FUNC)
+        {
+            if (is_joinkeys_predicate(ifp))
+                *unsupported_feature = true;
+            else if (ifp->functype() == Item_func::NOT_FUNC
+                       && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM)
+            {
+                check_walk(ifp->arguments()[0], arg);
+            }
+        }
+    }
+}
+
+/*@brief  find_join - This traverses Item                  */
+/************************************************************
+* DESCRIPTION:
+* This f() walks traverses Item looking for JOIN, SEMI-JOIN
+* predicates. 
+* PARAMETERS:
+*    Item * Item to traverse
+* RETURN:
+***********************************************************/
+void find_join(const Item* item, void* arg)
+{
+    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
+    if ( *unsupported_feature )
+        return;
+
+    if (item->type() == Item::FUNC_ITEM)
+    {
+        const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
+        //TODO Check for IN
+        //NOT IN + correlated subquery
+        {
+            if (is_joinkeys_predicate(ifp))
+                *unsupported_feature = true;
+            else if (ifp->functype() == Item_func::NOT_FUNC
+                       && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM)
+            {
+                check_walk(ifp->arguments()[0], arg);
+            }
+        }
+    }
+}
+
+/*@brief  save_join_predicate - This traverses Item        */
+/************************************************************
+* DESCRIPTION:
+* This f() walks Item and saves found JOIN predicates into
+* a List. The list will be used for a simple CROSS JOIN
+* check in create_DH.
+* PARAMETERS:
+*    Item * Item to walk
+* RETURN:
+***********************************************************/
+void save_join_predicates(const Item* item, void* arg)
+{
+    if (item->type() == Item::FUNC_ITEM)
+    {
+        const Item_func* ifp= reinterpret_cast<const Item_func*>(item);
+        if (is_joinkeys_predicate(ifp))
+        {
+            List<Item> *join_preds_list= (List<Item>*)arg;
+            join_preds_list->push_back(const_cast<Item*>(item));
+        }
+    }
+}
+
+
+/*@brief  check_walk - It traverses filter conditions      */
+/************************************************************
+* DESCRIPTION:
+* It traverses filter predicates looking for unsupported
+* JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
+* logical OR.
+* PARAMETERS:
+*    thd - THD pointer.
+*    derived - TABLE_LIST* to work with.
+* RETURN:
+***********************************************************/
+void check_walk(const Item* item, void* arg)
+{
+    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
+    if ( *unsupported_feature )
+        return;
+
     switch (item->type())
     {
         case Item::FUNC_ITEM:
         {
-            const Item_func* ifp = static_cast<const Item_func*>(item);
-
-            if ( ifp->functype() != Item_func::EQ_FUNC ) // NON-equi JOIN
-            {
-                if ( ifp->argument_count() == 2 &&
-                    ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
-                    ifp->arguments()[1]->type() == Item::FIELD_ITEM )
-                {
-                    Item_field* left= static_cast<Item_field*>(ifp->arguments()[0]);
-                    Item_field* right= static_cast<Item_field*>(ifp->arguments()[1]);
-
-                    if ( left->field->table != right->field->table )
-                    {
-                        *unsupported_feature = true;
-                        return;
-                    }
-                }
-                else // IN + correlated subquery
-                {
-                    if ( ifp->functype() == Item_func::NOT_FUNC
-                        && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM )
-                    {
-                        check_walk(ifp->arguments()[0], arg);
-                    }
-                }
-            }
+            find_nonequi_join(item, arg);
             break;
         }
-
         case Item::EXPR_CACHE_ITEM: // IN + correlated subquery
         {
-            const Item_cache_wrapper* icw = static_cast<const Item_cache_wrapper*>(item);
+            const Item_cache_wrapper* icw = reinterpret_cast<const Item_cache_wrapper*>(item);
             if ( icw->get_orig_item()->type() == Item::FUNC_ITEM )
             {
-                const Item_func *ifp = static_cast<const Item_func*>(icw->get_orig_item());
+                const Item_func *ifp = reinterpret_cast<const Item_func*>(icw->get_orig_item());
                 if ( ifp->argument_count() == 2 &&
                     ( ifp->arguments()[0]->type() == Item::Item::SUBSELECT_ITEM
                     || ifp->arguments()[1]->type() == Item::Item::SUBSELECT_ITEM ))
@@ -107,13 +239,24 @@ void check_walk(const Item* item, void* arg)
             }
             break;
         }
-
-        case Item::COND_ITEM: // OR in JOIN conds is unsupported yet
+        case Item::COND_ITEM: // OR contains JOIN conds thats is unsupported yet
         {
             Item_cond* icp = (Item_cond*)item;
             if ( is_cond_or(icp) )
             {
-                *unsupported_feature = true;
+                bool left_flag= false, right_flag= false;
+                if (icp->argument_list()->elements >= 2)
+                {
+                    Item *left; Item *right;
+                    List_iterator<Item> li(*icp->argument_list());
+                    left = li++; right = li++;
+                    left->traverse_cond(find_join, (void*)&left_flag, Item::POSTFIX);
+                    right->traverse_cond(find_join, (void*)&right_flag, Item::POSTFIX);
+                    if (left_flag && right_flag)
+                    {
+                        *unsupported_feature = true;
+                    }
+                }
             }
             break;
         }
@@ -172,9 +315,9 @@ create_calpont_group_by_handler(THD* thd, Query* query)
             unsupported_feature = select_lex->is_correlated;
 
             // Impossible HAVING or WHERE
-            if ( ( !unsupported_feature && select_lex->having_value == Item::COND_FALSE )
-                || ( select_lex->cond_count > 0
-                    && select_lex->cond_value == Item::COND_FALSE ) )
+            if (!unsupported_feature &&
+                (select_lex->having_value == Item::COND_FALSE
+                  || select_lex->cond_value == Item::COND_FALSE ))
             {
                 unsupported_feature = true;
             }
@@ -188,8 +331,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
                 if (join != 0)
                     icp = reinterpret_cast<Item_cond*>(join->conds);
 
-                if ( unsupported_feature == false
-                    && icp )
+                if (unsupported_feature == false && icp)
                 {
                     icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
                 }
@@ -198,16 +340,14 @@ create_calpont_group_by_handler(THD* thd, Query* query)
                 if (select_lex->where != 0)
                     icp = reinterpret_cast<Item_cond*>(select_lex->where);
 
-                if ( unsupported_feature == false
-                    && icp )
+                if (unsupported_feature == false && icp)
                 {
                     icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
                 }
-
             }
         } // unsupported features check ends here
 
-        if ( !unsupported_feature )
+        if (!unsupported_feature)
         {
             handler = new ha_calpont_group_by_handler(thd, query);
 
@@ -248,25 +388,70 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     }
 
     SELECT_LEX_UNIT *unit= derived->derived;
+    SELECT_LEX *sl= unit->first_select();
 
     bool unsupported_feature = false;
+    // Select_handler use the short-cut that effectively disables
+    // INSERT..SELECT and LDI
+    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT
+        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE )
     {
-        SELECT_LEX select_lex = *unit->first_select();
-        JOIN* join = select_lex.join;
-        Item_cond* icp = 0;
+        unsupported_feature = true;
+    }
 
-        if (join != 0)
-            icp = reinterpret_cast<Item_cond*>(join->conds);
+    // Impossible HAVING or WHERE
+    // TODO replace with function call
+    if ( unsupported_feature
+       || sl->having_value == Item::COND_FALSE
+        || sl->cond_value == Item::COND_FALSE )
+    {
+        unsupported_feature = true;
+    }
 
-        if (!join)
+    // JOIN expression from WHERE, ON expressions
+    JOIN* join= sl->join;
+    //TODO DRRTUY Make a proper tree traverse
+    //To search for CROSS JOIN-s we use tree invariant
+    //G(V,E) where [V] = [E]+1
+    List<Item> join_preds_list;
+    TABLE_LIST *tl;   
+    for (tl= sl->get_table_list(); tl; tl= tl->next_local)
+    {
+        Item_cond* where_icp= 0;
+        Item_cond* on_icp= 0;
+        if (tl->where != 0)
         {
-            icp = reinterpret_cast<Item_cond*>(select_lex.where);
+            where_icp= reinterpret_cast<Item_cond*>(tl->where);
         }
 
-        if ( icp )
+        if (where_icp)
         {
-            //icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            where_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
         }
+
+        // Looking for JOIN with ON expression through
+        // TABLE_LIST in FROM until CS meets unsupported feature
+        if (tl->on_expr)
+        {
+            on_icp= reinterpret_cast<Item_cond*>(tl->on_expr);
+            on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+        }
+    }
+
+    // CROSS JOIN w/o conditions isn't supported until MCOL-301
+    // is ready.
+    if (join && join->table_count >= 2 && !join_preds_list.elements)
+    {
+        unsupported_feature= true;
+    }
+
+    // CROSS JOIN with not enough JOIN predicates
+    if(!unsupported_feature && join
+        && join_preds_list.elements < join->table_count-1)
+    {
+        unsupported_feature= true;
     }
 
     if ( !unsupported_feature )
@@ -307,16 +492,9 @@ ha_columnstore_derived_handler::~ha_columnstore_derived_handler()
  ***********************************************************/
 int ha_columnstore_derived_handler::init_scan()
 {
-    char query_buff[4096];
-
     DBUG_ENTER("ha_columnstore_derived_handler::init_scan");
 
-    // Save query for logging
-    String derived_query(query_buff, sizeof(query_buff), thd->charset());
-    derived_query.length(0);
-    derived->derived->print(&derived_query, QT_ORDINARY);
-
-    mcs_handler_info mhi = mcs_handler_info(static_cast<void*>(this), DERIVED);
+    mcs_handler_info mhi = mcs_handler_info(reinterpret_cast<void*>(this), DERIVED);
     // this::table is the place for the result set
     int rc = ha_cs_impl_pushdown_init(&mhi, table);
 
@@ -465,7 +643,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT and LDI
-    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT 
+    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT
         || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE )
         
     {
@@ -481,51 +659,30 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         unsupported_feature = true;
     }
 
-    // Unsupported query check.
-    if ( !unsupported_feature )
-    {
-        // JOIN expression from WHERE, ON expressions
-        JOIN* join = select_lex->join;
-        Item_cond* where_icp = 0;
-        Item_cond* on_icp = 0;
-
-        if (join != 0)
-        {
-            where_icp = reinterpret_cast<Item_cond*>(join->conds);
-        }
-
-        if ( where_icp )
-        {
-            //where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-        }
-
-        // Looking for JOIN with ON expression through
-        // TABLE_LIST in FROM until CS meets unsupported feature
-        TABLE_LIST* table_ptr = select_lex->get_table_list();
-        for (; !unsupported_feature && table_ptr; table_ptr = table_ptr->next_global)
-        {
-            if(table_ptr->on_expr)
-            {
-                on_icp = reinterpret_cast<Item_cond*>(table_ptr->on_expr);
-                //on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-            }
-        }
-
-        // CROSS JOIN w/o conditions isn't supported until MCOL-301
-        // is ready.
-        if (join && join->table_count >= 2 && ( !where_icp && !on_icp ))
-        {
-            unsupported_feature = true;
-        }
-    }
- 
+    // Next block tries to execute the query using SH very early to fallback
+    // if execution fails.
     if (!unsupported_feature)
     {
-        handler = new ha_columnstore_select_handler(thd, select_lex);
+        handler= new ha_columnstore_select_handler(thd, select_lex);
         mutate_optimizer_flags(thd);
+        mcs_handler_info mhi= mcs_handler_info(reinterpret_cast<void*>(handler), SELECT);
+        // this::table is the place for the result set
+        int rc= ha_cs_impl_pushdown_init(&mhi, handler->table);
+
+        // Return SH if query execution is fine or fallback is disabled
+        if (!rc || !get_fallback_knob(thd))
+            return handler;
+
+        // Reset the DA and restore optimizer flags
+        // to allow query to fallback to other handlers
+        if (thd->get_stmt_da()->is_error())
+        {
+            thd->get_stmt_da()->reset_diagnostics_area();
+            restore_optimizer_flags(thd);
+        }
     }
 
-  return handler;
+    return NULL;
 }
 
 /***********************************************************
@@ -561,18 +718,11 @@ ha_columnstore_select_handler::~ha_columnstore_select_handler()
  ***********************************************************/
 int ha_columnstore_select_handler::init_scan()
 {
-    char query_buff[4096];
-
     DBUG_ENTER("ha_columnstore_select_handler::init_scan");
 
-    // Save query for logging
-    String select_query(query_buff, sizeof(query_buff), thd->charset());
-    select_query.length(0);
-    select->print(thd, &select_query, QT_ORDINARY);
-
-    mcs_handler_info mhi = mcs_handler_info(static_cast<void*>(this), SELECT);
-    // this::table is the place for the result set
-    int rc = ha_cs_impl_pushdown_init(&mhi, table);
+    // Dummy init for SH. Actual init happens in create_SH
+    // to allow fallback to other handlers if SH fails.
+    int rc = 0;
 
     DBUG_RETURN(rc);
 }
@@ -591,7 +741,7 @@ int ha_columnstore_select_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_select_handler::next_row");
 
-    int rc = ha_calpont_impl_rnd_next(table->record[0], table);
+    int rc= ha_cs_impl_select_next(table->record[0], table);
 
     DBUG_RETURN(rc);
 }
