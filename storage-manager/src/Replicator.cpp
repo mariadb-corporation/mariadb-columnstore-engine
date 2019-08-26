@@ -143,6 +143,17 @@ int Replicator::newObject(const boost::filesystem::path &filename, const uint8_t
     return count;
 }
 
+int Replicator::newNullObject(const boost::filesystem::path &filename,size_t length )
+{
+    int fd, err;
+    string objectFilename = msCachePath + "/" + filename.string();
+
+    OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
+    err = ftruncate(fd,length);
+
+    return err;
+}
+
 int Replicator::addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length)
 {
     int fd, err;

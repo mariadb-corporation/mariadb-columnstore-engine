@@ -1316,7 +1316,9 @@ void IOCReadTest1()
     string metaFilename = (metaPath/metaTestFile).string() + ".meta";
     
     boost::scoped_array<uint8_t> data(new uint8_t[1<<20]);
+
     memset(data.get(), 0, 1<<20);
+
     int err;
     err = ioc->read(testFile, data.get(), 0, 1<<20);
     assert(err < 0);
@@ -1348,6 +1350,9 @@ void IOCReadTest1()
     for (; i < (1<<20)/4; i++)
         assert(data32[i] == 0);
     
+    err = ioc->read(testFile, data.get(), 9000, 4000);
+    assert(err==0);
+
     cache->reset();
     err = ioc->unlink(testFile);
     assert(err>= 0);
@@ -1628,8 +1633,14 @@ int main(int argc, char* argv[])
     //Case 3 write spans 2 journal objects
     metadataJournalTest((8*sizeKB),(4*sizeKB));
     //Case 4 write starts object1 ends object3
-    metadataJournalTest((10*sizeKB),(7*sizeKB));
-    //Case 5 write starts in new object at offset >0
+    metadataJournalTest((16*sizeKB),(7*sizeKB));
+    //Case 5 write starts in new object at 0 offset after null objects
+    metadataJournalTest((8*sizeKB),(32*sizeKB));
+    // overwrite null objects
+    metadataJournalTest((10*sizeKB),(40*sizeKB));
+    metadataJournalTest((8*sizeKB),(24*sizeKB));
+    // overwrite whole file and create new objects
+    metadataJournalTest((96*sizeKB),(0));
 
     //append test
     // first one appends file to end of 8K object
@@ -1668,8 +1679,9 @@ int main(int argc, char* argv[])
     metadataJournalTestCleanup();
 
     (Cache::get())->shutdown();
-    delete (IOCoordinator::get());
+    delete (Synchronizer::get());
     delete (Cache::get());
+    delete (IOCoordinator::get());
 
     return 0;
 }
