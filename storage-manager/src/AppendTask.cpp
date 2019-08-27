@@ -68,7 +68,8 @@ bool AppendTask::run()
     
     ssize_t readCount = 0, writeCount = 0;
     vector<uint8_t> databuf;
-    uint bufsize = min(1 << 20, cmd->count);   // 1 MB
+    uint bufsize = min(100 << 20, cmd->count);   // 100 MB
+    //uint bufsize = cmd->count;
     databuf.resize(bufsize);
     
     while (readCount < cmd->count)

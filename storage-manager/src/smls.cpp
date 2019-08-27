@@ -157,12 +157,12 @@ int main(int argc, char **argv)
     }
     
     char prefix[8192];
-    makePathPrefix(prefix, 8192);
+    int prefixlen = makePathPrefix(prefix, 8192);
     
     if (SMOnline())
-        lsOnline(strncat(prefix, argv[1], 8192));
+        lsOnline(strncat(prefix, argv[1], 8192 - prefixlen));
     else
-        lsOffline(strncat(prefix, argv[1], 8192));
+        lsOffline(strncat(prefix, argv[1], 8192 - prefixlen));
     
     return 0;
 }
