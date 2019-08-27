@@ -108,7 +108,7 @@ bool PosixTask::read(uint8_t *buf, uint length)
     while (count < length)
     {
         err = ::recv(sock, &buf[count], length - count, 0);
-        if (err <= 0)
+        if (err < 0)
             return false;
 
         count += err;
@@ -207,7 +207,7 @@ void PosixTask::consumeMsg()
     
     while (remainingLengthInStream > 0)
     {
-        logger->log(LOG_ERR,"ERROR: eating data.");
+        logger->log(LOG_WARNING, "PosixTask::consumeMsg(): Discarding the tail end of a partial msg.");
         err = ::recv(sock, buf, min(remainingLengthInStream, 1024), 0);
         if (err <= 0) {
             remainingLengthInStream = 0;
