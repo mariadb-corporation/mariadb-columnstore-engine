@@ -140,6 +140,7 @@ void WF_stats<T>::resetData()
 template<typename T>
 void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
+    CDT cdt;
     if ((fFrameUnit == WF__FRAME_ROWS) ||
             (fPrev == -1) ||
             (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
@@ -163,7 +164,7 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
                 continue;
 
             T valIn;
-            getValue(colIn, valIn);
+            getValue(colIn, valIn, &cdt);
             long double val = (long double) valIn;
 
             fSum1 += val;
@@ -177,7 +178,9 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
             int scale = fRow.getScale(colIn);
             long double factor = pow(10.0, scale);
 
-            if (scale != 0) // adjust the scale if necessary
+            // adjust the scale if necessary
+            if (scale != 0 &&
+                cdt != CalpontSystemCatalog::LONGDOUBLE)
             {
                 fSum1 /= factor;
                 fSum2 /= factor * factor;
