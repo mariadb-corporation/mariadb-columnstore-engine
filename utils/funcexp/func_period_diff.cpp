@@ -85,7 +85,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            period1 = d.value / helpers::power(d.scale);
+            period1 = d.value / pow(10.0, d.scale);
             break;
         }
 
@@ -133,7 +133,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-            period2 = d.value / helpers::power(d.scale);
+            period2 = d.value / pow(10.0, d.scale);
             break;
         }
 

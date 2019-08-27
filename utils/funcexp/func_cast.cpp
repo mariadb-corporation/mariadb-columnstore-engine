@@ -180,8 +180,9 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / helpers::power(d.scale);
-            int lefto = (d.value - value * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            double dscale = d.scale;
+            int64_t value = d.value / pow(10.0, dscale);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( value >= 0 && lefto > 4 )
                 value++;
@@ -328,14 +329,15 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+            double dscale = d.scale;
 
             if (d.value < 0)
             {
                 return 0;
             }
 
-            uint64_t value = d.value / helpers::power(d.scale);
-            int lefto = (d.value - value * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            uint64_t value = d.value / pow(10.0, dscale);
+            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( value >= 0 && lefto > 4 )
                 value++;
