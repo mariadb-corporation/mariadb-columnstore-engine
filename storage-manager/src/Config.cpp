@@ -144,7 +144,9 @@ string expand_numbers(const boost::smatch &match)
     long num = stol(match[1].str());
     char suffix = (char) ::tolower(match[2].str()[0]);
 
-    if (suffix == 'g')
+    if (suffix == 't')
+        num <<= 40;
+    else if (suffix == 'g')
         num <<= 30;
     else if (suffix == 'm')
         num <<= 20;
