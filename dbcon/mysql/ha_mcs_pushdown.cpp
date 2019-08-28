@@ -415,7 +415,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     //G(V,E) where [V] = [E]+1
     List<Item> join_preds_list;
     TABLE_LIST *tl;   
-    for (tl= sl->get_table_list(); tl; tl= tl->next_local)
+    for (tl = sl->get_table_list(); !unsupported_feature && tl; tl = tl->next_local)
     {
         Item_cond* where_icp= 0;
         Item_cond* on_icp= 0;
@@ -442,7 +442,8 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 
     // CROSS JOIN w/o conditions isn't supported until MCOL-301
     // is ready.
-    if (join && join->table_count >= 2 && !join_preds_list.elements)
+    if (!unsupported_feature && join
+         && join->table_count >= 2 && !join_preds_list.elements)
     {
         unsupported_feature= true;
     }
