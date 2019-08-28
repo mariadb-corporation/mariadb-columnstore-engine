@@ -422,7 +422,6 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
                 if (err < 0)
                 {
                     l_errno = errno;
-                    replicator->updateMetadata(metadata);
                     //log error and abort
                     logger->log(LOG_ERR,"IOCoordinator::write(): Failed addJournalEntry -- NullData. Journal file likely has partially written data and incorrect metadata.");
                     errno = l_errno;
@@ -430,9 +429,6 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
                 }
                 else if ((uint)err < nullJournalSize)
                 {
-                    dataRemaining -= err;
-                    count += err;
-                    iocBytesWritten += err;
                     if ((err + lastObject.length) > lastObject.length)
                         metadata.updateEntryLength(lastObject.offset, (err + lastObject.length));
                     cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
