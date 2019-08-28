@@ -5893,8 +5893,6 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                         Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
                         field_vec.push_back(ifp);
                     }
-                    else
-                        hasNonSupportItem = true;
                     break;
                 }
                 else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
@@ -5957,7 +5955,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
         case Item::EXPR_CACHE_ITEM:
         {
             // item is a Item_cache_wrapper. Shouldn't get here.
-            // WIP Why
+            // DRRTUY TODO Why
             IDEBUG(std::cerr << "EXPR_CACHE_ITEM in parse_item\n" << std::endl);
             gwi->fatalParseError = true;
             // DRRTUY The questionable error text. I've seen
@@ -6107,10 +6105,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     {
         for (; table_ptr; table_ptr = table_ptr->next_local)
         {
-            // mysql put vtable here for from sub. we ignore it
-            if (string(table_ptr->table_name.str).find("$vtable") != string::npos)
-                continue;
-
             // Until we handle recursive cte:
             // Checking here ensures we catch all with clauses in the query.
             if (table_ptr->is_recursive_with_table())
@@ -6279,9 +6273,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
         csep->unionVec(unionVec);
         csep->distinctUnionNum(distUnionNum);
-
-        if (unionVec.empty())
-            gwi.cs_vtable_impossible_where_on_union = true;
     }
 
     gwi.clauseType = WHERE;
@@ -6307,7 +6298,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             Item_equal *cur_item_eq;
             while ((cur_item_eq= li++))
             {
-                // WIP replace the block with 
+                // DRRTUY TODO replace the block with
                 //cur_item_eq->traverse_cond(debug_walk, gwip, Item::POSTFIX);
                 std::cerr << "item_equal(";
                 Item *item;

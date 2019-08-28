@@ -98,7 +98,14 @@ static MYSQL_THDVAR_BOOL(
     1
 );
 
-
+static MYSQL_THDVAR_BOOL(
+    processing_handlers_fallback,
+    PLUGIN_VAR_NOCMDARG,
+    "Enable/Disable the unsupported features check in handlers.",
+    NULL,
+    NULL,
+    0
+);
 
 // legacy system variables
 static MYSQL_THDVAR_ULONG(
@@ -269,15 +276,6 @@ static MYSQL_THDVAR_BOOL(
     1 // default
 );
 
-static MYSQL_THDVAR_BOOL(
-    use_legacy_sysvars,
-    PLUGIN_VAR_NOCMDARG,
-    "Control CS behavior using legacy * sysvars",
-    NULL, // check
-    NULL, // update
-    0 // default
-);
-
 st_mysql_sys_var* mcs_system_variables[] =
 {
   MYSQL_SYSVAR(compression_type),
@@ -285,6 +283,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(original_optimizer_flags),
   MYSQL_SYSVAR(select_handler),
   MYSQL_SYSVAR(derived_handler),
+  MYSQL_SYSVAR(processing_handlers_fallback),
   MYSQL_SYSVAR(group_by_handler),
   MYSQL_SYSVAR(decimal_scale),
   MYSQL_SYSVAR(use_decimal_scale),
@@ -300,7 +299,6 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(use_import_for_batchinsert),
   MYSQL_SYSVAR(import_for_batchinsert_delimiter),
   MYSQL_SYSVAR(import_for_batchinsert_enclosed_by),
-  MYSQL_SYSVAR(use_legacy_sysvars),
   MYSQL_SYSVAR(varbin_always_hex),
   NULL
 };
@@ -323,8 +321,7 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd)
 
 ulonglong get_original_optimizer_flags(THD* thd)
 {
-    return ( current_thd == NULL && thd == NULL ) ? NULL :
-        THDVAR(current_thd, original_optimizer_flags);
+    return THDVAR(current_thd, original_optimizer_flags);
 }
 
 void set_original_optimizer_flags(ulonglong ptr, THD* thd)
@@ -364,7 +361,16 @@ void set_group_by_handler(THD* thd, bool value)
     THDVAR(thd, group_by_handler) = value;
 }
 
-void set_compression_type(THD* thd, ulong value)
+bool get_fallback_knob(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, processing_handlers_fallback);
+}
+void set_fallback_knob(THD* thd, bool value)
+{
+    THDVAR(thd, processing_handlers_fallback) = value;
+}
+
+    void set_compression_type(THD* thd, ulong value)
 {
     THDVAR(thd, compression_type) = value;
 }

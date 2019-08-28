@@ -349,7 +349,9 @@ SCSEP FromSubQuery::transform()
     csep->derivedTbAlias(fAlias); // always lower case
     csep->derivedTbView(fGwip.viewName.alias);
 
-    if (getSelectPlan(gwi, *fFromSub, csep, fPushdownHand) != 0)
+    // DRRTUY isUnion - false. fPushdownHand could be safely set to true
+    // b/c only pushdowns get here.
+    if (getSelectPlan(gwi, *fFromSub, csep, false, fPushdownHand) != 0)
     {
         fGwip.fatalParseError = true;
 

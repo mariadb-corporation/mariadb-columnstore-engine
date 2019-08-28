@@ -288,7 +288,7 @@ tpl_open ( tableid_t tableid,
     SMDEBUGLOG << "tpl_open: ntplh: " << ntplh << " conn_hdl: " << conn_hdl << " tableid: " << tableid << endl;
 
     // if first time enter this function for a statement, set
-    // queryState to QUERY_IN_PRCOESS and get execution plan.
+    // queryState to QUERY_IN_PROCESS and get execution plan.
     if (conn_hdl->queryState == NO_QUERY)
     {
         conn_hdl->queryState = QUERY_IN_PROCESS;
