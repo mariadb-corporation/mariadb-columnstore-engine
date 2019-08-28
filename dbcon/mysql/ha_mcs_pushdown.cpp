@@ -394,7 +394,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT and LDI
     if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE )
+        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE)
     {
         unsupported_feature = true;
     }
@@ -642,29 +642,40 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
-    // INSERT..SELECT and LDI
-    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE )
+    // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
+    if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
+        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE
+        || (thd->lex)->exchange)
         
     {
         unsupported_feature = true;
     }
 
-    // Impossible HAVING or WHERE
-    // TODO replace with function call
-    if ( unsupported_feature
-       || select_lex->having_value == Item::COND_FALSE
-        || select_lex->cond_value == Item::COND_FALSE )
-    {
-        unsupported_feature = true;
-    }
-
+    JOIN *join= select_lex->join;
     // Next block tries to execute the query using SH very early to fallback
     // if execution fails.
     if (!unsupported_feature)
     {
-        handler= new ha_columnstore_select_handler(thd, select_lex);
+        // TODO This part must explicitly call a list of needed optimizations
         mutate_optimizer_flags(thd);
+        join->optimization_state= JOIN::OPTIMIZATION_IN_PROGRESS;
+        join->optimize_inner();
+
+        // Impossible HAVING or WHERE
+        // TODO replace with function call
+        if (unsupported_feature
+           || select_lex->having_value == Item::COND_FALSE
+            || select_lex->cond_value == Item::COND_FALSE )
+        {
+            unsupported_feature = true;
+            restore_optimizer_flags(thd);
+        }
+    }
+
+    if (!unsupported_feature)
+    {
+        handler= new ha_columnstore_select_handler(thd, select_lex);
+        // This is an ugly hack to call simplify_joins()
         mcs_handler_info mhi= mcs_handler_info(reinterpret_cast<void*>(handler), SELECT);
         // this::table is the place for the result set
         int rc= ha_cs_impl_pushdown_init(&mhi, handler->table);
@@ -679,6 +690,23 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         {
             thd->get_stmt_da()->reset_diagnostics_area();
             restore_optimizer_flags(thd);
+            unsupported_feature = true;
+        }
+    }
+
+    if (join->optimization_state != JOIN::NOT_OPTIMIZED)
+    {
+        if (!join->with_two_phase_optimization)
+        {
+            if (unsupported_feature && join->have_query_plan != JOIN::QEP_DELETED)
+            {
+                join->build_explain();
+            }
+            join->optimization_state= JOIN::OPTIMIZATION_DONE;
+        }
+        else
+        {
+            join->optimization_state= JOIN::OPTIMIZATION_PHASE_1_DONE;
         }
     }
 

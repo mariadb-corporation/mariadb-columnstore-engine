@@ -4065,7 +4065,9 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 
         // MCOL-2178 Check for tableMap size to set this only once.
         ci->queryState = 0;
+        // Clean up the tableMap and physTablesList
         ci->tableMap.erase(table);
+        ci->physTablesList.erase(table);
     }
     else
     {
@@ -4078,12 +4080,12 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
         else if (lock_type == 2)
         {
             std::set<TABLE*>::iterator iter = ci->physTablesList.find(table);
-            if ( iter != ci->physTablesList.end() )
+            if (iter != ci->physTablesList.end())
             {
                 ci->physTablesList.erase(table);
             }
 
-            if ( iter != ci->physTablesList.end() && ci->physTablesList.empty() )
+            if (iter != ci->physTablesList.end() && ci->physTablesList.empty())
             {
                 if (!ci->cal_conn_hndl)
                     return 0;
@@ -5132,12 +5134,14 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 {
                     // CS resets error in create_SH() if fallback is enabled
                     setError(thd, ER_INTERNAL_ERROR, emsgStr);
-                    return ER_INTERNAL_ERROR;
+                    goto internal_error;
                 }
 
                 ci->rmParms.clear();
 
-                ci->queryState = 1;
+                // SH will initiate SM in select_next() only
+                if (!sh)
+                    ci->queryState= sm::QUERY_IN_PROCESS;
 
                 break;
             }
@@ -5315,8 +5319,6 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
     sm::tableid_t tableid= execplan::IDB_VTABLE_ID;
     sm::cpsm_conhdl_t* hndl= ci->cal_conn_hndl;
 
-    if (!ti.tpl_ctx || !ti.tpl_scan_ctx || (hndl && hndl->queryState == sm::NO_QUERY))
-    {
         if (ti.tpl_ctx == 0)
         {
             ti.tpl_ctx = new sm::cpsm_tplh_t();
@@ -5362,6 +5364,7 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
             }
         }
         ci->tableMap[table] = ti;
+        hndl->queryState= sm::QUERY_IN_PROCESS;
     }
 
     if (!ti.tpl_ctx || !ti.tpl_scan_ctx)
