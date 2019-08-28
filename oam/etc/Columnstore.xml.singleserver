@@ -540,5 +540,6 @@
 	</QueryTele>
     <StorageManager>
         <MaxSockets>30</MaxSockets>
+        <Enabled>N</Enabled>
     </StorageManager>
 </Columnstore>
