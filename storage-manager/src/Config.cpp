@@ -31,6 +31,7 @@
 
 #include "SMLogging.h"
 
+namespace bf = boost::filesystem;
 using namespace std;
 
 namespace
@@ -50,6 +51,17 @@ Config * Config::get()
     if (inst)
         return inst;
     inst = new Config();
+    return inst;
+}
+
+Config * Config::get(const string &configFile)
+{
+    if (inst)
+        return inst;
+    boost::mutex::scoped_lock s(m);
+    if (inst)
+        return inst;
+    inst = new Config(configFile);
     return inst;
 }
 
@@ -83,6 +95,17 @@ Config::Config() : die(false)
         }
     }
     if (filename.empty())
+        throw runtime_error("Config: Could not find the config file for StorageManager");
+    
+    reloadInterval = boost::posix_time::seconds(60);
+    last_mtime = {0, 0};
+    reload();
+    reloader = boost::thread([this] { this->reloadThreadFcn(); });
+}
+
+Config::Config(const string &configFile) : filename(configFile), die(false)
+{
+    if (!bf::is_regular_file(configFile))
         throw runtime_error("Config: Could not find the config file for StorageManager");
     
     reloadInterval = boost::posix_time::seconds(60);

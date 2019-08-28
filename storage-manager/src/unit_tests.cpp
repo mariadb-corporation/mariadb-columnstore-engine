@@ -1582,6 +1582,68 @@ void bigMergeJournal1()
     assert(buf);
 }
     
+    
+// This should write an incomplete msg(s) to make sure SM does the right thing.  Not
+// done yet, handing this off to Ben.
+void shortWriteMsg()
+{
+    // copy/modified/pasted from writetask().
+    bf::path fullPath = homepath / prefix / "writetest1";
+    const char *filename = fullPath.string().c_str();
+    ::unlink(filename);
+    int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
+    assert(fd > 0);
+    scoped_closer f(fd);
+ 
+    uint8_t buf[1024];
+    sm_msg_header *hdr = (sm_msg_header *) buf;
+    write_cmd *cmd = (write_cmd *) &hdr[1];
+    uint8_t *data;
+
+    cmd->opcode = WRITE;
+    cmd->offset = 0;
+    cmd->count = 9;
+    cmd->flen = 10;
+    memcpy(&cmd->filename, filename, cmd->flen);
+    data = (uint8_t *) &cmd->filename[cmd->flen];
+    memcpy(data, "123456789", cmd->count);
+
+    hdr->type = SM_MSG_START;
+    hdr->payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
+
+    WriteTask w(clientSock, hdr->payloadLen);
+    ssize_t result = ::write(sessionSock, cmd, hdr->payloadLen);
+    assert(result==(hdr->payloadLen));
+
+    w.run();
+    
+    // verify response
+    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(*resp));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == sizeof(ssize_t));
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == 9);
+    
+    //check file contents
+    err = ::read(fd, buf, 1024);
+    assert(err == 9);
+    buf[9] = 0;
+    assert(!strcmp("123456789", (const char *) buf));
+    ::unlink(filename);
+    cout << "write task OK" << endl;
+}
+
+// write and append are the biggest vulnerabilities here b/c those msgs could be sent in multiple
+// pieces, are much larger, and thus if there is a crash mid-message it's most likely to happen 
+// during a call to write/append().
+// it may not even be possible for CS to write a partial open/stat/read/etc msg, but that should be 
+// tested as well.
+void shortMsgTests()
+{
+    shortWriteMsg();
+}
 
 int main(int argc, char* argv[])
 {
@@ -1612,6 +1674,18 @@ int main(int argc, char* argv[])
     	}
     }
 
+    if (!bf::is_regular_file("test_data/storagemanager.cnf"))
+    {
+        cerr << "This should be run in a dir where ./test_data/storagemanager.cnf exists" << endl;
+        exit(1);
+    }
+    Config *config = Config::get("test_data/storagemanager.cnf");
+    cout << "Cleaning out debris from previous runs" << endl;
+    bf::remove_all(config->getValue("ObjectStorage", "metadata_path"));
+    bf::remove_all(config->getValue("ObjectStorage", "journal_path"));
+    bf::remove_all(config->getValue("LocalStorage", "path"));
+    bf::remove_all(config->getValue("Cache", "path"));
+    
     cout << "connecting" << endl;
     makeConnection();
     cout << "connected" << endl;
@@ -1639,12 +1713,11 @@ int main(int argc, char* argv[])
     // this starts in one object and crosses into new object
     metadataJournalTest_append((7*sizeKB));
 
-
     //writetask();
     //appendtask();
     unlinktask();
     stattask();
-    truncatetask();   // currently waiting on IOC::write() to be completed.
+    truncatetask();
     listdirtask();
     pingtask();
     copytask();
@@ -1655,15 +1728,25 @@ int main(int argc, char* argv[])
     replicatorTest();
     syncTest1();
 
-    s3storageTest1();
     IOCReadTest1();
     IOCTruncate();
     IOCUnlink();
     IOCCopyFile();
+    //shortMsgTests();
     
     // For the moment, this next one just verifies no error happens as reported by the fcns called.
     // It doesn't verify the result yet.
     bigMergeJournal1();
+    
+    // skip the s3 test if s3 is not configured
+    if (config->getValue("S3", "region") != "")
+    {
+        s3storageTest1();
+    }
+    else
+        cout << "To run the S3Storage unit tests, configure the S3 section of test-data/storagemanager.cnf" 
+            << endl;
+
     
     metadataJournalTestCleanup();
 
