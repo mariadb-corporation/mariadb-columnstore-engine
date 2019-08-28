@@ -48,6 +48,8 @@ class Replicator
         
         int addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
         int newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
+        int newNullObject(const boost::filesystem::path &filename,size_t length );
+
         int remove(const boost::filesystem::path &file, Flags flags = NONE);
         
         int updateMetadata(MetadataFile &meta);

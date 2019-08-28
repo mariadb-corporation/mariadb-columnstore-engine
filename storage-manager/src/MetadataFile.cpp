@@ -295,7 +295,7 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path &fi
     if (!objects.empty())
     {
         auto &lastObject = objects.back().second;
-        addObject.offset = lastObject.get<off_t>("offset") + lastObject.get<size_t>("length");
+        addObject.offset = lastObject.get<off_t>("offset") + mpConfig->mObjectSize;
     }
     
     addObject.length = length;

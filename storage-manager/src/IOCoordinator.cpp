@@ -402,15 +402,71 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
     // there is no overlapping data, or data goes beyond end of last object
     while (dataRemaining > 0)
     {
-        off_t newObjectOffset = metadata.getMetadataNewObjectOffset();
+        off_t currentEndofData = metadata.getMetadataNewObjectOffset();
+
         // count is 0 so first write is beyond current end of file.
         // offset is > than newObject.offset so we need to adjust offset for object
         // unless offset is beyond newObject.offset + objectSize then we need to write null data to this object
-        if (count == 0 && offset > newObjectOffset)
+        if (count == 0 && offset > currentEndofData)
         {
+        	// First lets fill the last object with null data
+            objects = metadata.metadataRead(currentEndofData,1);
+            if (objects.size() == 1)
+            {
+            	// last objeect needs data
+            	metadataObject lastObject = objects[0];
+            	uint64_t nullJournalSize = (objectSize - lastObject.length);
+            	uint8_t nullData[nullJournalSize];
+            	memset(nullData,0,nullJournalSize);
+                err = replicator->addJournalEntry((firstDir/lastObject.key),nullData,lastObject.length,nullJournalSize);
+                if (err < 0)
+                {
+                    l_errno = errno;
+                    //log error and abort
+                    logger->log(LOG_ERR,"IOCoordinator::write(): Failed addJournalEntry -- NullData. Journal file likely has partially written data and incorrect metadata.");
+                    errno = l_errno;
+                    return -1;
+                }
+                else if ((uint)err < nullJournalSize)
+                {
+                    if ((err + lastObject.length) > lastObject.length)
+                        metadata.updateEntryLength(lastObject.offset, (err + lastObject.length));
+                    cache->newJournalEntry(firstDir, err+JOURNAL_ENTRY_HEADER_SIZE);
+                    synchronizer->newJournalEntry(firstDir, lastObject.key, err+JOURNAL_ENTRY_HEADER_SIZE);
+                    replicator->updateMetadata(metadata);
+                    //logger->log(LOG_ERR,"IOCoordinator::write(): addJournalEntry incomplete write, %u of %u bytes written.",count,length);
+                    return count;
+                }
+                metadata.updateEntryLength(lastObject.offset, (nullJournalSize + lastObject.length));
+                cache->newJournalEntry(firstDir, nullJournalSize+JOURNAL_ENTRY_HEADER_SIZE);
+                synchronizer->newJournalEntry(firstDir, lastObject.key, nullJournalSize+JOURNAL_ENTRY_HEADER_SIZE);
+                currentEndofData += nullJournalSize;
+                iocBytesWritten += nullJournalSize + JOURNAL_ENTRY_HEADER_SIZE;
+            }
+            // dd we need to do some full null data objects
+            while ((currentEndofData + (off_t)objectSize) <= offset)
+            {
+                metadataObject nullObject = metadata.addMetadataObject(filename,objectSize);
+                err = replicator->newNullObject((firstDir/nullObject.key),objectSize);
+                if (err < 0)
+                {
+                    //log error and abort
+                    l_errno = errno;
+                    logger->log(LOG_ERR,"IOCoordinator::write(): Failed newNullObject.");
+                    errno = l_errno;
+                    if (count == 0)   // if no data has been written yet, it's safe to return -1 here.
+                        return -1;
+                    goto out;
+                }
+                cache->newObject(firstDir, nullObject.key,objectSize);
+                newObjectKeys.push_back(nullObject.key);
+                iocBytesWritten += objectSize;
+                currentEndofData += objectSize;
+            }
+
             //this is starting beyond last object in metadata
             //figure out if the offset is in this object
-            objectOffset = offset - newObjectOffset;
+            objectOffset = offset - currentEndofData;
             writeLength = min((objectSize - objectOffset),dataRemaining);
         }
         else
@@ -423,9 +479,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
         // objectOffset is 0 unless the write starts beyond the end of data
         // in that case need to add the null data to cachespace
         //cache->makeSpace(writeLength + objectOffset);
-
         metadataObject newObject = metadata.addMetadataObject(filename,(writeLength + objectOffset));
-
         // send to replicator
         err = replicator->newObject((firstDir/newObject.key),&data[count],objectOffset,writeLength);
         //assert((uint) err == writeLength);
