@@ -6,6 +6,9 @@
 # ‘LocalStorage’ will use a directory on the local filesystem as if it 
 # were cloud storage.  ‘S3’ is the module that uses real cloud storage.
 # Both modules have their own sections below.
+#
+# Note, changing this after running postConfigure will leave you with an
+# an inconsistent view of the data.
 service = LocalStorage
 
 # object_size is a tuneable value, but also implies a maximum capacity.
@@ -24,6 +27,10 @@ service = LocalStorage
 # Another limitation to consider is the get/put rate imposed by your
 # cloud provider.  If that is the limitation, increasing object_size
 # will result in higher transfer rates.
+#
+# object_size should not be changed after you have run postConfigure.
+# Things may fail that normally wouldn't.  This is a temporary limitation which
+# will be addressed in later versions.
 object_size = 5M
 
 # metadata_path is where SM will put its metadata.  From the caller's
@@ -66,7 +73,8 @@ common_prefix_depth = 4
 [S3]
 # These should be self-explanatory.  Region can be blank or commented
 # if using a private cloud storage system.  Bucket has to be set to 
-# something though.
+# something though.  Obviously, do not change these after running
+# postConfigure, or SM will not be able to find your data.
 region = some_region
 bucket = some_bucket
 
