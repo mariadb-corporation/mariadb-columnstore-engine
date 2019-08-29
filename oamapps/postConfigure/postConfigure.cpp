@@ -5342,33 +5342,29 @@ bool storageSetup(bool amazonInstall)
 
     if ( DBRootStorageType == "DataRedundancy" )
         storageType = "3";
-
-    if ( DBRootStorageType == "hdfs" )
-        storageType = "4";
         
     if (DBRootStorageType == "storagemanager")
-        storageType = "5";
+        storageType = "4";
 
     cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
 
     cout << "Columnstore supports the following storage options..." << endl;
-    cout << "  1 - internal.  This uses the linux VFS to access files and does " << endl <<
-        "not manage the filesystem." << endl;
-    cout << "  2 - external *.  If you have other mountable filesystems you would " << endl <<
-        " like ColumnStore to use & manage, select this option." << endl;
-    cout << "  3 - GlusterFS *  (NOTE: glusterd service must be running and enabled on all PMs.)" << endl;
-    cout << "  4 - HDFS *" << endl;
-    cout << "  5 - Storage Manager*" << endl;
-    cout << "* - This option enables data replication and server failover in a multi-node" << endl <<
-        "    configuration." << endl;
+    cout << "  1 - internal.  This uses the linux VFS to access files and does" << endl <<
+            "      not manage the filesystem." << endl;
+    cout << "  2 - external *.  If you have other mountable filesystems you would" << endl <<
+            "      like ColumnStore to use & manage, select this option." << endl;
+    cout << "  3 - GlusterFS *  Note: glusterd service must be running and enabled on" << endl <<
+            "      all PMs." << endl;
+    cout << "  4 - S3-compatible cloud storage *.  Note: that should be configured" << endl <<
+            "      before running postConfigure (see storagemanager.cnf)" << endl;
+    cout << "  * - This option enables data replication and server failover in a" << endl <<
+            "      multi-node configuration." << endl;
     
     cout << endl << "These options are available on this system: [1, 2";
     if (glusterInstalled == "y" && singleServerInstall != "1")
         cout << ", 3";
-    if (hadoopInstalled == "y")
-        cout << ", 4";
     if (storageManagerInstalled)
-        cout << ", 5";
+        cout << ", 4";
     cout << "]" << endl;
     
     prompt = "Select the type of data storage (" + storageType + ") > ";
@@ -5434,8 +5430,7 @@ bool storageSetup(bool amazonInstall)
 
         if ((storageType == "1" || storageType == "2")   // these are always valid options
           || (glusterInstalled == "y" && singleServerInstall != "1" && storageType == "3")    // allow gluster if installed
-          || (hadoopInstalled == "y" && storageType == "4")   // allow HDFS if installed
-          || (storageManagerInstalled && storageType == "5")   // allow storagemanager if installed
+          || (storageManagerInstalled && storageType == "4")   // allow storagemanager if installed
           )
             break;
             
@@ -5553,12 +5548,7 @@ bool storageSetup(bool amazonInstall)
             break;
         }
 
-        case (4):
-        {
-            DBRootStorageType = "hdfs";
-            break;
-        }
-        case 5:
+        case 4:
             DBRootStorageType = "storagemanager";
             break;
     }
@@ -5783,6 +5773,8 @@ bool storageSetup(bool amazonInstall)
     }
 
     // if hadoop / hdfs
+    #if 0
+    We are not supporting HDFS anymore.  Leaving this here for future use.
     if ( storageType == "4" )
     {
         hdfs = true;
@@ -5903,7 +5895,8 @@ bool storageSetup(bool amazonInstall)
             return false;
         }
     }
-    else if (storageType == "5")
+    #endif
+    if (storageType == "4")
     {
         hdfs = false;
         sysConfig->setConfig("StorageManager", "Enabled", "Y");
