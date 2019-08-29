@@ -83,6 +83,7 @@ target_link_libraries(StorageManager storagemanager)
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
