@@ -477,6 +477,17 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
         colSet.insert(key);
     }
 
+    // MCOL-3435 We haven't yet checked for aggregate, but we need to know
+    bool hasAggregation = false;
+    for (uint64_t i = 0; i < jobInfo.deliveredCols.size(); i++)
+    {
+        if (dynamic_cast<AggregateColumn*>(jobInfo.deliveredCols[i].get()) != NULL)
+        {
+            hasAggregation = true;
+            break;
+        }
+    }
+
     // add non-duplicate auxiliary columns
     RetColsVector colsInAf;
 
@@ -499,10 +510,17 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
             if (colSet.find(key) == colSet.end())
             {
                 jobInfo.deliveredCols.push_back(*j);
-// MCOL-3343 Enable this if we decide to allow Window Functions to run with
-// aggregates with no group by. MariaDB allows this. Nobody else in the world does.
-// There will be more work to get it to function if we try this.                
-//                jobInfo.windowSet.insert(getTupleKey(jobInfo, *j, true));
+                // MCOL-3435 Allow Window Functions to run with aggregates with 
+                // no group by by inserting a group by for window parameters.
+                if (hasAggregation)
+                {
+                    uint32_t tupleKey = getTupleKey(jobInfo, *j, true);
+                    if (find(jobInfo.groupByColVec.begin(), jobInfo.groupByColVec.end(), tupleKey) 
+                         == jobInfo.groupByColVec.end())
+                    {
+                        jobInfo.groupByColVec.push_back(tupleKey);
+                    }
+                }
             }
 
             colSet.insert(key);

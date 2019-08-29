@@ -1525,7 +1525,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
     // bug4531, window function support
     WindowFunctionStep::checkWindowFunction(csep, jobInfo);
 
-    // bug3391, move forward the aggregation check for no aggregte having clause.
+    // bug3391, move forward the aggregation check for no aggregate having clause.
     checkAggregation(csep, jobInfo);
 
     // include filters in having clause, if any.
