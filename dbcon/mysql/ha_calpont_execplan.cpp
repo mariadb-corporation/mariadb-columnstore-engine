@@ -7865,8 +7865,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         }
 
         // We don't currently support limit with correlated subquery
-        if (csep->limitNum() != (uint64_t) - 1 &&
-                gwi.subQuery && !gwi.correlatedTbNameVec.empty())
+        if (gwi.subQuery && !gwi.correlatedTbNameVec.empty() && csep->hasOrderBy())
         {
             gwi.fatalParseError = true;
             gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
