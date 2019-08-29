@@ -1,7 +1,17 @@
+# This is the configuration file for StorageManager (SM)
+
 [ObjectStorage]
+# 'service' is the module that SM will use for cloud IO.  
+# Current options are “LocalStorage” and “S3”.
+# ‘LocalStorage’ will use a directory on the local filesystem as if it 
+# were cloud storage.  ‘S3’ is the module that uses real cloud storage.
+# Both modules have their own sections below.
+#
+# Note, changing this after running postConfigure will leave you with an
+# an inconsistent view of the data.
 service = LocalStorage
 
-# This is a tuneable value, but also implies a maximum capacity.
+# object_size is a tuneable value, but also implies a maximum capacity.
 # Each file managed by StorageManager is broken into chunks of
 # object_size bytes.  Each chunk is stored in the cache as a file,
 # so the filesystem the cache is put on needs to have enough inodes to
@@ -10,61 +20,110 @@ service = LocalStorage
 # Regarding tuning, object stores do not support modifying stored data;
 # entire objects must be replaced on modification, and entire
 # objects are fetched on read.  An access pattern that includes
-# frequently accessing small amounts of data will benefit from 
+# frequently accessing small amounts of data may benefit from 
 # a smaller object_size.  An access pattern where data
-# is accessed in large chunks will benefit from a larger object_size.
+# is accessed in large chunks may benefit from a larger object_size.
 #
-# Another limitation to consider is the get/put rate imposed by the
+# Another limitation to consider is the get/put rate imposed by your
 # cloud provider.  If that is the limitation, increasing object_size
 # will result in higher transfer rates.
+#
+# object_size should not be changed after you have run postConfigure.
+# Things may fail that normally wouldn't.  This is a temporary limitation which
+# will be addressed in later versions.
 object_size = 5M
 
+# metadata_path is where SM will put its metadata.  From the caller's
+# perspective, each file will be represented by a metadata file in this
+# path.  A metadata file is a small json document enumerating the objects
+# that compose the file.
 metadata_path = ${HOME}/storagemanager/metadata
+
+# journal_path is where SM will store deltas to apply to objects.
+# If an existing object is modified, that modification (aka delta) will
+# be written to a journal file corresponding to that object.  Periodically,
+# those deltas will be merged with the object they apply to, resulting
+# in a new object.
 journal_path = ${HOME}/storagemanager/journal
+
+# max_concurrent_downloads is what is sounds like, per node.
+# This is not a global setting.
 max_concurrent_downloads = 20
+ 
+# max_concurrent_uploads is what is sounds like, per node.
+# This is not a global setting.
 max_concurrent_uploads = 20
 
-# This is the depth of the common prefix that all files managed by SM have
-# Ex: /usr/local/mariadb/columnstore/data1, and 
+# common_prefix_depth is the depth of the common prefix that all files 
+# managed by SM have.  Ex: /usr/local/mariadb/columnstore/data1, and 
 # /usr/local/mariadb/columnstore/data2 differ at the 5th directory element,
-# so they have a common prefix depth of 4.
+# so they have a common prefix depth of 4.  For Columnstore, it should 
+# be set to the number of directories that precede the data* directories.
+# The default value of 4 will work with package installations and installations
+# to a user's home directory, where data* would be in 
+# /home/user/mariadb/columnstore
 #
 # This value is used to manage the ownership of prefixes between
-# StorageManager instances that sharing a filesystem.
-# 
-# -1 is a special value indicating that there is no filesystem shared
-# between SM instances.
+# StorageManager instances that share a filesystem.  For example,
+# if you have SM data stored on a distributed filesystem for fault-tolerance
+# reasons, and all nodes have it mounted, SM instances will be able to 
+# negotiate ownership of data from a failed instance. 
 common_prefix_depth = 4
 
 [S3]
+# These should be self-explanatory.  Region can be blank or commented
+# if using a private cloud storage system.  Bucket has to be set to 
+# something though.  Obviously, do not change these after running
+# postConfigure, or SM will not be able to find your data.
 region = some_region
 bucket = some_bucket
 
 # Specify the endpoint to connect to if using an S3 compatible object
 # store like Google Cloud Storage or IBM's Cleversafe.
-# endpoint = <optional endpoint to use>
+# endpoint = storage.googleapis.com
 
-# optional prefix for objects; using this will hurt performance
+# For the best performance do not specify a prefix.  It may be useful,
+# however, if you must use a bucket with other data in it.  Because
+# of the way object stores route data and requests, keep the
+# prefix as short as possible for performance reasons.
 # prefix = cs/
 
-# Keys for S3 can also be set through the environment vars
-# AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
-# StorageManager will prioritize these config values over envvars.
+# Put your HMAC access keys here.  Keys can also be set through the 
+# environment vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+# If set, SM will use these values and ignore the envvars.
 # aws_access_key_id =
 # aws_secret_access_key = 
 
+
+# The LocalStorage section configures the 'local storage' module
+# if specified by ObjectStorage/service.
 [LocalStorage]
+
+# path specifies where the module should store object data.
 path = ${HOME}/storagemanager/fake-cloud
 
 # introduce latency to fake-cloud operations.  Useful for debugging.
 fake_latency = n
 
-# values are randomized between 1 and max_latency in microseconds.
-# values between 30000-50000 roughly simulate observed latency of S3
-# access from an EC2 node.
+# max_latency specifies how much latency should be added to fake-cloud
+# ops.  Values are randomized between 1 and max_latency in microseconds.
 max_latency = 50000
 
 [Cache]
+
+# cache_size can be specified in terms of tera-, giga-, mega-, kilo-
+# bytes using T/t G/g M/m K/k.  Drive manufacturers use a power-of-10 
+# notion of what that means, which means 1m = 1,000,000 bytes.  These 
+# settings use the programmer's power-of-2 notion, which means 
+# 1m = 1,048,576 bytes. 
+#
+# This number will include space used by journal files, but does not
+# include space used by metadata files.  In this version, journal data 
+# currently being written and downloads in progress are also not accounted 
+# for, so disk usage can temporarily go above this number.  You will want to 
+# leave a little space available on the mount for those operations.
 cache_size = 2g
+
+# Cache/path is where cached objects get stored.
 path = ${HOME}/storagemanager/cache
 
