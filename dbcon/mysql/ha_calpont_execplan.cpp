@@ -8702,8 +8702,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     if ((gwi.subQuery /*|| select_lex.group_list.elements != 0 */ ||
                             !csep->unionVec().empty() || isUnion) &&
                             !hasNonSupportItem && (after_size - before_size) == 0 &&
-                            !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT) &&
-                            string(ifp->func_name()) != "set_user_var")
+                            !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT)
+                       )
                     {
                         String val, *str = ifp->val_str(&val);
                         string valStr;
