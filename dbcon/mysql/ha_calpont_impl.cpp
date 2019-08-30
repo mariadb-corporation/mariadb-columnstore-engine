@@ -5319,52 +5319,55 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
     sm::tableid_t tableid= execplan::IDB_VTABLE_ID;
     sm::cpsm_conhdl_t* hndl= ci->cal_conn_hndl;
 
-    if (ti.tpl_ctx == 0)
+    if (!ti.tpl_ctx || !ti.tpl_scan_ctx || (hndl && hndl->queryState == sm::NO_QUERY))
     {
-        ti.tpl_ctx = new sm::cpsm_tplh_t();
-        ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
-    }
-
-    // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
-    // call rnd_init for a table more than once.
-    ti.tpl_scan_ctx->rowGroup = NULL;
-
-    try
-    {
-        sm::tpl_open(tableid, ti.tpl_ctx, hndl);
-        sm::tpl_scan_open(tableid, ti.tpl_scan_ctx, hndl);
-    }
-    catch (std::exception& e)
-    {
-        uint32_t sessionID = tid2sid(thd->thread_id);
-        string emsg = "table can not be opened: " + string(e.what());
-        setError(thd, ER_INTERNAL_ERROR, emsg);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-        goto internal_error;
-    }
-    catch (...)
-    {
-        uint32_t sessionID = tid2sid(thd->thread_id);
-        string emsg = "table can not be opened";
-        setError(thd, ER_INTERNAL_ERROR, emsg);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-        goto internal_error;
-    }
-
-    ti.tpl_scan_ctx->traceFlags = ci->traceFlags;
-
-    if ((ti.tpl_scan_ctx->ctp).size() == 0)
-    {
-        uint32_t num_attr = table->s->fields;
-
-        for (uint32_t i = 0; i < num_attr; i++)
+        if (ti.tpl_ctx == 0)
         {
-            CalpontSystemCatalog::ColType ctype;
-            ti.tpl_scan_ctx->ctp.push_back(ctype);
+            ti.tpl_ctx = new sm::cpsm_tplh_t();
+            ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
         }
+
+        // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
+        // call rnd_init for a table more than once.
+        ti.tpl_scan_ctx->rowGroup = NULL;
+
+        try
+        {
+            sm::tpl_open(tableid, ti.tpl_ctx, hndl);
+            sm::tpl_scan_open(tableid, ti.tpl_scan_ctx, hndl);
+        }
+        catch (std::exception& e)
+        {
+            uint32_t sessionID = tid2sid(thd->thread_id);
+            string emsg = "table can not be opened: " + string(e.what());
+            setError(thd, ER_INTERNAL_ERROR, emsg);
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto internal_error;
+        }
+        catch (...)
+        {
+            uint32_t sessionID = tid2sid(thd->thread_id);
+            string emsg = "table can not be opened";
+            setError(thd, ER_INTERNAL_ERROR, emsg);
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto internal_error;
+        }
+
+        ti.tpl_scan_ctx->traceFlags = ci->traceFlags;
+
+        if ((ti.tpl_scan_ctx->ctp).size() == 0)
+        {
+            uint32_t num_attr = table->s->fields;
+
+            for (uint32_t i = 0; i < num_attr; i++)
+            {
+                CalpontSystemCatalog::ColType ctype;
+                ti.tpl_scan_ctx->ctp.push_back(ctype);
+            }
+        }
+        ci->tableMap[table] = ti;
+        hndl->queryState= sm::QUERY_IN_PROCESS;
     }
-    ci->tableMap[table] = ti;
-    hndl->queryState= sm::QUERY_IN_PROCESS;
 
     if (!ti.tpl_ctx || !ti.tpl_scan_ctx)
     {
