@@ -7842,26 +7842,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 }
             }
 
-            // relate to bug4848. let mysql drive limit when limit session variable set.
-            // do not set in csep. @bug5096. ignore session limit setting for dml
-            if (gwi.thd->variables.select_limit == (uint64_t) - 1 &&
-                !csep->hasOrderBy())
-            {
-                csep->limitStart(limitOffset);
-                csep->limitNum(limitNum);
-            }
-            // Pushdown queries w ORDER BY and LIMIT
-            else if (isPushdownHand && csep->hasOrderBy())
-            {
-                csep->limitStart(limitOffset);
-                csep->limitNum(limitNum);
-            }
+            csep->limitStart(limitOffset);
+            csep->limitNum(limitNum);
         }
-        // Pushdown queries with ORDER BY w/o explicit limit
-        else if (isPushdownHand && csep->hasOrderBy())
+        // If an explicit limit is not specified, use the system variable value
+        else
         {
-            // We must set this to activate LimitedOrderBy in ExeMgr
-            csep->limitNum((uint64_t) - 2);
+            csep->limitNum(gwi.thd->variables.select_limit);
         }
 
         // We don't currently support limit with correlated subquery
