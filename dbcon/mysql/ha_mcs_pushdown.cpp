@@ -267,6 +267,57 @@ void check_walk(const Item* item, void* arg)
     }
 }
 
+/*@brief  check_user_var_func - This traverses Item        */
+/************************************************************
+* DESCRIPTION:
+* This f() walks Item looking for the existence of
+* "set_user_var" or "get_user_var" functions.
+* PARAMETERS:
+*    Item * Item to traverse
+* RETURN:
+***********************************************************/
+void check_user_var_func(const Item* item, void* arg)
+{
+    bool* unsupported_feature  = reinterpret_cast<bool*>(arg);
+
+    if (*unsupported_feature)
+        return;
+
+    if (item->type() == Item::FUNC_ITEM)
+    {
+        const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
+        std::string funcName = ifp->func_name();
+        if (funcName == "set_user_var" || funcName == "get_user_var")
+        {
+            *unsupported_feature = true;
+        }
+    }
+}
+
+void item_check(Item* item, bool* unsupported_feature)
+{
+    switch (item->type())
+    {
+        case Item::COND_ITEM:
+        {
+            Item_cond *icp = reinterpret_cast<Item_cond*>(item);
+            icp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+            break;
+        }
+        case Item::FUNC_ITEM:
+        {
+            Item_func *ifp = reinterpret_cast<Item_func*>(item);
+            ifp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+            break;
+        }
+        default:
+        {
+            item->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+            break;
+        }
+    }
+}
+
 /*@brief  create_calpont_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
@@ -343,6 +394,19 @@ create_calpont_group_by_handler(THD* thd, Query* query)
                 if (unsupported_feature == false && icp)
                 {
                     icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+                }
+            }
+
+            // Iterate and traverse through the item list and do not create GBH
+            // if the unsupported (set/get_user_var) functions are present.
+            List_iterator_fast<Item> it(select_lex->item_list);
+            Item* item;
+            while ((item = it++))
+            {
+                item_check(item, &unsupported_feature);
+                if (unsupported_feature)
+                {
+                    return handler;
                 }
             }
         } // unsupported features check ends here
@@ -437,6 +501,19 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
             on_icp= reinterpret_cast<Item_cond*>(tl->on_expr);
             on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+        }
+
+        // Iterate and traverse through the item list and do not create DH
+        // if the unsupported (set/get_user_var) functions are present.
+        List_iterator_fast<Item> it(tl->select_lex->item_list);
+        Item* item;
+        while ((item = it++))
+        {
+            item_check(item, &unsupported_feature);
+            if (unsupported_feature)
+            {
+                return handler;
+            }
         }
     }
 
@@ -670,6 +747,23 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         {
             unsupported_feature = true;
             restore_optimizer_flags(thd);
+        }
+    }
+
+    // Iterate and traverse through the item list and do not create SH
+    // if the unsupported (set/get_user_var) functions are present.
+    TABLE_LIST* table_ptr = select_lex->get_table_list();
+    for (; !unsupported_feature && table_ptr; table_ptr = table_ptr->next_global)
+    {
+        List_iterator_fast<Item> it(table_ptr->select_lex->item_list);
+        Item* item;
+        while ((item = it++))
+        {
+            item_check(item, &unsupported_feature);
+            if (unsupported_feature)
+            {
+                break;
+            }
         }
     }
 
