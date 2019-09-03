@@ -82,20 +82,30 @@ add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 11)
 
-add_custom_command(
-	TARGET StorageManager PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory
-		${CMAKE_CURRENT_BINARY_DIR}/storage-manager/test_data)
-add_custom_command(
-	TARGET StorageManager POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/storage-manager/test_data
-		${CMAKE_CURRENT_BINARY_DIR}/storage-manager/test_data)
+set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-add_dependencies(unit_tests test_files)
 target_link_libraries(unit_tests storagemanager)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
+
+add_custom_command(
+	TARGET unit_tests PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory
+		${CMAKE_CURRENT_BINARY_DIR}/test_data
+)
+add_custom_command(
+	TARGET unit_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/test_data
+		        ${CMAKE_CURRENT_BINARY_DIR}/test_data
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#                ../bin/unit_tests      # what is putting our bins in ../bin?
+#                ${CMAKE_CURRENT_BINARY_DIR} 
+)
 
 # The includes and lib linkages required to link against cloudio ... 
 # pretty crazy.  When lib dependencies are eventually config'd right,

@@ -65,7 +65,9 @@ bool ReadTask::run()
     
     // read from IOC, write to the socket
     vector<uint8_t> outbuf;
-    outbuf.resize(max(cmd->count, 4) + sizeof(sm_response));
+    if (cmd->count > (100 << 20))
+        cmd->count = (100 << 20);   // cap a read request at 100MB
+    outbuf.resize(max(cmd->count, 4) + sizeof(sm_response));  
     sm_response *resp = (sm_response *) &outbuf[0];
     
     resp->returnCode = 0;
