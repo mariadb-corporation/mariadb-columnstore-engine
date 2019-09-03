@@ -59,12 +59,12 @@ ExternalProject_Add(ms3
     CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_BINARY_DIR} ${S3_CONFIGURE_OPT}
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
-    INSTALL_DIR ${INSTALL_ENGINE}
     EXCLUDE_FROM_ALL TRUE
 )
 
-#add_library(marias3 SHARED IMPORTED)
-#set_property(TARGET marias3 PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.0.2)
+add_library(marias3 SHARED IMPORTED)
+set_target_properties(marias3 PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2)
+add_dependencies(marias3 ms3)
 
 set(S3API_DEPS marias3 curl xml2)
 
@@ -74,8 +74,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
-add_dependencies(storagemanager ms3)
+target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS} ${JEMALLOC_LIBRARIES})
 set_property(TARGET storagemanager PROPERTY CXX_STANDARD 11)
 
 add_executable(StorageManager src/main.cpp)
@@ -93,15 +92,15 @@ set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
 add_custom_command(
-	TARGET unit_tests PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory
-		${CMAKE_CURRENT_BINARY_DIR}/test_data
+    TARGET unit_tests PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_CURRENT_BINARY_DIR}/test_data
 )
 add_custom_command(
-	TARGET unit_tests POST_BUILD
+    TARGET unit_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${CMAKE_CURRENT_SOURCE_DIR}/test_data
-		        ${CMAKE_CURRENT_BINARY_DIR}/test_data
+                ${CMAKE_CURRENT_BINARY_DIR}/test_data
 #        COMMAND ${CMAKE_COMMAND} -E copy
 #                ../bin/unit_tests      # what is putting our bins in ../bin?
 #                ${CMAKE_CURRENT_BINARY_DIR} 
@@ -139,16 +138,20 @@ target_link_libraries(smrm storagemanager cloudio
     ${MARIADB_CLIENT_LIBS}
 )
 
-install(TARGETS StorageManager smcat smput smls smrm storagemanager
-    RUNTIME DESTINATION ${INSTALL_ENGINE}/bin
+install(TARGETS storagemanager
     LIBRARY DESTINATION ${INSTALL_ENGINE}/lib
     COMPONENT platform
 )
 
-install(FILES 
-        ${CMAKE_BINARY_DIR}/lib/libmarias3.so
-        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
-        ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
+install(TARGETS StorageManager smcat smput smls smrm
+    RUNTIME DESTINATION ${INSTALL_ENGINE}/bin
+    COMPONENT platform
+)
+
+install(PROGRAMS
+    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
+    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
+    ${CMAKE_BINARY_DIR}/lib/libmarias3.so
     DESTINATION ${INSTALL_ENGINE}/lib
     COMPONENT platform
 )
