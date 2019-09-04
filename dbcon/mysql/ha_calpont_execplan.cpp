@@ -7723,9 +7723,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                         }
                         else if (ord_item->type() == Item::SUBSELECT_ITEM)
                         {
-                            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-                            return ER_CHECK_NOT_IMPLEMENTED;
                         }
                         else
                         {
@@ -7766,7 +7763,20 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         // non-MAIN union branch
         if (unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
         {
-            if (select_lex.master_unit()->global_parameters()->explicit_limit)
+            /* Consider the following query:
+               "select a from t1 where exists (select b from t2 where a=b);"
+               CS first builds a hash table for t2, then pushes down the hash to
+               PrimProc for a distributed hash join execution, with t1 being the
+               large-side table. However, the server applies an optimization in
+               Item_exists_subselect::fix_length_and_dec in sql/item_subselect.cc
+               (see server commit ae476868a5394041a00e75a29c7d45917e8dfae8)
+               where it sets explicit_limit to true, which causes csep->limitNum set to 1.
+               This causes the hash table for t2 to only contain a single record for the
+               hash join, giving less number of rows in the output result set than expected.
+               We therefore do not allow limit set to 1 here for such queries.
+            */
+            if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS &&
+                select_lex.master_unit()->global_parameters()->explicit_limit)
             {
                 if (select_lex.master_unit()->global_parameters()->offset_limit)
                 {
@@ -7779,7 +7789,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
                     csep->limitNum(select->val_int());
                 }
-
             }
         }
         // union with explicit select at the top level
@@ -7815,7 +7824,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     limitOffset = join->select_lex->offset_limit->val_int();
                     limitNum = join->select_lex->select_limit->val_int();
                 }
-
                 else if (join->unit)
                 {
                     limitOffset = join->unit->offset_limit_cnt;
