@@ -35,7 +35,7 @@ SMLogging::SMLogging()
 {
     //TODO: make this configurable
     setlogmask (LOG_UPTO (LOG_DEBUG));
-    openlog ("StorageManager", LOG_PID | LOG_NDELAY, LOG_LOCAL2);
+    openlog ("StorageManager", LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 }
 
 SMLogging::~SMLogging()
