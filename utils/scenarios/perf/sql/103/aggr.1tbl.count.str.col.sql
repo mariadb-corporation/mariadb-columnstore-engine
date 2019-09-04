@@ -1,1 +1,0 @@
-Select count(l_linestatus) from lineitem where l_orderkey < 1000000;

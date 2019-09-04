@@ -872,7 +872,7 @@ int main(int argc, char* argv[])
         {
             // check if mysql is supported and get info
             string logFile =  tmpDir + "/idbmysql.log";
-            string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root ";
+            string columnstoreMysql = installDir + "/mysql/bin/mysql -u root ";
             string cmd = columnstoreMysql + " -e 'status' > " + logFile + " 2>&1";
             system(cmd.c_str());
 
@@ -886,8 +886,8 @@ int main(int argc, char* argv[])
                 //needs a password, was password entered on command line
                 if ( mysqlpw == " " )
                 {
-                    //go check my.cnf
-                    string file = installDir + "/mysql/my.cnf";
+                    //go check columnstore.cnf
+                    string file = "/etc/my.cnf.d/columnstore.cnf";
                     ifstream oldFile (file.c_str());
 
                     vector <string> lines;
@@ -909,8 +909,8 @@ int main(int argc, char* argv[])
 
                                 if (pos == string::npos)
                                 {
-                                    //password arg in my.cnf, go get password
-                                    cout << "NOTE: Using password from my.cnf" << endl;
+                                    //password arg in columnstore.cnf, go get password
+                                    cout << "NOTE: Using password from columnstore.cnf" << endl;
                                     mysqlpw = buf.substr(pos1 + 1, 80);
                                     cout << mysqlpw << endl;
                                     break;
@@ -923,7 +923,7 @@ int main(int argc, char* argv[])
 
                     if ( mysqlpw == " " )
                     {
-                        cout << "NOTE: No password provide on command line or found uncommented in my.cnf" << endl;
+                        cout << "NOTE: No password provide on command line or found uncommented in columnstore.cnf" << endl;
                         cout << endl;
                         string prompt = " *** Enter MariaDB Columnstore password > ";
                         mysqlpw = getpass(prompt.c_str());
@@ -946,7 +946,7 @@ int main(int argc, char* argv[])
             if (!FAILED)
             {
                 // check if mysql is supported and get info
-                string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt;
+                string columnstoreMysql = installDir + "/mysql/bin/mysql -u root " + pwprompt;
                 string cmd = columnstoreMysql + " -V > /dev/null 2>&1";
                 int ret = system(cmd.c_str());
 
@@ -1047,11 +1047,11 @@ int main(int argc, char* argv[])
         system("echo ' ' >> columnstoreSupportReport.txt");
         system("echo '******************** DBMS Columnstore config file ********************' >> columnstoreSupportReport.txt");
         system("echo ' ' >> columnstoreSupportReport.txt");
-        string cmd = "echo '################# cat /mysql/my.cnf ################# ' >> columnstoreSupportReport.txt";
+        string cmd = "echo '################# cat /etc/my.cnf.d/columnstore.cnf ################# ' >> columnstoreSupportReport.txt";
         system(cmd.c_str());
         cmd = "echo ' ' >> columnstoreSupportReport.txt";
         system(cmd.c_str());
-        cmd = "cat " + installDir + "/mysql/my.cnf 2>/dev/null >> columnstoreSupportReport.txt";
+        cmd = "cat /etc/my.cnf.d/columnstore.cnf 2>/dev/null >> columnstoreSupportReport.txt";
         system(cmd.c_str());
 
         system("echo ' ' >> columnstoreSupportReport.txt");

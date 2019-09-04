@@ -57,7 +57,6 @@ EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -80,7 +79,6 @@ EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -96,7 +94,6 @@ EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -112,7 +109,6 @@ EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 

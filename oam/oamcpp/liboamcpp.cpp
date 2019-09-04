@@ -9206,7 +9206,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
 ******************************************************************************************/
 bool Oam::changeMyCnf( std::string paramater, std::string value )
 {
-    string mycnfFile = startup::StartUp::installDir() + "/mysql/my.cnf";
+    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
     ifstream file (mycnfFile.c_str());
 
     if (!file)

@@ -762,16 +762,16 @@ int main(int argc, char* argv[])
     catch (...)
     {}
 
-    // run my.cnf upgrade script
+    // run columnstore.cnf upgrade script
     if ( reuseConfig == "y" )
     {
         cmd = installDir + "/bin/mycnfUpgrade  > " + tmpDir + "/mycnfUpgrade.log 2>&1";
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
-            cout << "Error: Problem upgrade my.cnf, check " << tmpDir << "/mycnfUpgrade.log" << endl;
+            cout << "Error: Problem upgrade columnstore.cnf, check " << tmpDir << "/mycnfUpgrade.log" << endl;
         else
-            cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
+            cout << "NOTE: columnstore.cnf file was upgraded based on columnstore.cnf.rpmsave" << endl;
     }
 
     //check mysql port changes

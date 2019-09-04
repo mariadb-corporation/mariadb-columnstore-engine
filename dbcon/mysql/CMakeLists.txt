@@ -87,10 +87,12 @@ install(FILES syscatalog_mysql.sql
               calremoveuserpriority.sql 
               calshowprocesslist.sql 
               columnstore_info.sql
-              my.cnf
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
+
+install(FILES columnstore.cnf
+        DESTINATION /etc/my.cnf.d COMPONENT storage-engine)
 
 
 #AM_CPPFLAGS = $(idb_common_includes) $(idb_cppflags)
