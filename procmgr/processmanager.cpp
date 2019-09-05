@@ -25,6 +25,7 @@
 #include <cassert>
 
 #include "columnstoreversion.h"
+#include "config.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"
@@ -8778,7 +8779,7 @@ void ProcessManager::clearNICAlarms(std::string hostName)
 ******************************************************************************************/
 bool ProcessManager::updateExtentMap()
 {
-    string fileName = startup::StartUp::installDir() + "/etc/Columnstore.xml";
+    string fileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
 
     ifstream oldFile (fileName.c_str());
 
@@ -9018,7 +9019,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 
     log.writeLog(__LINE__, "distributeConfigFile called for " + name + " file = " + file, LOG_TYPE_DEBUG);
 
-    string dirName = startup::StartUp::installDir() + "/etc/";
+    string dirName = std::string(MCSSYSCONFDIR) + "/columnstore/";
     string fileName = dirName + file;
 
     ifstream in (fileName.c_str());
@@ -10204,7 +10205,7 @@ int ProcessManager::OAMParentModuleChange()
                             else
                             {
                                 // update the Columnstore.xml with the new IP Address
-                                string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  startup::StartUp::installDir() + "/etc/Columnstore.xml";
+                                string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  MCSSYSCONFDIR + "/columnstore/Columnstore.xml";
                                 system(cmd.c_str());
 
                                 // get parent hotsname and IP address in case it changed

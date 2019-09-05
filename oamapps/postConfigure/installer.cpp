@@ -47,6 +47,7 @@
 #include <netdb.h>
 #include <sys/sysinfo.h>
 
+#include "config.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 
@@ -202,9 +203,9 @@ int main(int argc, char* argv[])
     //copy Columnstore.xml.rpmsave if upgrade option is selected
     if ( installType == "upgrade" )
     {
-        cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.new 2>&1";
+        cmd = "/bin/cp -f " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.new 2>&1";
         system(cmd.c_str());
-        cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.rpmsave " + installDir + "/etc/Columnstore.xml 2>&1";
+        cmd = "/bin/cp -f " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml 2>&1";
         system(cmd.c_str());
     }
 
@@ -1157,7 +1158,7 @@ bool updateProcessConfig(int serverTypeInstall)
         }
     }
 
-    string fileName = installDir + "/etc/ProcessConfig.xml";
+    string fileName = std::string(MCSSYSCONFDIR) + "/columnstore/ProcessConfig.xml";
 
     //Save a copy of the original version
     cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
@@ -1351,7 +1352,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
  */
 bool uncommentCalpontXml( string entry)
 {
-    string fileName = installDir + "/etc/Columnstore.xml";
+    string fileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
 
     ifstream oldFile (fileName.c_str());
 

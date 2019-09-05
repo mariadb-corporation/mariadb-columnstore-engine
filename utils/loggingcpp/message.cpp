@@ -34,6 +34,7 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 #include "messageobj.h"
@@ -56,7 +57,7 @@ void loadCatalog()
     string configFile(cf->getConfig("MessageLog", "MessageLogFile"));
 
     if (configFile.length() == 0)
-        configFile = startup::StartUp::installDir() + "/etc/MessageFile.txt";
+        configFile = std::string(MCSSYSCONFDIR) + "/columnstore/MessageFile.txt";
 
     ifstream msgFile(configFile.c_str());
 

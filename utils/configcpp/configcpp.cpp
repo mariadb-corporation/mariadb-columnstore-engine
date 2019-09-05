@@ -107,7 +107,7 @@ Config* Config::makeConfig(const char* cf)
             if (defaultFilePath.empty())
             {
                 fs::path configFilePath;
-                configFilePath = fs::path(installDir) / fs::path("etc") / defaultCalpontConfigFile;
+                configFilePath = fs::path(MCSSYSCONFDIR) / fs::path("columnstore") / defaultCalpontConfigFile;
                 defaultFilePath = configFilePath.string();
             }
 
@@ -383,7 +383,7 @@ void Config::writeConfig(const string& configFile) const
     const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
     const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
 
-    fs::path etcdir = fs::path(fInstallDir) / fs::path("etc");
+    fs::path etcdir = fs::path(MCSSYSCONFDIR) / fs::path("columnstore");
 
     fs::path dcf = etcdir / fs::path(defaultCalpontConfigFile);
     fs::path dcft = etcdir / fs::path(defaultCalpontConfigFileTemp);

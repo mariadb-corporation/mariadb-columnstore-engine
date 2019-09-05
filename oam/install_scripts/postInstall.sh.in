@@ -62,7 +62,7 @@ log_user $DEBUG
 if { $RPMPACKAGE == " " || $PASSWORD == " "} {puts "please enter both RPM and password, enter ./postInstaller.sh -h for additional info"; exit -1}
 
 if { $CONFIGFILE == " " } {
-	set CONFIGFILE $INSTALLDIR/etc/Columnstore.xml.rpmsave
+	set CONFIGFILE @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave
 }
 if { [catch { open $CONFIGFILE "r"} handle ] } {
 	puts "Calpont Config file not found: $CONFIGFILE"; exit -1
@@ -113,8 +113,8 @@ expect {
 }
 expect -re "# "
 log_user 0
-exec mv -f $INSTALLDIR/etc/Columnstore.xml $INSTALLDIR/etc/Columnstore.xml.new  > /dev/null 2>&1
-exec mv -f $CONFIGFILE  $INSTALLDIR/etc/Columnstore.xml  > /dev/null 2>&1
+exec mv -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.new  > /dev/null 2>&1
+exec mv -f $CONFIGFILE  @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml  > /dev/null 2>&1
 
 send_user "\n"
 set timeout 380

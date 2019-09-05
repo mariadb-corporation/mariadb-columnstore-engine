@@ -28,10 +28,12 @@ extern int h_errno;
 
 #include "columnstoreversion.h"
 #include "mcsadmin.h"
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/scoped_ptr.hpp"
-#include "boost/tokenizer.hpp"
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/tokenizer.hpp>
+
+#include "config.h"
 #include "sessionmanager.h"
 #include "dbrm.h"
 #include "messagequeue.h"
@@ -200,7 +202,7 @@ int main(int argc, char* argv[])
     tmpDir = startup::StartUp::tmpDir();
     installDir = startup::StartUp::installDir();
 
-    string cf = installDir + "/etc/" + ConsoleCmdsFile;
+    string cf = std::string(MCSSYSCONFDIR) + "/columnstore/" + ConsoleCmdsFile;
     fConfig = Config::makeConfig(cf);
 
 //	setupSignalHandlers();
@@ -9497,7 +9499,7 @@ void printModuleDisk(ModuleDisk moduledisk)
     cout << "Mount Point                    Total Blocks  Used Blocks   Usage %" << endl;
     cout << "-----------------------------  ------------  ------------  -------" << endl;
 
-    string etcdir = installDir + "/etc";
+    string etcdir = std::string(MCSSYSCONFDIR) + "/columnstore";
 
     for ( unsigned int i = 0 ; i < moduledisk.diskusage.size(); i++)
     {
@@ -9538,7 +9540,7 @@ void printModuleDisk(ModuleDisk moduledisk)
 void printModuleResources(TopProcessCpuUsers topprocesscpuusers, ModuleCpu modulecpu, TopProcessMemoryUsers topprocessmemoryusers, ModuleMemory modulememory, ModuleDisk moduledisk)
 {
     Oam oam;
-    string etcdir = installDir + "/etc";
+    string etcdir = std::string(MCSSYSCONFDIR) + "/columnstore";
 
     cout << endl << "Module '" + topprocesscpuusers.ModuleName + "' Resource Usage" << endl << endl;
 
