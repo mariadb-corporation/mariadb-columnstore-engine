@@ -71,7 +71,7 @@ chown -R $user:$user $installdir/mysql
 
 # Initiate databases if needed
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/mysql/my.cnf
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g /etc/my.cnf.d/columnstore.cnf
 fi
 
 # InfiniDB testing hook...
@@ -92,7 +92,7 @@ if [ -d $installdir/mysql/db/calpontsys ]; then
 		if [ -x $installdir/mysql/bin/mysql_upgrade ]; then
 			echo "Running mysql_upgrade script"
 			if [[ ${password} == " " ]]; then
-				$installdir/mysql/bin/mysql_upgrade --defaults-file=$installdir/mysql/my.cnf > $tmpdir/mysql_upgrade.log
+				$installdir/mysql/bin/mysql_upgrade > $tmpdir/mysql_upgrade.log
 				if [ $? -ne 0 ]; then
 					echo "ERROR: mysql_upgrade failure, check $tmpdir/mysql_upgrade.log"
 					$installdir/mysql/mysql-Columnstore stop
@@ -100,7 +100,7 @@ if [ -d $installdir/mysql/db/calpontsys ]; then
 					exit 2;
 				fi
 			else
-				$installdir/mysql/bin/mysql_upgrade --defaults-file=$installdir/mysql/my.cnf --password=$password  > $tmpdir/mysql_upgrade.log
+				$installdir/mysql/bin/mysql_upgrade --password=$password  > $tmpdir/mysql_upgrade.log
 				if [ $? -ne 0 ]; then
 					echo "ERROR: mysql_upgrade failure, check $tmpdir/mysql_upgrade.log"
 					$installdir/mysql/mysql-Columnstore stop
@@ -117,7 +117,7 @@ if [ -d $installdir/mysql/db/calpontsys ]; then
 fi
 
 ### Don't give the user the notes, we'll fix them ourselves...
-$installdir/mysql/scripts/mysql_install_db --rpm --user=$user --defaults-extra-file=$installdir/mysql/my.cnf --basedir=$installdir/mysql >/dev/null
+$installdir/mysql/scripts/mysql_install_db --rpm --user=$user --basedir=$installdir/mysql >/dev/null
 # Change permissions again to fix any new files.
 chown -R $user:$user $mysql_datadir
 

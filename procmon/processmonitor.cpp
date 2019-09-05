@@ -5117,7 +5117,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 
     log.writeLog(__LINE__, "changeMyCnf function called for " + type, LOG_TYPE_DEBUG);
 
-    string mycnfFile = startup::StartUp::installDir() + "/mysql/my.cnf";
+    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
     ifstream file (mycnfFile.c_str());
 
     if (!file)
@@ -5125,8 +5125,6 @@ int ProcessMonitor::changeMyCnf(std::string type)
         log.writeLog(__LINE__, "changeMyCnf - my.cnf file not found: " + mycnfFile, LOG_TYPE_CRITICAL);
         return oam::API_FAILURE;
     }
-
-    string dbDir = startup::StartUp::installDir() + "/mysql/db";
 
     //get server-id based on ExeMgrx setup
     string serverID = "0";
@@ -6691,7 +6689,7 @@ int ProcessMonitor::runUpgrade()
 	for ( int i = 0 ; i < 10 ; i++ )
 	{
 		//run upgrade script
-		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade --defaults-file=" + startup::StartUp::installDir() + "/mysql/my.cnf " +
+		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade " +
 			passwordOption + " > " + tmpLog + " 2>&1";
 
 		log.writeLog(__LINE__, "runUpgrade, cmd = " + cmd, LOG_TYPE_DEBUG);

@@ -125,22 +125,22 @@ int main(int argc, char* argv[])
     }
 
     //my.cnf file
-    string mycnfFile = startup::StartUp::installDir() + "/mysql/my.cnf";
+    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
     ifstream mycnffile (mycnfFile.c_str());
 
     if (!mycnffile)
     {
-        cerr << "mycnfUpgrade - my.cnf file not found: " << mycnfFile << endl;
+        cerr << "mycnfUpgrade - columnstore.cnf file not found: " << mycnfFile << endl;
         exit (1);
     }
 
     //my.cnf.rpmsave file
-    string mycnfsaveFile = startup::StartUp::installDir() + "/mysql/my.cnf.rpmsave";
+    string mycnfsaveFile = "/etc/my.cnf/columnstore.cnf.rpmsave";
     ifstream mycnfsavefile (mycnfsaveFile.c_str());
 
     if (!mycnfsavefile)
     {
-        cerr << "mycnfUpgrade - my.cnf.rpmsave file not found: " << mycnfsaveFile << endl;
+        cerr << "mycnfUpgrade - columnstore.cnf.rpmsave file not found: " << mycnfsaveFile << endl;
         exit (1);
     }
 
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 
     if (!includefile)
     {
-        cerr << "mycnfUpgrade - my.cnf include argument file not found: " << includeFile << endl;
+        cerr << "mycnfUpgrade - columnstore.cnf include argument file not found: " << includeFile << endl;
         exit (1);
     }
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
 
     if (!excludefile)
     {
-        cerr << "mycnfUpgrade - my.cnf exclude argument file not found: " << endl;
+        cerr << "mycnfUpgrade - columnstore.cnf exclude argument file not found: " << endl;
         exit (1);
     }
 
@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
         includeArg = line;
 
         boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
-        //see if in my.cnf.rpmsave
+        //see if in columnstore.cnf.rpmsave
         ifstream mycnfsavefile (mycnfsaveFile.c_str());
         char line[200];
         string oldbuf;
@@ -188,10 +188,10 @@ int main(int argc, char* argv[])
 
             if ( boost::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx) )
             {
-                //found in my.cnf.rpmsave, check if this is commented out
+                //found in columnstore.cnf.rpmsave, check if this is commented out
                 if ( line[0] != '#' )
                 {
-                    // no, check in my.cnf and replace if exist or add if it doesn't
+                    // no, check in columnstore.cnf and replace if exist or add if it doesn't
 
                     ifstream mycnffile (mycnfFile.c_str());
                     vector <string> lines;
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
                         lines.push_back(newbuf);
                     }
 
-                    //write out a new my.cnf
+                    //write out a new columnstore.cnf
                     mycnffile.close();
                     unlink (mycnfFile.c_str());
                     ofstream newFile (mycnfFile.c_str());
@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
                             lines.push_back(newbuf);
                         }
 
-                        //write out a new my.cnf
+                        //write out a new columnstore.cnf
                         mycnffile.close();
                         unlink (mycnfFile.c_str());
                         ofstream newFile (mycnfFile.c_str());

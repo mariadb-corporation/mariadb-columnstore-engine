@@ -10,8 +10,7 @@
 
 if [ -z "$MYSQLCMD" ]; then
 	INSTALLDIR="/usr/local/mariadb/columnstore"
-	MYSQLCNF=$INSTALLDIR/mysql/my.cnf
-	MYSQLCMD="$INSTALLDIR/mysql/bin/mysql --defaults-extra-file=$MYSQLCNF -u root"
+	MYSQLCMD="$INSTALLDIR/mysql/bin/mysql -u root"
 fi
 
 #

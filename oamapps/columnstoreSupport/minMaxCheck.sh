@@ -45,7 +45,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-extra-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root"
+        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql -u root"
 fi
 
 if [ -z "$INSTALLDIR" ]; then

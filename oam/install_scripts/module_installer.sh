@@ -139,13 +139,13 @@ fi
 
 MySQLRep=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLRep`
 if [ $MySQLRep = "y" ]; then
-	if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
+	if test -f /etc/my.cnf.d/columnstore.cnf ; then
 		echo "Run Upgrade on my.cnf on Module"
 		$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade > ${tmpDir}/mycnfUpgrade.log 2>&1
 	fi
 fi
 
-if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
+if test -f /etc//my.cnf.d/columnstore.cnf ; then
 	mysqlPort=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLPort`
 	echo "Run Mysql Port update on my.cnf on Module"
 	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > ${tmpDir}/mycnfUpgrade_port.log 2>&1

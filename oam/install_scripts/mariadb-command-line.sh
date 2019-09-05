@@ -57,7 +57,6 @@ EOD
 
 cat${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log
 $installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
 	calpontsys < ${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log 2>&1
 

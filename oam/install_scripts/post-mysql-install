@@ -23,7 +23,6 @@ checkForError() {
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
         $installdir/mysql/bin/mysql \
-                --defaults-extra-file=$installdir/mysql/my.cnf \
                 --user=root \
                 --execute='select * from mysql.plugin where name="columnstore";' \
                 calpontsys | grep -i columnstore
@@ -92,7 +91,7 @@ if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
 fi
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/mysql/my.cnf
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g /etc/my.cnf.d/columnstore.cnf
 fi
 
 if [ -x $installdir/mysql/mysql-Columnstore ]; then
