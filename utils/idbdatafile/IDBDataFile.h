@@ -54,6 +54,7 @@ public:
         BUFFERED   = 0x0001,
         UNBUFFERED = 0x0002,
         HDFS	   = 0x0003,
+        CLOUD      = 0x0004,
     };
 
     /**

@@ -577,8 +577,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     }
                     if (processName == "StorageManager")   // storagemanager doesn't send its own response
                     {
-                        ackMsg << (uint8_t) ACK << (uint8_t) START << (uint8_t) API_SUCCESS;
-                        mq.write(ackMsg);
+                        //ackMsg << (uint8_t) ACK << (uint8_t) START << (uint8_t) API_SUCCESS;
+                        //mq.write(ackMsg);
                     }
 
                     ProcessConfig processconfig;
@@ -716,8 +716,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     }
                     if (processName == "StorageManager")   // storagemanager doesn't send its own response
                     {
-                        ackMsg << (uint8_t) ACK << (uint8_t) RESTART << (uint8_t) API_SUCCESS;
-                        mq.write(ackMsg);
+                        //ackMsg << (uint8_t) ACK << (uint8_t) RESTART << (uint8_t) API_SUCCESS;
+                       // mq.write(ackMsg);
                     }
 
                     processList::iterator listPtr;
@@ -1122,8 +1122,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     }
                     if (processName == "StorageManager")    // storagemanager doesn't send its own status
                     {
-                        ackMsg << (uint8_t) ACK << (uint8_t) STARTALL << (uint8_t) API_SUCCESS;
-                        mq.write(ackMsg);
+                        //ackMsg << (uint8_t) ACK << (uint8_t) STARTALL << (uint8_t) API_SUCCESS;
+                        //mq.write(ackMsg);
                     }
 
                     if ( config.moduleType() == "pm" )
@@ -2268,6 +2268,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     Oam oam;
     SystemProcessStatus systemprocessstatus;
     ProcessStatus processstatus;
+    Config *cs_config = Config::makeConfig();
+    string DBRootStorageType = cs_config->getConfig("Installation", "DBRootStorageType");
 
     log.writeLog(__LINE__, "STARTING Process: " + processName, LOG_TYPE_CRITICAL); //, LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "Process location: " + processLocation, LOG_TYPE_CRITICAL); //, LOG_TYPE_DEBUG);
@@ -2697,7 +2699,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     updateProcessInfo(processName, initType, 0);
 
     //sleep, give time for INIT state to be update, prevent race condition with ACTIVE
-    sleep(1);
+    if (processName != "StorageManager")
+        sleep(1);
 
     //check and setup for logfile
     time_t now;
@@ -2852,7 +2855,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
         }
 
         //give time to get INIT status updated in shared memory
-        sleep(1);
+        if (processName != "StorageManager")
+            sleep(1);
         execv(processLocation.c_str(), argList);
 
         if (processName == "StorageManager")
@@ -4823,6 +4827,7 @@ int ProcessMonitor::runHDFSTest()
 
     ifstream File (DataFilePlugin.c_str());
 
+#if 0    // for storagemanager
     if (!File)
     {
         log.writeLog(__LINE__, "Error: Hadoop Datafile Plugin File (" + DataFilePlugin + ") doesn't exist", LOG_TYPE_CRITICAL);
@@ -4856,6 +4861,7 @@ int ProcessMonitor::runHDFSTest()
             fail = true;
         }
     }
+#endif
 
     if (!fail)
     {
