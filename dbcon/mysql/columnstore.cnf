@@ -50,3 +50,4 @@ relay-log=/usr/local/mariadb/columnstore/mysql/db/relay-bin
 relay-log-index = /usr/local/mariadb/columnstore/mysql/db/relay-bin.index 
 relay-log-info-file = /usr/local/mariadb/columnstore/mysql/db/relay-bin.info
 
+lower_case_table_names=1
