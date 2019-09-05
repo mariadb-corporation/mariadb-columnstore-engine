@@ -9365,7 +9365,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     }
 
     // put oid file and current file in list
-    // StorageManager: no need to distribute these files if in cloud storage
     dbrmFiles.push_back(currentFileName);
 
     if (fs.exists(journalFileName.c_str()) && fs.size(journalFileName.c_str()) > 0)
