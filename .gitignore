@@ -12,6 +12,7 @@
 *.la
 *.so
 *.so.*
+*.vpj
 .libs/
 config.log
 *~
