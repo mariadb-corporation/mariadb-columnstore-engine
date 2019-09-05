@@ -50,7 +50,6 @@ class SocketPool : public boost::noncopyable
         boost::condition_variable socketAvailable;
         uint maxSockets;
         static const uint defaultSockets = 20;
-        
 };
 
 }

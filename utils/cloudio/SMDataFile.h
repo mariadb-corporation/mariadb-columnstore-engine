@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -16,11 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
    
-=======
-# copy some licensing stuff here
-
-
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 #ifndef SMDATAFILE_H_
 #define SMDATAFILE_H_
 
@@ -42,21 +36,15 @@ class SMDataFile : public IDBDataFile
         ssize_t write(const void* ptr, size_t count);
         int seek(off64_t offset, int whence);
         int truncate(off64_t length);
-<<<<<<< HEAD
         int fallocate(int mode, off64_t offset, off64_t length);
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
         off64_t size();
         off64_t tell();
         int flush();
         time_t mtime();
-<<<<<<< HEAD
         int close();
     
         // for testing only
         SMDataFile(const char *fname, int openmode, size_t fake_size);
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
     
     private:
         SMDataFile();

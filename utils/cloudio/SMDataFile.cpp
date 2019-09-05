@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -17,11 +16,6 @@
    MA 02110-1301, USA. */
    
 #include <fcntl.h>
-=======
-// copy licensing stuff here
-
-
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 
 #include "SMDataFile.h"
 
@@ -30,19 +24,10 @@ using namespace std;
 namespace idbdatafile
 {
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 SMDataFile::~SMDataFile()
 {
 }
 
-<<<<<<< HEAD
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
-=======
->>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 SMDataFile::SMDataFile(const char *name, int _openmode, const struct stat &_stat) :
     IDBDataFile(name)
 {
@@ -63,11 +48,8 @@ ssize_t SMDataFile::pread(void *buf, off64_t offset, size_t count)
 ssize_t SMDataFile::read(void *buf, size_t count)
 {
     ssize_t ret = comm->pread(name(), buf, count, position);
-<<<<<<< HEAD
     if (ret < 0)
         return ret;
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
     position += ret;
     return ret;
 }
@@ -77,11 +59,8 @@ ssize_t SMDataFile::write(const void *buf, size_t count)
     if (openmode & O_APPEND)
         return comm->append(name(), buf, count);
     ssize_t ret = comm->pwrite(name(), buf, count, position);
-<<<<<<< HEAD
     if (ret < 0)
         return ret;
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
     position += ret;
     return ret;
 }
@@ -95,22 +74,15 @@ int SMDataFile::seek(off64_t offset, int whence)
         case SEEK_CUR:
             position += offset;
             break;
-<<<<<<< HEAD
         case SEEK_END: 
         {
-=======
-        case SEEK_END:
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
             struct stat _stat;
             int err = comm->stat(name(), &_stat);
             if (err)
                 return err;
             position = _stat.st_size + offset;
             break;
-<<<<<<< HEAD
         }
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
         default:
             errno = EINVAL;
             return -1;
@@ -123,15 +95,12 @@ int SMDataFile::truncate(off64_t length)
     return comm->truncate(name(), length);
 }
 
-<<<<<<< HEAD
 int SMDataFile::fallocate(int mode, off64_t offset, off64_t length)
 {
     idbassert_s(mode == 0, "SMDataFile::fallocate() does not support mode != 0 right now.");
     return comm->truncate(name(), offset + length);
 }
 
-=======
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 off64_t SMDataFile::size()
 {
     struct stat _stat;
@@ -163,7 +132,6 @@ time_t SMDataFile::mtime()
     return _stat.st_mtime;
 }
 
-<<<<<<< HEAD
 int SMDataFile::close()
 {
     return 0;
@@ -181,8 +149,5 @@ SMDataFile::SMDataFile(const char *fname, int _openmode, size_t fake_size)
         position = 0;
     comm = SMComm::get();
 }
-=======
-
->>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 
 }
