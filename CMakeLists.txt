@@ -275,6 +275,7 @@ ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
+ADD_SUBDIRECTORY(storage-manager)
 
 INCLUDE(cpackEngineRPM.cmake)
 INCLUDE(cpackEngineDEB.cmake)
