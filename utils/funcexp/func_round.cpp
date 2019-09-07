@@ -628,5 +628,14 @@ string Func_round::getStrVal(Row& row,
 }
 
 
+int64_t Func_round::getDatetimeIntVal(Row& row,
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      CalpontSystemCatalog::ColType& op_ct)
+{
+    return parm[0]->data()->getIntVal(row, isNull);
+}
+
+
 } // namespace funcexp
 // vim:ts=4 sw=4:
