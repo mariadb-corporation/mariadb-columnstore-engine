@@ -49,9 +49,11 @@ namespace WriteEngine
 // on useHdfs() to tell me which FileSystem reference to get.
 //------------------------------------------------------------------------------
 ConfirmHdfsDbFile::ConfirmHdfsDbFile() :
-    fFs( (idbdatafile::IDBPolicy::useHdfs()) ?
-         idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::HDFS) :
-         idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::BUFFERED))
+    fFs(idbdatafile::IDBPolicy::useHdfs() ?
+        idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::HDFS) :
+        idbdatafile::IDBPolicy::useCloud() ?
+            idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::CLOUD) :
+            idbdatafile::IDBFileSystem::getFs(idbdatafile::IDBDataFile::BUFFERED))
 {
 }
 

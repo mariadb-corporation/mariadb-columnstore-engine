@@ -486,8 +486,9 @@ int RedistributeWorkerThread::sendData()
     int16_t source = fPlanEntry.source;
     int16_t dest = fPlanEntry.destination;
 
-    IDBDataFile::Types fileType =
-        (IDBPolicy::useHdfs() ? IDBDataFile::HDFS : IDBDataFile::UNBUFFERED);
+    IDBDataFile::Types fileType = (IDBPolicy::useHdfs() ? IDBDataFile::HDFS :
+            IDBPolicy::useCloud() ? IDBDataFile::CLOUD : IDBDataFile::UNBUFFERED);
+
     IDBFileSystem& fs = IDBFileSystem::getFs( fileType );
 
     if ((remotePM) && (fileType != IDBDataFile::HDFS))
@@ -1049,8 +1050,11 @@ void RedistributeWorkerThread::confirmToPeer()
         }
     }
 
-    IDBFileSystem& fs = IDBFileSystem::getFs(
-                            (IDBPolicy::useHdfs() ? IDBDataFile::HDFS : IDBDataFile::UNBUFFERED) );
+    IDBFileSystem& fs = (IDBPolicy::useHdfs() ?
+        IDBFileSystem::getFs(IDBDataFile::HDFS) :
+        IDBPolicy::useCloud() ?
+            IDBFileSystem::getFs(IDBDataFile::CLOUD) :
+            IDBFileSystem::getFs(IDBDataFile::BUFFERED));
 
     uint32_t confirmCode = RED_DATA_COMMIT;
 
@@ -1519,8 +1523,11 @@ void RedistributeWorkerThread::handleDataAbort(SBS& sbs, size_t& size)
     if (fNewFilePtr != NULL)
         closeFile(fNewFilePtr);
 
-    IDBFileSystem& fs = IDBFileSystem::getFs(
-                            (IDBPolicy::useHdfs() ? IDBDataFile::HDFS : IDBDataFile::UNBUFFERED) );
+    IDBFileSystem& fs = (IDBPolicy::useHdfs() ?
+        IDBFileSystem::getFs(IDBDataFile::HDFS) :
+        IDBPolicy::useCloud() ?
+            IDBFileSystem::getFs(IDBDataFile::CLOUD) :
+            IDBFileSystem::getFs(IDBDataFile::BUFFERED));
 
     // remove local files
     for (set<string>::iterator i = fNewDirSet.begin(); i != fNewDirSet.end(); i++)
