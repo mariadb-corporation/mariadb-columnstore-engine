@@ -1050,8 +1050,11 @@ void RedistributeWorkerThread::confirmToPeer()
         }
     }
 
-    IDBFileSystem& fs = IDBFileSystem::getFs(
-                            (IDBPolicy::useHdfs() ? IDBDataFile::HDFS : IDBDataFile::UNBUFFERED) );
+    IDBFileSystem& fs = (IDBPolicy::useHdfs() ?
+        IDBFileSystem::getFs(IDBDataFile::HDFS) :
+        IDBPolicy::useCloud() ?
+            IDBFileSystem::getFs(IDBDataFile::CLOUD) :
+            IDBFileSystem::getFs(IDBDataFile::BUFFERED));
 
     uint32_t confirmCode = RED_DATA_COMMIT;
 
