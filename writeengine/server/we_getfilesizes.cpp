@@ -183,6 +183,8 @@ struct ColumnThread
 
         if (bUsingHdfs)
             fileType = IDBDataFile::HDFS;
+        else if (IDBPolicy::useCloud())
+            fileType = IDBDataFile::CLOUD;
         else
             fileType = IDBDataFile::UNBUFFERED;
 
