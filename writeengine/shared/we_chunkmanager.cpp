@@ -47,6 +47,7 @@ using namespace execplan;
 
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
+#include "cloudio/SMFileSystem.h"
 using namespace idbdatafile;
 
 namespace
@@ -96,7 +97,9 @@ ChunkManager::ChunkManager() : fMaxActiveChunkNum(100), fLenCompressed(0), fIsBu
     fLocalModuleId(Config::getLocalModuleID()),
     fFs(fIsHdfs ?
         IDBFileSystem::getFs(IDBDataFile::HDFS) :
-        IDBFileSystem::getFs(IDBDataFile::BUFFERED))
+        IDBPolicy::useCloud() ?
+            IDBFileSystem::getFs(IDBDataFile::CLOUD) :
+            IDBFileSystem::getFs(IDBDataFile::BUFFERED))
 {
     fUserPaddings = Config::getNumCompressedPadBlks() * BYTE_PER_BLOCK;
     fCompressor.numUserPaddingBytes(fUserPaddings);
@@ -2316,7 +2319,7 @@ int ChunkManager::swapTmpFile(const string& src, const string& dest)
 {
     // return value
     int rc = NO_ERROR;
-
+    
     // if no change to the cdf, the tmp may not exist, no need to swap.
     if (!fFs.exists(src.c_str()))
         return rc;
