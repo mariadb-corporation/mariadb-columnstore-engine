@@ -17,6 +17,10 @@
 
 
 #include "Config.h"
+
+// This one is the build system config
+#include "config.h"
+
 #include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -69,7 +73,7 @@ Config::Config() : die(false)
     // the paths to search in order
     paths.push_back(".");
     if (cs_install_dir)
-        paths.push_back(string(cs_install_dir) + "/etc");
+        paths.push_back(string(MCSSYSCONFDIR) + "/columnstore");
     paths.push_back("/etc");
     
     for (uint i = 0; i < paths.size(); i++)

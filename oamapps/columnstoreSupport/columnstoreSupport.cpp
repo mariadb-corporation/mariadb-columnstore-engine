@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <readline/readline.h>
 
+#include "config.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "installdir.h"
@@ -326,11 +327,11 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = "echo '################# cat /etc/Columnstore.xml ################# ' >> " + outputFile;
+            cmd = "echo '################# cat /etc/columnstore/Columnstore.xml ################# ' >> " + outputFile;
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = "cat " + installDir + "/etc/Columnstore.xml >> " + outputFile;
+            cmd = "cat " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml >> " + outputFile;
             system(cmd.c_str());
         }
 

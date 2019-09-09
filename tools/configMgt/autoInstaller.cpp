@@ -39,6 +39,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "config.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 
@@ -623,7 +624,7 @@ int main(int argc, char* argv[])
 
                 for ( int retry = 0 ; retry < 5 ; retry++ )
                 {
-                    cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Columnstore.xml " + systemUser + " " + debug_flag;
+                    cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml " + systemUser + " " + debug_flag;
                     rtnCode = system(cmd.c_str());
                     sleep(2);
 
@@ -685,7 +686,7 @@ int main(int argc, char* argv[])
 RPMSAVE:
                 //try Columnstore.xml.rpmsave
                 cout << "Get System Columnstore.xml.rpmsave                " << flush;
-                cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Columnstore.xml.rpmsave " + systemUser + " " + debug_flag;
+                cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave " + systemUser + " " + debug_flag;
                 rtnCode = system(cmd.c_str());
 
                 if (rtnCode == 0)

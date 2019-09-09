@@ -25,6 +25,7 @@
 
 #include <readline/readline.h>
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 
@@ -100,7 +101,7 @@ bool waitForActive()
 void dbrmDirCheck()
 {
 
-    const string fname = installDir + "/etc/Columnstore.xml.rpmsave";
+    const string fname = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave";
     ifstream oldFile (fname.c_str());
 
     if (!oldFile) return;

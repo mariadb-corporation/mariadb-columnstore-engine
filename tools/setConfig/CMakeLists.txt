@@ -1,6 +1,7 @@
 
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/configxml.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/configxml.sh" @ONLY)
 
 ########### next target ###############
 

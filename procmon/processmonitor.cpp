@@ -28,6 +28,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 #include "columnstoreversion.h"
+#include "config.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "processmonitor.h"
@@ -5885,7 +5886,7 @@ bool ProcessMonitor::amazonIPCheck()
                                 log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Columnstore.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
 
                                 // update the Columnstore.xml with the new IP Address
-                                string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/mariadb/columnstore/etc/Columnstore.xml";
+                                string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g " + MCSSYSCONFDIR + "/columnstore/Columnstore.xml";
                                 system(cmd.c_str());
                             }
                             else

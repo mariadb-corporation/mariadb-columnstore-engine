@@ -79,7 +79,7 @@ tmpDir=`$InstallDir/bin/getConfig SystemConfig SystemTempFileDir`
 mkdir $tmpDir >/dev/null 2>&1
 
 checkInstallSetup() {
-	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
+	InitialInstallFlag=`$InstallDir/bin/getConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
@@ -108,7 +108,7 @@ start() {
 	fi
 	#checkInstallSetup
 
-	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
+	CoreFileFlag=`$InstallDir/bin/getConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
     #columnstore core files
 		ulimit -c unlimited  > /dev/null 2>&1

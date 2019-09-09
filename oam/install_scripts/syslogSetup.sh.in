@@ -191,7 +191,7 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ $non_root_user == "yes" ]; then
-		chown $user:$user $installdir/etc/Columnstore.xml*
+		chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml*
 	fi
 	
 	rm -f ${syslog_conf}.columnstoreSave

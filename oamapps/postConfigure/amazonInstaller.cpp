@@ -476,8 +476,8 @@ int main(int argc, char* argv[])
     }
 
     //backup current Columnstore.xml
-    string configFile = installDir + "/etc/Columnstore.xml";
-    string saveFile = installDir + "/etc/Columnstore.xml.save";
+    string configFile = MCSSYSCONFDIR + "/columnstore/Columnstore.xml";
+    string saveFile = MCSSYSCONFDIR + "/columnstore/Columnstore.xml.save";
     string cmd = "rm -f " + saveFile;
     system(cmd.c_str());
     cmd = "cp " + configFile + " " + saveFile;
@@ -2427,9 +2427,9 @@ int main(int argc, char* argv[])
     }
 
     //copy Columnstore.xml to Columnstore.xml.rpmsave for postConfigure no-prompt option
-    cmd = "rm -f " + installDir + "/etc/Columnstore.xml.rpmsave";
+    cmd = "rm -f " + MCSSYSCONFDIR + "/columnstore/Columnstore.xml.rpmsave";
     system(cmd.c_str());
-    cmd = "cp " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.rpmsave";
+    cmd = "cp " + MCSSYSCONFDIR + "/columnstore/Columnstore.xml " + MCSSYSCONFDIR + "/columnstore/Columnstore.xml.rpmsave";
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)

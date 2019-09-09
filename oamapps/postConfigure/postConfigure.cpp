@@ -65,10 +65,11 @@
 
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/tokenizer.hpp"
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/tokenizer.hpp>
 
+#include "config.h"
 #include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
@@ -559,7 +560,7 @@ int main(int argc, char* argv[])
     }
 
     if ( oldFileName == oam::UnassignedName )
-        oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
+        oldFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave";
 
     cout << endl;
     cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -4281,8 +4282,8 @@ int main(int argc, char* argv[])
  */
 bool checkSaveConfigFile()
 {
-    string rpmFileName = installDir + "/etc/Columnstore.xml";
-    string newFileName = installDir + "/etc/Columnstore.xml.new";
+    string rpmFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
+    string newFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.new";
 
     string extentMapCheckOnly = " ";
 
@@ -4432,7 +4433,7 @@ bool checkSaveConfigFile()
             return false;
         }
 
-        cmd = "cd " + installDir + "/etc/;../bin/autoConfigure " + extentMapCheckOnly;
+        cmd = "cd " + std::string(MCSSYSCONFDIR) + "/columnstore;" + installDir + "/bin/autoConfigure " + extentMapCheckOnly;
         rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
@@ -4567,7 +4568,7 @@ bool updateProcessConfig()
     string newModule = ">pm";
 	oldModule.push_back(">um");
 
-    string fileName = installDir + "/etc/ProcessConfig.xml";
+    string fileName = std::string(MCSSYSCONFDIR) + "/columnstore/ProcessConfig.xml";
 
     //Save a copy of the original version
     string cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
@@ -4639,7 +4640,7 @@ bool updateProcessConfig()
  */
 bool uncommentCalpontXml( string entry)
 {
-    string fileName = installDir + "/etc/Columnstore.xml";
+    string fileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
 
     ifstream oldFile (fileName.c_str());
 
@@ -5314,7 +5315,7 @@ bool storageSetup(bool amazonInstall)
         hadoopInstalled = "y";
 
     // check whether StorageManager is installed
-    Config *processConfig = Config::makeConfig((installDir + "/etc/ProcessConfig.xml").c_str());
+    Config *processConfig = Config::makeConfig((std::string(MCSSYSCONFDIR) + "/columnstore/ProcessConfig.xml").c_str());
     string storageManagerLocation;
     bool storageManagerInstalled = false;
     // search the 'PROCESSCONFIG#' entries for the StorageManager entry

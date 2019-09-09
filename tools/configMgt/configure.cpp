@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
                         exit (-1);
                     }
 
-                    cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/mariadb/columnstore/etc/Columnstore.xml 0 ";
+                    cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " " + MCSSYSCONFDIR + "/columnstore/Columnstore.xml 0 ";
                     rtnCode = system(cmd.c_str());
 
                     if (rtnCode == 0)

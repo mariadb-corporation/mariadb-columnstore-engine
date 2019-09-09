@@ -157,6 +157,6 @@ install(PROGRAMS
 )
 
 install(FILES storagemanager.cnf 
-    DESTINATION ${INSTALL_ENGINE}/etc 
+    DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
     COMPONENT platform)
 

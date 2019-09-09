@@ -34,6 +34,7 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 #include "loggingid.h"
@@ -64,7 +65,7 @@ IDBErrorInfo::IDBErrorInfo()
     string configFile(cf->getConfig("SystemConfig", "ErrorMessageFile"));
 
     if (configFile.length() == 0)
-        configFile = startup::StartUp::installDir() + "/etc/ErrorMessage.txt";
+        configFile = std::string(MCSSYSCONFDIR) + "/columnstore/ErrorMessage.txt";
 
     ifstream msgFile(configFile.c_str());
 

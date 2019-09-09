@@ -68,8 +68,8 @@ if [ $is64bitpkg -eq 1 -a $is64bitos -ne 1 ]; then
 	exit 1
 fi
 
-if [ ! -f $installdir/etc/Columnstore.xml ]; then
-	echo "$installdir/etc/Columnstore.xml not found, exiting"
+if [ ! -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml ]; then
+	echo "@ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml not found, exiting"
 	exit 1
 fi
 
@@ -172,7 +172,7 @@ test -d $installdir/data1/systemFiles/dataTransaction || rmdir $installdir/data1
 test -d $installdir/data1/systemFiles/dataTransaction/archive || rmdir $installdir/data1/systemFiles/dataTransaction/archive >/dev/null 2>&1
 chmod 1755 $installdir/data1 >/dev/null 2>&1
 chmod -R 1755 $installdir/data1/systemFiles >/dev/null 2>&1
-chmod 1755 $installdir/etc > /dev/null 2>&1
+chmod 1755 @ENGINE_SYSCONFDIR@/columnstore > /dev/null 2>&1
 
 #create the bulk-load dirs
 mkdir -p $installdir/data/bulk/data/import >/dev/null 2>&1
@@ -275,7 +275,7 @@ else
 
 	sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
-	chown $user:$user $installdir/etc/Columnstore.xml
+	chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 	
 cat <<EOD
 
@@ -307,7 +307,7 @@ rm -f $lockdir/mysql-Columnstore
 rm -f $lockdir/columnstore
 
 #backup copy of Alarm Config File
-/bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
+/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave > /dev/null 2>&1
 
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`

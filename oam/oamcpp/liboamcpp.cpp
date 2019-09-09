@@ -105,34 +105,13 @@ void handleControlC(int i)
 
 Oam::Oam()
 {
-    // Assigned pointers to Config files
-    string calpontfiledir;
-    const char* cf = 0;
-
     InstallDir = startup::StartUp::installDir();
-    calpontfiledir = InstallDir + "/etc";
 
-    //FIXME: we should not use this anymore. Everything should be based off the install dir
-    //If CALPONT_HOME is set, use it for etc directory
-#ifdef _MSC_VER
-    cf = 0;
-    string cfStr = IDBreadRegistry("CalpontHome");
+    CalpontConfigFile = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
 
-    if (!cfStr.empty())
-        cf = cfStr.c_str();
+    AlarmConfigFile = std::string(MCSSYSCONFDIR) + "/columnstore/AlarmConfig.xml";
 
-#else
-    cf = getenv("CALPONT_HOME");
-#endif
-
-    if (cf != 0 && *cf != 0)
-        calpontfiledir = cf;
-
-    CalpontConfigFile = calpontfiledir + "/Columnstore.xml";
-
-    AlarmConfigFile = calpontfiledir + "/AlarmConfig.xml";
-
-    ProcessConfigFile = calpontfiledir + "/ProcessConfig.xml";
+    ProcessConfigFile = std::string(MCSSYSCONFDIR) + "/columnstore/ProcessConfig.xml";
 
     if (UseHdfs == 0)
     {

@@ -12,11 +12,11 @@
     olddir /var/log/mariadb/columnstore/archive
     su root root 
 }
-/usr/local/mariadb/columnstore/etc/Columnstore.xml {
+@ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml {
     daily
     dateext
 	copy
-    olddir /usr/local/mariadb/columnstore/etc/
+    olddir @ENGINE_SYSCONFDIR@/columnstore
 }
 /usr/local/mariadb/columnstore/mysql/db/*.err {
     missingok

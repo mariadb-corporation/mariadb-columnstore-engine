@@ -387,4 +387,6 @@
    code using `volatile' can become incorrect without. Disable with care. */
 #cmakedefine volatile
 
+#define MCSSYSCONFDIR "${ENGINE_SYSCONFDIR}"
+
 #endif

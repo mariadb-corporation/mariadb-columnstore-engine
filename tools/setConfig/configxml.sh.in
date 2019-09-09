@@ -38,7 +38,7 @@ case "$1" in
 
 	echo "Old value of $2 / $3 is $oldvalue"
 
-	calxml=$InstallDir/etc/Columnstore.xml
+	calxml=@ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 
 	seconds=$(date +%s)
 	cp $calxml $calxml.$seconds

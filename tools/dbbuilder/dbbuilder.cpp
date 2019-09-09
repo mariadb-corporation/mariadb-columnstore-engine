@@ -28,6 +28,7 @@ using namespace std;
 
 #include <boost/algorithm/string.hpp>
 
+#include "config.h"
 #include "dbbuilder.h"
 #include "systemcatalog.h"
 #include "liboamcpp.h"
@@ -227,7 +228,7 @@ int main(int argc, char* argv[])
             //@bug5554, make sure IDBPolicy matches the Columnstore.xml config
             try
             {
-                string calpontConfigFile(startup::StartUp::installDir() + "/etc/Columnstore.xml");
+                string calpontConfigFile(std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml");
                 config::Config* sysConfig = config::Config::makeConfig(calpontConfigFile.c_str());
                 string tmp = sysConfig->getConfig("Installation", "DBRootStorageType");
 
