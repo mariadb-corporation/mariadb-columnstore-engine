@@ -111,6 +111,7 @@ add_custom_command(
 # change this to only include and link against cloudio.
 include_directories(${CMAKE_SOURCE_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
 add_executable(smcat src/smcat.cpp)
+set_property(TARGET smcat PROPERTY CXX_STANDARD 11)
 target_link_libraries(smcat storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
@@ -118,6 +119,7 @@ target_link_libraries(smcat storagemanager cloudio
 )
 
 add_executable(smput src/smput.cpp)
+set_property(TARGET smput PROPERTY CXX_STANDARD 11)
 target_link_libraries(smput storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
@@ -125,6 +127,7 @@ target_link_libraries(smput storagemanager cloudio
 )
 
 add_executable(smls src/smls.cpp)
+set_property(TARGET smls PROPERTY CXX_STANDARD 11)
 target_link_libraries(smls storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
@@ -132,6 +135,7 @@ target_link_libraries(smls storagemanager cloudio
 )
 
 add_executable(smrm src/smrm.cpp)
+set_property(TARGET smrm PROPERTY CXX_STANDARD 11)
 target_link_libraries(smrm storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}

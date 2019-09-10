@@ -8,6 +8,8 @@ set(ProcMgr_SRCS main.cpp processmanager.cpp ../utils/common/crashtrace.cpp)
 
 add_executable(ProcMgr ${ProcMgr_SRCS})
 
+set_property(TARGET ProcMgr PROPERTY CXX_STANDARD 11)
+
 target_compile_options(ProcMgr PRIVATE -Wno-unused-result)
 
 target_link_libraries(ProcMgr ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
