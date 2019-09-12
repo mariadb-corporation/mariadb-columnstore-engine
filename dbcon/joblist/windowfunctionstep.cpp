@@ -514,11 +514,24 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
                 // no group by by inserting a group by for window parameters.
                 if (hasAggregation)
                 {
-                    uint32_t tupleKey = getTupleKey(jobInfo, *j, true);
-                    if (find(jobInfo.groupByColVec.begin(), jobInfo.groupByColVec.end(), tupleKey) 
-                         == jobInfo.groupByColVec.end())
+                    // If an argument is an AggregateColumn, don't group by it.
+                    if (dynamic_cast<AggregateColumn*>(j->get()) == NULL)
                     {
-                        jobInfo.groupByColVec.push_back(tupleKey);
+                        bool bFound = false;
+                        for (std::vector<SRCP>::iterator igpc = csep->groupByCols().begin(); 
+                                                         igpc < csep->groupByCols().end();
+                                                         ++igpc)
+                        {
+                            if (*igpc->get() == *j->get())
+                            {
+                                bFound = true;
+                                break;
+                            }
+                        }
+                        if (!bFound)
+                        {
+                            csep->groupByCols().push_back(*j);
+                        }
                     }
                 }
             }
