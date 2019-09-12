@@ -718,6 +718,25 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
+    // Save the original group_list as it can be mutated by the
+    // optimizer which calls the remove_const() function
+    Group_list_ptrs *group_list_ptrs = NULL;
+    if (select_lex->group_list.first)
+    {
+        void *mem = thd->stmt_arena->alloc(sizeof(Group_list_ptrs));
+
+        if (!mem || !(group_list_ptrs = new (mem) Group_list_ptrs(thd->stmt_arena->mem_root)) ||
+            group_list_ptrs->reserve(select_lex->group_list.elements))
+        {
+            return handler;
+        }
+
+        for (ORDER *order = select_lex->group_list.first; order; order = order->next)
+        {
+            group_list_ptrs->push_back(order);
+        }
+    }
+
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
@@ -746,6 +765,17 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         {
             unsupported_feature = true;
             restore_optimizer_flags(thd);
+        }
+    }
+
+    // Restore back the saved group_list
+    if (group_list_ptrs)
+    {
+        select_lex->group_list.empty();
+        for (size_t i = 0; i < group_list_ptrs->size(); i++)
+        {
+            ORDER *order = (*group_list_ptrs)[i];
+            select_lex->group_list.link_in_list(order, &order->next);
         }
     }
 
