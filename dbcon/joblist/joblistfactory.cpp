@@ -1131,9 +1131,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     // remember the columns to be returned
                     jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
 
-                    // bug 1499 distinct processing, save unique distinct columns that aren't Window columns
-                    if (doDistinct 
-                     && (jobInfo.distinctColVec.end() ==
+                   // bug 1499 distinct processing, save unique distinct columns
+                    if (doDistinct &&
+                            (jobInfo.distinctColVec.end() ==
                              find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
                     {
                         jobInfo.distinctColVec.push_back(tupleKey);
@@ -1284,13 +1284,13 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             // remember the columns to be returned
             jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
 
-                // bug 1499 distinct processing, save unique distinct columns that aren't Window columns
-                if (doDistinct 
-                 && (jobInfo.distinctColVec.end() ==
-                         find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
-                {
-                    jobInfo.distinctColVec.push_back(tupleKey);
-                }
+            // bug 1499 distinct processing, save unique distinct columns
+            if (doDistinct &&
+                    (jobInfo.distinctColVec.end() ==
+                     find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
+            {
+                jobInfo.distinctColVec.push_back(tupleKey);
+            }
         }
     }
 
