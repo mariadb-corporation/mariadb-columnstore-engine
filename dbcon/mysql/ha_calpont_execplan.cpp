@@ -7779,8 +7779,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                hash join, giving less number of rows in the output result set than expected.
                We therefore do not allow limit set to 1 here for such queries.
             */
-            if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS &&
-                select_lex.master_unit()->global_parameters()->explicit_limit)
+            if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS
+                 && gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS
+                 && select_lex.master_unit()->global_parameters()->explicit_limit)
             {
                 if (select_lex.master_unit()->global_parameters()->offset_limit)
                 {
