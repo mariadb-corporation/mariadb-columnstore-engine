@@ -17,7 +17,9 @@ service = LocalStorage
 # Another limitation to consider is the get/put rate imposed by the
 # cloud provider.  If that is the limitation, increasing object_size
 # will result in higher transfer rates.
-object_size = 5M
+# object_size set to 8M for storagemanager unit_tests to specifically
+#    test metadata and object edge cases
+object_size = 8K
 
 metadata_path = ${HOME}/sm-unittest/metadata
 journal_path = ${HOME}/sm-unittest/journal
