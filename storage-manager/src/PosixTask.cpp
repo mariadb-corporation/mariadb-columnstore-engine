@@ -75,18 +75,20 @@ uint PosixTask::getLength()
 }
 
 // todo, need this to return an int instead of a bool b/c it modifies the length of the read
-bool PosixTask::read(uint8_t *buf, uint length)
+int PosixTask::read(uint8_t *buf, uint length)
 {
     if (length > remainingLengthForCaller)
         length = remainingLengthForCaller;
     if (length == 0)
-        return false;
+        return 0;
     
     uint count = 0;
     int err;
     
+
     // copy data from the local buffer first.
     uint dataInBuffer = bufferLen - bufferPos;
+
     if (length <= dataInBuffer)
     {
         memcpy(buf, &localBuffer[bufferPos], length);
@@ -109,7 +111,7 @@ bool PosixTask::read(uint8_t *buf, uint length)
     {
         err = ::recv(sock, &buf[count], length - count, 0);
         if (err < 0)
-            return false;
+            return err;
 
         count += err;
         remainingLengthInStream -= err;
@@ -119,7 +121,7 @@ bool PosixTask::read(uint8_t *buf, uint length)
     /* The caller's request has been satisfied here.  If there is remaining data in the stream
     get what's available. */
     primeBuffer();
-    return true;
+    return count;
 }
 
 void PosixTask::primeBuffer()

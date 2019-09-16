@@ -35,7 +35,7 @@ AppendTask::~AppendTask()
 }
 
 #define check_error(msg, ret) \
-    if (!success) \
+    if (success<0) \
     { \
         handleError(msg, errno); \
         return ret; \
@@ -46,7 +46,7 @@ AppendTask::~AppendTask()
 bool AppendTask::run()
 {
     SMLogging* logger = SMLogging::get();
-    bool success;
+    int success;
     uint8_t cmdbuf[1024] = {0};
     ssize_t err;
     
@@ -77,14 +77,16 @@ bool AppendTask::run()
         uint toRead = min(cmd->count - readCount, bufsize);
         success = read(&databuf[0], toRead);
         check_error("AppendTask read data", false);
-        readCount += toRead;
+        if (success==0)
+            break;
+        readCount += success;
         uint writePos = 0;
 
         while (writeCount < readCount)
         {
             try
             {
-                err = ioc->append(cmd->filename, &databuf[writePos], toRead - writePos);
+                err = ioc->append(cmd->filename, &databuf[writePos], success - writePos);
             }
             catch (exception &e)
             {
@@ -112,8 +114,7 @@ bool AppendTask::run()
     }
     else
         resp->returnCode = writeCount;
-    success = write(*resp, payloadLen);
-    return success;
+    return write(*resp, payloadLen);
 }
 
 }

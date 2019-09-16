@@ -35,7 +35,7 @@ CopyTask::~CopyTask()
 }
 
 #define check_error(msg, ret) \
-    if (!success) \
+    if (success<0) \
     { \
         handleError(msg, errno); \
         return ret; \
