@@ -298,6 +298,34 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     return found;
 }
 
+/*@brief check_sum_func_item - This traverses Item       */
+/**********************************************************
+* DESCRIPTION:
+* This f() walks Item looking for the existence of
+* a Item::REF_ITEM, which references an item of
+* type Item::SUM_FUNC_ITEM
+* PARAMETERS:
+*    Item * Item to traverse
+* RETURN:
+*********************************************************/
+void check_sum_func_item(const Item* item, void* arg)
+{
+    bool* found = reinterpret_cast<bool*>(arg);
+
+    if (*found)
+        return;
+
+    if (item->type() == Item::REF_ITEM)
+    {
+        const Item_ref* ref_item = reinterpret_cast<const Item_ref*>(item);
+        Item* ref_item_item = (Item*) *ref_item->ref;
+        if (ref_item_item->type() == Item::SUM_FUNC_ITEM)
+        {
+            *found = true;
+        }
+    }
+}
+
 /*@brief sortItemIsInGrouping- seeks for an item in grouping*/
 /***********************************************************
  * DESCRIPTION:
@@ -318,6 +346,18 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     if(sort_item->type() == Item::SUM_FUNC_ITEM)
     {
         found = true;
+    }
+
+    // An "if" function that contains an aggregate function
+    // can be included in the ORDER BY clause
+    // e.g. select a, if (sum(b) > 1, 2, 1) from t1 group by 1 order by 2;
+    if (sort_item->type() == Item::FUNC_ITEM)
+    {
+        Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
+        if (string(ifp->func_name()) == "if")
+        {
+            ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
+        }
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
@@ -5150,6 +5190,17 @@ void gp_walk(const Item* item, void* arg)
 
                 case STRING_RESULT:
                 {
+                    // Special handling for 0xHHHH literals
+                    const Type_handler *tph = item->type_handler();
+                    if (typeid(*tph) == typeid(Type_handler_hex_hybrid))
+                    {
+                        Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
+                        gwip->rcWorkStack.push(new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM));
+                        ConstantColumn *cc = dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top());
+                        cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                        break;
+                    }
+
                     Item_string* isp = (Item_string*)item;
 
                     if (isp)
