@@ -718,18 +718,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
-    // This block gives false positive in
-    // partitionOptimization/vTpch11.
-    // Disable SH processing for UNION in a subquery.
-    // This way, the server falls back to using the DH for executing
-    // the UNION, if enabled.
-    /*TABLE_LIST *tbl_ptr = select_lex->get_table_list();
-    if (tbl_ptr && tbl_ptr->derived &&
-        (tbl_ptr->derived->is_unit_op() || tbl_ptr->derived->fake_select_lex))
-    {
-        return handler;
-    }*/
-
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
