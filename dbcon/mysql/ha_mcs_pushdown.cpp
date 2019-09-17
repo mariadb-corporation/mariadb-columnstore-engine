@@ -286,8 +286,8 @@ void check_user_var_func(const Item* item, void* arg)
     if (item->type() == Item::FUNC_ITEM)
     {
         const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
-        std::string funcName = ifp->func_name();
-        if (funcName == "set_user_var" || funcName == "get_user_var")
+        std::string funcname = ifp->func_name();
+        if (funcname == "set_user_var" || funcname == "get_user_var")
         {
             *unsupported_feature = true;
         }
@@ -455,16 +455,8 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     SELECT_LEX *sl= unit->first_select();
 
     bool unsupported_feature = false;
-    // Select_handler use the short-cut that effectively disables
-    // INSERT..SELECT and LDI
-    if ( (thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE)
-    {
-        unsupported_feature = true;
-    }
 
     // Impossible HAVING or WHERE
-    // TODO replace with function call
     if ( unsupported_feature
        || sl->having_value == Item::COND_FALSE
         || sl->cond_value == Item::COND_FALSE )
@@ -515,6 +507,14 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
                 return handler;
             }
         }
+    }
+
+    if (!unsupported_feature && !join_preds_list.elements
+          && join && join->conds)
+    {
+        Item_cond* conds= reinterpret_cast<Item_cond*>(join->conds);
+        conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+        conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
 
     // CROSS JOIN w/o conditions isn't supported until MCOL-301
@@ -718,15 +718,17 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
+    // This block gives false positive in
+    // partitionOptimization/vTpch11.
     // Disable SH processing for UNION in a subquery.
     // This way, the server falls back to using the DH for executing
     // the UNION, if enabled.
-    TABLE_LIST *tbl_ptr = select_lex->get_table_list();
+    /*TABLE_LIST *tbl_ptr = select_lex->get_table_list();
     if (tbl_ptr && tbl_ptr->derived &&
         (tbl_ptr->derived->is_unit_op() || tbl_ptr->derived->fake_select_lex))
     {
         return handler;
-    }
+    }*/
 
     bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
@@ -744,8 +746,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // if execution fails.
     if (!unsupported_feature)
     {
-        // TODO This part must explicitly call a list of needed optimizations
-        mutate_optimizer_flags(thd);
+        // Most of optimizer_switch flags disabled in external_lock
         join->optimization_state= JOIN::OPTIMIZATION_IN_PROGRESS;
         join->optimize_inner();
 
