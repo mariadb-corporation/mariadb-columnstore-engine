@@ -298,34 +298,6 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     return found;
 }
 
-/*@brief check_sum_func_item - This traverses Item       */
-/**********************************************************
-* DESCRIPTION:
-* This f() walks Item looking for the existence of
-* a Item::REF_ITEM, which references an item of
-* type Item::SUM_FUNC_ITEM
-* PARAMETERS:
-*    Item * Item to traverse
-* RETURN:
-*********************************************************/
-void check_sum_func_item(const Item* item, void* arg)
-{
-    bool* found = reinterpret_cast<bool*>(arg);
-
-    if (*found)
-        return;
-
-    if (item->type() == Item::REF_ITEM)
-    {
-        const Item_ref* ref_item = reinterpret_cast<const Item_ref*>(item);
-        Item* ref_item_item = (Item*) *ref_item->ref;
-        if (ref_item_item->type() == Item::SUM_FUNC_ITEM)
-        {
-            *found = true;
-        }
-    }
-}
-
 /*@brief sortItemIsInGrouping- seeks for an item in grouping*/
 /***********************************************************
  * DESCRIPTION:
@@ -346,18 +318,6 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     if(sort_item->type() == Item::SUM_FUNC_ITEM)
     {
         found = true;
-    }
-
-    // An "if" function that contains an aggregate function
-    // can be included in the ORDER BY clause
-    // e.g. select a, if (sum(b) > 1, 2, 1) from t1 group by 1 order by 2;
-    if (sort_item->type() == Item::FUNC_ITEM)
-    {
-        Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
-        if (string(ifp->func_name()) == "if")
-        {
-            ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
-        }
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
@@ -4938,6 +4898,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 mcsv1sdk::mcsv1Context& context = udafc->getContext();
                 context.setName(isp->func_name());
 
+                // Get the return type as defined by CREATE AGGREGATE FUNCTION
+                // Most functions don't care, but some may.
+                context.setMariaDBReturnType((mcsv1sdk::enum_mariadb_return_type)isp->field_type());
+                    
                 // Set up the return type defaults for the call to init()
                 context.setResultType(udafc->resultType().colDataType);
                 context.setColWidth(udafc->resultType().colWidth);
@@ -5190,17 +5154,6 @@ void gp_walk(const Item* item, void* arg)
 
                 case STRING_RESULT:
                 {
-                    // Special handling for 0xHHHH literals
-                    const Type_handler *tph = item->type_handler();
-                    if (typeid(*tph) == typeid(Type_handler_hex_hybrid))
-                    {
-                        Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
-                        gwip->rcWorkStack.push(new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM));
-                        ConstantColumn *cc = dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top());
-                        cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
-                        break;
-                    }
-
                     Item_string* isp = (Item_string*)item;
 
                     if (isp)
@@ -5214,10 +5167,6 @@ void gp_walk(const Item* item, void* arg)
                             {
                                 cval.assign(str->ptr(), str->length());
                             }
-
-                            // Trim the trailing white space from the constant
-                            // string value in the where clause
-                            boost::trim_right_if(cval, boost::is_any_of(" "));
 
                             gwip->rcWorkStack.push(new ConstantColumn(cval));
                             (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
@@ -7778,6 +7727,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                         }
                         else if (ord_item->type() == Item::SUBSELECT_ITEM)
                         {
+                            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+                            return ER_CHECK_NOT_IMPLEMENTED;
                         }
                         else
                         {
@@ -7818,21 +7770,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         // non-MAIN union branch
         if (unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
         {
-            /* Consider the following query:
-               "select a from t1 where exists (select b from t2 where a=b);"
-               CS first builds a hash table for t2, then pushes down the hash to
-               PrimProc for a distributed hash join execution, with t1 being the
-               large-side table. However, the server applies an optimization in
-               Item_exists_subselect::fix_length_and_dec in sql/item_subselect.cc
-               (see server commit ae476868a5394041a00e75a29c7d45917e8dfae8)
-               where it sets explicit_limit to true, which causes csep->limitNum set to 1.
-               This causes the hash table for t2 to only contain a single record for the
-               hash join, giving less number of rows in the output result set than expected.
-               We therefore do not allow limit set to 1 here for such queries.
-            */
-            if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS
-                 && gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS
-                 && select_lex.master_unit()->global_parameters()->explicit_limit)
+            if (select_lex.master_unit()->global_parameters()->explicit_limit)
             {
                 if (select_lex.master_unit()->global_parameters()->offset_limit)
                 {
@@ -7845,6 +7783,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
                     csep->limitNum(select->val_int());
                 }
+
             }
         }
         // union with explicit select at the top level
@@ -7880,6 +7819,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     limitOffset = join->select_lex->offset_limit->val_int();
                     limitNum = join->select_lex->select_limit->val_int();
                 }
+
                 else if (join->unit)
                 {
                     limitOffset = join->unit->offset_limit_cnt;
@@ -7906,13 +7846,26 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 }
             }
 
-            csep->limitStart(limitOffset);
-            csep->limitNum(limitNum);
+            // relate to bug4848. let mysql drive limit when limit session variable set.
+            // do not set in csep. @bug5096. ignore session limit setting for dml
+            if (gwi.thd->variables.select_limit == (uint64_t) - 1 &&
+                !csep->hasOrderBy())
+            {
+                csep->limitStart(limitOffset);
+                csep->limitNum(limitNum);
+            }
+            // Pushdown queries w ORDER BY and LIMIT
+            else if (isPushdownHand && csep->hasOrderBy())
+            {
+                csep->limitStart(limitOffset);
+                csep->limitNum(limitNum);
+            }
         }
-        // If an explicit limit is not specified, use the system variable value
-        else
+        // Pushdown queries with ORDER BY w/o explicit limit
+        else if (isPushdownHand && csep->hasOrderBy())
         {
-            csep->limitNum(gwi.thd->variables.select_limit);
+            // We must set this to activate LimitedOrderBy in ExeMgr
+            csep->limitNum((uint64_t) - 2);
         }
 
         // We don't currently support limit with correlated subquery
@@ -8753,8 +8706,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     if ((gwi.subQuery /*|| select_lex.group_list.elements != 0 */ ||
                             !csep->unionVec().empty() || isUnion) &&
                             !hasNonSupportItem && (after_size - before_size) == 0 &&
-                            !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT)
-                       )
+                            !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT) &&
+                            string(ifp->func_name()) != "set_user_var")
                     {
                         String val, *str = ifp->val_str(&val);
                         string valStr;

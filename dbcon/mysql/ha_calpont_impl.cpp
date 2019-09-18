@@ -323,7 +323,7 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
         case MYSQL_TYPE_FLOAT: // FLOAT type
         {
             Field_float* f2 = (Field_float*)*f;
-            float float_val = *(float*)(&value);
+            float float_val = value;
             f2->store(float_val);
             break;
         }
@@ -331,7 +331,7 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
         case MYSQL_TYPE_DOUBLE: // DOUBLE type
         {
             Field_double* f2 = (Field_double*)*f;
-            double double_val = *(double*)(&value);
+            double double_val = value;
             f2->store(double_val);
             break;
         }
@@ -2747,6 +2747,12 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
             ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
         return rc;
 
+    if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
+            ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
+    {
+       force_close_fep_conn(thd, ci, true); // checking prev command rc
+    }
+
     if (!ci)
     {
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4036,11 +4042,7 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 
 
     CalTableMap::iterator mapiter = ci->tableMap.find(table);
-    // make sure this is a release lock (2nd) call called in
-    // the table mode.
-    if (mapiter != ci->tableMap.end()
-          && (mapiter->second.condInfo && mapiter->second.csep)
-          && lock_type == 2)
+    if (mapiter != ci->tableMap.end() && lock_type == 2) // make sure it's the release lock (2nd) call
     {
         // table mode
         if (mapiter->second.conn_hndl)
@@ -4066,18 +4068,14 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
         // Clean up the tableMap and physTablesList
         ci->tableMap.erase(table);
         ci->physTablesList.erase(table);
-        thd->variables.in_subquery_conversion_threshold = IN_SUBQUERY_CONVERSION_THRESHOLD;
-        restore_optimizer_flags(thd);
     }
     else
     {
-        if (lock_type == 0)
+        if (lock_type == 0) 
         {
             ci->physTablesList.insert(table);
             // MCOL-2178 Disable Conversion of Big IN Predicates Into Subqueries
-            thd->variables.in_subquery_conversion_threshold=~ 0;
-            // Early optimizer_switch changes to avoid unsupported opt-s.
-            mutate_optimizer_flags(thd);
+            thd->variables.in_subquery_conversion_threshold=~0;
         }
         else if (lock_type == 2)
         {
@@ -4102,15 +4100,6 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                 // MCOL-3247 Use THD::ha_data as a per-plugin per-session
                 // storage for cal_conn_hndl to use it later in close_connection
                 thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
-                // Clean up all tableMap entries made by cond_push
-                for (auto &tme: ci->tableMap)
-                {
-                    if (tme.second.condInfo)
-                    {
-                        delete tme.second.condInfo;
-                        tme.second.condInfo= 0;
-                    }
-                }
                 ci->tableMap.clear();
                 // MCOL-2178 Enable Conversion of Big IN Predicates Into Subqueries
                 thd->variables.in_subquery_conversion_threshold = IN_SUBQUERY_CONVERSION_THRESHOLD;

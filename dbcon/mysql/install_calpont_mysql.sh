@@ -24,13 +24,15 @@ for arg in "$@"; do
 	fi
 done
 
-$installdir/mysql/bin/mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
+df=$installdir/mysql/my.cnf
+
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
 INSTALL PLUGIN columnstore_columns SONAME 'is_columnstore_columns.so';
 INSTALL PLUGIN columnstore_extents SONAME 'is_columnstore_extents.so';
 INSTALL PLUGIN columnstore_files SONAME 'is_columnstore_files.so';
-INSERT INTO mysql.func VALUES ('calgetstats',0,'libcalmysql.so','function'),('calsettrace',2,'libcalmysql.so','function'),('calsetparms',0,'libcalmysql.so','function'),('calflushcache',2,'libcalmysql.so','function'),('calgettrace',0,'libcalmysql.so','function'),('calgetversion',0,'libcalmysql.so','function'),('calonlinealter',2,'libcalmysql.so','function'),('calviewtablelock',0,'libcalmysql.so','function'),('calcleartablelock',0,'libcalmysql.so','function'),('callastinsertid',2,'libcalmysql.so','function'),('calgetsqlcount',0,'libcalmysql.so','function'),('idbpm',2,'libcalmysql.so','function'),('idbdbroot',2,'libcalmysql.so','function'),('idbsegment',2,'libcalmysql.so','function'),('idbsegmentdir',2,'libcalmysql.so','function'),('idbextentrelativerid',2,'libcalmysql.so','function'),('idbblockid',2,'libcalmysql.so','function'),('idbextentid',2,'libcalmysql.so','function'),('idbextentmin',0,'libcalmysql.so','function'),('idbextentmax',0,'libcalmysql.so','function'),('idbpartition',0,'libcalmysql.so','function'),('idblocalpm',2,'libcalmysql.so','function'),('mcssystemready',2,'libcalmysql.so','function'),('mcssystemreadonly',2,'libcalmysql.so','function'),('mcssystemprimary',2,'libcalmysql.so','function'),('regr_avgx',1,'libregr_mysql.so','aggregate'),('regr_avgy',1,'libregr_mysql.so','aggregate'),('regr_count',2,'libregr_mysql.so','aggregate'),('regr_slope',1,'libregr_mysql.so','aggregate'),('regr_intercept',1,'libregr_mysql.so','aggregate'),('regr_r2',1,'libregr_mysql.so','aggregate'),('corr',1,'libregr_mysql.so','aggregate'),('regr_sxx',1,'libregr_mysql.so','aggregate'),('regr_syy',1,'libregr_mysql.so','aggregate'),('regr_sxy',1,'libregr_mysql.so','aggregate'),('covar_pop',1,'libregr_mysql.so','aggregate'),('covar_samp',1,'libregr_mysql.so','aggregate'),('distinct_count',2,'libudf_mysql.so','aggregate'),('caldisablepartitions',0,'libcalmysql.so','function'),('calenablepartitions',0,'libcalmysql.so','function'),('caldroppartitions',0,'libcalmysql.so','function'),('calshowpartitions',0,'libcalmysql.so','function'),('caldroppartitionsbyvalue',0,'libcalmysql.so','function'),('caldisablepartitionsbyvalue',0,'libcalmysql.so','function'),('calenablepartitionsbyvalue',0,'libcalmysql.so','function'),('calshowpartitionsbyvalue',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calgetstats',0,'libcalmysql.so','function'),('calsettrace',2,'libcalmysql.so','function'),('calsetparms',0,'libcalmysql.so','function'),('calflushcache',2,'libcalmysql.so','function'),('calgettrace',0,'libcalmysql.so','function'),('calgetversion',0,'libcalmysql.so','function'),('calonlinealter',2,'libcalmysql.so','function'),('calviewtablelock',0,'libcalmysql.so','function'),('calcleartablelock',0,'libcalmysql.so','function'),('callastinsertid',2,'libcalmysql.so','function'),('calgetsqlcount',0,'libcalmysql.so','function'),('idbpm',2,'libcalmysql.so','function'),('idbdbroot',2,'libcalmysql.so','function'),('idbsegment',2,'libcalmysql.so','function'),('idbsegmentdir',2,'libcalmysql.so','function'),('idbextentrelativerid',2,'libcalmysql.so','function'),('idbblockid',2,'libcalmysql.so','function'),('idbextentid',2,'libcalmysql.so','function'),('idbextentmin',0,'libcalmysql.so','function'),('idbextentmax',0,'libcalmysql.so','function'),('idbpartition',0,'libcalmysql.so','function'),('idblocalpm',2,'libcalmysql.so','function'),('mcssystemready',2,'libcalmysql.so','function'),('mcssystemreadonly',2,'libcalmysql.so','function'),('mcssystemprimary',2,'libcalmysql.so','function'),('regr_avgx',1,'libregr_mysql.so','aggregate'),('regr_avgy',1,'libregr_mysql.so','aggregate'),('regr_count',2,'libregr_mysql.so','aggregate'),('regr_slope',1,'libregr_mysql.so','aggregate'),('regr_intercept',1,'libregr_mysql.so','aggregate'),('regr_r2',1,'libregr_mysql.so','aggregate'),('corr',1,'libregr_mysql.so','aggregate'),('regr_sxx',1,'libregr_mysql.so','aggregate'),('regr_syy',1,'libregr_mysql.so','aggregate'),('regr_sxy',1,'libregr_mysql.so','aggregate'),('covar_pop',1,'libregr_mysql.so','aggregate'),('covar_samp',1,'libregr_mysql.so','aggregate'),('moda',1,'libregr_mysql.so','aggregate'),('distinct_count',2,'libudf_mysql.so','aggregate');
 
 CREATE DATABASE IF NOT EXISTS infinidb_vtable;
 CREATE DATABASE IF NOT EXISTS infinidb_querystats;
@@ -76,9 +78,9 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
 

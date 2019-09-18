@@ -2671,7 +2671,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
-            if (valOut.compatible(uintTypeId))
+            if (valOut.compatible(intTypeId))
             {
                 intOut = valOut.cast<int>();
                 bSetSuccess = true;
@@ -2692,9 +2692,9 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-            if (valOut.compatible(llTypeId))
+            if (valOut.compatible(longTypeId))
             {
-                intOut = valOut.cast<long long>();
+                intOut = valOut.cast<long>();
                 fRow.setIntField<8>(intOut, colOut);
                 bSetSuccess = true;
             }
