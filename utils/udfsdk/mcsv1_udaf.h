@@ -311,7 +311,7 @@ public:
     EXPORT int32_t getColWidth();
 
     // For non-numric return types, set the return column width. This defaults
-    // to the the length of the input.
+    // to a length determined by the input datatype.
     // valid in init()
     EXPORT bool setColWidth(int32_t colWidth);
 
@@ -329,7 +329,7 @@ public:
     // Call this during init()
     EXPORT void  setUserDataSize(int bytes);
 
-    // Call this everywhere except init()inline void mcsv1Context::setMariaDBReturnType(enum_mariadb_return_type rt)
+    // Call this everywhere except init()
     EXPORT UserData* getUserData();
 
     // Many UDAnF need a default Window Frame. If none is set here, the default is
@@ -365,7 +365,7 @@ public:
     EXPORT const std::string& getName() const;
     
     // Get the return type as set by CREATE AGGREGATE FUNCTION
-    enum_mariadb_return_type getMariaDBReturnType() const;
+    EXPORT enum_mariadb_return_type getMariaDBReturnType() const;
 
     EXPORT mcsv1Context& operator=(const mcsv1Context& rhs);
     EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
