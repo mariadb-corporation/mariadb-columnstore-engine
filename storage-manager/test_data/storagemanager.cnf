@@ -36,7 +36,7 @@ max_concurrent_uploads = 20
 # 
 # -1 is a special value indicating that there is no filesystem shared
 # between SM instances.
-common_prefix_depth = 2
+common_prefix_depth = 1
 
 [S3]
 # region = some_region
