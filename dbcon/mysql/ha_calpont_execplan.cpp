@@ -348,16 +348,13 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
         found = true;
     }
 
-    // An "if" function that contains an aggregate function
+    // A function that contains an aggregate function
     // can be included in the ORDER BY clause
     // e.g. select a, if (sum(b) > 1, 2, 1) from t1 group by 1 order by 2;
     if (sort_item->type() == Item::FUNC_ITEM)
     {
         Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
-        if (string(ifp->func_name()) == "if")
-        {
-            ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
-        }
+        ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
