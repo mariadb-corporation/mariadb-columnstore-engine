@@ -74,12 +74,15 @@ int main(int argc, char** argv)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
-    for (int i=1; i<SIGRTMAX; i++)
-    {
-        sa.sa_handler = shutdownSM;
-        if (i != SIGCONT && i != SIGKILL && i != SIGSTOP)
-            sigaction(i, &sa, NULL);
-    }
+    std::vector<int> shutdownSignals{ SIGHUP, SIGINT, SIGQUIT, SIGILL,
+                                      SIGTRAP, SIGABRT, SIGBUS, SIGFPE,
+                                      SIGSEGV, SIGALRM, SIGTERM, SIGXCPU,
+                                      SIGXFSZ, SIGVTALRM, SIGPROF, SIGPOLL,
+                                      SIGPWR, SIGSYS};
+    sa.sa_handler = shutdownSM;
+    for (int sig : shutdownSignals)
+        sigaction(sig, &sa, NULL);
+
 
     sa.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sa, NULL);
