@@ -1550,8 +1550,8 @@ void IOCCopyFile2()
     
     bf::path fullPath = homepath / prefix / "not-there";
     const char *source = fullPath.string().c_str();
-    fullPath = homepath / prefix / "not-there2";
-    const char *dest = fullPath.string().c_str();
+    bf::path fullPath2 = homepath / prefix / "not-there2";
+    const char *dest = fullPath2.string().c_str();
 
     bf::path metaPath = ioc->getMetadataPath();
     bf::remove(metaPath/prefix/"not-there.meta");
