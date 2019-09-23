@@ -66,14 +66,13 @@ Config::Config() : die(false)
        
        We can change this however we need later.
     */
-    char *cs_install_dir = getenv("COLUMNSTORE_INSTALL_DIR");
+    //char *cs_install_dir = getenv("COLUMNSTORE_INSTALL_DIR");
     
     vector<string> paths;
     
     // the paths to search in order
     paths.push_back(".");
-    if (cs_install_dir)
-        paths.push_back(string(MCSSYSCONFDIR) + "/columnstore");
+    paths.push_back(string(MCSSYSCONFDIR) + "/columnstore");
     paths.push_back("/etc");
     
     for (uint i = 0; i < paths.size(); i++)
