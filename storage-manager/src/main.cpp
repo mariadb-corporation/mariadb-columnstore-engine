@@ -34,6 +34,7 @@ using namespace std;
 #include "Cache.h"
 #include "Synchronizer.h"
 #include "Replicator.h"
+#include "crashtrace.h"
 
 using namespace storagemanager;
 
@@ -58,7 +59,10 @@ void printKPIs(int sig)
 void shutdownSM(int sig)
 {
     if (!signalCaught)
+    {
         (SessionManager::get())->shutdownSM(sig);
+        fatalHandler(sig);
+    }
     signalCaught = true;
 }
 
