@@ -514,7 +514,7 @@ int  TableInfo::readTableData( )
             fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
             // bufferCount++;
-            if ( (fHandle && feof(fHandle)) || (fS3ReadLength == fS3ParseLength) )
+            if ( (fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) )
             {
                 timeval readFinished;
                 gettimeofday(&readFinished, NULL);
