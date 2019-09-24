@@ -31,6 +31,8 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 
+#include <libmarias3/marias3.h>
+
 #include "we_type.h"
 #include "we_colop.h"
 #include "we_fileop.h"
@@ -63,7 +65,7 @@ private:
 
     int fTableId;                       // Table id
     int fBufferSize;                    // Size of buffer used by BulkLoadBuffer
-    int fFileBufSize;                   // Size of fFileBuffer passed to setvbuf
+    size_t fFileBufSize;                // Size of fFileBuffer passed to setvbuf
     //   to read import files.  Comes from
     //   writeBufferSize tag in job xml file
     char fColDelim;                     // Used to delimit col values in a row
@@ -133,6 +135,15 @@ private:
     volatile bool fTableLocked;         // Do we have db table lock
 
     bool fReadFromStdin;                // Read import file from STDIN
+    bool fReadFromS3;                   // Read import file from S3
+    std::string fS3Host;                // S3 hostname
+    std::string fS3Key;                 // S3 key
+    std::string fS3Secret;              // S3 secret key
+    std::string fS3Bucket;              // S3 bucket
+    std::string fS3Region;
+    ms3_st* ms3;                        // S3 object
+    size_t fS3ReadLength;
+    size_t fS3ParseLength;
     bool fNullStringMode;               // Treat "NULL" as a null value
     char fEnclosedByChar;               // Character to enclose col values
     char fEscapeChar;                   // Escape character used in conjunc-
@@ -366,9 +377,9 @@ public:
      *  @param fixedBinaryRecLen In binary mode, this is the fixed record length
      *         used to read the buffer; in text mode, this value is not used.
      */
-    void initializeBuffers(int   noOfBuffers,
-                           const JobFieldRefList& jobFieldRefList,
-                           unsigned int fixedBinaryRecLen);
+    int initializeBuffers(int   noOfBuffers,
+                          const JobFieldRefList& jobFieldRefList,
+                          unsigned int fixedBinaryRecLen);
 
     /** @brief Read the table data into the read buffer
      */
@@ -412,8 +423,10 @@ public:
 
     /** @brief set list of import files and STDIN usage flag
      */
-    void setLoadFilesInput(bool  bReadFromStdin,
-                           const std::vector<std::string>& files);
+    void setLoadFilesInput(bool  bReadFromStdin, bool bReadFromS3,
+        const std::vector<std::string>& files, const std::string& s3host,
+        const std::string &s3key, const std::string &s3secret,
+        const std::string &s3bucket, const std::string &s3region);
 
     /** @brief set job file name under process.
      */
@@ -609,11 +622,19 @@ inline void TableInfo::setJobId(int jobId)
     fJobId = jobId;
 }
 
-inline void TableInfo::setLoadFilesInput(bool  bReadFromStdin,
-        const std::vector<std::string>& files)
+inline void TableInfo::setLoadFilesInput(bool  bReadFromStdin, bool bReadFromS3,
+        const std::vector<std::string>& files, const std::string& s3host,
+        const std::string &s3key, const std::string &s3secret,
+        const std::string &s3bucket, const std::string &s3region)
 {
     fReadFromStdin  = bReadFromStdin;
+    fReadFromS3     = bReadFromS3;
     fLoadFileList   = files;
+    fS3Host         = s3host;
+    fS3Key          = s3key;
+    fS3Secret       = s3secret;
+    fS3Bucket       = s3bucket;
+    fS3Region       = s3region;
 }
 
 inline void TableInfo::setMaxErrorRows(const unsigned int maxErrorRows)

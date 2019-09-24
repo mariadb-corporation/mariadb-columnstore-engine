@@ -1,6 +1,7 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${S3API_DIR} )
 
+link_directories(${CMAKE_BINARY_DIR}/lib)
 
 ########### next target ###############
 
@@ -37,7 +38,7 @@ set(cpimport.bin_SRCS cpimport.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
 
-target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} we_bulk we_xml)
+target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
 
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

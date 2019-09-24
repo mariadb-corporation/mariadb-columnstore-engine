@@ -265,6 +265,12 @@ public:
      */
     bool tryAndLockColumn(const int& columnId, const int& id);
 
+    int fillFromMemory(
+        const BulkLoadBuffer& overFlowBufIn,
+        const char* input, size_t length, size_t *parse_length, RID& totalReadRows,
+        RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
+        unsigned int allowedErrCntThisCall );
+
     /** @brief Read the table data into the buffer
      */
     int fillFromFile(const BulkLoadBuffer& overFlowBufIn,

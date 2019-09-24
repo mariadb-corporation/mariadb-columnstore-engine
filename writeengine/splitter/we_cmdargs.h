@@ -274,6 +274,11 @@ private:	// variables for SplitterApp
     std::string fTmpFileDir;// Temp file directory.
     std::string fBulkRoot;	// Bulk Root path
     std::string fJobFile;	// Job File Name
+    std::string fS3Key;     // S3 key
+    std::string fS3Secret;  // S3 Secret
+    std::string fS3Bucket;  // S3 Bucket
+    std::string fS3Host;    // S3 Host
+    std::string fS3Region;  // S3 Region
 
     unsigned int fBatchQty;	// No. of batch Qty.
     int fNoOfReadThrds;		// No. of read buffers

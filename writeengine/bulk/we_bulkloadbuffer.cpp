@@ -2039,6 +2039,106 @@ int  BulkLoadBuffer::parseDictSection(ColumnInfo& columnInfo,
     return rc;
 }
 
+
+int BulkLoadBuffer::fillFromMemory(
+    const BulkLoadBuffer& overFlowBufIn,
+    const char* input, size_t length, size_t *parse_length, RID& totalReadRows,
+    RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
+    unsigned int allowedErrCntThisCall )
+{
+    boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
+    reset();
+    copyOverflow( overFlowBufIn );
+    size_t readSize = 0;
+
+    // Copy the overflow data from the last buffer, that did not get written
+    if (fOverflowSize != 0)
+    {
+        memcpy( fData, fOverflowBuf, fOverflowSize );
+
+        if (fOverflowBuf != NULL)
+        {
+            delete [] fOverflowBuf;
+            fOverflowBuf = NULL;
+        }
+    }
+
+    readSize = fBufferSize - fOverflowSize;
+    if (readSize > (length - *parse_length))
+    {
+        readSize = length - *parse_length;
+    }
+    memcpy(fData + fOverflowSize, input + *parse_length, readSize);
+    *parse_length += readSize;
+
+    bool bEndOfData = false;
+
+    if (length == *parse_length)
+    {
+        bEndOfData = true;
+    }
+
+    if ( bEndOfData && // @bug 3516: Add '\n' if missing from last record
+            (fImportDataMode == IMPORT_DATA_TEXT) ) // Only applies to ascii mode
+    {
+        if ( (fOverflowSize > 0) | (readSize > 0) )
+        {
+            if ( fData[ fOverflowSize + readSize - 1 ] != '\n' )
+            {
+                // Should be safe to add byte to fData w/o risk of overflowing,
+                // since we hit EOF.  That should mean fread() did not read all
+                // the bytes we requested, meaning we have room to add a byte.
+                fData[ fOverflowSize + readSize ] = '\n';
+                readSize++;
+            }
+        }
+    }
+
+    // Lazy allocation of fToken memory as needed
+    if (fTokens == 0)
+    {
+        resizeTokenArray();
+    }
+
+    if ((readSize > 0) || (fOverflowSize > 0))
+    {
+        if (fOverflowBuf != NULL)
+        {
+            delete [] fOverflowBuf;
+            fOverflowBuf = NULL;
+        }
+
+        fReadSize = readSize + fOverflowSize;
+        fStartRow = correctTotalRows;
+        fStartRowForLogging = totalReadRows;
+
+        if (fImportDataMode == IMPORT_DATA_TEXT)
+        {
+            tokenize( columnsInfo, allowedErrCntThisCall );
+        }
+        else
+        {
+            int rc = tokenizeBinary( columnsInfo, allowedErrCntThisCall,
+                                     bEndOfData );
+
+            if (rc != NO_ERROR)
+                return rc;
+        }
+
+        // If we read a full buffer without hitting any new lines, then
+        // terminate import because row size is greater than read buffer size.
+        if ((fTotalReadRowsForLog == 0) && (fReadSize == fBufferSize))
+        {
+            return ERR_BULK_ROW_FILL_BUFFER;
+        }
+
+        totalReadRows    += fTotalReadRowsForLog;
+        correctTotalRows += fTotalReadRows;
+    }
+
+    return NO_ERROR;
+}
+
 //------------------------------------------------------------------------------
 // Read the next set of rows from the input import file (for the specified
 // table), into "this" BulkLoadBuffer.

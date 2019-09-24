@@ -110,3 +110,6 @@ columnstoreversion.h
 .build
 /.vs
 /CMakeSettings.json
+tags
+*.orig
+*.diff
