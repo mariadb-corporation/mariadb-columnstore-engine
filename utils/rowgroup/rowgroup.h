@@ -1035,12 +1035,13 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
 
 inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
 {
+    uint8_t* p = &data[offsets[colIndex]];
+    *((long double*)p) = val;
     if (sizeof(long double) == 16)
     {
         // zero out the unused portion as there may be garbage there.
-        *((uint64_t*)&val+1) &= 0x000000000000FFFFULL;
+        *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
     }
-    *((long double*) &data[offsets[colIndex]]) = val;
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)

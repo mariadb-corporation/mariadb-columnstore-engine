@@ -68,8 +68,9 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            year = d.value / helpers::power(d.scale);
-            int lefto = (d.value - year * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            double dscale = d.scale;
+            year = d.value / pow(10.0, dscale);
+            int lefto = (d.value - year * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( year >= 0 && lefto > 4 )
                 year++;
@@ -127,8 +128,9 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-            int64_t tmp = d.value / helpers::power(d.scale);
-            int lefto = (d.value - tmp * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            double dscale = d.scale;
+            int64_t tmp = d.value / pow(10.0, dscale);
+            int lefto = (d.value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( tmp >= 0 && lefto > 4 )
                 tmp++;

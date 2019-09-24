@@ -2621,6 +2621,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 //				DBRMroot = tempDBRMDir + "/BRM_saves";
             }
             
+            
             //
             // run the 'load_brm' script first if files exist
             //
@@ -4419,7 +4420,6 @@ int ProcessMonitor::getDBRMdata(string *path)
                         bf::create_directories(pTmp);
                     *path = pTmp.string();
                     log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
-                    
                     for ( int i = 0 ; i < numFiles ; i ++ )
                     {
                         string fileName;
@@ -6359,7 +6359,6 @@ int ProcessMonitor::checkDataMount()
         /*  StorageManager isn't running yet.  Can't check for writability here. */
         return API_SUCCESS;
     }
-        
     //go unmount disk NOT assigned to this pm
     unmountExtraDBroots();
 
