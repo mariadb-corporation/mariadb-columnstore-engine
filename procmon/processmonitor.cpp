@@ -1026,59 +1026,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                     log.writeLog(__LINE__, "STOPALL: ACK back to ProcMgr, return status = " + oam.itoa((int) requestStatus));
 
-                    //Remove MariaDB ColumnStore PGK on REMOVE option if distubuted install
-                    string DistributedInstall = "n";
-
-                    try
-                    {
-                        oam.getSystemConfig("DistributedInstall", DistributedInstall);
-                    }
-                    catch (...)
-                    {
-                        log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-                    }
-
-                    if ( actIndicator == oam::REMOVE && ( DistributedInstall == "y" ))
-                    {
-                        log.writeLog(__LINE__,  "STOPALL: uninstall MariaDB ColumnStore PGKs", LOG_TYPE_DEBUG);
-
-                        if ( config.moduleType() == "um" )
-                        {
-                            system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
-                            system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");
-                        }
-                        else	// pm
-                        {
-                            //Flush the cache
-                            cacheutils::flushPrimProcCache();
-                            cacheutils::dropPrimProcFdCache();
-                            flushInodeCache();
-
-							try
-							{
-								string DBRootStorageType = "internal";
-								oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-
-								if ( DBRootStorageType == "external" )
-								{
-									string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data* -l > /dev/null 2>&1";
-
-									system(cmd.c_str());
-									sleep(1);
-								}
-							}
-							catch (...) {}
-
-                            system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
-                            system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");
-                        }
-
-                        // should get here is packages get removed correctly
-                        string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
-                        system(cmd.c_str());
-                        exit (0);
-                    }
-
                     break;
                 }
 
