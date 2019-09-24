@@ -2616,11 +2616,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 tmp = tmp.filename();
                 DBRMroot = (bf::path(DBRMDir) / tmp).string();
                 
-                // DBRMDir might have changed, so need to change DBRMroot
-                bf::path tmp(DBRMroot);
-                tmp = tmp.filename();
-                DBRMroot = (bf::path(DBRMDir) / tmp).string();
-                
                 sendAlarm("DBRM", DBRM_LOAD_DATA_ERROR, CLEAR);
                 // change DBRMroot to temp DBRMDir path
 //				DBRMroot = tempDBRMDir + "/BRM_saves";
@@ -4425,13 +4420,6 @@ int ProcessMonitor::getDBRMdata(string *path)
                         bf::create_directories(pTmp);
                     *path = pTmp.string();
                     log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
-                    
-                    boost::uuids::uuid u = boost::uuids::random_generator()();
-                    bf::path pTmp = bf::path(*path) / boost::uuids::to_string(u);
-                    bf::create_directories(pTmp);
-                    *path = pTmp.string();
-                    log.writeLog(__LINE__, "Downloading DBRM files to " + *path, LOG_TYPE_DEBUG);
-                    
                     for ( int i = 0 ; i < numFiles ; i ++ )
                     {
                         string fileName;
@@ -4472,10 +4460,6 @@ int ProcessMonitor::getDBRMdata(string *path)
 //								string temp1 = temp + "data" + fileName.substr(pos1,80);
 //								fileName = temp1;
 //							}
-                            bf::path pFilename(fileName);
-                            pFilename = pTmp / pFilename.filename();
-                            const char *cFilename = pFilename.string().c_str();
-                            
                             bf::path pFilename(fileName);
                             pFilename = pTmp / pFilename.filename();
                             const char *cFilename = pFilename.string().c_str();
