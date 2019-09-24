@@ -35,6 +35,7 @@
 #include <alloca.h>
 #endif
 #include <cstring>
+#include <cmath>
 #include <boost/regex.hpp>
 
 #include "expressionparser.h"
@@ -113,6 +114,8 @@ private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strCompare(const std::string& op1, const std::string& op2);
+    // MCOL-1559
+    inline bool strTrimCompare(const std::string& op1, const std::string& op2);
 };
 
 inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
@@ -126,31 +129,31 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
         //  considers these nulls significant, but they're not in the pattern, so we need to strip
         //   them off...
         const std::string& v = lop->getStrVal(row, isNull);
-        char* c = (char*)alloca(v.length() + 1);
-        memcpy(c, v.c_str(), v.length());
-        c[v.length()] = 0;
-        std::string vv(c);
+//        char* c = (char*)alloca(v.length() + 1);
+//        memcpy(c, v.c_str(), v.length());
+//        c[v.length()] = 0;
+//        std::string vv(c);
 
         if (regex)
         {
-#ifdef _MSC_VER
-            bool ret = boost::regex_match(vv, *regex);
+#ifdef POSIX_REGEX
+            bool ret = regexec(regex.get(), v.c_str(), 0, NULL, 0) == 0;
 #else
-            bool ret = regexec(regex.get(), vv.c_str(), 0, NULL, 0) == 0;
+            bool ret = boost::regex_match(v.c_str(), *regex);
 #endif
             return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
         }
         else
         {
-#ifdef _MSC_VER
-            boost::regex regex(dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull)));
-            bool ret = boost::regex_match(vv, regex);
-#else
+#ifdef POSIX_REGEX
             regex_t regex;
             std::string str = dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull));
             regcomp(&regex, str.c_str(), REG_NOSUB | REG_EXTENDED);
-            bool ret = regexec(&regex, vv.c_str(), 0, NULL, 0) == 0;
+            bool ret = regexec(&regex, v.c_str(), 0, NULL, 0) == 0;
             regfree(&regex);
+#else
+            boost::regex regex(dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull)));
+            bool ret = boost::regex_match(v.c_str(), regex);
 #endif
             return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
         }
@@ -489,11 +492,12 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 return false;
 
             const std::string& val1 = lop->getStrVal(row, isNull);
-
             if (isNull)
                 return false;
 
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+            return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+//            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+
         }
 
         //FIXME: ???
@@ -567,6 +571,37 @@ inline bool PredicateOperator::strCompare(const std::string& op1, const std::str
 
         case OP_LE:
             return funcexp::utf8::idb_strcoll(op1.c_str(), op2.c_str()) <= 0;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "Non support predicate operation: " << fOp;
+            throw logging::InvalidOperationExcept(oss.str());
+        }
+    }
+}
+
+inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)
+{
+    switch (fOp)
+    {
+        case OP_EQ:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) == 0;
+
+        case OP_NE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) != 0;
+
+        case OP_GT:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) > 0;
+
+        case OP_GE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) >= 0;
+
+        case OP_LT:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) < 0;
+
+        case OP_LE:
+            return funcexp::utf8::idb_strtrimcoll(op1, op2) <= 0;
 
         default:
         {

@@ -51,6 +51,16 @@ int64_t Func_div::getIntVal(rowgroup::Row& row,
 {
     double val1 = parm[0]->data()->getDoubleVal(row, isNull);
     double val2 = parm[1]->data()->getDoubleVal(row, isNull);
+    
+    if (val2 == 0 || val2 == NAN)
+    {
+        isNull = true;
+        return 0;
+    }
+    // MCOL-179 InnoDB doesn't round or convert to int before dividing.
+    return static_cast<int64_t>(val1 / val2);
+
+#if 0    
     int64_t int_val2 = (int64_t)(val2 > 0 ? val2 + 0.5 : val2 - 0.5);
 
     if (int_val2 == 0)
@@ -69,6 +79,7 @@ int64_t Func_div::getIntVal(rowgroup::Row& row,
     }
 
     return int_val1 / int_val2;
+#endif    
 }
 
 
