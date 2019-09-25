@@ -324,6 +324,11 @@ void check_sum_func_item(const Item* item, void* arg)
             *found = true;
         }
     }
+    else if (item->type() == Item::CONST_ITEM)
+    {
+        *found= true;
+    }
+
 }
 
 /*@brief sortItemIsInGrouping- seeks for an item in grouping*/
@@ -355,6 +360,10 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     {
         Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
         ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
+    }
+    else if (sort_item->type() == Item::CONST_ITEM)
+    {
+        found= true;
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
@@ -2010,7 +2019,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             }
         }
     }
-    else if (ifp->functype() == Item_func::MULT_EQUAL_FUNC)
+    /*else if (ifp->functype() == Item_func::MULT_EQUAL_FUNC)
     {
         Item_equal *cur_item_eq = (Item_equal*)ifp;
         Item *lhs_item, *rhs_item;
@@ -2041,7 +2050,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                 gwip->ptWorkStack.push(pt);
             }
         }
-    }
+    }*/
     else if (ifp->functype() == Item_func::EQUAL_FUNC)
     {
         // Convert "a <=> b" to (a = b OR (a IS NULL AND b IS NULL))"
@@ -6387,19 +6396,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_INTERNAL_ERROR;
         }
-       
-        // MCOL-3416 support for EQUAL_COND in MDB >= 10.1
-        if (join && join->cond_equal)
-        {
-            // TODO MCOL-3416 This must traverse all levels not current_level only
-            List_iterator<Item_equal> li(join->cond_equal->current_level);
-            Item_equal *cur_item_eq;
-            while ((cur_item_eq= li++))
-            {
-                cur_item_eq->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
-            }
-        }
-
     }
     else if (join && join->zero_result_cause)
     {
