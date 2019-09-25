@@ -323,7 +323,9 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
         case MYSQL_TYPE_FLOAT: // FLOAT type
         {
             Field_float* f2 = (Field_float*)*f;
-            float float_val = value;
+            float float_val = *(float*)(&value);
+            // Not sure if the above is correct
+//            float float_val = value;
             f2->store(float_val);
             break;
         }
@@ -331,7 +333,9 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
         case MYSQL_TYPE_DOUBLE: // DOUBLE type
         {
             Field_double* f2 = (Field_double*)*f;
-            double double_val = value;
+            // Not sure if the above is correct
+            double double_val = *(double*)(&value);
+//            double double_val = value;
             f2->store(double_val);
             break;
         }
