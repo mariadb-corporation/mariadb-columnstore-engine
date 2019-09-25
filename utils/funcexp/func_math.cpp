@@ -1606,6 +1606,46 @@ string Func_format::getStrVal(Row& row,
         {
             double rawValue = parm[0]->data()->getDoubleVal(row, isNull);
 
+            // Special handling for double values with scientific notation
+            // of the form 1.2345678901e208
+            ostringstream ss;
+            ss << setprecision(16) << rawValue; // 16 == numeric_limits<double>::digits10 + 1
+            string str = ss.str();
+            if (str.find("e+") != string::npos)
+            {
+                char buf[384];
+                snprintf(buf, 384, "%.16e", rawValue);
+                value = buf;
+                // Do not allow a double value 1.2345678901e+208
+                // to expand to 1.2345678900999999e+208
+                if (strlen(buf) > str.size() &&
+                    parm[0]->data()->resultType().colDataType != execplan::CalpontSystemCatalog::CHAR &&
+                    parm[0]->data()->resultType().colDataType != execplan::CalpontSystemCatalog::VARCHAR &&
+                    parm[0]->data()->resultType().colDataType != execplan::CalpontSystemCatalog::TEXT)
+                {
+                    value = str;
+                }
+
+                // Move the "." or add the 0's appropriately based on the exp value
+                // For 1.2345678901e+208, exp = 208
+                size_t pos1 = value.find(".");
+                size_t pos2 = value.find("e+");
+                int exp = stoi(value.substr(pos2 + 2));
+                int diff = exp - (pos2 - pos1 - 1);
+                value = value.substr(0, pos2);
+                value.erase(pos1, 1);
+                if (diff >= 0)
+                {
+                    string tmp(diff, '0');
+                    value.append(tmp);
+                }
+                else
+                {
+                    value.insert(pos1 + exp, ".");
+                }
+                break;
+            }
+
             // roundup
             if (scale < 0) scale = 0;
 
