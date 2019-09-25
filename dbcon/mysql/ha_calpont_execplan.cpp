@@ -3112,7 +3112,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
     return ct;
 }
 
-ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand)
+ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand, bool isRefItem)
 {
     ReturnedColumn* rc = NULL;
 
@@ -3132,6 +3132,12 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
         case Item::FIELD_ITEM:
         {
             Item_field* ifp = (Item_field*)item;
+
+            if (isRefItem && gwi.isGroupByHandler && !gwi.extSelAggColsItems.empty())
+            {
+                return buildAggFrmTempField(ifp, gwi);
+            }
+
             return buildSimpleColumn(ifp, gwi);
         }
         case Item::CONST_ITEM:
@@ -5606,7 +5612,7 @@ void gp_walk(const Item* item, void* arg)
 
             if (col->type() != Item::COND_ITEM)
             {
-                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError, false, true);
 
                 if ( col->type() == Item::FIELD_ITEM )
                     gwip->fatalParseError = false;
@@ -8112,6 +8118,7 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     SELECT_LEX *select_lex = gi.groupByTables->select_lex;
     gp_walk_info gwi;
     gwi.thd = thd;
+    gwi.isGroupByHandler = true;
     int status = getGroupPlan(gwi, *select_lex, csep, gi);
 
 #ifdef DEBUG_WALK_COND
