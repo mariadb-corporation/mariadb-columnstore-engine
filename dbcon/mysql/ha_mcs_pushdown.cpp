@@ -26,7 +26,8 @@ void mutate_optimizer_flags(THD *thd_)
     set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
     thd_->variables.optimizer_switch = OPTIMIZER_SWITCH_IN_TO_EXISTS |
         OPTIMIZER_SWITCH_EXISTS_TO_IN |
-        OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED;
+        OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED |
+        OPTIMIZER_SWITCH_COND_PUSHDOWN_FROM_HAVING;
 }
 
 void restore_optimizer_flags(THD *thd_)

@@ -264,13 +264,15 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
                 continue;
 
             T valIn;
-            getValue(colIn, valIn);
+            CDT cdt;
+            getValue(colIn, valIn, &cdt);
 //            checkSumLimit(fSum, valIn);
 
             if ((!fDistinct) || (fSet.find(valIn) == fSet.end()))
             {
                 long double val = valIn;
-                if (scale)
+                if (scale && 
+                    cdt != CalpontSystemCatalog::LONGDOUBLE)
                 {
                     val /= pow(10.0, scale);
                 }

@@ -94,10 +94,6 @@ bool getUIntValFromParm(
             {
                 isNull = true;
             }
-            else
-            {
-                value = 0;
-            }
         }
         break;
 
@@ -111,9 +107,9 @@ bool getUIntValFromParm(
             {
                 d.value = 0;
             }
-
-            int64_t tmpval = d.value / helpers::power(d.scale);
-            int lefto = (d.value - tmpval * helpers::power(d.scale)) / helpers::power(d.scale - 1);
+            double dscale = d.scale;
+            int64_t tmpval = d.value / pow(10.0, dscale);
+            int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( tmpval >= 0 && lefto > 4 )
                 tmpval++;
