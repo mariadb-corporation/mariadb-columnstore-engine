@@ -27,4 +27,4 @@ add_subdirectory(clusterTester)
 add_subdirectory(libmysql_client)
 add_subdirectory(regr)
 add_subdirectory(cloudio)
-
+add_subdirectory(libmarias3)

@@ -166,7 +166,12 @@ void printUsage()
          "        -L send *.err and *.bad (reject) files here" << endl <<
          "        -T Timezone used for TIMESTAMP datatype" << endl <<
          "           Possible values: \"SYSTEM\" (default)" << endl <<
-         "                          : Offset in the form +/-HH:MM" << endl << endl;
+         "                          : Offset in the form +/-HH:MM" << endl << endl <<
+         "        -y S3 Authentication Key (for S3 imports)" << endl <<
+         "        -K S3 Authentication Secret (for S3 imports)" << endl <<
+         "        -t S3 Bucket (for S3 imports)" << endl <<
+         "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl <<
+         "        -g S3 Regions (for S3 imports)" << endl;
 
     cout << "    Example1:" << endl <<
          "        cpimport.bin -j 1234" << endl <<
@@ -317,7 +322,7 @@ void parseCmdLineArgs(
     std::string jobUUID;
 
     while ( (option = getopt(
-                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:")) != EOF )
+                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:y:K:t:H:g:")) != EOF )
     {
         switch (option)
         {
@@ -707,6 +712,37 @@ void parseCmdLineArgs(
                 break;
             }
 
+            case 'y':
+            {
+                curJob.setS3Key(optarg);
+                break;
+            }
+
+            case 'K':
+            {
+                curJob.setS3Secret(optarg);
+                break;
+            }
+
+            case 't':
+            {
+                curJob.setS3Bucket(optarg);
+                break;
+            }
+
+            case 'H':
+            {
+                curJob.setS3Host(optarg);
+                break;
+            }
+
+            case 'g':
+            {
+                curJob.setS3Region(optarg);
+                break;
+            }
+
+
             default :
             {
                 ostringstream oss;
@@ -842,9 +878,14 @@ void parseCmdLineArgs(
 //------------------------------------------------------------------------------
 void printInputSource(
     const std::string& alternateImportDir,
-    const std::string& jobDescFile)
+    const std::string& jobDescFile,
+    const std::string& S3Bucket)
 {
-    if (alternateImportDir.size() > 0)
+    if (!S3Bucket.empty())
+    {
+        cout << "Input file will be read from S3 Bucket : " << S3Bucket << ", file/object : " << jobDescFile << endl;
+    }
+    else if (alternateImportDir.size() > 0)
     {
         if (alternateImportDir == IMPORT_PATH_CWD)
         {
@@ -930,6 +971,7 @@ void constructTempXmlFile(
     const std::string&       xmlGenSchema,
     const std::string&       xmlGenTable,
     const std::string&       alternateImportDir,
+    const std::string&       S3Bucket,
     boost::filesystem::path& sFileName)
 {
     // Construct the job description file name
@@ -957,7 +999,7 @@ void constructTempXmlFile(
         startupError( oss.str(), false );
     }
 
-    printInputSource( alternateImportDir, sFileName.string() );
+    printInputSource( alternateImportDir, sFileName.string(), S3Bucket );
 
     TempXMLGenData genData( sJobIdStr, xmlGenSchema, xmlGenTable );
     XMLGenProc genProc( &genData,
@@ -1275,6 +1317,7 @@ int main(int argc, char** argv)
                                  xmlGenSchema,
                                  xmlGenTable,
                                  curJob.getAlternateImportDir(),
+                                 curJob.getS3Bucket(),
                                  sFileName);
         }
         else                       // create user's persistent job file name
@@ -1300,7 +1343,7 @@ int main(int argc, char** argv)
                 startupError( oss.str(), false );
             }
 
-            printInputSource( curJob.getAlternateImportDir(), sFileName.string());
+            printInputSource( curJob.getAlternateImportDir(), sFileName.string(), curJob.getS3Bucket());
         }
 
         if (bDebug)

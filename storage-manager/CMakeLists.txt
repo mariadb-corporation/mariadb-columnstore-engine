@@ -52,28 +52,12 @@ if (SM_LOG_TO_STDERR)
     add_definitions(-DDEBUG)
 endif()
 
-set(S3API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmarias3)
-
-include(ExternalProject)
-ExternalProject_Add(ms3
-    DOWNLOAD_COMMAND cd ${CMAKE_SOURCE_DIR} && git submodule update --init
-    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_BINARY_DIR} ${S3_CONFIGURE_OPT}
-    BUILD_COMMAND make
-    BUILD_IN_SOURCE 0
-    EXCLUDE_FROM_ALL TRUE
-)
-
-add_library(marias3 SHARED IMPORTED)
-set_target_properties(marias3 PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2)
-add_dependencies(marias3 ms3)
-
-set(S3API_DEPS marias3 curl xml2)
-
 # get linkage right
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
 add_library(storagemanager SHARED ${storagemanager_SRCS})
+add_dependencies(storagemanager marias3)
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS} ${JEMALLOC_LIBRARIES})
 set_property(TARGET storagemanager PROPERTY CXX_STANDARD 11)
@@ -149,13 +133,6 @@ install(TARGETS StorageManager smcat smput smls smrm
     COMPONENT platform
 )
 
-install(PROGRAMS
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so
-    DESTINATION ${INSTALL_ENGINE}/lib
-    COMPONENT platform
-)
 
 install(FILES storagemanager.cnf 
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore

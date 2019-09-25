@@ -217,6 +217,21 @@ std::string WECmdArgs::getCpImportCmdLine()
     if (fbTruncationAsError)
         aSS << " -S ";
 
+    if (!fS3Key.empty())
+    {
+        if (fS3Secret.empty() || fS3Bucket.empty() || fS3Region.empty())
+            throw (runtime_error("Not all requried S3 options provided"));
+        aSS << " -y " << fS3Key;
+        aSS << " -K " << fS3Secret;
+        aSS << " -t " << fS3Bucket;
+        aSS << " -g " << fS3Region;
+
+        if (!fS3Host.empty())
+        {
+            aSS << " -H " << fS3Host;
+        }
+    }
+
     if ((fJobId.length() > 0) && (fMode == 1) && (!fJobLogOnly))
     {
         // if JobPath provided, make it w.r.t WES
@@ -541,7 +556,12 @@ void WECmdArgs::usage()
          << "\t\t\t3 - input files will be loaded on the local PM.\n"
          << "\t-T\tTimezone used for TIMESTAMP datatype.\n"
          << "\t\tPossible values: \"SYSTEM\" (default)\n"
-         << "\t\t               : Offset in the form +/-HH:MM\n";
+         << "\t\t               : Offset in the form +/-HH:MM\n"
+         << "\t-y\tS3 Authentication Key (for S3 imports)\n"
+         << "\t-K\tS3 Authentication Secret (for S3 imports)\n"
+         << "\t-t\tS3 Bucket (for S3 imports)\n"
+         << "\t-H\tS3 Hostname (for S3 imports, Amazon's S3 default)\n"
+         << "\t-g\tS3 Region (for S3 imports)\n";
 
     cout << "\nExample1: Traditional usage\n"
          << "\tcpimport -j 1234";
@@ -580,7 +600,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     //	fPrgmName = "/home/bpaul/genii/export/bin/cpimport";
 
     while ((aCh = getopt(argc, argv,
-                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:N"))
+                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:"))
             != EOF)
     {
         switch (aCh)
@@ -885,6 +905,36 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
                 break;
             }
 
+            case 'y': //-y S3 Key
+            {
+                fS3Key = optarg;
+                break;
+            }
+
+            case 'K': //-K S3 Secret
+            {
+                fS3Secret = optarg;
+                break;
+            }
+
+            case 'H': //-H S3 Host
+            {
+                fS3Host = optarg;
+                break;
+            }
+
+            case 't': //-t S3 bucket
+            {
+                fS3Bucket = optarg;
+                break;
+            }
+
+            case 'g': //-g S3 Region
+            {
+                fS3Region = optarg;
+                break;
+            }
+
             default:
             {
                 std::string aErr = "Unknown command line option " + aCh;
@@ -1028,7 +1078,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             {
                 fPmFile = argv[optind];
 
-                if (fPmFile.at(0) != '/')
+                if ((fPmFile.at(0) != '/') && (fS3Key.empty()))
                 {
                     std::string aTmp = fPmFile;
                     fPmFile = bulkRootPath + "/data/import/" + aTmp;
@@ -1044,7 +1094,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
                 else
                     fPmFile = fLocFile;
 
-                if (fPmFile.at(0) != '/')	//should be true all the time
+                if ((fPmFile.at(0) != '/') && (fS3Key.empty()))	//should be true all the time
                 {
                     std::string aTmp = fPmFile;
                     fPmFile = bulkRootPath + "/data/import/" + aTmp;
@@ -1135,7 +1185,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
                         if (2 == fArgMode)
                         {
                             //BUG 4342
-                            if (fPmFile.at(0) != '/')
+                            if ((fPmFile.at(0) != '/') && (fS3Key.empty()))
                             {
                                 std::string aTmp = fPmFile;
                                 fPmFile = PrepMode2ListOfFiles(aTmp);

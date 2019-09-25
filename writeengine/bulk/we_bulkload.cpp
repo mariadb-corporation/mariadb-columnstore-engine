@@ -797,9 +797,11 @@ int BulkLoad::preProcess( Job& job, int tableNo,
     }
 
     // Initialize BulkLoadBuffers after we have added all the columns
-    tableInfo->initializeBuffers(fNoOfBuffers,
-                                 job.jobTableList[tableNo].fFldRefs,
-                                 fixedBinaryRecLen);
+    rc = tableInfo->initializeBuffers(fNoOfBuffers,
+                                      job.jobTableList[tableNo].fFldRefs,
+                                      fixedBinaryRecLen);
+    if (rc)
+        return rc;
 
     fTableInfo.push_back(tableInfo);
 
@@ -1246,31 +1248,38 @@ int BulkLoad::manageImportDataFileList(Job& job,
     {
         std::string importDir;
 
-        if ( fAlternateImportDir == IMPORT_PATH_CWD )  // current working dir
+        if (!fS3Key.empty())
         {
-            char cwdBuf[4096];
-            importDir  = ::getcwd(cwdBuf, sizeof(cwdBuf));
-            importDir += '/';
+            loadFilesList.push_back(loadFileName);
         }
-        else if ( fAlternateImportDir.size() > 0 )     // -f path
+        else
         {
-            importDir = fAlternateImportDir;
-        }
-        else                                           // <BULKROOT>/data/import
-        {
-            importDir  = fRootDir;
-            importDir += DIR_BULK_IMPORT;
-        }
+            if ( fAlternateImportDir == IMPORT_PATH_CWD )  // current working dir
+            {
+                char cwdBuf[4096];
+                importDir  = ::getcwd(cwdBuf, sizeof(cwdBuf));
+                importDir += '/';
+            }
+            else if ( fAlternateImportDir.size() > 0 )     // -f path
+            {
+                importDir = fAlternateImportDir;
+            }
+            else                                           // <BULKROOT>/data/import
+            {
+                importDir  = fRootDir;
+                importDir += DIR_BULK_IMPORT;
+            }
 
-        // Break down loadFileName into vector of file names in case load-
-        // FileName contains a list of files or 1 or more wildcards.
-        int rc = buildImportDataFileList(importDir,
-                                         loadFileName,
-                                         loadFilesList);
+            // Break down loadFileName into vector of file names in case load-
+            // FileName contains a list of files or 1 or more wildcards.
+            int rc = buildImportDataFileList(importDir,
+                                             loadFileName,
+                                             loadFilesList);
 
-        if (rc != NO_ERROR)
-        {
-            return rc;
+            if (rc != NO_ERROR)
+            {
+                return rc;
+            }
         }
 
         // No filenames is considered a fatal error, except for remote mode2.
@@ -1284,7 +1293,7 @@ int BulkLoad::manageImportDataFileList(Job& job,
 
             if (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC)
             {
-                tableInfo->setLoadFilesInput(bUseStdin, loadFilesList);
+                tableInfo->setLoadFilesInput(bUseStdin, (!fS3Key.empty()), loadFilesList, fS3Host, fS3Key, fS3Secret, fS3Bucket, fS3Region);
                 tableInfo->markTableComplete( );
                 fLog.logMsg( oss.str(), MSGLVL_INFO1 );
                 return NO_ERROR;
@@ -1300,33 +1309,36 @@ int BulkLoad::manageImportDataFileList(Job& job,
         // We also used to check to make sure the input file is not empty, and
         // if it were, we threw an error at this point, but we removed that
         // check.  With shared-nothing, an empty file is now acceptable.
-        for (unsigned ndx = 0; ndx < loadFilesList.size(); ndx++ )
+        if (fS3Key.empty())
         {
-            // in addition to being more portable due to the use of boost, this change
-            // actually fixes an inherent bug with cpimport reading from a named pipe.
-            // Only the first open call gets any data passed through the pipe so the
-            // here that used to do an open to test for existence meant cpimport would
-            // never get data from the pipe.
-            boost::filesystem::path pathFile(loadFilesList[ndx]);
+            for (unsigned ndx = 0; ndx < loadFilesList.size(); ndx++ )
+            {
+                // in addition to being more portable due to the use of boost, this change
+                // actually fixes an inherent bug with cpimport reading from a named pipe.
+                // Only the first open call gets any data passed through the pipe so the
+                // here that used to do an open to test for existence meant cpimport would
+                // never get data from the pipe.
+                boost::filesystem::path pathFile(loadFilesList[ndx]);
 
-            if ( !boost::filesystem::exists( pathFile ) )
-            {
-                ostringstream oss;
-                oss << "input data file " << loadFilesList[ndx] << " does not exist";
-                fLog.logMsg( oss.str(), ERR_FILE_NOT_EXIST, MSGLVL_ERROR );
-                tableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
-                return ERR_FILE_NOT_EXIST;
-            }
-            else
-            {
-                ostringstream oss;
-                oss << "input data file " << loadFilesList[ndx];
-                fLog.logMsg( oss.str(), MSGLVL_INFO1 );
+                if ( !boost::filesystem::exists( pathFile ) )
+                {
+                    ostringstream oss;
+                    oss << "input data file " << loadFilesList[ndx] << " does not exist";
+                    fLog.logMsg( oss.str(), ERR_FILE_NOT_EXIST, MSGLVL_ERROR );
+                    tableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
+                    return ERR_FILE_NOT_EXIST;
+                }
+                else
+                {
+                    ostringstream oss;
+                    oss << "input data file " << loadFilesList[ndx];
+                    fLog.logMsg( oss.str(), MSGLVL_INFO1 );
+                }
             }
         }
     }
 
-    tableInfo->setLoadFilesInput(bUseStdin, loadFilesList);
+    tableInfo->setLoadFilesInput(bUseStdin, (!fS3Key.empty()), loadFilesList, fS3Host, fS3Key, fS3Secret, fS3Bucket, fS3Region);
 
     return NO_ERROR;
 }

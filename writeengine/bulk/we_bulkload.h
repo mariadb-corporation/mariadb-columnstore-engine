@@ -119,6 +119,11 @@ public:
     const std::string&  getJobDir            ( ) const;
     const std::string&  getSchema            ( ) const;
     const std::string&  getTempJobDir        ( ) const;
+    const std::string&  getS3Key             ( ) const;
+    const std::string&  getS3Secret          ( ) const;
+    const std::string&  getS3Bucket          ( ) const;
+    const std::string&  getS3Host            ( ) const;
+    const std::string&  getS3Region          ( ) const;
     bool                getTruncationAsError ( ) const;
     BulkModeType        getBulkLoadMode      ( ) const;
     bool                getContinue          ( ) const;
@@ -151,6 +156,11 @@ public:
     void                setJobUUID           ( const std::string& jobUUID );
     void                setErrorDir          ( const std::string& errorDir );
     void                setTimeZone          ( const std::string& timeZone );
+    void                setS3Key             ( const std::string& key );
+    void                setS3Secret          ( const std::string& secret );
+    void                setS3Bucket          ( const std::string& bucket );
+    void                setS3Host            ( const std::string& host );
+    void                setS3Region          ( const std::string& region );
     // Timer functions
     void                startTimer           ( );
     void                stopTimer            ( );
@@ -230,6 +240,11 @@ private:
     boost::uuids::uuid fUUID;               // job UUID
     static bool		fNoConsoleOutput;		   // disable output to console
     std::string fTimeZone;                 // Timezone to use for TIMESTAMP data type
+    std::string fS3Key;                    // S3 Key
+    std::string fS3Secret;                 // S3 Secret
+    std::string fS3Host;                   // S3 Host
+    std::string fS3Bucket;                 // S3 Bucket
+    std::string fS3Region;                 // S3 Region
 
     //--------------------------------------------------------------------------
     // Private Functions
@@ -340,6 +355,31 @@ inline const std::string& BulkLoad::getSchema( ) const
 inline const std::string& BulkLoad::getTempJobDir( ) const
 {
     return DIR_BULK_TEMP_JOB;
+}
+
+inline const std::string& BulkLoad::getS3Key( ) const
+{
+    return fS3Key;
+}
+
+inline const std::string& BulkLoad::getS3Secret( ) const
+{
+    return fS3Secret;
+}
+
+inline const std::string& BulkLoad::getS3Bucket( ) const
+{
+    return fS3Bucket;
+}
+
+inline const std::string& BulkLoad::getS3Host( ) const
+{
+    return fS3Host;
+}
+
+inline const std::string& BulkLoad::getS3Region( ) const
+{
+    return fS3Region;
 }
 
 inline bool BulkLoad::getTruncationAsError ( ) const
@@ -470,6 +510,31 @@ inline void BulkLoad::setErrorDir( const std::string& errorDir )
 inline void BulkLoad::setTimeZone( const std::string& timeZone )
 {
     fTimeZone = timeZone;
+}
+
+inline void BulkLoad::setS3Key( const std::string& key )
+{
+    fS3Key = key;
+}
+
+inline void BulkLoad::setS3Secret( const std::string& secret )
+{
+    fS3Secret = secret;
+}
+
+inline void BulkLoad::setS3Bucket( const std::string& bucket )
+{
+    fS3Bucket = bucket;
+}
+
+inline void BulkLoad::setS3Host( const std::string& host )
+{
+    fS3Host = host;
+}
+
+inline void BulkLoad::setS3Region( const std::string& region )
+{
+    fS3Region = region;
 }
 
 inline void BulkLoad::startTimer( )
