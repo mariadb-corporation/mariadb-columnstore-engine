@@ -37,8 +37,12 @@ class Config : public boost::noncopyable
         
         std::string getValue(const std::string &section, const std::string &key) const;
         
+        // for testing, lets caller specify a config file to use
+        static Config *get(const std::string &);
+        
     private:
         Config();
+        Config(const std::string &);
         
         void reload();
         void reloadThreadFcn();

@@ -41,7 +41,7 @@ class PosixTask
         void primeBuffer();
         
     protected:
-        bool read(uint8_t *buf, uint length);
+        int read(uint8_t *buf, uint length);
         bool write(const std::vector<uint8_t> &buf);
         bool write(sm_response &resp, uint payloadLength);
         bool write(const uint8_t *buf, uint length);

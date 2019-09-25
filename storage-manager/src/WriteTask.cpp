@@ -36,7 +36,7 @@ WriteTask::~WriteTask()
 }
 
 #define check_error(msg, ret) \
-    if (!success) \
+    if (success<0) \
     { \
         handleError(msg, errno); \
         return ret; \
@@ -47,7 +47,7 @@ WriteTask::~WriteTask()
 bool WriteTask::run()
 {
     SMLogging* logger = SMLogging::get();
-    bool success;
+    int success;
     uint8_t cmdbuf[1024] = {0};
     
     success = read(cmdbuf, sizeof(write_cmd));
@@ -77,14 +77,16 @@ bool WriteTask::run()
         uint toRead = min(cmd->count - readCount, bufsize);
         success = read(&databuf[0], toRead);
         check_error("WriteTask read data", false);
-        readCount += toRead;
+        if (success==0)
+            break;
+        readCount += success;
         uint writePos = 0;
         ssize_t err;
         while (writeCount < readCount)
         {
             try 
             {
-                err = ioc->write(cmd->filename, &databuf[writePos], cmd->offset + writeCount, toRead - writePos);
+                err = ioc->write(cmd->filename, &databuf[writePos], cmd->offset + writeCount, success - writePos);
             }
             catch (exception &e)
             {
@@ -113,8 +115,7 @@ bool WriteTask::run()
     }
     else
         resp->returnCode = writeCount;
-    success = write(*resp, payloadLen);
-    return success;
+    return write(*resp, payloadLen);
 }
 
 }

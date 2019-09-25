@@ -189,9 +189,10 @@ void makeConnection()
     t.join();
 }
     
-bool opentask()
+bool opentask(bool connectionTest=false)
 {
     // going to rely on msgs being smaller than the buffer here
+	int err=0;
     uint8_t buf[1024];
     sm_msg_header *hdr = (sm_msg_header *) buf;
     open_cmd *cmd = (open_cmd *) &hdr[1];
@@ -206,6 +207,7 @@ bool opentask()
     cmd->flen = 19;
     strcpy((char *) cmd->filename, filename);
     
+    cout << "open file " << filename << endl;
     ::unlink(filename);
     ssize_t result = ::write(sessionSock, cmd, hdr->payloadLen);
     assert(result==(hdr->payloadLen));
@@ -213,21 +215,29 @@ bool opentask()
     OpenTask o(clientSock, hdr->payloadLen);
     o.run();
     
-    // read the response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(struct stat) + sizeof(sm_response));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.payloadLen == sizeof(struct stat) + sizeof(ssize_t));
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 0);
-    struct stat *_stat = (struct stat *) resp->payload;
-    
-    // what can we verify about the stat...
-    assert(_stat->st_uid == getuid());
-    assert(_stat->st_gid == getgid());
-    assert(_stat->st_size == 0);
-    
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+		// read the response
+		err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+		sm_response *resp = (sm_response *) buf;
+		assert(err == sizeof(struct stat) + sizeof(sm_response));
+		assert(resp->header.type == SM_MSG_START);
+		assert(resp->header.payloadLen == sizeof(struct stat) + sizeof(ssize_t));
+		assert(resp->header.flags == 0);
+		assert(resp->returnCode == 0);
+		struct stat *_stat = (struct stat *) resp->payload;
+
+		// what can we verify about the stat...
+		assert(_stat->st_uid == getuid());
+		assert(_stat->st_gid == getgid());
+		assert(_stat->st_size == 0);
+    }
     /* verify the file is there */
     string metaPath = Config::get()->getValue("ObjectStorage", "metadata_path");
     assert(!metaPath.empty());
@@ -414,7 +424,7 @@ bool writetask()
     assert(resp->header.payloadLen == sizeof(ssize_t));
     assert(resp->header.flags == 0);
     assert(resp->returnCode == 9);
-    
+
     //check file contents
     err = ::read(fd, buf, 1024);
     assert(err == 9);
@@ -476,8 +486,9 @@ bool appendtask()
     return true;
 }
 
-void unlinktask()
+void unlinktask(bool connectionTest=false)
 {
+	int err=0;
     // make a meta file and delete it
     bf::path fullPath = homepath / prefix / "unlinktest1";
     string pathMeta = prefix + "/unlinktest1";
@@ -503,14 +514,23 @@ void unlinktask()
     assert(result==(sizeof(unlink_cmd) + cmd->flen));
     u.run();
     
-    // verify response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(*resp));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.payloadLen == sizeof(ssize_t));
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 0);
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+		// read the response
+		err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+	    sm_response *resp = (sm_response *) buf;
+	    assert(err == sizeof(*resp));
+	    assert(resp->header.type == SM_MSG_START);
+	    assert(resp->header.payloadLen == sizeof(ssize_t));
+	    assert(resp->header.flags == 0);
+	    assert(resp->returnCode == 0);
+    }
     
     // confirm it no longer exists
     assert(!bf::exists(fullPathMeta));
@@ -547,8 +567,9 @@ void unlinktask()
     cout << "unlink task OK" << endl;
 }
 
-bool stattask()
+bool stattask(bool connectionTest=false)
 {
+	int err=0;
     bf::path fullPath = homepath / prefix / "stattest1";
     string filename = fullPath.string();
     string Metafilename = prefix + "/stattest1";
@@ -571,21 +592,30 @@ bool stattask()
     StatTask s(clientSock, sizeof(*cmd) + cmd->flen);
     s.run();
     
-    // read the response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(struct stat) + sizeof(sm_response));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.flags == 0);
-    assert(resp->header.payloadLen == sizeof(struct stat) + sizeof(ssize_t));
-    assert(resp->returnCode == 0);
-    struct stat *_stat = (struct stat *) resp->payload;
-    
-    // what can we verify about the stat...
-    assert(_stat->st_uid == getuid());
-    assert(_stat->st_gid == getgid());
-    assert(_stat->st_size == 8192);
-    
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+        // read the response
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err == sizeof(struct stat) + sizeof(sm_response));
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.flags == 0);
+        assert(resp->header.payloadLen == sizeof(struct stat) + sizeof(ssize_t));
+        assert(resp->returnCode == 0);
+        struct stat *_stat = (struct stat *) resp->payload;
+
+        // what can we verify about the stat...
+        assert(_stat->st_uid == getuid());
+        assert(_stat->st_gid == getgid());
+        assert(_stat->st_size == 8192);
+    }
+
     ::unlink(fullFilename.c_str());
     cout << "stattask OK" << endl;
     return true;
@@ -732,7 +762,7 @@ bool IOCTruncate()
 }
 
 
-bool truncatetask()
+bool truncatetask(bool connectionTest=false)
 {
     IOCoordinator *ioc = IOCoordinator::get();
     Cache *cache = Cache::get();
@@ -742,7 +772,7 @@ bool truncatetask()
     string metaStr = prefix + "/trunctest1";
     const char *filename = fullPath.string().c_str();
     const char *Metafilename = metaStr.c_str();
-
+    int err=0;
     // get the metafile created
     string metaFullName = (metaPath/Metafilename).string() + ".meta";
     ::unlink(metaFullName.c_str());
@@ -762,14 +792,23 @@ bool truncatetask()
     TruncateTask t(clientSock, sizeof(*cmd) + cmd->flen);
     t.run();
     
-    // read the response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(sm_response));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.flags == 0);
-    assert(resp->header.payloadLen == sizeof(ssize_t));
-    assert(resp->returnCode == 0);
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+        // read the response
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err == sizeof(sm_response));
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.flags == 0);
+        assert(resp->header.payloadLen == sizeof(ssize_t));
+        assert(resp->returnCode == 0);
+    }
     
     // reload the metadata, check that it is 1000 bytes
     meta = MetadataFile(Metafilename);
@@ -781,7 +820,7 @@ bool truncatetask()
     return true;
 }
 
-bool listdirtask()
+bool listdirtask(bool connectionTest=false)
 {
     IOCoordinator *ioc = IOCoordinator::get();
     const bf::path metaPath = ioc->getMetadataPath();
@@ -821,36 +860,47 @@ bool listdirtask()
     ListDirectoryTask l(clientSock, sizeof(*cmd) + cmd->plen);
     l.run();
 
-    /* going to keep this simple. Don't run this in a big dir. */
-    /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
-    err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err > 0);
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 0);
-    listdir_resp *r = (listdir_resp *) resp->payload;
-    assert(r->elements == 10);
-    int off = sizeof(sm_response) + sizeof(listdir_resp);
-    uint fileCounter = 0;
-    while (off < err)
+    if (connectionTest)
     {
-        listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
-        //cout << "len = " << e->flen << endl;
-        assert(off + e->flen + sizeof(listdir_resp_entry) < 8192);
-        string file(e->filename, e->flen);
-        assert(files.find((tmpPath/file).string()) != files.end());
-        fileCounter++;
-        //cout << "name = " << file << endl;
-        off += e->flen + sizeof(listdir_resp_entry);
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
     }
-    assert(fileCounter == r->elements);
+    else
+    {
+        /* going to keep this simple. Don't run this in a big dir. */
+        /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
+        err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err > 0);
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.flags == 0);
+        assert(resp->returnCode == 0);
+        listdir_resp *r = (listdir_resp *) resp->payload;
+        assert(r->elements == 10);
+        int off = sizeof(sm_response) + sizeof(listdir_resp);
+        uint fileCounter = 0;
+        while (off < err)
+        {
+            listdir_resp_entry *e = (listdir_resp_entry *) &buf[off];
+            //cout << "len = " << e->flen << endl;
+            assert(off + e->flen + sizeof(listdir_resp_entry) < 8192);
+            string file(e->filename, e->flen);
+            assert(files.find((tmpPath/file).string()) != files.end());
+            fileCounter++;
+            //cout << "name = " << file << endl;
+            off += e->flen + sizeof(listdir_resp_entry);
+        }
+        assert(fileCounter == r->elements);
+    }
+
     bf::remove_all(tmpPath);
     return true;
 }
 
-void pingtask()
+void pingtask(bool connectionTest=false)
 {
+	int err=0;
     uint8_t buf[1024];
     ping_cmd *cmd = (ping_cmd *) buf;
     cmd->opcode = PING;
@@ -861,18 +911,28 @@ void pingtask()
     PingTask p(clientSock, sizeof(*cmd));
     p.run();
     
-    // read the response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(sm_response));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.payloadLen == sizeof(ssize_t));
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 0);
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+        // read the response
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err == sizeof(sm_response));
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.payloadLen == sizeof(ssize_t));
+        assert(resp->header.flags == 0);
+        assert(resp->returnCode == 0);
+    }
+
     cout << "pingtask OK" << endl;
 }
 
-bool copytask()
+bool copytask(bool connectionTest=false)
 {
     /*  
         make a file
@@ -907,15 +967,25 @@ bool copytask()
 
     CopyTask c(clientSock, len);
     c.run();
-    
-    // read the response
-    int err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    sm_response *resp = (sm_response *) buf;
-    assert(err == sizeof(sm_response));
-    assert(resp->header.type == SM_MSG_START);
-    assert(resp->header.payloadLen == sizeof(ssize_t));
-    assert(resp->header.flags == 0);
-    assert(resp->returnCode == 0);
+    int err=0;
+    if (connectionTest)
+    {
+    	close(sessionSock);
+    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    	assert(err == -1);
+    }
+    else
+    {
+        // read the response
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        sm_response *resp = (sm_response *) buf;
+        assert(err == sizeof(sm_response));
+        assert(resp->header.type == SM_MSG_START);
+        assert(resp->header.payloadLen == sizeof(ssize_t));
+        assert(resp->header.flags == 0);
+        assert(resp->returnCode == 0);
+    }
+
     
     // verify copytest2 is there
     MetadataFile meta2(Metadest, MetadataFile::no_create_t(),true);
@@ -1485,8 +1555,8 @@ void IOCCopyFile2()
     
     bf::path fullPath = homepath / prefix / "not-there";
     const char *source = fullPath.string().c_str();
-    fullPath = homepath / prefix / "not-there2";
-    const char *dest = fullPath.string().c_str();
+    bf::path fullPath2 = homepath / prefix / "not-there2";
+    const char *dest = fullPath2.string().c_str();
 
     bf::path metaPath = ioc->getMetadataPath();
     bf::remove(metaPath/prefix/"not-there.meta");
@@ -1587,6 +1657,93 @@ void bigMergeJournal1()
     assert(buf);
 }
     
+    
+// This should write an incomplete msg(s) to make sure SM does the right thing.  Not
+// done yet, handing this off to Ben.
+void shortMsg()
+{
+    IOCoordinator *ioc = IOCoordinator::get();
+
+    struct stat _stat;
+    bf::path fullPath = homepath / prefix / "writetest1";
+    const char *filename = fullPath.string().c_str();
+    ::unlink(filename);
+    ioc->open(filename,O_WRONLY | O_CREAT,&_stat);
+
+    size_t size = 27;
+    uint8_t bufWrite[(sizeof(write_cmd)+std::strlen(filename)+size)];
+ 
+    sm_msg_header *hdrWrite = (sm_msg_header *) bufWrite;
+    write_cmd *cmdWrite = (write_cmd *) &hdrWrite[1];
+    uint8_t *dataWrite;
+
+    cmdWrite->opcode = WRITE;
+    cmdWrite->offset = 0;
+    cmdWrite->count = size;
+    cmdWrite->flen = std::strlen(filename);
+    memcpy(&cmdWrite->filename, filename, cmdWrite->flen);
+    dataWrite = (uint8_t *) &cmdWrite->filename[cmdWrite->flen];
+    memcpy(dataWrite, "123456789123456789123456789", cmdWrite->count);
+
+    hdrWrite->type = SM_MSG_START;
+    hdrWrite->payloadLen = sizeof(*cmdWrite) + cmdWrite->flen + 9;
+
+    WriteTask w(clientSock, hdrWrite->payloadLen);
+    ssize_t result = ::write(sessionSock, cmdWrite, hdrWrite->payloadLen);
+    assert(result==(hdrWrite->payloadLen));
+
+    w.run();
+    
+    // verify response
+    int err = ::recv(sessionSock, bufWrite, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) bufWrite;
+    assert(err == sizeof(*resp));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == sizeof(ssize_t));
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == 9);
+    
+
+	uint8_t bufAppend[(sizeof(append_cmd)+std::strlen(filename)+size)];
+    uint8_t *dataAppend;
+
+	sm_msg_header *hdrAppend = (sm_msg_header *) bufAppend;
+	append_cmd *cmdAppend = (append_cmd *) &hdrAppend[1];
+	cmdAppend->opcode = APPEND;
+	cmdAppend->count = size;
+	cmdAppend->flen = std::strlen(filename);
+	memcpy(&cmdAppend->filename, filename, cmdAppend->flen);
+	dataAppend = (uint8_t *) &cmdAppend->filename[cmdAppend->flen];
+    memcpy(dataAppend, "123456789123456789123456789", cmdAppend->count);
+    hdrAppend->type = SM_MSG_START;
+    hdrAppend->payloadLen = sizeof(*cmdAppend) + cmdAppend->flen + 9;
+
+	AppendTask a(clientSock, hdrAppend->payloadLen);
+	err = ::write(sessionSock, cmdAppend, hdrAppend->payloadLen);
+
+	a.run();
+
+	// verify response
+	err = ::recv(sessionSock, bufAppend, 1024, MSG_DONTWAIT);
+	resp = (sm_response *) bufAppend;
+	assert(err == sizeof(*resp));
+	assert(resp->header.type == SM_MSG_START);
+	assert(resp->header.payloadLen == sizeof(ssize_t));
+	assert(resp->header.flags == 0);
+	assert(resp->returnCode == 9);
+    ioc->unlink(fullPath.string().c_str());
+    cout << "shortWriteMsg Test OK" << endl;
+}
+
+// write and append are the biggest vulnerabilities here b/c those msgs could be sent in multiple
+// pieces, are much larger, and thus if there is a crash mid-message it's most likely to happen 
+// during a call to write/append().
+// it may not even be possible for CS to write a partial open/stat/read/etc msg, but that should be 
+// tested as well.
+void shortMsgTests()
+{
+    shortMsg();
+}
 
 int main(int argc, char* argv[])
 {
@@ -1617,6 +1774,18 @@ int main(int argc, char* argv[])
     	}
     }
 
+    if (!bf::is_regular_file("test_data/storagemanager.cnf"))
+    {
+        cerr << "This should be run in a dir where ./test_data/storagemanager.cnf exists" << endl;
+        exit(1);
+    }
+    Config *config = Config::get("test_data/storagemanager.cnf");
+    cout << "Cleaning out debris from previous runs" << endl;
+    bf::remove_all(config->getValue("ObjectStorage", "metadata_path"));
+    bf::remove_all(config->getValue("ObjectStorage", "journal_path"));
+    bf::remove_all(config->getValue("LocalStorage", "path"));
+    bf::remove_all(config->getValue("Cache", "path"));
+    
     cout << "connecting" << endl;
     makeConnection();
     cout << "connected" << endl;
@@ -1650,12 +1819,11 @@ int main(int argc, char* argv[])
     // this starts in one object and crosses into new object
     metadataJournalTest_append((7*sizeKB));
 
-
     //writetask();
     //appendtask();
     unlinktask();
     stattask();
-    truncatetask();   // currently waiting on IOC::write() to be completed.
+    truncatetask();
     listdirtask();
     pingtask();
     copytask();
@@ -1666,17 +1834,57 @@ int main(int argc, char* argv[])
     replicatorTest();
     syncTest1();
 
-    s3storageTest1();
     IOCReadTest1();
     IOCTruncate();
     IOCUnlink();
     IOCCopyFile();
+    shortMsgTests();
     
     // For the moment, this next one just verifies no error happens as reported by the fcns called.
     // It doesn't verify the result yet.
     bigMergeJournal1();
     
+    // skip the s3 test if s3 is not configured
+    if (config->getValue("S3", "region") != "")
+    {
+        s3storageTest1();
+    }
+    else
+        cout << "To run the S3Storage unit tests, configure the S3 section of test-data/storagemanager.cnf" 
+            << endl;
+
+    cout << "Cleanup";
     metadataJournalTestCleanup();
+    cout << " DONE" << endl;
+
+    cout << "Testing connection loss..." << endl;
+
+    //opentask();
+    opentask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    unlinktask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    stattask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    truncatetask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    listdirtask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    pingtask(true);
+    cout << "connecting" << endl;
+    makeConnection();
+    cout << "connected" << endl;
+    copytask(true);
 
     (Cache::get())->shutdown();
     delete (Synchronizer::get());

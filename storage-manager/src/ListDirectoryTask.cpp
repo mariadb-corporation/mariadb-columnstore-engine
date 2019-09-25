@@ -37,7 +37,7 @@ ListDirectoryTask::~ListDirectoryTask()
 }
 
 #define check_error(msg, ret) \
-    if (!success) \
+    if (success<0) \
     { \
         handleError(msg, errno); \
         return ret; \
@@ -116,7 +116,7 @@ bool ListDirectoryTask::run()
     
     sm_response *resp = (sm_response *) buf;
     resp->header.type = SM_MSG_START;
-    resp->header.payloadLen = payloadLen + sizeof(sm_response) - sizeof(sm_msg_header);   // the +4 is for the length of the return code
+    resp->header.payloadLen = payloadLen + sizeof(sm_response) - sizeof(sm_msg_header);
     resp->header.flags = 0;
     resp->returnCode = 0;
     listdir_resp *r = (listdir_resp *) resp->payload;
