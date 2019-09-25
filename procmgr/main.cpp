@@ -747,18 +747,6 @@ static void startMgrProcessThread()
         log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
     }
 
-    //get Distributed Install
-    string DistributedInstall = "n";
-
-    try
-    {
-        oam.getSystemConfig("DistributedInstall", DistributedInstall);
-    }
-    catch (...)
-    {
-        log.writeLog(__LINE__, "ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-    }
-
     //Send out a start service just to make sure Columnstore is runing on remote nodes
     //note this only works for systems with ssh-keys
     /*	for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)

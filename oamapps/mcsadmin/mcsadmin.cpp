@@ -5670,7 +5670,6 @@ int processCommand(string* arguments)
             int DataRedundancyNetworkType;
             int DataRedundancyStorageType;
             string AmazonVPCNextPrivateIP;
-            string DistributedInstall = "n";
 
             try
             {
@@ -5680,7 +5679,6 @@ int processCommand(string* arguments)
                 oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
                 oam.getSystemConfig("DataRedundancyNetworkType", DataRedundancyNetworkType);
                 oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
-                oam.getSystemConfig("DistributedInstall", DistributedInstall);
             }
             catch (...) {}
 
@@ -5722,17 +5720,13 @@ int processCommand(string* arguments)
                 if (arguments[3] != "" && (arguments[3][0] == 'y' || arguments[3][0] == 'Y'))
                     storeHostnames = true;
 
-                //check for a non-distrubuted install setup, dont need password
-                if ( DistributedInstall != "y" )
+                if (arguments[5] != "")
+                    password = arguments[5];
+                else
                 {
-                    if (arguments[5] != "")
-                        password = arguments[5];
-                    else
-                    {
-                        cout << endl;
-                        string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
-                        password = dataPrompt(prompt);
-                    }
+                    cout << endl;
+                    string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+                    password = dataPrompt(prompt);
                 }
 
                 if (arguments[6] != "")
@@ -5757,17 +5751,13 @@ int processCommand(string* arguments)
                 if (arguments[2] != "" && (arguments[2][0] == 'y' || arguments[2][0] == 'Y'))
                     storeHostnames = true;
                 
-                //check for a non-distrubuted install setup, dont need password
-                if ( DistributedInstall != "y" )
+                if (arguments[4] != "")
+                    password = arguments[4];
+                else
                 {
-                    if (arguments[4] != "")
-                        password = arguments[4];
-                    else
-                    {
-                        cout << endl;
-                        string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
-                        password = dataPrompt(prompt);
-                    }
+                    cout << endl;
+                    string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+                    password = dataPrompt(prompt);
                 }
 
                 if (arguments[5] != "")
@@ -9239,24 +9229,6 @@ void printSystemStatus()
         if ( MySQLRep == "y" )
             cout << "MariaDB ColumnStore Replication Feature is enabled" << endl;
 
-		//display Distributed Install feature
-        if ( SingleServerInstall == "n" )
-        {
-			string DistributedInstall;
-
-			try
-			{
-				oam.getSystemConfig("DistributedInstall", DistributedInstall);
-				
-				if ( DistributedInstall == "y" )
-					cout << "MariaDB ColumnStore set for Distributed Install" << endl;
-				else
-					cout << "MariaDB ColumnStore set for Non-Distributed Install" << endl;
-			}
-			catch (...) {}
-			
-			cout << endl;
-		}
     }
     catch (exception& e)
     {
