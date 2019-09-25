@@ -37,7 +37,7 @@ REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 set(cpimport.bin_SRCS cpimport.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
-add_dependencies(cpimport.bin ms3)
+add_dependencies(cpimport.bin marias3)
 target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
 
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

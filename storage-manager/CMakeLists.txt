@@ -56,7 +56,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
 add_library(storagemanager SHARED ${storagemanager_SRCS})
-add_dependencies(storagemanager ms3)
+add_dependencies(storagemanager marias3)
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS} ${JEMALLOC_LIBRARIES})
 set_property(TARGET storagemanager PROPERTY CXX_STANDARD 11)
