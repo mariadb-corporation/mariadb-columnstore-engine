@@ -5227,10 +5227,6 @@ void gp_walk(const Item* item, void* arg)
                                 cval.assign(str->ptr(), str->length());
                             }
 
-                            // Trim the trailing white space from the constant
-                            // string value in the where clause
-                            boost::trim_right_if(cval, boost::is_any_of(" "));
-
                             gwip->rcWorkStack.push(new ConstantColumn(cval));
                             (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
                             break;
