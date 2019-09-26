@@ -157,6 +157,8 @@ struct gp_walk_info
     bool cs_vtable_is_update_with_derive;
     bool cs_vtable_impossible_where_on_union;
 
+    bool isGroupByHandler;
+
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
         condPush(false),
@@ -175,7 +177,8 @@ struct gp_walk_info
         recursionHWM(0),
         inCaseStmt(false),
         cs_vtable_is_update_with_derive(false),
-        cs_vtable_impossible_where_on_union(false)
+        cs_vtable_impossible_where_on_union(false),
+        isGroupByHandler(false)
     {}
 
     ~gp_walk_info() {}
@@ -358,7 +361,7 @@ const std::string bestTableName(const Item_field* ifp);
 bool isMCSTable(TABLE* table_ptr);
 
 // execution plan util functions prototypes
-execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false, bool isRefItem = false);
 execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false, bool selectBetweenIn = false);
 execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
 execplan::ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi);
