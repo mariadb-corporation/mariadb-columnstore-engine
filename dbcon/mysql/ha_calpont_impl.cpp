@@ -766,7 +766,15 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
                     (*f)->field_length = 310;
 
-                    f2->store(dl);
+                    // The server converts dl=-0 to dl=0 in f2->store().
+                    // This happens in the call to truncate_double().
+                    // This is an unexpected behaviour, so we directly store the
+                    // double value using the lower level float8store() function.
+                    // TODO Remove this when f2->store() handles this properly.
+                    if (dl == 0)
+                        float8store(f2->ptr,dl);
+                    else
+                        f2->store(dl);
 
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
