@@ -1359,7 +1359,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
             if (value->type() ==  Item::CONST_ITEM)
             {
-                if (value->cmp_type() == STRING_RESULT)
+                if (value->cmp_type() == STRING_RESULT ||
+                    value->cmp_type() == DECIMAL_RESULT ||
+                    value->cmp_type() == REAL_RESULT)
                 {
                     //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
                     String val, *str;
