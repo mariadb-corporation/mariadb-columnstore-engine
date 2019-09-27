@@ -4950,6 +4950,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 mcsv1sdk::mcsv1Context& context = udafc->getContext();
                 context.setName(isp->func_name());
 
+                // Get the return type as defined by CREATE AGGREGATE FUNCTION
+                // Most functions don't care, but some may.
+                context.setMariaDBReturnType((mcsv1sdk::enum_mariadb_return_type)isp->field_type());
+
                 // Set up the return type defaults for the call to init()
                 context.setResultType(udafc->resultType().colDataType);
                 context.setColWidth(udafc->resultType().colWidth);

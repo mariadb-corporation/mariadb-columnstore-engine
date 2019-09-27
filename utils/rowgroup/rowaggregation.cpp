@@ -2671,7 +2671,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
-            if (valOut.compatible(uintTypeId))
+            if (valOut.compatible(intTypeId))
             {
                 intOut = valOut.cast<int>();
                 bSetSuccess = true;

@@ -65,6 +65,7 @@ static const uint32_t SM_MSG_END=0x9d5bc31b;
 static const uint32_t SM_HEADER_LEN = sizeof(sm_msg_header);
 
 // the unix socket StorageManager is listening on
+__attribute__ ((unused)) 
 static const char *socket_name = "\0storagemanager";
 
 #pragma GCC diagnostic pop
