@@ -3175,7 +3175,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
                     String val, *str = item->val_str(&val);
                     string valStr;
                     valStr.assign(str->ptr(), str->length());
-            rc = new ConstantColumn(valStr, ConstantColumn::NUM);
+                    rc = new ConstantColumn(valStr);
                     break;
                 }
                 case REAL_RESULT:
