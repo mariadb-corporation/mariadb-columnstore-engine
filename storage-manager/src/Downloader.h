@@ -49,6 +49,8 @@ class Downloader
         const boost::filesystem::path & getTmpPath() const;
         
         void printKPIs() const;
+        void setMaxDownloads(uint newMax);
+        uint getMaxDownloads(){return maxDownloads;}
         
     private:
         uint maxDownloads;

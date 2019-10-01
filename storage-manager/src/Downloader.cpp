@@ -49,6 +49,12 @@ Downloader::Downloader() : maxDownloads(0)
     bytesDownloaded = 0;
 }
 
+void Downloader::setMaxDownloads(uint newMax)
+{
+    maxDownloads = newMax;
+    workers.setMaxThreads(maxDownloads);
+}
+
 Downloader::~Downloader()
 {
 }

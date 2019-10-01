@@ -105,6 +105,12 @@ enum OpFlags
     NEW_OBJECT = 0x4,
 };
 
+void Synchronizer::setMaxUploads(uint newMax)
+{
+    maxUploads = newMax;
+    threadPool->setMaxThreads(maxUploads);
+}
+
 /* XXXPAT.  Need to revisit this later.  To make multiple prefix functionality as minimal as possible,
 I limited the changes to key string manipulation where possible.  The keys it manages have the prefix they 
 belong to prepended.  So key 12345 in prefix p1 becomes p1/12345.  This is not the most elegant or performant

@@ -34,6 +34,8 @@
 #include <iostream>
 
 #include "SMLogging.h"
+#include "Cache.h"
+#include "Synchronizer.h"
 
 namespace bf = boost::filesystem;
 using namespace std;
@@ -131,7 +133,7 @@ void Config::reloadThreadFcn()
         try
         {
             reload();
-            // TODO: add a listener interface to inform upstream of config changes
+            checkConfigChanges();
             boost::this_thread::sleep(reloadInterval);
         }
         catch (boost::property_tree::ini_parser_error &e)
@@ -205,6 +207,78 @@ string Config::getValue(const string &section, const string &key) const
     ret = boost::regex_replace(ret, num_re, expand_numbers);
     
     return ret;
+}
+
+void Config::checkConfigChanges()
+{
+	SMLogging* logger = SMLogging::get();
+	// Cache Size
+    string stmp = getValue("Cache", "cache_size");
+	size_t currentCacheSize = (Cache::get())->getMaxCacheSize();
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "Cache/cache_size is not set. Using current value = %zi",currentCacheSize);
+    }
+    try
+    {
+        size_t newMaxCacheSize = stoul(stmp);
+        if (newMaxCacheSize != currentCacheSize)
+        {
+            if (newMaxCacheSize >= MIN_CACHE_SIZE)
+            {
+                (Cache::get())->setMaxCacheSize(newMaxCacheSize);
+                logger->log(LOG_INFO, "Cache/cache_size modified old value = %zi new value = %zi",currentCacheSize,newMaxCacheSize);
+            }
+            else
+            {
+                logger->log(LOG_CRIT, "Cache/cache_size is below %u. Check value and suffix are correct in configuration file. Using current value = %zi",MIN_CACHE_SIZE,currentCacheSize);
+            }
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "Cache/cache_size is not a number. Using current value = %zi",currentCacheSize);
+    }
+    // Downloader threads
+    stmp = getValue("ObjectStorage", "max_concurrent_downloads");
+    uint currentValue = (Cache::get())->getDownloader()->getMaxDownloads();
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "max_concurrent_downloads is not set. Using current value = %u",currentValue);
+    }
+    try
+    {
+        uint newValue = stoul(stmp);
+        if (newValue != currentValue)
+        {
+            (Cache::get())->getDownloader()->setMaxDownloads(newValue);
+            logger->log(LOG_INFO, "max_concurrent_downloads modified old value = %u new value = %u",currentValue,newValue);
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "max_concurrent_downloads is not a number. Using current value = %u",currentValue);
+    }
+    // Uploader threads
+    stmp = getValue("ObjectStorage", "max_concurrent_uploads");
+    currentValue = (Synchronizer::get())->getMaxUploads();
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "max_concurrent_uploads is not set. Using current value = %u",currentValue);
+    }
+    try
+    {
+        uint newValue = stoul(stmp);
+        if (newValue != currentValue)
+        {
+            (Synchronizer::get())->setMaxUploads(newValue);
+            logger->log(LOG_INFO, "max_concurrent_uploads modified old value = %u new value = %u",currentValue,newValue);
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "max_concurrent_uploads is not a number. Using current value = %u",currentValue);
+    }
 }
 
 }

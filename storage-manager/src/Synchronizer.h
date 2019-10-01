@@ -61,6 +61,10 @@ class Synchronizer : public boost::noncopyable
         boost::filesystem::path getJournalPath();
         boost::filesystem::path getCachePath();
         void printKPIs() const;
+
+        void setMaxUploads(uint newMax);
+        uint getMaxUploads(){return maxUploads;}
+
     private:
         Synchronizer();
         

@@ -35,6 +35,12 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/thread/mutex.hpp>
 
+// Setting to min possible based on
+// using 1k in config file. If wrong
+// letter is used will not value be
+// set to less than 1k
+#define MIN_CACHE_SIZE 1024
+
 namespace storagemanager
 {
 

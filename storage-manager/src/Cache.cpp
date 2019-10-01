@@ -56,20 +56,32 @@ Cache::Cache()
     Config *conf = Config::get();
     logger = SMLogging::get();
     
+    size_t defaultCacheValue = 2147483648;
     string stmp = conf->getValue("Cache", "cache_size");
     if (stmp.empty()) 
     {
-        logger->log(LOG_CRIT, "Cache/cache_size is not set");
-        throw runtime_error("Please set Cache/cache_size in the storagemanager.cnf file");
+        logger->log(LOG_CRIT, "Cache/cache_size is not set. Using default value = %zi",defaultCacheValue);
+        maxCacheSize = defaultCacheValue;
+        //throw runtime_error("Please set Cache/cache_size in the storagemanager.cnf file");
     }
     try
     {
-        maxCacheSize = stoul(stmp);
+        size_t configCacheValue = stoul(stmp);
+        if (configCacheValue >= MIN_CACHE_SIZE)
+        {
+            maxCacheSize = configCacheValue;
+        }
+        else
+        {
+            logger->log(LOG_CRIT, "Cache/cache_size is below %u. Check value and suffix are correct in configuration file. Using default value = %zi",MIN_CACHE_SIZE,defaultCacheValue);
+            maxCacheSize = defaultCacheValue;
+        }
     }
     catch (invalid_argument &)
     {
-        logger->log(LOG_CRIT, "Cache/cache_size is not a number");
-        throw runtime_error("Please set Cache/cache_size to a number");
+        logger->log(LOG_CRIT, "Cache/cache_size is not a number. Using default value = %zi",defaultCacheValue);
+        maxCacheSize = defaultCacheValue;
+        //throw runtime_error("Please set Cache/cache_size to a number");
     }
     //cout << "Cache got cache size " << maxCacheSize << endl;
         
