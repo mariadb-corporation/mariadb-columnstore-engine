@@ -20,9 +20,9 @@
 #include "ha_calpont.h"
 #include "columnstoreversion.h"
 
+#include "ha_mcs_pushdown.h"
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
-#include "ha_mcs_pushdown.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -36,13 +36,13 @@ handlerton* mcs_hton;
 
 // handlers creation function for hton.
 // Look into ha_mcs_pushdown.* for more details.
-static group_by_handler*
+group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query);
 
-static derived_handler*
+derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived);
 
-static select_handler*
+select_handler*
 create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
 
 /* Variables for example share methods */
@@ -890,7 +890,6 @@ int ha_calpont::create(const char* name, TABLE* table_arg,
     DBUG_ENTER("ha_calpont::create");
 
     int rc = ha_calpont_impl_create(name, table_arg, create_info);
-//  table_arg->s->write_frm_image();
     DBUG_RETURN(rc);
 }
 
@@ -903,8 +902,6 @@ const COND* ha_calpont::cond_push(const COND* cond)
 
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
-
-#include "ha_mcs_pushdown.cpp"
 
 mysql_declare_plugin(columnstore)
 {
