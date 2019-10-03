@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
             cout << "   -h  Help" << endl;
             cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
             cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -511,7 +511,7 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
 			exit (1);
 		}
 	}
