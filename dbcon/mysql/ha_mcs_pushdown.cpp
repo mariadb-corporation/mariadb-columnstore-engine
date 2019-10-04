@@ -714,7 +714,12 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // MCOL-2178 Disable SP support in the select_handler for now.
     // Check the session variable value to enable/disable use of
     // select_handler
-    if (!get_select_handler(thd) || (thd->lex)->sphead)
+    // Disable processing of select_result_interceptor classes
+    // which intercept and transform result set rows. E.g.:
+    // select a,b into @a1, @a2 from t1;
+    if (!get_select_handler(thd) || (thd->lex)->sphead ||
+        ((thd->lex)->result &&
+         !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
     {
         return handler;
     }
