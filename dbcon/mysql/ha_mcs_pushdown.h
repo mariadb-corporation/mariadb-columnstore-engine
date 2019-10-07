@@ -20,6 +20,9 @@
 
 #include "idb_mysql.h"
 #include "ha_calpont.h"
+#include "ha_mcs_sysvars.h"
+#define NEED_CALPONT_EXTERNS
+#include "ha_calpont_impl.h"
 
 void mutate_optimizer_flags(THD *thd_);
 void restore_optimizer_flags(THD *thd_);
