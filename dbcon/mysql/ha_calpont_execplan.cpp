@@ -361,9 +361,10 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
         Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
         ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
     }
-    else if (sort_item->type() == Item::CONST_ITEM)
+    else if (sort_item->type() == Item::CONST_ITEM ||
+             sort_item->type() == Item::WINDOW_FUNC_ITEM)
     {
-        found= true;
+        found = true;
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
