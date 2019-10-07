@@ -39,8 +39,6 @@ class Config : public boost::noncopyable
         
         // for testing, lets caller specify a config file to use
         static Config *get(const std::string &);
-        // for inotify to get filename
-        std::string getFilename(){return filename;}
 
         void checkConfigChanges();
 
