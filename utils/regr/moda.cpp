@@ -304,8 +304,8 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
         else if (iter->second == maxCnt)
         {
             // Tie breaker: choose the closest to avg. If still tie, choose smallest
-            if ((abs(val-avg) > abs(iter->first-avg))
-            || ((abs(val-avg) == abs(iter->first-avg)) && (abs(val) > abs(iter->first))))
+            if ((std::fabs(val-avg) > std::fabs(iter->first-avg))
+            || ((std::fabs(val-avg) == std::fabs(iter->first-avg)) && (std::fabs(val) > std::fabs(iter->first))))
             {
                 val = iter->first;
             }
