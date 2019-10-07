@@ -86,6 +86,14 @@
 
 namespace mcsv1sdk
 {
+// The return type of the CREATE AGGREGATE statement
+enum enum_mariadb_return_type { 
+    MYSQL_TYPE_DOUBLE = 5,
+    MYSQL_TYPE_LONGLONG = 8,
+    MYSQL_TYPE_VARCHAR=15,
+    MYSQL_TYPE_NEWDECIMAL = 246
+};
+    
 /**
  * A map from name to function object.
  *
@@ -303,7 +311,7 @@ public:
     EXPORT int32_t getColWidth();
 
     // For non-numric return types, set the return column width. This defaults
-    // to the the length of the input.
+    // to a length determined by the input datatype.
     // valid in init()
     EXPORT bool setColWidth(int32_t colWidth);
 
@@ -355,6 +363,9 @@ public:
 
     // Get the name of the function
     EXPORT const std::string& getName() const;
+    
+    // Get the return type as set by CREATE AGGREGATE FUNCTION
+    EXPORT enum_mariadb_return_type getMariaDBReturnType() const;
 
     EXPORT mcsv1Context& operator=(const mcsv1Context& rhs);
     EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
@@ -380,6 +391,7 @@ private:
     mcsv1sdk::mcsv1_UDAF* func;
     int32_t  fParamCount;
     std::vector<uint32_t> paramKeys;
+    enum_mariadb_return_type mariadbReturnType;
 
 public:
     // For use by the framework
@@ -403,6 +415,7 @@ public:
     EXPORT boost::shared_ptr<UserData> getUserDataSP();
     EXPORT void setParamCount(int32_t paramCount);
     std::vector<uint32_t>* getParamKeys();
+    EXPORT void setMariaDBReturnType(enum_mariadb_return_type rt);
 };
 
 // Since aggregate functions can operate on any data type, we use the following structure
@@ -420,7 +433,7 @@ public:
 // For char, varchar, text, varbinary and blob types, columnData will be std::string.
 struct ColumnDatum
 {
-  execplan::CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
+    execplan::CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
     static_any::any  columnData;  // Not valid in init()
     uint32_t    scale;     // If dataType is a DECIMAL type
     uint32_t    precision; // If dataType is a DECIMAL type
@@ -956,6 +969,16 @@ inline std::vector<uint32_t>* mcsv1Context::getParamKeys()
     return &paramKeys;
 }
 
+inline enum_mariadb_return_type mcsv1Context::getMariaDBReturnType() const
+{
+    return mariadbReturnType;
+}
+
+inline void mcsv1Context::setMariaDBReturnType(enum_mariadb_return_type rt)
+{
+    mariadbReturnType = rt;
+}
+
 inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     return NOT_IMPLEMENTED;
@@ -967,8 +990,6 @@ inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, in
     userData->size = length;
     return SUCCESS;
 }
-
-
 
 // Handy helper functions
 template<typename T>
