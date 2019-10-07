@@ -84,8 +84,8 @@ void lsOffline(const char *path)
                 cout.width(15);
 
             struct tm *my_tm = localtime(&_stat.st_mtim.tv_sec);
-            char date[32];
-            strftime(date, 32, "%b %e %H:%M", my_tm);
+            char date[100];
+            strftime(date, 100, "%b %e %H:%M", my_tm);
             cout << right << _stat.st_size << left << " " << date << left << " " << entry << endl;
         }
         else
@@ -126,8 +126,8 @@ void lsOnline(const char *path)
                 cout.width(15);
 
             struct tm *my_tm = localtime(&mtime);
-            char date[32];
-            strftime(date, 32, "%b %e %H:%M", my_tm);
+            char date[100];
+            strftime(date, 100, "%b %e %H:%M", my_tm);
             cout << right << size << left << " " << date << left << " " << entry << endl;
         }
         else
