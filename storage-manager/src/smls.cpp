@@ -24,9 +24,11 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include "IOCoordinator.h"
 #include "SMFileSystem.h"
+#include "SMDataFile.h"
 #include "messageFormat.h"
 
 using namespace std;
@@ -80,7 +82,11 @@ void lsOffline(const char *path)
             }
             else
                 cout.width(15);
-            cout << right << _stat.st_size << left << " " << entry << endl;
+
+            struct tm *my_tm = localtime(&_stat.st_mtim.tv_sec);
+            char date[32];
+            strftime(date, 32, "%b %e %H:%M", my_tm);
+            cout << right << _stat.st_size << left << " " << date << left << " " << entry << endl;
         }
         else
         {
@@ -107,6 +113,8 @@ void lsOnline(const char *path)
         p = base / entry;
         bool isDir = fs.isDir(p.string().c_str());
         ssize_t size = fs.size(p.string().c_str());
+        idbdatafile::SMDataFile df(p.string().c_str(),O_RDONLY,1);
+        time_t mtime = df.mtime();
         if (size >= 0)
         {
             if (isDir)
@@ -116,7 +124,11 @@ void lsOnline(const char *path)
             }
             else
                 cout.width(15);
-            cout << right << size << left << " " << entry << endl;
+
+            struct tm *my_tm = localtime(&mtime);
+            char date[32];
+            strftime(date, 32, "%b %e %H:%M", my_tm);
+            cout << right << size << left << " " << date << left << " " << entry << endl;
         }
         else
         {
