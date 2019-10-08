@@ -522,7 +522,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
                                                          igpc < csep->groupByCols().end();
                                                          ++igpc)
                         {
-                            if (*igpc->get() == *j->get())
+                            if ((*igpc)->alias() == (*j)->alias())
                             {
                                 bFound = true;
                                 break;

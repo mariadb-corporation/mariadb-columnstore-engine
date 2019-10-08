@@ -127,12 +127,14 @@ if [ -n "$plugin" ]; then
 
 	setenv=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFileEnvFile`
 
-	eval userhome=~$user
-	bashFile=$userhome/.bashrc
-	touch ${bashFile}
+    if [ -n "$setenv" ]; then
+        eval userhome=~$user
+        bashFile=$userhome/.bashrc
+        touch ${bashFile}
 
-	echo " " >> ${bashFile}
-	echo ". $COLUMNSTORE_INSTALL_DIR/bin/$setenv" >> ${bashFile}
+        echo " " >> ${bashFile}
+        echo ". $COLUMNSTORE_INSTALL_DIR/bin/$setenv" >> ${bashFile}
+    fi
 fi
 
 # if mysqlrep is on and module has a my.cnf file, upgrade it

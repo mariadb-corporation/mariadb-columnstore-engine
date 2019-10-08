@@ -14,7 +14,10 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-// ha_calpont.cpp includes this file.
+#include <typeinfo>
+#include <string>
+
+#include "ha_mcs_pushdown.h"
 
 void check_walk(const Item* item, void* arg);
 
@@ -25,7 +28,6 @@ void mutate_optimizer_flags(THD *thd_)
     // in SH::scan_init()
     set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
     thd_->variables.optimizer_switch = OPTIMIZER_SWITCH_IN_TO_EXISTS |
-        OPTIMIZER_SWITCH_EXISTS_TO_IN |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FROM_HAVING;
 }
@@ -339,7 +341,7 @@ void item_check(Item* item, bool* unsupported_feature)
  *    group_by_handler if success
  *    NULL in other case
  ***********************************************************/
-static group_by_handler*
+group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
@@ -439,7 +441,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
  *    derived_handler if possible
  *    NULL in other case
  ***********************************************************/
-static derived_handler*
+derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 {
     ha_columnstore_derived_handler* handler = NULL;
@@ -659,7 +661,8 @@ int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
 
-    int rc = ha_calpont_impl_group_by_init(this, table);
+    mcs_handler_info mhi = mcs_handler_info(reinterpret_cast<void*>(this), GROUP_BY);
+    int rc = ha_calpont_impl_group_by_init(&mhi, table);
 
     DBUG_RETURN(rc);
 }
@@ -673,7 +676,7 @@ int ha_calpont_group_by_handler::init_scan()
 int ha_calpont_group_by_handler::next_row()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::next_row");
-    int rc = ha_calpont_impl_group_by_next(this, table);
+    int rc = ha_calpont_impl_group_by_next(table);
 
     DBUG_RETURN(rc);
 }
@@ -687,8 +690,7 @@ int ha_calpont_group_by_handler::next_row()
 int ha_calpont_group_by_handler::end_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
-
-    int rc = ha_calpont_impl_group_by_end(this, table);
+    int rc = ha_calpont_impl_group_by_end(table);
 
     DBUG_RETURN(rc);
 }
@@ -706,7 +708,7 @@ int ha_calpont_group_by_handler::end_scan()
  *    select_handler if possible
  *    NULL in other case
  ***********************************************************/
-static select_handler*
+select_handler*
 create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 {
     ha_columnstore_select_handler* handler = NULL;
@@ -714,7 +716,12 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // MCOL-2178 Disable SP support in the select_handler for now.
     // Check the session variable value to enable/disable use of
     // select_handler
-    if (!get_select_handler(thd) || (thd->lex)->sphead)
+    // Disable processing of select_result_interceptor classes
+    // which intercept and transform result set rows. E.g.:
+    // select a,b into @a1, @a2 from t1;
+    if (!get_select_handler(thd) || (thd->lex)->sphead ||
+        ((thd->lex)->result &&
+         !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
     {
         return handler;
     }
@@ -796,6 +803,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             }
         }
     }
+
 
     if (!unsupported_feature)
     {

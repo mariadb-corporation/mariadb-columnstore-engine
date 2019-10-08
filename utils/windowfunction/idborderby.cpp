@@ -266,6 +266,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
             case CalpontSystemCatalog::BIGINT:
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
+            case CalpontSystemCatalog::TIME:
             {
                 Compare* c = new IntCompare(*i);
                 fCompares.push_back(c);
@@ -317,7 +318,6 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
             case CalpontSystemCatalog::TIMESTAMP:
-            case CalpontSystemCatalog::TIME:
             {
                 Compare* c = new UintCompare(*i);
                 fCompares.push_back(c);

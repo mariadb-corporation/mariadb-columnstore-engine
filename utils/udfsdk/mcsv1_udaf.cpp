@@ -218,6 +218,7 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
     // Dont send context flags, These are set for each call
     b << fUserDataSize;
     b << (uint32_t)fResultType;
+    b << fColWidth;
     b << fResultscale;
     b << fResultPrecision;
     b << errorMsg;
@@ -228,6 +229,7 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
     b << fStartConstant;
     b << fEndConstant;
     b << fParamCount;
+    b << (uint32_t)mariadbReturnType;
 }
 
 void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
@@ -239,6 +241,7 @@ void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
     uint32_t iResultType;
     b >> iResultType;
     fResultType = (execplan::CalpontSystemCatalog::ColDataType)iResultType;
+    b >> fColWidth;
     b >> fResultscale;
     b >> fResultPrecision;
     b >> errorMsg;
@@ -250,6 +253,9 @@ void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
     b >> fStartConstant;
     b >> fEndConstant;
     b >> fParamCount;
+    uint32_t mrt;
+    b >> mrt;
+    mariadbReturnType = (enum_mariadb_return_type)mrt;
 }
 
 void UserData::serialize(messageqcpp::ByteStream& bs) const

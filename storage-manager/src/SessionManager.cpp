@@ -300,7 +300,8 @@ int SessionManager::start()
                             //read this snippet and keep going
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
                             remainingBytes = endOfData;
-                            assert(len == peakLength);
+                            if (len != peakLength)
+                                logger->log(LOG_ERR,"Read returned length != peakLength. ( %i != %i )", len, peakLength);
                             continue;
                         }
 
@@ -327,7 +328,8 @@ int SessionManager::start()
                         {
                             //logger->log(LOG_DEBUG,"No SM_MSG_START");
                             len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
-                            assert(len == peakLength);
+                            if (len != peakLength)
+                                logger->log(LOG_ERR,"Read returned length != peakLength. ( %i != %i )", len, peakLength);
                             // we know the msg header isn't in position [0, endOfData - i), so throw that out
                             // and copy [i, endOfData) to the front of the buffer to be
                             // checked by the next iteration.
@@ -351,6 +353,8 @@ int SessionManager::start()
                             {
                                 //logger->log(LOG_DEBUG,"SM_MSG_START data is next message");
                                 len = ::read(fds[socketIncr].fd, &recv_buffer[remainingBytes], peakLength);
+                                if (len != peakLength)
+                                    logger->log(LOG_ERR,"Read returned length != peakLength. ( %i != %i )", len, peakLength);
                             }
                             //Disable polling on this socket
                             fds[socketIncr].events = 0;

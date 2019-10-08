@@ -323,19 +323,13 @@ if [ -z "$hadoop" ]; then
 cat <<EOD
 The next steps are:
 
-If installing on a pm1 node using non-distributed install
+If installation on pm1:
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/postConfigure -i $installdir
 
-If installing on a pm1 node using distributed install
-
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-$installdir/bin/postConfigure -i $installdir -d
-
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
@@ -346,15 +340,11 @@ EOD
 cat <<EOD
 The next step is:
 
-If installing on a pm1 node using non-distributed install
+If installation on pm1:
 
 $installdir/bin/postConfigure
 
-If installing on a pm1 node using distributed install
-
-$installdir/bin/postConfigure -d
-
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 $installdir/bin/columnstore start
 
@@ -386,7 +376,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
@@ -400,7 +390,7 @@ export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/postConfigure -i $installdir
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
@@ -415,7 +405,7 @@ If you are intending to install MariaDB Columnstore over Hadoop, the next steps 
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/columnstore start
@@ -426,7 +416,7 @@ If installing on a pm1 node:
 
 $installdir/bin/postConfigure
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 $installdir/bin/columnstore start
 
@@ -472,7 +462,7 @@ If installing on a pm1 node:
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/columnstore start
@@ -483,7 +473,7 @@ If installing on a pm1 node:
 
 $installdir/bin/postConfigure
 
-If installing on a non-pm1 using the non-distributed option:
+If installing on a node other than pm1:
 
 $installdir/bin/columnstore start
 

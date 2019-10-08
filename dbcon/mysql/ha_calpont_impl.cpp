@@ -1359,7 +1359,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
             if (value->type() ==  Item::CONST_ITEM)
             {
-                if (value->cmp_type() == STRING_RESULT)
+                if (value->cmp_type() == STRING_RESULT ||
+                    value->cmp_type() == DECIMAL_RESULT ||
+                    value->cmp_type() == REAL_RESULT)
                 {
                     //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
                     String val, *str;
@@ -4152,8 +4154,10 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
  *    0 if success
  *    others if something went wrong whilst getting the result set
  ***********************************************************/
-int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table)
+int ha_calpont_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
 {
+    ha_calpont_group_by_handler *group_hand= 
+      reinterpret_cast<ha_calpont_group_by_handler*>(handler_info->hndl_ptr);
     string tableName = group_hand->table_list->table->s->table_name.str;
     IDEBUG( cout << "group_by_init for table " << tableName << endl );
     THD* thd = current_thd;
@@ -4590,7 +4594,7 @@ internal_error:
  *    HA_ERR_END_OF_FILE if the record set has come to an end
  *    others if something went wrong whilst getting the result set
  ***********************************************************/
-int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table)
+int ha_calpont_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -4678,7 +4682,7 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
     return rc;
 }
 
-int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table)
+int ha_calpont_impl_group_by_end(TABLE* table)
 {
     int rc = 0;
     THD* thd = current_thd;

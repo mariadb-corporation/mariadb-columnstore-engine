@@ -112,7 +112,7 @@ ostream& operator<<(ostream& output, const FunctionColumn& rhs)
 const string FunctionColumn::toString() const
 {
     ostringstream output;
-    output << "FunctionColumn: " << fFunctionName << endl;
+    output << std::endl << "FunctionColumn: " << fFunctionName << endl;
 
     if (fAlias.length() > 0) output << "/Alias: " << fAlias;
 

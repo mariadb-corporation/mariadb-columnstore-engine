@@ -361,9 +361,10 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
         Item_func *ifp = reinterpret_cast<Item_func*>(sort_item);
         ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
     }
-    else if (sort_item->type() == Item::CONST_ITEM)
+    else if (sort_item->type() == Item::CONST_ITEM ||
+             sort_item->type() == Item::WINDOW_FUNC_ITEM)
     {
-        found= true;
+        found = true;
     }
 
     for (; !found && groupcol; groupcol = groupcol->next)
@@ -3175,7 +3176,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
                     String val, *str = item->val_str(&val);
                     string valStr;
                     valStr.assign(str->ptr(), str->length());
-            rc = new ConstantColumn(valStr, ConstantColumn::NUM);
+                    rc = new ConstantColumn(valStr);
                     break;
                 }
                 case REAL_RESULT:
@@ -4949,6 +4950,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
                 mcsv1sdk::mcsv1Context& context = udafc->getContext();
                 context.setName(isp->func_name());
+
+                // Get the return type as defined by CREATE AGGREGATE FUNCTION
+                // Most functions don't care, but some may.
+                context.setMariaDBReturnType((mcsv1sdk::enum_mariadb_return_type)isp->field_type());
 
                 // Set up the return type defaults for the call to init()
                 context.setResultType(udafc->resultType().colDataType);
