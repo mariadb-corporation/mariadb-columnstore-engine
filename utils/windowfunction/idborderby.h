@@ -63,6 +63,7 @@ struct IdbSortSpec
     // TODO There are three ordering specs since 10.2
     int fAsc;   // <ordering specification> ::= ASC | DESC
     int fNf;    // <null ordering> ::= NULLS FIRST | NULLS LAST
+    std::string fLocale;
 
     IdbSortSpec() : fIndex(-1), fAsc(1), fNf(1) {}
     IdbSortSpec(int i, bool b) : fIndex(i), fAsc(b ? 1 : -1), fNf(fAsc) {}
@@ -75,13 +76,42 @@ struct IdbSortSpec
 class Compare
 {
 public:
-    Compare(const IdbSortSpec& spec) : fSpec(spec) {}
+    Compare(const IdbSortSpec& spec) : fSpec(spec)
+    {
+        // Save off the current Locale in case something goes wrong.
+        std::string curLocale = setlocale(LC_COLLATE, NULL);
+        if (spec.fLocale.length() > 0)
+        {
+            fLocale = spec.fLocale;
+        }
+        else
+        {
+            fLocale = curLocale;
+        }
+
+        try
+        {
+            std::locale localloc(fLocale.c_str());
+            loc = localloc;
+        }
+        catch(...)
+        {
+            fLocale = curLocale;
+            std::locale localloc(fLocale.c_str());
+            loc = localloc;
+        }
+        if (fLocale.find("ja_JP") != std::string::npos)
+            JPcodePoint = true;
+    }
     virtual ~Compare() {}
 
     virtual int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer) = 0;
 
 protected:
     IdbSortSpec fSpec;
+    std::string fLocale;
+    std::locale loc;
+    bool JPcodePoint; // code point ordering (Japanese UTF) flag
 };
 
 
