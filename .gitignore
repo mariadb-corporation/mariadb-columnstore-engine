@@ -113,3 +113,11 @@ columnstoreversion.h
 tags
 *.orig
 *.diff
+oam/install_scripts/columnstore
+oam/install_scripts/columnstoreInstall.sh
+oam/install_scripts/columnstoreLogRotate
+oam/install_scripts/post-install
+oam/install_scripts/postInstall.sh
+oam/install_scripts/pre-uninstall
+oam/install_scripts/syslogSetup.sh
+tools/setConfig/configxml.sh
