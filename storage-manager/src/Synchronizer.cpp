@@ -62,14 +62,12 @@ Synchronizer::Synchronizer() : maxUploads(0)
     numBytesRead = numBytesWritten = numBytesUploaded = numBytesDownloaded = mergeDiff =
         flushesTriggeredBySize = flushesTriggeredByTimer = journalsMerged = 
         objectsSyncedWithNoJournal = bytesReadBySync = bytesReadBySyncWithJournal = 0;
-    
-    configListener();
-    config->addConfigListener(this);
 
     journalPath = cache->getJournalPath();    
     cachePath = cache->getCachePath();
     threadPool.reset(new ThreadPool());
-    threadPool->setMaxThreads(maxUploads);
+    configListener();
+    config->addConfigListener(this);
     die = false;
     journalSizeThreshold = cache->getMaxCacheSize() / 2;
     blockNewJobs = false;

@@ -33,7 +33,6 @@ Downloader::Downloader() : maxDownloads(0)
     storage = CloudStorage::get();
     configListener();
     Config::get()->addConfigListener(this);
-    workers.setMaxThreads(maxDownloads);
     workers.setName("Downloader");
     logger = SMLogging::get();
     tmpPath = "downloading";
