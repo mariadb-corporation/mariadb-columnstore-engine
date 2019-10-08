@@ -22,13 +22,20 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/thread.hpp>
 #include <sys/types.h>
-
+#include <functional>
+#include <vector>
 #include <string>
 
 /* TODO.  Need a config change listener impl. */
 
 namespace storagemanager
 {
+class ConfigListener
+{
+    public:
+        virtual void configListener() = 0;
+};
+
 class Config : public boost::noncopyable
 {
     public:
@@ -39,13 +46,17 @@ class Config : public boost::noncopyable
         
         // for testing, lets caller specify a config file to use
         static Config *get(const std::string &);
-        
+
+        void addConfigListener(ConfigListener *listener);
+        void removeConfigListener(ConfigListener *listener);
+
     private:
         Config();
         Config(const std::string &);
         
         void reload();
         void reloadThreadFcn();
+        std::vector<ConfigListener *> configListeners;
         struct ::timespec last_mtime;
         mutable boost::mutex mutex;
         boost::thread reloader;
@@ -55,6 +66,9 @@ class Config : public boost::noncopyable
         boost::property_tree::ptree contents;
         bool die;
 };
+
+
+
 
 }
 

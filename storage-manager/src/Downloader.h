@@ -21,6 +21,8 @@
 #include "ThreadPool.h"
 #include "CloudStorage.h"
 #include "SMLogging.h"
+#include "Config.h"
+
 #include <unordered_set>
 #include <vector>
 #include <string>
@@ -34,7 +36,7 @@
 namespace storagemanager
 {
 
-class Downloader
+class Downloader : public ConfigListener
 {
     public:
         Downloader();
@@ -49,6 +51,8 @@ class Downloader
         const boost::filesystem::path & getTmpPath() const;
         
         void printKPIs() const;
+
+        virtual void configListener() override;
         
     private:
         uint maxDownloads;

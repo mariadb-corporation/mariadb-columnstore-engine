@@ -131,7 +131,8 @@ void Config::reloadThreadFcn()
         try
         {
             reload();
-            // TODO: add a listener interface to inform upstream of config changes
+            for (auto& listener : configListeners)
+                listener->configListener();
             boost::this_thread::sleep(reloadInterval);
         }
         catch (boost::property_tree::ini_parser_error &e)
@@ -205,6 +206,19 @@ string Config::getValue(const string &section, const string &key) const
     ret = boost::regex_replace(ret, num_re, expand_numbers);
     
     return ret;
+}
+
+void Config::addConfigListener(ConfigListener *listener)
+{
+    configListeners.push_back(listener);
+}
+
+void Config::removeConfigListener(ConfigListener *listener)
+{
+    auto iterator = std::find(configListeners.begin(), configListeners.end(), listener);
+
+    if (iterator != configListeners.end())
+        configListeners.erase(iterator);
 }
 
 }

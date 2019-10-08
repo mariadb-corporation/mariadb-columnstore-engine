@@ -31,17 +31,8 @@ namespace storagemanager
 Downloader::Downloader() : maxDownloads(0)
 {
     storage = CloudStorage::get();
-    string sMaxDownloads = Config::get()->getValue("ObjectStorage", "max_concurrent_downloads");
-    try
-    {
-        maxDownloads = stoul(sMaxDownloads);
-    }
-    catch(invalid_argument)
-    {
-        logger->log(LOG_WARNING, "Downloader: Invalid arg for ObjectStorage/max_concurrent_downloads, using default of 20");
-    }
-    if (maxDownloads == 0)
-        maxDownloads = 20;
+    configListener();
+    Config::get()->addConfigListener(this);
     workers.setMaxThreads(maxDownloads);
     workers.setName("Downloader");
     logger = SMLogging::get();
@@ -51,6 +42,7 @@ Downloader::Downloader() : maxDownloads(0)
 
 Downloader::~Downloader()
 {
+    Config::get()->removeConfigListener(this);
 }
 
 void Downloader::download(const vector<const string *> &keys, vector<int> *errnos, vector<size_t> *sizes,
@@ -216,4 +208,29 @@ inline bool Downloader::DLEquals::operator()(const boost::shared_ptr<Download> &
     return (d1->key == d2->key);
 }
 
+void Downloader::configListener()
+{
+    // Downloader threads
+    string stmp = Config::get()->getValue("ObjectStorage", "max_concurrent_downloads");
+    if (maxDownloads == 0)
+        maxDownloads = 20;
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "max_concurrent_downloads is not set. Using current value = %u",maxDownloads);
+    }
+    try
+    {
+        uint newValue = stoul(stmp);
+        if (newValue != maxDownloads)
+        {
+            maxDownloads = newValue;
+            workers.setMaxThreads(maxDownloads);
+            logger->log(LOG_INFO, "max_concurrent_downloads = %u",maxDownloads);
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "max_concurrent_downloads is not a number. Using current value = %u",maxDownloads);
+    }
+}
 }

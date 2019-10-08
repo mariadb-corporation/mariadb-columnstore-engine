@@ -31,6 +31,7 @@
 #include "Replicator.h"
 #include "ThreadPool.h"
 #include "CloudStorage.h"
+#include "Config.h"
 
 namespace storagemanager
 {
@@ -38,7 +39,7 @@ namespace storagemanager
 class Cache;  // break circular dependency in header files
 class IOCoordinator;
 
-class Synchronizer : public boost::noncopyable
+class Synchronizer : public boost::noncopyable , public ConfigListener
 {
     public:
         static Synchronizer *get();
@@ -61,6 +62,9 @@ class Synchronizer : public boost::noncopyable
         boost::filesystem::path getJournalPath();
         boost::filesystem::path getCachePath();
         void printKPIs() const;
+
+        virtual void configListener() override;
+
     private:
         Synchronizer();
         
