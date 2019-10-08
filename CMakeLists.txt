@@ -322,16 +322,16 @@ IF( WITH_SHARED_COMP_TESTS )
     ADD_SUBDIRECTORY(writeengine/shared)
 ENDIF( WITH_SHARED_COMP_TESTS )
 
+exec_program("git"
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ARGS "describe --match=NeVeRmAtCh --always --dirty"
+    OUTPUT_VARIABLE GIT_VERSION)
+
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-
-exec_program("git"
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ARGS "describe --match=NeVeRmAtCh --always --dirty"
-    OUTPUT_VARIABLE GIT_VERSION)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${INSTALL_ENGINE} COMPONENT platform)

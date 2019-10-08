@@ -3,5 +3,6 @@
 #include <string>
 const std::string columnstore_version("${VERSION}");
 const std::string columnstore_release("${PACKAGE_RELEASE}");
+const std::string columnstore_commit_hash("${GIT_VERSION}");
 #endif
 

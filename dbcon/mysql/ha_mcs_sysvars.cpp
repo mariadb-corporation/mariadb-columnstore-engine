@@ -303,6 +303,13 @@ st_mysql_sys_var* mcs_system_variables[] =
   NULL
 };
 
+st_mysql_show_var mcs_status_variables[] =
+{
+  {"columnstore_version", (char*)&cs_version, SHOW_CHAR},
+  {"columnstore_commit_hash", (char*)&cs_commit_hash, SHOW_CHAR},
+  {0, 0, (enum_mysql_show_type)0}
+};
+
 void* get_fe_conn_info_ptr(THD* thd)
 {
     return ( current_thd == NULL && thd == NULL ) ? NULL :
