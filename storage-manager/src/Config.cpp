@@ -130,9 +130,11 @@ void Config::reloadThreadFcn()
     {
         try
         {
-            reload();
-            for (auto& listener : configListeners)
-                listener->configListener();
+            if (reload())
+            {
+                for (auto& listener : configListeners)
+                    listener->configListener();
+            }
             boost::this_thread::sleep(reloadInterval);
         }
         catch (boost::property_tree::ini_parser_error &e)
@@ -144,20 +146,24 @@ void Config::reloadThreadFcn()
     }
 }
 
-void Config::reload()
+bool Config::reload()
 {
+    bool rtn = false;
     struct stat statbuf;
     int err = stat(filename.c_str(), &statbuf);
     if (err)
-        // log something
-        return;
+    {
+        SMLogging::get()->log(LOG_ERR, "Config::reload error %s", filename.c_str());
+        return rtn;
+    }
     if ((statbuf.st_mtim.tv_sec == last_mtime.tv_sec) && (statbuf.st_mtim.tv_nsec == last_mtime.tv_nsec))
-        return;
+        return rtn;
     last_mtime = statbuf.st_mtim;
-    
+    rtn = true;
     boost::unique_lock<boost::mutex> s(mutex);
     contents.clear();
     boost::property_tree::ini_parser::read_ini(filename, contents);
+    return rtn;
 }
 
 string use_envvar(const boost::smatch &envvar)

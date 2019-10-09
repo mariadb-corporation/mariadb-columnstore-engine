@@ -54,7 +54,7 @@ class Config : public boost::noncopyable
         Config();
         Config(const std::string &);
         
-        void reload();
+        bool reload();
         void reloadThreadFcn();
         std::vector<ConfigListener *> configListeners;
         struct ::timespec last_mtime;
