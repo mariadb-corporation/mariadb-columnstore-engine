@@ -6,7 +6,7 @@
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--help'` -eq 6 ]; then
-		echo "Usage ./quick_installer_multi_server.sh"
+		echo "Usage ./quick_installer_single_server.sh"
 		echo ""
 		echo "Quick Installer for a Single Server MariaDB ColumnStore Install"
 		echo ""
