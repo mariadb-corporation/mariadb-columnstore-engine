@@ -12,7 +12,7 @@ for arg in "$@"; do
 		echo ""
 		exit 1
 	else
-		echo "quick_installer_multi_server.sh: ignoring unknown argument: $arg" 1>&2
+		echo "quick_installer_single_server.sh: ignoring unknown argument: $arg" 1>&2
 	fi
 done
 
