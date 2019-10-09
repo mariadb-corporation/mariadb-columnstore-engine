@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 /*
- * $Id: ha_calpont_dml.cpp 9711 2013-07-23 21:01:27Z chao $
+ * $Id: ha_mcs_dml.cpp 9711 2013-07-23 21:01:27Z chao $
  */
 
 #include <my_config.h>
@@ -43,9 +43,9 @@ using namespace boost;
 #include "idb_mysql.h"
 
 #define NEED_CALPONT_INTERFACE
-#include "ha_calpont_impl.h"
+#include "ha_mcs_impl.h"
 
-#include "ha_calpont_impl_if.h"
+#include "ha_mcs_impl_if.h"
 using namespace cal_impl_if;
 
 #include "vendordmlstatement.h"
@@ -469,7 +469,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 
 }
 
-int ha_calpont_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool abort)
+int ha_mcs_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool abort)
 {
     int rc = 0;
     THD* thd = current_thd;
@@ -550,7 +550,7 @@ int ha_calpont_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool
 
 }
 
-int ha_calpont_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
+int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
 {
     int rc = 0;
     //timer.start( "buildValueList");
@@ -640,7 +640,7 @@ int ha_calpont_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_in
     }
 }
 
-int ha_calpont_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
+int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
 {
     ByteStream rowData;
     int rc = 0;
@@ -1829,7 +1829,7 @@ int ha_calpont_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if
     return rc;
 }
 
-std::string  ha_calpont_impl_viewtablelock( cal_impl_if::cal_connection_info& ci, execplan::CalpontSystemCatalog::TableName& tablename)
+std::string  ha_mcs_impl_viewtablelock( cal_impl_if::cal_connection_info& ci, execplan::CalpontSystemCatalog::TableName& tablename)
 {
     THD* thd = current_thd;
     ulong sessionID = tid2sid(thd->thread_id);
@@ -1893,7 +1893,7 @@ std::string  ha_calpont_impl_viewtablelock( cal_impl_if::cal_connection_info& ci
 // Any bulk rollback that is pending will be applied before the table
 // lock is released.
 //------------------------------------------------------------------------------
-std::string  ha_calpont_impl_cleartablelock(
+std::string  ha_mcs_impl_cleartablelock(
     cal_impl_if::cal_connection_info& ci,
     uint64_t tableLockID)
 {
@@ -2005,7 +2005,7 @@ std::string  ha_calpont_impl_cleartablelock(
     return tableLockInfo;
 }
 
-int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci )
+int ha_mcs_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci )
 {
     int rc = 0;
 
@@ -2020,7 +2020,7 @@ int ha_calpont_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connectio
     return rc;
 }
 
-int ha_calpont_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci)
+int ha_mcs_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci)
 {
     int rc = 0;
 #ifdef INFINIDB_DEBUG
@@ -2040,7 +2040,7 @@ int ha_calpont_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_connect
     return rc;
 }
 
-int ha_calpont_impl_close_connection_ (handlerton* hton, THD* thd, cal_connection_info& ci )
+int ha_mcs_impl_close_connection_ (handlerton* hton, THD* thd, cal_connection_info& ci )
 {
     int rc = 0;
 #ifdef INFINIDB_DEBUG

@@ -1225,7 +1225,7 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     // Need to convert a string with a binary unsigned number in it to a 64-bit signed int
 
     // MySQL seems to round off values unless we use the string store method. Groan.
-    // Taken from ha_calpont_impl.cpp
+    // Taken from ha_mcs_impl.cpp
 
     //biggest Calpont supports is DECIMAL(18,x), or 18 total digits+dp+sign for column
     // Need 19 digits maxium to hold a sum result of 18 digits decimal column.

@@ -104,7 +104,7 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 	sleep 5
 	
 	# Install various Calpont stuff...
-	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
+	$installdir/mysql/install_mcs_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
 	checkForError
 	if [ $? -ne 0 ]; then
 		echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"

@@ -17,12 +17,12 @@
    MA 02110-1301, USA. */
 
 #include <typeinfo>
-#include "ha_calpont.h"
+#include "ha_mcs.h"
 #include "columnstoreversion.h"
 
 #include "ha_mcs_pushdown.h"
 #define NEED_CALPONT_EXTERNS
-#include "ha_calpont_impl.h"
+#include "ha_mcs_impl.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -39,7 +39,7 @@ char cs_commit_hash[41]; // a commit hash is 40 characters
 // handlers creation function for hton.
 // Look into ha_mcs_pushdown.* for more details.
 group_by_handler*
-create_calpont_group_by_handler(THD* thd, Query* query);
+create_columnstore_group_by_handler(THD* thd, Query* query);
 
 derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived);
@@ -93,7 +93,7 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
     size_t frm_len = 0;
     int error = 0;
 
-    if (!ha_calpont_impl_discover_existence(share->db.str, share->table_name.str))
+    if (!ha_mcs_impl_discover_existence(share->db.str, share->table_name.str))
         DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
     error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
@@ -111,7 +111,7 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 int calpont_discover_existence(handlerton* hton, const char* db,
                                const char* table_name)
 {
-    return ha_calpont_impl_discover_existence(db, table_name);
+    return ha_mcs_impl_discover_existence(db, table_name);
 }
 
 static int columnstore_init_func(void* p)
@@ -151,7 +151,7 @@ static int columnstore_init_func(void* p)
     mcs_hton->commit = calpont_commit;
     mcs_hton->rollback = calpont_rollback;
     mcs_hton->close_connection = calpont_close_connection;
-    mcs_hton->create_group_by = create_calpont_group_by_handler;
+    mcs_hton->create_group_by = create_columnstore_group_by_handler;
     mcs_hton->create_derived = create_columnstore_derived_handler;
     mcs_hton->create_select = create_columnstore_select_handler;
     DBUG_RETURN(0);
@@ -172,28 +172,28 @@ static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
                                        MEM_ROOT* mem_root)
 {
-    return new (mem_root) ha_calpont(hton, table);
+    return new (mem_root) ha_mcs(hton, table);
 }
 
 static int calpont_commit(handlerton* hton, THD* thd, bool all)
 {
-    int rc = ha_calpont_impl_commit( hton, thd, all);
+    int rc = ha_mcs_impl_commit( hton, thd, all);
     return rc;
 }
 
 static int calpont_rollback(handlerton* hton, THD* thd, bool all)
 {
-    int rc = ha_calpont_impl_rollback( hton, thd, all);
+    int rc = ha_mcs_impl_rollback( hton, thd, all);
     return rc;
 }
 
 static int calpont_close_connection ( handlerton* hton, THD* thd )
 {
-    int rc = ha_calpont_impl_close_connection( hton, thd);
+    int rc = ha_mcs_impl_close_connection( hton, thd);
     return rc;
 }
 
-ha_calpont::ha_calpont(handlerton* hton, TABLE_SHARE* table_arg) :
+ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg) :
     handler(hton, table_arg),
     int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
                     HA_TABLE_SCAN_ON_INDEX |
@@ -221,14 +221,14 @@ ha_calpont::ha_calpont(handlerton* hton, TABLE_SHARE* table_arg) :
   delete_table method in handler.cc
 */
 
-static const char* ha_calpont_exts[] =
+static const char* ha_mcs_exts[] =
 {
     NullS
 };
 
-const char** ha_calpont::bas_ext() const
+const char** ha_mcs::bas_ext() const
 {
-    return ha_calpont_exts;
+    return ha_mcs_exts;
 }
 
 /**
@@ -247,11 +247,11 @@ const char** ha_calpont::bas_ext() const
   handler::ha_open() in handler.cc
 */
 
-int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
+int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
 {
-    DBUG_ENTER("ha_calpont::open");
+    DBUG_ENTER("ha_mcs::open");
 
-    int rc = ha_calpont_impl_open(name, mode, test_if_locked);
+    int rc = ha_mcs_impl_open(name, mode, test_if_locked);
 
     DBUG_RETURN(rc);
 }
@@ -273,11 +273,11 @@ int ha_calpont::open(const char* name, int mode, uint32_t test_if_locked)
   sql_base.cc, sql_select.cc and table.cc
 */
 
-int ha_calpont::close(void)
+int ha_mcs::close(void)
 {
-    DBUG_ENTER("ha_calpont::close");
+    DBUG_ENTER("ha_mcs::close");
 
-    int rc = ha_calpont_impl_close();
+    int rc = ha_mcs_impl_close();
 
     DBUG_RETURN(rc);
 }
@@ -313,33 +313,33 @@ int ha_calpont::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_calpont::write_row(const uchar* buf)
+int ha_mcs::write_row(const uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::write_row");
-    int rc = ha_calpont_impl_write_row(buf, table);
+    DBUG_ENTER("ha_mcs::write_row");
+    int rc = ha_mcs_impl_write_row(buf, table);
 
     DBUG_RETURN(rc);
 }
 
-void ha_calpont::start_bulk_insert(ha_rows rows, uint flags)
+void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
 {
-    DBUG_ENTER("ha_calpont::start_bulk_insert");
-    ha_calpont_impl_start_bulk_insert(rows, table);
+    DBUG_ENTER("ha_mcs::start_bulk_insert");
+    ha_mcs_impl_start_bulk_insert(rows, table);
     DBUG_VOID_RETURN;
 }
 
-int ha_calpont::end_bulk_insert(bool abort)
+int ha_mcs::end_bulk_insert(bool abort)
 {
-    DBUG_ENTER("ha_calpont::end_bulk_insert");
-    int rc = ha_calpont_impl_end_bulk_insert(abort, table);
+    DBUG_ENTER("ha_mcs::end_bulk_insert");
+    int rc = ha_mcs_impl_end_bulk_insert(abort, table);
     DBUG_RETURN(rc);
 }
 
 /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
-int ha_calpont::end_bulk_insert()
+int ha_mcs::end_bulk_insert()
 {
-    DBUG_ENTER("ha_calpont::end_bulk_insert");
-    int rc = ha_calpont_impl_end_bulk_insert(false, table);
+    DBUG_ENTER("ha_mcs::end_bulk_insert");
+    int rc = ha_mcs_impl_end_bulk_insert(false, table);
     DBUG_RETURN(rc);
 }
 
@@ -365,11 +365,11 @@ int ha_calpont::end_bulk_insert()
     @see
   sql_select.cc, sql_acl.cc, sql_update.cc and sql_insert.cc
 */
-int ha_calpont::update_row(const uchar* old_data, uchar* new_data)
+int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
 {
 
-    DBUG_ENTER("ha_calpont::update_row");
-    int rc = ha_calpont_impl_update_row();
+    DBUG_ENTER("ha_mcs::update_row");
+    int rc = ha_mcs_impl_update_row();
     DBUG_RETURN(rc);
 }
 
@@ -394,10 +394,10 @@ int ha_calpont::update_row(const uchar* old_data, uchar* new_data)
   sql_acl.cc, sql_udf.cc, sql_delete.cc, sql_insert.cc and sql_select.cc
 */
 
-int ha_calpont::delete_row(const uchar* buf)
+int ha_mcs::delete_row(const uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::delete_row");
-    int rc = ha_calpont_impl_delete_row();
+    DBUG_ENTER("ha_mcs::delete_row");
+    int rc = ha_mcs_impl_delete_row();
     DBUG_RETURN(rc);
 }
 
@@ -408,12 +408,12 @@ int ha_calpont::delete_row(const uchar* buf)
   index.
 */
 
-int ha_calpont::index_read_map(uchar* buf, const uchar* key,
+int ha_mcs::index_read_map(uchar* buf, const uchar* key,
                                key_part_map keypart_map __attribute__((unused)),
                                enum ha_rkey_function find_flag
                                __attribute__((unused)))
 {
-    DBUG_ENTER("ha_calpont::index_read");
+    DBUG_ENTER("ha_mcs::index_read");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -423,9 +423,9 @@ int ha_calpont::index_read_map(uchar* buf, const uchar* key,
   Used to read forward through the index.
 */
 
-int ha_calpont::index_next(uchar* buf)
+int ha_mcs::index_next(uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::index_next");
+    DBUG_ENTER("ha_mcs::index_next");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -435,9 +435,9 @@ int ha_calpont::index_next(uchar* buf)
   Used to read backwards through the index.
 */
 
-int ha_calpont::index_prev(uchar* buf)
+int ha_mcs::index_prev(uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::index_prev");
+    DBUG_ENTER("ha_mcs::index_prev");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -452,9 +452,9 @@ int ha_calpont::index_prev(uchar* buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_calpont::index_first(uchar* buf)
+int ha_mcs::index_first(uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::index_first");
+    DBUG_ENTER("ha_mcs::index_first");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -469,9 +469,9 @@ int ha_calpont::index_first(uchar* buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_calpont::index_last(uchar* buf)
+int ha_mcs::index_last(uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::index_last");
+    DBUG_ENTER("ha_mcs::index_last");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -489,24 +489,24 @@ int ha_calpont::index_last(uchar* buf)
     @see
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and sql_update.cc
 */
-int ha_calpont::rnd_init(bool scan)
+int ha_mcs::rnd_init(bool scan)
 {
-    DBUG_ENTER("ha_calpont::rnd_init");
+    DBUG_ENTER("ha_mcs::rnd_init");
 
     int rc = 0;
     if(scan)
     {
-        rc = ha_calpont_impl_rnd_init(table);
+        rc = ha_mcs_impl_rnd_init(table);
     }
 
     DBUG_RETURN(rc);
 }
 
-int ha_calpont::rnd_end()
+int ha_mcs::rnd_end()
 {
-    DBUG_ENTER("ha_calpont::rnd_end");
+    DBUG_ENTER("ha_mcs::rnd_end");
 
-    int rc = ha_calpont_impl_rnd_end(table);
+    int rc = ha_mcs_impl_rnd_end(table);
 
     DBUG_RETURN(rc);
 }
@@ -526,11 +526,11 @@ int ha_calpont::rnd_end()
     @see
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and sql_update.cc
 */
-int ha_calpont::rnd_next(uchar* buf)
+int ha_mcs::rnd_next(uchar* buf)
 {
-    DBUG_ENTER("ha_calpont::rnd_next");
+    DBUG_ENTER("ha_mcs::rnd_next");
 
-    int rc = ha_calpont_impl_rnd_next(buf, table);
+    int rc = ha_mcs_impl_rnd_next(buf, table);
 
     DBUG_RETURN(rc);
 }
@@ -563,9 +563,9 @@ int ha_calpont::rnd_next(uchar* buf)
 // allow for implementing blobs (is that the same as varbinary?). Perhaps using
 // lbid and offset as key would work, or something. We also need to add functionality
 // to retrieve records quickly by this "key"
-void ha_calpont::position(const uchar* record)
+void ha_mcs::position(const uchar* record)
 {
-    DBUG_ENTER("ha_calpont::position");
+    DBUG_ENTER("ha_mcs::position");
     DBUG_VOID_RETURN;
 }
 
@@ -583,10 +583,10 @@ void ha_calpont::position(const uchar* record)
     @see
   filesort.cc, records.cc, sql_insert.cc, sql_select.cc and sql_update.cc
 */
-int ha_calpont::rnd_pos(uchar* buf, uchar* pos)
+int ha_mcs::rnd_pos(uchar* buf, uchar* pos)
 {
-    DBUG_ENTER("ha_calpont::rnd_pos");
-    int rc = ha_calpont_impl_rnd_pos(buf, pos);
+    DBUG_ENTER("ha_mcs::rnd_pos");
+    int rc = ha_mcs_impl_rnd_pos(buf, pos);
     DBUG_RETURN(rc);
 }
 
@@ -629,9 +629,9 @@ int ha_calpont::rnd_pos(uchar* buf, uchar* pos)
   sql_select.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_table.cc,
   sql_union.cc and sql_update.cc
 */
-int ha_calpont::info(uint32_t flag)
+int ha_mcs::info(uint32_t flag)
 {
-    DBUG_ENTER("ha_calpont::info");
+    DBUG_ENTER("ha_mcs::info");
     // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
     // the number again if the issue re-occurs
     stats.records = 2000;
@@ -651,9 +651,9 @@ int ha_calpont::info(uint32_t flag)
     @see
   ha_innodb.cc
 */
-int ha_calpont::extra(enum ha_extra_function operation)
+int ha_mcs::extra(enum ha_extra_function operation)
 {
-    DBUG_ENTER("ha_calpont::extra");
+    DBUG_ENTER("ha_mcs::extra");
 #ifdef INFINIDB_DEBUG
     {
         const char* hefs;
@@ -685,7 +685,7 @@ int ha_calpont::extra(enum ha_extra_function operation)
                 break;
         }
 
-        fprintf(stderr, "ha_calpont::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
+        fprintf(stderr, "ha_mcs::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
     }
 #endif
     DBUG_RETURN(0);
@@ -711,9 +711,9 @@ int ha_calpont::extra(enum ha_extra_function operation)
   JOIN::reinit() in sql_select.cc and
   st_select_lex_unit::exec() in sql_union.cc.
 */
-int ha_calpont::delete_all_rows()
+int ha_mcs::delete_all_rows()
 {
-    DBUG_ENTER("ha_calpont::delete_all_rows");
+    DBUG_ENTER("ha_mcs::delete_all_rows");
     DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -735,15 +735,15 @@ int ha_calpont::delete_all_rows()
   the section "locking functions for mysql" in lock.cc;
   copy_data_between_tables() in sql_table.cc.
 */
-int ha_calpont::external_lock(THD* thd, int lock_type)
+int ha_mcs::external_lock(THD* thd, int lock_type)
 {
-    DBUG_ENTER("ha_calpont::external_lock");
+    DBUG_ENTER("ha_mcs::external_lock");
 
     //@Bug 2526 Only register the transaction when autocommit is off
     if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
         trans_register_ha( thd, true, mcs_hton);
 
-    int rc = ha_calpont_impl_external_lock(thd, table, lock_type);
+    int rc = ha_mcs_impl_external_lock(thd, table, lock_type);
     DBUG_RETURN(rc);
 }
 
@@ -786,7 +786,7 @@ int ha_calpont::external_lock(THD* thd, int lock_type)
   get_lock_data() in lock.cc
 */
 
-THR_LOCK_DATA** ha_calpont::store_lock(THD* thd,
+THR_LOCK_DATA** ha_mcs::store_lock(THD* thd,
                                        THR_LOCK_DATA** to,
                                        enum thr_lock_type lock_type)
 {
@@ -819,12 +819,12 @@ THR_LOCK_DATA** ha_calpont::store_lock(THD* thd,
     @see
   delete_table and ha_create_table() in handler.cc
 */
-int ha_calpont::delete_table(const char* name)
+int ha_mcs::delete_table(const char* name)
 {
-    DBUG_ENTER("ha_calpont::delete_table");
+    DBUG_ENTER("ha_mcs::delete_table");
     /* This is not implemented but we want someone to be able that it works. */
 
-    int rc = ha_calpont_impl_delete_table(name);
+    int rc = ha_mcs_impl_delete_table(name);
 
     DBUG_RETURN(rc);
 }
@@ -844,10 +844,10 @@ int ha_calpont::delete_table(const char* name)
   @see
   mysql_rename_table() in sql_table.cc
 */
-int ha_calpont::rename_table(const char* from, const char* to)
+int ha_mcs::rename_table(const char* from, const char* to)
 {
-    DBUG_ENTER("ha_calpont::rename_table ");
-    int rc = ha_calpont_impl_rename_table(from, to);
+    DBUG_ENTER("ha_mcs::rename_table ");
+    int rc = ha_mcs_impl_rename_table(from, to);
     DBUG_RETURN(rc);
 }
 
@@ -865,10 +865,10 @@ int ha_calpont::rename_table(const char* from, const char* to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_calpont::records_in_range(uint32_t inx, key_range* min_key,
+ha_rows ha_mcs::records_in_range(uint32_t inx, key_range* min_key,
                                      key_range* max_key)
 {
-    DBUG_ENTER("ha_calpont::records_in_range");
+    DBUG_ENTER("ha_mcs::records_in_range");
     DBUG_RETURN(10);                         // low number to force index usage
 }
 
@@ -892,19 +892,19 @@ ha_rows ha_calpont::records_in_range(uint32_t inx, key_range* min_key,
   ha_create_table() in handle.cc
 */
 
-int ha_calpont::create(const char* name, TABLE* table_arg,
+int ha_mcs::create(const char* name, TABLE* table_arg,
                        HA_CREATE_INFO* create_info)
 {
-    DBUG_ENTER("ha_calpont::create");
+    DBUG_ENTER("ha_mcs::create");
 
-    int rc = ha_calpont_impl_create(name, table_arg, create_info);
+    int rc = ha_mcs_impl_create(name, table_arg, create_info);
     DBUG_RETURN(rc);
 }
 
-const COND* ha_calpont::cond_push(const COND* cond)
+const COND* ha_mcs::cond_push(const COND* cond)
 {
-    DBUG_ENTER("ha_calpont::cond_push");
-    DBUG_RETURN(ha_calpont_impl_cond_push(const_cast<COND*>(cond), table));
+    DBUG_ENTER("ha_mcs::cond_push");
+    DBUG_RETURN(ha_mcs_impl_cond_push(const_cast<COND*>(cond), table));
 }
 
 

@@ -351,7 +351,7 @@ void item_check(Item* item, bool* unsupported_feature)
     }
 }
 
-/*@brief  create_calpont_group_by_handler- Creates handler*/
+/*@brief  create_columnstore_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
  * Creates a group_by pushdown handler if there is no:
@@ -372,9 +372,9 @@ void item_check(Item* item, bool* unsupported_feature)
  *    NULL in other case
  ***********************************************************/
 group_by_handler*
-create_calpont_group_by_handler(THD* thd, Query* query)
+create_columnstore_group_by_handler(THD* thd, Query* query)
 {
-    ha_calpont_group_by_handler* handler = NULL;
+    ha_mcs_group_by_handler* handler = NULL;
 
     // same as thd->lex->current_select
     SELECT_LEX *select_lex = query->from->select_lex;
@@ -446,7 +446,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 
         if (!unsupported_feature)
         {
-            handler = new ha_calpont_group_by_handler(thd, query);
+            handler = new ha_mcs_group_by_handler(thd, query);
 
             // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
             query->group_by = NULL;
@@ -626,7 +626,7 @@ int ha_columnstore_derived_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::next_row");
 
-    int rc = ha_calpont_impl_rnd_next(table->record[0], table);
+    int rc = ha_mcs_impl_rnd_next(table->record[0], table);
 
     DBUG_RETURN(rc);
 }
@@ -645,7 +645,7 @@ int ha_columnstore_derived_handler::end_scan()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::end_scan");
 
-    int rc = ha_calpont_impl_rnd_end(table, true);
+    int rc = ha_mcs_impl_rnd_end(table, true);
 
     DBUG_RETURN(rc);
 }
@@ -661,7 +661,7 @@ void ha_columnstore_derived_handler::print_error(int, unsigned long)
  *    thd - THD pointer.
  *    query - Query describing structure
  ***********************************************************/
-ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
+ha_mcs_group_by_handler::ha_mcs_group_by_handler(THD* thd_arg, Query* query)
         : group_by_handler(thd_arg, mcs_hton),
           select(query->select),
           table_list(query->from),
@@ -677,7 +677,7 @@ ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* qu
  * DESCRIPTION:
  * GROUP BY destructor
  ***********************************************************/
-ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
+ha_mcs_group_by_handler::~ha_mcs_group_by_handler()
 {
 }
 
@@ -687,12 +687,12 @@ ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
  * RETURN:
  *    int rc
  ***********************************************************/
-int ha_calpont_group_by_handler::init_scan()
+int ha_mcs_group_by_handler::init_scan()
 {
-    DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
+    DBUG_ENTER("ha_mcs_group_by_handler::init_scan");
 
     mcs_handler_info mhi = mcs_handler_info(reinterpret_cast<void*>(this), GROUP_BY);
-    int rc = ha_calpont_impl_group_by_init(&mhi, table);
+    int rc = ha_mcs_impl_group_by_init(&mhi, table);
 
     DBUG_RETURN(rc);
 }
@@ -703,10 +703,10 @@ int ha_calpont_group_by_handler::init_scan()
  * RETURN:
  *    int rc
  ***********************************************************/
-int ha_calpont_group_by_handler::next_row()
+int ha_mcs_group_by_handler::next_row()
 {
-    DBUG_ENTER("ha_calpont_group_by_handler::next_row");
-    int rc = ha_calpont_impl_group_by_next(table);
+    DBUG_ENTER("ha_mcs_group_by_handler::next_row");
+    int rc = ha_mcs_impl_group_by_next(table);
 
     DBUG_RETURN(rc);
 }
@@ -717,10 +717,10 @@ int ha_calpont_group_by_handler::next_row()
  * RETURN:
  *    int rc
  ***********************************************************/
-int ha_calpont_group_by_handler::end_scan()
+int ha_mcs_group_by_handler::end_scan()
 {
-    DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
-    int rc = ha_calpont_impl_group_by_end(table);
+    DBUG_ENTER("ha_mcs_group_by_handler::end_scan");
+    int rc = ha_mcs_impl_group_by_end(table);
 
     DBUG_RETURN(rc);
 }
@@ -935,7 +935,7 @@ int ha_columnstore_select_handler::end_scan()
 {
     DBUG_ENTER("ha_columnstore_select_handler::end_scan");
 
-    int rc = ha_calpont_impl_rnd_end(table, true);
+    int rc = ha_mcs_impl_rnd_end(table, true);
 
     DBUG_RETURN(rc);
 }

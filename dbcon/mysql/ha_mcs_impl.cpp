@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 /*
- * $Id: ha_calpont_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
+ * $Id: ha_mcs_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
  */
 
 //#define DEBUG_WALK_COND
@@ -66,9 +66,9 @@ using namespace std;
 #include "idb_mysql.h"
 
 #define NEED_CALPONT_INTERFACE
-#include "ha_calpont_impl.h"
+#include "ha_mcs_impl.h"
 
-#include "ha_calpont_impl_if.h"
+#include "ha_mcs_impl_if.h"
 using namespace cal_impl_if;
 
 #include "calpontselectexecutionplan.h"
@@ -187,7 +187,7 @@ inline uint32_t tid2sid(const uint32_t tid)
   Reduces the boiler plate code.
 
   Called from number of places(mostly DML) in
-  ha_calpont_impl.cpp().
+  ha_mcs_impl.cpp().
 */
 void log_this(THD *thd, const char *message,
     logging::LOG_TYPE log_type, unsigned sid)
@@ -219,7 +219,7 @@ void log_this(THD *thd, const char *message,
   code 0. This causes ExeMgr loop to drop the
   connection.
 
-  Called from many places in ha_calpont_impl.cpp().
+  Called from many places in ha_mcs_impl.cpp().
 */
 void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc = false)
 {
@@ -2233,20 +2233,20 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
 } //anon namespace
 
-int ha_calpont_impl_open(const char* name, int mode, uint32_t test_if_locked)
+int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked)
 {
-    IDEBUG ( cout << "ha_calpont_impl_open: " << name << ", " << mode << ", " << test_if_locked << endl );
+    IDEBUG ( cout << "ha_mcs_impl_open: " << name << ", " << mode << ", " << test_if_locked << endl );
     Config::makeConfig();
     return 0;
 }
 
-int ha_calpont_impl_close(void)
+int ha_mcs_impl_close(void)
 {
-    IDEBUG( cout << "ha_calpont_impl_close" << endl );
+    IDEBUG( cout << "ha_mcs_impl_close" << endl );
     return 0;
 }
 
-int ha_calpont_impl_discover_existence(const char* schema, const char* name)
+int ha_mcs_impl_discover_existence(const char* schema, const char* name)
 {
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
@@ -2264,7 +2264,7 @@ int ha_calpont_impl_discover_existence(const char* schema, const char* name)
     return 0;
 }
 
-int ha_calpont_impl_rnd_init(TABLE* table)
+int ha_mcs_impl_rnd_init(TABLE* table)
 {
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
@@ -2626,7 +2626,7 @@ internal_error:
     return ER_INTERNAL_ERROR;
 }
 
-int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
+int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -2713,7 +2713,7 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
+int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 {
     int rc = 0;
     THD* thd = current_thd;
@@ -2858,7 +2858,7 @@ int ha_calpont_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     return rc;
 }
 
-int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info)
+int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info)
 {
     THD* thd = current_thd;
 
@@ -2873,22 +2873,22 @@ int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* c
     // Just to be sure
     if (!table_arg)
     {
-        setError(thd, ER_INTERNAL_ERROR, "ha_calpont_impl_create_: table_arg is NULL");
+        setError(thd, ER_INTERNAL_ERROR, "ha_mcs_impl_create_: table_arg is NULL");
         return 1;
     }
 
     if (!table_arg->s)
     {
-        setError(thd, ER_INTERNAL_ERROR, "ha_calpont_impl_create_: table_arg->s is NULL");
+        setError(thd, ER_INTERNAL_ERROR, "ha_mcs_impl_create_: table_arg->s is NULL");
         return 1;
     }
 
-    int rc = ha_calpont_impl_create_(name, table_arg, create_info, *ci);
+    int rc = ha_mcs_impl_create_(name, table_arg, create_info, *ci);
 
     return rc;
 }
 
-int ha_calpont_impl_delete_table(const char* name)
+int ha_mcs_impl_delete_table(const char* name)
 {
     THD* thd = current_thd;
     char* dbName = NULL;
@@ -2938,10 +2938,10 @@ int ha_calpont_impl_delete_table(const char* name)
         return 0;
     }
 
-    int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
+    int rc = ha_mcs_impl_delete_table_(dbName, name, *ci);
     return rc;
 }
-int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
+int ha_mcs_impl_write_row(const uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
     // Error out INSERT on VIEW. It's currently not supported.
@@ -2978,7 +2978,7 @@ int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
             ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT)) )
     {
-        rc = ha_calpont_impl_write_batch_row_(buf, table, *ci);
+        rc = ha_mcs_impl_write_batch_row_(buf, table, *ci);
     }
     else
     {
@@ -2988,7 +2988,7 @@ int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
             //cout << "write_row starts a client " << ci->dmlProc << " for session " << thd->thread_id << endl;
         }
 
-        rc = ha_calpont_impl_write_row_(buf, table, *ci, rowsInserted);
+        rc = ha_mcs_impl_write_row_(buf, table, *ci, rowsInserted);
 
     }
 
@@ -3001,7 +3001,7 @@ int ha_calpont_impl_write_row(const uchar* buf, TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_update_row()
+int ha_mcs_impl_update_row()
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3015,7 +3015,7 @@ int ha_calpont_impl_update_row()
     return ( rc );
 }
 
-int ha_calpont_impl_delete_row()
+int ha_mcs_impl_delete_row()
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3029,7 +3029,7 @@ int ha_calpont_impl_delete_row()
     return ( rc );
 }
 
-void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
+void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -3565,7 +3565,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 
 
 
-int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
+int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -3600,7 +3600,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
         				ci->dmlProc = new MessageQueueClient("DMLProc");
         				//cout << "end_bulk_insert starts a client " << ci->dmlProc << " for session " << thd->thread_id << endl;
         			}
-        			rc = ha_calpont_impl_write_last_batch(table, *ci, abort);
+        			rc = ha_mcs_impl_write_last_batch(table, *ci, abort);
         		}
         	    else if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) && (!ci->singleInsert) && ((ci->isLoaddataInfile) ||
         		}  */
@@ -3774,7 +3774,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
             }
 
             if (((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) || ((thd->lex)->sql_command == SQLCOM_LOAD))
-                rc = ha_calpont_impl_write_last_batch(table, *ci, abort);
+                rc = ha_mcs_impl_write_last_batch(table, *ci, abort);
         }
     }
 
@@ -3813,7 +3813,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
+int ha_mcs_impl_commit (handlerton* hton, THD* thd, bool all)
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3836,7 +3836,7 @@ int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
         //cout << "commit starts a client " << ci->dmlProc << " for session " << thd->thread_id << endl;
     }
 
-    int rc = ha_calpont_impl_commit_(hton, thd, all, *ci);
+    int rc = ha_mcs_impl_commit_(hton, thd, all, *ci);
     thd->server_status &= ~SERVER_STATUS_IN_TRANS;
     ci->singleInsert = true; // reset the flag
     ci->isLoaddataInfile = false;
@@ -3845,7 +3845,7 @@ int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
     return rc;
 }
 
-int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
+int ha_mcs_impl_rollback (handlerton* hton, THD* thd, bool all)
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3858,7 +3858,7 @@ int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
         ci->dmlProc = new MessageQueueClient("DMLProc");
     }
 
-    int rc = ha_calpont_impl_rollback_(hton, thd, all, *ci);
+    int rc = ha_mcs_impl_rollback_(hton, thd, all, *ci);
     ci->singleInsert = true; // reset the flag
     ci->isLoaddataInfile = false;
     ci->tableOid = 0;
@@ -3867,7 +3867,7 @@ int ha_calpont_impl_rollback (handlerton* hton, THD* thd, bool all)
     return rc;
 }
 
-int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
+int ha_mcs_impl_close_connection (handlerton* hton, THD* thd)
 {
     if (!thd) return 0;
 
@@ -3893,7 +3893,7 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
 
     if ( ci->dmlProc )
     {
-        rc = ha_calpont_impl_close_connection_(hton, thd, *ci);
+        rc = ha_mcs_impl_close_connection_(hton, thd, *ci);
         delete ci->dmlProc;
         ci->dmlProc = NULL;
     }
@@ -3909,9 +3909,9 @@ int ha_calpont_impl_close_connection (handlerton* hton, THD* thd)
     return rc;
 }
 
-int ha_calpont_impl_rename_table(const char* from, const char* to)
+int ha_mcs_impl_rename_table(const char* from, const char* to)
 {
-    IDEBUG( cout << "ha_calpont_impl_rename_table: " << from << " => " << to << endl );
+    IDEBUG( cout << "ha_mcs_impl_rename_table: " << from << " => " << to << endl );
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -3922,27 +3922,27 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
     if ( ci->alterTableState == cal_connection_info::ALTER_FIRST_RENAME )
     {
         ci->alterTableState = cal_connection_info::ALTER_SECOND_RENAME;
-        IDEBUG( cout << "ha_calpont_impl_rename_table: was in state ALTER_FIRST_RENAME, now in ALTER_SECOND_RENAME" << endl );
+        IDEBUG( cout << "ha_mcs_impl_rename_table: was in state ALTER_FIRST_RENAME, now in ALTER_SECOND_RENAME" << endl );
         return 0;
     }
     else if (ci->alterTableState == cal_connection_info::ALTER_SECOND_RENAME)
     {
         ci->alterTableState = cal_connection_info::NOT_ALTER;
-        IDEBUG( cout << "ha_calpont_impl_rename_table: was in state ALTER_SECOND_RENAME, now in NOT_ALTER" << endl );
+        IDEBUG( cout << "ha_mcs_impl_rename_table: was in state ALTER_SECOND_RENAME, now in NOT_ALTER" << endl );
         return 0;
     }
 
-    int rc = ha_calpont_impl_rename_table_(from, to, *ci);
+    int rc = ha_mcs_impl_rename_table_(from, to, *ci);
     return rc;
 }
 
-int ha_calpont_impl_delete_row(const uchar* buf)
+int ha_mcs_impl_delete_row(const uchar* buf)
 {
-    IDEBUG( cout << "ha_calpont_impl_delete_row" << endl );
+    IDEBUG( cout << "ha_mcs_impl_delete_row" << endl );
     return 0;
 }
 
-COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
+COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -3954,7 +3954,7 @@ COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
 
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
-    IDEBUG( cout << "ha_calpont_impl_cond_push: " << alias << endl );
+    IDEBUG( cout << "ha_mcs_impl_cond_push: " << alias << endl );
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4015,7 +4015,7 @@ COND* ha_calpont_impl_cond_push(COND* cond, TABLE* table)
     return cond;
 }
 
-int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
+int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 {
     // @bug 3014. Error out locking table command. IDB does not support it now.
     if (thd->lex->sql_command == SQLCOM_LOCK_TABLES)
@@ -4134,15 +4134,15 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
 }
 
 // for sorting length exceeds blob limit. Just error out for now.
-int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
+int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos)
 {
-    IDEBUG( cout << "ha_calpont_impl_rnd_pos" << endl);
+    IDEBUG( cout << "ha_mcs_impl_rnd_pos" << endl);
     string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_TOO_BIG);
     setError(current_thd, ER_INTERNAL_ERROR, emsg);
     return ER_INTERNAL_ERROR;
 }
 
-/*@brief ha_calpont_impl_group_by_init - Get data for MariaDB group_by
+/*@brief ha_mcs_impl_group_by_init - Get data for MariaDB group_by
     pushdown handler */
 /***********************************************************
  * DESCRIPTION:
@@ -4154,10 +4154,10 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
  *    0 if success
  *    others if something went wrong whilst getting the result set
  ***********************************************************/
-int ha_calpont_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
+int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
 {
-    ha_calpont_group_by_handler *group_hand= 
-      reinterpret_cast<ha_calpont_group_by_handler*>(handler_info->hndl_ptr);
+    ha_mcs_group_by_handler *group_hand= 
+      reinterpret_cast<ha_mcs_group_by_handler*>(handler_info->hndl_ptr);
     string tableName = group_hand->table_list->table->s->table_name.str;
     IDEBUG( cout << "group_by_init for table " << tableName << endl );
     THD* thd = current_thd;
@@ -4580,7 +4580,7 @@ internal_error:
     return ER_INTERNAL_ERROR;
 }
 
-/*@brief ha_calpont_impl_group_by_next - Return result set for MariaDB group_by
+/*@brief ha_mcs_impl_group_by_next - Return result set for MariaDB group_by
     pushdown handler
 */
 /***********************************************************
@@ -4594,7 +4594,7 @@ internal_error:
  *    HA_ERR_END_OF_FILE if the record set has come to an end
  *    others if something went wrong whilst getting the result set
  ***********************************************************/
-int ha_calpont_impl_group_by_next(TABLE* table)
+int ha_mcs_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
@@ -4682,7 +4682,7 @@ int ha_calpont_impl_group_by_next(TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_group_by_end(TABLE* table)
+int ha_mcs_impl_group_by_end(TABLE* table)
 {
     int rc = 0;
     THD* thd = current_thd;
@@ -4856,7 +4856,7 @@ int ha_calpont_impl_group_by_end(TABLE* table)
  * Execute the query and saves derived table query.
  * There is an extra handler argument so I ended up with a
  * new init function. The code is a copy of
- * ha_calpont_impl_rnd_init() mostly. 
+ * ha_mcs_impl_rnd_init() mostly. 
  * PARAMETERS:
  * mcs_handler_info* pnt to an envelope struct 
  * TABLE* table - dest table to put the results into
