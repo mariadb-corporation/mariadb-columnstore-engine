@@ -130,9 +130,10 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     }
     else
     {
-        int len1, len2;
-        const char* s1 = l->row1().getCharPtrField(fSpec.fIndex, len1);
-        const char* s2 = l->row2().getCharPtrField(fSpec.fIndex, len2);
+        int len1 = l->row1().getStringLength(fSpec.fIndex);
+        int len2 = l->row2().getStringLength(fSpec.fIndex);
+        const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
+        const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
         const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
         ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
     }
