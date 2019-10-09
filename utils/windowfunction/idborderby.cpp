@@ -477,6 +477,55 @@ int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     return ret;
 }
 
+int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    bool b1 = l->row1().isNullValue(fSpec.fIndex);
+    bool b2 = l->row2().isNullValue(fSpec.fIndex);
+
+    int ret = 0;
+
+    if (b1 == true || b2 == true)
+    {
+        if (b1 == false && b2 == true)
+            ret = fSpec.fNf;
+        else if (b1 == true && b2 == false)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        int64_t v1 = l->row1().getIntField(fSpec.fIndex);
+        int64_t v2 = l->row2().getIntField(fSpec.fIndex);
+
+        // ((int64_t) -00:00:26) > ((int64_t) -00:00:25)
+        // i.e. For 2 negative TIME values, we invert the order of
+        // comparison operations to force "-00:00:26" to appear before
+        // "-00:00:25" in ascending order.
+        if (v1 < 0 && v2 < 0)
+        {
+            // Unset the MSB.
+            v1 &= ~(1ULL << 63);
+            v2 &= ~(1ULL << 63);
+            if (v1 < v2)
+                ret = fSpec.fAsc;
+            else if (v1 > v2)
+                ret = -fSpec.fAsc;
+        }
+        else
+        {
+            if (v1 > v2)
+                ret = fSpec.fAsc;
+            else if (v1 < v2)
+                ret = -fSpec.fAsc;
+        }
+    }
+
+    return ret;
+}
+
+
 bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
 {
     for (vector<Compare*>::iterator i = fCompares.begin(); i != fCompares.end(); i++)
@@ -627,6 +676,13 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
                 fCompares.push_back(c);
                 break;
             }
+            case CalpontSystemCatalog::TIME:
+            {
+                Compare* c = new TimeCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
+
             case CalpontSystemCatalog::TIME:
             {
                 Compare* c = new TimeCompare(*i);
