@@ -79,7 +79,7 @@ else
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
         
 		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib:$HOME/mariadb/columnstore/mysql/lib
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib
 
         echo "${bold}Run postConfigure script${normal}"
         echo ""

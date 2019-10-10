@@ -22,7 +22,7 @@ checkForError() {
         # See if engine columnstore exist
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
-        $installdir/mysql/bin/mysql \
+        mysql \
                 --user=root \
                 --execute='select * from mysql.plugin where name="columnstore";' \
                 calpontsys | grep -i columnstore
@@ -65,29 +65,9 @@ USER=`whoami 2>/dev/null`
 if [ $USER != "root" ]; then
 	ldconfig >/dev/null 2>&1
 	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib
 else
 	ldconfig
-fi
-
-if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
-	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
-	libudfsdk=$installdir/lib/libudf_mysql.so.1.0.0
-	libregrsdk=$installdir/lib/libregr_mysql.so.1.0.0
-elif [ -f $installdir/lib/libcalmysql.so.1 ]; then
-	libcalmysql=$installdir/lib/libcalmysql.so.1
-	libudfsdk=$installdir/lib/libudf_mysql.so.1
-	libregrsdk=$installdir/lib/libregr_mysql.so.1
-else
-	libcalmysql=
-fi
-
-if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
-	cd $installdir/mysql/lib64/mysql/plugin
-	ln -sf $libcalmysql libcalmysql.so
-        ln -sf $libcalmysql libcalmysqlent.so
-	ln -sf $libudfsdk libudf_mysql.so
-	ln -sf $libregrsdk libregr_mysql.so
 fi
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then

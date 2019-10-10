@@ -24,7 +24,7 @@ for arg in "$@"; do
 	fi
 done
 
-$installdir/mysql/bin/mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
+mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
 INSTALL PLUGIN columnstore_columns SONAME 'is_columnstore_columns.so';
@@ -76,9 +76,9 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
 

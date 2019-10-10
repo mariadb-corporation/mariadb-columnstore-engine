@@ -22,5 +22,5 @@ add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
 
 set_target_properties(udf_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS udf_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+install(TARGETS udf_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
 

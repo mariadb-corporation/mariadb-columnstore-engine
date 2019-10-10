@@ -51,8 +51,8 @@ export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 InstallDir=$COLUMNSTORE_INSTALL_DIR
 
 if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
-	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$InstallDir/lib:$InstallDir/mysql/lib
+	export PATH=$InstallDir/bin:/bin:/usr/bin
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$InstallDir/lib
 fi
 
 #hadoop

@@ -1750,23 +1750,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             break;
         }
 
-		case RUNUPGRADE:
-		{
-			log.writeLog(__LINE__,  "MSG RECEIVED: Run upgrade script ");
-
-			// run upgrade script
-			int ret = runUpgrade();
-
-			ackMsg << (ByteStream::byte) ACK;
-			ackMsg << (ByteStream::byte) RUNUPGRADE;
-			ackMsg << (ByteStream::byte) ret;
-			mq.write(ackMsg);
-
-			log.writeLog(__LINE__, "RUNUPGRADE: ACK back to ProcMgr return status = " + oam.itoa((int) ret));
-
-			break;
-		}
-
         case PROCUNMOUNT:
         {
             string dbrootID;
@@ -5969,86 +5952,6 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
     MonitorLog log;
     Oam oam;
 
-    if ( config.moduleType() == "um")
-    {
-        log.writeLog(__LINE__, "amazonVolumeCheck function called for User Module", LOG_TYPE_DEBUG);
-
-        string volumeNameID = "UMVolumeName" + oam.itoa(config.moduleID());
-        string volumeName = oam::UnassignedName;
-        string deviceNameID = "UMVolumeDeviceName" + oam.itoa(config.moduleID());
-        string deviceName = oam::UnassignedName;
-
-        try
-        {
-            oam.getSystemConfig( volumeNameID, volumeName);
-            oam.getSystemConfig( deviceNameID, deviceName);
-        }
-        catch (...)
-        {}
-
-        if ( volumeName.empty() || volumeName == oam::UnassignedName )
-        {
-            log.writeLog(__LINE__, "amazonVolumeCheck function exiting, no volume assigned ", LOG_TYPE_WARNING);
-            return false;
-        }
-
-        string status = oam.getEC2VolumeStatus(volumeName);
-
-        if ( status == "attached" )
-        {
-            string cmd;
-			string mountLog = tmpLogDir + "/um_mount.log";
-            cmd = SUDO + "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,user > " + mountLog;
-
-            system(cmd.c_str());
-            log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
-
-            cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
-            system(cmd.c_str());
-
-            log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
-            return true;
-        }
-
-        if ( status != "available" )
-        {
-            log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume not attached and not available: " + volumeName, LOG_TYPE_WARNING);
-            return false;
-        }
-        else
-        {
-            //get Module HostName / InstanceName
-            string instanceName;
-
-            try
-            {
-                ModuleConfig moduleconfig;
-                oam.getSystemConfig(config.moduleName(), moduleconfig);
-                HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-                instanceName = (*pt1).HostName;
-            }
-            catch (...)
-            {}
-
-            if (oam.attachEC2Volume(volumeName, deviceName, instanceName))
-            {
-                string cmd = SUDO + "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,user > /dev/null 2>&1";
-                system(cmd.c_str());
-                log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
-
-                cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
-                system(cmd.c_str());
-
-                return true;
-            }
-            else
-            {
-                log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume failed to attached: " + volumeName, LOG_TYPE_WARNING);
-                return false;
-            }
-        }
-    }
-    else
     {
         log.writeLog(__LINE__, "amazonVolumeCheck function called for DBRoot" + oam.itoa(dbrootID), LOG_TYPE_DEBUG);
 
@@ -6668,56 +6571,6 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
     return oam::API_SUCCESS;
 }
-
-/******************************************************************************************
-* @brief	runUpgrade
-*
-* purpose:	run upgrade script
-*
-******************************************************************************************/
-int ProcessMonitor::runUpgrade()
-{
-	Oam oam;
-
-	string tmpLog = tmpLogDir + "/mysql_upgrade.log";
-
-	string mysqlpw = oam.getMySQLPassword();
-
-	string passwordOption = "";
-	if ( mysqlpw != oam::UnassignedName )
-		passwordOption = " --password=" + mysqlpw;
-
-	for ( int i = 0 ; i < 10 ; i++ )
-	{
-		//run upgrade script
-		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade " +
-			passwordOption + " > " + tmpLog + " 2>&1";
-
-		log.writeLog(__LINE__, "runUpgrade, cmd = " + cmd, LOG_TYPE_DEBUG);
-		int retCode = system(cmd.c_str());
-		if ( retCode == 0 ) {
-			log.writeLog(__LINE__, "mysql_upgrade.sh: Successful return", LOG_TYPE_DEBUG);
-			return oam::API_SUCCESS;
-		}
-		else {
-			if (oam.checkLogStatus(cmd, "ERROR 1045") ) {
-				log.writeLog(__LINE__, "mysql_upgrade.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
-				return oam::API_SUCCESS;
-			}
-
-			log.writeLog(__LINE__, "mysql_upgrade.sh: Error return, check log " + tmpLog, LOG_TYPE_ERROR);
-			//restart mysqld and retry
-			try {
-				oam.actionMysqlCalpont(MYSQL_RESTART);
-			}
-			catch(...)
-			{}
-			sleep(1);
-		}
-	}
-	return oam::API_FAILURE;
-}
-
 
 } //end of namespace
 // vim:ts=4 sw=4:
