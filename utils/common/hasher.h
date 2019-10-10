@@ -29,11 +29,14 @@
 
 #include <stdint.h>
 #include <string.h>
+#define XXH_INLINE_ALL
+#include <xxhash.h>
 
 namespace utils
 {
 /** @brief class Hasher
  *  As of 10/16/12, this implements the Murmur3 hash algorithm.
+ *  10/10/19 xxHash has been adopted 
  */
 
 inline uint32_t rotl32(uint32_t x, int8_t r)
@@ -73,7 +76,7 @@ class Hasher
 public:
     inline uint32_t operator()(const std::string& s) const
     {
-        return operator()(s.data(), s.length());
+        return XXH64(reinterpret_cast<const void*>(s.data()), s.length(), 0);
     }
 
     inline uint32_t operator()(const char* data, uint64_t len) const
@@ -139,65 +142,23 @@ public:
 
 class Hasher_r
 {
+private:
+    XXH64_state_t* state;
 public:
-    inline uint32_t operator()(const char* data, uint64_t len, uint32_t seed) const
+    Hasher_r()
     {
-        const int nblocks = len / 4;
-
-        uint32_t h1 = seed;
-
-        const uint32_t c1 = 0xcc9e2d51;
-        const uint32_t c2 = 0x1b873593;
-
-        //----------
-        // body
-
-        const uint32_t* blocks = (const uint32_t*) (data + nblocks * 4);
-
-        for (int i = -nblocks; i; i++)
-        {
-            uint32_t k1 = blocks[i];
-
-            k1 *= c1;
-            k1 = rotl32(k1, 15);
-            k1 *= c2;
-
-            h1 ^= k1;
-            h1 = rotl32(h1, 13);
-            h1 = h1 * 5 + 0xe6546b64;
-        }
-
-        //----------
-        // tail
-
-        const uint8_t* tail = (const uint8_t*) (data + nblocks * 4);
-
-        uint32_t k1 = 0;
-
-        switch (len & 3)
-        {
-            case 3:
-                k1 ^= tail[2] << 16;
-
-            case 2:
-                k1 ^= tail[1] << 8;
-
-            case 1:
-                k1 ^= tail[0];
-                k1 *= c1;
-                k1 = rotl32(k1, 15);
-                k1 *= c2;
-                h1 ^= k1;
-        };
-
-        return h1;
+        state= XXH64_createState();
+        XXH64_reset(state, 0);
     }
 
-    inline uint32_t finalize(uint32_t seed, uint32_t len) const
+    inline uint32_t operator()(const char* data, uint64_t len, uint32_t seed) const
     {
-        seed ^= len;
-        seed = fmix(seed);
-        return seed;
+        (void)XXH64_update(state, (void*)data, len);
+        return 42;
+    }
+        inline uint32_t finalize(uint32_t seed, uint32_t len) const
+    {
+        return XXH64_digest(state);
     }
 };
 
