@@ -23,6 +23,9 @@
 #include "idb_mysql.h"
 
 extern st_mysql_sys_var* mcs_system_variables[];
+extern st_mysql_show_var mcs_status_variables[];
+extern char cs_version[];
+extern char cs_commit_hash[];
 
 // compression_type
 enum mcs_compression_type_t {

@@ -33,6 +33,8 @@ static int calpont_commit(handlerton* hton, THD* thd, bool all);
 static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
 handlerton* mcs_hton;
+char cs_version[25];
+char cs_commit_hash[41]; // a commit hash is 40 characters
 
 // handlers creation function for hton.
 // Look into ha_mcs_pushdown.* for more details.
@@ -127,6 +129,12 @@ static int columnstore_init_func(void* p)
             tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
+
+    strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version));
+    cs_version[sizeof(cs_version) - 1] = 0;
+
+    strncpy(cs_commit_hash, columnstore_commit_hash.c_str(), sizeof(cs_commit_hash));
+    cs_commit_hash[sizeof(cs_commit_hash) - 1] = 0;
 
     mcs_hton = (handlerton*)p;
 #ifndef _MSC_VER
@@ -914,7 +922,7 @@ mysql_declare_plugin(columnstore)
     columnstore_init_func,                        /* Plugin Init */
     columnstore_done_func,                        /* Plugin Deinit */
     0x0100 /* 1.0 */,
-    NULL,                                         /* status variables */
+    mcs_status_variables,                         /* status variables */
     mcs_system_variables,                         /* system variables */
     NULL,                                         /* reserved */
     0                                             /* config flags */
@@ -931,7 +939,7 @@ maria_declare_plugin(columnstore)
   columnstore_init_func,
   columnstore_done_func,
   0x0100, /* 1.0 */
-  NULL,                          /* status variables                */
+  mcs_status_variables,          /* status variables                */
   mcs_system_variables,          /* system variables                */
   "1.0",                         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
