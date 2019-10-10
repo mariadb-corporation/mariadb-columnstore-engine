@@ -56,7 +56,7 @@ stop slave;
 EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -78,7 +78,7 @@ CHANGE MASTER TO
 EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -93,7 +93,7 @@ start slave;
 EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 
@@ -108,7 +108,7 @@ SHOW SLAVE STATUS\G
 EOD
 
 cat ${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_slave-rep.sql >>${tmpdir}/slave-rep-status.log 2>&1
 

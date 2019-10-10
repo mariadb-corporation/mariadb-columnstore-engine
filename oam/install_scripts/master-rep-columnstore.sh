@@ -51,7 +51,7 @@ GRANT REPLICATION SLAVE ON *.* TO '$repUser'@'$hostipaddr';
 EOD
 
 cat ${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log 2>&1
 
@@ -68,7 +68,7 @@ grant REPLICATION SLAVE on *.* to '$repUser'@'$hostipaddr' identified by 'Calpon
 EOD
 
 cat ${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log 2>&1
 
@@ -83,7 +83,7 @@ SHOW MASTER STATUS
 EOD
 
 cat ${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log 2>&1
 
@@ -95,7 +95,7 @@ SHOW MASTER STATUS
 EOD
 
 cat ${tmpdir}/idb_master-rep.sql >${tmpdir}/show-master-status.log
-$installdir/mysql/bin/mysql \
+mysql \
 	--user=root \
 	calpontsys <${tmpdir}/idb_master-rep.sql >>${tmpdir}/show-master-status.log
 

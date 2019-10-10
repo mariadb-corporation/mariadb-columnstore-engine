@@ -2961,15 +2961,6 @@ int main(int argc, char* argv[])
                             cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
                             exit(1);
                         }
-
-                        string pathID = installDir + "/mysql/db";
-
-                        // check volume for attach and try to attach if not
-                        if ( !attachVolume(newModuleHostName, volumeName, deviceName, pathID) )
-                        {
-                            cout << "attachVolume error" << endl;
-                            exit(1);
-                        }
                     }
                 }
 
@@ -3866,19 +3857,6 @@ int main(int argc, char* argv[])
         {
             if ( oam.checkLogStatus(dbbuilderLog, "System catalog appears to exist") )
             {
-/*				cout << endl << "Run MariaDB Server Upgrade.. ";
-				cout.flush();
-
-				//send message to procmon's to run upgrade script
-				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-
-				if ( status != 0 ) {
-					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
-					exit(1);
-				}
-				else
-					cout << " DONE" << endl;
-*/
 				cout.flush();
             }
             else

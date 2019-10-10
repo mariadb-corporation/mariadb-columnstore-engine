@@ -7859,47 +7859,25 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     if (action == MYSQL_START || action == MYSQL_RESTART)
     {
         //get pid
-        cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
-        system(cmd.c_str());
-        ifstream oldFile(pidtmp.c_str());
+        char buf[512];
+        FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
-        //fail if file size 0
-        oldFile.seekg(0, std::ios::end);
-        int size = oldFile.tellg();
+        fgets(buf, 512, cmd_pipe);
+        pid_t pid = strtoul(buf, NULL, 10);
 
-        if ( size == 0 )
+        pclose( cmd_pipe );
+
+        if (!pid)
         {
             // mysql not started
-            writeLog("***mysql.pid FILE SIZE EQUALS ZERO", LOG_TYPE_ERROR);
+            writeLog("***mysqld NOT RUNNING", LOG_TYPE_ERROR);
             exceptionControl("actionMysqlCalpont", API_FAILURE);
         }
-
-        char line[400];
-        string pid;
-
-        while (oldFile.getline(line, 400))
-        {
-            pid = line;
-            string::size_type pos = pid.find("cat", 0);
-
-            if (pos != string::npos)
-            {
-                // mysql not started
-                writeLog("***mysql.pid FILE HAS CAT", LOG_TYPE_ERROR);
-                exceptionControl("actionMysqlCalpont", API_FAILURE);
-            }
-
-            break;
-        }
-
-        oldFile.close();
-
-        int PID = atoi(pid.c_str());
 
         //set process status
         try
         {
-            setProcessStatus("mysqld", moduleName, ACTIVE, PID);
+            setProcessStatus("mysqld", moduleName, ACTIVE, pid);
         }
         catch (...)
         {}
@@ -7918,24 +7896,18 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
             if ( state != ACTIVE )
             {
                 //get pid
-                cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
-                system(cmd.c_str());
-                ifstream oldFile(pidtmp.c_str());
-                char line[400];
-                string pid;
+                char buf[512];
+                FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
-                while (oldFile.getline(line, 400))
-                {
-                    pid = line;
-                    break;
-                }
+                fgets(buf, 512, cmd_pipe);
+                pid_t pid = strtoul(buf, NULL, 10);
 
-                oldFile.close();
+                pclose( cmd_pipe );
 
                 //set process status
                 try
                 {
-                    setProcessStatus("mysqld", moduleName, ACTIVE, atoi(pid.c_str()));
+                    setProcessStatus("mysqld", moduleName, ACTIVE, pid);
                 }
                 catch (...)
                 {}
@@ -7945,26 +7917,20 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
             else
             {
                 //check if pid has changed
-                cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
-                system(cmd.c_str());
-                ifstream oldFile(pidtmp.c_str());
-                char line[400];
-                string pid;
+                char buf[512];
+                FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
-                while (oldFile.getline(line, 400))
-                {
-                    pid = line;
-                    break;
-                }
+                fgets(buf, 512, cmd_pipe);
+                pid_t pid = strtoul(buf, NULL, 10);
 
-                oldFile.close();
+                pclose( cmd_pipe );
 
-                if ( pidStatus != atoi(pid.c_str()) )
+                if ( pidStatus != pid )
                 {
                     //set process status
                     try
                     {
-                        setProcessStatus("mysqld", moduleName, ACTIVE, atoi(pid.c_str()));
+                        setProcessStatus("mysqld", moduleName, ACTIVE, pid);
                     }
                     catch (...)
                     {}

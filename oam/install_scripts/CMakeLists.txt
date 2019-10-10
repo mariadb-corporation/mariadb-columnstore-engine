@@ -27,7 +27,6 @@ install(PROGRAMS post-install
                 columnstoreSyslog-ng 
                 syslogSetup.sh  
                 remote_scp_put.sh 
-                columnstore.def  
                 remotessh.exp 
                 rsync.sh 
                 remote_command_verify.sh  

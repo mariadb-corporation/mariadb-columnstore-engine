@@ -48,8 +48,7 @@ stop slave;
 EOD
 
 cat ${tmpdir}/idb_disable-rep.sql >>${tmpdir}/disable-rep-status.log
-$installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
+mysql \
 	--user=root $pwprompt \
 	calpontsys <${tmpdir}/idb_disable-rep.sql >>${tmpdir}/disable-rep-status.log 2>&1
 
@@ -64,8 +63,7 @@ reset slave;
 EOD
 
 cat ${tmpdir}/idb_disable-rep.sql >>${tmpdir}/disable-rep-status.log
-$installdir/mysql/bin/mysql \
-	--defaults-extra-file=$installdir/mysql/my.cnf \
+mysql \
 	--user=root $pwprompt \
 	calpontsys <${tmpdir}/idb_disable-rep.sql >>${tmpdir}/disable-rep-status.log 2>&1
 

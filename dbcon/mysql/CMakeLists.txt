@@ -81,7 +81,7 @@ set_target_properties(is_columnstore_files PROPERTIES PREFIX "")
 set_target_properties(is_columnstore_files PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 
-install(TARGETS calmysql is_columnstore_tables is_columnstore_columns is_columnstore_extents is_columnstore_files DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+install(TARGETS calmysql is_columnstore_tables is_columnstore_columns is_columnstore_extents is_columnstore_files DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 

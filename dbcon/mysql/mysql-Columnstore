@@ -43,39 +43,11 @@
 # If you change base dir, you must also change datadir. These may get
 # overwritten by settings in the MySQL configuration files.
 
-prefix=/usr/local
-
-USER=`whoami 2>/dev/null`
-
-if [ $USER != "root" ]; then
-	prefix=$HOME
-fi
-
-if [ $USER != "root" ]; then
-	if [ -f $prefix/.bash_profile ]; then		
-		profileFile=$prefix/.bash_profile
-	elif [ -f $prefix/.profile ]; then		
-		profileFile=$prefix/.profile
-	else
-		profileFile=$prefix/.bashrc
-	fi
-		
-	. $profileFile
-fi
 
 # Source function library.
 if [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
 fi
-
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
-fi
-
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-
-basedir=$COLUMNSTORE_INSTALL_DIR/mysql
-datadir=$basedir/db
 
 # Default value, in seconds, afterwhich the script should timeout waiting
 # for server start. 
@@ -86,7 +58,7 @@ service_startup_timeout=90
 user=`whoami 2>/dev/null`
 
 # Lock directory
-lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
+lockdir=/var/lock/subsys
 
 lock_file_path="$lockdir/mysql-Columnstore"
 
@@ -96,14 +68,14 @@ lock_file_path="$lockdir/mysql-Columnstore"
 mysqld_pid_file_path=
 if test -z "$basedir"
 then
-  basedir=/usr/local/mariadb/columnstore/mysql
-  bindir=/usr/local/bin
+  basedir=/usr
+  bindir=/usr/bin
   if test -z "$datadir"
   then
     datadir=/var/lib/mysql
   fi
-  sbindir=/usr/local/sbin
-  bindir=/usr/local/bin
+  sbindir=/usr/bin
+  bindir=/usr/bin
 else
   bindir="$basedir/bin"
   if test -z "$datadir"
@@ -295,7 +267,7 @@ wait_for_ready () {
   i=0
   while test $i -ne $service_startup_timeout ; do
 
-    if $bindir/mysqladmin ping --socket=$basedir/lib/mysql/mysql.sock >/dev/null 2>&1; then
+    if $bindir/mysqladmin ping >/dev/null 2>&1; then
       log_success_msg
       return 0
     elif kill -0 $! 2>/dev/null ; then
@@ -335,7 +307,7 @@ fi
 kill_by_pid() {
   # let's see if we can kill the 2 mysql procs by hand
   # get the our mysql from ps
-  eval $(ps -ef | grep "$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
+  eval $(ps -ef | grep "bin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
 
   if [ -n "$pid" ]; then
 	ppid=$(ps -o ppid= -p $pid)
@@ -361,7 +333,7 @@ case "$mode" in
     then
       # Give extra arguments to mysqld with the my.cnf file. This script
       # may be overwritten at next upgrade.
-      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "--ledir=$bindir" "$@" >/dev/null 2>&1 &
+      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "$@" >/dev/null 2>&1 &
       wait_for_ready; return_value=$?
 
       # Make lock for RedHat / SuSE

@@ -13,13 +13,13 @@ fi
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 if [ $COLUMNSTORE_INSTALL_DIR != "/usr/local/mariadb/columnstore" ]; then
-	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:$COLUMNSTORE_INSTALL_DIR/mysql/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
+	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:/bin:/usr/bin
+	export LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib
 fi
 
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysql -u root"
+        MYSQLCMD="mysql -u root"
         export MYSQLCMD
 fi
 

@@ -24,15 +24,55 @@ for arg in "$@"; do
 	fi
 done
 
-$installdir/mysql/bin/mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
-INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
-INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
-INSTALL PLUGIN columnstore_columns SONAME 'is_columnstore_columns.so';
-INSTALL PLUGIN columnstore_extents SONAME 'is_columnstore_extents.so';
-INSTALL PLUGIN columnstore_files SONAME 'is_columnstore_files.so';
-INSERT INTO mysql.func VALUES ('calgetstats',0,'libcalmysql.so','function'),('calsettrace',2,'libcalmysql.so','function'),('calsetparms',0,'libcalmysql.so','function'),('calflushcache',2,'libcalmysql.so','function'),('calgettrace',0,'libcalmysql.so','function'),('calgetversion',0,'libcalmysql.so','function'),('calonlinealter',2,'libcalmysql.so','function'),('calviewtablelock',0,'libcalmysql.so','function'),('calcleartablelock',0,'libcalmysql.so','function'),('callastinsertid',2,'libcalmysql.so','function'),('calgetsqlcount',0,'libcalmysql.so','function'),('idbpm',2,'libcalmysql.so','function'),('idbdbroot',2,'libcalmysql.so','function'),('idbsegment',2,'libcalmysql.so','function'),('idbsegmentdir',2,'libcalmysql.so','function'),('idbextentrelativerid',2,'libcalmysql.so','function'),('idbblockid',2,'libcalmysql.so','function'),('idbextentid',2,'libcalmysql.so','function'),('idbextentmin',0,'libcalmysql.so','function'),('idbextentmax',0,'libcalmysql.so','function'),('idbpartition',0,'libcalmysql.so','function'),('idblocalpm',2,'libcalmysql.so','function'),('mcssystemready',2,'libcalmysql.so','function'),('mcssystemreadonly',2,'libcalmysql.so','function'),('mcssystemprimary',2,'libcalmysql.so','function'),('regr_avgx',1,'libregr_mysql.so','aggregate'),('regr_avgy',1,'libregr_mysql.so','aggregate'),('regr_count',2,'libregr_mysql.so','aggregate'),('regr_slope',1,'libregr_mysql.so','aggregate'),('regr_intercept',1,'libregr_mysql.so','aggregate'),('regr_r2',1,'libregr_mysql.so','aggregate'),('corr',1,'libregr_mysql.so','aggregate'),('regr_sxx',1,'libregr_mysql.so','aggregate'),('regr_syy',1,'libregr_mysql.so','aggregate'),('regr_sxy',1,'libregr_mysql.so','aggregate'),('covar_pop',1,'libregr_mysql.so','aggregate'),('covar_samp',1,'libregr_mysql.so','aggregate'),('moda',4,'libregr_mysql.so','aggregate'),('distinct_count',2,'libudf_mysql.so','aggregate'),('caldisablepartitions',0,'libcalmysql.so','function'),('calenablepartitions',0,'libcalmysql.so','function'),('caldroppartitions',0,'libcalmysql.so','function'),('calshowpartitions',0,'libcalmysql.so','function'),('caldroppartitionsbyvalue',0,'libcalmysql.so','function'),('caldisablepartitionsbyvalue',0,'libcalmysql.so','function'),('calenablepartitionsbyvalue',0,'libcalmysql.so','function'),('calshowpartitionsbyvalue',0,'libcalmysql.so','function');
+mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
+INSERT INTO mysql.func VALUES ('calgetstats',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calsettrace',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calsetparms',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calflushcache',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calgettrace',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calgetversion',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calonlinealter',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calviewtablelock',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calcleartablelock',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('callastinsertid',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calgetsqlcount',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbpm',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbdbroot',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbsegment',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbsegmentdir',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbextentrelativerid',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbblockid',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbextentid',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbextentmin',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbextentmax',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idbpartition',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('idblocalpm',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('mcssystemready',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('mcssystemreadonly',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('mcssystemprimary',2,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('regr_avgx',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_avgy',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_count',2,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_slope',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_intercept',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_r2',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('corr',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_sxx',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_syy',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('regr_sxy',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('covar_pop',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('covar_samp',1,'libregr_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('distinct_count',2,'libudf_mysql.so','aggregate');
+INSERT INTO mysql.func VALUES ('caldisablepartitions',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calenablepartitions',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('caldroppartitions',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calshowpartitions',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('caldroppartitionsbyvalue',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('caldisablepartitionsbyvalue',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calenablepartitionsbyvalue',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('calshowpartitionsbyvalue',0,'libcalmysql.so','function');
+INSERT INTO mysql.func VALUES ('moda',4,'libregr_mysql.so','aggregate');
 
-CREATE DATABASE IF NOT EXISTS infinidb_vtable;
 CREATE DATABASE IF NOT EXISTS infinidb_querystats;
 CREATE TABLE IF NOT EXISTS infinidb_querystats.querystats
 (
@@ -76,9 +116,9 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
-$installdir/mysql/bin/mysql --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/syscatalog_mysql.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
+mysql --user=root  mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
 

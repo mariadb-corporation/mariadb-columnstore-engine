@@ -2095,12 +2095,6 @@ int main(int argc, char* argv[])
 
             cmd = "mkdir -p " + installDir + "/data1/mysqldb  > /dev/null 2>&1";
             system(cmd.c_str());
-
-            cmd = "mkdir -p " + installDir + "/mysql  > /dev/null 2>&1";
-            system(cmd.c_str());
-
-            cmd = "cd " + installDir + "/mysql/;ln -s " + installDir + "/data1/mysqldb db > /dev/null 2>&1";
-            system(cmd.c_str());
         }
 
         //install rpms
