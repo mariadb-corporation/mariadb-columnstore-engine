@@ -43,6 +43,36 @@ void restore_optimizer_flags(THD *thd_)
     }
 }
 
+int save_group_list(THD* thd, SELECT_LEX* select_lex, Group_list_ptrs **group_list_ptrs)
+{
+    if (select_lex->group_list.first)
+    {
+        void *mem = thd->stmt_arena->alloc(sizeof(Group_list_ptrs));
+
+        if (!mem || !((*group_list_ptrs) = new (mem) Group_list_ptrs(thd->stmt_arena->mem_root)) ||
+            (*group_list_ptrs)->reserve(select_lex->group_list.elements))
+        {
+            return 1;
+        }
+
+        for (ORDER *order = select_lex->group_list.first; order; order = order->next)
+        {
+            (*group_list_ptrs)->push_back(order);
+        }
+    }
+    return 0;
+}
+
+void restore_group_list(SELECT_LEX* select_lex, Group_list_ptrs *group_list_ptrs)
+{
+    select_lex->group_list.empty();
+    for (size_t i = 0; i < group_list_ptrs->size(); i++)
+    {
+        ORDER *order = (*group_list_ptrs)[i];
+        select_lex->group_list.link_in_list(order, &order->next);
+    }
+}
+
 /*@brief  find_tables - This traverses Item              */
 /**********************************************************
 * DESCRIPTION:
@@ -729,20 +759,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // Save the original group_list as it can be mutated by the
     // optimizer which calls the remove_const() function
     Group_list_ptrs *group_list_ptrs = NULL;
-    if (select_lex->group_list.first)
+    if (save_group_list(thd, select_lex, &group_list_ptrs))
     {
-        void *mem = thd->stmt_arena->alloc(sizeof(Group_list_ptrs));
-
-        if (!mem || !(group_list_ptrs = new (mem) Group_list_ptrs(thd->stmt_arena->mem_root)) ||
-            group_list_ptrs->reserve(select_lex->group_list.elements))
-        {
-            return handler;
-        }
-
-        for (ORDER *order = select_lex->group_list.first; order; order = order->next)
-        {
-            group_list_ptrs->push_back(order);
-        }
+        return handler;
     }
 
     bool unsupported_feature = false;
@@ -779,12 +798,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // Restore back the saved group_list
     if (group_list_ptrs)
     {
-        select_lex->group_list.empty();
-        for (size_t i = 0; i < group_list_ptrs->size(); i++)
-        {
-            ORDER *order = (*group_list_ptrs)[i];
-            select_lex->group_list.link_in_list(order, &order->next);
-        }
+        restore_group_list(select_lex, group_list_ptrs);
     }
 
     // Iterate and traverse through the item list and do not create SH
