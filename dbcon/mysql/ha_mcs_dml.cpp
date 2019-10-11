@@ -159,7 +159,17 @@ int ProcessCommandStatement(THD* thd, string& dmlStatement, cal_connection_info&
     //@Bug 2721 and 2722. Log the statement before issuing commit/rollback
     if ( dmlStatement == "LOGGING" )
     {
-        VendorDMLStatement cmdStmt(idb_mysql_query_str(thd), DML_COMMAND, sessionID);
+        char* query_char = idb_mysql_query_str(thd);
+        std::string query_str;
+        if (!query_char)
+        {
+            query_str = "<Replication event>";
+        }
+        else
+        {
+            query_str = query_char;
+        }
+        VendorDMLStatement cmdStmt(query_str, DML_COMMAND, sessionID);
         cmdStmt.set_Logging( false );
         pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
         pDMLPackage->set_Logging( false );
@@ -250,7 +260,18 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 
     int rc = 0;
 
-    VendorDMLStatement dmlStmts(idb_mysql_query_str(thd), DML_INSERT, table->s->table_name.str,
+    char* query_char = idb_mysql_query_str(thd);
+    std::string query_str;
+    if (!query_char)
+    {
+        query_str = "<Replication event>";
+    }
+    else
+    {
+        query_str = query_char;
+    }
+
+    VendorDMLStatement dmlStmts(query_str, DML_INSERT, table->s->table_name.str,
                                 table->s->db.str, size, ci.colNameList.size(), ci.colNameList,
                                 ci.tableValuesMap, ci.nullValuesBitset, sessionID);
 
@@ -2009,7 +2030,7 @@ int ha_mcs_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connection_in
 {
     int rc = 0;
 
-    if (thd->slave_thread && !ci.replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
 
     std::string command("COMMIT");

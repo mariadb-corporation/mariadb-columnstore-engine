@@ -2360,7 +2360,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
     if ( schemaSyncOnly && isCreate)
         return rc;
 
-    if (thd->slave_thread && !ci.replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return rc;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
@@ -2558,7 +2558,7 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
         return 0;
     }
 
-    if (thd->slave_thread && !ci.replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
@@ -2697,7 +2697,7 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
     pair<string, string> toPair;
     string stmt;
 
-    if (thd->slave_thread && !ci.replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.

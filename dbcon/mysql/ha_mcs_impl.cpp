@@ -1255,6 +1255,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
             if (((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
                 args.add("Update");
+            else if (thd->get_command() == COM_SLAVE_SQL)
+                args.add("Row based replication event");
             else
                 args.add("Delete");
 
@@ -1282,7 +1284,16 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
     }
 
     // @bug 1127. Re-construct update stmt using lex instead of using the original query.
-    string dmlStmt = string(idb_mysql_query_str(thd));
+    char* query_char = idb_mysql_query_str(thd);
+    std::string dmlStmt;
+    if (!query_char)
+    {
+        dmlStmt = "<Replication event>";
+    }
+    else
+    {
+        dmlStmt = query_char;
+    }
     string schemaName;
     string tableName("");
     string aliasName("");
@@ -1555,6 +1566,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             }
         }
     }
+    else if (thd->get_command() == COM_SLAVE_SQL)
+    {
+        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
+        setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+        return ER_CHECK_NOT_IMPLEMENTED;
+    }
     else
     {
         updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
@@ -1684,7 +1701,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
     pDMLPackage->set_IsFromCol( true );
     //cout << " setting 	isFromCol to " << isFromCol << endl;
-    string origStmt(idb_mysql_query_str(thd));
+    std::string origStmt = dmlStmt;
     origStmt += ";";
     pDMLPackage->set_SQLStatement( origStmt );
 
@@ -1733,7 +1750,17 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
         updateCP->txnID(txnID.id);
         updateCP->verID(verID);
         updateCP->sessionID(sessionID);
-        updateCP->data(idb_mysql_query_str(thd));
+        char* query_char = idb_mysql_query_str(thd);
+        std::string query_str;
+        if (!query_char)
+        {
+            query_str = "<Replication event>";
+        }
+        else
+        {
+            query_str = query_char;
+        }
+        updateCP->data(query_str);
 
         try
         {
@@ -2300,7 +2327,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2310,6 +2337,13 @@ int ha_mcs_impl_rnd_init(TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
+
+    if (thd->slave_thread && thd->get_command() == COM_SLAVE_SQL)
+    {
+        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
+        setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+        return ER_CHECK_NOT_IMPLEMENTED;
+    }
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return 0;
@@ -2632,7 +2666,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2718,17 +2752,11 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     int rc = 0;
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
-    bool replicationEnabled = false;
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (ci && ci->replicationEnabled)
-    {
-        replicationEnabled = true;
-    }
-
-    if (thd->slave_thread && !replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -2966,7 +2994,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
 
     if (ci->alterTableState > 0) return 0;
@@ -3043,7 +3071,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 
     if (ci->alterTableState > 0) return;
 
-    if (thd->slave_thread && !ci->replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return;
 
     //@bug 5660. Error out DDL/DML on slave node, or on local query node
@@ -3576,7 +3604,7 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled)
+    if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
 
     int rc = 0;
@@ -4612,7 +4640,7 @@ int ha_mcs_impl_group_by_next(TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -4688,7 +4716,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
 
-    if (thd->slave_thread && !ci->replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||
@@ -5306,7 +5334,7 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (thd->slave_thread && !ci->replicationEnabled && (
+    if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
                 thd->lex->sql_command == SQLCOM_UPDATE ||

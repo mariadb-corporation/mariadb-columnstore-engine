@@ -262,18 +262,10 @@ struct cal_connection_info
         useXbit(false),
         utf8(false),
         useCpimport(1),
-        delimiter('\7'),
-        replicationEnabled(false)
+        delimiter('\7')
     {
         // check if this is a slave mysql daemon
         isSlaveNode = checkSlave();
-
-        std::string option = config::Config::makeConfig()->getConfig("SystemConfig", "ReplicationEnabled");
-
-        if (!option.compare("Y"))
-        {
-            replicationEnabled = true;
-        }
     }
 
     static bool checkSlave()
@@ -339,7 +331,6 @@ struct cal_connection_info
     char delimiter;
     char enclosed_by;
     std::vector <execplan::CalpontSystemCatalog::ColType> columnTypes;
-    bool replicationEnabled;
     // MCOL-1101 remove compilation unit variable rmParms
     std::vector <execplan::RMParam> rmParms;
 };
