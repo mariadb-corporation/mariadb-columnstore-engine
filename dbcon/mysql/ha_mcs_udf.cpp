@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 /*
- * $Id: ha_calpont_udf.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ * $Id: ha_mcs_udf.cpp 9210 2013-01-21 14:10:42Z rdempsey $
  */
 
 #include <my_config.h>

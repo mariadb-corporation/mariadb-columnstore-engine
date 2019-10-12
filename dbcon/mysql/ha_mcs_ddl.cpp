@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 /*
- * $Id: ha_calpont_ddl.cpp 9675 2013-07-11 15:38:12Z chao $
+ * $Id: ha_mcs_ddl.cpp 9675 2013-07-11 15:38:12Z chao $
  */
 
 #include <my_config.h>
@@ -51,7 +51,7 @@ using namespace boost;
 #include "ha_mcs_sysvars.h"
 #include "idb_mysql.h"
 
-#include "ha_calpont_impl_if.h"
+#include "ha_mcs_impl_if.h"
 using namespace cal_impl_if;
 
 #include "ddlpkg.h"
@@ -2257,10 +2257,10 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
   return has_default;
 }
 
-int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
+int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
 #ifdef MCS_DEBUG
-    cout << "ha_calpont_impl_create_: " << name << endl;
+    cout << "ha_mcs_impl_create_: " << name << endl;
 #endif
     THD* thd = current_thd;
 
@@ -2321,7 +2321,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         if (isCreate)
         {
 #ifdef MCS_DEBUG
-            cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
+            cout << "ha_mcs_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
 #endif
             return 0;
         }
@@ -2347,7 +2347,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         ci.isAlter = true;
         ci.alterTableState = cal_connection_info::ALTER_FIRST_RENAME;
 #ifdef MCS_DEBUG
-        cout << "ha_calpont_impl_create_: now in state ALTER_FIRST_RENAME" << endl;
+        cout << "ha_mcs_impl_create_: now in state ALTER_FIRST_RENAME" << endl;
 #endif
     }
 
@@ -2524,17 +2524,17 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         ci.alterTableState = cal_connection_info::NOT_ALTER;
         ci.isAlter = false;
 #ifdef MCS_DEBUG
-        cout << "ha_calpont_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
+        cout << "ha_mcs_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
     }
 
     return rc;
 }
 
-int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connection_info& ci)
+int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_info& ci)
 {
 #ifdef MCS_DEBUG
-    cout << "ha_calpont_impl_delete_table: " << db << name << endl;
+    cout << "ha_mcs_impl_delete_table: " << db << name << endl;
 #endif
     THD* thd = current_thd;
     std::string tbl(name);
@@ -2603,7 +2603,7 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
   This f() finds and returns position of the last slash sign found in
   the path or NULL.
 
-  Called from ha_calpont_ddl.cpp by decode_table_name().
+  Called from ha_mcs_ddl.cpp by decode_table_name().
 */
 const char* last_slash_pos(const char *name, size_t name_len)
 {
@@ -2625,7 +2625,7 @@ const char* last_slash_pos(const char *name, size_t name_len)
   Replaces the encoded table name in the path with a decoded variant,
   e.g if path contains ./test/d@0024. This f() makes it ./test/d$
 
-  Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
+  Called from ha_mcs_ddl.cpp by ha_mcs_impl_rename_table_().
 */
 void decode_table_name(char *buf, const char *path, size_t pathLen)
 {
@@ -2660,7 +2660,7 @@ void decode_table_name(char *buf, const char *path, size_t pathLen)
   symbol in table names. The f() supports international
   glyphs in db or table names.
 
-  Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
+  Called from ha_mcs_ddl.cpp by ha_mcs_impl_rename_table_().
 */
 pair<string, string> parseTableName(const char *path)
 {
@@ -2683,7 +2683,7 @@ pair<string, string> parseTableName(const char *path)
 
     return make_pair(db, tb);
 }
-int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
+int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
     string emsg;

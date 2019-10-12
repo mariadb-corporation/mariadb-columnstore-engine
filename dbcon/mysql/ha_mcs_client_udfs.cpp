@@ -17,9 +17,9 @@
    MA 02110-1301, USA. */
 
 #define NEED_CALPONT_INTERFACE
-#include "ha_calpont_impl.h"
+#include "ha_mcs_impl.h"
 
-#include "ha_calpont_impl_if.h"
+#include "ha_mcs_impl_if.h"
 using namespace cal_impl_if;
 
 #include "configcpp.h"
@@ -497,7 +497,7 @@ extern "C"
             //cout << "viewtablelock starts a new client " << ci->dmlProc << " for session " << thd->thread_id << endl;
         }
 
-        std::string lockinfo = ha_calpont_impl_viewtablelock(*ci, tableName);
+        std::string lockinfo = ha_mcs_impl_viewtablelock(*ci, tableName);
 
         memcpy(result, lockinfo.c_str(), lockinfo.length());
         *length = lockinfo.length();
@@ -550,7 +550,7 @@ extern "C"
         }
 
         unsigned long long uLockID = lockID;
-        std::string lockinfo = ha_calpont_impl_cleartablelock(*ci, uLockID);
+        std::string lockinfo = ha_mcs_impl_cleartablelock(*ci, uLockID);
 
         memcpy(result, lockinfo.c_str(), lockinfo.length());
         *length = lockinfo.length();

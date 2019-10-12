@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: ha_calpont_partition.cpp 9642 2013-06-24 14:57:42Z rdempsey $
+* $Id: ha_mcs_partition.cpp 9642 2013-06-24 14:57:42Z rdempsey $
 */
 
 #include <my_config.h>
@@ -878,7 +878,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
     }
 }
 
-std::string  ha_calpont_impl_markpartitions_(
+std::string  ha_mcs_impl_markpartitions_(
     execplan::CalpontSystemCatalog::TableName tableName, set<LogicalPartition>& partitionNums)
 {
     ddlpackage::QualifiedName* qualifiedName = new QualifiedName();
@@ -900,7 +900,7 @@ std::string  ha_calpont_impl_markpartitions_(
     return msg;
 }
 
-std::string  ha_calpont_impl_restorepartitions_(
+std::string  ha_mcs_impl_restorepartitions_(
     execplan::CalpontSystemCatalog::TableName tableName, set<LogicalPartition>& partitionNums)
 {
     ddlpackage::QualifiedName* qualifiedName = new QualifiedName();
@@ -923,7 +923,7 @@ std::string  ha_calpont_impl_restorepartitions_(
     return msg;
 }
 
-std::string  ha_calpont_impl_droppartitions_(
+std::string  ha_mcs_impl_droppartitions_(
     execplan::CalpontSystemCatalog::TableName tableName, set<LogicalPartition>& partitionNums)
 {
     ddlpackage::QualifiedName* qualifiedName = new QualifiedName();
@@ -1238,7 +1238,7 @@ extern "C"
         }
 
         if (errMsg.empty())
-            errMsg = ha_calpont_impl_markpartitions_(tableName, partitionNums );
+            errMsg = ha_mcs_impl_markpartitions_(tableName, partitionNums );
 
         memcpy(result, errMsg.c_str(), errMsg.length());
         *length = errMsg.length();
@@ -1325,7 +1325,7 @@ extern "C"
         }
 
         if (errMsg.empty())
-            errMsg = ha_calpont_impl_restorepartitions_(tableName, partitionNums );
+            errMsg = ha_mcs_impl_restorepartitions_(tableName, partitionNums );
 
         memcpy(result, errMsg.c_str(), errMsg.length());
         *length = errMsg.length();
@@ -1412,7 +1412,7 @@ extern "C"
         }
 
         if (errMsg.empty())
-            errMsg = ha_calpont_impl_droppartitions_(tableName, partSet);
+            errMsg = ha_mcs_impl_droppartitions_(tableName, partSet);
 
         memcpy(result, errMsg.c_str(), errMsg.length());
         *length = errMsg.length();
@@ -1495,7 +1495,7 @@ extern "C"
             return result;
         }
 
-        msg = ha_calpont_impl_droppartitions_(tableName, partSet);
+        msg = ha_mcs_impl_droppartitions_(tableName, partSet);
 
         memcpy(result, msg.c_str(), msg.length());
         *length = msg.length();
@@ -1567,7 +1567,7 @@ extern "C"
             return result;
         }
 
-        msg = ha_calpont_impl_markpartitions_(tableName, partSet);
+        msg = ha_mcs_impl_markpartitions_(tableName, partSet);
 
         memcpy(result, msg.c_str(), msg.length());
         *length = msg.length();
@@ -1639,7 +1639,7 @@ extern "C"
             return result;
         }
 
-        msg = ha_calpont_impl_restorepartitions_(tableName, partSet);
+        msg = ha_mcs_impl_restorepartitions_(tableName, partSet);
 
         memcpy(result, msg.c_str(), msg.length());
         *length = msg.length();

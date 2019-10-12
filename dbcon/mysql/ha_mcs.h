@@ -15,8 +15,8 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef HA_CALPONT_H__
-#define HA_CALPONT_H__
+#ifndef HA_MCS_H__
+#define HA_MCS_H__
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
@@ -38,15 +38,15 @@ typedef struct st_calpont_share
 /** @brief
   Class definition for the storage engine
 */
-class ha_calpont: public handler
+class ha_mcs: public handler
 {
     THR_LOCK_DATA lock;      ///< MySQL lock
     COLUMNSTORE_SHARE* share;    ///< Shared lock info
     ulonglong int_table_flags;
 
 public:
-    ha_calpont(handlerton* hton, TABLE_SHARE* table_arg);
-    ~ha_calpont()
+    ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
+    ~ha_mcs()
     {
     }
 
@@ -228,4 +228,4 @@ public:
     }
 
 };
-#endif //HA_CALPONT_H__
+#endif //HA_MCS_H__

@@ -19,10 +19,10 @@
 #define HA_MCS_PUSH
 
 #include "idb_mysql.h"
-#include "ha_calpont.h"
+#include "ha_mcs.h"
 #include "ha_mcs_sysvars.h"
 #define NEED_CALPONT_EXTERNS
-#include "ha_calpont_impl.h"
+#include "ha_mcs_impl.h"
 
 void mutate_optimizer_flags(THD *thd_);
 void restore_optimizer_flags(THD *thd_);
@@ -73,11 +73,11 @@ struct mcs_handler_info
  * next_row - get a row back from sm.
  * end_scan - finish and clean the things up.
  ***********************************************************/
-class ha_calpont_group_by_handler: public group_by_handler
+class ha_mcs_group_by_handler: public group_by_handler
 {
 public:
-    ha_calpont_group_by_handler(THD* thd_arg, Query* query);
-    ~ha_calpont_group_by_handler();
+    ha_mcs_group_by_handler(THD* thd_arg, Query* query);
+    ~ha_mcs_group_by_handler();
     int init_scan();
     int next_row();
     int end_scan();
