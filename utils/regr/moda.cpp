@@ -280,7 +280,7 @@ template<class T>
 mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     uint64_t maxCnt = 0;
-    T avg = 0;
+    long double avg = 0;
     T val = 0;
     ModaData* data = static_cast<ModaData*>(context->getUserData());
     std::unordered_map<T, uint32_t>* map = data->getMap<T>();
@@ -304,8 +304,10 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
         else if (iter->second == maxCnt)
         {
             // Tie breaker: choose the closest to avg. If still tie, choose smallest
-            if ((std::fabs(val-avg) > std::fabs(iter->first-avg))
-            || ((std::fabs(val-avg) == std::fabs(iter->first-avg)) && (std::fabs(val) > std::fabs(iter->first))))
+            long double dist1 = val > avg ? (long double)val-avg : avg-(long double)val;
+            long double dist2 = iter->first > avg ? (long double)iter->first-avg : avg-(long double)iter->first;
+            if ((dist1 > dist2)
+            || ((dist1 == dist2) && (std::fabs(val) > std::fabs(iter->first))))
             {
                 val = iter->first;
             }
