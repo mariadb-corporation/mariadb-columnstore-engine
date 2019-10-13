@@ -29,6 +29,7 @@
 /**
  * @file
  */
+#include "config.h"
 
 
 #include <unistd.h>
@@ -478,7 +479,7 @@ int main(int argc, char* argv[])
             }
             umNumber = atoi(argv[i]);
         }
-        else if ( string("-numBlocksPct") == argv[i] ) 
+        else if ( string("-numBlocksPct") == argv[i] )
         {
             i++;
             if (i >= argc)
@@ -652,14 +653,14 @@ int main(int argc, char* argv[])
         if (moduleconfig.hostConfigList.size() > 0 )
         {
             HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-            
+
             // MCOL-1607.  The 'am I pm1?' check below requires an ipaddr.
             string PM1ipAdd = oam.getIPAddress((*pt1).IPAddr.c_str());
             if (PM1ipAdd.empty())
-                PM1ipAdd = (*pt1).IPAddr;    // this is what it was doing before              
-                
+                PM1ipAdd = (*pt1).IPAddr;    // this is what it was doing before
+
             //cout << PM1ipAdd << endl;
-            
+
             if ( PM1ipAdd != "127.0.0.1" )
             {
                 if ( PM1ipAdd != "0.0.0.0")
@@ -1684,7 +1685,7 @@ int main(int argc, char* argv[])
                     exit(1);
                 }
 
-                
+
                 string percent;
 
                 if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
@@ -2561,7 +2562,7 @@ int main(int argc, char* argv[])
 
                                     callFree(pcommand);
                                 }
-                                
+
                                 if (!doNotResolveHostNames)
                                 {
                                     string ugh = oam.getIPAddress(newModuleIPAddr);
@@ -3699,7 +3700,7 @@ int main(int argc, char* argv[])
                 {
                     exit(0);
                 }
-                
+
                 string p1 = pass1;
                 pass2 = getpass("Confirm password > ");
                 string p2 = pass2;
@@ -3758,6 +3759,10 @@ int main(int argc, char* argv[])
     //
     // startup MariaDB ColumnStore
     //
+
+    #ifdef SKIP_OAM_INIT
+    exit(0);
+    #endif
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
             pmNumber > 1 )
@@ -6348,7 +6353,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
 
                     callFree(pcommand);
                 }
-                
+
                 if (!doNotResolveHostNames)
                 {
                     string ugh = oam.getIPAddress(moduleIPAddr);
@@ -6893,7 +6898,7 @@ void singleServerConfigSetup(Config* sysConfig)
 
 /**
     Resolves the given hostname into its reverse DNS name.
-    
+
     @param hostname the hostname to resolve.
     @return the reverse dns name of given hostname or an empty string in case the hostname could not be resolved.
 */
