@@ -604,7 +604,8 @@ void checkAggregation(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 
     jobInfo.hasDistinct = csep->distinct();
 
-    if (csep->distinct() == true)
+    // DISTINCT with window functions must be done in tupleannexstep
+    if (csep->distinct() == true && jobInfo.windowDels.size() == 0)
     {
         jobInfo.hasAggregation = true;
     }
@@ -878,6 +879,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
         AggregateColumn* aggc = dynamic_cast<AggregateColumn*>(srcp.get());
         bool doDistinct = (csep->distinct() && csep->groupByCols().empty());
+    //    Use this instead of the above line to mimic MariaDB's sql_mode = 'ONLY_FULL_GROUP_BY'
+    //    bool doDistinct = (csep->distinct() && 
+    //                       csep->groupByCols().empty() &&
+    //                       !jobInfo.hasAggregation);
         uint32_t tupleKey = -1;
         string alias;
         string view;
@@ -1126,7 +1131,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     // remember the columns to be returned
                     jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
 
-                    // bug 1499 distinct processing, save unique distinct columns
+                   // bug 1499 distinct processing, save unique distinct columns
                     if (doDistinct &&
                             (jobInfo.distinctColVec.end() ==
                              find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
@@ -1525,7 +1530,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
     // bug4531, window function support
     WindowFunctionStep::checkWindowFunction(csep, jobInfo);
 
-    // bug3391, move forward the aggregation check for no aggregte having clause.
+    // bug3391, move forward the aggregation check for no aggregate having clause.
     checkAggregation(csep, jobInfo);
 
     // include filters in having clause, if any.
