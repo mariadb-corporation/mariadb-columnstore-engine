@@ -81,8 +81,6 @@ void startModuleThread(std::string moduleName);
 void stopModuleThread(std::string moduleName);
 void processMSG(messageqcpp::IOSocket* fIos);
 
-void sendUpgradeRequest();
-
 /** @brief Timeset for Milleseconds
 */
 #define TS_MS(x) ((x) * 1000000)

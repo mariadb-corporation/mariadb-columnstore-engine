@@ -121,7 +121,7 @@
 	<PROCESSCONFIG12>
 		<ProcessName>mysqld</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/mariadb/columnstore/mysql/libexe/mysqld</ProcessLocation>
+		<ProcessLocation>/usr/bin/mysqld</ProcessLocation>
 		<BootLaunch>0</BootLaunch>
 		<LaunchID>100</LaunchID>
 		<DepProcessName/>

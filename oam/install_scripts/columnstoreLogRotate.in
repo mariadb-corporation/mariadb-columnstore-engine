@@ -18,12 +18,3 @@
 	copy
     olddir @ENGINE_SYSCONFDIR@/columnstore
 }
-/usr/local/mariadb/columnstore/mysql/db/*.err {
-    missingok
-    rotate 7
-    daily
-    dateext
-	copytruncate
-    olddir /usr/local/mariadb/columnstore/mysql/db
-    su root root
-}

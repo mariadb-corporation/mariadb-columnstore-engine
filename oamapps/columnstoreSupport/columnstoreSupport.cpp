@@ -205,7 +205,7 @@ void reportThread(string reporttype)
         cmd = "mv -f " + tmpDir + "/" + localModule + "_logReport.tar.gz .";
         system(cmd.c_str());
 
-        cmd = "tar -zcf " + localModule + "_mysqllogReport.tar.gz " + installDir + "/mysql/db/*.err* 2>/dev/null";
+        cmd = "tar -zcf " + localModule + "_mysqllogReport.tar.gz /var/log/mysql/*.err* 2>/dev/null";
         system(cmd.c_str());
 
         // run log config on local server
@@ -873,7 +873,7 @@ int main(int argc, char* argv[])
         {
             // check if mysql is supported and get info
             string logFile =  tmpDir + "/idbmysql.log";
-            string columnstoreMysql = installDir + "/mysql/bin/mysql -u root ";
+            string columnstoreMysql = "mysql -u root ";
             string cmd = columnstoreMysql + " -e 'status' > " + logFile + " 2>&1";
             system(cmd.c_str());
 
@@ -947,7 +947,7 @@ int main(int argc, char* argv[])
             if (!FAILED)
             {
                 // check if mysql is supported and get info
-                string columnstoreMysql = installDir + "/mysql/bin/mysql -u root " + pwprompt;
+                string columnstoreMysql = "mysql -u root " + pwprompt;
                 string cmd = columnstoreMysql + " -V > /dev/null 2>&1";
                 int ret = system(cmd.c_str());
 

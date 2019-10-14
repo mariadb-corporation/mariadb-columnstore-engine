@@ -25,7 +25,8 @@ if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
 }
 
-set COMMAND "rsync -vopgr -e ssh --exclude=mysql/ --exclude=test/ --exclude=infinidb_vtable/ --exclude=infinidb_querystats/ --exclude=calpontsys/ --include=*/ --include=*/* --exclude=* $INSTALLDIR/mysql/db/ $USERNAME@$SERVER:$INSTALLDIR/mysql/db/"
+# LinuxJedi: Not sure what this is expecting to be copying, but it probably shouldn't be doing it
+# set COMMAND "rsync -vopgr -e ssh --exclude=mysql/ --exclude=test/ --exclude=infinidb_vtable/ --exclude=infinidb_querystats/ --exclude=calpontsys/ --include=*/ --include=*/* --exclude=* $INSTALLDIR/mysql/db/ $USERNAME@$SERVER:$INSTALLDIR/mysql/db/"
 
 #
 # run command

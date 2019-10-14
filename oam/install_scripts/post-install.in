@@ -22,7 +22,7 @@ for arg in "$@"; do
 		if [ $installdirTmp == $installdir ] ; then
 			user=root
 			export COLUMNSTORE_INSTALL_DIR=$installdir
-			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 		else
 			installdir=$installdirTmp
 			prefix=`dirname $installdir`
@@ -43,7 +43,7 @@ done
  
 if [ $user != "root" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
 	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/. >/dev/null 2>&1
@@ -130,7 +130,7 @@ if [ $user != "root" ]; then
         	echo " " >> ${profileFile}
 		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFile}
         	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFile}
-        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFile}
+        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib" >> ${profileFile}
 	fi
 	
 	egrep -qs 'MariaDB Columnstore Non-Root Alias Variables' ${profileFile}
@@ -206,10 +206,6 @@ mkdir -p $hdfsDir >/dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-
-# remove mysql archive log
-test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
-rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1

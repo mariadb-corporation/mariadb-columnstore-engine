@@ -45,7 +45,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql -u root"
+        MYSQLCMD="mysql -u root"
 fi
 
 if [ -z "$INSTALLDIR" ]; then

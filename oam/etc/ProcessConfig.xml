@@ -132,7 +132,7 @@
 	<PROCESSCONFIG12>
 		<ProcessName>mysqld</ProcessName>
 		<ModuleType>um</ModuleType>
-		<ProcessLocation>$INSTALLDIR/mysql/libexec/mysqld</ProcessLocation>
+        <ProcessLocation>/usr/bin/mysqld</ProcessLocation>
 		<BootLaunch>0</BootLaunch>
 		<LaunchID>100</LaunchID>
 		<DepProcessName/>
