@@ -62,23 +62,12 @@ Synchronizer::Synchronizer() : maxUploads(0)
     numBytesRead = numBytesWritten = numBytesUploaded = numBytesDownloaded = mergeDiff =
         flushesTriggeredBySize = flushesTriggeredByTimer = journalsMerged = 
         objectsSyncedWithNoJournal = bytesReadBySync = bytesReadBySyncWithJournal = 0;
-    
-    string stmp = config->getValue("ObjectStorage", "max_concurrent_uploads");
-    try
-    {
-        maxUploads = stoul(stmp);
-    }
-    catch(invalid_argument)
-    {
-        logger->log(LOG_WARNING, "Downloader: Invalid arg for ObjectStorage/max_concurrent_uploads, using default of 20");
-    }
-    if (maxUploads == 0)
-        maxUploads = 20;
-        
+
     journalPath = cache->getJournalPath();    
     cachePath = cache->getCachePath();
     threadPool.reset(new ThreadPool());
-    threadPool->setMaxThreads(maxUploads);
+    configListener();
+    config->addConfigListener(this);
     die = false;
     journalSizeThreshold = cache->getMaxCacheSize() / 2;
     blockNewJobs = false;
@@ -91,6 +80,7 @@ Synchronizer::~Synchronizer()
         or save the list it's working on.....
         For milestone 2, this will do the safe thing and finish working first.
         Later we can get fancy. */
+    Config::get()->removeConfigListener(this);
     forceFlush();
     die = true;
     syncThread.join();
@@ -772,4 +762,29 @@ void Synchronizer::Job::operator()()
     sync->process(it);
 }
 
+void Synchronizer::configListener()
+{
+    // Uploader threads
+    string stmp = Config::get()->getValue("ObjectStorage", "max_concurrent_uploads");
+    if (maxUploads == 0)
+        maxUploads = 20;
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "max_concurrent_uploads is not set. Using current value = %u",maxUploads);
+    }
+    try
+    {
+        uint newValue = stoul(stmp);
+        if (newValue != maxUploads)
+        {
+            maxUploads = newValue;
+            threadPool->setMaxThreads(maxUploads);
+            logger->log(LOG_INFO, "max_concurrent_uploads = %u",maxUploads);
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "max_concurrent_uploads is not a number. Using current value = %u",maxUploads);
+    }
+}
 }

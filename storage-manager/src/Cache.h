@@ -27,6 +27,7 @@
 #include "Downloader.h"
 #include "SMLogging.h"
 #include "PrefixCache.h"
+#include "Config.h"
 
 #include <string>
 #include <vector>
@@ -35,10 +36,16 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/thread/mutex.hpp>
 
+// Setting to min possible based on
+// using 1k in config file. If wrong
+// letter is used will not value be
+// set to less than 1k
+#define MIN_CACHE_SIZE 1024
+
 namespace storagemanager
 {
 
-class Cache : public boost::noncopyable
+class Cache : public boost::noncopyable , public ConfigListener
 {
     public:
         static Cache *get();
@@ -94,6 +101,7 @@ class Cache : public boost::noncopyable
         void reset();
         void validateCacheSize();
         
+        virtual void configListener() override;
     private:
         Cache();
         

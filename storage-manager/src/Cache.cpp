@@ -56,24 +56,11 @@ Cache::Cache()
     Config *conf = Config::get();
     logger = SMLogging::get();
     
-    string stmp = conf->getValue("Cache", "cache_size");
-    if (stmp.empty()) 
-    {
-        logger->log(LOG_CRIT, "Cache/cache_size is not set");
-        throw runtime_error("Please set Cache/cache_size in the storagemanager.cnf file");
-    }
-    try
-    {
-        maxCacheSize = stoul(stmp);
-    }
-    catch (invalid_argument &)
-    {
-        logger->log(LOG_CRIT, "Cache/cache_size is not a number");
-        throw runtime_error("Please set Cache/cache_size to a number");
-    }
+    configListener();
+    conf->addConfigListener(this);
     //cout << "Cache got cache size " << maxCacheSize << endl;
         
-    stmp = conf->getValue("ObjectStorage", "object_size");
+    string stmp = conf->getValue("ObjectStorage", "object_size");
     if (stmp.empty()) 
     {
         logger->log(LOG_CRIT, "ObjectStorage/object_size is not set");
@@ -129,6 +116,7 @@ Cache::Cache()
 
 Cache::~Cache()
 {
+    Config::get()->removeConfigListener(this);
     for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
         delete it->second;
 }
@@ -334,6 +322,39 @@ void Cache::shutdown()
     downloader.reset();
 }
 
+void Cache::configListener()
+{
+    Config *conf = Config::get();
+    SMLogging* logger = SMLogging::get();
+
+    if (maxCacheSize == 0)
+        maxCacheSize = 2147483648;
+    string stmp = conf->getValue("Cache", "cache_size");
+    if (stmp.empty())
+    {
+        logger->log(LOG_CRIT, "Cache/cache_size is not set. Using current value = %zi",maxCacheSize);
+    }
+    try
+    {
+        size_t newMaxCacheSize = stoull(stmp);
+        if (newMaxCacheSize != maxCacheSize)
+        {
+            if (newMaxCacheSize >= MIN_CACHE_SIZE)
+            {
+                setMaxCacheSize(newMaxCacheSize);
+                logger->log(LOG_INFO, "Cache/cache_size = %zi",maxCacheSize);
+            }
+            else
+            {
+                logger->log(LOG_CRIT, "Cache/cache_size is below %u. Check value and suffix are correct in configuration file. Using current value = %zi",MIN_CACHE_SIZE,maxCacheSize);
+            }
+        }
+    }
+    catch (invalid_argument &)
+    {
+        logger->log(LOG_CRIT, "Cache/cache_size is not a number. Using current value = %zi",maxCacheSize);
+    }
+}
 }
 
 
