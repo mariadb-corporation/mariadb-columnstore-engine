@@ -25,7 +25,7 @@ END //
 
 DROP PROCEDURE IF EXISTS `total_usage` //
 
-CREATE PROCEDURE total_usage ()
+CREATE DEFINER = 'root'@'localhost' PROCEDURE total_usage ()
 BEGIN
     SELECT
         (SELECT columnstore_info.format_filesize(sum(data_size)) TOTAL_DATA_SIZE FROM INFORMATION_SCHEMA.COLUMNSTORE_EXTENTS) TOTAL_DATA_SIZE,
@@ -34,7 +34,7 @@ END //
 
 DROP PROCEDURE IF EXISTS `table_usage` //
 
-CREATE PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64))
+CREATE DEFINER = 'root'@'localhost' PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64))
 `table_usage`: BEGIN
 
     DECLARE done INTEGER DEFAULT 0;
@@ -93,7 +93,7 @@ END //
 
 DROP PROCEDURE IF EXISTS `compression_ratio` //
 
-CREATE PROCEDURE compression_ratio()
+CREATE DEFINER='root'@'localhost' PROCEDURE compression_ratio()
 BEGIN
 SELECT CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL), ':1') COMPRESSION_RATIO;
 END //
