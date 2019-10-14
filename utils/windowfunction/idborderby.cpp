@@ -134,8 +134,16 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         int len2 = l->row2().getStringLength(fSpec.fIndex);
         const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
         const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
-        const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
-        ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
+        // For Japanese, coll.compare() may not be as correct as strncmp
+        if (JPcodePoint)
+        {
+            ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
+        }
+        else
+        {
+            const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+            ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
+        }
     }
 
     return ret;
