@@ -405,6 +405,12 @@ int main(int argc, char* argv[])
 		}
 		else if( string("-d") == argv[i] )
 		{
+            if (!rootUser)
+            {
+                cout << "   ERROR: Distributed installation for a non-root user is not supported" << endl;
+                exit (1);
+            }
+            
 			nonDistribute = false;
 			nonDistributeFlag = true;
 		}
