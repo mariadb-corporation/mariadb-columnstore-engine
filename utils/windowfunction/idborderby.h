@@ -63,7 +63,6 @@ struct IdbSortSpec
     // TODO There are three ordering specs since 10.2
     int fAsc;   // <ordering specification> ::= ASC | DESC
     int fNf;    // <null ordering> ::= NULLS FIRST | NULLS LAST
-    std::string fLocale;
 
     IdbSortSpec() : fIndex(-1), fAsc(1), fNf(1) {}
     IdbSortSpec(int i, bool b) : fIndex(i), fAsc(b ? 1 : -1), fNf(fAsc) {}
@@ -76,42 +75,13 @@ struct IdbSortSpec
 class Compare
 {
 public:
-    Compare(const IdbSortSpec& spec) : fSpec(spec) 
-    {
-        // Save off the current Locale in case something goes wrong.
-        std::string curLocale = setlocale(LC_COLLATE, NULL);
-        if (spec.fLocale.length() > 0)
-        {
-            fLocale = spec.fLocale;
-        }
-        else
-        {
-            fLocale = curLocale;
-        }
-
-        try
-        {
-            std::locale localloc(fLocale.c_str());
-            loc = localloc;
-        }
-        catch(...)
-        {
-            fLocale = curLocale;
-            std::locale localloc(fLocale.c_str());
-            loc = localloc;
-        }
-        if (fLocale.find("ja_JP") != std::string::npos)
-            JPcodePoint = true;
-    }
+    Compare(const IdbSortSpec& spec) : fSpec(spec) {}
     virtual ~Compare() {}
 
     virtual int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer) = 0;
 
 protected:
     IdbSortSpec fSpec;
-    std::string fLocale;
-    std::locale loc;
-    bool JPcodePoint; // code point ordering (Japanese UTF) flag
 };
 
 
@@ -330,69 +300,9 @@ protected:
     uint64_t                            fErrorCode;
     joblist::ResourceManager*           fRm;
     boost::shared_ptr<int64_t>			fSessionMemLimit;
-    std::string                         fLocale;
-    bool                                JPcodePoint;
 };
 
-// Set the locale based on the passed in string. If NULL,
-// use the value from system config with a default of "C"
-#if 0
-inline
-std::string IdbOrderBy::setlocale()
-{
-    // get and set locale language
-    std::string systemLang("C");
-    oam::Oam oam;
 
-    if (fLocale.length() == 0)
-    {
-        return;
-    }
-    
-    char* pLoc = setlocale(LC_ALL, fLocale.c_str());
-
-    if (pLoc == NULL)
-    {
-        try
-        {
-            //send alarm
-            alarmmanager::ALARMManager alarmMgr;
-            std::string alarmItem = "system";
-            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::SET);
-            printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
-        }
-        catch (...)
-        {
-            // Ignoring for time being.
-        }
-    }
-    else
-    {
-        try
-        {
-            //send alarm
-            alarmmanager::ALARMManager alarmMgr;
-            std::string alarmItem = "system";
-            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::CLEAR);
-        }
-        catch (...)
-        {
-            // Ignoring for time being.
-        }
-
-    }
-
-    printf ("Locale is : %s\n", systemLang.c_str() );
-
-    //BUG 2991
-    setlocale(LC_NUMERIC, "C");
-
-    if (systemLang.find("ja_JP") != std::string::npos)
-        JPcodePoint = true;
-
-    return systemLang;
-}
-#endif
 }
 
 #endif  // IDB_ORDER_BY_H
