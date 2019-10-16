@@ -167,9 +167,13 @@ extern "C"
             strcpy(message,"regr_avgx() with a non-numeric independant (second) argument");
             return 1;
         }
-        if (initid->decimals != DECIMAL_NOT_SPECIFIED)
+        if (args->arg_type[1] == DECIMAL_RESULT && initid->decimals != DECIMAL_NOT_SPECIFIED)
         {
             initid->decimals += 4;
+        }
+        else
+        {
+            initid->decimals = DECIMAL_NOT_SPECIFIED;
         }
         
         if (!(data = (struct regr_avgx_data*) malloc(sizeof(struct regr_avgx_data))))
@@ -271,9 +275,13 @@ extern "C"
             return 1;
         }
 
-        if (initid->decimals != DECIMAL_NOT_SPECIFIED)
+        if (args->arg_type[0] == DECIMAL_RESULT && initid->decimals != DECIMAL_NOT_SPECIFIED)
         {
             initid->decimals += 4;
+        }
+        else
+        {
+            initid->decimals = DECIMAL_NOT_SPECIFIED;
         }
                         
         if (!(data = (struct regr_avgy_data*) malloc(sizeof(struct regr_avgy_data))))
