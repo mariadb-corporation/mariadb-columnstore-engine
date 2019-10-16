@@ -53,7 +53,7 @@ extern std::locale loc;
 // Is there a way to construct a global reference to a facet?
 // const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
 
-//Columnstore version of strlocale  BUG 5362
+//Infinidb version of strlocale  BUG 5362
 //set System Locale "C" by default
 //return the system Locale currently set in from Columnstore.xml
 inline

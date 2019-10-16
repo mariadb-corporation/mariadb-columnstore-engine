@@ -54,9 +54,10 @@ public:
     void finalize();
 
 protected:
-    uint64_t fStart;
-    uint64_t fCount;
+    uint64_t                            fStart;
+    uint64_t                            fCount;
 };
+
 
 }
 

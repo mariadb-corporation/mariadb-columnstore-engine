@@ -375,7 +375,6 @@ public:
     inline std::string getStringField(uint32_t colIndex) const;
     inline const uint8_t* getStringPointer(uint32_t colIndex) const;
     inline uint32_t getStringLength(uint32_t colIndex) const;
-    inline const char* getCharPtrField(uint32_t colIndex, int& len) const;
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
 
@@ -773,17 +772,6 @@ inline std::string Row::getStringField(uint32_t colIndex) const
     // Not all CHAR/VARCHAR are NUL terminated so use length
     return std::string((char*) &data[offsets[colIndex]],
                        strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex)));
-}
-
-// Return a char* to the string field with len
-inline const char* Row::getCharPtrField(uint32_t colIndex, int& len) const
-{
-    len = getStringLength(colIndex);
-    if (inStringTable(colIndex))
-    {
-        return (const char*)strings->getPointer(*((uint64_t*) &data[offsets[colIndex]]));
-    }
-    return (char*)&data[offsets[colIndex]];
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
