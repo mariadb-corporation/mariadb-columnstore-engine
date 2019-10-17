@@ -276,6 +276,15 @@ static MYSQL_THDVAR_BOOL(
     1 // default
 );
 
+static MYSQL_THDVAR_BOOL(
+    replication_slave,
+    PLUGIN_VAR_NOCMDARG | PLUGIN_VAR_READONLY,
+    "Allow this MariaDB server to apply replication changes to ColumnStore",
+    NULL,
+    NULL,
+    0
+);
+
 st_mysql_sys_var* mcs_system_variables[] =
 {
   MYSQL_SYSVAR(compression_type),
@@ -300,6 +309,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(import_for_batchinsert_delimiter),
   MYSQL_SYSVAR(import_for_batchinsert_enclosed_by),
   MYSQL_SYSVAR(varbin_always_hex),
+  MYSQL_SYSVAR(replication_slave),
   NULL
 };
 
@@ -519,4 +529,13 @@ ulong get_import_for_batchinsert_enclosed_by(THD* thd)
 void set_import_for_batchinsert_enclosed_by(THD* thd, ulong value)
 {
     THDVAR(thd, import_for_batchinsert_enclosed_by) = value;
+}
+
+bool get_replication_slave(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, replication_slave);
+}
+void set_replication_slave(THD* thd, bool value)
+{
+    THDVAR(thd, replication_slave) = value;
 }

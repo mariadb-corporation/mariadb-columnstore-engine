@@ -102,5 +102,8 @@ void set_import_for_batchinsert_delimiter(THD* thd, ulong value);
 
 ulong get_import_for_batchinsert_enclosed_by(THD* thd);
 void set_import_for_batchinsert_enclosed_by(THD* thd, ulong value);
-  
+
+bool get_replication_slave(THD* thd);
+void set_replication_slave(THD* thd, bool value);
+
 #endif
