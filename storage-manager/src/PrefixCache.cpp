@@ -361,7 +361,7 @@ void PrefixCache::newObject(const string &key, size_t size)
     {
         //This should never happen but was in MCOL-3499
         //Remove this when PrefixCache ctor can call populate() synchronous with write calls
-        logger->log(LOG_ERR, "PrefixCache::newObject(): key exists in m_lru already.",key.c_str());
+        logger->log(LOG_ERR, "PrefixCache::newObject(): key exists in m_lru already %s",key.c_str());
     }
     //_makeSpace(size);
     lru.push_back(key);
