@@ -114,8 +114,10 @@ PrefixCache::PrefixCache(const bf::path &prefix) : firstDir(prefix), currentCach
     }
         
     lru_mutex.lock();    // unlocked by populate() when it's done
-    boost::thread t([this] { this->populate(); });
-    t.detach();
+    // Ideally put this in background but has to be synchronous with write calls
+    populate();
+    //boost::thread t([this] { this->populate(); });
+    //t.detach();
 }
 
 PrefixCache::~PrefixCache()
@@ -355,6 +357,12 @@ void PrefixCache::newObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
     assert(m_lru.find(key) == m_lru.end());
+    if (m_lru.find(key) != m_lru.end())
+    {
+        //This should never happen but was in MCOL-3499
+        //Remove this when PrefixCache ctor can call populate() synchronous with write calls
+        logger->log(LOG_ERR, "PrefixCache::newObject(): key exists in m_lru already.",key.c_str());
+    }
     //_makeSpace(size);
     lru.push_back(key);
     LRU_t::iterator back = lru.end();
@@ -438,8 +446,11 @@ void PrefixCache::_makeSpace(size_t size)
             return;
         }
         
+        // ran into this a couple times, still happens as of commit 948ee1aa5
+        // BT: made this more visable in logging.
+        //     likely related to MCOL-3499 and lru containing double entries.
         if (!bf::exists(cachePrefix / *it))
-            cout << cachePrefix / *it << " doesn't exist, WTF?" << endl;  // ran into this a couple times, still happens as of commit 948ee1aa5
+            logger->log(LOG_WARNING, "PrefixCache::makeSpace(): doesn't exist, %s/%s",cachePrefix.string().c_str(),((string)(*it)).c_str());
         assert(bf::exists(cachePrefix / *it));
         /* 
             tell Synchronizer that this key will be evicted
