@@ -109,7 +109,6 @@ bool WriteTask::run()
         payloadLen = 4;
         resp->returnCode = -1;
         *((int *) &resp[1]) = errno;
-        success = write(*resp, payloadLen);
     }
     else
         resp->returnCode = writeCount;
