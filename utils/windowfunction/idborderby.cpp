@@ -130,13 +130,20 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     }
     else
     {
-        string v1 = l->row1().getStringField(fSpec.fIndex);
-        string v2 = l->row2().getStringField(fSpec.fIndex);
-
-        if (v1 > v2)
-            ret = fSpec.fAsc;
-        else if (v1 < v2)
-            ret = -fSpec.fAsc;
+        int len1 = l->row1().getStringLength(fSpec.fIndex);
+        int len2 = l->row2().getStringLength(fSpec.fIndex);
+        const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
+        const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
+        // For Japanese, coll.compare() may not be as correct as strncmp
+        if (JPcodePoint)
+        {
+            ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
+        }
+        else
+        {
+            const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+            ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
+        }
     }
 
     return ret;
