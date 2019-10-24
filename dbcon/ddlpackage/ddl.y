@@ -112,7 +112,7 @@ MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
 REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET COLLATE IDB_IF EXISTS CHANGE TRUNCATE
-BOOL BOOLEAN MEDIUMINT TIMESTAMP
+BOOL BOOLEAN MEDIUMINT TIMESTAMP BINARY
 
 %token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE TIME
 
@@ -131,6 +131,7 @@ BOOL BOOLEAN MEDIUMINT TIMESTAMP
 %type <ata>                  ata_rename_table
 %type <columnType>           character_string_type
 %type <columnType>           binary_string_type
+%type <columnType>           fixed_binary_string_type
 %type <columnType>           blob_type
 %type <columnType>           text_type
 %type <str>                  check_constraint_def
@@ -747,6 +748,7 @@ opt_column_collate:
 data_type:
 	character_string_type opt_column_charset opt_column_collate
 	| binary_string_type
+	| fixed_binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
@@ -914,6 +916,14 @@ binary_string_type:
 	VARBINARY '(' ICONST ')'
 	{
 		$$ = new ColumnType(DDL_VARBINARY);
+		$$->fLength = atoi($3);
+	}
+	;
+
+fixed_binary_string_type:
+	BINARY '(' ICONST ')'
+	{
+		$$ = new ColumnType(DDL_BINARY);
 		$$->fLength = atoi($3);
 	}
 	;

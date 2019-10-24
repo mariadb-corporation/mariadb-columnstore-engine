@@ -159,6 +159,10 @@ uint64_t BlockOp::getEmptyRowValue(
         case CalpontSystemCatalog::UBIGINT :
             emptyVal = joblist::UBIGINTEMPTYROW;
             break;
+            
+        case CalpontSystemCatalog::BINARY :
+            emptyVal = joblist::BINARYEMPTYROW;
+            break;
 
         case CalpontSystemCatalog::CHAR :
         case CalpontSystemCatalog::VARCHAR :
@@ -267,9 +271,11 @@ void BlockOp::setEmptyBuf(
     // Optimize buffer initialization by constructing and copying in an array
     // instead of individual values.  This reduces the number of calls to
     // memcpy().
-    for (int j = 0; j < ARRAY_COUNT; j++)
+     
+    int w = width > 8 ? 8: width;
+    for(uint8_t* pos = emptyValArray, * end = pos + NBYTES_IN_ARRAY; pos < end; pos += w) //FIXME for no loop
     {
-        memcpy(emptyValArray + (j * width), &emptyVal, width);
+        memcpy(pos, &emptyVal, w);
     }
 
     int countFull128 = (bufSize / width) / ARRAY_COUNT;

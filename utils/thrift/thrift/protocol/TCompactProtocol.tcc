@@ -808,6 +808,8 @@ TType TCompactProtocolT<Transport_>::getTType(int8_t type) {
     case detail::compact::CT_STRUCT:
       return T_STRUCT;
     default:
+
+      cout << __FILE__<< __LINE__ << __func__<< endl;
       throw TException(std::string("don't know what type: ") + (char)type);
   }
   return T_STOP;

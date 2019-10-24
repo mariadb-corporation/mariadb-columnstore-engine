@@ -19,6 +19,7 @@
 
 
 //#define NDEBUG
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <sstream>
@@ -488,7 +489,8 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
                         datum.columnData = valIn;
                         break;
                     }
-
+                    case CalpontSystemCatalog::BINARY:
+                         cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
                     default:
                     {
                         string errStr = "(" + colType2String[(int)datum.dataType] + ")";
@@ -752,7 +754,8 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
                 setValue(colDataType, b, e, c, &strOut);
             }
             break;
-
+            case CalpontSystemCatalog::BINARY:
+                cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
         default:
         {
             std::ostringstream errmsg;
@@ -1100,7 +1103,8 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             datum.columnData = valIn;
                             break;
                         }
-
+                        case CalpontSystemCatalog::BINARY:
+                             cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
                         default:
                         {
                             string errStr = "(" + colType2String[(int)datum.dataType] + ")";
