@@ -251,6 +251,10 @@ uint32_t convertDataType(int dataType)
         case ddlpackage::DDL_UNSIGNED_DOUBLE:
             calpontDataType = CalpontSystemCatalog::UDOUBLE;
             break;
+            
+        case ddlpackage::DDL_BINARY:
+            calpontDataType = CalpontSystemCatalog::BINARY;
+            break;
 
         default:
             throw runtime_error("Unsupported datatype!");
