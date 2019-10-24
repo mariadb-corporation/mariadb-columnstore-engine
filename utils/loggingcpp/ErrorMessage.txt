@@ -143,7 +143,7 @@
 4016	ERR_DML_DDL_SLAVE	DML and DDL statements for Columnstore tables can only be run from the replication master.
 4017	ERR_DML_DDL_LOCAL	DML and DDL statements are not allowed when columnstore_local_query is greater than 0.
 4018	ERR_NON_SUPPORT_SYNTAX	The statement is not supported in Columnstore.
-4019    ERR_RBR_EVENT Row based replication events are not supported in Columnstore.
+4019	ERR_RBR_EVENT	Row based replication events are not supported in Columnstore.
 
 # UDF
 5001	ERR_FUNC_NON_IMPLEMENT	%1%:%2% is not implemented.
