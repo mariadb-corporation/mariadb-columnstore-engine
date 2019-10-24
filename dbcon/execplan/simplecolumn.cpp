@@ -690,6 +690,13 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             break;
         }
 
+        case CalpontSystemCatalog::BINARY:
+            
+        {
+            fResult.strVal = row.getBinaryField(fInputIndex);
+            break;
+        }
+        
         default:	// treat as int64
         {
             fResult.intVal = row.getUintField<8>(fInputIndex);
