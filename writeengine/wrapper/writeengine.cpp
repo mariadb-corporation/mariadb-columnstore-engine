@@ -388,6 +388,15 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
             memcpy(value, &val, size);
         }
         break;
+        
+        case WriteEngine::WR_BINARY:
+        {
+            char val = boost::any_cast<char>(data);
+            //TODO:FIXME how to determine size ? 16, 32,48 ?
+            size = 16;
+            memcpy(value, &val, size);
+        }
+        break;
 
     } // end of switch (colType)
 }  /*@convertValue -  The base for converting values */
@@ -492,6 +501,12 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
             case WriteEngine::WR_TOKEN:
                 ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
                 break;
+                
+            case WriteEngine::WR_BINARY:
+                curStr = boost::any_cast<string>(data);
+                memcpy((char*)valArray + pos * curStr.length(), curStr.c_str(), curStr.length());
+                break;     
+           
         } // end of switch (colType)
     }
     else
@@ -556,6 +571,16 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
 
             case WriteEngine::WR_TOKEN:
                 data = ((Token*)valArray)[pos];
+                break;
+                
+            case WriteEngine::WR_BINARY :
+            {
+                char tmp[16];
+                //TODO:FIXME how to determine size ? 16, 32,48 ?
+                memcpy(tmp, (char*)valArray + pos * 16, 16);
+                curStr = tmp;
+                data = curStr;
+            }
                 break;
         } // end of switch (colType)
     } // end of if
@@ -3234,7 +3259,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     }
 
     bool newFile;
-
+    cout << "Datafile   " << curCol.dataFile.fSegFileName << endl;
 #ifdef PROFILE
     timer.start("allocRowId");
 #endif
@@ -5130,6 +5155,10 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 case WriteEngine::WR_TOKEN:
                     valArray = (Token*) calloc(sizeof(Token), totalRow1);
                     break;
+
+                case WriteEngine::WR_BINARY:
+                    valArray =  calloc(colStructList[i].colWidth, totalRow1);
+                    break;
             }
 
             // convert values to valArray
@@ -5349,6 +5378,11 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         tmp16 = curValue;
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
+                   
+                    case WriteEngine::WR_BINARY:
+                         ((uint64_t*)valArray)[j] = curValue; //FIXME maybe
+                        break;   
+                   
                 }
             }
 
@@ -5491,6 +5525,10 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                     case WriteEngine::WR_USHORT:
                         tmp16 = curValue;
                         ((uint16_t*)valArray)[j] = tmp16;
+                        break;
+                    
+                    case WriteEngine::WR_BINARY:
+                       ((uint64_t*)valArray)[j] = curValue; // FIXME maybe
                         break;
                 }
             }
@@ -5774,6 +5812,9 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
             case WriteEngine::WR_TOKEN:
                 valArray = (Token*) calloc(sizeof(Token), 1);
+                break;
+            case WriteEngine::WR_BINARY:
+                valArray = (char*) calloc(sizeof(char), curColStruct.colWidth); //FIXME maybe
                 break;
         }
 
