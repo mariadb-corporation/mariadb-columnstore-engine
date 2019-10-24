@@ -83,6 +83,9 @@ const uint16_t NULL_UINT16 = USMALLINTNULL;
 const uint32_t NULL_UINT32 = UINTNULL;
 const uint64_t NULL_UINT64 = UBIGINTNULL;
 
+const uint64_t BINARYEMPTYROW = 0; 
+const uint64_t BINARYNULL = 0;
+
 const std::string CPNULLSTRMARK("_CpNuLl_");
 const std::string CPSTRNOTFOUND("_CpNoTf_");
 
