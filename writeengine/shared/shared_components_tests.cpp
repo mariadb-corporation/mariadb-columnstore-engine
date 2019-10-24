@@ -91,7 +91,8 @@ CPPUNIT_TEST(setUp);
 // Extent & dict related testing
     CPPUNIT_TEST( testExtensionWOPrealloc );
     CPPUNIT_TEST( testDictExtensionWOPrealloc );
-// Semaphore related testing
+    CPPUNIT_TEST( testExtentCrWOPreallocBin );
+    // Semaphore related testing
 //    CPPUNIT_TEST( testSem );
 
 // Log related testing
@@ -1542,7 +1543,180 @@ public:
 
     }
 */
+    template<uint8_t W> struct binary;
+    typedef binary<16> binary16;
+    typedef binary<32> binary32;
+    template<uint8_t W>
+    struct binary {
+        unsigned char data[W]; // May be ok for empty value ?
+        void operator=(uint64_t v) {*((uint64_t *) data) = v; memset(data + 8, 0, W - 8);}
+        inline uint8_t& operator[](const int index) {return *((uint8_t*) (data + index));}
+        inline uint64_t& uint64(const int index) {return *((uint64_t*) (data + (index << 3)));}
+    };
+    
+    void testExtentCrWOPreallocBin() {
+        IDBDataFile* pFile = NULL;
+        ColumnOpCompress1 fileOp;
+        BlockOp blockOp;
+        char fileName[20];
+        int rc;
+        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        int dbRoot = 1;
 
+        idbdatafile::IDBPolicy::init(true, false, "", 0);
+        // Set to versionbuffer to satisfy IDBPolicy::getType
+        strcpy(fileName, "versionbuffer");
+        fileOp.compressionType(1);
+
+        fileOp.deleteFile(fileName);
+        CPPUNIT_ASSERT(fileOp.exists(fileName) == false);
+
+        //binary16 emptyVal = blockOp.getEmptyBinRowValue( execplan::CalpontSystemCatalog::BINARY, 16 );
+        uint64_t emptyVal = blockOp.getEmptyRowValue(execplan::CalpontSystemCatalog::BIGINT, 8);
+        int width = blockOp.getCorrectRowWidth(execplan::CalpontSystemCatalog::BINARY, sizeof (binary16));
+        int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
+
+        // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
+        // under the hood
+        // bigint column file
+        rc = fileOp.createFile(fileName,
+                nBlocks, // number of blocks
+                emptyVal, // NULL value
+                width, // width
+                dbRoot); // dbroot
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+
+        fileOp.closeFile(pFile);
+
+        // open created compressed file and check its header
+        pFile = IDBDataFile::open(IDBPolicy::getType(fileName,
+                IDBPolicy::WRITEENG), fileName, "rb", dbRoot);
+
+        rc = pFile->seek(0, 0);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        rc = fileOp.readHeaders(pFile, hdrs);
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        // Couldn't use IDBDataFile->close() here w/o excplicit cast
+        fileOp.closeFile(pFile);
+
+        // Extend the extent up to 64MB
+        pFile = IDBDataFile::open(IDBPolicy::getType(fileName,
+                IDBPolicy::WRITEENG), fileName, "rb", dbRoot);
+
+        // disable disk space preallocation 
+        idbdatafile::IDBPolicy::setPreallocSpace(dbRoot);
+        rc = fileOp.initColumnExtent(pFile,
+                dbRoot,
+                BYTE_PER_BLOCK - nBlocks, // number of blocks
+                emptyVal,
+                width,
+                false, // use existing file
+                false, // don't expand; new extent
+                false, // add full (not abbreviated) extent
+                true); // optimize extention
+
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+        fileOp.closeFile(pFile);
+        // file has been extended
+        cout << endl << "file has been extended";
+
+        // write up to INITIAL_EXTENT_ROWS_TO_DISK + 1 rows into the file
+
+        Column curCol;
+        binary16 valArray[INITIAL_EXTENT_ROWS_TO_DISK + 1];
+        RID rowIdArray[INITIAL_EXTENT_ROWS_TO_DISK + 1];
+        // This is the magic for the stub in FileOp::oid2FileName 
+        int fid = 42;
+
+        for (uint64_t it = 0; it <= INITIAL_EXTENT_ROWS_TO_DISK; it++) {
+            rowIdArray[it] = it;
+            valArray[it].uint64(0) = it + 3;
+            valArray[it].uint64(1) = it + 5;
+        }
+
+        fileOp.initColumn(curCol);
+        fileOp.setColParam(curCol,
+                1, // column number
+                width,
+                execplan::CalpontSystemCatalog::BINARY,
+                WriteEngine::WR_BINARY,
+                fid,
+                1); //compression type
+
+        string segFile;
+        // openColumnFile uses DBRM's oid server but we
+        // have to get the chunks' pointers from the header.
+        curCol.dataFile.pFile = fileOp.openFile(
+                curCol,
+                dbRoot,
+                0,
+                0,
+                segFile,
+                false,
+                "r+b",
+                BYTE_PER_BLOCK * BYTE_PER_BLOCK); // buffer size is 64MB
+
+        CPPUNIT_ASSERT(rc == NO_ERROR);
+
+        rc = fileOp.writeRow(curCol, INITIAL_EXTENT_ROWS_TO_DISK + 1,
+                (RID*) rowIdArray, valArray);
+        CPPUNIT_ASSERT_EQUAL(NO_ERROR, rc); // I prefer this way as it prints values
+
+        // flush and close the file used for reading
+        fileOp.clearColumn(curCol);
+
+        std::map<uint32_t, uint32_t> oids;
+        oids[fid] = fid;
+
+        // flush changed chunks from the Manager 
+        int rtn1 = fileOp.chunkManager()->flushChunks(rc, oids);
+
+        // read back the file
+        cout << endl << "Read file      ";
+        DataBlock block;
+        binary16* bin16 = (binary16*) block.data;
+
+        fileOp.initColumn(curCol);
+        fileOp.setColParam(curCol,
+                1, // column number
+                width,
+                execplan::CalpontSystemCatalog::BINARY,
+                WriteEngine::WR_BINARY,
+                fid,
+                1); //compression type
+
+        curCol.dataFile.pFile = fileOp.openFile(
+                curCol,
+                dbRoot,
+                0,
+                0,
+                segFile,
+                false,
+                "r+b",
+                BYTE_PER_BLOCK * BYTE_PER_BLOCK); // buffer size is 64MB
+
+        CPPUNIT_ASSERT_EQUAL(NO_ERROR, rc);
+
+        int blocks = fileOp.blocksInFile(curCol.dataFile.pFile);
+
+        for (int b = 0; b < blocks; b++) {
+            rc = fileOp.chunkManager()->readBlock(curCol.dataFile.pFile, block.data, b); // ColumnOpCompress1.readBlock() is protected so ...
+            CPPUNIT_ASSERT_EQUAL(NO_ERROR, rc);
+            //cout << endl << bin16[0].uint64(0); 
+            CPPUNIT_ASSERT_EQUAL(b * 512UL + 3, bin16[0].uint64(0)); // Checking just first value of each block as it was written before 
+            CPPUNIT_ASSERT_EQUAL(b * 512UL + 5, bin16[0].uint64(1));                    
+        }
+
+        fileOp.clearColumn(curCol);
+        fileOp.closeFile(curCol.dataFile.pFile); // Seems done by clearColumn, but anyways...
+
+        cout << endl << "Delete file      ";
+
+        fileOp.deleteFile(fileName);
+        CPPUNIT_ASSERT(fileOp.exists(fileName) == false);
+        cout << endl << "End of test";
+    }
+    
     void testCleanup()
     {
         // shutdown
