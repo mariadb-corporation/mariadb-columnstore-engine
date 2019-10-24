@@ -506,6 +506,16 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                 throw std::runtime_error(os.str());
             }
 
+            else if (dataType == CalpontSystemCatalog::BINARY
+                     && ! (colDefPtr->fType->fLength == 16 
+                           || colDefPtr->fType->fLength == 32))
+            {
+                ostringstream os;
+                os << "binary length may not be other than 16 or 32";
+                throw std::runtime_error(os.str());
+            }
+
+            
             unsigned int i = 0;
             column_iterator = columns.begin();
 

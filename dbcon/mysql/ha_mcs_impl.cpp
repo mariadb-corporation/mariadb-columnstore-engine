@@ -817,7 +817,16 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
                     break;
                 }
+                case CalpontSystemCatalog::BINARY:
+                {
+                    Field_varstring* f2 = (Field_varstring*)*f;
+                    f2->store(row.getBinaryField(s).c_str(), 16, f2->charset());
 
+                    if ((*f)->null_ptr)
+                        *(*f)->null_ptr &= ~(*f)->null_bit;
+                    
+                    break;
+                }
                 default:	// treat as int64
                 {
                     intColVal = row.getUintField<8>(s);
