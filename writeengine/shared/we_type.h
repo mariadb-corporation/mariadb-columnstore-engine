@@ -108,9 +108,10 @@ enum ColType                            /** @brief Column type enumeration*/
     WR_USHORT           = 14,           /** @brief Unsigned Short */
     WR_UINT             = 15,           /** @brief Unsigned Int */
     WR_ULONGLONG        = 16,           /** @brief Unsigned Long long*/
-    WR_TEXT             = 17,            /** @brief TEXT */
+    WR_TEXT             = 17,           /** @brief TEXT */
     WR_MEDINT           = 18,           /** @brief Medium Int */
-    WR_UMEDINT          = 19            /** @brief Unsigned Medium Int */
+    WR_UMEDINT          = 19,           /** @brief Unsigned Medium Int */
+    WR_BINARY           = 20           /** @brief BINARY */            
 };
 
 // Describes relation of field to column for a bulk load

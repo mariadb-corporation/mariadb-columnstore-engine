@@ -238,6 +238,7 @@ enum DDL_DATATYPES
     DDL_TEXT,
     DDL_TIME,
     DDL_TIMESTAMP,
+    DDL_BINARY,
     DDL_INVALID_DATATYPE
 };
 
@@ -276,7 +277,8 @@ const std::string DDLDatatypeString[] =
     "unsigned-numeric",
     "text",
     "time",
-    "timestamp"
+    "timestamp",
+    "binary",
     ""
 };
 

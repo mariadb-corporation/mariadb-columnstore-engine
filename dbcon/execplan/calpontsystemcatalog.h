@@ -165,7 +165,8 @@ public:
         NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
         LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
         STRINT,			/* @bug3532, string as int for fast comparison */
-        UNDEFINED       /*!< Undefined - used in UDAF API */
+        UNDEFINED,              /*!< Undefined - used in UDAF API */
+        BINARY,                 /*!< BINARY type */
     };
 
     /** the set of column constraint types
@@ -1214,6 +1215,13 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
             break;
         }
 
+        case execplan::CalpontSystemCatalog::BINARY:
+        {
+            ret = false;
+
+            break;
+        }
+        
         default:
             break;
     }

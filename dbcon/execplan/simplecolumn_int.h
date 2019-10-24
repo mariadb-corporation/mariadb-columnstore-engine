@@ -25,6 +25,7 @@
 
 #ifndef SIMPLECOLUMNINT_H
 #define SIMPLECOLUMNINT_H
+#include <iostream>
 #include <string>
 
 #include "simplecolumn.h"
@@ -241,6 +242,8 @@ void SimpleColumn_INT<len>::serialize(messageqcpp::ByteStream& b) const
         case 8:
             b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT8;
             break;
+        case 16:
+            std::cout << __FILE__<< ":" << __LINE__ << " Fix for 16 Bytes ?" << std::endl;
     }
 
     SimpleColumn::serialize(b);
@@ -266,6 +269,8 @@ void SimpleColumn_INT<len>::unserialize(messageqcpp::ByteStream& b)
         case 8:
             ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT8);
             break;
+        case 16:
+            std::cout << __FILE__<< ":" << __LINE__ << " Fix for 16 Bytes ?" << std::endl;
     }
 
     SimpleColumn::unserialize(b);

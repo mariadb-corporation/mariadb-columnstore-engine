@@ -1531,6 +1531,10 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 value = data;
                 break;
 
+            case CalpontSystemCatalog::BINARY:
+                value = data;
+                break;
+
             default:
                 throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
                 break;
@@ -1727,6 +1731,12 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
+            case CalpontSystemCatalog::BINARY:
+            {
+                value = data;
+            }
+            break;
+            
             case CalpontSystemCatalog::UTINYINT:
             {
                 uint8_t utinyintvalue = joblist::UTINYINTNULL;

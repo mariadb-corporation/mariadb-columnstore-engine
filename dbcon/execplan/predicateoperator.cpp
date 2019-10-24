@@ -178,6 +178,7 @@ bool PredicateOperator::operator!=(const TreeNode* t) const
 }
 
 //FIXME: VARBINARY???
+//FIXME: BINARY???
 void PredicateOperator::setOpType(Type& l, Type& r)
 {
     if ( l.colDataType == execplan::CalpontSystemCatalog::DATETIME ||

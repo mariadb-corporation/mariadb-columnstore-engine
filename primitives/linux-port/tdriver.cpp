@@ -39,9 +39,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "primitiveprocessor.h"
+using namespace primitives;
 
 using namespace std;
-
 int done;
 
 void alarm_handler(int sig)
@@ -87,7 +87,6 @@ class PrimTest : public CppUnit::TestFixture
 
     CPPUNIT_TEST(p_IdxList_1);
     CPPUNIT_TEST(p_IdxList_2);
-
 // whole block tests
     CPPUNIT_TEST(p_Col_1);
     CPPUNIT_TEST(p_Col_2);
@@ -162,7 +161,11 @@ class PrimTest : public CppUnit::TestFixture
 
 // CPPUNIT_TEST(p_Dictionary_like_prefixbench_1);
 // CPPUNIT_TEST(p_Dictionary_like_substrbench_1);
-
+    
+// binary data type
+    CPPUNIT_TEST(p_Col_bin_16);
+    CPPUNIT_TEST(p_Col_bin_32);
+    
     CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -3744,6 +3747,178 @@ public:
 
         close(fd);
     }
+    
+    template<uint8_t W> struct binary;
+    typedef binary<16> binary16;
+    typedef binary<32> binary32;
+    template<uint8_t W>
+    struct binary {
+        unsigned char data[W]; // May be ok for empty value ?
+        void operator=(uint64_t v) {*((uint64_t *) data) = v; memset(data + 8, 0, W - 8);}
+        inline uint8_t& operator[](const int index) {return *((uint8_t*) (data + index));}
+        inline uint64_t& uint64(const int index) {return *((uint64_t*) (data + (index << 3)));}
+    };
+
+    void p_Col_bin_16()
+    {
+        PrimitiveProcessor pp;
+        uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
+        NewColRequestHeader* in;
+        NewColResultHeader* out;
+        ColArgs* args;
+        binary16* results;
+        uint32_t written, i;
+        int fd;
+        binary16 tmp;
+        binary16* bin16 = (binary16*) block;
+
+        for(int i = 0; i < BLOCK_SIZE/16; i++)
+        {
+            bin16[i] = 0; 
+        }
+        
+        bin16[0].uint64(0) = 10UL; 
+ 
+        bin16[1].uint64(0) = 1000UL; 
+        
+        bin16[3].uint64(0) = 1000UL; 
+        bin16[3].uint64(1) = 1; 
+        
+        bin16[4].uint64(0) = 256; 
+        bin16[4].uint64(1) = 1; 
+
+        typedef char bin16_t[16];
+        
+        *(uint64_t*)(((bin16_t*)block) + 5) = 500;
+        
+        *(uint64_t*)&((bin16_t*)block)[6] = 501;
+        
+        memset(input, 0, BLOCK_SIZE);
+        memset(output, 0, 4 * BLOCK_SIZE);
+
+        in = reinterpret_cast<NewColRequestHeader*>(input);
+        out = reinterpret_cast<NewColResultHeader*>(output);
+        args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
+
+        in->DataSize = sizeof(binary16);
+        in->DataType = execplan::CalpontSystemCatalog::BINARY;
+        in->OutputType = OT_DATAVALUE;
+        in->NOPS = 3;
+        in->BOP = BOP_OR;
+        in->NVALS = 0;
+
+        tmp = 10;
+        args->COP = COMPARE_EQ;
+        memcpy(args->val, &tmp, in->DataSize);
+        args = reinterpret_cast<ColArgs*> (args->val + in->DataSize);
+        
+        args->COP = COMPARE_EQ;
+        tmp = 1000;
+        memcpy(args->val, &tmp, in->DataSize);
+
+        args = reinterpret_cast<ColArgs*> (args->val + in->DataSize);
+        tmp.uint64(0) = 256;
+        tmp.uint64(1) = 1;
+        args->COP = COMPARE_EQ;
+        memcpy(args->val, &tmp, in->DataSize);
+         
+        pp.setBlockPtr((int*) block);
+        pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
+
+        results = reinterpret_cast<binary16*>(&output[sizeof(NewColResultHeader)]);
+//    	cout << "NVALS = " << out->NVALS << endl;
+        CPPUNIT_ASSERT_EQUAL((uint16_t)3, out->NVALS);
+        CPPUNIT_ASSERT_EQUAL((u_int64_t)10, results[0].uint64(0));
+        CPPUNIT_ASSERT_EQUAL((u_int64_t)1000, results[1].uint64(0));
+ 	for (i = 0; i < out->NVALS; i++) {
+            printf("Result %d  Value %016X%016X\n",i ,results[i].uint64(1),results[i].uint64(0) );
+//      	CPPUNIT_ASSERT(results[i] == (uint32_t) (i < 10 ? i : i - 10 + 1001));
+ 	}
+    }
+
+    void p_Col_bin_32()
+    {
+        PrimitiveProcessor pp;
+        uint8_t input[2 * BLOCK_SIZE], output[8 * BLOCK_SIZE], block[BLOCK_SIZE];
+        NewColRequestHeader* in;
+        NewColResultHeader* out;
+        ColArgs* args;
+        binary32* results;
+        uint32_t written, i;
+        int fd;
+        binary32 tmp;
+        binary32* bin32 = (binary32*) block;
+
+        for(int i = 0; i < BLOCK_SIZE/32; i++)
+        {
+            bin32[i].uint64(0) = 0;
+        }
+        
+        bin32[0].uint64(0) = 10UL; 
+ 
+        bin32[1].uint64(0) = 1000UL; 
+        
+        bin32[3].uint64(0) = 1000UL; 
+        bin32[3].uint64(1) = 1; 
+        
+        bin32[4].uint64(0) = 256; 
+        bin32[4].uint64(1) = 254; 
+        bin32[4].uint64(2) = 253; 
+        bin32[4].uint64(3) = 252; 
+     
+        typedef char bin32_t[32];
+        
+        *(uint64_t*)(((bin32_t*)block) + 5) = 500;
+        
+        *(uint64_t*)&((bin32_t*)block)[6] = 501;
+        
+        memset(input, 0, BLOCK_SIZE);
+        memset(output, 0, 4 * BLOCK_SIZE);
+
+        in = reinterpret_cast<NewColRequestHeader*>(input);
+        out = reinterpret_cast<NewColResultHeader*>(output);
+        args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
+        
+        in->DataSize = sizeof(binary32);
+        in->DataType = execplan::CalpontSystemCatalog::BINARY;
+        in->OutputType = OT_DATAVALUE;
+        in->NOPS = 3;
+        in->BOP = BOP_OR;
+        in->NVALS = 0;
+
+        tmp = 10;
+        args->COP = COMPARE_EQ;
+        memcpy(args->val, &tmp, in->DataSize);
+        args = reinterpret_cast<ColArgs*> (args->val + in->DataSize);
+        
+        args->COP = COMPARE_EQ;
+        tmp = 1000;
+        memcpy(args->val, &tmp, in->DataSize);
+
+        args = reinterpret_cast<ColArgs*> (args->val + in->DataSize);
+        tmp.uint64(0) = 256;
+        tmp.uint64(1) = 254;
+        tmp.uint64(2) = 253;
+        tmp.uint64(3) = 252;
+
+        args->COP = COMPARE_EQ;
+        memcpy(args->val, &tmp, in->DataSize);
+         
+        pp.setBlockPtr((int*) block);
+        pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
+
+        results = reinterpret_cast<binary32*>(&output[sizeof(NewColResultHeader)]);
+//    	cout << "NVALS = " << out->NVALS << endl;
+        CPPUNIT_ASSERT_EQUAL((uint16_t)3, out->NVALS);
+//        CPPUNIT_ASSERT_EQUAL((u_int64_t)10, results[0].uint64(0));
+//        CPPUNIT_ASSERT_EQUAL((u_int64_t)1000, results[1].uint64(0));
+ 	for (i = 0; i < out->NVALS; i++) {
+            printf("Result %d  Value %016X%016X%016X%016X\n",i ,results[i].uint64(3),results[i].uint64(2),results[i].uint64(1),results[i].uint64(0) );
+//      	CPPUNIT_ASSERT(results[i] == (uint32_t) (i < 10 ? i : i - 10 + 1001));
+ 	}
+    }
+
+    
 
     void p_Dictionary_1()
     {

@@ -130,6 +130,15 @@ string Func_hex::getStrVal(rowgroup::Row& row,
             return string(hexPtr.get(), hexLen);
         }
 
+        case CalpontSystemCatalog::BINARY:
+        {
+            const string& arg = parm[0]->data()->getStrVal(row, isNull);
+            uint64_t hexLen = arg.size() * 2;
+            scoped_array<char> hexPtr(new char[hexLen + 1]);  // "+ 1" for the last \0
+            octet2hex(hexPtr.get(), arg.data(), arg.size());
+            return string(hexPtr.get(), hexLen);
+        }
+        
         default:
         {
             dec = (uint64_t)parm[0]->data()->getIntVal(row, isNull);

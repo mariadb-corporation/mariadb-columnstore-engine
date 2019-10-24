@@ -223,6 +223,10 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
             return "udouble";
             break;
 
+        case CalpontSystemCatalog::BINARY:
+            return "binary";
+            break;            
+        
         default:
             break;
     }

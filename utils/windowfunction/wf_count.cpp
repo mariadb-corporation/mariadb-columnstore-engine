@@ -19,6 +19,7 @@
 
 
 //#define NDEBUG
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <sstream>
@@ -68,7 +69,8 @@ boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const st
             break;
         }
 
-        default:
+        case CalpontSystemCatalog::BINARY:
+             std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
         {
             func.reset(new WF_count<int64_t>(id, name));
             break;

@@ -91,7 +91,8 @@ void PseudoCC::loadData()
                 case 8:
                     loadPMNumber<uint64_t>();
                     break;
-
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;
@@ -143,7 +144,8 @@ void PseudoCC::loadData()
                 case 8:
                     loadSegmentNum<uint64_t>();
                     break;
-
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;
@@ -170,6 +172,8 @@ void PseudoCC::loadData()
                     loadPartitionNum<uint64_t>();
                     break;
 
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;
@@ -196,6 +200,8 @@ void PseudoCC::loadData()
                     loadLBID<uint64_t>();
                     break;
 
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;        
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;
@@ -221,7 +227,9 @@ void PseudoCC::loadData()
                 case 8:
                     loadDBRootNum<uint64_t>();
                     break;
-
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+                    
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;
@@ -250,7 +258,9 @@ void PseudoCC::loadData()
                 case 8:
                     loadSingleValue<int64_t>(valueFromUM);
                     break;
-
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+                    
                 default:
                     cout << "PC::loadData(): bad column width" << endl;
                     break;

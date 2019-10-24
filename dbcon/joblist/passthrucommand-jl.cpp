@@ -73,7 +73,12 @@ PassThruCommandJL::PassThruCommandJL(const PassThruStep& p)
             case 8:
                 tableColumnType = TableColumn::UINT64;
                 break;
-
+            
+            case 16:
+            case 32:
+                tableColumnType = TableColumn::STRING;    
+                break;
+               
             default:
                 throw logic_error("PassThruCommandJL(): bad column width?");
         }

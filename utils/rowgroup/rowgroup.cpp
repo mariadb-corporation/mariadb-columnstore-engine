@@ -26,6 +26,7 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
+#include <iostream>
 #include <vector>
 //#define NDEBUG
 #include <cassert>
@@ -587,7 +588,8 @@ string Row::toString() const
                     os << " " << dec;
                     break;
                 }
-
+                case CalpontSystemCatalog::BINARY:
+                    std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -649,7 +651,8 @@ string Row::toCSV() const
                     os << dec;
                     break;
                 }
-
+                case CalpontSystemCatalog::BINARY:
+                std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
                 default:
                     os << getIntField(i);
                     break;
@@ -810,7 +813,8 @@ void Row::initToNull()
             case CalpontSystemCatalog::UBIGINT:
                 *((uint64_t*) &data[offsets[i]]) = joblist::UBIGINTNULL;
                 break;
-
+            case CalpontSystemCatalog::BINARY:
+                std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
             default:
                 ostringstream os;
                 os << "Row::initToNull(): got bad column type (" << types[i] <<
@@ -892,7 +896,8 @@ bool Row::isNullValue(uint32_t colIndex) const
                 case 8:
                     return
                         (*((uint64_t*) &data[offsets[colIndex]]) == joblist::CHAR8NULL);
-
+                case 16:
+                    std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
                 default:
                     return (*((uint64_t*) &data[offsets[colIndex]]) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
             }
@@ -962,6 +967,16 @@ bool Row::isNullValue(uint32_t colIndex) const
             return (*((long double*) &data[offsets[colIndex]]) == joblist::LONGDOUBLENULL);
             break;
 
+        case CalpontSystemCatalog::BINARY:
+        {
+            // When is null? I dont know. Wait for bitmap null empty implemtenttion ? 
+            // Also still pendig rework discussed use pointers for empty null values
+            
+            std::cout << __FILE__<< ":" << __LINE__ << " isNullValue  value " << (*((uint64_t*) &data[offsets[colIndex]])) << std::endl;  
+            //return false; 
+            return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::BINARYEMPTYROW);
+        }
+       
         default:
         {
             ostringstream os;
@@ -1437,7 +1452,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                         case 8:
                             cr->PutData(row.getUintField<8>(j));
                             break;
-
+                        case 16:
+                        
                         default:
                         {
                             string s = row.getStringField(j);
@@ -1458,6 +1474,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                     cr->PutData(row.getUintField<4>(j));
                     break;
 
+                case CalpontSystemCatalog::BINARY:
+                    std::cout << __FILE__<< __LINE__ << __func__<< std::endl;
                 default:
                     cr->PutData(row.getIntField<8>(j));
             }

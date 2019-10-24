@@ -77,6 +77,9 @@ void PassThruCommand::project()
 
     switch (colWidth)
     {
+        case 16:
+            cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+        
         case 8:
             bpp->serialized->append((uint8_t*) bpp->values, bpp->ridCount << 3);
             break;
@@ -153,6 +156,21 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
             }
 
             break;
+        case 16:
+            cout << __FILE__ << ":" << __LINE__ << " PassThruCommand::projectIntoRowGroup" << " Addition for 16 Bytes" << endl;
+            for (i = 0; i < bpp->ridCount; i++)
+            {
+                cout << "PTC: " <<  "BIN16 " << i << " " 
+                        << hex 
+                        << *((int64_t*) bpp->values[i])
+                        << " "
+                        << *(((int64_t*) bpp->values[i]) +1)
+                        << endl;
+                // values[i]  is 8 bytes so it contains the pointer to bpp->outputMsg set by ColumnCommand::process_OT_BOTH() 
+                r.setBinaryField((uint8_t*)bpp->values[i], 16, offset);
+               
+                r.nextRow(rowSize);
+            }
     }
 }
 
