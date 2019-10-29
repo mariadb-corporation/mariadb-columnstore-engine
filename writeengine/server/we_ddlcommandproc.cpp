@@ -459,9 +459,11 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             {
                 if (colDefPtr->fType->fPrecision > 18) //@Bug 5717 precision cannot be over 18.
                 {
-                    ostringstream os;
-                    os << "Syntax error: The maximum precision (total number of digits) that can be specified is 18";
-                    throw std::runtime_error(os.str());
+                    // WIP MCOL-641
+                    //ostringstream os;
+                    //os << "Syntax error: The maximum precision (total number of digits) that can be specified is 18";
+                    //throw std::runtime_error(os.str());
+                    colDefPtr->convertDecimal();
                 }
                 else if	 (colDefPtr->fType->fPrecision < colDefPtr->fType->fScale)
                 {
@@ -508,7 +510,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             }
 
             else if (dataType == CalpontSystemCatalog::BINARY
-                     && ! (colDefPtr->fType->fLength == 16 
+                     && ! (colDefPtr->fType->fLength == 16
                            || colDefPtr->fType->fLength == 32))
             {
                 ostringstream os;
