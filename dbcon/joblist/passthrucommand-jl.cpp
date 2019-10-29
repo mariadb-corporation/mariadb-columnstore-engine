@@ -76,7 +76,7 @@ PassThruCommandJL::PassThruCommandJL(const PassThruStep& p)
             
             case 16:
             case 32:
-                tableColumnType = TableColumn::STRING;    
+                tableColumnType = TableColumn::STRING;
                 break;
                
             default:
