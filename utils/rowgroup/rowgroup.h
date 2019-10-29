@@ -746,6 +746,7 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
             return *((int64_t*) &data[offsets[colIndex]]);
 
         default:
+            std::cout << "Row::getIntField getColumnWidth(colIndex) " << getColumnWidth(colIndex) << std::endl;
             idbassert(0);
             throw std::logic_error("Row::getIntField(): bad length.");
     }

@@ -199,14 +199,12 @@ void ColumnDef::convertDecimal()
     }
     else if ((fType->fPrecision > 0) && (fType->fPrecision < 3))
     {
-        //dataType = CalpontSystemCatalog::TINYINT;
         fType->fType = DDL_TINYINT;
         fType->fLength = 1;
     }
 
     else if (fType->fPrecision < 5 && (fType->fPrecision > 2))
     {
-        //dataType = CalpontSystemCatalog::SMALLINT;
         fType->fType = DDL_SMALLINT;
         fType->fLength = 2;
     }
@@ -217,15 +215,19 @@ void ColumnDef::convertDecimal()
     }
     else if (fType->fPrecision > 6 && fType->fPrecision < 10)
     {
-        //dataType = CalpontSystemCatalog::INT;
         fType->fType = DDL_INT;
         fType->fLength = 4;
     }
     else if (fType->fPrecision > 9 && fType->fPrecision < 19)
     {
-        //dataType = CalpontSystemCatalog::BIGINT;
         fType->fType = DDL_BIGINT;
         fType->fLength = 8;
     }
+    else if (fType->fPrecision > 19 && fType->fPrecision <39)
+    {
+        fType->fType = DDL_BINARY;
+        fType->fLength = 16;
+
+    }
 }
-}
+} // end of namespace
