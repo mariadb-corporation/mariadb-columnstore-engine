@@ -633,8 +633,12 @@ void Convertor::convertColType(ColStruct* curStruct)
                     *internalType = WriteEngine::WR_INT;
                     break;
 
-                default:
+                case 8:
                     *internalType = WriteEngine::WR_LONGLONG;
+                    break;
+
+                default:
+                    *internalType = WriteEngine::WR_BCDECIMAL;
                     break;
             }
 

@@ -838,7 +838,14 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                 {
-                    intColVal = row.getIntField(s);
+                    if (row.getPrecision(s) > 18)
+                    {
+                        sscanf(row.getBinaryField(s).c_str(), "%ld",&intColVal);
+                    }
+                    else
+                    {
+                        intColVal = row.getIntField(s);
+                    }
                     storeNumericField(f, intColVal, colType);
                     break;
                 }

@@ -1687,9 +1687,9 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
 
             case WriteEngine::WR_BINARY:
+            case WriteEngine::WR_BCDECIMAL:
                 if (!bDelete) pVal = (uint8_t*) valArray + i * curCol.colWidth;
                 
-                //pOldVal = (uint8_t*) oldValArray + i * curCol.colWidth;
                 break;
                 
             default  :

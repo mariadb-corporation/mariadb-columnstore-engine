@@ -621,7 +621,17 @@ public:
      */
     // todo: add implementation when we work on version control
     // int endTran(const TransID transOid) { return NO_ERROR; }
+    // WIP
+    void setDebugLevel(const DebugLevel level)
+    {
+        WEObj::setDebugLevel(level);
 
+        for (int i = 0; i < TOTAL_COMPRESS_OP; i++)
+        {
+            m_colOp[i]->setDebugLevel(level);
+            m_dctnry[i]->setDebugLevel(level);
+        }
+    }  // todo: cleanup
 
     /************************************************************************
      * Internal use definitions
@@ -676,17 +686,7 @@ private:
                            std::vector<BRM::VBRange>& freeList, std::vector<std::vector<uint32_t> >& fboLists,
                            std::vector<std::vector<BRM::LBIDRange> >& rangeLists, std::vector<BRM::LBIDRange>&   rangeListTot);
 
-    void setDebugLevel(const DebugLevel level)
-    {
-        WEObj::setDebugLevel(level);
-
-        for (int i = 0; i < TOTAL_COMPRESS_OP; i++)
-        {
-            m_colOp[i]->setDebugLevel(level);
-            m_dctnry[i]->setDebugLevel(level);
-        }
-    }  // todo: cleanup
-
+    
     /**
      * @brief Common methods to write values to a column
      */

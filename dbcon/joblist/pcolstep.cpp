@@ -177,7 +177,10 @@ pColStep::pColStep(
         fColType.colWidth = 8;
         fIsDict = true;
     }
-    else if (fColType.colWidth > 8 && fColType.colDataType != CalpontSystemCatalog::BINARY )
+    // WIP MCOL-641
+    else if (fColType.colWidth > 8 
+        && fColType.colDataType != CalpontSystemCatalog::BINARY
+        && fColType.colDataType != CalpontSystemCatalog::DECIMAL)
     {
         fColType.colWidth = 8;
         fIsDict = true;
