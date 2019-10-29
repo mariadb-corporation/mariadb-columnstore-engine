@@ -148,11 +148,6 @@ pColScanStep::pColScanStep(
     int err, i, mask;
     BRM::LBIDRange_v::iterator it;
 
-    //pthread_mutex_init(&mutex, NULL);
-    //pthread_mutex_init(&dlMutex, NULL);
-    //pthread_mutex_init(&cpMutex, NULL);
-    //pthread_cond_init(&condvar, NULL);
-    //pthread_cond_init(&condvarWakeupProducer, NULL);
     finishedSending = false;
     recvWaiting = 0;
     recvExited = 0;
@@ -178,7 +173,10 @@ pColScanStep::pColScanStep(
         fColType.colWidth = 8;
         fIsDict = true;
     }
-    else if (fColType.colWidth > 8 && fColType.colDataType != CalpontSystemCatalog::BINARY)
+    // MCOL-641 WIP
+    else if (fColType.colWidth > 8 
+        && fColType.colDataType != CalpontSystemCatalog::BINARY
+        && fColType.colDataType != CalpontSystemCatalog::DECIMAL)
     {
         fColType.colWidth = 8;
         fIsDict = true;

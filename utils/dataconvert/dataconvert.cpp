@@ -1224,8 +1224,12 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 value = (long long) number_int_value(data, colType, pushWarning, noRoundup);
                 break;
 
+            // MCOL-641 WIP
+            // use string2BCD conversion here + set sign
             case CalpontSystemCatalog::DECIMAL:
-                if (colType.colWidth == 1)
+                if (colType.colWidth == 16)
+                    value = data;
+                else if (colType.colWidth == 1)
                     value = (char) number_int_value(data, colType, pushWarning, noRoundup);
                 else if (colType.colWidth == 2)
                     value = (short) number_int_value(data, colType, pushWarning, noRoundup);
@@ -1233,9 +1237,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                     value = (int) number_int_value(data, colType, pushWarning, noRoundup);
                 else if (colType.colWidth == 8)
                     value = (long long) number_int_value(data, colType, pushWarning, noRoundup);
+                else if (colType.colWidth == 32)
+                    value = data;
 
                 break;
-
+            // MCOL-641 Implement UDECIMAL
             case CalpontSystemCatalog::UDECIMAL:
 
                 // UDECIMAL numbers may not be negative
