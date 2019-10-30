@@ -51,8 +51,8 @@ class  ResourceManager;
 namespace ordering
 {
 
-template<typename _Tp, typename _Sequence = vector<_Tp>,
-    typename _Compare  = less<typename _Sequence::value_type> >
+template<typename _Tp, typename _Sequence = std::vector<_Tp>,
+    typename _Compare  = std::less<typename _Sequence::value_type> >
 class reservablePQ: private std::priority_queue<_Tp, _Sequence, _Compare>
 {
 public:
@@ -132,6 +132,7 @@ public:
     void revertSortSpec()
     {
         fSpec.fAsc = -fSpec.fAsc;
+        fSpec.fNf = -fSpec.fNf;
     }
 
 protected:
@@ -288,15 +289,6 @@ public:
 };
 
 // End of comparators for variable sized types
-
-class TimeCompare : public Compare
-{
-public:
-    TimeCompare(const IdbSortSpec& spec) : Compare(spec) {}
-
-    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
-};
-
 
 class CompareRule
 {

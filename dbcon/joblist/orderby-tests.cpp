@@ -315,7 +315,7 @@ private:
     void ORDERBY_TIME_TEST()
     {
         uint64_t numRows = 8192;
-        uint64_t maxThreads = 16;
+        uint64_t maxThreads = 8;
         // limit == 100000 is still twice as good to sort in parallel
         // limit == 1000000 however is better to sort using single threaded sorting
         uint64_t limit = 100000;
@@ -324,9 +324,10 @@ private:
         bool generateRandValues = true;
         bool hasDistinct = true;
         bool noDistinct = false;
-        //orderByTest_nRGs(numRows * 14400, limit, maxThreads, woParallel, generateRandValues, noDistinct);
-        //orderByTest_nRGs(numRows * 14400, limit, maxThreads, woParallel, generateRandValues, hasDistinct);
+        orderByTest_nRGs(numRows * 14400, limit, maxThreads, woParallel, generateRandValues, noDistinct);
         orderByTest_nRGs(numRows * 14400, limit, maxThreads, parallel, generateRandValues, noDistinct);
+        orderByTest_nRGs(numRows * 14400, limit, maxThreads, woParallel, generateRandValues, hasDistinct);
+        orderByTest_nRGs(numRows * 14400, limit, maxThreads, parallel, generateRandValues, hasDistinct);
     }
     void QUICK_TEST()
     {
