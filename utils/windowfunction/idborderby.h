@@ -132,6 +132,7 @@ public:
     void revertSortSpec()
     {
         fSpec.fAsc = -fSpec.fAsc;
+        fSpec.fNf = -fSpec.fNf;
     }
 
 protected:

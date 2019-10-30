@@ -28,13 +28,6 @@
 #include "jobstep.h"
 #include "limitedorderby.h"
 
-// forward reference
-namespace fucexp
-{
-class FuncExp;
-}
-
-
 namespace joblist
 {
 class TupleConstantStep;
