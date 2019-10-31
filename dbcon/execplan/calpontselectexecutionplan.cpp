@@ -82,6 +82,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location):
     fQueryType(SELECT),
     fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL),
     fStringTableThreshold(20),
+    fOrderByThreads(1),
     fDJSSmallSideLimit(0),
     fDJSLargeSideLimit(0),
     fDJSPartitionSize(100 * 1024 * 1024),  // 100MB mem usage for disk based join,
@@ -125,6 +126,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
     fQueryType(SELECT),
     fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL),
     fStringTableThreshold(20),
+    fOrderByThreads(1),
     fDJSSmallSideLimit(0),
     fDJSLargeSideLimit(0),
     fDJSPartitionSize(100 * 1024 * 1024),  // 100MB mem usage for disk based join
@@ -151,6 +153,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan (string data) :
     fQueryType(SELECT),
     fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL),
     fStringTableThreshold(20),
+    fOrderByThreads(1),
     fDJSSmallSideLimit(0),
     fDJSLargeSideLimit(0),
     fDJSPartitionSize(100 * 1024 * 1024),  // 100MB mem usage for disk based join
@@ -479,6 +482,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
     b << (uint64_t)fLimitNum;
     b << static_cast<const ByteStream::byte>(fHasOrderBy);
     b << static_cast<const ByteStream::byte>(fSpecHandlerProcessed);
+    b << reinterpret_cast<uint32_t>(fOrderByThreads);
 
     b << static_cast<uint32_t>(fSelectSubList.size());
 
@@ -647,6 +651,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
     b >> (uint64_t&)fLimitNum;
     b >> reinterpret_cast< ByteStream::byte&>(fHasOrderBy);
     b >> reinterpret_cast< ByteStream::byte&>(fSpecHandlerProcessed);
+    b >> reinterpret_cast<uint32_t&>(fOrderByThreads);
 
     // for SELECT subquery
     b >> size;

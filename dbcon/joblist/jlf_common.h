@@ -247,6 +247,7 @@ struct JobInfo
     std::vector<std::pair<uint32_t, bool> > orderByColVec;
     uint64_t                                limitStart;
     uint64_t                                limitCount;
+    uint32_t                                orderByThreads;
 
     // tupleInfo
     boost::shared_ptr<TupleKeyInfo> keyInfo;

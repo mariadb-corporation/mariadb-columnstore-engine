@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019 MariaDB Corporaton.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,15 +22,11 @@
 #ifndef JOBLIST_TUPLEANNEXSTEP_H
 #define JOBLIST_TUPLEANNEXSTEP_H
 
+#include <queue>
+#include <boost/thread/thread.hpp>
+
 #include "jobstep.h"
-
-
-// forward reference
-namespace fucexp
-{
-class FuncExp;
-}
-
+#include "limitedorderby.h"
 
 namespace joblist
 {
@@ -49,6 +46,8 @@ public:
     /** @brief TupleAnnexStep constructor
      */
     TupleAnnexStep(const JobInfo& jobInfo);
+    // Copy ctor to have a class mutex
+    TupleAnnexStep(const TupleAnnexStep &copy);
 
     /** @brief TupleAnnexStep destructor
      */
@@ -90,6 +89,14 @@ public:
         fLimitStart = s;
         fLimitCount = c;
     }
+    void setParallelOp()
+    {
+        fParallelOp = true;
+    }
+    void setMaxThreads(uint32_t number)
+    {
+        fMaxThreads = number;
+    }
 
     virtual bool stringTableFriendly()
     {
@@ -100,11 +107,15 @@ public:
 
 protected:
     void execute();
+    void execute(uint32_t);
     void executeNoOrderBy();
     void executeWithOrderBy();
+    void executeParallelOrderBy(uint64_t id);
     void executeNoOrderByWithDistinct();
     void formatMiniStats();
     void printCalTrace();
+    void finalizeParallelOrderBy();
+    void finalizeParallelOrderByDistinct();
 
     // input/output rowgroup and row
     rowgroup::RowGroup      fRowGroupIn;
@@ -117,18 +128,26 @@ protected:
     RowGroupDL*             fInputDL;
     RowGroupDL*             fOutputDL;
     uint64_t                fInputIterator;
+    std::vector<uint64_t>   fInputIteratorsList;
     uint64_t                fOutputIterator;
 
     class Runner
     {
     public:
-        Runner(TupleAnnexStep* step) : fStep(step) { }
+        Runner(TupleAnnexStep* step) : 
+            fStep(step), id(0) { }
+        Runner(TupleAnnexStep* step, uint32_t id) : 
+            fStep(step), id(id) { }
         void operator()()
         {
-            fStep->execute();
+            if(id)
+                fStep->execute(id);
+            else
+                fStep->execute();
         }
 
         TupleAnnexStep*     fStep;
+        uint16_t            id;
     };
     uint64_t fRunner; // thread pool handle
 
@@ -136,9 +155,11 @@ protected:
     uint64_t                fRowsReturned;
     uint64_t                fLimitStart;
     uint64_t                fLimitCount;
+    uint64_t                fMaxThreads;
     bool                    fLimitHit;
     bool                    fEndOfResult;
     bool                    fDistinct;
+    bool                    fParallelOp;
 
     LimitedOrderBy*         fOrderBy;
     TupleConstantStep*      fConstant;
@@ -146,8 +167,21 @@ protected:
     funcexp::FuncExp*       fFeInstance;
     JobList*                fJobList;
 
+    std::vector<LimitedOrderBy*> fOrderByList;
+    std::vector<uint64_t> fRunnersList;
+    uint16_t fFinishedThreads;
+    boost::mutex fParallelFinalizeMutex;
 };
 
+template <class T>
+class reservablePQ: private std::priority_queue<T>
+{
+public:
+    typedef typename std::priority_queue<T>::size_type size_type;
+    reservablePQ(size_type capacity = 0) { reserve(capacity); };
+    void reserve(size_type capacity) { this->c.reserve(capacity); } 
+    size_type capacity() const { return this->c.capacity(); } 
+};
 
 } // namespace
 

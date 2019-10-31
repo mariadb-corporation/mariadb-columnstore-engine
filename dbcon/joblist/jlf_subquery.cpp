@@ -762,12 +762,12 @@ int doFromSubquery(CalpontExecutionPlan* ep, const string& alias, const string& 
 
 void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
-    // make sure there is a LIMIT
-    if (csep->orderByCols().size() > 0 && csep->limitNum() == (uint64_t) - 1)
+    if (!csep->orderByCols().size())
         return;
 
     jobInfo.limitStart = csep->limitStart();
     jobInfo.limitCount = csep->limitNum();
+    jobInfo.orderByThreads = csep->orderByThreads();
 
     CalpontSelectExecutionPlan::OrderByColumnList& orderByCols = csep->orderByCols();
 

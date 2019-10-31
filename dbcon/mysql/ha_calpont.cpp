@@ -1101,43 +1101,6 @@ struct st_mysql_storage_engine columnstore_storage_engine =
 struct st_mysql_storage_engine infinidb_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
-#if 0
-static ulong srv_enum_var = 0;
-static ulong srv_ulong_var = 0;
-
-const char* enum_var_names[] =
-{
-    "e1", "e2", NullS
-};
-
-TYPELIB enum_var_typelib =
-{
-    array_elements(enum_var_names) - 1, "enum_var_typelib",
-    enum_var_names, NULL
-};
-
-static MYSQL_SYSVAR_ENUM(
-    enum_var,                       // name
-    srv_enum_var,                   // varname
-    PLUGIN_VAR_RQCMDARG,            // opt
-    "Sample ENUM system variable.", // comment
-    NULL,                           // check
-    NULL,                           // update
-    0,                              // def
-    &enum_var_typelib);             // typelib
-
-static MYSQL_SYSVAR_ULONG(
-    ulong_var,
-    srv_ulong_var,
-    PLUGIN_VAR_RQCMDARG,
-    "0..1000",
-    NULL,
-    NULL,
-    8,
-    0,
-    1000,
-    0);
-#endif
 
 /*@brief  check_walk - It traverses filter conditions*/
 /************************************************************
@@ -1393,8 +1356,6 @@ int ha_calpont_group_by_handler::end_scan()
 
 static struct st_mysql_sys_var* calpont_system_variables[] =
 {
-//  MYSQL_SYSVAR(enum_var),
-//  MYSQL_SYSVAR(ulong_var),
     NULL
 };
 

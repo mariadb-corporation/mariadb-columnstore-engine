@@ -471,7 +471,7 @@ void TupleConstantStep::execute()
     fOutputDL->endOfInput();
 }
 
-
+// *DRRTUY Copy row at once not one field at a time
 void TupleConstantStep::fillInConstants()
 {
     fRowGroupIn.getRow(0, &fRowIn);
@@ -494,7 +494,6 @@ void TupleConstantStep::fillInConstants()
     }
     else // only first column is constant
     {
-        //size_t n = fRowOut.getOffset(fRowOut.getColumnCount()) - fRowOut.getOffset(1);
         for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
         {
             fRowOut.setRid(fRowIn.getRelRid());
