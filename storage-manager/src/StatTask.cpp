@@ -48,7 +48,7 @@ StatTask::~StatTask()
 bool StatTask::run()
 {
     SMLogging* logger = SMLogging::get();
-    bool success;
+    int success;
     uint8_t buf[1024] = {0};
     
     if (getLength() > 1023) {
@@ -84,8 +84,7 @@ bool StatTask::run()
         payloadLen = 4;
         *((int32_t *) resp->payload) = errno;
     }
-    success = write(*resp, payloadLen);
-    return success;
+    return write(*resp, payloadLen);
 }
 
 }
