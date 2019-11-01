@@ -312,9 +312,11 @@ private:
     uint16_t status;
 
     /* for Joiner serialization */
+    bool pickNextJoinerNum();
     uint32_t pos, joinerNum;
     boost::shared_ptr<joiner::Joiner> joiner;
     boost::shared_ptr<std::vector<ElementType> > smallSide;
+    boost::scoped_array<uint32_t> posByJoinerNum;
 
     /* for RowGroup return type */
     rowgroup::RowGroup inputRG, projectionRG;

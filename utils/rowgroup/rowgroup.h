@@ -359,7 +359,7 @@ public:
     template<int len> void setUintField_offset(uint64_t val, uint32_t offset);
     inline void nextRow(uint32_t size);
     inline void prevRow(uint32_t size, uint64_t number);
-    
+
     inline void setUintField(uint64_t val, uint32_t colIndex);
     template<int len> void setIntField(int64_t, uint32_t colIndex);
     inline void setIntField(int64_t, uint32_t colIndex);
@@ -1803,7 +1803,8 @@ inline std::string StringStore::getString(uint64_t off) const
 
     if (off & 0x8000000000000000)
     {
-        off = off - 0x8000000000000000;
+        //off = off - 0x8000000000000000;
+        off &= ~0x8000000000000000;
 
         if (longStrings.size() <= off)
             return joblist::CPNULLSTRMARK;
@@ -1842,7 +1843,8 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
 
     if (off & 0x8000000000000000)
     {
-        off = off - 0x8000000000000000;
+        //off = off - 0x8000000000000000;
+        off &= ~0x8000000000000000;
 
         if (longStrings.size() <= off)
             return (const uint8_t*) joblist::CPNULLSTRMARK.c_str();
@@ -1910,10 +1912,10 @@ inline bool StringStore::equals(const std::string& str, uint64_t off) const
 
     if (off & 0x8000000000000000)
     {
-        if (longStrings.size() <= (off - 0x8000000000000000))
+        if (longStrings.size() <= (off & ~0x8000000000000000))
             return false;
 
-        mc = (MemChunk*) longStrings[off - 0x8000000000000000].get();
+        mc = (MemChunk*) longStrings[off & ~0x8000000000000000].get();
 
         memcpy(&length, mc->data, 4);
 
@@ -1948,7 +1950,8 @@ inline uint32_t StringStore::getStringLength(uint64_t off)
 
     if (off & 0x8000000000000000)
     {
-        off = off - 0x8000000000000000;
+        //off = off - 0x8000000000000000;
+        off &= ~0x8000000000000000;
 
         if (longStrings.size() <= off)
             return 0;
@@ -2015,4 +2018,3 @@ inline void RGData::getRow(uint32_t num, Row* row)
 
 #endif
 // vim:ts=4 sw=4:
-

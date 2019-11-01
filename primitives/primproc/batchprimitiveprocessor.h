@@ -86,7 +86,7 @@ class BatchPrimitiveProcessor
 {
 public:
     BatchPrimitiveProcessor(messageqcpp::ByteStream&, double prefetchThresh,
-                            boost::shared_ptr<BPPSendThread>);
+                            boost::shared_ptr<BPPSendThread>, uint processorThreads);
 
     ~BatchPrimitiveProcessor();
 
@@ -95,6 +95,7 @@ public:
     void resetBPP(messageqcpp::ByteStream&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& outputSock);
     void addToJoiner(messageqcpp::ByteStream&);
     int endOfJoiner();
+    void doneSendingJoinerData();
     int operator()();
     void setLBIDForScan(uint64_t rid);
 
@@ -255,7 +256,8 @@ private:
     bool doJoin;
     uint32_t joinerSize;
     uint16_t preJoinRidCount;
-    boost::mutex addToJoinerLock;
+    boost::scoped_array<boost::scoped_array<boost::mutex> > addToJoinerLocks;
+    boost::scoped_array<boost::mutex> smallSideDataLocks;
     void executeJoin();
 
 // 		uint32_t ridsIn, ridsOut;
@@ -281,10 +283,11 @@ private:
     /* Rowgroups + join */
     typedef std::tr1::unordered_multimap<uint64_t, uint32_t,
             joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
-            utils::SimpleAllocator<std::pair<const uint64_t, uint32_t> > > TJoiner;
-
+            utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t> > > TJoiner;
+            
     typedef std::tr1::unordered_multimap<joiner::TypelessData,
-            uint32_t, joiner::TupleJoiner::hasher> TLJoiner;
+            uint32_t, joiner::TupleJoiner::hasher, std::equal_to<joiner::TypelessData>,
+            utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t> > > TLJoiner;
 
     bool generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth = 0);
     /* generateJoinedRowGroup helper fcns & vars */
@@ -299,7 +302,7 @@ private:
     boost::scoped_array<rowgroup::Row> smallRows;
     boost::shared_array<boost::shared_array<int> > gjrgMappings;
 
-    boost::shared_array<boost::shared_ptr<TJoiner> > tJoiners;
+    boost::shared_array<boost::shared_array<boost::shared_ptr<TJoiner> > > tJoiners;
     typedef std::vector<uint32_t> MatchedData[LOGICAL_BLOCK_RIDS];
     boost::shared_array<MatchedData> tSmallSideMatches;
     void executeTupleJoin();
@@ -328,7 +331,7 @@ private:
     /* extra typeless join vars & fcns*/
     boost::shared_array<bool> typelessJoin;
     boost::shared_array<std::vector<uint32_t> > tlLargeSideKeyColumns;
-    boost::shared_array<boost::shared_ptr<TLJoiner> > tlJoiners;
+    boost::shared_array<boost::shared_array<boost::shared_ptr<TLJoiner> > > tlJoiners;
     boost::shared_array<uint32_t> tlKeyLengths;
     inline void getJoinResults(const rowgroup::Row& r, uint32_t jIndex, std::vector<uint32_t>& v);
     // these allocators hold the memory for the keys stored in tlJoiners
@@ -342,7 +345,6 @@ private:
     rowgroup::RowGroup fAggregateRG;
     rowgroup::RGData fAggRowGroupData;
     //boost::scoped_array<uint8_t> fAggRowGroupData;
-    boost::shared_array<boost::shared_ptr<utils::SimplePool> > _pools;
 
     /* OR hacks */
     uint8_t bop;   // BOP_AND or BOP_OR
@@ -389,7 +391,14 @@ private:
     uint32_t dbRoot;
 
     bool endOfJoinerRan;
-
+    /* Some addJoiner() profiling stuff */
+    boost::posix_time::ptime firstCallTime;
+    utils::Hasher_r bucketPicker;
+    const uint32_t bpSeed = 0xf22df448;   // an arbitrary random #
+    uint processorThreads;
+    uint ptMask;
+    bool firstInstance;
+    
     friend class Command;
     friend class ColumnCommand;
     friend class DictStep;

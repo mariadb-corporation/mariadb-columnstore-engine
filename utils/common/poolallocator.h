@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include <boost/shared_array.hpp>
+#include <boost/atomic.hpp>
 
 namespace utils
 {
@@ -40,18 +41,22 @@ class PoolAllocator
 public:
     static const unsigned DEFAULT_WINDOW_SIZE = 4096 * 40;  // should be an integral # of pages
 
-    explicit PoolAllocator(unsigned windowSize = DEFAULT_WINDOW_SIZE, bool isTmpSpace = false) :
+    explicit PoolAllocator(unsigned windowSize = DEFAULT_WINDOW_SIZE, bool isTmpSpace = false, bool _useLock = false) :
         allocSize(windowSize),
         tmpSpace(isTmpSpace),
         capacityRemaining(0),
         memUsage(0),
-        nextAlloc(0) { }
+        nextAlloc(0),
+        useLock(_useLock),
+        lock(false) { }
     PoolAllocator(const PoolAllocator& p) :
         allocSize(p.allocSize),
         tmpSpace(p.tmpSpace),
         capacityRemaining(0),
         memUsage(0),
-        nextAlloc(0) { }
+        nextAlloc(0),
+        useLock(p.useLock),
+        lock(false) { }
     virtual ~PoolAllocator() {}
 
     PoolAllocator& operator=(const PoolAllocator&);
@@ -69,8 +74,14 @@ public:
         return allocSize;
     }
 
+    void setUseLock(bool ul)
+    {
+        useLock = ul;
+    }
+
 private:
     void newBlock();
+    void *allocOOB(uint64_t size);
 
     unsigned allocSize;
     std::vector<boost::shared_array<uint8_t> > mem;
@@ -78,6 +89,8 @@ private:
     unsigned capacityRemaining;
     uint64_t memUsage;
     uint8_t* nextAlloc;
+    bool useLock;
+    boost::atomic<bool> lock;
 
     struct OOBMemInfo
     {
@@ -87,6 +100,35 @@ private:
     typedef std::map<void*, OOBMemInfo> OutOfBandMap;
     OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
 };
+
+inline void* PoolAllocator::allocate(uint64_t size)
+{
+    void *ret;
+    bool _false = false;
+
+    if (useLock)
+        while (!lock.compare_exchange_weak(_false, true, boost::memory_order_acquire))
+            _false = false;
+
+    if (size > allocSize)
+    {
+        ret = allocOOB(size);
+        if (useLock)
+            lock.store(false, boost::memory_order_release);
+        return ret;
+    }
+
+    if (size > capacityRemaining)
+        newBlock();
+
+    ret = (void*) nextAlloc;
+    nextAlloc += size;
+    capacityRemaining -= size;
+    memUsage += size;
+    if (useLock)
+        lock.store(false, boost::memory_order_release);
+    return ret;
+}
 
 }
 

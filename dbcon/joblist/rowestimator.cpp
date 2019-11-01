@@ -499,14 +499,13 @@ uint64_t RowEstimator::estimateRows(const vector<ColumnCommandJL*>& cpColVec,
     rowsInLastExtent = ((hwm + 1) * fBlockSize / colCmd->getColType().colWidth) % fRowsPerExtent;
 
     // Sum up the total number of scanned rows.
-    uint32_t idx = scanFlags.size() - 1;
-    bool done = false;
+    int32_t idx = scanFlags.size() - 1;
 
-    while (!done)
+    while (idx >= 0)
     {
         if (scanFlags[idx])
         {
-            extentRows = (idx == scanFlags.size() - 1 ? rowsInLastExtent : fRowsPerExtent);
+            extentRows = (idx == (int) scanFlags.size() - 1 ? rowsInLastExtent : fRowsPerExtent);
 
             // Get the predicate factor.
 #if ROW_EST_DEBUG
@@ -549,26 +548,28 @@ uint64_t RowEstimator::estimateRows(const vector<ColumnCommandJL*>& cpColVec,
 #endif
         }
 
-        if (extentsSampled == fExtentsToSample || idx == 0)
-        {
-            done = true;
-        }
-        else
-        {
+        //if (extentsSampled == fExtentsToSample || idx == 0)
+        //{
+            //done = true;
+        //}
+        //else
+        //{
             idx--;
-        }
+        //}
     }
 
     // If there are more extents than we sampled, add the row counts for the qualifying extents
     // that we didn't sample to the count of rows that will be scanned.
-    if ((extentsSampled >= fExtentsToSample) && (idx > 0))
+	// XXXPAT: Modified this fcn to sample all extents.  Leaving this here due to level of arcana
+	// involved.  :)
+    if (false && (extentsSampled >= fExtentsToSample) && (idx > 0))
     {
         factor = (1.0 * estimatedRowCount) / (1.0 * totalRowsToBeScanned);
 #if ROW_EST_DEBUG
         cout << "overall factor-" << factor << endl;
 #endif
 
-        for (uint32_t i = 0; i < idx; i++)
+        for (int32_t i = 0; i < idx; i++)
         {
             if (scanFlags[i])
             {
@@ -611,4 +612,3 @@ uint64_t RowEstimator::estimateRowsForNonCPColumn(ColumnCommandJL& colCmd)
 }
 
 } //namespace joblist
-
