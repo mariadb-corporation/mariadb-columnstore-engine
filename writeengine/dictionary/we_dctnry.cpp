@@ -1111,7 +1111,7 @@ int Dctnry::insertDctnry(const int& sgnature_size,
     for (i = m_lastFbo; i < m_numBlocks; i++)
     {
         // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
-        if ( ((m_freeSpace >= (size + m_totalHdrBytes)) ||
+        if ( ((m_freeSpace >= size) ||
                 ((size > 8176) && (m_freeSpace > m_totalHdrBytes))) &&
                 (m_curOp    <  (MAX_OP_COUNT - 1)) )
         {
