@@ -54,32 +54,14 @@ else
 	fi
 fi
 
-if [[ $HOME = "/root" ]]; then
-        echo ""
-        echo "${bold}Run post-install script${normal}"
-        echo ""
-        /usr/local/mariadb/columnstore/bin/post-install
-        echo "${bold}Run postConfigure script${normal}"
-        echo ""
-        if [[ $umCount = "" ]]; then
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount $systemName -d
-		else
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName -d
-		fi
+echo ""
+echo "${bold}Run post-install script${normal}"
+echo ""
+columnstore-post-install
+echo "${bold}Run postConfigure script${normal}"
+echo ""
+if [[ $umCount = "" ]]; then
+    postConfigure -qa -pm-count $pmCount $systemName -d
 else
-        echo ""
-        echo "${bold}Run post-install script${normal}"
-        echo ""
-        $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
-
-		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib
-		
-        echo "${bold}Run postConfigure script${normal}"
-        echo ""
-        if [[ $umCount = "" ]]; then
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
-		else
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
-		fi
+    postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName -d
 fi

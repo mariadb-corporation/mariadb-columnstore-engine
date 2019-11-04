@@ -1466,8 +1466,8 @@ void WECmdArgs::checkJobIdCase()
         snprintf(aBuff, sizeof(aBuff), "%s/Job_%s.xml", fJobPath.c_str(),
                  fJobId.c_str());
     else	// for time being
-        snprintf(aBuff, sizeof(aBuff), "%s/data/bulk/job/Job_%s.xml",
-                 startup::StartUp::installDir().c_str(), fJobId.c_str());
+        snprintf(aBuff, sizeof(aBuff), "/var/lib/columnstore/data/bulk/job/Job_%s.xml",
+                 fJobId.c_str());
 
     std::string aJobFileName(aBuff);
 

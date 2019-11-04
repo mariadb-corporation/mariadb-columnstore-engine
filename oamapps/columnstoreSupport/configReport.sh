@@ -8,14 +8,8 @@ else
         MODULE="pm1"
 fi
 
-if [ $2 ] ; then
-        INSTALLDIR=$2
-else
-        INSTALLDIR="/usr/local/mariadb/columnstore"
-fi
-
 #get temp directory
-tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/${MODULE}_configReport.txt
 

@@ -113,6 +113,12 @@ SET(CPACK_RPM_SPEC_MORE_DEFINE "${CPACK_RPM_SPEC_MORE_DEFINE}
 SET(ignored
     "%ignore /usr"
     "%ignore /usr/local"
+    "%ignore /bin"
+    "%ignore /lib"
+    "%ignore /usr/sbin"
+    "%ignore /usr/lib64/mysql"
+    "%ignore /usr/lib64/mysql/plugin"
+    "%ignore /etc/my.cnf.d"
 )
 
 #SET(CPACK_RPM_SPEC_MORE_DEFINE "

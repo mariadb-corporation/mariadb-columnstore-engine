@@ -11,7 +11,7 @@ checkForError() {
 	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
 		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
 		  rm -f ${tmpdir}/error.check
-		  $installdir/mysql/mysql-Columnstore stop
+		  mysql-Columnstore stop
 		  sleep 2
 		  exit 2;
 	fi
@@ -40,20 +40,12 @@ checkForError() {
 	return 0;
 }
 
-prefix=/usr/local
-installdir=$prefix/mariadb/columnstore
 rpmmode=install
 tmpdir="/tmp"
 
 for arg in "$@"; do
-	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
-		prefix="$(echo $arg | awk -F= '{print $2}')"
-		installdir=$prefix/mariadb/columnstore
-	elif [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
+	if [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
-	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
-		installdir="$(echo $arg | awk -F= '{print $2}')"
-		prefix=$(dirname $installdir)
 	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
 		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	else
@@ -61,39 +53,26 @@ for arg in "$@"; do
 	fi
 done
 
-USER=`whoami 2>/dev/null`
-if [ $USER != "root" ]; then
-	ldconfig >/dev/null 2>&1
-	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib
-else
-	ldconfig
-fi
-
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g /etc/my.cnf.d/columnstore.cnf
-fi
-
-if [ -x $installdir/mysql/mysql-Columnstore ]; then
+if [ -x mysql-Columnstore ]; then
 
 	# Restart in the same way that mysqld will be started normally.
-	$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
+	mysql-Columnstore stop >/dev/null 2>&1
 	sleep 2
-	$installdir/mysql/mysql-Columnstore start --skip-grant-tables
+	mysql-Columnstore start --skip-grant-tables
 
 	sleep 5
 	
 	# Install various Calpont stuff...
-	$installdir/mysql/install_mcs_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
+	install_mcs_mysql.sh  --tmpdir=$tmpdir
 	checkForError
 	if [ $? -ne 0 ]; then
 		echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
-		$installdir/mysql/mysql-Columnstore stop
+		mysql-Columnstore stop
 		sleep 2
 		exit 2;
 	fi
 
-	$installdir/mysql/mysql-Columnstore stop
+	mysql-Columnstore stop
 
 fi
 

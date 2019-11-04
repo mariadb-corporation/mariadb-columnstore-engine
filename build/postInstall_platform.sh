@@ -5,7 +5,6 @@ if  [ "$1" -eq "$1" 2> /dev/null ]; then
 	fi
 fi
 
-prefix=/usr/local
-
-test -x /usr/local/mariadb/columnstore/bin/post-install && /usr/local/mariadb/columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
+mkdir -p /var/lib/columnstore/local
+columnstore-post-install --rpmmode=$rpmmode
 

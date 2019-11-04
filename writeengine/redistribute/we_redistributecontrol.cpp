@@ -89,8 +89,7 @@ RedistributeControl* RedistributeControl::instance()
 RedistributeControl::RedistributeControl() : fInfoFilePtr(NULL), fPlanFilePtr(NULL)
 {
     // default path /usr/local/mariadb/columnstore/data1/systemFiles/redistribute
-    string installDir = startup::StartUp::installDir();
-    fRedistributeDir = installDir + RedistributeDir;
+    fRedistributeDir = "/var/lib/columnstore/" + RedistributeDir;
     fInfoFilePath = fRedistributeDir + InfoFileName;
     fPlanFilePath = fRedistributeDir + PlanFileName;
 

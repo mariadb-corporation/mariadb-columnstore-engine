@@ -8,7 +8,7 @@ else
 fi
 
 if [ $rpmmode = erase ]; then
-	test -x /usr/local/mariadb/columnstore/bin/pre-uninstall && /usr/local/mariadb/columnstore/bin/pre-uninstall
+	columnstore-pre-uninstall
 fi
 
 exit 0

@@ -8,14 +8,8 @@ else
         MODULE="pm1"
 fi
 
-if [ $2 ] ; then
-        INSTALLDIR=$2
-else
-        INSTALLDIR="/usr/local/mariadb/columnstore"
-fi
-
 #get temp directory
-tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/${MODULE}_resourceReport.txt
 
@@ -31,9 +25,9 @@ echo "################# ipcs -l #################"
 echo " "
 ipcs -l
 
-echo "################# $INSTALLDIR/bin/clearShm -n #################"
+echo "################# clearShm -n #################"
 echo " "
-$INSTALLDIR/bin/clearShm -n
+clearShm -n
 
 echo " "
 echo "-- Disk Usage --"
@@ -45,26 +39,26 @@ df -k
 echo " "
 echo "-- Disk BRM Data files --"
 echo " "
-ls -l $INSTALLDIR/data1/systemFiles/dbrm 2> /dev/null
-ls -l $INSTALLDIR/dbrm 2> /dev/null
+ls -l /var/lib/columnstore/data1/systemFiles/dbrm 2> /dev/null
+ls -l /var/lib/columnstore/dbrm 2> /dev/null
 
-echo "################# cat $INSTALLDIR/data1/systemFiles/dbrm/BRM_saves_current #################"
+echo "################# cat /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current #################"
 echo " "
-cat $INSTALLDIR/data1/systemFiles/dbrm/BRM_saves_current 2> /dev/null
+cat /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current 2> /dev/null
 
 echo " "
 echo "-- View Table Locks --"
 echo " "
 echo "################# cat bin/viewtablelock #################"
 echo " "
-$INSTALLDIR/bin/viewtablelock 2> /dev/null
+viewtablelock 2> /dev/null
 
 echo " "
 echo "-- BRM Extent Map  --"
 echo " "
 echo "################# bin/editem -i #################"
 echo " "
-$INSTALLDIR/bin/editem -i 2>/dev/null
+editem -i 2>/dev/null
 
 } > ${tmpDir}/${MODULE}_resourceReport.txt
 

@@ -70,7 +70,6 @@ bool rootUser = true;
 string HOME = "/root";
 string SingleServerInstall;
 string tmpDir;
-string installDir;
 
 bool repeatStop;
 
@@ -200,7 +199,6 @@ int main(int argc, char* argv[])
     string ccHistoryFile = HOME + "/.cc_history";
 
     tmpDir = startup::StartUp::tmpDir();
-    installDir = startup::StartUp::installDir();
 
     string cf = std::string(MCSSYSCONFDIR) + "/columnstore/" + ConsoleCmdsFile;
     fConfig = Config::makeConfig(cf);
@@ -2626,7 +2624,7 @@ int processCommand(string* arguments)
                 {
 					string logFile = tmpDir + "/cc-stop.pdsh";
 					
-                    cmd = "pdsh -a '/" + installDir + "/bin/columnstore stop' > " + logFile + " 2>&1";
+                    cmd = "pdsh -a 'columnstore stop' > " + logFile + " 2>&1";
                     system(cmd.c_str());
 
                     if (oam.checkLogStatus(logFile, "exit") )
@@ -2636,7 +2634,7 @@ int processCommand(string* arguments)
                 }
                 else
                 {
-                    cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/status.log";
+                    cmd = "columnstore stop > " + tmpDir + "/status.log";
                     system(cmd.c_str());
                 }
             }
@@ -2646,7 +2644,7 @@ int processCommand(string* arguments)
 
                 if ( gracefulTemp == FORCEFUL )
                 {
-                    cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/status.log";
+                    cmd = "columnstore stop > " + tmpDir + "/status.log";
                     system(cmd.c_str());
                     cout << endl << "   Successful shutdown of System (stopped local columnstore service) " << endl << endl;
                 }
@@ -2654,7 +2652,7 @@ int processCommand(string* arguments)
                 if (Failed.find("Connection refused") != string::npos)
                 {
                     cout << endl << "**** shutdownSystem Error : ProcessManager not Active, stopping columnstore service" << endl;
-                    cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/status.log";
+                    cmd = "columnstore stop > " + tmpDir + "/status.log";
                     system(cmd.c_str());
                     cout << endl << "   Successful stop of local columnstore service " << endl << endl;
                 }
@@ -2676,7 +2674,7 @@ int processCommand(string* arguments)
                 if ( DBRootStorageType == "hdfs")
                 {
 					string logFile = tmpDir + "cc-stop.pdsh";
-                    cmd = "pdsh -a '" + installDir + "/bin/columnstore stop' > " + logFile + " 2>&1";
+                    cmd = "pdsh -a 'columnstore stop' > " + logFile + " 2>&1";
                     system(cmd.c_str());
 
                     if (oam.checkLogStatus(logFile, "exit") )
@@ -2783,7 +2781,7 @@ int processCommand(string* arguments)
                     if ( DBRootStorageType == "hdfs")
                     {
 						string logFile = tmpDir + "/cc-restart.pdsh";
-                        cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + logFile + " 2>&1";
+                        cmd = "pdsh -a 'columnstore restart' > " + logFile + " 2>&1";
                         system(cmd.c_str());
 
                         if (oam.checkLogStatus(logFile, "exit") )
@@ -2820,7 +2818,7 @@ int processCommand(string* arguments)
 
                                 if ( modulename == localModule )
                                 {
-                                    cmd = installDir + "/bin/columnstore restart > " + tmpDir + "/start.log 2>&1";
+                                    cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
                                     int rtnCode = system(cmd.c_str());
 
                                     if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0)
@@ -2838,7 +2836,7 @@ int processCommand(string* arguments)
                                 for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
                                 {
                                     //run remote command script
-                                    cmd = installDir + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + installDir + "/bin/columnstore restart' 0";
+                                    cmd = "remote_command.sh " + (*pt1).IPAddr + " " + password + " 'columnstore restart' 0";
                                     int rtnCode = system(cmd.c_str());
 
                                     if (WEXITSTATUS(rtnCode) < 0)
@@ -2847,7 +2845,7 @@ int processCommand(string* arguments)
                                         cout << endl << "**** startSystem Failed" << endl;
 
                                         // stop local columnstore service
-                                        cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/stop.log 2>&1";
+                                        cmd = "columnstore stop > " + tmpDir + "/stop.log 2>&1";
                                         system(cmd.c_str());
 
                                         FAILED = true;
@@ -2861,7 +2859,7 @@ int processCommand(string* arguments)
                                             cout << endl << "**** startSystem Failed" << endl;
 
                                             // stop local columnstore service
-                                            cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/stop.log 2>&1";
+                                            cmd = "columnstore stop > " + tmpDir + "/stop.log 2>&1";
                                             system(cmd.c_str());
 
                                             FAILED = true;
@@ -2887,7 +2885,7 @@ int processCommand(string* arguments)
                     //just kick off local server
                     cout << endl << "   System being started, please wait...";
                     cout.flush();
-                    cmd = installDir + "/bin/columnstore restart > " + tmpDir + "/start.log 2>&1";
+                    cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
                     int rtnCode = system(cmd.c_str());
 
                     if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0)
@@ -3025,7 +3023,7 @@ int processCommand(string* arguments)
                     if ( DBRootStorageType == "hdfs")
                     {
 						string logFile = tmpDir + "/cc-restart.pdsh";
-                        cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + logFile + " 2>&1";
+                        cmd = "pdsh -a 'columnstore restart' > " + logFile + " 2>&1";
                         system(cmd.c_str());
 
                         if (oam.checkLogStatus(logFile, "exit") )
@@ -3068,7 +3066,7 @@ int processCommand(string* arguments)
                                 for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
                                 {
                                     //run remote command script
-                                    cmd = installDir + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + installDir + "/bin/columnstore restart' 0";
+                                    cmd = "remote_command.sh " + (*pt1).IPAddr + " " + password + " 'columnstore restart' 0";
 
                                     int rtnCode = system(cmd.c_str());
 
@@ -3078,7 +3076,7 @@ int processCommand(string* arguments)
                                         cout << endl << "**** restartSystem Failed" << endl;
 
                                         // stop local columnstore service
-                                        cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/stop.log 2>&1";
+                                        cmd = "columnstore stop > " + tmpDir + "/stop.log 2>&1";
                                         system(cmd.c_str());
 
                                         FAILED = true;
@@ -3093,7 +3091,7 @@ int processCommand(string* arguments)
                                             FAILED = true;
 
                                             // stop local columnstore service
-                                            cmd = installDir + "/bin/columnstore stop > " + tmpDir + "/stop.log 2>&1";
+                                            cmd = "columnstore stop > " + tmpDir + "/stop.log 2>&1";
                                             system(cmd.c_str());
 
                                             break;
@@ -3109,7 +3107,7 @@ int processCommand(string* arguments)
                                 break;
 
                             //RESTART LOCAL HOST
-                            cmd = installDir + "/bin/columnstore restart > " + tmpDir + "/start.log 2>&1";
+                            cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
                             int rtnCode = system(cmd.c_str());
 
                             if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0)
@@ -3129,7 +3127,7 @@ int processCommand(string* arguments)
                     //just kick off local server
                     cout << "   System being restarted, please wait...";
                     cout.flush();
-                    cmd = installDir + "/bin/columnstore restart > " + tmpDir + "/start.log 2>&1";
+                    cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
                     int rtnCode = system(cmd.c_str());
 
                     if (WEXITSTATUS(rtnCode) != 0)
@@ -4936,7 +4934,6 @@ int processCommand(string* arguments)
         {
 			cout << endl << "System Installation and Temporary File Directories" << endl << endl;
 			
-			cout << "System Installation Directory = " << installDir << endl;
 			cout << "System Temporary File Directory = " << tmpDir << endl << endl;
         }
         break;
@@ -6182,13 +6179,13 @@ int processCommand(string* arguments)
                                         ++it)
                                 {
                                     string deviceName = *it;
-                                    string entry = deviceName + " " + installDir + "/gluster/brick" + oam.itoa(brickID)  + " " + deviceType + " defaults 1 2";
+                                    string entry = deviceName + " /var/lib/columnstore/gluster/brick" + oam.itoa(brickID)  + " " + deviceType + " defaults 1 2";
                                     //send update pm
                                     oam.distributeFstabUpdates(entry, moduleName);
                                 }
                             }
 
-                            string command = installDir + "/bin/remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brickID) + "'";
+                            string command = "remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p /var/lib/columnstore/gluster/brick" + oam.itoa(brickID) + "'";
                             system(command.c_str());
                             brickID++;
                         }
@@ -8225,7 +8222,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 
                             //run remote command script
                             HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-                            cmd = installDir + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " reboot " ;
+                            cmd = "remote_command.sh " + (*pt1).IPAddr + " " + password + " reboot " ;
                             int rtnCode = system(cmd.c_str());
 
                             if (WEXITSTATUS(rtnCode) != 0)
@@ -8344,7 +8341,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
                                     HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
                                     string ipAddr = (*pt1).IPAddr;
                                     //run remote command script
-                                    cmd = installDir + "/bin/remote_command.sh " + ipAddr + " " + password + " reboot " ;
+                                    cmd = "remote_command.sh " + ipAddr + " " + password + " reboot " ;
                                     int rtnCode = system(cmd.c_str());
 
                                     if (WEXITSTATUS(rtnCode) != 0)

@@ -78,7 +78,6 @@ bool uncommentCalpontXml( string entry);
 
 extern string pwprompt;
 
-string installDir;
 bool noPrompting;
 string mysqlpw = " ";
 
@@ -130,19 +129,15 @@ int main(int argc, char* argv[])
 
     string numBlocksPctParam = "";
     string totalUmMemoryParam = "";
-    if (argc >= 13) {
-        installDir = argv[12];
-        if (argc >= 15) {
-            if (string(argv[13]) != "-") {
+    if (argc >= 12) {
+        if (argc >= 14) {
+            if (string(argv[12]) != "-") {
                 numBlocksPctParam = argv[13];
             }
-            if (string(argv[14]) != "-") {
+            if (string(argv[13]) != "-") {
                 totalUmMemoryParam = argv[14];
             }
         }
-    }
-    else {
-        installDir = "/usr/local/mariadb/columnstore";
     }
 
     ofstream file("/dev/null");
@@ -164,7 +159,6 @@ int main(int argc, char* argv[])
     cout << nodeps << endl;
     cout << mysqlpw << endl;
     cout << installer_debug << endl;
-    cout << installDir << endl;
     if (!numBlocksPctParam.empty()) {
         cout << numBlocksPctParam << endl;
     }
@@ -542,13 +536,13 @@ int main(int argc, char* argv[])
     if ( installType == "initial" )
     {
         //cleanup/create /local/etc directories
-        cmd = "rm -rf " + installDir + "/local/etc > /dev/null 2>&1";
+        cmd = "rm -rf /var/lib/columnstore/local/etc > /dev/null 2>&1";
         system(cmd.c_str());
-        cmd = "mkdir " + installDir + "/local/etc > /dev/null 2>&1";
+        cmd = "mkdir /var/lib/columnstore/local/etc > /dev/null 2>&1";
         system(cmd.c_str());
 
         //create associated /local/etc directory for parentOAMModuleName
-        cmd = "mkdir " + installDir + "/local/etc/" + parentOAMModuleName + " > /dev/null 2>&1";
+        cmd = "mkdir /var/lib/columnstore/local/etc/" + parentOAMModuleName + " > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -626,7 +620,7 @@ int main(int argc, char* argv[])
             if ( installType == "initial" )
             {
                 //create associated /local/etc directory for module
-                cmd = "mkdir " + installDir + "/local/etc/" + moduleName + " > /dev/null 2>&1";
+                cmd = "mkdir /var/lib/columnstore/local/etc/" + moduleName + " > /dev/null 2>&1";
                 system(cmd.c_str());
             }
         }
@@ -644,7 +638,7 @@ int main(int argc, char* argv[])
 
         for (; list1 != directormodulelist.end() ; list1++)
         {
-            cmd = "mkdir " + installDir + "/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
+            cmd = "mkdir /var/lib/columnstore/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
             system(cmd.c_str());
 
             //make module file in /local/etc/"modulename"
@@ -660,7 +654,7 @@ int main(int argc, char* argv[])
 
         for (; list1 != usermodulelist.end() ; list1++)
         {
-            cmd = "mkdir " + installDir + "/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
+            cmd = "mkdir /var/lib/columnstore/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
             system(cmd.c_str());
 
             //make module file in /local/etc/"modulename"
@@ -676,7 +670,7 @@ int main(int argc, char* argv[])
 
         for (; list1 != performancemodulelist.end() ; list1++)
         {
-            cmd = "mkdir " + installDir + "/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
+            cmd = "mkdir /var/lib/columnstore/local/etc/" + (*list1).moduleName + " > /dev/null 2>&1";
             system(cmd.c_str());
 
             //make module file in /local/etc/"modulename"
@@ -689,99 +683,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    //perform uninstall option
-    if ( installType == "uninstall" )
-    {
-        ModuleList::iterator list1 = childmodulelist.begin();
-
-        for (; list1 != childmodulelist.end() ; list1++)
-        {
-            string remoteModuleName = (*list1).moduleName;
-            string remoteModuleIP = (*list1).moduleIP;
-            string remoteHostName = (*list1).hostName;
-            string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
-
-            if ( remoteModuleType == "um" ||
-                    (remoteModuleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) )
-            {
-                //run remote installer script
-                if ( packageType != "binary" )
-                {
-                    string temppwprompt = pwprompt;
-
-                    if ( pwprompt == " " )
-                        temppwprompt = "none";
-
-                    cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-                    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
-                    int rtnCode = system(cmd.c_str());
-
-                    if (WEXITSTATUS(rtnCode) != 0)
-                    {
-                        cout << endl << "ERROR: returned from package_installer.sh" << endl;
-                        exit(1);
-                    }
-                }
-                else
-                {
-                    // do a binary package install
-                    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
-                          password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-                          serverTypeInstall + " " + installer_debug + " " + installDir;
-                    int rtnCode = system(cmd.c_str());
-
-                    if (WEXITSTATUS(rtnCode) != 0)
-                    {
-                        cout << endl << "ERROR: returned from binary_installer.sh" << endl;
-                        exit(1);
-                    }
-                }
-            }
-            else
-            {
-                if (remoteModuleType == "pm")
-                {
-                    if ( packageType != "binary" )
-                    {
-                        //run remote installer script
-                        cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-                        cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
-                        int rtnCode = system(cmd.c_str());
-
-                        if (WEXITSTATUS(rtnCode) != 0)
-                        {
-                            cout << endl << "ERROR returned from package_installer.sh" << endl;
-                            exit(1);
-                        }
-                    }
-                    else
-                    {
-                        // do a binary package install
-                        cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-                              " " + password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-                              serverTypeInstall + " " + installer_debug + " " + installDir;
-                        int rtnCode = system(cmd.c_str());
-
-                        if (WEXITSTATUS(rtnCode) != 0)
-                        {
-                            cout << endl << "ERROR returned from binary_installer.sh" << endl;
-                            exit(1);
-                        }
-                    }
-                }
-            }
-
-            //unmount child module
-            cmd = "umount -fl /mnt/" + remoteModuleName + " > /dev/null 2>&1";
-            system(cmd.c_str());
-            cmd = "rm -fr /mnt/" + remoteModuleName;
-            system(cmd.c_str());
-        }
-
-        cout << "uninstall request successful" << endl;
-        return 0;
-    }
-
     if ( installType == "initial" )
     {
         //setup local OS Files
@@ -792,139 +693,12 @@ int main(int argc, char* argv[])
             exit(1);
         }
 
-        cmd = "chmod 755 -R " + installDir + "/data1/systemFiles/dbrm > /dev/null 2>&1";
+        cmd = "chmod 755 -R /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
-    string idbstartcmd = installDir + "/bin/columnstore start";
+    string idbstartcmd = "columnstore start";
 
-    if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
-            performancemodulelist.size() > 1 )
-    {
-        //
-        // perform multi-server install
-        //
-
-        // perform remote install of servers in the system
-        ModuleList::iterator list1 = childmodulelist.begin();
-
-        for (; list1 != childmodulelist.end() ; list1++)
-        {
-            string remoteModuleName = (*list1).moduleName;
-            string remoteModuleIP = (*list1).moduleIP;
-            string remoteHostName = (*list1).hostName;
-            string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
-
-            if ( remoteModuleType == "um" ||
-                    (remoteModuleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) )
-            {
-                //run remote installer script
-                if ( packageType != "binary" )
-                {
-                    string temppwprompt = pwprompt;
-
-                    if ( pwprompt == " " )
-                        temppwprompt = "none";
-
-                    cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-                    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
-                    int rtnCode = system(cmd.c_str());
-
-                    if (WEXITSTATUS(rtnCode) != 0)
-                    {
-                        cout << endl << "ERROR returned from package_installer.sh" << endl;
-                        exit(1);
-                    }
-                }
-                else
-                {
-                    // do a binary package install
-                    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
-                          password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-                          serverTypeInstall + " " + installer_debug + " " + installDir;
-                    int rtnCode = system(cmd.c_str());
-
-                    if (WEXITSTATUS(rtnCode) != 0)
-                    {
-                        cout << endl << "ERROR returned from binary_installer.sh" << endl;
-                        exit(1);
-                    }
-                }
-            }
-            else
-            {
-                if (remoteModuleType == "pm" && IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM)
-                {
-                    //run remote installer script
-                    if ( packageType != "binary" )
-                    {
-                        cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-                        cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
-                        int rtnCode = system(cmd.c_str());
-
-                        if (WEXITSTATUS(rtnCode) != 0)
-                        {
-                            cout << endl << "ERROR returned from package_installer.sh" << endl;
-                            exit(1);
-                        }
-                    }
-                    else
-                    {
-                        // do a binary package install
-                        cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-                              " " + password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType +
-                              " " + serverTypeInstall + " " + installer_debug + " " + installDir;
-                        int rtnCode = system(cmd.c_str());
-
-                        if (WEXITSTATUS(rtnCode) != 0)
-                        {
-                            cout << endl << "ERROR returned from binary_installer.sh" << endl;
-                            exit(1);
-                        }
-                    }
-                }
-            }
-        }
-
-        if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
-        {
-            //run the mysql / mysqld setup scripts
-            cout << endl << "Running the MariaDB ColumnStore setup scripts" << endl << endl;
-
-            // call the mysql setup scripts
-            mysqlSetup();
-            sleep(5);
-        }
-
-        //
-        // perform start of MariaDB ColumnStore of other servers in the system
-        //
-        list1 = childmodulelist.begin();
-
-        for (; list1 != childmodulelist.end() ; list1++)
-        {
-            string remoteModuleName = (*list1).moduleName;
-            string remoteModuleIP = (*list1).moduleIP;
-            string remoteHostName = (*list1).hostName;
-
-            if ( remoteModuleName == parentOAMModuleName )
-                continue;
-
-            //run remote command script
-            cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + idbstartcmd + "' " +  installer_debug;
-            int rtnCode = system(cmd.c_str());
-
-            if (WEXITSTATUS(rtnCode) != 0)
-                cout << "error with running remote_command.sh" << endl;
-        }
-
-        //start on local module
-        int rtnCode = system(idbstartcmd.c_str());
-
-        if (rtnCode != 0)
-            cout << "Error starting MariaDB ColumnStore local module" << endl;
-    }
-    else
     {
         //
         // perform single-server install from auto-installer
@@ -962,7 +736,7 @@ int main(int argc, char* argv[])
 
             //startup mysqld and infinidb processes
             cout << endl;
-            cmd = installDir + "/bin/clearShm > /dev/null 2>&1";
+            cmd = "clearShm > /dev/null 2>&1";
             system(cmd.c_str());
             system(idbstartcmd.c_str());
         }
@@ -986,7 +760,7 @@ int main(int argc, char* argv[])
         cout << " DONE" << endl;
 
 		string logFile = tmpDir + "/dbbuilder.log";
-        cmd = installDir + "/bin/dbbuilder 7 > " + logFile;
+        cmd = "dbbuilder 7 > " + logFile;
         system(cmd.c_str());
 
         if (oam.checkLogStatus(logFile, "System Catalog created") )
@@ -1072,14 +846,14 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
             cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
             system(cmd.c_str());
 
-            cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+            cmd = "cat /var/lib/columnstore/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
 
             if (geteuid() == 0) system(cmd.c_str());
 
-            cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+            cmd = "rm -f /var/lib/columnstore/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
             system(cmd.c_str());
 
-            cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
+            cmd = "cp /var/lib/columnstore/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont /var/lib/columnstore/local/. > /dev/null 2>&1";
             system(cmd.c_str());
     }
 
@@ -1095,9 +869,9 @@ bool makeModuleFile(string moduleName, string parentOAMModuleName)
     string fileName;
 
     if ( moduleName == parentOAMModuleName )
-        fileName = installDir + "/local/module";
+        fileName = "/var/lib/columnstore/local/module";
     else
-        fileName = installDir + "/local/etc/" + moduleName + "/module";
+        fileName = "/var/lib/columnstore/local/etc/" + moduleName + "/module";
 
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());

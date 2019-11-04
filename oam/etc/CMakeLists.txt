@@ -1,3 +1,4 @@
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ProcessConfig.xml.in" "${CMAKE_CURRENT_SOURCE_DIR}/ProcessConfig.xml" @ONLY)
 
 install(FILES  AlarmConfig.xml 
                Columnstore.xml 

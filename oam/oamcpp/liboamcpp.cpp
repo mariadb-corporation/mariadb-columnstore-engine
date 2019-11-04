@@ -105,8 +105,6 @@ void handleControlC(int i)
 
 Oam::Oam()
 {
-    InstallDir = startup::StartUp::installDir();
-
     CalpontConfigFile = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
 
     AlarmConfigFile = std::string(MCSSYSCONFDIR) + "/columnstore/AlarmConfig.xml";
@@ -2840,7 +2838,7 @@ oamModuleInfo_t Oam::getModuleInfo()
     int localModuleID;
 
     // Get Module Name from module-file
-    string fileName = InstallDir + "/local/module";
+    string fileName = "/etc/columnstore/module";
 
     ifstream oldFile (fileName.c_str());
 
@@ -5006,7 +5004,7 @@ string Oam::getWritablePM()
  ********************************************************************/
 string Oam::getHotStandbyPM()
 {
-    string fileName = InstallDir + "/local/hotStandbyPM";
+    string fileName = "/var/lib/columnstore/local/hotStandbyPM";
     string module;
 
     ifstream oldFile (fileName.c_str());
@@ -5035,7 +5033,7 @@ string Oam::getHotStandbyPM()
  ********************************************************************/
 void Oam::setHotStandbyPM(std::string moduleName)
 {
-    string fileName = InstallDir + "/local/hotStandbyPM";
+    string fileName = "/var/lib/columnstore/local/hotStandbyPM";
 
     unlink (fileName.c_str());
 
@@ -6048,7 +6046,7 @@ bool Oam::autoMovePmDbroot(std::string residePM)
             }
 
             //store in move dbroot transaction file
-            string fileName = InstallDir + "/local/moveDbrootTransactionLog";
+            string fileName = "/var/lib/columnstore/local/moveDbrootTransactionLog";
 
             string cmd = "echo '" + residePM + "|" + localModuleName + "|" + itoa(subDBRootID) + "' >> " + fileName;
             system(cmd.c_str());
@@ -6177,7 +6175,7 @@ bool Oam::autoMovePmDbroot(std::string residePM)
                         }
 
                         //store in move dbroot transaction file
-                        string fileName = InstallDir + "/local/moveDbrootTransactionLog";
+                        string fileName = "/var/lib/columnstore/local/moveDbrootTransactionLog";
 
                         string cmd = "echo '" + residePM + "|" + toPM + "|" + itoa(dbrootID) + "' >> " + fileName;
                         system(cmd.c_str());
@@ -6278,7 +6276,7 @@ bool Oam::autoMovePmDbroot(std::string residePM)
                         }
 
                         //store in move dbroot transaction file
-                        string fileName = InstallDir + "/local/moveDbrootTransactionLog";
+                        string fileName = "/var/lib/columnstore/local/moveDbrootTransactionLog";
 
                         string cmd = "echo '" + residePM + "|" + toPM + "|" + itoa(dbrootID) + "' >> " + fileName;
                         system(cmd.c_str());
@@ -6339,7 +6337,7 @@ bool Oam::autoUnMovePmDbroot(std::string toPM)
         return 1;
 
     //store in move dbroot transaction file
-    string fileName = InstallDir + "/local/moveDbrootTransactionLog";
+    string fileName = "/var/lib/columnstore/local/moveDbrootTransactionLog";
 
     ifstream oldFile (fileName.c_str());
 
@@ -6397,7 +6395,7 @@ bool Oam::autoUnMovePmDbroot(std::string toPM)
 
     if (!found)
     {
-			writeLog("No dbroots found in " + InstallDir + "/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
+			writeLog("No dbroots found in /var/lib/columnstore/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
 
         cout << "No dbroots found in " << fileName << endl;
     }
@@ -6780,7 +6778,7 @@ void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string
     for ( ; pt2 != dbrootlist.end() ; pt2++)
     {
         string DBrootID = "DBRoot" + itoa(*pt2);
-        string pathID = InstallDir + "/data" + itoa(*pt2);
+        string pathID = "/var/lib/columnstore/data" + itoa(*pt2);
 
         try
         {
@@ -7789,10 +7787,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         return;
 
     // check if mysql-Columnstore is installed
-    string mysqlscript = InstallDir + "/mysql/mysql-Columnstore";
-
-    if (access(mysqlscript.c_str(), X_OK) != 0)
-        return;
+    string mysqlscript = "mysql-Columnstore";
 
     string command;
 
@@ -8189,7 +8184,7 @@ std::string Oam::getEC2InstanceIpAddress(std::string instanceName)
 {
     // run script to get Instance status and IP Address
     string tmplog = tmpdir + "/getCloudIP_" + instanceName;
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getPrivateIP " + instanceName + " > " + tmplog;
+    string cmd = "MCSInstanceCmds.sh getPrivateIP " + instanceName + " > " + tmplog;
     system(cmd.c_str());
 
     if (checkLogStatus(tmplog, "stopped") )
@@ -8228,7 +8223,7 @@ std::string Oam::getEC2LocalInstance(std::string name)
 {
     // run script to get Instance status and IP Address
     string file = tmpdir + "/getInstanceInfo_" + name;
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > " + file;
+    string cmd = "MCSInstanceCmds.sh getInstance  > " + file;
     int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 1 )
         return "failed";
@@ -8261,7 +8256,7 @@ std::string Oam::getEC2LocalInstanceType(std::string name)
 {
     // run script to get Instance status and IP Address
     string file = tmpdir + "/getInstanceType_" + name;
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > " + file;
+    string cmd = "MCSInstanceCmds.sh getType  > " + file;
     int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 1 )
         return "failed";
@@ -8294,7 +8289,7 @@ std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 {
     // run script to get Instance Subnet
     string file = tmpdir + "/getInstanceSubnet_" + name;
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > " + file;
+    string cmd = "MCSInstanceCmds.sh getSubnet  > " + file;
     int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 1 )
         return "failed";
@@ -8328,7 +8323,7 @@ std::string Oam::launchEC2Instance( const std::string name, const std::string IP
 {
     // run script to get Instance status and IP Address
     string file = tmpdir + "/getInstance_" + name;
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > " + file;
+    string cmd = "MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > " + file;
     int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 1 )
         return "failed";
@@ -8371,7 +8366,7 @@ std::string Oam::launchEC2Instance( const std::string name, const std::string IP
 void Oam::terminateEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh terminateInstance " + instanceName + " > " + tmpdir + "/terminateEC2Instance_" + instanceName;
+    string cmd = "MCSInstanceCmds.sh terminateInstance " + instanceName + " > " + tmpdir + "/terminateEC2Instance_" + instanceName;
     system(cmd.c_str());
 
     return;
@@ -8388,7 +8383,7 @@ void Oam::terminateEC2Instance(std::string instanceName)
 void Oam::stopEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh stopInstance " + instanceName + " > " + tmpdir + "/stopEC2Instance_" + instanceName;
+    string cmd = "MCSInstanceCmds.sh stopInstance " + instanceName + " > " + tmpdir + "/stopEC2Instance_" + instanceName;
     system(cmd.c_str());
 
     return;
@@ -8405,7 +8400,7 @@ void Oam::stopEC2Instance(std::string instanceName)
 bool Oam::startEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > " + tmpdir + "/startEC2Instance_" + instanceName;
+    string cmd = "MCSInstanceCmds.sh startInstance " + instanceName + " > " + tmpdir + "/startEC2Instance_" + instanceName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         return false;
@@ -8424,7 +8419,7 @@ bool Oam::startEC2Instance(std::string instanceName)
 bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > " + tmpdir + "/assignElasticIP_" + instanceName;
+    string cmd = "MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > " + tmpdir + "/assignElasticIP_" + instanceName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         exceptionControl("assignElasticIP", oam::API_FAILURE);
@@ -8443,7 +8438,7 @@ bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
 bool Oam::deassignElasticIP(std::string IpAddress)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > " + tmpdir + "/deassignElasticIP_" + IpAddress;
+    string cmd = "MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > " + tmpdir + "/deassignElasticIP_" + IpAddress;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         exceptionControl("deassignElasticIP", oam::API_FAILURE);
@@ -8462,7 +8457,7 @@ bool Oam::deassignElasticIP(std::string IpAddress)
 std::string Oam::getEC2VolumeStatus(std::string volumeName)
 {
     // run script to get Volume Status
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > " + tmpdir + "/getVolumeStatus_" + volumeName;
+    string cmd = "MCSVolumeCmds.sh describe " + volumeName + " > " + tmpdir + "/getVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 ){
         return "failed";
@@ -8497,7 +8492,7 @@ std::string Oam::createEC2Volume(std::string size, std::string name)
 {
     // run script to get Volume Status
     string file = tmpdir + "/createVolumeStatus_" + name;
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > " + file;
+    string cmd = "MCSVolumeCmds.sh create " + size + " " + name + " > " + file;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         return "failed";
@@ -8540,7 +8535,7 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
     for ( int retry = 0 ; retry < 2 ; retry++ )
     {
         // run script to attach Volume
-        string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > " + tmpdir +  "/attachVolumeStatus_" + volumeName;
+        string cmd = "MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > " + tmpdir +  "/attachVolumeStatus_" + volumeName;
         ret = system(cmd.c_str());
 
 			if (WEXITSTATUS(ret) == 1 )
@@ -8571,7 +8566,7 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
 bool Oam::detachEC2Volume(std::string volumeName)
 {
     // run script to attach Volume
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > " + tmpdir +  "/detachVolumeStatus_" + volumeName;
+    string cmd = "MCSVolumeCmds.sh detach " + volumeName + " > " + tmpdir +  "/detachVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         return false;
@@ -8590,7 +8585,7 @@ bool Oam::detachEC2Volume(std::string volumeName)
 bool Oam::deleteEC2Volume(std::string volumeName)
 {
     // run script to delete Volume
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > " + tmpdir +  "/deleteVolumeStatus_" + volumeName;
+    string cmd = "MCSVolumeCmds.sh delete " + volumeName + " > " + tmpdir +  "/deleteVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         return false;
@@ -8609,7 +8604,7 @@ bool Oam::deleteEC2Volume(std::string volumeName)
 bool Oam::createEC2tag(std::string resourceName, std::string tagName, std::string tagValue)
 {
     // run script to create a tag
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > " + tmpdir +  "createTagStatus_" + resourceName;
+    string cmd = "MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > " + tmpdir +  "createTagStatus_" + resourceName;
     int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) == 1 )
         return false;
@@ -8685,7 +8680,7 @@ void Oam::syslogAction( std::string action)
 void Oam::dbrmctl(std::string command)
 {
     //reload DBRM with new configuration
-    string cmd = InstallDir + "/bin/dbrmctl " + command + " > /dev/null 2>&1";
+    string cmd = "dbrmctl " + command + " > /dev/null 2>&1";
     system(cmd.c_str());
 
     return;
@@ -8954,7 +8949,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                 if (WEXITSTATUS(status) != 0 )
                 {
                     cout << "ERROR: peer probe command failed." << endl;
-                    command = InstallDir + "/bin/remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+                    command = "remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -8997,7 +8992,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                 for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
                 {
                     int pm = (*dbrootPmIter) - 1;
-                    command += DataRedundancyConfigs[pm].pmIpAddr + ":" + InstallDir + "/gluster/brick" + itoa(pmnextbrick[pm]) + " ";
+                    command += DataRedundancyConfigs[pm].pmIpAddr + ":/var/lib/columnstore/gluster/brick" + itoa(pmnextbrick[pm]) + " ";
                     pmnextbrick[pm]++;
                 }
 
@@ -9062,7 +9057,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     string ModuleDBRootID = "ModuleDBRootID" + itoa(pm + 1) + "-" + itoa(i + 1) + "-3";
                     string dbr = sysConfig->getConfig("SystemModuleConfig", ModuleDBRootID);
                     string command = "" + DataRedundancyConfigs[pm].pmIpAddr +
-                                     ":/dbroot" + dbr + " " + InstallDir + "/data" + dbr +
+                                     ":/dbroot" + dbr + " /var/lib/columnstore/data" + dbr +
                                      " glusterfs defaults,direct-io-mode=enable 00";
                     string toPM = "pm" + itoa(pm + 1);
                     distributeFstabUpdates(command, toPM);
@@ -9120,7 +9115,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             if (WEXITSTATUS(status) != 0 )
             {
                 cout << "ERROR: peer probe command failed." << endl;
-                command = InstallDir + "/bin/remote_command.sh " + ipAddress + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+                command = "remote_command.sh " + ipAddress + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
@@ -9151,7 +9146,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
 ******************************************************************************************/
 bool Oam::changeMyCnf( std::string paramater, std::string value )
 {
-    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
+    string mycnfFile = std::string(MCSMYCNFDIR) + "/columnstore.cnf";
     ifstream file (mycnfFile.c_str());
 
     if (!file)
@@ -9431,9 +9426,9 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
     string entry;
 
     if (user == 0)
-        entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+        entry = device + " /var/lib/columnstore/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
     else
-        entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
+        entry = device + " /var/lib/columnstore/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
 
     string cmd;
 
@@ -9452,14 +9447,14 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
         system(cmd.c_str());
     }
 
-    cmd = "grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
+    cmd = "grep /data" + dbrootID + "/var/lib/columnstore/local/etc/pm1/fstab > /dev/null 2>&1";
 
     status = system(cmd.c_str());
 
     if (WEXITSTATUS(status) != 0 )
     {
         //use from addmodule later
-        cmd = "touch " + InstallDir + "/local/etc/pm1/fstab;echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
+        cmd = "touch /var/lib/columnstore/local/etc/pm1/fstab;echo " + entry + " >> /var/lib/columnstore/local/etc/pm1/fstab";
         system(cmd.c_str());
     }
 

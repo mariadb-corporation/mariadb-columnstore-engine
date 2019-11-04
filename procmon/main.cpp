@@ -195,7 +195,7 @@ int main(int argc, char** argv)
     if ( ret != 0 )
     {
         log.writeLog(__LINE__, "pthread_create failed, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
-        string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+        string cmd = "columnstore stop > /dev/null 2>&1";
         system(cmd.c_str());
         exit(1);
     }
@@ -252,16 +252,16 @@ int main(int argc, char** argv)
 
 
         //run the module install script
-        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " " + passwordOption + " > " + tmpLogDir + "/module_installer.log 2>&1";
-        log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
+        string cmd = "columnstore_module_installer.sh --module=" + modType + " " + passwordOption + " > " + tmpLogDir + "/module_installer.log 2>&1";
+        log.writeLog(__LINE__, "run columnstore_module_installer.sh", LOG_TYPE_DEBUG);
         log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
         int ret = system(cmd.c_str());
 
         if ( ret != 0 )
         {
-            log.writeLog(__LINE__, "module_installer.sh error, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
-            string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+            log.writeLog(__LINE__, "columnstore_module_installer.sh error, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
+            string cmd = "columnstore stop > /dev/null 2>&1";
             system(cmd.c_str());
             exit(1);
         }
@@ -286,7 +286,7 @@ int main(int argc, char** argv)
         {
             log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
             sleep(2);
-            string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+            string cmd = "columnstore stop > /dev/null 2>&1";
             system(cmd.c_str());
             exit(1);
         }
@@ -399,7 +399,7 @@ int main(int argc, char** argv)
 		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//		sleep (1);
 
-                string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+                string cmd = "columnstore stop > /dev/null 2>&1";
 
                 system(cmd.c_str());
             }
@@ -614,7 +614,7 @@ int main(int argc, char** argv)
             //Set the alarm
 		//	aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//	sleep (1);
-            string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+            string cmd = "columnstore stop > /dev/null 2>&1";
             system(cmd.c_str());
         }
 
@@ -846,9 +846,6 @@ int main(int argc, char** argv)
 
     //update syslog file priviledges
     aMonitor.changeModLog();
-
-    //update crontab
-//	aMonitor.changeCrontab();
 
     //Read ProcessConfig file to get process list belong to this process monitor
     SystemProcessConfig systemprocessconfig;

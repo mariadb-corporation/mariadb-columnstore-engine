@@ -1,3 +1,5 @@
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/install_mcs_mysql.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/install_mcs_mysql.sh" @ONLY)
+
 
 include_directories( ${ENGINE_COMMON_INCLUDES}
                      /usr/include/libxml2 )
@@ -28,7 +30,7 @@ set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-t
 
 add_library(calmysql SHARED ${libcalmysql_SRCS})
 
-target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
+target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
@@ -38,7 +40,7 @@ SET ( is_columnstore_tables_SRCS
     )
 add_library(is_columnstore_tables SHARED ${is_columnstore_tables_SRCS})
 
-target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
+target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_tables PROPERTIES PREFIX "")
@@ -50,7 +52,7 @@ SET ( is_columnstore_columns_SRCS
     )
 add_library(is_columnstore_columns SHARED ${is_columnstore_columns_SRCS})
 
-target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
+target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_columns PROPERTIES PREFIX "")
@@ -62,7 +64,7 @@ SET ( is_columnstore_extents_SRCS
     )
 add_library(is_columnstore_extents SHARED ${is_columnstore_extents_SRCS})
 
-target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
+target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
@@ -74,7 +76,7 @@ SET ( is_columnstore_files_SRCS
     )
 add_library(is_columnstore_files SHARED ${is_columnstore_files_SRCS})
 
-target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
+target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
 # Don't prepend .so file with 'lib'
 set_target_properties(is_columnstore_files PROPERTIES PREFIX "")
@@ -88,12 +90,12 @@ install(FILES syscatalog_mysql.sql
               calremoveuserpriority.sql 
               calshowprocesslist.sql 
               columnstore_info.sql
-              DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
+              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT storage-engine)
 install(PROGRAMS install_mcs_mysql.sh mysql-Columnstore
-              DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
+    DESTINATION ${ENGINE_SBINDIR} COMPONENT storage-engine)
 
 install(FILES columnstore.cnf
-        DESTINATION /etc/my.cnf.d COMPONENT storage-engine)
+    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT storage-engine)
 
 
 #AM_CPPFLAGS = $(idb_common_includes) $(idb_cppflags)

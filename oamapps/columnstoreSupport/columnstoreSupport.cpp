@@ -93,8 +93,6 @@ void childReportThread(threadInfo_t& st)
     string remoteModuleIP = (*list).moduleIP;
     string remoteHostName = (*list).hostName;
 
-    string installDir(startup::StartUp::installDir());
-
     pthread_mutex_lock( &mutex1 );
     runningThreads++;
 //cout << "++ " << runningThreads << endl;
@@ -105,10 +103,6 @@ void childReportThread(threadInfo_t& st)
     if (reportType == "log")
     {
         outputFile = remoteModuleName + "_" + reportType + "Report.tar.gz";
-    }
-    else if (reportType == "hadoop")
-    {
-        outputFile = "hadoopReport.txt";
     }
     else
     {
@@ -124,16 +118,12 @@ void childReportThread(threadInfo_t& st)
         system(cmd.c_str());
     }
 
-    //run remote report script
-    if (reportType == "hadoop")
-        cout << "Get " + reportType + " report data" << endl;
-    else
-        cout << "Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
+    cout << "Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
 
     cout.flush();
 
-    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
-                 installDir + "/bin/" + reportType + "Report.sh " + remoteModuleName + " " + installDir +
+    string cmd = "remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
+                 reportType + "Report.sh " + remoteModuleName +
                  "' " + debug_flag + " - forcetty";
 
     int rtnCode = system(cmd.c_str());
@@ -143,7 +133,7 @@ void childReportThread(threadInfo_t& st)
         cout << "Error with running remote_command.sh, exiting..." << endl;
     }
 
-    cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + rootPassword + " " + tmpDir + "/" + outputFile + " > /dev/null 2>&1";
+    cmd = "remote_scp_get.sh " + remoteModuleIP + " " + rootPassword + " " + tmpDir + "/" + outputFile + " > /dev/null 2>&1";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
@@ -162,7 +152,6 @@ void reportThread(string reporttype)
 {
     string reportType = reporttype;
 
-    string installDir(startup::StartUp::installDir());
     Oam oam;
 
     pthread_mutex_lock( &mutex1 );
@@ -199,7 +188,7 @@ void reportThread(string reporttype)
 
     if (reportType == "log")
     {
-        string cmd = installDir + "/bin/logReport.sh " + localModule + " " + installDir;
+        string cmd = "logReport.sh " + localModule;
         system(cmd.c_str());
 
         cmd = "mv -f " + tmpDir + "/" + localModule + "_logReport.tar.gz .";
@@ -221,7 +210,7 @@ void reportThread(string reporttype)
         system(cmd.c_str());
         cmd = "echo ' ' >> " + outputFile;
         system(cmd.c_str());
-        cmd = installDir + "/bin/mcsadmin getLogConfig >> " + outputFile;
+        cmd = "mcsadmin getLogConfig >> " + outputFile;
         system(cmd.c_str());
     }
     else
@@ -236,7 +225,7 @@ void reportThread(string reporttype)
         cmd = "echo '=======================================================================' >> " + outputFile;
         system(cmd.c_str());
 
-        cmd = installDir + "/bin/" + reportType + "Report.sh " + localModule + " " + installDir;
+        cmd = reportType + "Report.sh " + localModule;
         system(cmd.c_str());
         cmd = " mv -f " + tmpDir + "/" + localModule + "_" + reportType + "Report.txt .";
         system(cmd.c_str());
@@ -253,7 +242,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getSystemNetworkConfig >> " + outputFile;
+            cmd = "mcsadmin getSystemNetworkConfig >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -266,7 +255,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getModuleTypeConfig >> " + outputFile;
+            cmd = "mcsadmin getModuleTypeConfig >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -279,7 +268,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getStorageConfig >> " + outputFile;
+            cmd = "mcsadmin getStorageConfig >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -292,7 +281,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getStorageStatus >> " + outputFile;
+            cmd = "mcsadmin getStorageStatus >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -305,7 +294,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getSystemInfo >> " + outputFile;
+            cmd = "mcsadmin getSystemInfo >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -318,7 +307,7 @@ void reportThread(string reporttype)
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
-            cmd = installDir + "/bin/mcsadmin getSystemDirectories >> " + outputFile;
+            cmd = "mcsadmin getSystemDirectories >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -343,7 +332,7 @@ void reportThread(string reporttype)
                 system(cmd.c_str());
                 cmd = "echo ' ' >> " + outputFile;
                 system(cmd.c_str());
-                string cmd = installDir + "/bin/mcsadmin getModuleResourceUsage " + localModule + " >> " + outputFile;
+                string cmd = "mcsadmin getModuleResourceUsage " + localModule + " >> " + outputFile;
                 system(cmd.c_str());
             }
             else
@@ -352,7 +341,7 @@ void reportThread(string reporttype)
                 system(cmd.c_str());
                 cmd = "echo ' ' >> " + outputFile;
                 system(cmd.c_str());
-                string cmd = installDir + "/bin/mcsadmin getSystemResourceUsage >> " + outputFile;
+                string cmd = "mcsadmin getSystemResourceUsage >> " + outputFile;
                 system(cmd.c_str());
             }
         }
@@ -370,7 +359,6 @@ void reportThread(string reporttype)
 int main(int argc, char* argv[])
 {
     Oam oam;
-    string installDir(startup::StartUp::installDir());
 
     Config* sysConfig = Config::makeConfig();
     string SystemSection = "SystemConfig";
@@ -463,10 +451,6 @@ int main(int argc, char* argv[])
             cout << endl;
             cout << "Usage: columnstoreSupport [-h][-a][-hw][-s][-c][-db][-r][-l][-bl][-lc][-p 'root-password'][-de]";
 
-            // if hdfs set up print the hadoop option
-            if (!DataFilePlugin.empty())
-                cout << "[-hd]";
-
             cout << endl;
             cout << "			-h  help" << endl;
             cout << "			-a  Output all Reports (excluding Bulk Logs Reports)" << endl;
@@ -480,10 +464,6 @@ int main(int argc, char* argv[])
             cout << "			-lc Output Reports for Local Server only" << endl;
             cout << "			-p  password (multi-server systems), root-password or 'ssh' to use 'ssh keys'" << endl;
             cout << "			-de Debug Flag" << endl;
-
-            // if hdfs set up print the hadoop option
-            if (!DataFilePlugin.empty())
-                cout << "			-hd Output hadoop reports only" << endl;
 
             exit (0);
         }
@@ -736,7 +716,6 @@ int main(int argc, char* argv[])
     system("rm -f *_bulklogReport.txt");
     system("rm -f *_resourceReport.txt");
     system("rm -f *_softwareReport.txt");
-    system("rm -f hadoopReport.txt");
 
     //
     // Software
@@ -888,7 +867,7 @@ int main(int argc, char* argv[])
                 if ( mysqlpw == " " )
                 {
                     //go check columnstore.cnf
-                    string file = "/etc/my.cnf.d/columnstore.cnf";
+                    string file = std::string(MCSMYCNFDIR) + "/columnstore.cnf";
                     ifstream oldFile (file.c_str());
 
                     vector <string> lines;
@@ -987,11 +966,11 @@ int main(int argc, char* argv[])
                     system("echo ' ' >> columnstoreSupportReport.txt");
                     system("echo '******************** DBMS Columnstore System Catalog Data ********************' >> columnstoreSupportReport.txt");
                     system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " calpontsys < " + installDir + "/mysql/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
+                    cmd = "echo '################# " + columnstoreMysql + " calpontsys < " + MCSSUPPORTDIR + "/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
                     system(cmd.c_str());
                     cmd = "echo ' ' >> columnstoreSupportReport.txt";
                     system(cmd.c_str());
-                    cmd = columnstoreMysql + " calpontsys < " + installDir + "/mysql/dumpcat_mysql.sql >> columnstoreSupportReport.txt";
+                    cmd = columnstoreMysql + " calpontsys < " + MCSSUPPORTDIR + "/dumpcat_mysql.sql >> columnstoreSupportReport.txt";
                     system(cmd.c_str());
 
                     system("echo ' ' >> columnstoreSupportReport.txt");
@@ -1031,7 +1010,7 @@ int main(int argc, char* argv[])
         system("echo '******************** Database Size Report ********************' >> columnstoreSupportReport.txt");
         system("echo ' ' >> columnstoreSupportReport.txt");
 
-        string file = installDir + "/bin/databaseSizeReport";
+        string file = "databaseSizeReport";
         ifstream File (file.c_str());
 
         if (File)
@@ -1041,18 +1020,18 @@ int main(int argc, char* argv[])
             system(cmd.c_str());
             cmd = "echo ' ' >> columnstoreSupportReport.txt";
             system(cmd.c_str());
-            cmd = installDir + "/bin/databaseSizeReport >> columnstoreSupportReport.txt";
+            cmd = "databaseSizeReport >> columnstoreSupportReport.txt";
             system(cmd.c_str());
         }
 
         system("echo ' ' >> columnstoreSupportReport.txt");
         system("echo '******************** DBMS Columnstore config file ********************' >> columnstoreSupportReport.txt");
         system("echo ' ' >> columnstoreSupportReport.txt");
-        string cmd = "echo '################# cat /etc/my.cnf.d/columnstore.cnf ################# ' >> columnstoreSupportReport.txt";
+        string cmd = "echo '################# cat " + std::string(MCSMYCNFDIR) + "/columnstore.cnf ################# ' >> columnstoreSupportReport.txt";
         system(cmd.c_str());
         cmd = "echo ' ' >> columnstoreSupportReport.txt";
         system(cmd.c_str());
-        cmd = "cat /etc/my.cnf.d/columnstore.cnf 2>/dev/null >> columnstoreSupportReport.txt";
+        cmd = "cat " + std::string(MCSMYCNFDIR) + "/columnstore.cnf 2>/dev/null >> columnstoreSupportReport.txt";
         system(cmd.c_str());
 
         system("echo ' ' >> columnstoreSupportReport.txt");
@@ -1062,54 +1041,13 @@ int main(int argc, char* argv[])
         system(cmd.c_str());
         cmd = "echo ' ' >> columnstoreSupportReport.txt";
         system(cmd.c_str());
-        cmd = installDir + "/bin/mcsadmin getActiveSqlStatement >> columnstoreSupportReport.txt";
+        cmd = "mcsadmin getActiveSqlStatement >> columnstoreSupportReport.txt";
         system(cmd.c_str());
 
         cmd = "cat columnstoreSupportReport.txt > " + localModule + "_dbmsReport.txt";
         system(cmd.c_str());
     }
 
-    //
-    // HADOOP
-    //
-
-    if (HADOOP)
-    {
-        if (LOCAL || childmodulelist.empty())
-        {
-            cout << "Get hadoop report data" << endl;
-            string cmd = installDir + "/bin/hadoopReport.sh " + localModule + " " + installDir + "\n";
-            cmd += " mv -f " + tmpDir + "/hadoopReport.txt .";
-            FILE* pipe = popen(cmd.c_str(), "r");
-
-            if (!pipe)
-            {
-                cout << "Failed to get a pipe for hadoop health check commands" << endl;
-                exit(-1);
-            }
-
-            pclose(pipe);
-        }
-        else
-        {
-            // only get hadoop report from parentOAMModule, because it's consistant view.
-            parentmodulelist.push_back(parentOAMModule);
-            threadInfo_t* st = new threadInfo_t;
-            ChildModuleList::iterator iter = parentmodulelist.begin();
-            *st = boost::make_tuple(iter, "hadoop");
-
-            pthread_t hdthread;
-            int status = pthread_create (&hdthread, NULL, (void* (*)(void*)) &childReportThread, st);
-
-            if ( status != 0 )
-            {
-                cout <<  "ERROR: childreportthread: pthread_create failed, return status = " + oam.itoa(status) << endl;
-            }
-        }
-    }
-
-    //wait for all threads to complete
-    sleep(5);
     int wait = 0;
 
     while (true)

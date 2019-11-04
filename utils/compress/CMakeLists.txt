@@ -4,8 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} ${SNAPPY_INCLUDE_DIR} )
 ########### next target ###############
 
 set(compress_LIB_SRCS
-    idbcompress.cpp
-    version1.cpp)
+    idbcompress.cpp)
 
 add_definitions(-DNDEBUG)
 

@@ -120,7 +120,7 @@ void Config::checkReload( )
 
     if ( m_bulkRoot.length() == 0 )
     {
-        m_bulkRoot = startup::StartUp::installDir();
+        m_bulkRoot = "/var/lib/columnstore";
 #ifndef _MSC_VER
         m_bulkRoot += "/data";
 #endif
@@ -214,68 +214,6 @@ void Config::checkReload( )
     if ( ncpb.length() != 0 )
         m_NumCompressedPadBlks = cf->uFromText(ncpb);
 
-#if 0  // common code, moved to IDBPolicy
-    //--------------------------------------------------------------------------
-    // IDBDataFile logging
-    //--------------------------------------------------------------------------
-    bool idblog = false;
-    string idblogstr = cf->getConfig("SystemConfig", "DataFileLog");
-
-    if ( idblogstr.length() != 0 )
-    {
-        boost::to_upper(idblogstr);
-        idblog = ( idblogstr == "ON" );
-    }
-
-    //--------------------------------------------------------------------------
-    // Optional File System Plugin - if a HDFS type plugin is loaded
-    // then the system will use HDFS for all IDB data files
-    //--------------------------------------------------------------------------
-    string fsplugin = cf->getConfig("SystemConfig", "DataFilePlugin");
-
-    if ( fsplugin.length() != 0 )
-    {
-        IDBPolicy::installPlugin(fsplugin);
-    }
-
-    //--------------------------------------------------------------------------
-    // HDFS file buffering
-    //--------------------------------------------------------------------------
-    // Maximum amount of memory to use for hdfs buffering.
-    bool bUseRdwrMemBuffer = true;  // If true, use in-memory buffering, else use file buffering
-    int64_t hdfsRdwrBufferMaxSize = 0;
-    string strBufferMaxSize = cf->getConfig("SystemConfig", "hdfsRdwrBufferMaxSize");
-
-    if (strBufferMaxSize.length() == 0)
-    {
-        // Default is use membuf with no maximum size.
-        bUseRdwrMemBuffer = true;
-    }
-    else
-    {
-        hdfsRdwrBufferMaxSize = static_cast<int64_t>(cf->uFromText(strBufferMaxSize));
-
-        if ( hdfsRdwrBufferMaxSize == 0 )
-        {
-            // If we're given a size of 0, turn off membuffering.
-            bUseRdwrMemBuffer = false;
-        }
-    }
-
-    // Directory in which to place file buffer temporary files.
-    string TmpFileDir = startup::StartUp::tmpDir();
-
-    string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
-    hdfsRdwrScratch = TmpFileDir + hdfsRdwrScratch;
-
-    if ( hdfsRdwrScratch.length() == 0 )
-    {
-        hdfsRdwrScratch = TmpFileDir + "/hdfsscratch";
-    }
-
-    IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
-#endif
-
     IDBPolicy::configIDBPolicy();
 
     //--------------------------------------------------------------------------
@@ -307,12 +245,7 @@ void Config::checkReload( )
 
     if ( m_VersionBufferDir.length() == 0 )
     {
-#ifdef _MSC_VER
-        m_VersionBufferDir = startup::StartUp::installDir() + "\\version";
-#else
-        m_VersionBufferDir =
-            startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves";
-#endif
+        m_VersionBufferDir = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves";
     }
 
     //--------------------------------------------------------------------------

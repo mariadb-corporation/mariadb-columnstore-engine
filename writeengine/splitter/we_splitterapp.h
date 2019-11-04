@@ -78,9 +78,6 @@ public:
     static void onSigHup(int aInt);
 
     void invokeCpimport();
-    std::string getCalpontHome();
-    std::string getPrgmPath(std::string& PrgmName);
-    void updateCmdLineWithPath(string& CmdLine);
 
 private:
 public:	// for multi table support

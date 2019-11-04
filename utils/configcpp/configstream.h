@@ -41,9 +41,9 @@ namespace config
 class ConfigStream
 {
 public:
-    ConfigStream(const messageqcpp::ByteStream& bs, const std::string& installDir);
-    ConfigStream(const std::string& str, const std::string& installDir);
-    ConfigStream(const char* cptr, const std::string& installDir);
+    ConfigStream(const messageqcpp::ByteStream& bs);
+    ConfigStream(const std::string& str);
+    ConfigStream(const char* cptr);
     ~ConfigStream();
 
     const std::string getConfig(const std::string& section, const std::string& name) const

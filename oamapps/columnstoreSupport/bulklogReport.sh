@@ -8,26 +8,20 @@ else
         MODULE="pm1"
 fi
 
-if [ $2 ] ; then
-        INSTALLDIR=$2
-else
-        INSTALLDIR="/usr/local/mariadb/columnstore"
-fi
-
 #get temp directory
-tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/${MODULE}_bulklogReport.txt
 
 {
 
-if test -d $INSTALLDIR/data/bulk ; then
+if test -d /var/lib/columnstore/data/bulk ; then
 	echo " "
 	echo "-- Check for Errors in Bulk Logs --"
 	echo " "
-	echo "################# egrep '(ERR|CRIT)' $INSTALLDIR/data/bulk/log/*.err #################"
+	echo "################# egrep '(ERR|CRIT)' /var/lib/columnstore/data/bulk/log/*.err #################"
 	echo " "
-	egrep '(ERR|CRIT)' $INSTALLDIR/data/bulk/log/*.err 2>/dev/null
+	egrep '(ERR|CRIT)' /var/lib/columnstore/data/bulk/log/*.err 2>/dev/null
 fi
 
 } > ${tmpDir}/${MODULE}_bulklogReport.txt

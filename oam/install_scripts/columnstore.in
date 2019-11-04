@@ -17,69 +17,31 @@
 # Short-Description: Start/stop MariaDB Columnstore DW DBMS
 ### END INIT INFO
 
-prefix=/usr/local
-
 USER=`whoami 2>/dev/null`
-
-if [ $USER != "root" ]; then
-	prefix=$HOME
-fi
-
-if [ $USER != "root" ]; then
-	if [ -f $prefix/.bash_profile ]; then		
-		profileFile=$prefix/.bash_profile
-	elif [ -f $prefix/.profile ]; then		
-		profileFile=$prefix/.profile
-	else
-		profileFile=$prefix/.bashrc
-	fi
-		
-	. $profileFile
-fi
 
 # Source function library.
 if [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
 fi
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
-fi
-
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-
-InstallDir=$COLUMNSTORE_INSTALL_DIR
-
-if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
-	export PATH=$InstallDir/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$InstallDir/lib
-fi
-
-#hadoop
-plugin=`$InstallDir/bin/getConfig SystemConfig DataFilePlugin`
-if [ -n "$plugin" ]; then
-	setenv=`$InstallDir/bin/getConfig SystemConfig DataFileEnvFile`
-	. $InstallDir/bin/$setenv >/dev/null 2>&1
-fi
-
-test -f $InstallDir/post/functions && . $InstallDir/post/functions
+. @ENGINE_SUPPORTDIR@/columnstore_functions
 
 mt=`module_type`
 mid=`module_id`
 
-has_um=`$InstallDir/bin/getConfig SystemModuleConfig ModuleCount2`
+has_um=`mcsGetConfig SystemModuleConfig ModuleCount2`
 if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-lockdir=`$InstallDir/bin/getConfig Installation LockFileDirectory`
+lockdir=`mcsGetConfig Installation LockFileDirectory`
 
 #get temp directory
-tmpDir=`$InstallDir/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 mkdir $tmpDir >/dev/null 2>&1
 
 checkInstallSetup() {
-	InitialInstallFlag=`$InstallDir/bin/getConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
+	InitialInstallFlag=`mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
@@ -87,8 +49,6 @@ checkInstallSetup() {
 		exit 1
 	fi
 }
-
-[ -f $InstallDir/bin/ProcMon ] || exit 0
 
 start() {
 	if [ -f $lockdir/columnstore ]; then
@@ -98,17 +58,9 @@ start() {
 
 	(mkdir -p $lockdir && touch $lockdir/columnstore) >/dev/null 2>&1
 
-	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
-		$InstallDir/bin/columnstore.pre-start
-		if [ $? -ne 0 ]; then
-			echo "Error running MariaDB Columnstore pre-start script, not starting MariaDB Columnstore"
-			rm -f $lockdir/columnstore
-			exit 1
-		fi
-	fi
 	#checkInstallSetup
 
-	CoreFileFlag=`$InstallDir/bin/getConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation CoreFileFlag`
+	CoreFileFlag=`mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
     #columnstore core files
 		ulimit -c unlimited  > /dev/null 2>&1
@@ -120,7 +72,7 @@ start() {
 	RETVAL=0
 	echo "Starting MariaDB Columnstore Database Platform"
 	rm -f ${tmpDir}/StopColumnstore
-	exec $InstallDir/bin/run.sh -l ${tmpDir} $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
+	exec columnstore_run.sh -l ${tmpDir} ProcMon  > /dev/null 2>&1 &
 
 	return $RETVAL
 }	
@@ -129,15 +81,11 @@ stop() {
 	touch ${tmpDir}/StopColumnstore
 	pkill ProcMon
 	pkill ProcMgr
-	$InstallDir/bin/clearShm
+	clearShm
 	RETVAL=$?
 	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
-	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
-	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
-	if [ -x $InstallDir/bin/columnstore.post-stop ]; then
-		$InstallDir/bin/columnstore.post-stop
-	fi
+	mysql-Columnstore stop > /dev/null 2>&1
 	return $RETVAL
 }
 restart() {

@@ -1,0 +1,104 @@
+#!/bin/bash
+#
+# $Id: post-uninstall 421 2007-04-05 15:46:55Z dhill $
+#
+# pre-uninstall steps for columnstore install
+
+rpmmode=install
+user=`whoami 2>/dev/null`
+
+quiet=0
+
+for arg in "$@"; do
+	if [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
+		rpmmode="`echo $arg | awk -F= '{print $2}'`"
+	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
+		user="`echo $arg | awk -F= '{print $2}'`"
+	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
+		quiet=1
+	else
+		echo "pre-install: invalid unknown argument: $arg" 1>&2
+		echo "exiting..."
+		exit 1
+	fi
+done
+
+#stop services
+columnstore stop > /dev/null 2>&1
+mysql-Columnstore stop > /dev/null 2>&1
+
+cloud=`mcsGetConfig Installation Cloud`
+if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	if test -f /etc/fstab ; then
+	    sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
+	fi
+fi
+
+rm -f /etc/profile.d/columnstoreAlias.sh
+
+rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+
+# delete Mariab Columnstore shared memory segments
+clearShm  > /dev/null 2>&1
+
+#get temp directory
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
+if [[ $tmpDir = *"tmp" ]]; then
+	# delete tmp files
+	rm -rf $tmpDir/*
+fi
+rm -f /var/lib/columnstore/local/*.columnstore
+rm -rf /var/lib/columnstore/local/etc/
+rm -f /var/lib/columnstore/data/bulk/tmp/job/* >/dev/null 2>&1
+rm -f /var/lib/columnstore/local/moveDbrootTransactionLog
+
+lockdir=`mcsGetConfig Installation LockFileDirectory`
+rm -f $lockdir/columnstore
+rm -f $lockdir/mysql-Columnstore
+
+# delete core files
+#rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
+
+#uninstall MariaDB Columnstore system logging
+columnstoreSyslogSetup.sh uninstall >/dev/null 2>&1
+
+#remove the start service command
+systemctl=`which systemctl 2>/dev/null`
+if [ -n "$systemctl" ]; then
+
+	systemctl disable columnstore >/dev/null 2>&1
+	rm -f /usr/lib/systemd/system/columnstore.service
+	rm -f /lib/systemd/system/columnstore.service
+else
+	chkconfig=`which chkconfig 2>/dev/null`
+	if [ -n "$chkconfig" ]; then
+		chkconfig columnstore off > /dev/null 2>&1
+		chkconfig --del columnstore > /dev/null 2>&1
+		rm -f /etc/init.d/columnstore > /dev/null 2>&1
+	else
+		updaterc=`which update-rc.d 2>/dev/null`
+		if [ -n "$updaterc" ]; then
+			update-rc.d -f columnstore remove > /dev/null 2>&1
+			rm -f /etc/init.d/columnstore > /dev/null 2>&1	
+		fi
+	fi
+fi
+
+if [ $quiet != 1 ]; then
+	#make copy of Columnstore.xml
+	/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave > /dev/null 2>&1
+	/bin/cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave > /dev/null 2>&1
+	cp @ENGINE_SUPPORTDIR@/myCnf-include-args.text @ENGINE_SUPPORTDIR@/myCnf-include-args.text.rpmsave >& /dev/null
+	rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
+fi
+
+#remove OAMdbrootCheck file
+rm -f /var/lib/columnstore/data*/OAMdbrootCheck > /dev/null 2>&1
+
+#tell user to run post configure script
+echo " "
+echo "Mariab Columnstore uninstall completed"
+
+exit 0
+
