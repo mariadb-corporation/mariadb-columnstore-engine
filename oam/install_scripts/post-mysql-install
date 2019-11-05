@@ -25,7 +25,7 @@ checkForError() {
         mysql \
                 --user=root \
                 --execute='show engines;' \
-                calpontsys | grep -i columnstore
+                | grep -i columnstore
 
         #
         # Add compressiontype column to SYSCOLUMN if applicable
