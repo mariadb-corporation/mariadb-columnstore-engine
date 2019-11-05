@@ -31,7 +31,7 @@
 #include <vector>
 #include <map>
 #include <boost/shared_array.hpp>
-#include <boost/atomic.hpp>
+#include <atomic>
 
 namespace utils
 {
@@ -90,7 +90,7 @@ private:
     uint64_t memUsage;
     uint8_t* nextAlloc;
     bool useLock;
-    boost::atomic<bool> lock;
+    std::atomic<bool> lock;
 
     struct OOBMemInfo
     {
@@ -107,14 +107,14 @@ inline void* PoolAllocator::allocate(uint64_t size)
     bool _false = false;
 
     if (useLock)
-        while (!lock.compare_exchange_weak(_false, true, boost::memory_order_acquire))
+        while (!lock.compare_exchange_weak(_false, true, std::memory_order_acquire))
             _false = false;
 
     if (size > allocSize)
     {
         ret = allocOOB(size);
         if (useLock)
-            lock.store(false, boost::memory_order_release);
+            lock.store(false, std::memory_order_release);
         return ret;
     }
 
@@ -126,7 +126,7 @@ inline void* PoolAllocator::allocate(uint64_t size)
     capacityRemaining -= size;
     memUsage += size;
     if (useLock)
-        lock.store(false, boost::memory_order_release);
+        lock.store(false, std::memory_order_release);
     return ret;
 }
 
