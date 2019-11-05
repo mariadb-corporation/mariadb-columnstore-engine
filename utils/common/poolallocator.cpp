@@ -65,32 +65,18 @@ void PoolAllocator::newBlock()
         nextAlloc = mem.front().get();
 }
 
-void* PoolAllocator::allocate(uint64_t size)
+void * PoolAllocator::allocOOB(uint64_t size)
 {
-    void* ret;
+    OOBMemInfo memInfo;
 
-    if (size > allocSize)
-    {
-        OOBMemInfo memInfo;
-
-        memUsage += size;
-        memInfo.mem.reset(new uint8_t[size]);
-        memInfo.size = size;
-        ret = (void*) memInfo.mem.get();
-        oob[ret] = memInfo;
-        return ret;
-    }
-
-    if (size > capacityRemaining)
-        newBlock();
-
-    ret = (void*) nextAlloc;
-    nextAlloc += size;
-    capacityRemaining -= size;
     memUsage += size;
+    memInfo.mem.reset(new uint8_t[size]);
+    memInfo.size = size;
+    void *ret = (void*) memInfo.mem.get();
+    oob[ret] = memInfo;
     return ret;
 }
-
+        
 void PoolAllocator::deallocate(void* p)
 {
     OutOfBandMap::iterator it = oob.find(p);

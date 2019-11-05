@@ -83,7 +83,7 @@ public:
     void construct(pointer p, const T& val);
     void destroy(pointer p);
 
-    static const uint32_t DEFAULT_SIZE = 4096 * sizeof(T);
+    static const uint32_t DEFAULT_SIZE = 32768 * sizeof(T);
 
     boost::shared_ptr<utils::PoolAllocator> pa;
 };

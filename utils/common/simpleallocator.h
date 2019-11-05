@@ -117,20 +117,20 @@ public:
 
     ~SimpleAllocator() throw() { }
 
-    pointer address(reference x) const
+    inline pointer address(reference x) const
     {
         return &x;
     }
-    const_pointer address(const_reference x) const
+    inline const_pointer address(const_reference x) const
     {
         return &x;
     }
 
-    pointer allocate(size_type n, const void* = 0)
+    inline pointer allocate(size_type n, const void* = 0)
     {
         return static_cast<pointer>(fPool->allocate(n * sizeof(T)));
     }
-    void deallocate(pointer p, size_type n)
+    inline void deallocate(pointer p, size_type n)
     {
         fPool->deallocate(p, n * sizeof(T));
     }
@@ -142,21 +142,21 @@ public:
         return std::numeric_limits<size_type>::max();
     }
 #else
-    size_type max_size() const throw()
+    inline size_type max_size() const throw()
     {
         return fPool->max_size() / sizeof(T);
     }
 #endif
-    void construct(pointer ptr, const T& val)
+    inline void construct(pointer ptr, const T& val)
     {
         new ((void*)ptr) T(val);
     }
-    void destroy(pointer ptr)
+    inline void destroy(pointer ptr)
     {
         ptr->T::~T();
     }
 
-    void setPool(SimplePool* pool)
+    inline void setPool(SimplePool* pool)
     {
         fPool = pool;
     }

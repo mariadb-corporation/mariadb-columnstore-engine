@@ -48,21 +48,21 @@ TupleJoiner::TupleJoiner(
 {
     if (smallRG.getColTypes()[smallJoinColumn] == CalpontSystemCatalog::LONGDOUBLE)
     {
-        STLPoolAllocator<pair<const long double, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
+        STLPoolAllocator<pair<const long double, Row::Pointer> > alloc;
         _pool = alloc.getPoolAllocator();
 
         ld.reset(new ldhash_t(10, hasher(), ldhash_t::key_equal(), alloc));
     }
     else if (smallRG.usesStringTable())
     {
-        STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
+        STLPoolAllocator<pair<const int64_t, Row::Pointer> > alloc;
         _pool = alloc.getPoolAllocator();
 
         sth.reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
     }
     else
     {
-        STLPoolAllocator<pair<const int64_t, uint8_t*> > alloc(64 * 1024 * 1024 + 1);
+        STLPoolAllocator<pair<const int64_t, uint8_t*> > alloc;
         _pool = alloc.getPoolAllocator();
 
         h.reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
@@ -112,7 +112,7 @@ TupleJoiner::TupleJoiner(
     smallKeyColumns(smallJoinColumns), largeKeyColumns(largeJoinColumns),
     bSignedUnsignedJoin(false), uniqueLimit(100), finished(false)
 {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
+    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc;
     _pool = alloc.getPoolAllocator();
 
     ht.reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
@@ -1352,7 +1352,7 @@ void TupleJoiner::setTableName(const string& tname)
 
 void TupleJoiner::clearData()
 {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc(64 * 1024 * 1024 + 1);
+    STLPoolAllocator<pair<const TypelessData, Row::Pointer> > alloc;
     _pool = alloc.getPoolAllocator();
 
     if (typelessJoin)

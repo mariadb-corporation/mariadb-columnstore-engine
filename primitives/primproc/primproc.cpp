@@ -159,7 +159,7 @@ int8_t setupCwd(Config* cf)
 
     if (rc < 0 || access(".", W_OK) != 0)
         rc = chdir("/tmp");
-    
+
     return rc;
 }
 

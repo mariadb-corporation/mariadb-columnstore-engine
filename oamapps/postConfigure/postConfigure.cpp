@@ -29,8 +29,6 @@
 /**
  * @file
  */
-#include "config.h"
-
 
 #include <unistd.h>
 #include <iterator>
@@ -214,11 +212,6 @@ typedef struct _thread_data_t
 
 int main(int argc, char* argv[])
 {
-// print a warning if this is a developer build
-#ifdef SKIP_OAM_INIT
-    cout << "SKIP_OAM_INIT is set" << endl;
-    sleep(2);
-#endif
     Oam oam;
     string parentOAMModuleHostName;
     ChildModuleList childmodulelist;

@@ -1317,9 +1317,29 @@ void BatchPrimitiveProcessorJL::useJoiners(const vector<boost::shared_ptr<joiner
         cout << "will send small side row data\n";
 #endif
     }
+    posByJoinerNum.reset(new uint32_t[PMJoinerCount]);
+    memset(posByJoinerNum.get(), 0, PMJoinerCount * sizeof(uint32_t));
 }
 
+// helper fcn to interleave small side data by joinernum
+bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
+{
+    uint i;
+    // find the next joiner that still has more data to send.  Set joinerNum & pos.
+    for (i = 0; i < PMJoinerCount; i++)
+    {
+        joinerNum = (joinerNum + 1) % PMJoinerCount;
+        if (posByJoinerNum[joinerNum] != tJoiners[joinerNum]->getSmallSide()->size())
+            break;
+    }
+    if (i == PMJoinerCount)
+        return false;
+    pos = posByJoinerNum[joinerNum];
+    return true;
+}
+    
 /* This algorithm relies on the joiners being sorted by size atm */
+/* XXXPAT: Going to interleave across joiners to take advantage of the new locking env in PrimProc */
 bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 {
     uint32_t size = 0, toSend, i, j;
@@ -1332,11 +1352,26 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     uint64_t smallkey;
     bool isNull;
     bool bSignedUnsigned;
-
+    
+    bool moreMsgs = pickNextJoinerNum();
+    
+    if (!moreMsgs)
+    {
+        /* last message */
+// 		cout << "sending last joiner msg\n";
+        ism.Command = BATCH_PRIMITIVE_END_JOINER;
+        bs.load((uint8_t*) &ism, sizeof(ism));
+        bs << (messageqcpp::ByteStream::quadbyte)sessionID;
+        bs << (messageqcpp::ByteStream::quadbyte)stepID;
+        bs << uniqueID;
+        return false;
+    }
+    
     memset((void*)&ism, 0, sizeof(ism));
     tSmallSide = tJoiners[joinerNum]->getSmallSide();
     size = tSmallSide->size();
 
+#if 0
     if (joinerNum == PMJoinerCount - 1 && pos == size)
     {
         /* last message */
@@ -1356,7 +1391,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
         size = tSmallSide->size();
         pos = 0;
     }
-
+#endif
+    
     ism.Command = BATCH_PRIMITIVE_ADD_JOINER;
     bs.load((uint8_t*) &ism, sizeof(ism));
     bs << (messageqcpp::ByteStream::quadbyte)sessionID;
@@ -1541,6 +1577,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     }
 
     pos += toSend;
+    posByJoinerNum[joinerNum] = pos;
     return true;
 }
 
