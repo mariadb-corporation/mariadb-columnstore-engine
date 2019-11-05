@@ -1369,7 +1369,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
                 if (!cc)
                     break;
 
-                sop->setOpType(sc->resultType(), valVec[j]->resultType());
+                sop->setOpType(sc->resultType(), valVec[j]->columnVec()[i]->resultType());
                 cf->pushFilter(new SimpleFilter(sop, sc->clone(),
                                                 valVec[j]->columnVec()[i]->clone()));
             }
