@@ -3153,12 +3153,6 @@ void TupleBPS::rgDataToDl(RGData& rgData, RowGroup& rg, RowGroupDL* dlp)
     if (dupColumns.size() > 0)
         dupOutputColumns(rgData, rg);
 
-    /*
-    	if (!(fSessionId & 0x80000000)) {
-    		rg.setData(&rgData);
-    		cerr << "TBPS rowcount: " << rg.getRowCount() << endl;
-    	}
-    */
     dlp->insert(rgData);
 }
 

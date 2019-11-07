@@ -63,6 +63,8 @@
 namespace rowgroup
 {
 
+const int16_t rgCommonSize = 8192;
+
 /*
 	The format of the data RowGroup points to is currently ...
 

@@ -43,32 +43,85 @@ using namespace rowgroup;
 
 #include "idborderby.h"
 
+#include "joblisttypes.h"
 
 namespace ordering
 {
+int TinyIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    int8_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int8_t v2 = l->row2().getIntField(fSpec.fIndex);
+    int8_t nullValue = static_cast<int8_t>(joblist::TINYINTNULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int SmallIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    int16_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int16_t v2 = l->row2().getIntField(fSpec.fIndex);
+    int16_t nullValue = static_cast<int16_t>(joblist::SMALLINTNULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
 
 int IntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
-
     int ret = 0;
+    int32_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int32_t v2 = l->row2().getIntField(fSpec.fIndex);
+    int32_t nullValue = static_cast<int32_t>(joblist::INTNULL);
 
-    if (b1 == true || b2 == true)
+    if (v1 == nullValue || v2 == nullValue)
     {
-        if (b1 == false && b2 == true)
+        if (v1 != nullValue && v2 == nullValue)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (v1 == nullValue && v2 != nullValue)
             ret = -fSpec.fNf;
     }
     else
     {
-        int64_t v1 = l->row1().getIntField(fSpec.fIndex);
-        int64_t v2 = l->row2().getIntField(fSpec.fIndex);
-
         if (v1 > v2)
             ret = fSpec.fAsc;
         else if (v1 < v2)
@@ -78,29 +131,25 @@ int IntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     return ret;
 }
 
-
-int UintCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+int BigIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
-
     int ret = 0;
+    int64_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int64_t v2 = l->row2().getIntField(fSpec.fIndex);
+    int64_t nullValue = static_cast<int64_t>(joblist::BIGINTNULL);
 
-    if (b1 == true || b2 == true)
+    if (v1 == nullValue || v2 == nullValue)
     {
-        if (b1 == false && b2 == true)
+        if (v1 != nullValue && v2 == nullValue)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (v1 == nullValue && v2 != nullValue)
             ret = -fSpec.fNf;
     }
     else
     {
-        uint64_t v1 = l->row1().getUintField(fSpec.fIndex);
-        uint64_t v2 = l->row2().getUintField(fSpec.fIndex);
-
         if (v1 > v2)
             ret = fSpec.fAsc;
         else if (v1 < v2)
@@ -110,6 +159,116 @@ int UintCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     return ret;
 }
 
+int UTinyIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint8_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint8_t v2 = l->row2().getUintField(fSpec.fIndex);
+    uint8_t nullValue = static_cast<uint8_t>(joblist::UTINYINTNULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int USmallIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint16_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint16_t v2 = l->row2().getUintField(fSpec.fIndex);
+    uint16_t nullValue = static_cast<uint16_t>(joblist::USMALLINTNULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int UIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint32_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint32_t v2 = l->row2().getUintField(fSpec.fIndex);
+    uint32_t nullValue = static_cast<uint32_t>(joblist::UINTNULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int UBigIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint64_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint64_t v2 = l->row2().getUintField(fSpec.fIndex);
+
+    if (v1 == joblist::UBIGINTNULL || v2 == joblist::UBIGINTNULL)
+    {
+        if (v1 != joblist::UBIGINTNULL && v2 == joblist::UBIGINTNULL)
+            ret = fSpec.fNf;
+        else if (v1 == joblist::UBIGINTNULL && v2 != joblist::UBIGINTNULL)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
 
 int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
@@ -130,41 +289,45 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     }
     else
     {
-        string v1 = l->row1().getStringField(fSpec.fIndex);
-        string v2 = l->row2().getStringField(fSpec.fIndex);
-
-        if (v1 > v2)
-            ret = fSpec.fAsc;
-        else if (v1 < v2)
-            ret = -fSpec.fAsc;
+        int len1 = l->row1().getStringLength(fSpec.fIndex);
+        int len2 = l->row2().getStringLength(fSpec.fIndex);
+        const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
+        const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
+        // For Japanese, coll.compare() may not be as correct as strncmp
+        if (JPcodePoint)
+        {
+            ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
+        }
+        else
+        {
+            const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+            ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
+        }
     }
 
     return ret;
 }
-
 
 int DoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
-
+    uint64_t uiv1 = l->row1().getUintField(fSpec.fIndex);
+    uint64_t uiv2 = l->row2().getUintField(fSpec.fIndex);
     int ret = 0;
 
-    if (b1 == true || b2 == true)
+    if (uiv1 == joblist::DOUBLENULL || uiv2 == joblist::DOUBLENULL)
     {
-        if (b1 == false && b2 == true)
+        if (uiv1 != joblist::DOUBLENULL && uiv2 == joblist::DOUBLENULL)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (uiv1 == joblist::DOUBLENULL && uiv2 != joblist::DOUBLENULL)
             ret = -fSpec.fNf;
     }
     else
     {
         double v1 = l->row1().getDoubleField(fSpec.fIndex);
         double v2 = l->row2().getDoubleField(fSpec.fIndex);
-
         if (v1 > v2)
             ret = fSpec.fAsc;
         else if (v1 < v2)
@@ -179,23 +342,22 @@ int FloatCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
-
+    int32_t iv1 = l->row1().getIntField(fSpec.fIndex);
+    int32_t iv2 = l->row2().getIntField(fSpec.fIndex);
+    int32_t nullValue = static_cast<int32_t>(joblist::FLOATNULL);
     int ret = 0;
 
-    if (b1 == true || b2 == true)
+    if (iv1 == nullValue || iv2 == nullValue)
     {
-        if (b1 == false && b2 == true)
+        if (iv1 != nullValue && iv2 == nullValue)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (iv1 == nullValue && iv2 != nullValue)
             ret = -fSpec.fNf;
     }
     else
     {
         float v1 = l->row1().getFloatField(fSpec.fIndex);
         float v2 = l->row2().getFloatField(fSpec.fIndex);
-
         if (v1 > v2)
             ret = fSpec.fAsc;
         else if (v1 < v2)
@@ -210,23 +372,20 @@ int LongDoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
+    long double v1 = l->row1().getLongDoubleField(fSpec.fIndex);
+    long double v2 = l->row2().getLongDoubleField(fSpec.fIndex);
 
     int ret = 0;
 
-    if (b1 == true || b2 == true)
+    if (v1 == joblist::LONGDOUBLENULL || v2 == joblist::LONGDOUBLENULL)
     {
-        if (b1 == false && b2 == true)
+        if (v1 != joblist::LONGDOUBLENULL && v2 == joblist::LONGDOUBLENULL)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (v1 == joblist::LONGDOUBLENULL && v2 != joblist::LONGDOUBLENULL)
             ret = -fSpec.fNf;
     }
     else
     {
-        long double v1 = l->row1().getLongDoubleField(fSpec.fIndex);
-        long double v2 = l->row2().getLongDoubleField(fSpec.fIndex);
-
         if (v1 > v2)
             ret = fSpec.fAsc;
         else if (v1 < v2)
@@ -236,29 +395,79 @@ int LongDoubleCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r
     return ret;
 }
 
+int DateCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint32_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint32_t v2 = l->row2().getUintField(fSpec.fIndex);
+    uint32_t nullValue = static_cast<uint32_t>(joblist::DATENULL);
+
+    if (v1 == nullValue || v2 == nullValue)
+    {
+        if (v1 != nullValue && v2 == nullValue)
+            ret = fSpec.fNf;
+        else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int DatetimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    uint64_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint64_t v2 = l->row2().getUintField(fSpec.fIndex);
+
+    if (v1 == joblist::DATETIMENULL || v2 == joblist::DATETIMENULL)
+    {
+        if (v1 != joblist::DATETIMENULL && v2 == joblist::DATETIMENULL)
+            ret = fSpec.fNf;
+        else if (v1 == joblist::DATETIMENULL && v2 != joblist::DATETIMENULL)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
 
 int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 {
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
-
     int ret = 0;
+    uint64_t v1 = l->row1().getUintField(fSpec.fIndex);
+    uint64_t v2 = l->row2().getUintField(fSpec.fIndex);
 
-    if (b1 == true || b2 == true)
+    if (v1 == joblist::TIMENULL || v2 == joblist::TIMENULL)
     {
-        if (b1 == false && b2 == true)
+        if (v1 != joblist::TIMENULL && v2 == joblist::TIMENULL)
             ret = fSpec.fNf;
-        else if (b1 == true && b2 == false)
+        else if (v1 == joblist::TIMENULL && v2 != joblist::TIMENULL)
             ret = -fSpec.fNf;
     }
     else
     {
-        int64_t v1 = l->row1().getIntField(fSpec.fIndex);
-        int64_t v2 = l->row2().getIntField(fSpec.fIndex);
-
         // ((int64_t) -00:00:26) > ((int64_t) -00:00:25)
         // i.e. For 2 negative TIME values, we invert the order of
         // comparison operations to force "-00:00:26" to appear before
@@ -301,6 +510,16 @@ bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
     return false;
 }
 
+void CompareRule::revertRules()
+{
+    std::vector<Compare*>::iterator fCompareIter = fCompares.begin();
+    for(; fCompareIter!=fCompares.end(); fCompareIter++)
+    {
+        (*fCompareIter)->revertSortSpec();
+    }
+}
+
+
 
 void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgroup::RowGroup& rg)
 {
@@ -311,31 +530,80 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
         switch (types[i->fIndex])
         {
             case CalpontSystemCatalog::TINYINT:
+            {
+                Compare* c = new TinyIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::SMALLINT:
+            {
+                Compare* c = new SmallIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
-            case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UDECIMAL:
             {
                 Compare* c = new IntCompare(*i);
                 fCompares.push_back(c);
                 break;
             }
+            case CalpontSystemCatalog::BIGINT:
+            {
+                Compare* c = new BigIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
+            case CalpontSystemCatalog::DECIMAL:
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                Compare* c;
+                uint32_t len = rg.getColumnWidth(i->fIndex);
+                switch (len)
+                {
+                    case 1 :
+                        c = new TinyIntCompare(*i); break;
+                    case 2 :
+                        c = new SmallIntCompare(*i); break;
+                    case 4 :
+                        c = new IntCompare(*i); break;
+                    default:
+                        c = new BigIntCompare(*i);
+                }
+
+                fCompares.push_back(c);
+                break;
+            }
 
             case CalpontSystemCatalog::UTINYINT:
+            {
+                Compare* c = new UTinyIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::USMALLINT:
+            {
+                Compare* c = new USmallIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::UMEDINT:
             case CalpontSystemCatalog::UINT:
+            {
+                Compare* c = new UIntCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::UBIGINT:
             {
-                Compare* c = new UintCompare(*i);
+                Compare* c = new UBigIntCompare(*i);
                 fCompares.push_back(c);
                 break;
             }
 
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
             {
                 Compare* c = new StringCompare(*i);
                 fCompares.push_back(c);
@@ -366,14 +634,18 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
             }
 
             case CalpontSystemCatalog::DATE:
-            case CalpontSystemCatalog::DATETIME:
-            case CalpontSystemCatalog::TIMESTAMP:
             {
-                Compare* c = new UintCompare(*i);
+                Compare* c = new DateCompare(*i);
                 fCompares.push_back(c);
                 break;
             }
-
+            case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
+            {
+                Compare* c = new DatetimeCompare(*i);
+                fCompares.push_back(c);
+                break;
+            }
             case CalpontSystemCatalog::TIME:
             {
                 Compare* c = new TimeCompare(*i);
@@ -417,9 +689,10 @@ OrderByData::OrderByData(const std::vector<IdbSortSpec>& spec, const rowgroup::R
 
 // IdbOrderBy class implementation
 IdbOrderBy::IdbOrderBy() :
-    fDistinct(false), fMemSize(0), fRowsPerRG(8192), fErrorCode(0), fRm(NULL)
-{
-}
+    fDistinct(false), fMemSize(0), fRowsPerRG(rowgroup::rgCommonSize),
+    fErrorCode(0),
+    fRm(NULL)
+{ }
 
 
 IdbOrderBy::~IdbOrderBy()

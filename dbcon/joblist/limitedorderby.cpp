@@ -55,7 +55,7 @@ LimitedOrderBy::~LimitedOrderBy()
 }
 
 
-void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
+void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool invertRules, bool isMultiThreaded)
 {
     fRm = jobInfo.rm;
     fSessionMemLimit = jobInfo.umMemLimit;
@@ -77,12 +77,22 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
         map<uint32_t, uint32_t>::iterator j = keyToIndexMap.find(i->first);
         idbassert(j != keyToIndexMap.end());
 
-        fOrderByCond.push_back(IdbSortSpec(j->second, i->second));
+        fOrderByCond.push_back(IdbSortSpec(j->second, i->second ^ invertRules));
     }
 
     // limit row count info
-    fStart = jobInfo.limitStart;
-    fCount = jobInfo.limitCount;
+    if (isMultiThreaded)
+    {
+        // CS can't apply offset at the first stage
+        // otherwise it looses records. 
+        fStart = 0;
+        fCount = jobInfo.limitStart+jobInfo.limitCount;
+    }
+    else
+    {
+        fStart = jobInfo.limitStart;
+        fCount = jobInfo.limitCount;
+    }
 
     IdbOrderBy::initialize(rg);
 }
@@ -169,6 +179,8 @@ void LimitedOrderBy::finalize()
 
     if (fOrderByQueue.size() > 0)
     {
+        // *DRRTUY Very memory intensive. CS needs to account active
+        // memory only and release memory if needed.
         uint64_t memSizeInc = fRowsPerRG * fRowGroup.getRowSize();
         fMemSize += memSizeInc;
 
@@ -207,6 +219,8 @@ void LimitedOrderBy::finalize()
         fData.reinit(fRowGroup, fRowsPerRG);
         fRowGroup.setData(&fData);
         fRowGroup.resetRowGroup(0);
+        // *DRRTUY This approach won't work with
+        // OFSET > fRowsPerRG
         offset = offset != 0 ? offset - 1 : offset;
         fRowGroup.getRow(offset, &fRow0);
         
@@ -219,7 +233,8 @@ void LimitedOrderBy::finalize()
             offset--;
             fRow0.prevRow(rSize);
             fOrderByQueue.pop();
-
+            
+            // if RG has fRowsPerRG rows
             if(offset == (uint64_t)-1)
             {
                 tempRGDataList.push_front(fData);
@@ -232,7 +247,7 @@ void LimitedOrderBy::finalize()
                     throw IDBExcept(fErrorCode);
                 }
                 
-                fData.reinit(fRowGroup, fRowsPerRG);            
+                fData.reinit(fRowGroup, fRowsPerRG);
                 fRowGroup.setData(&fData);
                 fRowGroup.resetRowGroup(0); // ?
                 fRowGroup.getRow(preLastRowNumb, &fRow0);
@@ -241,9 +256,9 @@ void LimitedOrderBy::finalize()
         }
         // Push the last/only group into the queue.
         if (fRowGroup.getRowCount() > 0)
-            tempRGDataList.push_front(fData);   
+            tempRGDataList.push_front(fData);
         
-        for(tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)        
+        for(tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
             tempQueue.push(*tempListIter);
         
         fDataQueue = tempQueue;
