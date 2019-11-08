@@ -667,9 +667,9 @@ int Dctnry::insertDctnry2(Signature& sig)
 
     while (sig.size > 0)
     {
-        if (sig.size > (m_freeSpace - m_totalHdrBytes))
+        if (sig.size > (m_freeSpace - HDR_UNIT_SIZE))
         {
-            write_size = (m_freeSpace - m_totalHdrBytes);
+            write_size = (m_freeSpace - HDR_UNIT_SIZE);
         }
         else
         {
@@ -891,8 +891,8 @@ int Dctnry::insertDctnry(const char* buf,
         //...String not found in cache, so proceed.
         //   If room is available in current block then insert into block.
         // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
-        if ( ((totalUseSize <= m_freeSpace) ||
-                ((curSig.size > 8176) && (m_freeSpace > m_totalHdrBytes))) &&
+        if ( ((totalUseSize <= m_freeSpace - HDR_UNIT_SIZE) ||
+                ((curSig.size > 8176) && (m_freeSpace > HDR_UNIT_SIZE))) &&
                 (m_curOp      < (MAX_OP_COUNT - 1)) )
         {
             RETURN_ON_ERROR(insertDctnry2(curSig)); //m_freeSpace updated!
@@ -1115,14 +1115,14 @@ int Dctnry::insertDctnry(const int& sgnature_size,
     for (i = m_lastFbo; i < m_numBlocks; i++)
     {
         // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
-        if ( ((m_freeSpace >= size) ||
-                ((size > 8176) && (m_freeSpace > m_totalHdrBytes))) &&
+        if ( ((m_freeSpace - HDR_UNIT_SIZE >= size) ||
+                ((size > 8176) && (m_freeSpace > HDR_UNIT_SIZE))) &&
                 (m_curOp    <  (MAX_OP_COUNT - 1)) )
         {
             // found the perfect block; signature size fit in this block
-            if (size > (m_freeSpace - m_totalHdrBytes))
+            if (size > (m_freeSpace - HDR_UNIT_SIZE))
             {
-                write_size = (m_freeSpace - m_totalHdrBytes);
+                write_size = (m_freeSpace - HDR_UNIT_SIZE);
             }
             else
             {
