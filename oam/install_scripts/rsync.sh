@@ -8,7 +8,6 @@
 # Argument 3 - Debug flag 1 for on, 0 for off
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
-set INSTALLDIR [lindex $argv 2]
 set DEBUG 0
 set DEBUG [lindex $argv 3]
 log_user $DEBUG

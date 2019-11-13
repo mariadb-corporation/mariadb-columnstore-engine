@@ -14,12 +14,8 @@ OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16" "ubuntu18")
 
 NODE_IPADDRESS=""
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
-fi
-
 #get temp directory
-tmpDir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 checkContinue() {
 
@@ -205,7 +201,7 @@ checkLocalOS()
   echo ""
 
   #get local OS
-  `$COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh > ${tmpDir}/os_detect 2>&1`
+  `os_detect.sh > ${tmpDir}/os_detect 2>&1`
   if [ "$?" -eq 0 ]; then
     localOS=`cat ${tmpDir}/os_detect | grep "Operating System name" | cut -f2 -d '"'`
     echo "Local Node OS System Name : $localOS"
@@ -311,7 +307,7 @@ checkSSH()
   echo ""
 
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD ls 1 > /dev/null 2>&1`;
+    `remote_command.sh $ipadd $PASSWORD ls 1 > /dev/null 2>&1`;
     rc="$?"
     if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
       if [ $PASSWORD == "ssh" ] ; then
@@ -341,7 +337,7 @@ checkRemoteDir()
     echo "** Run Non-root User directory permissions check on remote nodes (/dev/shm)"
     echo ""
 
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
+	`remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
     rc="$?"
     if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
 		`grep "Permission denied" ${tmpDir}/remote_command_check  > /dev/null 2>&1`
@@ -376,14 +372,14 @@ checkOS()
   echo ""
   
   pass=true
-  `/bin/cp -f $COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh ${tmpDir}/.`
+  `/bin/cp -f os_detect.sh ${tmpDir}/.`
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_put.sh $ipadd $PASSWORD ${tmpDir}/os_detect.sh 1 > ${tmpDir}/remote_scp_put_check 2>&1`
+    `remote_scp_put.sh $ipadd $PASSWORD ${tmpDir}/os_detect.sh 1 > ${tmpDir}/remote_scp_put_check 2>&1`
     if [ "$?" -ne 0 ]; then
       echo "Error running remote_scp_put.sh to $ipadd Node, check ${tmpDir}/remote_scp_put_check"
       exit 1
     else
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD ${tmpDir}/os_detect.sh 1 > ${tmpDir}/remote_command_check`
+      `remote_command.sh $ipadd $PASSWORD ${tmpDir}/os_detect.sh 1 > ${tmpDir}/remote_command_check`
       rc="$?"
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_command.sh ${tmpDir}/os_detect.sh on $ipadd Node, check ${tmpDir}/remote_command_check"
@@ -423,10 +419,10 @@ checkLocale()
   
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > locale_check 2>&1' 1 > ${tmpDir}/remote_command_check`
+    `remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > locale_check 2>&1' 1 > ${tmpDir}/remote_command_check`
     rc="$?"
      if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD locale_check > ${tmpDir}/remote_scp_get_check 2>&1`
+      `remote_scp_get.sh $ipadd $PASSWORD locale_check > ${tmpDir}/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	exit 1
@@ -526,9 +522,9 @@ checkUMASK()
   pass=true
   
 	  for ipadd in "${NODE_IPADDRESS[@]}"; do
-		`$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'rm -f UMASKtest;touch UMASKtest;echo $(stat -c "%A" "UMASKtest") > test.log' > ${tmpDir}/remote_command_check 2>&1`
+		`remote_command.sh $ipadd $PASSWORD 'rm -f UMASKtest;touch UMASKtest;echo $(stat -c "%A" "UMASKtest") > test.log' > ${tmpDir}/remote_command_check 2>&1`
 		if [ "$?" -eq 0 ]; then
-		  `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd Calpont1 test.log >> ${tmpDir}/remote_scp_get 2>&1`
+		  `remote_scp_get.sh $ipadd Calpont1 test.log >> ${tmpDir}/remote_scp_get 2>&1`
 			if [ "$?" -eq 0 ]; then
 				permission=`cat test.log`
 			    result=${permission:4:1}
@@ -572,7 +568,7 @@ checkSELINUX()
   
   pass=true
 	  for ipadd in "${NODE_IPADDRESS[@]}"; do
-		`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > ${tmpDir}/remote_scp_get_check 2>&1`
+		`remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > ${tmpDir}/remote_scp_get_check 2>&1`
 		if [ "$?" -ne 0 ]; then
 		  echo "$ipadd Node SELINUX setting is Not Enabled"
 		else
@@ -628,12 +624,12 @@ checkFirewalls()
       # 'sysconfig not on remote node
       for firewall in "${FIREWALL_LIST[@]}"; do
 	pass=true
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "service '$firewall' status > ${tmpDir}/firewall_check 2>&1" 1 > ${tmpDir}/remote_command_check`
+        `remote_command.sh $ipadd $PASSWORD "service '$firewall' status > ${tmpDir}/firewall_check 2>&1" 1 > ${tmpDir}/remote_command_check`
         if [ "$?" -eq 0 ]; then
               echo "${bold}Warning${normal}, $ipadd Node $firewall service is Active, check port test results"
               pass=false
         else
-	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > ${tmpDir}/firewall_check 2>&1" 1 > ${tmpDir}/remote_command_check`
+	  `remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > ${tmpDir}/firewall_check 2>&1" 1 > ${tmpDir}/remote_command_check`
 	  if [ "$?" -eq 0 ]; then
 	      echo "${bold}Warning${normal}, $ipadd Node $firewall service is Active, check port test results"
 	      pass=false
@@ -666,7 +662,7 @@ checkFirewalls()
     fi
 
     for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > ${tmpDir}/rcSuSEfirewall2_check 2>&1' 1 > ${tmpDir}/remote_command_check`
+      `remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > ${tmpDir}/rcSuSEfirewall2_check 2>&1' 1 > ${tmpDir}/remote_command_check`
       rc="$?"
       if  [ $rc -eq 0 ] ; then
 	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Enabled, check port test results"
@@ -717,14 +713,14 @@ checkTime()
   #get local epoch time
   localTime=`date +%s`
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-     `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'date +%s > time_check' > ${tmpDir}/time_check`
+     `remote_command.sh $ipadd $PASSWORD 'date +%s > time_check' > ${tmpDir}/time_check`
       rc="$?"
       if  [ $rc -ne 0 ] ; then
 	  echo $ipadd " Node ${bold}Failed${normal} date/time check failed, check ${tmpDir}/time_check"
 	  pass=false
 	  REPORTPASS=false
       else
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD time_check > ${tmpDir}/remote_scp_get_check 2>&1`
+	`remote_scp_get.sh $ipadd $PASSWORD time_check > ${tmpDir}/remote_scp_get_check 2>&1`
 	if [ "$?" -ne 0 ]; then
 	  echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	else
@@ -757,23 +753,23 @@ checkMysqlPassword()
   
   #get MariaDB password
   pass=true
-  `$COLUMNSTORE_INSTALL_DIR/mysql/mysql-Columnstore start > /dev/null 2>&1`
-  `$COLUMNSTORE_INSTALL_DIR/bin/mariadb-command-line.sh > /dev/null 2>&1`
+  `mysql-Columnstore start > /dev/null 2>&1`
+  `mariadb-command-line.sh > /dev/null 2>&1`
   if [ "$?" -eq 2 ]; then
       echo "${bold}Failed${normal}, Local Node MariaDB login failed with missing password file, /root/.my.cnf"
   fi
   
   if [ "$IPADDRESSES" != "" ]; then
-    `/bin/cp -f $COLUMNSTORE_INSTALL_DIR/bin/mariadb-command-line.sh ${tmpDir}/.`
+    `/bin/cp -f mariadb-command-line.sh ${tmpDir}/.`
 
     for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD $COLUMNSTORE_INSTALL_DIR/mysql/mysql-Columnstore start > /dev/null 2>&1`
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_put.sh $ipadd $PASSWORD ${tmpDir}/mariadb-command-line.sh 1 > ${tmpDir}/remote_scp_put_check 2>&1`
+      `remote_command.sh $ipadd $PASSWORD mysql-Columnstore start > /dev/null 2>&1`
+      `remote_scp_put.sh $ipadd $PASSWORD ${tmpDir}/mariadb-command-line.sh 1 > ${tmpDir}/remote_scp_put_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_put.sh to $ipadd Node, check ${tmpDir}/remote_scp_put_check"
 	exit 1
       else
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD ${tmpDir}/mariadb-command-line.sh 1 > ${tmpDir}/remote_command_check`
+	`remote_command.sh $ipadd $PASSWORD ${tmpDir}/mariadb-command-line.sh 1 > ${tmpDir}/remote_command_check`
 	    `cat ${tmpDir}/remote_command_check | grep "ERROR - PASSWORD" > /dev/null 2>&1`
 	    if [ "$?" -eq 0 ]; then
 	      echo "${bold}Failed${normal}, $ipadd Node MariaDB login failed with missing password file, /root/.my.cnf"
@@ -861,14 +857,14 @@ checkPackages()
       for ipadd in "${NODE_IPADDRESS[@]}"; do
 	for PKG in "${CENTOS_PKG[@]}"; do
 	  if [ $OS == "centos6" ] && [ $PKG == "boost" ]; then
-	    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'ls /usr/lib/libboost_regex.so > /dev/null 2>&1' 1 > ${tmpDir}/remote_command_check 2>&1`
+	    `remote_command.sh $ipadd $PASSWORD 'ls /usr/lib/libboost_regex.so > /dev/null 2>&1' 1 > ${tmpDir}/remote_command_check 2>&1`
 	    if  [ $? -ne 0 ] ; then
 	      echo "${bold}Failed${normal}, $ipadd Node ${bold}boost libraries${normal} not installed"
 	      pass=false
 	      REPORTPASS=false
 	    fi
 	  else
-	    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	    `remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
 	    rc="$?"
 	    if  [ $rc -eq 2 ] ; then
               echo "${bold}Failed${normal}, $ipadd Node, 'yum' not installed"
@@ -893,7 +889,7 @@ checkPackages()
 	
 	#check for package that shouldnt be installed
 	for PKG in "${CENTOS_PKG_NOT[@]}"; do
-	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	  `remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
 	  rc="$?"
 	  if  [ $rc -eq 2 ] ; then
 	    echo "${bold}Failed${normal}, $ipadd Node, 'yum' not installed"
@@ -970,7 +966,7 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
       for ipadd in "${NODE_IPADDRESS[@]}"; do
 	for PKG in "${SUSE_PKG[@]}"; do
-	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	  `remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
 	  rc="$?"
 	  if  [ $rc -ne 0 ] ; then
 	    echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
@@ -989,7 +985,7 @@ checkPackages()
 	
 	#check for package that shouldnt be installed
 	for PKG in "${SUSE_PKG_NOT[@]}"; do
-	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	  `remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
 	  rc="$?"
 	  if  [ $rc -eq 0 ] ; then
 	    echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is installed, please un-install"
@@ -1061,8 +1057,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${UBUNTU_PKG[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+          `remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
             else
@@ -1093,8 +1089,8 @@ checkPackages()
       
       #check for package that shouldnt be installed
       for PKG in "${UBUNTU_PKG_NOT[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	`remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
 	  if [ "$?" -ne 0 ]; then
 	    echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	  else
@@ -1178,8 +1174,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${DEBIAN_PKG[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+          `remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
             else
@@ -1210,8 +1206,8 @@ checkPackages()
       
       #check for package that shouldnt be installed
       for PKG in "${DEBIAN_PKG_NOT[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	`remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
 	  if [ "$?" -ne 0 ]; then
 	    echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	  else
@@ -1296,8 +1292,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${DEBIAN9_PKG[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+          `remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
             else
@@ -1328,8 +1324,8 @@ checkPackages()
       
       #check for package that shouldnt be installed
       for PKG in "${DEBIAN9_PKG_NOT[@]}"; do
-        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
+        `remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > ${tmpDir}/pkg_check 2>&1" 1 > ${tmpDir}/remote_command_check 2>&1`
+	`remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/pkg_check > ${tmpDir}/remote_scp_get_check 2>&1`
 	  if [ "$?" -ne 0 ]; then
 	    echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	  else

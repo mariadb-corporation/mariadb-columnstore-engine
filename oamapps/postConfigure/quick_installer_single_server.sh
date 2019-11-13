@@ -17,24 +17,10 @@ for arg in "$@"; do
 done
 
 
-if [ $HOME == "/root" ]; then
-        echo ""
-        echo "Run post-install script"
-        echo ""
-        /usr/local/mariadb/columnstore/bin/post-install
-        echo "Run postConfigure script"
-        echo ""
-        /usr/local/mariadb/columnstore/bin/postConfigure -qs
-else
-        echo ""
-        echo "Run post-install script"
-        echo ""
-        $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
-        
-		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib
-
-        echo "Run postConfigure script"
-        echo ""
-        $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
-fi
+echo ""
+echo "Run post-install script"
+echo ""
+columnstore-post-install
+echo "Run postConfigure script"
+echo ""
+postConfigure -qs

@@ -2531,7 +2531,6 @@ private:
     std::string CalpontConfigFile;
     std::string AlarmConfigFile;
     std::string ProcessConfigFile;
-    std::string InstallDir;
     static int  UseHdfs;
     std::string userDir;
 

@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
                 cerr << cmd << endl;
 #endif
 
-            cmd = startup::StartUp::installDir() + "/bin/save_brm";
+            cmd = "save_brm";
 
             if (canWrite)
             {

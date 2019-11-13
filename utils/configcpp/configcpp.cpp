@@ -83,57 +83,36 @@ Config* Config::makeConfig(const char* cf)
 {
     mutex::scoped_lock lk(fInstanceMapMutex);
 
-    static string installDir;
+    static string defaultFilePath;
 
-    if (installDir.empty())
-        installDir = startup::StartUp::installDir();
-
-    if (cf == 0)
+    if (cf == 0 || *cf == 0)
     {
-#ifdef _MSC_VER
-        string cfStr = IDBreadRegistry("ConfigFile");
+        fs::path configFilePath;
+        configFilePath = fs::path(MCSSYSCONFDIR) / fs::path("columnstore") / defaultCalpontConfigFile;
+        defaultFilePath = configFilePath.string();
 
-        if (!cfStr.empty())
-            cf = cfStr.c_str();
-
-#else
-        cf = getenv("COLUMNSTORE_CONFIG_FILE");
-#endif
-
-        if (cf == 0 || *cf == 0)
+        if (fInstanceMap.find(defaultFilePath) == fInstanceMap.end())
         {
-            static string defaultFilePath;
-
-            if (defaultFilePath.empty())
-            {
-                fs::path configFilePath;
-                configFilePath = fs::path(MCSSYSCONFDIR) / fs::path("columnstore") / defaultCalpontConfigFile;
-                defaultFilePath = configFilePath.string();
-            }
-
-            if (fInstanceMap.find(defaultFilePath) == fInstanceMap.end())
-            {
-                Config* instance = new Config(defaultFilePath, installDir);
-                fInstanceMap[defaultFilePath] = instance;
-            }
-
-            return fInstanceMap[defaultFilePath];
+            Config* instance = new Config(defaultFilePath);
+            fInstanceMap[defaultFilePath] = instance;
         }
+
+        return fInstanceMap[defaultFilePath];
     }
 
     string configFile(cf);
 
     if (fInstanceMap.find(configFile) == fInstanceMap.end())
     {
-        Config* instance = new Config(configFile, installDir);
+        Config* instance = new Config(configFile);
         fInstanceMap[configFile] = instance;
     }
 
     return fInstanceMap[configFile];
 }
 
-Config::Config(const string& configFile, const string& installDir) :
-    fDoc(0), fConfigFile(configFile), fMtime(0), fInstallDir(installDir), fParser(fInstallDir)
+Config::Config(const string& configFile) :
+    fDoc(0), fConfigFile(configFile), fMtime(0), fParser()
 {
     for ( int i = 0 ; i < 20 ; i++ )
     {
@@ -239,7 +218,7 @@ void Config::closeConfig(void)
 
 const string Config::getConfig(const string& section, const string& name)
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::getConfig: both section and name must have a length");
@@ -266,7 +245,7 @@ const string Config::getConfig(const string& section, const string& name)
 
 void Config::getConfig(const string& section, const string& name, vector<string>& values)
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0)
         throw invalid_argument("Config::getConfig: section must have a length");
@@ -291,7 +270,7 @@ void Config::getConfig(const string& section, const string& name, vector<string>
 
 void Config::setConfig(const string& section, const string& name, const string& value)
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0 )
         throw invalid_argument("Config::setConfig: all of section and name must have a length");
@@ -321,7 +300,7 @@ void Config::setConfig(const string& section, const string& name, const string& 
 
 void Config::delConfig(const string& section, const string& name)
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::delConfig: both section and name must have a length");
@@ -349,7 +328,7 @@ void Config::delConfig(const string& section, const string& name)
 
 void Config::writeConfig(const string& configFile) const
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
     FILE* fi;
 
     if (fDoc == 0)
@@ -623,7 +602,7 @@ int64_t Config::fromText(const std::string& text)
 
 time_t Config::getCurrentMTime()
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     struct stat statbuf;
 
@@ -635,7 +614,7 @@ time_t Config::getCurrentMTime()
 
 const vector<string> Config::enumConfig()
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {
@@ -659,7 +638,7 @@ const vector<string> Config::enumConfig()
 
 const vector<string> Config::enumSection(const string& section)
 {
-    mutex::scoped_lock lk(fLock);
+    recursive_mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {

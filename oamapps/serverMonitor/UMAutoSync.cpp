@@ -237,7 +237,7 @@ void UMAutoSync()
 void rsync(std::string moduleName, std::string IPAddr, std::string rootPassword)
 {
 
-    string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + IPAddr + " " + rootPassword + " 1 > /tmp/rsync_" + moduleName + ".log";
+    string cmd = "rsync.sh " + IPAddr + " " + rootPassword + " 1 > /tmp/rsync_" + moduleName + ".log";
     int ret = system(cmd.c_str());
 
     if ( WEXITSTATUS(ret) == 0 )

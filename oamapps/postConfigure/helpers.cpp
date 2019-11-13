@@ -48,8 +48,6 @@ string prompt;
 
 const char* pcommand = 0;
 
-extern string installDir;
-
 extern bool noPrompting;
 
 namespace installer
@@ -242,7 +240,7 @@ void dbrmDirCheck()
         }
     }
 
-    cmd = "chmod 755 -R " + installDir + "/data1/systemFiles/dbrm > /dev/null 2>&1";
+    cmd = "chmod 755 -R /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
     system(cmd.c_str());
 
     return;
@@ -261,7 +259,7 @@ void mysqlSetup()
 	if ( mysqlpw != oam::UnassignedName )
 		passwordOption = " --password=" + mysqlpw;
 
-    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " " + passwordOption + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
+    cmd = "post-mysqld-install " + passwordOption + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
@@ -290,7 +288,7 @@ void mysqlSetup()
             HOME = p;
     }
     
-    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysql-install.log";
+    cmd = "post-mysql-install --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysql-install.log";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) == 2)
@@ -593,7 +591,7 @@ void checkFilesPerPartion(int DBRootCount, Config* sysConfig)
     Oam oam;
     string SystemSection = "SystemConfig";
 
-    string dbRoot = installDir + "/data1";
+    string dbRoot = "/var/lib/columnstore/data1";
 
     try
     {
@@ -792,7 +790,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
                         (remoteModuleType == "pm" && pmwithum) )
                 {
 
-                    string cmd = installDir + "/bin/remote_command_verify.sh " + remoteModuleIP + " " + " " + USER + " " + password + " '" + remotenetstat + "' tcp error 5 0 > /dev/null 2>&1";
+                    string cmd = "remote_command_verify.sh " + remoteModuleIP + " " + " " + USER + " " + password + " '" + remotenetstat + "' tcp error 5 0 > /dev/null 2>&1";
                     int rtnCode = system(cmd.c_str());
 
                     if (WEXITSTATUS(rtnCode) == 0)

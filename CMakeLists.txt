@@ -74,12 +74,38 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
+SET (ENGINE_SYSCONFDIR "/etc")
+SET (ENGINE_DATADIR    "/var/lib/columnstore")
+
+# TODO: This will all be replaced by variables from server install_layout.cmake once we are a submodule
 IF (RPM)
     SET(MARIADB_PLUGINDIR "/usr/lib64/mysql/plugin")
+    SET(MARIADB_MYCNFDIR  "/etc/my.cnf.d")
+    SET (ENGINE_LIBDIR     "/usr/lib64")
+    SET (ENGINE_BINDIR     "/usr/bin")
+    SET (ENGINE_INCDIR     "/usr/include")
+    SET (ENGINE_MANDIR     "/usr/share/man")
+    SET (ENGINE_SBINDIR    "/usr/sbin")
+    SET (ENGINE_SUPPORTDIR "/usr/share/columnstore")
 ELSEIF (DEB)
     SET(MARIADB_PLUGINDIR "/usr/lib/mysql/plugin")
+    SET(MARIADB_MYCNFDIR  "/etc/mysql/conf.d")
+    SET (ENGINE_LIBDIR     "/usr/lib")
+    SET (ENGINE_BINDIR     "/usr/bin")
+    SET (ENGINE_INCDIR     "/usr/include")
+    SET (ENGINE_MANDIR     "/usr/share/man")
+    SET (ENGINE_SBINDIR    "/usr/sbin")
+    SET (ENGINE_SUPPORTDIR "/usr/share/columnstore")
 ELSE()
-    SET(MARIADB_PLUGINDIR "/usr/local/lib/mysql/plugin")
+    # TODO: prefix should probably apply here
+    SET(MARIADB_PLUGINDIR  "/usr/local/lib/mysql/plugin")
+    SET(MARIADB_MYCNFDIR   "/etc/mysql")
+    SET (ENGINE_LIBDIR     "/usr/local/lib")
+    SET (ENGINE_BINDIR     "/usr/local/bin")
+    SET (ENGINE_INCDIR     "/usr/local/include")
+    SET (ENGINE_MANDIR     "/usr/local/man")
+    SET (ENGINE_SBINDIR    "/usr/local/sbin")
+    SET (ENGINE_SUPPORTDIR "/usr/local/share/columnstore")
 ENDIF()
 
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
@@ -103,26 +129,6 @@ SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
 
 SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore")
-
-# use, i.e. don't skip the full RPATH for the build tree
-SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
-
-# when building, don't use the install RPATH already
-# (but later on when installing)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-
-SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
-
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# the RPATH to be used when installing, but only if it's not a system directory
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${INSTALL_ENGINE}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
-ENDIF("${isSystemDir}" STREQUAL "-1")
 
 INCLUDE (configureEngine)
 
@@ -192,17 +198,6 @@ IF(SECURITY_HARDENED)
 ENDIF()
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
-SET (ENGINE_LIBDIR     "${INSTALL_ENGINE}/lib")
-SET (ENGINE_BINDIR     "${INSTALL_ENGINE}/bin")
-SET (ENGINE_INCDIR     "${INSTALL_ENGINE}/include")
-SET (ENGINE_SYSCONFDIR "/etc")
-SET (ENGINE_MANDIR     "${INSTALL_ENGINE}/man")
-SET (ENGINE_SBINDIR    "${INSTALL_ENGINE}/sbin")
-SET (ENGINE_SHAREDIR   "${INSTALL_ENGINE}/share")
-SET (ENGINE_POSTDIR    "${INSTALL_ENGINE}/post")
-SET (ENGINE_LOCALDIR   "${INSTALL_ENGINE}/local")
-SET (ENGINE_MYSQLDIR   "${INSTALL_ENGINE}/mysql")
-SET (ENGINE_TOOLSDIR   "${INSTALL_ENGINE}/tools")
 
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${JEMALLOC_LIBRARIES})
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
@@ -226,6 +221,10 @@ IF (SERVER_SOURCE_ROOT_DIR)
   ENDIF()
 ELSE()
     SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_BINARY_DIR}/..)
+ENDIF()
+
+IF (NOT SERVER_BUILD_DIR)
+    SET (SERVER_BUILD_DIR ${SERVER_SOURCE_ROOT_DIR})
 ENDIF()
 
 MESSAGE("SERVER_BUILD_INCLUDE_DIR = ${SERVER_BUILD_INCLUDE_DIR}")
@@ -332,12 +331,12 @@ exec_program("git"
 
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT platform)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT platform)
 
 INCLUDE(cpackEngineRPM)
 INCLUDE(cpackEngineDEB)

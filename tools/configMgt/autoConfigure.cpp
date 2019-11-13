@@ -1634,7 +1634,7 @@ int main(int argc, char* argv[])
             {
                 int id = *pt;
                 string DBrootID = "DBRoot" + oam.itoa(id);;
-                string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(id);
+                string pathID =  "/var/lib/columnstore/data" + oam.itoa(id);
 
                 try
                 {
@@ -1731,7 +1731,7 @@ int main(int argc, char* argv[])
             {
                 int id = *pt;
                 string DBrootID = "DBRoot" + oam.itoa(id);;
-                string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(id);
+                string pathID =  "/var/lib/columnstore/data" + oam.itoa(id);
 
                 try
                 {
@@ -1810,7 +1810,7 @@ int main(int argc, char* argv[])
             }
 
             string DBrootID = "DBRoot" + oam.itoa(i);
-            string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(i);
+            string pathID =  "/var/lib/columnstore/data" + oam.itoa(i);
 
             try
             {
@@ -1951,47 +1951,6 @@ int main(int argc, char* argv[])
                 cout << "ERROR: Problem setting DataFilePlugin in the Calpont System Configuration file" << endl;
                 exit(-1);
             }
-
-            string DataFileEnvFile;
-
-            try
-            {
-                DataFileEnvFile = sysConfigOld->getConfig(SystemSection, "DataFileEnvFile");
-
-                if ( !DataFileEnvFile.empty() )
-                {
-                    try
-                    {
-                        sysConfigNew->setConfig(SystemSection, "DataFileEnvFile", DataFileEnvFile);
-                    }
-                    catch (...)
-                    {
-                        cout << "ERROR: Problem setting DataFileEnvFile in the Calpont System Configuration file" << endl;
-                        exit(-1);
-                    }
-                }
-                else
-                {
-                    string::size_type pos = DataFilePlugin.find("hdfs-20.so", 0);
-
-                    if (pos != string::npos)
-                        DataFileEnvFile = "setenv-hdfs-20";
-                    else
-                        DataFileEnvFile = "setenv-hdfs-12";
-
-                    try
-                    {
-                        sysConfigNew->setConfig(SystemSection, "DataFileEnvFile", DataFileEnvFile);
-                    }
-                    catch (...)
-                    {
-                        cout << "ERROR: Problem setting DataFileEnvFile in the Calpont System Configuration file" << endl;
-                        exit(-1);
-                    }
-                }
-            }
-            catch (...)
-            {}
 
             string ExtentsPerSegmentFile;
 

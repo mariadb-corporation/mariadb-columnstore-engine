@@ -51,6 +51,7 @@
 #include <boost/regex.hpp>
 #include "liboamcpp.h"
 #include "installdir.h"
+#include "config.h"
 
 using namespace std;
 using namespace oam;
@@ -69,8 +70,8 @@ string rtrim(const string &in) {
 
 void mergeMycnfIncludeArgs() 
 {
-	string userArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text.rpmsave";
-	string packagedArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
+	string userArgsFilename = std::string(MCSSUPPORTDIR) + "/myCnf-include-args.text.rpmsave";
+	string packagedArgsFilename = std::string(MCSSUPPORTDIR) + "/myCnf-include-args.text";
 	ifstream userArgs(userArgsFilename.c_str());
 	fstream packagedArgs(packagedArgsFilename.c_str(), ios::in);
 
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
     }
 
     //my.cnf file
-    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
+    string mycnfFile = std::string(MCSMYCNFDIR) + "/columnstore.cnf";
     ifstream mycnffile (mycnfFile.c_str());
 
     if (!mycnffile)
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
 	mergeMycnfIncludeArgs();
 
     //include arguments file
-    string includeFile = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
+    string includeFile = std::string(MCSSUPPORTDIR) + "/myCnf-include-args.text";
     ifstream includefile (includeFile.c_str());
 
     if (!includefile)
@@ -159,7 +160,7 @@ int main(int argc, char* argv[])
     }
 
     //exclude arguments file
-    string excludeFile = startup::StartUp::installDir() + "/bin/myCnf-exclude-args.text";
+    string excludeFile = std::string(MCSSUPPORTDIR) + "/myCnf-exclude-args.text";
     ifstream excludefile (excludeFile.c_str());
 
     if (!excludefile)

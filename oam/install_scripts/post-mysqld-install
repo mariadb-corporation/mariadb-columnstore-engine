@@ -4,9 +4,6 @@
 #
 # Post-install steps for columnstore-mysql install
 
-prefix=/usr/local
-installdir=$prefix/mariadb/columnstore
-rpmmode=install
 user=mysql
 tmpdir="/tmp"
 
@@ -19,15 +16,7 @@ if [ $EUID -ne 0 ]; then
 fi
 
 for arg in "$@"; do
-	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
-		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/mariadb/columnstore
-	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
-		rpmmode="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
-		installdir="`echo $arg | awk -F= '{print $2}'`"
-		prefix=`dirname $installdir`
-	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
+	if [ `expr -- "$arg" : '--user='` -eq 7 ]; then
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
 		password="$(echo $arg | awk -F= '{print $2}')"

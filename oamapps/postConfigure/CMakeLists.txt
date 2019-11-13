@@ -19,13 +19,13 @@ install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 set(installer_SRCS installer.cpp helpers.cpp)
 
-add_executable(installer ${installer_SRCS})
+add_executable(columnstore_installer ${installer_SRCS})
 
-target_compile_options(installer PRIVATE -Wno-unused-result)
+target_compile_options(columnstore_installer PRIVATE -Wno-unused-result)
 
-target_link_libraries(installer ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(columnstore_installer ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS installer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS columnstore_installer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############

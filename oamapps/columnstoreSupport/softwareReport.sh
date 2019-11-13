@@ -8,14 +8,8 @@ else
         MODULE="pm1"
 fi
 
-if [ $2 ] ; then
-        INSTALLDIR=$2
-else
-        INSTALLDIR="/usr/local/mariadb/columnstore"
-fi
-
 #get temp directory
-tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/${MODULE}_softwareReport.txt
 
@@ -29,14 +23,14 @@ echo "-- Columnstore Package Details --"
 echo " "
 echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
 echo " "
-$INSTALLDIR/bin/mcsadmin getsoftwareinfo
+mcsadmin getsoftwareinfo
 
 echo " "
 echo "-- Columnstore Storage Configuration --"
 echo " "
 echo "################# mcsadmin getStorageConfig #################"
 echo " "
-$INSTALLDIR/bin/mcsadmin getStorageConfig
+mcsadmin getStorageConfig
 
 } > ${tmpDir}/${MODULE}_softwareReport.txt
 

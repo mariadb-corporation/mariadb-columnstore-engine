@@ -35,20 +35,20 @@ using namespace messageqcpp;
 namespace config
 {
 
-ConfigStream::ConfigStream(const ByteStream& bs, const string& installDir) :
-    fParser(installDir)
+ConfigStream::ConfigStream(const ByteStream& bs) :
+    fParser()
 {
     init(reinterpret_cast<const xmlChar*>(bs.buf()));
 }
 
-ConfigStream::ConfigStream(const string& str, const string& installDir) :
-    fParser(installDir)
+ConfigStream::ConfigStream(const string& str) :
+    fParser()
 {
     init(reinterpret_cast<const xmlChar*>(str.c_str()));
 }
 
-ConfigStream::ConfigStream(const char* cptr, const string& installDir) :
-    fParser(installDir)
+ConfigStream::ConfigStream(const char* cptr) :
+    fParser()
 {
     init(reinterpret_cast<const xmlChar*>(cptr));
 }

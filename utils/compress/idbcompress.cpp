@@ -28,7 +28,6 @@ using namespace std;
 #include "logger.h"
 #include "snappy.h"
 #include "hasher.h"
-#include "version1.h"
 
 #define IDBCOMP_DLLEXPORT
 #include "idbcompress.h"
@@ -214,63 +213,10 @@ int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, un
         comprc = snappy::GetUncompressedLength(&in[HEADER_SIZE], storedLen, &ol) &&
                  snappy::RawUncompress(&in[HEADER_SIZE], storedLen, reinterpret_cast<char*>(out));
     }
-    else if (storedMagic == CHUNK_MAGIC1 || storedMagic == CHUNK_MAGIC2)
-    {
-        if (inLen < HEADER_SIZE)
-        {
-            return ERR_BADINPUT;
-        }
-
-        storedChecksum = *((uint32_t*) &in[CHECKSUM_OFFSET]);
-        storedLen = *((uint32_t*) (&in[LEN_OFFSET]));
-
-        if (inLen < storedLen + HEADER_SIZE)
-        {
-            return ERR_BADINPUT;
-        }
-
-        /* We can no longer verify the checksum on ver 1.1 */
-        if (storedMagic == CHUNK_MAGIC2)
-        {
-            realChecksum = hasher(&in[HEADER_SIZE], storedLen);
-
-            if (storedChecksum != realChecksum)
-            {
-                return ERR_CHECKSUM;
-            }
-        }
-
-        try
-        {
-            comprc = v1::decompress(&in[HEADER_SIZE], storedLen, out, &ol);
-        }
-        catch (runtime_error& rex)
-        {
-            //cerr << "decomp caught exception: " << rex.what() << endl;
-            ostringstream os;
-            os << "decomp caught exception: " << rex.what();
-            log(os.str());
-            comprc = false;
-        }
-        catch (exception& ex)
-        {
-            ostringstream os;
-            os << "decomp caught exception: " << ex.what();
-            log(os.str());
-            comprc = false;
-        }
-        catch (...)
-        {
-            comprc = false;
-        }
-    }
-    else if ((storedMagic & 0x80) != 0)
-    {
-        return ERR_BADINPUT;
-    }
     else
     {
-        comprc = v1::decompress(in, inLen, out, &ol);
+        // v1 compression or bad header
+        return ERR_BADINPUT;
     }
 
     if (!comprc)

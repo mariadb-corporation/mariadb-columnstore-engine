@@ -15,7 +15,7 @@ else
 fi
 
 #get temp directory
-tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/logReport.log
 

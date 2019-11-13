@@ -110,7 +110,7 @@ int main(int argc, char** argv)
             {
                 dbrm.setSystemSuspended(true);
                 sleep(5);
-                string cmd = startup::StartUp::installDir() + "/bin/save_brm  > /var/log/mariadb/columnstore/save_brm.log1 2>&1";
+                string cmd = "save_brm  > /var/log/mariadb/columnstore/save_brm.log1 2>&1";
                 int rtnCode = system(cmd.c_str());
 
                 if (rtnCode == 0)

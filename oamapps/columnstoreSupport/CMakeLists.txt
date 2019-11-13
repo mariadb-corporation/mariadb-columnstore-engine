@@ -14,7 +14,7 @@ target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses  ${M
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
-install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh hadoopReport.sh 
+install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh
     hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
     DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
               

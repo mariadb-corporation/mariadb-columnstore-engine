@@ -4,19 +4,6 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(autoInstaller_SRCS autoInstaller.cpp)
-
-add_executable(autoInstaller ${autoInstaller_SRCS})
-
-target_compile_options(autoInstaller PRIVATE -Wno-unused-result)
-
-target_link_libraries(autoInstaller ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} readline ncurses)
-
-install(TARGETS autoInstaller DESTINATION ${ENGINE_BINDIR})
-
-
-########### next target ###############
-
 set(autoConfigure_SRCS autoConfigure.cpp)
 
 add_executable(autoConfigure ${autoConfigure_SRCS})

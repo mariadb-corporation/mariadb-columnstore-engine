@@ -45,8 +45,6 @@ using namespace messageqcpp;
 #include "loggingid.h"
 using namespace logging;
 
-#include "installdir.h"
-
 #include "clientrotator.h"
 
 //#include "idb_mysql.h"
@@ -68,12 +66,10 @@ const uint64_t LOCAL_EXEMGR_PORT = 8601;
 
 string ClientRotator::getModule()
 {
-    string installDir = startup::StartUp::installDir();
-	
 	//Log to debug.log
 	LoggingID logid( 24, 0, 0);
 
-    string fileName = installDir + "/local/module";
+    string fileName = "/var/lib/columnstore/local/module";
 
     string module;
     ifstream moduleFile (fileName.c_str());

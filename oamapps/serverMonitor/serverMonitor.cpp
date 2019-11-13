@@ -323,7 +323,7 @@ bool ServerMonitor::sendResourceAlarm(string alarmItem, ALARMS alarmID, int acti
         serverMonitor.checkSwapAlarm(alarmItem, alarmID);
 
     // don't issue an alarm on thge dbroots is already issued by this or another server
-    if ( alarmItem.find(startup::StartUp::installDir() + "/data") == 0 )
+    if ( alarmItem.find("/var/lib/columnstore/data") == 0 )
     {
         // check if Alarm is already active from any module, don't resend
         if ( !( oam.checkActiveAlarm(alarmID, "*", alarmItem)) )
