@@ -31,6 +31,6 @@ install(PROGRAMS
     ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
     ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
     ${CMAKE_BINARY_DIR}/lib/libmarias3.so
-    DESTINATION ${INSTALL_ENGINE}/lib
+    DESTINATION ${ENGINE_LIBDIR}
     COMPONENT platform
 )
