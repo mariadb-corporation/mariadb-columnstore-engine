@@ -21,6 +21,27 @@
 
 void check_walk(const Item* item, void* arg);
 
+
+void disable_indices_for_CEJ(THD *thd_)
+{
+    TABLE_LIST* global_list;
+    for (global_list = thd_->lex->query_tables; global_list; global_list = global_list->next_global)
+    {
+    // MCOL-652 - doing this with derived tables can cause bad things to happen
+        if (!global_list->derived)
+        {
+            global_list->index_hints= new (thd_->mem_root) List<Index_hint>();
+
+            global_list->index_hints->push_front(new (thd_->mem_root)
+                                    Index_hint(INDEX_HINT_USE,
+                                    INDEX_HINT_MASK_JOIN,
+                                    NULL,
+                                    0), thd_->mem_root);
+
+        }
+    }
+}
+
 void mutate_optimizer_flags(THD *thd_)
 {
     // MCOL-2178 Disable all optimizer flags as it was in the fork.
@@ -756,6 +777,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
+    // Remove this in 1.4.3
     // Save the original group_list as it can be mutated by the
     // optimizer which calls the remove_const() function
     Group_list_ptrs *group_list_ptrs = NULL;
@@ -780,9 +802,24 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // if execution fails.
     if (!unsupported_feature)
     {
-        // Most of optimizer_switch flags disabled in external_lock
-        join->optimization_state= JOIN::OPTIMIZATION_IN_PROGRESS;
-        join->optimize_inner();
+        disable_indices_for_CEJ(thd);
+
+        if (select_lex->handle_derived(thd->lex, DT_MERGE))
+        {
+            // early quit b/c of the error in handle_derived
+            return handler;
+        }
+
+        COND *conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
+        select_lex->optimize_unflattened_subqueries(false);
+    
+        if (conds)
+        {
+#ifdef DEBUG_WALK_COND
+            conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
+#endif
+            join->conds = conds;
+        }
 
         // Impossible HAVING or WHERE
         // TODO replace with function call
@@ -818,43 +855,18 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         }
     }
 
-
     if (!unsupported_feature)
     {
         handler= new ha_columnstore_select_handler(thd, select_lex);
-        // This is an ugly hack to call simplify_joins()
         mcs_handler_info mhi= mcs_handler_info(reinterpret_cast<void*>(handler), SELECT);
         // this::table is the place for the result set
         int rc= ha_cs_impl_pushdown_init(&mhi, handler->table);
 
-        // Return SH if query execution is fine or fallback is disabled
-        if (!rc || !get_fallback_knob(thd))
-            return handler;
-
-        // Reset the DA and restore optimizer flags
-        // to allow query to fallback to other handlers
-        if (thd->get_stmt_da()->is_error())
-        {
-            thd->get_stmt_da()->reset_diagnostics_area();
-            restore_optimizer_flags(thd);
+        // Return SH even if init fails b/c CS changed SELECT_LEX structures
+        // with simplify_joins_()
+        if (rc)
             unsupported_feature = true;
-        }
-    }
-
-    if (join->optimization_state != JOIN::NOT_OPTIMIZED)
-    {
-        if (!join->with_two_phase_optimization)
-        {
-            if (unsupported_feature && join->have_query_plan != JOIN::QEP_DELETED)
-            {
-                join->build_explain();
-            }
-            join->optimization_state= JOIN::OPTIMIZATION_DONE;
-        }
-        else
-        {
-            join->optimization_state= JOIN::OPTIMIZATION_PHASE_1_DONE;
-        }
+        return handler;
     }
 
     return NULL;

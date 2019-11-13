@@ -400,7 +400,7 @@ tpl_close ( cpsm_tplh_t* ntplh,
         // MCOL-1601 Dispose of unused empty RowGroup
         if (clear_scan_ctx)
         {
-            std::cout << "tpl_close() clear_scan_ctx read" << std::endl;
+            SMDEBUGLOG << "tpl_close() clear_scan_ctx read" << std::endl;
             bs = hndl->exeMgr->read();
         }
 
