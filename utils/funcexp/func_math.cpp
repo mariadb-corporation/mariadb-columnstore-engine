@@ -312,8 +312,6 @@ double Func_asin::getDoubleVal(Row& row,
     }
 }
 
-
-
 //
 //	atan
 //
@@ -383,7 +381,7 @@ double Func_atan::getDoubleVal(Row& row,
             // null value is indicated by isNull
             long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if (isNull || (value < -1.0 || value > 1.0))
+            if (isNull)
             {
                 isNull = true;
                 return doubleNullVal();
@@ -552,7 +550,7 @@ double Func_cos::getDoubleVal(Row& row,
             // null value is indicated by isNull
             long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if (isNull || (value < -1.0 || value > 1.0))
+            if (isNull)
             {
                 isNull = true;
                 return doubleNullVal();
@@ -1027,19 +1025,6 @@ double Func_log2::getDoubleVal(Row& row,
                 return doubleNullVal();
             }
 
-            if (parm.size() > 1 )
-            {
-                long double value2 = parm[1]->data()->getLongDoubleVal(row, isNull);
-
-                if (isNull || (value2 <= 0.0 || value == 1.0) )
-                {
-                    isNull = true;
-                    return doubleNullVal();
-                }
-
-                return log2(value2) / log(value);
-            }
-
             return log2(value);
         }
         break;
@@ -1283,7 +1268,7 @@ double Func_sin::getDoubleVal(Row& row,
             // null value is indicated by NaN
             long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if (isNull || value <= 0.0)
+            if (isNull)
             {
                 isNull = true;
                 return doubleNullVal();
@@ -1519,7 +1504,7 @@ double Func_tan::getDoubleVal(Row& row,
             // null value is indicated by NaN
             long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if (isNull || value <= 0.0)
+            if (isNull)
             {
                 isNull = true;
                 return doubleNullVal();
