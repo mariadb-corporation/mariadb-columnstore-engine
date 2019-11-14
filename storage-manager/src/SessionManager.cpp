@@ -51,6 +51,8 @@ namespace storagemanager
 SessionManager::SessionManager()
 {
     crp = ClientRequestProcessor::get();
+    socketCtrl[0] = -1;
+    socketCtrl[1] = -1;
 }
 
 SessionManager::~SessionManager()
@@ -164,7 +166,7 @@ int SessionManager::start()
                 {
                     //logger->log(LOG_DEBUG,"Error! revents = %d", fds[socketIncr].revents,);
                     if (fds[socketIncr].fd == -1)
-                        cout << "!= POLLIN, closing fd -1" << endl;
+                        logger->log(LOG_DEBUG,"!= POLLIN, closing fd -1");
                     close(fds[socketIncr].fd);
                     fds[socketIncr].fd = -1;
                     continue;
@@ -239,7 +241,7 @@ int SessionManager::start()
                                 if (fds[i].fd == socket)
                                 {
                                     if (socket == -1)
-                                        cout << "REMOVEFD told to remove fd -1" << endl;
+                                        logger->log(LOG_DEBUG,"REMOVEFD told to remove fd -1");
                                     close(socket);
                                     fds[i].fd = -1;
                                     break;
@@ -376,7 +378,7 @@ int SessionManager::start()
                     if (closeConn)
                     {
                         if (fds[socketIncr].fd == -1)
-                            cout << "closeConn closing fd -1" << endl;
+                            logger->log(LOG_DEBUG,"closeConn closing fd -1");
                         close(fds[socketIncr].fd);
                         fds[socketIncr].fd = -1;
                     }
