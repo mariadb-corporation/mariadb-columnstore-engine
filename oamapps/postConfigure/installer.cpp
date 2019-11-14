@@ -129,14 +129,12 @@ int main(int argc, char* argv[])
 
     string numBlocksPctParam = "";
     string totalUmMemoryParam = "";
-    if (argc >= 12) {
-        if (argc >= 14) {
-            if (string(argv[12]) != "-") {
-                numBlocksPctParam = argv[13];
-            }
-            if (string(argv[13]) != "-") {
-                totalUmMemoryParam = argv[14];
-            }
+    if (argc >= 14) {
+        if (string(argv[12]) != "-") {
+            numBlocksPctParam = argv[12];
+        }
+        if (string(argv[13]) != "-") {
+            totalUmMemoryParam = argv[13];
         }
     }
 
