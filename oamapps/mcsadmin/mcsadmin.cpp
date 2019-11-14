@@ -580,7 +580,6 @@ int processCommand(string* arguments)
         cout << arguments[0] << ": Unknown Command, type help for list of commands" << endl << endl;
         return 1;
     }
-
     switch ( CmdID )
     {
         case 0: // help
@@ -7938,8 +7937,73 @@ int processCommand(string* arguments)
             break;
         }
 
-        case 67: // AVAILABLE
+        case 67: // stopModule parameters moduleID
         {
+
+            if (arguments[1] == "")
+            {
+                // need arguments
+                cout << endl << "**** stopModule Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
+                break;
+            }
+
+            string moduleType = arguments[1].substr(0, MAX_MODULE_TYPE_SIZE);
+
+            //gracefulTemp = INSTALL;
+
+            // confirm request
+            if ( arguments[2] != "y" )
+            {
+                if (confirmPrompt("This command stops the processing of applications on a Module within the MariaDB ColumnStore System"))
+                    break;
+            }
+
+            //parse module names
+            DeviceNetworkConfig devicenetworkconfig;
+            DeviceNetworkList devicenetworklist;
+
+            boost::char_separator<char> sep(", ");
+            boost::tokenizer< boost::char_separator<char> > tokens(arguments[1], sep);
+
+            for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
+                    it != tokens.end();
+                    ++it)
+            {
+                devicenetworkconfig.DeviceName = *it;
+                devicenetworklist.push_back(devicenetworkconfig);
+            }
+
+            DeviceNetworkList::iterator pt = devicenetworklist.begin();
+            DeviceNetworkList::iterator endpt = devicenetworklist.end();
+
+            if ( devicenetworklist.empty() )
+            {
+                cout << endl << "No modules to stop." << endl << endl;
+                break;
+            }
+
+            // stop module
+            try
+            {
+                cout << endl << "   Stopping Module(s)" << endl;
+                oam.stopModule(devicenetworklist, gracefulTemp, ackTemp);
+                cout << "   Successful stop of Module(s) " << endl;
+            }
+            catch (exception& e)
+            {
+
+                string Failed = e.what();
+
+                if (Failed.find("Disabled") != string::npos)
+                    cout << endl << "   Successful stop of Module(s) " << endl;
+                else
+                {
+                    cout << endl << "**** stopModule Failed :  " << e.what() << endl;
+                    break;
+                }
+            }
+
+            break;
         }
 
 
