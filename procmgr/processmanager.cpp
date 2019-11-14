@@ -5462,11 +5462,95 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
     listPT = devicenetworklist.begin();
 
+    //distribute config file
+    distributeConfigFile("system");
+    distributeConfigFile("system", "ProcessConfig.xml");
+
     for ( ; listPT != devicenetworklist.end() ; listPT++)
     {
-        string moduleName = (*listPT).DeviceName;
+        string remoteModuleName = (*listPT).DeviceName;
+        string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+        HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+        string remoteModuleIP = (*pt1).IPAddr;
+        string remoteHostName = (*pt1).HostName;
 
-        processManager.configureModule(moduleName);
+        string dir = "/var/lib/columnstore/local/etc" + remoteModuleName;
+
+        cmd = "mkdir " + dir + " > /dev/null 2>&1";
+        system(cmd.c_str());
+
+        if ( remoteModuleType == "um" )
+        {
+            cmd = "cp /var/lib/columnstore/local/etc/um1/* " + dir + "/.";
+            system(cmd.c_str());
+        }
+        else if ( remoteModuleType == "pm" )
+        {
+            cmd = "cp /var/lib/columnstore/local/etc/pm1/* " + dir + "/.";
+            system(cmd.c_str());
+        }
+
+        log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+        //create module file
+        if ( !createModuleFile(remoteModuleName) )
+        {
+            log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
+
+        log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+        if ( remoteModuleType == "pm" )
+        {
+            //setup Standby OAM Parent, if needed
+            if ( config.OAMStandbyName() == oam::UnassignedName )
+                setStandbyModule(remoteModuleName, false);
+        }
+
+        string logFile = tmpLogDir + "/" + remoteModuleName + "_mcs_module_installer.log";
+        log.writeLog(__LINE__, "addModule - mcs_module_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+        cmd = "mcs_module_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " 1 >" + logFile;
+        log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+        int rtnCode = system(cmd.c_str());
+
+        if (WEXITSTATUS(rtnCode) != 0)
+        {
+            log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+            DeviceNetworkList devicenetworklistR;
+            DeviceNetworkConfig devicenetworkconfigR;
+            HostConfig hostconfig;
+
+            devicenetworkconfigR.DeviceName = remoteModuleName;
+
+            hostconfig.IPAddr = oam::UnassignedName;
+
+            hostconfig.HostName = oam::UnassignedName;
+            hostconfig.NicID = 1;
+            devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+            devicenetworklistR.push_back(devicenetworkconfigR);
+
+            processManager.removeModule(devicenetworklistR, false);
+
+            log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+            pthread_mutex_unlock(&THREAD_LOCK);
+            cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+            system(cmd.c_str());
+            processManager.setModuleState(remoteModuleName, oam::FAILED);
+            return API_FAILURE;
+        }
+        if (manualFlag)
+            //set new module to disable state if manual add
+            disableModule(remoteModuleName, true);
+
+        // add to monitor list
+        moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
+
+        processManager.configureModule(remoteModuleName);
     }
 
     //delay to give time for ProcMon to start after the config is sent and procmon restarts

@@ -284,7 +284,7 @@ int OamCache::getLocalPMId()
 {
     mutex::scoped_lock lk(cacheLock);
 
-    // This comes from the file /etc/columnstore/module, not from the xml.
+    // This comes from the file /var/lib/columnstore/local/module, not from the xml.
     // Thus, it's not refreshed during checkReload().
     if (mLocalPMId > 0)
     {
@@ -293,7 +293,7 @@ int OamCache::getLocalPMId()
 
     string localModule;
     string moduleType;
-    string fileName = "/etc/columnstore/module";
+    string fileName = "/var/lib/columnstore/local/module";
     ifstream moduleFile (fileName.c_str());
     char line[400];
 
@@ -337,7 +337,7 @@ string OamCache::getModuleName()
     if (!moduleName.empty())
         return moduleName;
 
-    string fileName = "/etc/columnstore/module";
+    string fileName = "/var/lib/columnstore/local/module";
     ifstream moduleFile(fileName.c_str());
     getline(moduleFile, moduleName);
     moduleFile.close();
