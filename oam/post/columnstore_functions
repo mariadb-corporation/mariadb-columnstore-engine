@@ -10,7 +10,7 @@ fi
 module_type()
 {
 (
-	sed -r 's/[0-9]+$//' /etc/columnstore/module
+	sed -r 's/[0-9]+$//' /var/lib/columnstore/local/module
 ) 2>/dev/null
 }
 
@@ -30,13 +30,13 @@ oidbitmapfile()
 module_name()
 {
 (
-	cat /etc/columnstore/module
+	cat /var/lib/columnstore/local/module
 ) 2>/dev/null
 }
 
 module_id()
 {
 (
-	sed -r 's/[a-zA-Z]//g' /etc/columnstore/module
+	sed -r 's/[a-zA-Z]//g' /var/lib/columnstore/local/module
 ) 2>/dev/null
 }

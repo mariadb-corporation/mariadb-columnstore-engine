@@ -2838,7 +2838,7 @@ oamModuleInfo_t Oam::getModuleInfo()
     int localModuleID;
 
     // Get Module Name from module-file
-    string fileName = "/etc/columnstore/module";
+    string fileName = "/var/lib/columnstore/local/module";
 
     ifstream oldFile (fileName.c_str());
 

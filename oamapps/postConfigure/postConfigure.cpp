@@ -3570,18 +3570,44 @@ int main(int argc, char* argv[])
 			}
     }
 
-    int thread_id = 0;
-
-    pthread_t thr[childmodulelist.size()];
-
-    /* create a thread_data_t argument array */
-    thread_data_t thr_data[childmodulelist.size()];
-
     string install = "y";
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
             pmNumber > 1 )
     {
+
+        ChildModuleList::iterator list1 = childmodulelist.begin();
+
+        for (; list1 != childmodulelist.end() ; list1++)
+        {
+            string remoteModuleName = (*list1).moduleName;
+            string remoteModuleIP = (*list1).moduleIP;
+            string remoteHostName = (*list1).hostName;
+            string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+            string debug_logfile;
+            string logfile;
+
+            if ( remote_installer_debug == "1" )
+            {
+                logfile = tmpDir + "/";
+                logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
+                debug_logfile = " > " + logfile;
+            }
+
+            cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+            if ( remote_installer_debug == "1" )
+                cout << "Install log file is located here: " + logfile << endl << endl;
+
+            cmd = "mcs_module_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + remote_installer_debug + " " + debug_logfile;
+
+            int rtnCode = system(cmd.c_str());
+            if (WEXITSTATUS(rtnCode) != 0)
+            {
+                cout << endl << "Error returned from mcs_module_installer.sh" << endl;
+                exit(1);
+            }
+        }
 
         //configure data redundancy
         if (DataRedundancy)
