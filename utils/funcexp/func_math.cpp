@@ -1386,7 +1386,7 @@ double Func_sqrt::getDoubleVal(Row& row,
             // null value is indicated by NaN
             long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if (isNull || value <= 0.0)
+            if (isNull || value < 0.0)
             {
                 isNull = true;
                 return doubleNullVal();
