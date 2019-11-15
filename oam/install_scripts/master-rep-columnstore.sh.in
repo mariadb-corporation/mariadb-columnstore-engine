@@ -29,7 +29,7 @@ done
 . @ENGINE_SUPPORTDIR@/columnstore_functions
 
 repUser="idbrep"
-password="Calpont1"
+password="C0lumnStore!"
 
 >${tmpdir}/master-rep-status-$hostipaddr.log
 
@@ -55,8 +55,8 @@ checkForError
 echo "Grant table access for $repUser for node $hostipaddr" >>${tmpdir}/master-rep-status-$hostipaddr.log
 cat >${tmpdir}/idb_master-rep.sql <<EOD
 use mysql
-grant all on *.* to '$repUser'@'$hostipaddr' identified by 'Calpont1';
-grant REPLICATION SLAVE on *.* to '$repUser'@'$hostipaddr' identified by 'Calpont1';
+grant all on *.* to '$repUser'@'$hostipaddr' identified by 'C0lumnStore!';
+grant REPLICATION SLAVE on *.* to '$repUser'@'$hostipaddr' identified by 'C0lumnStore!';
 EOD
 
 cat ${tmpdir}/idb_master-rep.sql >>${tmpdir}/master-rep-status-$hostipaddr.log
