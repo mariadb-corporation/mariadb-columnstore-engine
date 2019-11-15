@@ -119,6 +119,8 @@ SET(ignored
     "%ignore /usr/lib64/mysql"
     "%ignore /usr/lib64/mysql/plugin"
     "%ignore /etc/my.cnf.d"
+    "%ignore /var/lib"
+    "%ignore /var"
 )
 
 #SET(CPACK_RPM_SPEC_MORE_DEFINE "
