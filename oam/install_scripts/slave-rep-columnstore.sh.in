@@ -35,7 +35,7 @@ done
 . @ENGINE_SUPPORTDIR@/columnstore_functions
 
 repUser="idbrep"
-password="Calpont1"
+password="C0lumnStore!"
 
 >${tmpdir}/slave-rep-status.log
 
