@@ -77,11 +77,10 @@ start() {
 	return $RETVAL
 }	
 stop() {
-	echo "Shutting down MariaDB Columnstore Database Platform"
+    moduleName="$(cat /var/lib/columnstore/local/module)"
+	echo "Stopping module $moduleName of MariaDB Columnstore Database Platform"
 	touch ${tmpDir}/StopColumnstore
-	pkill ProcMon
-	pkill ProcMgr
-	clearShm
+    mcsadmin stopModule $moduleName y
 	RETVAL=$?
 	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
