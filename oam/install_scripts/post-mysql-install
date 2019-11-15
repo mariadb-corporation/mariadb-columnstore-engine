@@ -53,28 +53,25 @@ for arg in "$@"; do
 	fi
 done
 
-if [ -x mysql-Columnstore ]; then
+# Restart in the same way that mysqld will be started normally.
+mysql-Columnstore stop >/dev/null 2>&1
+sleep 2
+mysql-Columnstore start --skip-grant-tables
 
-	# Restart in the same way that mysqld will be started normally.
-	mysql-Columnstore stop >/dev/null 2>&1
-	sleep 2
-	mysql-Columnstore start --skip-grant-tables
+sleep 5
 
-	sleep 5
-	
-	# Install various Calpont stuff...
-	install_mcs_mysql.sh  --tmpdir=$tmpdir
-	checkForError
-	if [ $? -ne 0 ]; then
-		echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
-		mysql-Columnstore stop
-		sleep 2
-		exit 2;
-	fi
-
-	mysql-Columnstore stop
-
+# Install various Calpont stuff...
+install_mcs_mysql.sh  --tmpdir=$tmpdir
+checkForError
+if [ $? -ne 0 ]; then
+    echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+    mysql-Columnstore stop
+    sleep 2
+    exit 2;
 fi
+
+mysql-Columnstore stop
+
 
 exit 0
 
