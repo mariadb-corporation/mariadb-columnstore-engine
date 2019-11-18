@@ -539,6 +539,18 @@ int main(int argc, char* argv[])
         exit (1);
     }
 
+    char buf[512];
+    FILE *cmd_pipe = popen("pidof -s mysqld", "r");
+    fgets(buf, 512, cmd_pipe);
+    pid_t pid = strtoul(buf, NULL, 10);
+    pclose(cmd_pipe);
+
+    if (pid)
+    {
+        cout << "MariaDB Server is currently running on PID " << pid << ". Cannot run postConfigure whilst this is running. Exiting.." << endl;
+        exit (1);
+    }
+
     //check Config saved files
     if ( !checkSaveConfigFile())
     {
