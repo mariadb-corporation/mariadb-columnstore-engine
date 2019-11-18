@@ -3465,12 +3465,12 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 open("/dev/null", O_WRONLY);
                 open("/dev/null", O_WRONLY);
                 errno = 0;
-                execv(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
+                execvp(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
 
                 int execvErrno = errno;
 
                 ostringstream oss;
-                oss << " : execv error: cpimport.bin invocation failed; "
+                oss << " : execvp error: cpimport.bin invocation failed; "
                     << "(errno-" << errno << "); " << strerror(execvErrno) <<
                     "; Check file and try invoking locally.";
                 cout << oss.str();
