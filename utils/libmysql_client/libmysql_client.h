@@ -36,7 +36,7 @@ public:
     int init(const char*, unsigned int, const char*, const char*, const char*);
 
     // run the query
-    int run(const char* q);
+    int run(const char* q, bool resultExpected = true);
 
     void handleMySqlError(const char*, int);
 
