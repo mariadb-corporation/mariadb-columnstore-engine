@@ -51,7 +51,7 @@ expect {
 send_user "\n"
 
 send_user "Stop ColumnStore service                       "
-send "ssh -v $USERNAME@$SERVER 'columnstore stop'\n"
+send "ssh -v $USERNAME@$SERVER 'pkill ProcMon; pkill ProcMgr'\n"
 set timeout 60
 # check return
 expect {
@@ -116,7 +116,7 @@ send_user "\n"
 
 send_user "Start ColumnStore service                       "
 send_user " \n"
-send "ssh -v $USERNAME@$SERVER 'columnstore restart'\n"
+send "ssh -v $USERNAME@$SERVER 'columnstore start'\n"
 set timeout 60
 # check return
 expect {
