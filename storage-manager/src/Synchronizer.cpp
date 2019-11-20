@@ -322,11 +322,10 @@ void Synchronizer::syncNow()
 {
     boost::unique_lock<boost::mutex> lock(mutex);
 
-    // this is pretty hacky.  when time permits, implement something better.
-    //
-    // Issue all of the pendingOps for the given prefix
-    // recreate the threadpool (dtor returns once all jobs have finished)
-    // resume normal operation
+    // This should ensure that all pendingOps have been added as jobs
+    // and waits for them to complete. until pendingOps is empty.
+    // Used by the mcsadmin command suspendDatabaseWrites.
+    // Leaving S3 storage and local metadata directories sync'd for snapshot backups.
 
     blockNewJobs = true;
     while (pendingOps.size() != 0)
@@ -338,8 +337,6 @@ void Synchronizer::syncNow()
         lock.unlock();
         while (opsInProgress.size() > 0)
             boost::this_thread::sleep_for(boost::chrono::seconds(1));
-        if (pendingOps.size() != 0)
-            logger->log(LOG_DEBUG,"Synchronizer syncNow pendingOps not empty.");
         lock.lock();
     }
     blockNewJobs = false;
