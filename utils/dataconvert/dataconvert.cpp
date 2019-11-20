@@ -2011,7 +2011,7 @@ int64_t DataConvert::convertColumnTimestamp(
     unsigned int dataOrgLen,
     const std::string& timeZone )
 {
-
+    char tmbuf[64];
     std::string dataOrgTemp = dataOrg;
     if (dataOrgTemp.substr(0, 19) == "0000-00-00 00:00:00")
     {
@@ -2023,7 +2023,6 @@ int64_t DataConvert::convertColumnTimestamp(
     if (strcmp(dataOrg, "current_timestamp() ON UPDATE current_timestamp()") == 0)
     {
         struct timeval tv;
-        char tmbuf[64];
         gettimeofday(&tv, 0);
         MySQLTime time;
         gmtSecToMySQLTime(tv.tv_sec, time, timeZone);

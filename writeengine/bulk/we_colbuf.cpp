@@ -133,7 +133,7 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmptie
 
     if (nitems != 1)
     {
-        delete newBuf;
+        delete [] newBuf;
         return ERR_FILE_WRITE;
     }
 
@@ -141,7 +141,7 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmptie
     Stats::stopParseEvent(WE_STATS_WRITE_COL);
 #endif
 
-    delete newBuf;
+    delete [] newBuf;
     return NO_ERROR;
 }
 
