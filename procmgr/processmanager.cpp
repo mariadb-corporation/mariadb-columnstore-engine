@@ -2712,6 +2712,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     ByteStream::byte ackResponse = API_FAILURE;
                     log.writeLog(__LINE__,  "MSG RECEIVED: suspend database writes");
 
+                    string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+
                     // GRACEFUL_WAIT means that we are Suspending writes, but waiting for all
                     // transactions to finish or rollback as commanded. This is only set if there
                     // are, in fact, transactions active (or cpimport).
@@ -2783,6 +2785,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     {
                         ackResponse = API_FAILURE_DB_ERROR;
                         dbrm.setSystemSuspended(false);
+                    }
+
+                    if (storageType == "storagemanager")
+                    {
+                        string DBRMroot;
+                        oam.getSystemConfig("DBRMRoot", DBRMroot);
+
+                        string currentFileName = DBRMroot + "_current";
+                        IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
+                        fs.filesystemSync();
                     }
 
                     ackMsg.reset();

@@ -34,6 +34,7 @@ set(storagemanager_SRCS
     src/Utilities.cpp
     src/Ownership.cpp
     src/PrefixCache.cpp
+    src/SyncTask.cpp
     ../utils/common/crashtrace.cpp
 )
 

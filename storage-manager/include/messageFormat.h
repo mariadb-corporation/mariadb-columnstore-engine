@@ -82,7 +82,8 @@ enum Opcodes {
     TRUNCATE,
     LIST_DIRECTORY,
     PING,
-    COPY
+    COPY,
+    SYNC
 };
 
 /*
