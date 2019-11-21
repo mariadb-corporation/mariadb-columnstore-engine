@@ -241,6 +241,7 @@
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
 		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
+		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ModuleHeartbeatPeriod>10</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
 		<ProcessRestartCount>10</ProcessRestartCount>
@@ -486,7 +487,7 @@
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
 			files are left behind.  -->
-        <TempFilePath>/var/lib/columnstore/tmp</TempFilePath>
+        <TempFilePath>/var/lib/columnstore/tmp/cs-diskjoin</TempFilePath>
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>
