@@ -261,7 +261,8 @@ public:
     }
     uint32_t  	getJlMaxOutstandingRequests() const
     {
-        return  getUintVal(fJobListStr, "MaxOutstandingRequests", defaultMaxOutstandingRequests);
+        return  fJlMaxOutstandingRequests;
+        //getUintVal(fJobListStr, "MaxOutstandingRequests", defaultMaxOutstandingRequests);
     }
     uint32_t  	getJlJoinerChunkSize() const
     {
@@ -577,6 +578,7 @@ private:
     uint32_t fJlProcessorThreadsPerScan;
     uint32_t fJlNumScanReceiveThreads;
     uint8_t fTwNumThreads;
+    uint32_t fJlMaxOutstandingRequests;
 
     /* old HJ support */
     ResourceDistributor	fHJUmMaxMemorySmallSideDistributor;

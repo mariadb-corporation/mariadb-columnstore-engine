@@ -477,8 +477,8 @@
 	<HashJoin>
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
-		<FifoSizeLargeSide>128</FifoSizeLargeSide>
-		<PmMaxMemorySmallSide>64M</PmMaxMemorySmallSide><!-- divide by 48 to get element count -->
+		<FifoSizeLargeSide>64</FifoSizeLargeSide>
+		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide><!-- divide by 48 to get element count -->
 		<TotalUmMemory>25%</TotalUmMemory>
 		<TotalPmUmMemory>10%</TotalPmUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
@@ -491,7 +491,7 @@
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
-		<FifoSize>32</FifoSize>
+		<FifoSize>16</FifoSize>
 		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be
 			  less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
 		<!--  ProcessorThreadsPerScan is the number of jobs issued to process
@@ -501,7 +501,7 @@
 			  ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
 			  as many threads are available across all PMs.  -->
 		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
-		<MaxOutstandingRequests>20</MaxOutstandingRequests>
+		<!-- <MaxOutstandingRequests>20</MaxOutstandingRequests> -->
 		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
 	<TupleWSDL>
