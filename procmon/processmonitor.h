@@ -542,6 +542,7 @@ public:
     	*/
     int glusterUnassign(std::string dbrootID);
 
+    int syncFS();
     /**
     * return the process list
     */

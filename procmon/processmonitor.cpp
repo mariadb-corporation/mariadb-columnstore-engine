@@ -2072,6 +2072,19 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             break;
         }
 
+        case SYNCFSALL:
+        {
+            log.writeLog(__LINE__,  "MSG RECEIVED: SYNC FileSystem...");
+            int requestStatus = API_SUCCESS;
+            requestStatus = syncFS();
+            ackMsg << (ByteStream::byte) ACK;
+            ackMsg << (ByteStream::byte) SHUTDOWNMODULE;
+            ackMsg << (ByteStream::byte) API_SUCCESS;
+            mq.write(ackMsg);
+
+            log.writeLog(__LINE__, "SYNCFSALL: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
+            break;
+        }
 
         default:
             break;
@@ -6185,6 +6198,22 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
         }
     }
 
+    return oam::API_SUCCESS;
+}
+
+
+int ProcessMonitor::syncFS()
+{
+    Oam oam;
+
+    string DBRMroot;
+    oam.getSystemConfig("DBRMRoot", DBRMroot);
+
+    string currentFileName = DBRMroot + "_current";
+    IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
+    bool success = fs.filesystemSync();
+    if (!success)
+        return oam::API_FAILURE;
     return oam::API_SUCCESS;
 }
 

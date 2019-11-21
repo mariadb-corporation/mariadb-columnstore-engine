@@ -2794,7 +2794,78 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         string currentFileName = DBRMroot + "_current";
                         IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
-                        fs.filesystemSync();
+
+                        if (!fs.filesystemSync())
+                        {
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) API_FAILURE;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "SUSPENDWRITES: API_FAILURE filestemSync()",LOG_TYPE_ERROR);
+                            break;
+                        }
+                        //sync fs on all pm nodes if up
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
+                                continue;
+
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                int opState = oam::ACTIVE;
+                                bool degraded;
+
+                                try
+                                {
+                                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                                }
+                                catch (...)
+                                {
+                                    log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                                }
+
+                                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                    continue;
+
+                                ByteStream msg;
+                                ByteStream::byte requestID = SYNCFSALL;
+
+                                msg << requestID;
+
+                                int returnStatus = processManager.sendMsgProcMon( (*pt).DeviceName, msg, requestID );
+
+                                if (returnStatus != API_SUCCESS)
+                                {
+                                    ackMsg << (ByteStream::byte) oam::ACK;
+                                    ackMsg << actionType;
+                                    ackMsg << target;
+                                    ackMsg << (ByteStream::byte) API_FAILURE;
+
+                                    try
+                                    {
+                                        fIos.write(ackMsg);
+                                    }
+                                    catch (...) {}
+
+                                    log.writeLog(__LINE__, "SUSPENDWRITES: API_FAILURE filestemSync() on module " + (*pt).DeviceName,LOG_TYPE_ERROR);
+                                    break;
+                                }
+                            }
+                        }
                     }
 
                     ackMsg.reset();

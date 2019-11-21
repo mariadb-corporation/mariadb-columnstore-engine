@@ -3232,6 +3232,10 @@ void Oam::SuspendWrites(GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag)
             cout << endl << "   Suspension of database writes canceled" << endl << endl;
             break;
 
+        case API_FAILURE:
+            cout << endl << "   Suspension of database writes failed: Filesystem sync failed" << endl << endl;
+            break;
+
         default:
             exceptionControl("suspendWrites", returnStatus);
             break;
