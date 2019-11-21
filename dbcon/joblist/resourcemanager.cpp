@@ -87,7 +87,8 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
                                        0),
     fHJPmMaxMemorySmallSideSessionMap(
         getUintVal(fHashJoinStr, "PmMaxMemorySmallSide", defaultHJPmMaxMemorySmallSide)),
-    isExeMgr(runningInExeMgr)
+    isExeMgr(runningInExeMgr),
+    fJlMaxOutstandingRequests(defaultMaxOutstandingRequests)
 {
     int temp;
     int configNumCores = -1;
@@ -127,8 +128,26 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
 
     temp = getIntVal(fJobListStr, "ProcessorThreadsPerScan", -1);
 
+
     if (temp > 0)
         fJlProcessorThreadsPerScan = temp;
+
+    temp = getIntVal(fJobListStr, "MaxOutstandingRequests", -1);
+
+    if (temp > 0)
+        fJlMaxOutstandingRequests = temp;
+    else
+    {
+        oam::Oam oam;
+        oam::ModuleTypeConfig moduletypeconfig;
+        oam.getSystemConfig("pm", moduletypeconfig);
+        const auto temp = moduletypeconfig.ModuleCount * fNumCores * 4 / fJlProcessorThreadsPerScan;
+
+        if (temp > defaultMaxOutstandingRequests)
+        {
+            fJlMaxOutstandingRequests = temp;
+        }        
+    }
 
     temp = getIntVal(fJobListStr, "NumScanReceiveThreads", -1);
 
@@ -140,7 +159,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     if (temp > 0)
         fTwNumThreads = temp;
 
-    pmJoinMemLimit = getIntVal(fHashJoinStr, "PmMaxMemorySmallSide",
+    pmJoinMemLimit = getUintVal(fHashJoinStr, "PmMaxMemorySmallSide",
                                defaultHJPmMaxMemorySmallSide);
 
     // Need to use different limits if this instance isn't running on the UM,
@@ -200,10 +219,12 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     nt = fConfig->getConfig("RowAggregation", "RowAggrThreads");
 
     if (nt.empty())
-        if ( numCores() < 4 )
+    {
+        if ( numCores() > 0 )
             fAggNumThreads = numCores();
         else
-            fAggNumThreads = 4;
+            fAggNumThreads = 1;
+    }
     else
         fAggNumThreads = fConfig->uFromText(nt);
 
@@ -213,7 +234,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         fAggNumBuckets = fAggNumThreads * 4;
     else
         fAggNumBuckets = fConfig->uFromText(nb);
-
+    
     nr = fConfig->getConfig("RowAggregation", "RowAggrRowGroupsPerThread");
 
     if (nr.empty())

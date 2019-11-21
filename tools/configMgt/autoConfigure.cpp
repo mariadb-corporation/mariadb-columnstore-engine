@@ -2122,7 +2122,6 @@ int main(int argc, char* argv[])
     {
         ColScanReadAheadBlocks = sysConfigOld->getConfig("PrimitiveServers", "ColScanReadAheadBlocks");
         PrefetchThreshold = sysConfigOld->getConfig("PrimitiveServers", "PrefetchThreshold");
-        MaxOutstandingRequests = sysConfigOld->getConfig("JobList", "MaxOutstandingRequests");
         PmMaxMemorySmallSide = sysConfigOld->getConfig("HashJoin", "PmMaxMemorySmallSide");
         ThreadPoolSize = sysConfigOld->getConfig("JobList", "ThreadPoolSize");
     }
@@ -2133,7 +2132,6 @@ int main(int argc, char* argv[])
     {
         sysConfigNew->setConfig("PrimitiveServers", "ColScanReadAheadBlocks", ColScanReadAheadBlocks);
         sysConfigNew->setConfig("PrimitiveServers", "PrefetchThreshold", PrefetchThreshold);
-        sysConfigNew->setConfig("JobList", "MaxOutstandingRequests", MaxOutstandingRequests);
         sysConfigNew->setConfig("HashJoin", "PmMaxMemorySmallSide", PmMaxMemorySmallSide);
         sysConfigNew->setConfig("JobList", "ThreadPoolSize", ThreadPoolSize);
     }
