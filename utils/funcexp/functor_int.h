@@ -365,6 +365,23 @@ public:
 };
 
 
+/** @brief Func_bit_count class
+  */
+class Func_bit_count : public Func_Int
+{
+public:
+    Func_bit_count() : Func_Int("bit_count") {}
+    virtual ~Func_bit_count() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
 /** @brief Func_hour class
   */
 class Func_hour : public Func_Int
