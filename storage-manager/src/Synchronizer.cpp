@@ -299,22 +299,23 @@ void Synchronizer::periodicSync()
 void Synchronizer::syncNow(const bf::path &prefix)
 {
     boost::unique_lock<boost::mutex> lock(mutex);
-    
-    // this is pretty hacky.  when time permits, implement something better.
-    //
-    // Issue all of the pendingOps for the given prefix
-    // recreate the threadpool (dtor returns once all jobs have finished)
-    // resume normal operation
-    
+
+    // This should ensure that all pendingOps have been added as jobs
+    // and waits for them to complete. until pendingOps is empty.
+    // this should be redone to only remove items of given prefix eventually
+
     blockNewJobs = true;
-    for (auto &job : pendingOps)
-        if (job.first.find(prefix.string()) == 0)
+    while (pendingOps.size() != 0 && opsInProgress.size() != 0)
+    {
+        for (auto &job : pendingOps)
             makeJob(job.first);
-    uncommittedJournalSize[prefix] = 0;
-    lock.unlock();
-    threadPool.reset(new ThreadPool());
-    threadPool->setMaxThreads(maxUploads);
-    lock.lock();
+        for (auto it = uncommittedJournalSize.begin(); it != uncommittedJournalSize.end(); ++it)
+            it->second = 0;
+        lock.unlock();
+        while (opsInProgress.size() > 0)
+            boost::this_thread::sleep_for(boost::chrono::seconds(1));
+        lock.lock();
+    }
     blockNewJobs = false;
 }
 
@@ -328,7 +329,7 @@ void Synchronizer::syncNow()
     // Leaving S3 storage and local metadata directories sync'd for snapshot backups.
 
     blockNewJobs = true;
-    while (pendingOps.size() != 0)
+    while (pendingOps.size() != 0 && opsInProgress.size() != 0)
     {
         for (auto &job : pendingOps)
             makeJob(job.first);
