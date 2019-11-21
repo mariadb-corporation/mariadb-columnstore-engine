@@ -432,26 +432,9 @@ public:
     int processRestarted( std::string processName, bool manual = true );
 
     /**
-     *@brief  update crontab to have logs archived at midnight
-     */
-
-    int changeCrontab();
-
-    /**
-     *@brief  Update Transaction Log
-     */
-
-    int changeTransactionLog();
-
-    /**
      *@brief update Core Dump configuration
      */
     int updateCore(std::string action);
-
-    /**
-     *@brief setup Tranaction Logging
-     */
-    void setTransactionLog(bool action);
 
     /**
      *@brief Remove XM ProcMon setup
@@ -467,11 +450,6 @@ public:
      *@brief Runs DB sanity test
      */
     int runStartupTest();
-
-    /**
-     *@brief Runs HDFS sanity test
-     */
-    int runHDFSTest();
 
     /**
     *@brief Update Calpont Config File

@@ -469,16 +469,8 @@ void WESplitterApp::invokeCpimport()
     boost::uuids::uuid u = boost::uuids::random_generator()();
     fCmdArgs.setJobUUID(u);
 
-    //BUG 4361 - check cpimport.bin is available or not
-    std::string aCpiBinFile = getCalpontHome() + "/cpimport.bin";			//BUG 4361
-
-    if (access(aCpiBinFile.c_str(), X_OK) != 0)
-        throw runtime_error("Error: Missing File " + aCpiBinFile);
-
     fCmdArgs.setMode(3);
     std::string aCmdLineStr = fCmdArgs.getCpImportCmdLine();
-
-    updateCmdLineWithPath(aCmdLineStr);
 
     if (fDh.getDebugLvl())
         cout << "CPI CmdLineArgs : " << aCmdLineStr << endl;
@@ -503,88 +495,11 @@ void WESplitterApp::invokeCpimport()
 
     Cmds.push_back(0);    //null terminate
 
-    int aRet = execv(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
+    int aRet = execvp(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
 
     if (fDh.getDebugLvl())
         cout << "Return status of cpimport is " << aRet << endl;
 
-}
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-std::string WESplitterApp::getCalpontHome()
-{
-    string calpontDir = config::Config::makeConfig()->getConfig(
-                            "SystemConfig", "CalpontHome");
-
-    if (0 == calpontDir.length())
-    {
-        calpontDir = startup::StartUp::installDir() + "/bin";
-    }
-    else
-    {
-        calpontDir += "/bin";
-    }
-
-    return calpontDir;
-}
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-std::string WESplitterApp::getPrgmPath(std::string& PrgmName)
-{
-    std::string cpimportPath = getCalpontHome();
-    cpimportPath += "/";
-    cpimportPath += PrgmName;
-    return cpimportPath;
-}
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-
-void WESplitterApp::updateCmdLineWithPath(string& CmdLine)
-{
-    std::istringstream iSs(CmdLine);
-    std::ostringstream oSs;
-    std::string aArg;
-    int aCount = 0;
-
-    while (iSs >> aArg)
-    {
-        if (0 == aCount)
-        {
-            string aPrgmPath = getPrgmPath(aArg);
-            oSs << aPrgmPath;
-        }
-        else
-        {
-            oSs << " ";
-            oSs << aArg;
-
-        }
-
-        ++aCount;
-    }
-
-    CmdLine = oSs.str();
 }
 
 //-----------------------------------------------------------------------------

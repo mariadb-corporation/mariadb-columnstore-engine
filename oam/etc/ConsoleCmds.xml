@@ -423,6 +423,9 @@
 		<Arg1>Required: Module-name(s) being placed enable</Arg1>
 	</Cmd66>
 	<Cmd67>
-		<Name>AVAILABLE</Name>
+        <Name>stopModule</Name>
+        <Desc1>Stop a module</Desc1>
+        <Desc2>Used by columnstore stop script to stop individual modules.</Desc2>
+        <Arg1>Required: Module-name being stopped</Arg1>
 	</Cmd67>
 </Columnstore>

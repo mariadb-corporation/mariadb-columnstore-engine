@@ -22,5 +22,5 @@ add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
 
 set_target_properties(regr_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS regr_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+install(TARGETS regr_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
 

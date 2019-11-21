@@ -286,7 +286,7 @@ bool WEDataLoader::setupCpimport() // fork the cpimport
         for (int i = aStartFD; i < aEndFD; i++) close(i);
 
         errno = 0;
-        int aRet = execv(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
+        int aRet = execvp(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
         //int aRet = execvp(Cmds[0], &Cmds[0]);	//NOTE - works if $PATH has cpimport
 
         int execvErrno = errno;
@@ -561,85 +561,6 @@ void WEDataLoader::str2Argv(std::string CmdLine, std::vector<char*>& V)
     }
 
     V.push_back(0); //null terminate
-}
-
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-std::string WEDataLoader::getCalpontHome()
-{
-    string calpontDir = config::Config::makeConfig()->getConfig(
-                            "SystemConfig", "CalpontHome");
-
-    if (0 == calpontDir.length())
-    {
-        calpontDir = startup::StartUp::installDir() + "/bin";
-    }
-    else
-    {
-        calpontDir += "/bin";
-    }
-
-    return calpontDir;
-}
-
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-std::string WEDataLoader::getPrgmPath(std::string& PrgmName)
-{
-    std::string cpimportPath = getCalpontHome();
-    cpimportPath += "/";
-    cpimportPath += PrgmName;
-    return cpimportPath;
-}
-
-//-----------------------------------------------------------------------------
-/**
- *
- * @brief 	Include the absolute path to prgm name, which is
- * @brief 	the first element in the vector
- * @param 	V vector which contains each element of argv
- *
- **/
-
-void WEDataLoader::updateCmdLineWithPath(string& CmdLine)
-{
-    std::istringstream iSs(CmdLine);
-    std::ostringstream oSs;
-    std::string aArg;
-    int aCount = 0;
-
-    while (iSs >> aArg)
-    {
-        if (0 == aCount)
-        {
-            string aPrgmPath = getPrgmPath(aArg);
-            oSs << aPrgmPath;
-        }
-        else
-        {
-            oSs << " ";
-            oSs << aArg;
-
-        }
-
-        ++aCount;
-    }
-
-    CmdLine = oSs.str();
 }
 
 //-----------------------------------------------------------------------------
@@ -1207,8 +1128,6 @@ void WEDataLoader::onReceiveCmdLineArgs(ByteStream& Ibs)
 {
     Ibs >> fCmdLineStr;
     cout << "CMD LINE ARGS came in " << fCmdLineStr << endl;
-    updateCmdLineWithPath(fCmdLineStr);
-    cout << "Updated CmdLine : " << fCmdLineStr << endl;
 
     if (fpSysLog)
     {

@@ -41,42 +41,6 @@ using namespace std;
 
 namespace startup
 {
-/* static */
-mutex StartUp::fInstallDirLock;
-/* static */
-string* StartUp::fInstallDirp = 0;
-
-/* static */
-const string StartUp::installDir()
-{
-    mutex::scoped_lock lk(fInstallDirLock);
-
-    if (fInstallDirp)
-        return *fInstallDirp;
-
-#ifdef _MSC_VER
-    fInstallDirp = new string("C:\\Calpont");
-    string cfStr = IDBreadRegistry("");
-
-    if (!cfStr.empty())
-        *fInstallDirp = cfStr;
-
-#else
-    fInstallDirp = new string("/usr/local/mariadb/columnstore");
-    //See if we can figure out the install dir in Linux...
-    //1. env var COLUMNSTORE_INSTALL_DIR
-    const char* p = 0;
-    p = getenv("COLUMNSTORE_INSTALL_DIR");
-
-    if (p && *p)
-        *fInstallDirp = p;
-
-    //2. up one level from current binary location?
-    //3. fall back to /usr/local/mariadb/columnstore
-#endif
-
-    return *fInstallDirp;
-}
 
 /* static */
 mutex StartUp::fTmpDirLock;

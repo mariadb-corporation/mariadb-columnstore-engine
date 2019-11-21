@@ -65,9 +65,6 @@ public:
     void pushData2Cpimport(ByteStream& Ibs);	// push data to cpimport from the queue
     void closeWritePipe();
     void str2Argv(std::string CmdLine, std::vector<char*>& V);
-    std::string getCalpontHome();
-    std::string getPrgmPath(std::string& PrgmName);
-    void updateCmdLineWithPath(std::string& CmdLine);
 
 
 public:

@@ -119,7 +119,7 @@ int main(int argc, char** argv)
 
     if (!dflg && !parentOAMModuleFlag)
     {
-        cerr << "Exiting, setConfig can only be run on the Active "
+        cerr << "Exiting, mcsSetConfig can only be run on the Active "
              "OAM Parent Module '" << parentOAMModule << "'" << endl;
         return 2;
     }

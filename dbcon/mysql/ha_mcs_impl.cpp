@@ -3209,7 +3209,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             //cout << "current set up is usecpimport:delimiter = " << (int)ci->useCpimport<<":"<<	ci->delimiter <<endl;
             //set up for cpimport
             std::vector<char*> Cmds;
-            std::string aCmdLine(startup::StartUp::installDir());
+            std::string aCmdLine;
             std::string aTmpDir(startup::StartUp::tmpDir());
 
             //If local module type is not PM and Local PM query is set, error out
@@ -3234,18 +3234,18 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 else
                 {
 #ifdef _MSC_VER
-                    aCmdLine = aCmdLine + "/bin/cpimport.exe -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
+                    aCmdLine = "cpimport.exe -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #else
-                    aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -P " + boost::to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -T " + thd->variables.time_zone->get_name()->ptr() + " -E " + escapechar + ci->enclosed_by + " ";
+                    aCmdLine = "cpimport -m 1 -N -P " + boost::to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -T " + thd->variables.time_zone->get_name()->ptr() + " -E " + escapechar + ci->enclosed_by + " ";
 #endif
                 }
             }
             else
             {
 #ifdef _MSC_VER
-                aCmdLine = aCmdLine + "/bin/cpimport.exe -N -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
+                aCmdLine = "cpimport.exe -N -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #else
-                aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -s " + ci->delimiter + " -e 0" + " -T " + thd->variables.time_zone->get_name()->ptr() + " -E " + escapechar + ci->enclosed_by + " ";
+                aCmdLine = std::string("cpimport -m 1 -N -s ") + ci->delimiter + " -e 0" + " -T " + thd->variables.time_zone->get_name()->ptr() + " -E " + escapechar + ci->enclosed_by + " ";
 #endif
             }
 
@@ -3465,12 +3465,12 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 open("/dev/null", O_WRONLY);
                 open("/dev/null", O_WRONLY);
                 errno = 0;
-                execv(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
+                execvp(Cmds[0], &Cmds[0]);	//NOTE - works with full Path
 
                 int execvErrno = errno;
 
                 ostringstream oss;
-                oss << " : execv error: cpimport.bin invocation failed; "
+                oss << " : execvp error: cpimport.bin invocation failed; "
                     << "(errno-" << errno << "); " << strerror(execvErrno) <<
                     "; Check file and try invoking locally.";
                 cout << oss.str();

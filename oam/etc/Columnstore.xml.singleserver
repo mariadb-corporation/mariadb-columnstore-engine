@@ -226,9 +226,9 @@
 		-->
 		<!-- Warning: Do not change this value once database is built -->
 		<DBRootCount>1</DBRootCount>
-		<DBRoot1>$INSTALLDIR/data1</DBRoot1>
-		<DBRMRoot>$INSTALLDIR/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
-		<TableLockSaveFile>$INSTALLDIR/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
+        <DBRoot1>/var/lib/columnstore/data1</DBRoot1>
+        <DBRMRoot>/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
+        <TableLockSaveFile>/var/lib/columnstore/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
 		<DBRMTimeOut>20</DBRMTimeOut> <!-- in seconds -->
 		<DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
@@ -241,7 +241,6 @@
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
 		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
-		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ModuleHeartbeatPeriod>10</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
 		<ProcessRestartCount>10</ProcessRestartCount>
@@ -334,11 +333,11 @@
 	</SystemExtDeviceConfig>
 	<SessionManager>
 		<MaxConcurrentTransactions>1000</MaxConcurrentTransactions>
-		<SharedMemoryTmpFile>$INSTALLDIR/data1/systemFiles/dbrm/CalpontShm</SharedMemoryTmpFile>
-		<TxnIDFile>$INSTALLDIR/data1/systemFiles/dbrm/SMTxnID</TxnIDFile>
+        <SharedMemoryTmpFile>/var/lib/columnstore/data1/systemFiles/dbrm/CalpontShm</SharedMemoryTmpFile>
+        <TxnIDFile>/var/lib/columnstore/data1/systemFiles/dbrm/SMTxnID</TxnIDFile>
 	</SessionManager>
 	<SessionMonitor>
-		<SharedMemoryTmpFile>$INSTALLDIR/data1/systemFiles/dbrm/CalpontSessionMonitorShm</SharedMemoryTmpFile>
+        <SharedMemoryTmpFile>/var/lib/columnstore/data1/systemFiles/dbrm/CalpontSessionMonitorShm</SharedMemoryTmpFile>
 		<TransactionAgeLimit>10</TransactionAgeLimit>
 	</SessionMonitor>
 	<VersionBuffer> 
@@ -351,13 +350,13 @@
 		It should be relocated to $INSTALLDIR/share/oidbitmap
 		on the production machine-->
 		<!-- Do not change this file after database built	 -->
-		<OIDBitmapFile>$INSTALLDIR/data1/systemFiles/dbrm/oidbitmap</OIDBitmapFile>
+        <OIDBitmapFile>/var/lib/columnstore/data1/systemFiles/dbrm/oidbitmap</OIDBitmapFile>
 		<!-- Do not change this value after database built	 -->
 		<FirstOID>3000</FirstOID>
 	</OIDManager>
 	<WriteEngine>
-		<BulkRoot>$INSTALLDIR/data/bulk</BulkRoot>
-		<BulkRollbackDir>$INSTALLDIR/data/bulk/rollback</BulkRollbackDir>
+        <BulkRoot>/var/lib/columnstore/data/bulk</BulkRoot>
+        <BulkRollbackDir>/var/lib/columnstore/data/bulk/rollback</BulkRollbackDir>
 		<MaxFileSystemDiskUsagePct>98</MaxFileSystemDiskUsagePct>
 		<CompressedPaddingBlocks>1</CompressedPaddingBlocks> <!-- Number of blocks used to pad compressed chunks -->
 	</WriteEngine>
@@ -487,7 +486,7 @@
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
 			files are left behind.  -->
-		<TempFilePath>$INSTALLDIR/tmp</TempFilePath>
+        <TempFilePath>/var/lib/columnstore/tmp</TempFilePath>
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>

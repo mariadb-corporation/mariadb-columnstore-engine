@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <algorithm>
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -108,6 +109,8 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
     int64_t val1 = -1, val2 = -1;
     bool isDate1 = false, isDate2 = false;
+    bool isTime1 = false, isTime2 = false;
+    std::string text;
 
     switch (type1)
     {
@@ -117,9 +120,12 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             break;
 
         case execplan::CalpontSystemCatalog::TIME:
+            isTime1 = true;
         case execplan::CalpontSystemCatalog::DATETIME:
-            // Diff between time and datetime returns NULL in MariaDB
-            if (type1 != type2)
+             // Diff between time and datetime returns NULL in MariaDB
+            if ((type2 == execplan::CalpontSystemCatalog::TIME ||
+                 type2 == execplan::CalpontSystemCatalog::DATETIME) &&
+                 type1 != type2)
             {
                 isNull = true;
                 break;
@@ -155,7 +161,9 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
-            val1 = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull), &isDate1);
+            text = parm[0]->data()->getStrVal(row, isNull);
+            isTime1 = std::count(text.begin(), text.end(), '-') <= 1; // Time can have at most 1 dash (signifies negative)
+            val1 = dataconvert::DataConvert::stringToDatetime(text, &isDate1);
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -190,6 +198,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             break;
 
         case execplan::CalpontSystemCatalog::TIME:
+            isTime2 = true;
         case execplan::CalpontSystemCatalog::DATETIME:
             val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
             break;
@@ -216,7 +225,9 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
-            val2 = dataconvert::DataConvert::stringToDatetime(parm[1]->data()->getStrVal(row, isNull), &isDate2);
+            text = parm[1]->data()->getStrVal(row, isNull);
+            isTime2 = std::count(text.begin(), text.end(), '-') <= 1; // Time can have at most 1 dash (signifies negative)
+            val2 = dataconvert::DataConvert::stringToDatetime(text, &isDate2);
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -249,8 +260,8 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         return "";
     }
 
-    // both date format or both datetime format
-    if ((isDate1 && isDate2) || (!isDate1 && !isDate2))
+    // both date format or both datetime format. Diff between time and datetime returns NULL in MariaDB
+    if ((isDate1 && isDate2) || ((!isDate1 && !isDate2) && (isTime1 == isTime2)))
         return helpers::timediff( val1, val2);
 
     isNull = true;

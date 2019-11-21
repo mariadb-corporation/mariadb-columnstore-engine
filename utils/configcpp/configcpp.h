@@ -220,7 +220,7 @@ private:
 
     /** @brief ctor with config file specified
     */
-    Config(const std::string& configFile, const std::string& installDir);
+    Config(const std::string& configFile);
 
     static configMap_t fInstanceMap;
     static boost::mutex fInstanceMapMutex;
@@ -230,8 +230,7 @@ private:
     xmlDocPtr fDoc;
     const std::string fConfigFile;
     time_t fMtime;
-    mutable boost::mutex fLock;
-    const std::string fInstallDir;
+    mutable boost::recursive_mutex fLock;
     XMLParser fParser;
 
 };

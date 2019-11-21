@@ -191,9 +191,6 @@ bool amazon_quick_install = false;
 bool doNotResolveHostNames = false;
 bool resolveHostNamesToReverseDNSNames = false;
 
-string DataFileEnvFile;
-
-string installDir;
 string tmpDir;
 string HOME = "/root";
 string SUDO = "";
@@ -236,37 +233,6 @@ int main(int argc, char* argv[])
     // hidden options
     // -f for force use nodeps on rpm install
     // -o to prompt for process to start offline
-
-    //default
-    installDir = installDir + "";
-    //see if we can determine our own location
-    ostringstream oss;
-    oss << "/proc/" << getpid() << "/exe";
-    ssize_t rlrc;
-    const size_t psz = PATH_MAX;
-    char thisexepath[psz + 1];
-    memset(thisexepath, 0, psz + 1);
-    rlrc = readlink(oss.str().c_str(), thisexepath, psz);
-
-    if (rlrc > 0)
-    {
-        thisexepath[rlrc] = 0;
-        //should look something like '/usr/local/mariadb/columnstore/bin/postConfigure'
-        char* ptr;
-        ptr = strrchr(thisexepath, '/');
-
-        if (ptr)
-        {
-            *ptr = 0;
-            ptr = strrchr(thisexepath, '/');
-
-            if (ptr)
-            {
-                *ptr = 0;
-                installDir = thisexepath;
-            }
-        }
-    }
 
     //check if root-user
     int user;
@@ -320,7 +286,6 @@ int main(int argc, char* argv[])
 			cout << "   -qs Quick Install - Single Server" << endl;
 			cout << "   -qm Quick Install - Multi Server" << endl;
             cout << "   -port MariaDB ColumnStore Port Address" << endl;
-            cout << "   -i  Non-root Install directory, Only use for non-root installs" << endl;
 			cout << "   -sn System Name" << endl;
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
@@ -410,17 +375,6 @@ int main(int argc, char* argv[])
                 cout << "   ERROR: Invalid MariaDB ColumnStore Port ID supplied, must be between 1000-9999" << endl;
                 exit (1);
             }
-        }
-        else if( string("-i") == argv[i] )
-        {
-            i++;
-            if (i >= argc )
-            {
-                cout << "   ERROR: Path not provided" << endl;
-                exit (1);
-            }
-
-            installDir = argv[i];
         }
         else if( string("-sn") == argv[i] )
         {
@@ -532,12 +486,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (installDir[0] != '/')
-    {
-        cout << "   ERROR: Install dir '" << installDir << "' is not absolute" << endl;
-        exit(1);
-    }
-
     if ( oldFileName == oam::UnassignedName )
         oldFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave";
 
@@ -588,6 +536,18 @@ int main(int argc, char* argv[])
     if (oam.checkSystemRunning())
     {
         cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
+        exit (1);
+    }
+
+    char buf[512];
+    FILE *cmd_pipe = popen("pidof -s mysqld", "r");
+    fgets(buf, 512, cmd_pipe);
+    pid_t pid = strtoul(buf, NULL, 10);
+    pclose(cmd_pipe);
+
+    if (pid)
+    {
+        cout << "MariaDB Server is currently running on PID " << pid << ". Cannot run postConfigure whilst this is running. Exiting.." << endl;
         exit (1);
     }
 
@@ -745,7 +705,7 @@ int main(int argc, char* argv[])
     // run columnstore.cnf upgrade script
     if ( reuseConfig == "y" )
     {
-        cmd = installDir + "/bin/mycnfUpgrade  > " + tmpDir + "/mycnfUpgrade.log 2>&1";
+        cmd = "mycnfUpgrade  > " + tmpDir + "/mycnfUpgrade.log 2>&1";
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
@@ -970,7 +930,7 @@ int main(int argc, char* argv[])
             totalUmMemoryParam = "-";
         }
 
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + numBlocksPctParam + " " + totalUmMemoryParam;
+		cmd = "columnstore_installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + numBlocksPctParam + " " + totalUmMemoryParam;
 		system(cmd.c_str());
 		exit(0);
 	}
@@ -1105,9 +1065,9 @@ int main(int argc, char* argv[])
 
     cout << endl;
     //cleanup/create local/etc  directory
-    cmd = "rm -rf " + installDir + "/local/etc > /dev/null 2>&1";
+    cmd = "rm -rf /var/lib/columnstore/local/etc > /dev/null 2>&1";
     system(cmd.c_str());
-    cmd = "mkdir " + installDir + "/local/etc > /dev/null 2>&1";
+    cmd = "mkdir /var/lib/columnstore/local/etc > /dev/null 2>&1";
     system(cmd.c_str());
 
     cout << endl << "===== Setup System Module Type Configuration =====" << endl << endl;
@@ -1471,7 +1431,7 @@ int main(int argc, char* argv[])
 
         if ( amazonInstall )
         {
-            string cmd = installDir + "/bin/MCSgetCredentials.sh >/dev/null 2>&1";
+            string cmd = "MCSgetCredentials.sh >/dev/null 2>&1";
             int rtnCode = system(cmd.c_str());
 
             if ( WEXITSTATUS(rtnCode) != 0 )
@@ -1567,7 +1527,7 @@ int main(int argc, char* argv[])
     }
 
     //create associated local/etc directory for parentOAMModuleName
-    cmd = "mkdir " + installDir + "/local/etc/" + parentOAMModuleName + " > /dev/null 2>&1";
+    cmd = "mkdir /var/lib/columnstore/local/etc/" + parentOAMModuleName + " > /dev/null 2>&1";
     system(cmd.c_str());
 
     //setup local module file name
@@ -2821,7 +2781,7 @@ int main(int argc, char* argv[])
                     }
 
                     //create associated local/etc directory for module
-                    string cmd = "mkdir " + installDir + "/local/etc/" + newModuleName + " > /dev/null 2>&1";
+                    string cmd = "mkdir /var/lib/columnstore/local/etc/" + newModuleName + " > /dev/null 2>&1";
                     system(cmd.c_str());
 
                     if ( newModuleName != parentOAMModuleName)
@@ -3231,7 +3191,7 @@ int main(int argc, char* argv[])
                         }
 
                         string DBrootID = "DBRoot" + *it;
-                        string pathID = installDir + "/data" + *it;
+                        string pathID = "/var/lib/columnstore/data" + *it;
 
                         try
                         {
@@ -3622,18 +3582,44 @@ int main(int argc, char* argv[])
 			}
     }
 
-    int thread_id = 0;
-
-    pthread_t thr[childmodulelist.size()];
-
-    /* create a thread_data_t argument array */
-    thread_data_t thr_data[childmodulelist.size()];
-
     string install = "y";
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
             pmNumber > 1 )
     {
+
+        ChildModuleList::iterator list1 = childmodulelist.begin();
+
+        for (; list1 != childmodulelist.end() ; list1++)
+        {
+            string remoteModuleName = (*list1).moduleName;
+            string remoteModuleIP = (*list1).moduleIP;
+            string remoteHostName = (*list1).hostName;
+            string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+            string debug_logfile;
+            string logfile;
+
+            if ( remote_installer_debug == "1" )
+            {
+                logfile = tmpDir + "/";
+                logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
+                debug_logfile = " > " + logfile;
+            }
+
+            cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+            if ( remote_installer_debug == "1" )
+                cout << "Install log file is located here: " + logfile << endl << endl;
+
+            cmd = "mcs_module_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + remote_installer_debug + " " + debug_logfile;
+
+            int rtnCode = system(cmd.c_str());
+            if (WEXITSTATUS(rtnCode) != 0)
+            {
+                cout << endl << "Error returned from mcs_module_installer.sh" << endl;
+                exit(1);
+            }
+        }
 
         //configure data redundancy
         if (DataRedundancy)
@@ -3729,7 +3715,7 @@ int main(int argc, char* argv[])
     //check if local MariaDB ColumnStore system logging is working
     cout << endl << "===== Checking MariaDB ColumnStore System Logging Functionality =====" << endl << endl;
 
-    cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
+    cmd = "columnstoreSyslogSetup.sh status  > /dev/null 2>&1";
 
     int ret = system(cmd.c_str());
 
@@ -3762,7 +3748,7 @@ int main(int argc, char* argv[])
         {
             //start MariaDB ColumnStore on local server
             cout << endl << "----- Starting MariaDB ColumnStore on local server -----" << endl << endl;
-            cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
+            cmd = "columnstore restart > /dev/null 2>&1";
             int rtnCode = system(cmd.c_str());
 
             if (WEXITSTATUS(rtnCode) != 0)
@@ -3784,7 +3770,7 @@ int main(int argc, char* argv[])
 
         //start MariaDB ColumnStore on local server
         cout << endl << "----- Starting MariaDB ColumnStore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
-        string cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
+        string cmd = "columnstore restart > /dev/null 2>&1";
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
@@ -3832,7 +3818,7 @@ int main(int argc, char* argv[])
                     string ModuleDBRootID = "ModuleDBRootID" + oam.itoa(pm + 1) + "-" + oam.itoa(i + 1) + "-3";
                     string dbr = sysConfig->getConfig("SystemModuleConfig", ModuleDBRootID);
                     string command = "" + moduleIPAddr +
-                                     ":/dbroot" + dbr + " " + installDir + "/data" + dbr +
+                                     ":/dbroot" + dbr + " /var/lib/columnstore/data" + dbr +
                                      " glusterfs defaults,direct-io-mode=enable 00";
                     string toPM = "pm" + oam.itoa(pm + 1);
                     oam.distributeFstabUpdates(command, toPM);
@@ -3842,10 +3828,7 @@ int main(int argc, char* argv[])
 
         string dbbuilderLog = tmpDir + "/dbbuilder.log";
 
-        if (hdfs)
-            cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
-        else
-            cmd = installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
+        cmd = "dbbuilder 7 > " + dbbuilderLog;
 
         system(cmd.c_str());
 
@@ -4076,7 +4059,7 @@ bool checkSaveConfigFile()
             return false;
         }
 
-        cmd = "cd " + std::string(MCSSYSCONFDIR) + "/columnstore;" + installDir + "/bin/autoConfigure " + extentMapCheckOnly;
+        cmd = "cd " + std::string(MCSSYSCONFDIR) + "/columnstore;autoConfigure " + extentMapCheckOnly;
         rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
@@ -4174,17 +4157,17 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 
         system(cmd.c_str());
 
-        cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+        cmd = "cat /var/lib/columnstore/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
 
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
             cout << "Error Updating " + files[i] << endl;
 
-        cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+        cmd = "rm -f /var/lib/columnstore/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
         system(cmd.c_str());
 
-        cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
+        cmd = "cp /var/lib/columnstore/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont /var/lib/columnstore/local/. > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -4195,7 +4178,7 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
     if (!oldFile)
         return allfound;
 
-    string cmd = "cp " + fileName + " " + installDir + "/local/etc/. > /dev/null 2>&1";
+    string cmd = "cp " + fileName + " /var/lib/columnstore/local/etc/. > /dev/null 2>&1";
     system(cmd.c_str());
     return allfound;
 }
@@ -4450,7 +4433,7 @@ bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
     // mount data1 and create directories if configured with storage
     if ( DBRootStorageType == "external" )
     {
-        string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.log 2>&1";
+        string cmd = "mount /var/lib/columnstore/data1 > " + tmpDir + "/mount.log 2>&1";
         system(cmd.c_str());
 
         if ( !rootUser)
@@ -4460,12 +4443,12 @@ bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
 			if ( amazonInstall )
 				SUDO = "sudo ";
 
-            cmd = SUDO + "chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
+            cmd = SUDO + "chown -R " + USER + ":" + USER + " /var/lib/columnstore/data1 > /dev/null";
             system(cmd.c_str());
         }
 
         // create system file directories
-        cmd = "mkdir -p " + installDir + "/data1/systemFiles/dbrm > /dev/null 2>&1";
+        cmd = "mkdir -p /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
         rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
@@ -4475,7 +4458,7 @@ bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
         }
     }
 
-    cmd = "chmod 755 -R " + installDir + "/data1/systemFiles/dbrm > /dev/null 2>&1";
+    cmd = "chmod 755 -R /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
     system(cmd.c_str());
 
     return true;
@@ -4578,105 +4561,7 @@ bool storageSetup(bool amazonInstall)
         {
             hdfs = false;
             sysConfig->setConfig("StorageManager", "Enabled", "Y");
-            sysConfig->setConfig("SystemConfig", "DataFilePlugin", "$INSTALLDIR/lib/libcloudio.so");
-            sysConfig->setConfig("SystemConfig", "DataFileEnvFile", "");
-        }
-        else if (hdfs)
-        {
-            //default
-            DataFileEnvFile = "setenv-hdfs-20";
-
-            try
-            {
-                DataFileEnvFile = sysConfig->getConfig("SystemConfig", "DataFileEnvFile");
-            }
-            catch (...)
-            {
-                DataFileEnvFile = "setenv-hdfs-20";
-            }
-
-            string DataFilePlugin = installDir + "/lib/hdfs-20.so";
-
-            try
-            {
-                DataFilePlugin = sysConfig->getConfig("SystemConfig", "DataFilePlugin");
-            }
-            catch (...)
-            {
-                DataFilePlugin = installDir + "/lib/hdfs-20.so";
-            }
-
-            while (true)
-            {
-                cout << " Running HDFS Sanity Test (please wait):    ";
-                cout.flush();
-                string logdir("/var/log/mariadb/columnstore");
-
-                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
-
-                string hdfslog = logdir + "/hdfsCheck.log1";
-
-                string cmd = ". " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/hdfsCheck " + DataFilePlugin +  " > " + hdfslog + " 2>&1";
-                system(cmd.c_str());
-
-                if (oam.checkLogStatus(hdfslog, "All HDFS checks passed!"))
-                {
-                    cout << "  PASSED" << endl;
-
-                    try
-                    {
-                        sysConfig->setConfig("SystemConfig", "DataFilePlugin", DataFilePlugin);
-                    }
-                    catch (...)
-                    {
-                        cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
-                        return false;
-                    }
-
-                    try
-                    {
-                        sysConfig->setConfig("SystemConfig", "DataFileEnvFile", DataFileEnvFile);
-                    }
-                    catch (...)
-                    {
-                        cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
-                        return false;
-                    }
-
-                    if ( !writeConfig(sysConfig) )
-                    {
-                        cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-                        return false;
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    cout << "  FAILED (Tested with Hadoop Datafile Plugin File (" + DataFilePlugin + "), please re-enter or enter 'exit' to Investigate)" << endl << endl;
-
-                    if ( noPrompting )
-                        exit(1);
-
-                    prompt = "Enter the Hadoop Datafile Plugin File (" + DataFilePlugin + ") > ";
-                    pcommand = callReadline(prompt.c_str());
-
-                    if (pcommand)
-                    {
-                        if (strlen(pcommand) > 0) DataFilePlugin = pcommand;
-
-                        callFree(pcommand);
-                    }
-
-                    if ( DataFilePlugin == "exit" )
-                        exit (1);
-
-                    if ( DataFilePlugin != installDir + "/lib/hdfs-20.so" )
-                        DataFileEnvFile = "setenv-hdfs-12";
-                    else
-                        DataFileEnvFile = "setenv-hdfs-20";
-                }
-            }
+            sysConfig->setConfig("SystemConfig", "DataFilePlugin", "libcloudio.so");
         }
 
         return true;
@@ -5416,136 +5301,11 @@ bool storageSetup(bool amazonInstall)
         sysConfig->setConfig("PrimitiveServers", "DirectIO", "y");
     }
 
-    // if hadoop / hdfs
-    #if 0
-    We are not supporting HDFS anymore.  Leaving this here for future use.
-    if ( storageType == "4" )
-    {
-        hdfs = true;
-        string DataFilePlugin = installDir + "/lib/hdfs-20.so";
-
-        try
-        {
-            DataFilePlugin = sysConfig->getConfig("SystemConfig", "DataFilePlugin");
-        }
-        catch (...)
-        {
-            DataFilePlugin = installDir + "/lib/hdfs-20.so";
-        }
-
-        if (DataFilePlugin.empty() || DataFilePlugin == "")
-            DataFilePlugin = installDir + "/lib/hdfs-20.so";
-
-        DataFileEnvFile = "setenv-hdfs-20";
-
-        try
-        {
-            DataFileEnvFile = sysConfig->getConfig("SystemConfig", "DataFileEnvFile");
-        }
-        catch (...)
-        {
-            DataFileEnvFile = "setenv-hdfs-20";
-        }
-
-        if (DataFileEnvFile.empty() || DataFileEnvFile == "" || DataFileEnvFile == oam::UnassignedName)
-            DataFileEnvFile = "setenv-hdfs-20";
-
-        cout << endl;
-
-        while (true)
-        {
-            prompt = "Enter the Hadoop Datafile Plugin File (" + DataFilePlugin + ") > ";
-            pcommand = callReadline(prompt.c_str());
-
-            if (pcommand)
-            {
-                if (strlen(pcommand) > 0) DataFilePlugin = pcommand;
-
-                callFree(pcommand);
-            }
-
-            if ( DataFilePlugin == "exit" )
-                exit (1);
-
-            if ( DataFilePlugin != installDir + "/lib/hdfs-20.so" )
-                DataFileEnvFile = "setenv-hdfs-12";
-
-            ifstream File (DataFilePlugin.c_str());
-
-            if (!File)
-                cout << "Error: Hadoop Datafile Plugin File (" + DataFilePlugin + ") doesn't exist, please re-enter" << endl;
-            else
-            {
-                cout << endl << " Running HDFS Sanity Test (please wait):    ";
-                cout.flush();
-                string logdir("/var/log/mariadb/columnstore");
-
-                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
-
-                string hdfslog = logdir + "/hdfsCheck.log1";
-
-                string cmd = installDir + "/bin/hdfsCheck " + DataFilePlugin +  " > " + hdfslog + " 2>&1";
-                system(cmd.c_str());
-
-                if (oam.checkLogStatus(hdfslog, "All HDFS checks passed!"))
-                {
-                    cout << "  PASSED" << endl;
-                    break;
-                }
-                else
-                {
-                    cout << "  FAILED (Tested with Hadoop Datafile Plugin File (" + DataFilePlugin + "), please re-enter or enter 'exit' to Investigate)" << endl << endl;
-                }
-            }
-        }
-
-        try
-        {
-            sysConfig->setConfig("SystemConfig", "DataFilePlugin", DataFilePlugin);
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-
-        try
-        {
-            sysConfig->setConfig("SystemConfig", "DataFileEnvFile", DataFileEnvFile);
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-
-        try
-        {
-            sysConfig->setConfig("SystemConfig", "DataFileLog", "OFF");
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting DataFileLog in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-
-        try
-        {
-            sysConfig->setConfig("ExtentMap", "ExtentsPerSegmentFile", "1");
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting ExtentsPerSegmentFile in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-    }
-    #endif
     if (storageType == "4")
     {
         hdfs = false;
         sysConfig->setConfig("StorageManager", "Enabled", "Y");
-        sysConfig->setConfig("SystemConfig", "DataFilePlugin", "$INSTALLDIR/lib/libcloudio.so");
-        sysConfig->setConfig("SystemConfig", "DataFileEnvFile", "");
+        sysConfig->setConfig("SystemConfig", "DataFilePlugin", "libcloudio.so");
     }
     else
     {
@@ -5558,16 +5318,6 @@ bool storageSetup(bool amazonInstall)
         catch (...)
         {
             cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-
-        try
-        {
-            sysConfig->setConfig("SystemConfig", "DataFileEnvFile", "");
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
             return false;
         }
 
@@ -5645,7 +5395,7 @@ void setSystemName()
 bool copyFstab(string moduleName)
 {
     string cmd;
-    cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+    cmd = "/bin/cp -f /etc/fstab /var/lib/columnstore/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -5661,9 +5411,9 @@ bool makeModuleFile(string moduleName, string parentOAMModuleName)
     string fileName;
 
     if ( moduleName == parentOAMModuleName)
-        fileName = installDir + "/local/module";
+        fileName = "/var/lib/columnstore/local/module";
     else
-        fileName = installDir + "/local/etc/" + moduleName + "/module";
+        fileName = "/var/lib/columnstore/local/etc/" + moduleName + "/module";
 
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());
@@ -5684,16 +5434,6 @@ bool updateBash()
     string fileName = HOME + "/.bashrc";
 
     ifstream newFile (fileName.c_str());
-
-    if ( hdfs )
-    {
-        string cmd = "echo . " + installDir + "/bin/" + DataFileEnvFile + " >> " + fileName;
-        system(cmd.c_str());
-
-        cmd = "su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown root:root " + installDir + "' >/dev/null 2>&1";
-
-        system(cmd.c_str());
-    }
 
     newFile.close();
 
@@ -5963,7 +5703,7 @@ bool singleServerDBrootSetup()
         }
 
         string DBrootID = "DBRoot" + *it;
-        string pathID = installDir + "/data" + *it;
+        string pathID = "/var/lib/columnstore/data" + *it;
 
         try
         {
@@ -6146,7 +5886,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
     std::vector<int> dbrootPms[DBRootCount];
     DataRedundancySetup DataRedundancyConfigs[pmNumber];
     string command = "";
-    string remoteCommand = installDir + "/bin/remote_command.sh ";
+    string remoteCommand = "remote_command.sh ";
 
     // how many copies?
     if (pmNumber > 2)
@@ -6584,7 +6324,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
     {
         for ( int brick = 1; brick <= numberBricksPM; brick++)
         {
-            command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+            command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p /var/lib/columnstore/gluster/brick" + oam.itoa(brick) + "'";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6712,7 +6452,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
         for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
         {
             int pm = (*dbrootPmIter) - 1;
-            command += DataRedundancyConfigs[pm].pmIpAddr + ":" + installDir + "/gluster/brick" + oam.itoa(pmnextbrick[pm]) + " ";
+            command += DataRedundancyConfigs[pm].pmIpAddr + ":/var/lib/columnstore/gluster/brick" + oam.itoa(pmnextbrick[pm]) + " ";
             pmnextbrick[pm]++;
         }
 

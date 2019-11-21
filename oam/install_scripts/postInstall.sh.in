@@ -13,7 +13,6 @@ set PASSWORD " "
 set CONFIGFILE " "
 set DEBUG 0
 set USERNAME "root"
-set INSTALLDIR "/usr/local/mariadb/columnstore"
 
 spawn -noecho /bin/bash
 
@@ -47,9 +46,6 @@ while true {
 		set CONFIGFILE $arg($i)
 	} elseif { $arg($i) == "-d" } {
 		set DEBUG 1
-	} elseif { $arg($i) == "-i" } {
-		incr i
-		set INSTALLDIR $arg($i)
 	} elseif { $arg($i) == "-u" } {
 		incr i
 		set USERNAME $arg($i)
@@ -76,7 +72,7 @@ send_user "\nPerforming Calpont RPM System Install\n\n"
 #
 send_user "Stop Calpont System                             "
 expect -re "# "
-send "$INSTALLDIR/bin/mcsadmin stopSystem INSTALL y\n"
+send "mcsadmin stopSystem INSTALL y\n"
 expect {
 	-re "# "                  	{ send_user "DONE" }
 	-re "**** stopSystem Failed" { send_user "INFO: System not running" }
@@ -122,7 +118,7 @@ set timeout 380
 # Run installer
 #
 send_user "Run System Installer                            "
-send "$INSTALLDIR/bin/installer $RPMPACKAGE initial $PASSWORD n 0\n"
+send "columnstore_installer $RPMPACKAGE initial $PASSWORD n 0\n"
 expect {
 	-re "reboot request successful" 			{ }
 	-re "error"   								{ send_user "FAILED" ; exit -1 }

@@ -7,11 +7,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/configxml.sh.in" "${CMAKE_CURRENT_SO
 
 set(setConfig_SRCS main.cpp)
 
-add_executable(setConfig ${setConfig_SRCS})
+add_executable(mcsSetConfig ${setConfig_SRCS})
 
-target_link_libraries(setConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
+target_link_libraries(mcsSetConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS setConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS mcsSetConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 install(PROGRAMS configxml.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

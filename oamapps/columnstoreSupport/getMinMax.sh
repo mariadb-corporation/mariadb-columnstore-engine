@@ -9,7 +9,6 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-	INSTALLDIR="/usr/local/mariadb/columnstore"
 	MYSQLCMD="mysql -u root"
 fi
 
@@ -76,7 +75,7 @@ fi
 #
 # Use the editem utility to get the min and max value.
 #
-/usr/local/mariadb/columnstore/bin/editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
+editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
 	BEGIN {
 		allValid=1;
 		foundValidExtent=0;

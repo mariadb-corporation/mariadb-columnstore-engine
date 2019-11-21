@@ -250,7 +250,7 @@ void diskMonitor()
                 // check local
                 if ( deviceName == "/")
                 {
-                    fileName = deviceName + startup::StartUp::installDir();
+                    fileName = deviceName + "/var/lib/columnstore/";
                 }
                 else
                 {

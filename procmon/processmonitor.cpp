@@ -931,13 +931,13 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                         if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
-                        string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
+                        string cmd = "reset_locks > " + logdir + "/reset_locks.log1 2>&1";
                         system(cmd.c_str());
                         log.writeLog(__LINE__, "BRM reset_locks script run", LOG_TYPE_DEBUG);
 
                         if ( !gOAMParentModuleFlag )
                         {
-                            cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
+                            cmd = "clearShm -c > /dev/null 2>&1";
                             rtnCode = system(cmd.c_str());
 
                             if (WEXITSTATUS(rtnCode) != 1)
@@ -1082,24 +1082,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                             mq.write(ackMsg);
 
                             log.writeLog(__LINE__, "STARTALL: ACK back to ProcMgr, return status = " + oam.itoa((int) oam::API_FAILURE));
-
-                            break;
-                        }
-                    }
-
-                    //run HDFS startup test script to perform basic DB sanity testing
-                    if ( HDFS )
-                    {
-                        if ( runHDFSTest() != oam::API_SUCCESS )
-                        {
-                            requestStatus = oam::API_FAILURE_DB_ERROR;
-
-                            ackMsg << (ByteStream::byte) ACK;
-                            ackMsg << (ByteStream::byte) STARTALL;
-                            ackMsg << (ByteStream::byte) requestStatus;
-                            mq.write(ackMsg);
-
-                            log.writeLog(__LINE__, "STARTALL: ACK back to ProcMgr, return status = " + oam.itoa((int) requestStatus));
 
                             break;
                         }
@@ -1360,7 +1342,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                     //sleep to give time for process-manager to finish up
                     sleep(5);
-                    string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+                    string cmd = "columnstore stop > /dev/null 2>&1";
                     system(cmd.c_str());
                     exit (0);
 
@@ -1528,11 +1510,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             // install mysqld rpms if being reconfigured as a um
             if ( reconfigureModuleName.find("um") != string::npos )
             {
-                string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> " + tmpLogDir + "/rpminstall";
+                string cmd = "post-mysqld-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = startup::StartUp::installDir() + "/bin/post-mysql-install >> " + tmpLogDir + "/rpminstall";
+                cmd = "post-mysql-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = startup::StartUp::installDir() + "/mysql/mysql-Columnstore start > " + tmpLogDir + "/mysqldstart";
+                cmd = "mysql-Columnstore start > " + tmpLogDir + "/mysqldstart";
                 system(cmd.c_str());
 
 				string tmpFile = tmpLogDir + "/mysqldstart";
@@ -1629,8 +1611,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             runStandby = false;
 
             log.writeLog(__LINE__, "Running Active", LOG_TYPE_INFO);
-            //setup TransactionLog on mounted Performance Module
-            setTransactionLog(true);
 
             //give time for Status Control thread to start reading incoming messages
             sleep(3);
@@ -1718,7 +1698,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				string tmpUmount = tmpLogDir + "/umount.log";
                 for ( ; retry < 5 ; retry++)
                 {
-                    string cmd = "export LC_ALL=C;" + SUDO + "umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
+                    string cmd = "export LC_ALL=C;" + SUDO + "umount /var/lib/columnstore/data" + dbrootID + " > " + tmpUmount + " 2>&1";
 
                     system(cmd.c_str());
 
@@ -1727,9 +1707,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     if (!oam.checkLogStatus(tmpUmount, "busy"))
                         break;
 
-					cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
+					cmd = "lsof /var/lib/columnstore/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
 					system(cmd.c_str());
-					cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
+					cmd = "fuser -muvf /var/lib/columnstore/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
 					system(cmd.c_str());
 
                     sleep(2);
@@ -1786,12 +1766,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             if (DataRedundancyConfig == "n")
             {
 				string tmpMount = tmpLogDir + "/mount.log";
-                string cmd = SUDO + "export LC_ALL=C;" + SUDO + "mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
+                string cmd = SUDO + "export LC_ALL=C;" + SUDO + "mount /var/lib/columnstore/data" + dbrootID + " > " + tmpMount  + "2>&1";
                 system(cmd.c_str());
 
                 if ( !rootUser )
                 {
-                    cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null 2>&1";
+                    cmd = SUDO + "chown -R " + USER + ":" + USER + " /var/lib/columnstore/data" + dbrootID + " > /dev/null 2>&1";
                     system(cmd.c_str());
                 }
 
@@ -1844,16 +1824,16 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             }
 
             //check if entry already exist in ../local/etc/pm1/fstab
-            cmd = "grep " + entry + " " + startup::StartUp::installDir() + "/local/etc/pm1/fstab /dev/null 2>&1";
+            cmd = "grep " + entry + "/var/lib/columnstore/local/etc/pm1/fstab /dev/null 2>&1";
             status = system(cmd.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {
-                cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+                cmd = "echo " + entry + " >> /var/lib/columnstore/local/etc/pm1/fstab";
 
                 system(cmd.c_str());
 
-                log.writeLog(__LINE__, "Add line entry to ../local/etc/pm1/fstab : " + entry);
+                log.writeLog(__LINE__, "Add line entry to /var/lib/columnstore/local/etc/pm1/fstab : " + entry);
             }
 
             //mkdir on entry directory
@@ -2588,15 +2568,15 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 
                 if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
-                string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
+                string cmd = "reset_locks > " + logdir + "/reset_locks.log1 2>&1";
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "BRM reset_locks script run", LOG_TYPE_DEBUG);
 
-                cmd = startup::StartUp::installDir() + "/bin/clearShm -c  > /dev/null 2>&1";
+                cmd = "clearShm -c  > /dev/null 2>&1";
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "Clear Shared Memory script run", LOG_TYPE_DEBUG);
 
-                cmd = startup::StartUp::installDir() + "/bin/" + loadScript + " " + dbrmFile + " > " + logdir + "/load_brm.log1 2>&1";
+                cmd = loadScript + " " + dbrmFile + " > " + logdir + "/load_brm.log1 2>&1";
                 log.writeLog(__LINE__, loadScript + " cmd = " + cmd, LOG_TYPE_DEBUG);
                 system(cmd.c_str());
 
@@ -3551,7 +3531,7 @@ int ProcessMonitor::getConfigLog()
 ******************************************************************************************/
 void ProcessMonitor::checkPowerOnResults()
 {
-    string  POWERON_TEST_RESULTS_FILE = startup::StartUp::installDir() + "/post/st_status";
+    string  POWERON_TEST_RESULTS_FILE = "/var/lib/columnstore/st_status";
     MonitorLog log;
 
     ifstream oldFile (POWERON_TEST_RESULTS_FILE.c_str());
@@ -3842,7 +3822,7 @@ int ProcessMonitor::buildSystemTables()
 
         if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
-        string cmd = startup::StartUp::installDir() + "/bin/dbbuilder 7 > " + logdir + "/dbbuilder.log &";
+        string cmd = "dbbuilder 7 > " + logdir + "/dbbuilder.log &";
         system(cmd.c_str());
 
         log.writeLog(__LINE__, "buildSystemTables: dbbuilder 7 Successfully Launched", LOG_TYPE_DEBUG);
@@ -3863,10 +3843,9 @@ int ProcessMonitor::buildSystemTables()
 int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
 {
     Oam oam;
-    string installDir = startup::StartUp::installDir();
 
     //create custom files
-    string dir = installDir + "/local/etc/" + reconfigureModuleName;
+    string dir = "/var/lib/columnstore/local/etc/" + reconfigureModuleName;
 
     string cmd = "mkdir " + dir + " > /dev/null 2>&1";
     system(cmd.c_str());
@@ -3877,17 +3856,17 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
     if ( reconfigureModuleName.find("um") != string::npos)
     {
 
-        cmd = "cp " + installDir + "/local/etc/um1/* " + dir + "/.";
+        cmd = "cp /var/lib/columnstore/local/etc/um1/* " + dir + "/.";
         system(cmd.c_str());
     }
     else
     {
-        cmd = "cp " + installDir + "/local/etc/pm1/* " + dir + "/.";
+        cmd = "cp /var/lib/columnstore/local/etc/pm1/* " + dir + "/.";
         system(cmd.c_str());
     }
 
     //update module file
-    string fileName = installDir + "/local/module";
+    string fileName = "/var/lib/columnstore/local/module";
 
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());
@@ -3910,10 +3889,9 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
 int ProcessMonitor::configureModule(std::string configureModuleName)
 {
     Oam oam;
-    string installDir = startup::StartUp::installDir();
 
     //update module file
-    string fileName = installDir + "/local/module";
+    string fileName = "/var/lib/columnstore/local/module";
 
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());
@@ -4167,7 +4145,7 @@ int ProcessMonitor::createDataDirs(std::string cloud)
                 {
                     int id = *pt1;
 
-                    string DBRootName = startup::StartUp::installDir() + "/data" + oam.itoa(id);
+                    string DBRootName = "/var/lib/columnstore/data" + oam.itoa(id);
 
                     string cmd = "mkdir " + DBRootName + " > /dev/null 2>&1";
                     int rtnCode = system(cmd.c_str());
@@ -4180,7 +4158,7 @@ int ProcessMonitor::createDataDirs(std::string cloud)
 
                     if ( id == 1 )
                     {
-                        cmd = "mkdir -p " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm > /dev/null 2>&1";
+                        cmd = "mkdir -p /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
                         system(cmd.c_str());
                     }
 
@@ -4432,7 +4410,7 @@ int ProcessMonitor::getDBRMdata(string *path)
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string journalFilename = startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        string journalFilename = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_journal";
                         IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(journalFilename.c_str(),
                             IDBPolicy::WRITEENG), journalFilename.c_str(), "w", 0);
                         delete idbJournalFile;
@@ -4465,221 +4443,6 @@ int ProcessMonitor::getDBRMdata(string *path)
 }
 
 /******************************************************************************************
-* @brief	changeCrontab
-*
-* purpose:	update crontab to have logs archived at midnight
-*
-*
-******************************************************************************************/
-int ProcessMonitor::changeCrontab()
-{
-    MonitorLog log;
-//	MonitorConfig config;
-//	ProcessMonitor aMonitor(config, log);
-    Oam oam;
-
-    log.writeLog(__LINE__, "Update crontab to have daily logs saved at midnight", LOG_TYPE_DEBUG);
-
-    string fileName = "/etc/crontab";
-
-    ifstream oldFile (fileName.c_str());
-
-    if (!oldFile) return false;
-
-    vector <string> lines;
-    char line[200];
-    string buf;
-    string newLine = "58 23 * * * ";
-
-    while (oldFile.getline(line, 200))
-    {
-        buf = line;
-
-        string::size_type pos = buf.find("cron.daily", 0);
-
-        if (pos != string::npos)
-        {
-            pos = buf.find("root", 0);
-            newLine = newLine + buf.substr(pos, 200);
-
-            log.writeLog(__LINE__, "Updated Crontab daily line = " + newLine, LOG_TYPE_DEBUG);
-
-            buf = newLine;
-        }
-
-        //output to temp file
-        lines.push_back(buf);
-    }
-
-    oldFile.close();
-    unlink (fileName.c_str());
-    ofstream newFile (fileName.c_str());
-
-    //create new file
-    int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0664);
-
-    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-    newFile.close();
-
-    close(fd);
-
-    // restart the service to make sure it running
-    system("/etc/init.d/crond start > /dev/null 2>&1");
-    system("/etc/init.d/crond reload > /dev/null 2>&1");
-    system("systemctl start crond.service > /dev/null 2>&1");
-    system("systemctl reload crond.service > /dev/null 2>&1");
-
-    return API_SUCCESS;
-}
-
-/******************************************************************************************
-* @brief	changeTransactionLog
-*
-* purpose:	update TransactionLog based on system config "TransactionArchivePeriod"
-*
-*
-******************************************************************************************/
-int ProcessMonitor::changeTransactionLog()
-{
-    MonitorLog log;
-//	MonitorConfig config;
-//	ProcessMonitor aMonitor(config, log);
-    Oam oam;
-
-    string transactionArchivePeriod;
-
-    try
-    {
-        oam.getSystemConfig("TransactionArchivePeriod", transactionArchivePeriod);
-    }
-    catch (exception& ex)
-    {
-        string error = ex.what();
-//		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-        return API_FAILURE;
-    }
-    catch (...)
-    {
-//		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-        return API_FAILURE;
-    }
-
-    int tap = atoi(transactionArchivePeriod.c_str());
-
-    if ( tap > 60 )
-    {
-        tap = 60;
-        transactionArchivePeriod = "60";
-    }
-
-    if ( tap <= 0 )
-    {
-        tap = 10;
-        transactionArchivePeriod = "10";
-    }
-
-    log.writeLog(__LINE__, "Configure Tranasction Log at " + transactionArchivePeriod + " minutes", LOG_TYPE_DEBUG);
-
-    string fileName = "/etc/cron.d/transactionLog";
-
-    ifstream oldFile (fileName.c_str());
-
-    if (!oldFile) return false;
-
-    vector <string> lines;
-    char line[200];
-    string buf;
-    string newLine = "00";
-
-    while (oldFile.getline(line, 200))
-    {
-        buf = line;
-
-        string::size_type pos = buf.find("transactionLogArchiver.sh", 0);
-
-        if (pos != string::npos)
-        {
-            int minutes = tap;
-
-            for ( ; minutes < 60 ; )
-            {
-                newLine = newLine + "," + oam.itoa(minutes);
-                minutes = minutes + tap;
-            }
-
-            pos = buf.find(" *", 0);
-            newLine = newLine + buf.substr(pos, 200);
-
-            log.writeLog(__LINE__, "Updated TransactionLog line = " + newLine, LOG_TYPE_DEBUG);
-
-            buf = newLine;
-        }
-
-        //output to temp file
-        lines.push_back(buf);
-    }
-
-    oldFile.close();
-    unlink (fileName.c_str());
-    ofstream newFile (fileName.c_str());
-
-    //create new file
-    int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0664);
-
-    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-    newFile.close();
-
-    close(fd);
-
-    // restart the service to make sure it running
-    system("/etc/init.d/crond start > /dev/null 2>&1");
-    system("/etc/init.d/crond reload > /dev/null 2>&1");
-    system("systemctl start crond.service > /dev/null 2>&1");
-    system("systemctl reload crond.service > /dev/null 2>&1");
-
-    return API_SUCCESS;
-}
-
-/******************************************************************************************
-* @brief	setup Tranaction Logging
-*
-* purpose:	Active or Deactive Transaction logging
-*
-******************************************************************************************/
-void ProcessMonitor::setTransactionLog(bool action)
-{
-
-    if (action)
-    {
-        //set
-        log.writeLog(__LINE__, "setTransactionLog: setup ", LOG_TYPE_DEBUG);
-        changeTransactionLog();
-
-        string cmd = "cp " + startup::StartUp::installDir() + "/bin/transactionLog /etc/cron.d/.";
-        system(cmd.c_str());
-        log.writeLog(__LINE__, "Successful copied transactionLog script", LOG_TYPE_DEBUG);
-
-        system("chmod 644 /etc/cron.d/transactionLog");
-        log.writeLog(__LINE__, "Successful chmod on transactionLog", LOG_TYPE_DEBUG);
-    }
-    else
-    {
-        //clear
-        log.writeLog(__LINE__, "setTransactionLog: clear", LOG_TYPE_DEBUG);
-        system("rm -f /etc/cron.d/transactionLog");
-        log.writeLog(__LINE__, "Successful deleted transactionLog script", LOG_TYPE_DEBUG);
-    }
-
-    // restart the crond service to make sure it running
-    log.writeLog(__LINE__, "Start and reload crond", LOG_TYPE_DEBUG);
-    system("/etc/init.d/crond start > /dev/null 2>&1");
-    system("/etc/init.d/crond reload > /dev/null 2>&1");
-    system("systemctl start crond.service > /dev/null 2>&1");
-    system("systemctl reload crond.service > /dev/null 2>&1");
-
-}
-
-/******************************************************************************************
 * @brief	runStartupTest
 *
 * purpose:	Runs DB sanity test
@@ -4707,7 +4470,7 @@ int ProcessMonitor::runStartupTest()
 
     if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
-    string cmd = startup::StartUp::installDir() + "/bin/startupTests.sh > " + logdir + "/startupTests.log1 2>&1";
+    string cmd = "startupTests.sh > " + logdir + "/startupTests.log1 2>&1";
     system(cmd.c_str());
 
     cmd = logdir + "/startupTests.log1";
@@ -4734,98 +4497,6 @@ int ProcessMonitor::runStartupTest()
     else
     {
         log.writeLog(__LINE__, "ERROR: runStartupTest failed", LOG_TYPE_CRITICAL);
-        //Set the alarm
-        sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-
-        //setModule status to failed
-        try
-        {
-            oam.setModuleStatus(config.moduleName(), oam::FAILED);
-        }
-        catch (exception& ex)
-        {
-            string error = ex.what();
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: " + error, LOG_TYPE_ERROR);
-        }
-        catch (...)
-        {
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-        }
-
-        return oam::API_FAILURE;
-    }
-}
-
-/******************************************************************************************
-* @brief	runHDFSTest
-*
-* purpose:	Runs HDFS sanity test
-*
-*
-******************************************************************************************/
-int ProcessMonitor::runHDFSTest()
-{
-    //ProcMon log file
-    MonitorLog log;
-//	MonitorConfig config;
-//	ProcessMonitor aMonitor(config, log);
-    Oam oam;
-    bool fail = false;
-
-    string logdir("/var/log/mariadb/columnstore");
-
-    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
-
-    string hdfslog = logdir + "/hdfsCheck.log1";
-
-    //run hadoop test
-    string DataFilePlugin;
-    oam.getSystemConfig("DataFilePlugin", DataFilePlugin);
-
-    ifstream File (DataFilePlugin.c_str());
-
-    if (!File)
-    {
-        log.writeLog(__LINE__, "Error: Hadoop Datafile Plugin File (" + DataFilePlugin + ") doesn't exist", LOG_TYPE_CRITICAL);
-        fail = true;
-    }
-    else
-    {
-        // retry since columnstore can startup before hadoop is full up
-        int retry = 0;
-
-        for (  ; retry < 12 ; retry++ )
-        {
-            string cmd = startup::StartUp::installDir() + "/bin/hdfsCheck " + DataFilePlugin +  " > " + hdfslog + " 2>&1";
-            system(cmd.c_str());
-
-            if (oam.checkLogStatus(hdfslog, "All HDFS checks passed!"))
-            {
-                log.writeLog(__LINE__, "hdfsCheck passed", LOG_TYPE_DEBUG);
-                break;
-            }
-            else
-            {
-                log.writeLog(__LINE__, "hdfsCheck Failed, wait and try again", LOG_TYPE_DEBUG);
-                sleep(10);
-            }
-        }
-
-        if ( retry >= 12 )
-        {
-            log.writeLog(__LINE__, "hdfsCheck Failed, check " + hdfslog, LOG_TYPE_CRITICAL);
-            fail = true;
-        }
-    }
-
-    if (!fail)
-    {
-        //Clear the alarm
-        sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, CLEAR);
-        return oam::API_SUCCESS;
-    }
-    else
-    {
         //Set the alarm
         sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 
@@ -5048,7 +4719,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 
     log.writeLog(__LINE__, "changeMyCnf function called for " + type, LOG_TYPE_DEBUG);
 
-    string mycnfFile = "/etc/my.cnf.d/columnstore.cnf";
+    string mycnfFile = string(MCSMYCNFDIR) + "/columnstore.cnf";
     ifstream file (mycnfFile.c_str());
 
     if (!file)
@@ -5216,7 +4887,7 @@ int ProcessMonitor::runMariaDBCommandLine(std::string command)
     if ( MySQLPort.empty() )
         MySQLPort = "3306";
 
-    string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + " > " + tmpLogDir + "/mariadb-command-line.sh.log 2>&1";
+    string cmd = "mariadb-command-line.sh --command='" + command + "' --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + " > " + tmpLogDir + "/mariadb-command-line.sh.log 2>&1";
 
     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
@@ -5327,7 +4998,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
                 string ipAddr = (*pt1).IPAddr;
 
                 string logFile = tmpLogDir + "/master-rep-columnstore-" + moduleName + ".log";
-                string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
+                string cmd = "master-rep-columnstore.sh --hostIP=" + ipAddr + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
                 log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
                 system(cmd.c_str());
@@ -5471,7 +5142,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
     {
         string logFile = tmpLogDir + "/slave-rep-columnstore.log";
 
-        string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
+        string cmd = "slave-rep-columnstore.sh --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
 
         log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
@@ -5535,7 +5206,7 @@ int ProcessMonitor::runDisableRep()
 
     string logFile = tmpLogDir + "/disable-rep-columnstore.log";
 
-    string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --tmpdir=" + tmpLogDir + "  >  " + logFile + " 2>&1";
+    string cmd = "disable-rep-columnstore.sh --tmpdir=" + tmpLogDir + "  >  " + logFile + " 2>&1";
 
     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
@@ -5626,7 +5297,7 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
                     string ipAddr = (*pt1).IPAddr;
 
                     string logFile = tmpLogDir + "/master-dist_" + moduleName + ".log";
-                    string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > " + logFile;
+                    string cmd = "rsync.sh " + ipAddr + " " + password + " 1 > " + logFile;
 
                     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
                     system(cmd.c_str());
@@ -5666,7 +5337,7 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 
             string logFile = tmpLogDir + "/master-dist_" + slaveModule + ".log";
 
-            string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > " + logFile;
+            string cmd = "rsync.sh " + ipAddr + " " + password + " 1 > " + logFile;
             system(cmd.c_str());
 
             if (!oam.checkLogStatus(logFile, "FAILED"))
@@ -5955,12 +5626,12 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
             {
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to attached: " + volumeName, LOG_TYPE_DEBUG);
 
-                string cmd = SUDO + "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
+                string cmd = SUDO + "mount /var/lib/columnstore/data" + oam.itoa(dbrootID) + " > /dev/null";
 
                 system(cmd.c_str());
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to mounted: " + volumeName, LOG_TYPE_DEBUG);
 
-                cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID);
+                cmd = SUDO + "chown -R " + USER + ":" + USER + " /var/lib/columnstore/data" + oam.itoa(dbrootID);
                 system(cmd.c_str());
 
                 return true;
@@ -6042,7 +5713,7 @@ void ProcessMonitor::unmountExtraDBroots()
                 {
                     if ( DataRedundancyConfig == "n" )
                     {
-                        string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data" + oam.itoa(id) + " > /dev/null 2>&1";
+                        string cmd = SUDO + "umount /var/lib/columnstore/data" + oam.itoa(id) + " > /dev/null 2>&1";
                         system(cmd.c_str());
                     }
                     else
@@ -6093,7 +5764,6 @@ int ProcessMonitor::checkDataMount()
 
     string DBRootStorageType = "internal";
     vector <string> dbrootList;
-    string installDir(startup::StartUp::installDir());
 
     for ( int retry = 0 ; retry < 10 ; retry++)
     {
@@ -6188,7 +5858,7 @@ int ProcessMonitor::checkDataMount()
 
         while ( p != dbrootList.end() )
         {
-            string dbroot = installDir + "/data" + *p;
+            string dbroot = "/var/lib/columnstore/data" + *p;
             p++;
 
             string fileName = dbroot + "/OAMdbrootCheck";
@@ -6222,7 +5892,7 @@ int ProcessMonitor::checkDataMount()
 
     while ( p != dbrootList.end() )
     {
-        string dbroot = installDir + "/data" + *p;
+        string dbroot = "/var/lib/columnstore/data" + *p;
         string fileName = dbroot + "/OAMdbrootCheck";
 
         if ( DataRedundancyConfig == "n" )
@@ -6445,7 +6115,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
     }
 
 	string tmpLog = tmpLogDir + "/glusterAssign.log";
-    command = SUDO + "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" + dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
+    command = SUDO + "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" + dbrootID + " /var/lib/columnstore/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 
@@ -6490,7 +6160,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
 	string tmpLog = tmpLogDir + "/glusterUnassign.log";
 
-    command = SUDO + "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
+    command = SUDO + "umount -f /var/lib/columnstore/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 

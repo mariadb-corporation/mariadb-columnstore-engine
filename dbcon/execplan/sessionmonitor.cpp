@@ -106,7 +106,7 @@ SessionMonitor::SessionMonitor()
         fSegmentFilename = strdup(stmp.c_str());
     else
     {
-		string tmpdir = startup::StartUp::installDir() + "CalpontSessionMonitorShm";
+		string tmpdir = "/var/lib/columnstore/CalpontSessionMonitorShm";
 		
         fSegmentFilename = strdup(tmpdir);
 	}

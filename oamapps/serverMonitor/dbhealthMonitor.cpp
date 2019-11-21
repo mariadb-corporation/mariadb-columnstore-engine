@@ -180,7 +180,7 @@ int ServerMonitor::healthCheck(bool action)
     ACK_FLAG ackTemp = ACK_YES;
 
     //run Health script
-    string cmd = startup::StartUp::installDir() + "/bin/dbhealth.sh > /var/log/mariadb/columnstore/dbfunctional.log1 2>&1";
+    string cmd = "dbhealth.sh > /var/log/mariadb/columnstore/dbfunctional.log1 2>&1";
     system(cmd.c_str());
 
     if (!oam.checkLogStatus("/var/log/mariadb/columnstore/dbfunctional.log1", "OK"))

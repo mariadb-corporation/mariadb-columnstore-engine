@@ -6,7 +6,6 @@
 
 pmIpAddrs=""
 umIpAddrs=""
-nonDistrubutedInstall="-n"
 systemName=""
 
 for arg in "$@"; do
@@ -17,8 +16,6 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--system-name='` -eq 14 ]; then
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
-	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
-		nonDistrubutedInstall="-d"
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		echo "Usage ./quick_installer_multi_server.sh [OPTION]"
 		echo ""
@@ -34,7 +31,6 @@ for arg in "$@"; do
 		echo
 		echo "--pm-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx"
 		echo "--um-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx, optional"
-		echo "--dist-install Use Distributed Install, optional"
 		echo "--system-name=nnnn System Name, optional"
 		echo ""
 		exit 1
@@ -60,32 +56,14 @@ else
 	fi
 fi
 
-if [[ $HOME = "/root" ]]; then
-        echo ""
-        echo "${bold}Run post-install script${normal}"
-        echo ""
-        /usr/local/mariadb/columnstore/bin/post-install
-        echo "${bold}Run postConfigure script${normal}"
-        echo ""        
-        if [[ $umIpAddrs = "" ]]; then
-			/usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
-		else
-			/usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
-		fi
+echo ""
+echo "${bold}Run post-install script${normal}"
+echo ""
+columnstore-post-install
+echo "${bold}Run postConfigure script${normal}"
+echo ""        
+if [[ $umIpAddrs = "" ]]; then
+    postConfigure -qm -pm-ip-addrs $pmIpAddrs $systemName
 else
-        echo ""
-        echo "${bold}Run post-install script${normal}"
-        echo ""
-        $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
-        
-		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib
-
-        echo "${bold}Run postConfigure script${normal}"
-        echo ""
-        if [[ $umIpAddrs = "" ]]; then
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
-		else
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
-		fi
+    postConfigure -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $systemName
 fi

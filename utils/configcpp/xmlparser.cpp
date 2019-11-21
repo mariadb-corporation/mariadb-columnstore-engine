@@ -63,7 +63,7 @@ const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, co
                     if (cur3)
                         res = (const char*)cur3->content;
 
-                    return expand(res);
+                    return res;
                 }
 
                 cur2 = cur2->next;
@@ -74,7 +74,7 @@ const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, co
     }
 
     // maybe nullstr if not found
-    return expand(res);
+    return res;
 }
 
 void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const string& name, vector<string>& values) const
@@ -108,7 +108,7 @@ void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const stri
                     if (cur3)
                         res = (const char*)cur3->content;
 
-                    values.push_back(expand(res));
+                    values.push_back(res);
                 }
 
                 cur2 = cur2->next;
@@ -224,23 +224,6 @@ void XMLParser::delConfig(xmlDocPtr doc, const string& section, const string& na
     return;
 }
 
-const string XMLParser::expand(const std::string& in) const
-{
-    string out(in);
-    string::size_type pos;
-    const string::size_type len = 11;
-
-    pos = out.find("$INSTALLDIR");
-
-    while (pos != string::npos)
-    {
-        out.replace(pos, len, fInstallDir);
-        pos = out.find("$INSTALLDIR");
-    }
-
-    return out;
-}
-
 const vector<string> XMLParser::enumConfig(const xmlDocPtr doc) const
 {
     vector<string> resv;
@@ -289,7 +272,7 @@ const vector<string> XMLParser::enumSection(const xmlDocPtr doc, const string& s
                 res = reinterpret_cast<const char*>(cur2->name);
 
                 if (res != "text" && res != "comment")
-                    resv.push_back(expand(res));
+                    resv.push_back(res);
 
                 cur2 = cur2->next;
             }

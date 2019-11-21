@@ -4,7 +4,7 @@ USE columnstore_info;
 DROP FUNCTION IF EXISTS `format_filesize`;
 
 DELIMITER //
-CREATE FUNCTION `format_filesize`(filesize FLOAT) RETURNS varchar(20) CHARSET utf8 DETERMINISTIC
+CREATE FUNCTION `format_filesize`(filesize FLOAT) RETURNS varchar(20) CHARSET utf8 DETERMINISTIC SQL SECURITY INVOKER
 BEGIN
 
 DECLARE n INT DEFAULT 1;
@@ -25,7 +25,7 @@ END //
 
 DROP PROCEDURE IF EXISTS `total_usage` //
 
-CREATE DEFINER = 'root'@'localhost' PROCEDURE total_usage ()
+CREATE PROCEDURE total_usage () SQL SECURITY INVOKER
 BEGIN
     SELECT
         (SELECT columnstore_info.format_filesize(sum(data_size)) TOTAL_DATA_SIZE FROM INFORMATION_SCHEMA.COLUMNSTORE_EXTENTS) TOTAL_DATA_SIZE,
@@ -34,7 +34,7 @@ END //
 
 DROP PROCEDURE IF EXISTS `table_usage` //
 
-CREATE DEFINER = 'root'@'localhost' PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64))
+CREATE PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64)) SQL SECURITY INVOKER
 `table_usage`: BEGIN
 
     DECLARE done INTEGER DEFAULT 0;
@@ -93,12 +93,12 @@ END //
 
 DROP PROCEDURE IF EXISTS `compression_ratio` //
 
-CREATE DEFINER='root'@'localhost' PROCEDURE compression_ratio()
+CREATE PROCEDURE compression_ratio() SQL SECURITY INVOKER
 BEGIN
 SELECT CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL), ':1') COMPRESSION_RATIO;
 END //
 
-create procedure columnstore_upgrade()
+create procedure columnstore_upgrade() SQL SECURITY INVOKER
 `columnstore_upgrade`: BEGIN
     DECLARE done INTEGER DEFAULT 0;
     DECLARE schema_table VARCHAR(100) CHARACTER SET utf8 DEFAULT "";

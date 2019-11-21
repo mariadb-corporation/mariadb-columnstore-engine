@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 
     try
     {
-        openlog("getConfig", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_USER);
+        openlog("mcsGetConfig", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_USER);
         Config* cf;
 
         if (configFile.length() > 0)
@@ -154,12 +154,12 @@ int main(int argc, char** argv)
     }
     catch (exception& e)
     {
-        syslog(LOG_ERR, "Exception in getConfig for %s %s : %s", argv[optind + 0], argv[optind + 1], e.what());
+        syslog(LOG_ERR, "Exception in mcsGetConfig for %s %s : %s", argv[optind + 0], argv[optind + 1], e.what());
         closelog();
     }
     catch (...)
     {
-        syslog(LOG_ERR, "Exception in getConfig for %s %s : Unknown exception", argv[optind + 0], argv[optind + 1]);
+        syslog(LOG_ERR, "Exception in mcsGetConfig for %s %s : Unknown exception", argv[optind + 0], argv[optind + 1]);
         closelog();
     }
 

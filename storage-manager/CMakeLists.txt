@@ -124,12 +124,12 @@ target_link_libraries(smrm storagemanager cloudio
 )
 
 install(TARGETS storagemanager
-    LIBRARY DESTINATION ${INSTALL_ENGINE}/lib
+    LIBRARY DESTINATION ${ENGINE_LIBDIR}
     COMPONENT platform
 )
 
 install(TARGETS StorageManager smcat smput smls smrm
-    RUNTIME DESTINATION ${INSTALL_ENGINE}/bin
+    RUNTIME DESTINATION ${ENGINE_BINDIR}
     COMPONENT platform
 )
 

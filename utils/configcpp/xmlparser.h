@@ -36,7 +36,7 @@ namespace config
 class XMLParser
 {
 public:
-    XMLParser(const std::string& installDir) : fInstallDir(installDir) { }
+    XMLParser() { }
     ~XMLParser() { }
 
     const std::string getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name) const;
@@ -58,11 +58,6 @@ private:
     //XMLParser(const XMLParser& rhs);
     //XMLParser& operator=(const XMLParser& rhs);
 
-    /** @brief expand macros in config file to actual values
-    */
-    const std::string expand(const std::string& in) const;
-
-    const std::string fInstallDir;
 
 };
 

@@ -4,22 +4,6 @@
 #
 #
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	test -f /etc/default/infinidb && . /etc/default/infinidb
-fi
-
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
-fi
-
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-
-InstallDir=$COLUMNSTORE_INSTALL_DIR
-
-if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
-	export PATH=$InstallDir/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$InstallDir/lib
-fi
 
 case "$1" in
  setconfig)
@@ -29,7 +13,7 @@ case "$1" in
 		exit 1
 	fi
 
-	oldvalue=$($InstallDir/bin/getConfig $2 $3)
+	oldvalue=$(mcsGetConfig $2 $3)
 
 	#if [ -z $oldvalue ]; then 
 	#	echo "$2 / $3 not found in Columnstore.xml"	
@@ -46,17 +30,17 @@ case "$1" in
 	echo "$calxml backed up to $calxml.$seconds"
 	echo
 
-	oldvalue=$($InstallDir/bin/getConfig $2 $3)
+	oldvalue=$(mcsGetConfig $2 $3)
 
 	echo "Old value of $2 / $3 is $oldvalue"
 
 	if ( [ $# -eq 4 ] && [ -z $4 ] ); then
-		$InstallDir/bin/setConfig $2 $3 ""
+		mcsSetConfig $2 $3 ""
 	else
-		$InstallDir/bin/setConfig $2 $3 $4
+		mcsSetConfig $2 $3 $4
 	fi
 
-	newvalue=$($InstallDir/bin/getConfig $2 $3)
+	newvalue=$(mcsGetConfig $2 $3)
 
 	echo "$2 / $3 now set to $newvalue"
 	;;
@@ -67,7 +51,7 @@ case "$1" in
 		exit 1
 	fi
 
-	value=$($InstallDir/bin/getConfig $2 $3)
+	value=$(mcsGetConfig $2 $3)
 
 	if [ -z $value ]; then 
 		echo "$2 / $3 not found in Columnstore.xml"	

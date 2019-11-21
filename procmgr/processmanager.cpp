@@ -1365,9 +1365,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             processManager.setSystemState(oam::MAN_OFFLINE);
 
                             //clearout auto move dbroots files
-                            string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                            string cmd = "rm -f /var/lib/columnstore/local/moveDbrootTransactionLog";
                             system(cmd.c_str());
-                            cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                            cmd = "touch /var/lib/columnstore/local/moveDbrootTransactionLog";
                             system(cmd.c_str());
                         }
                     }
@@ -1437,7 +1437,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
                         }
 
-                        string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/columnstore stop' > /dev/null 2>&1";
+                        string cmd = "pdsh -a -x " + localHostName + " 'columnstore stop' > /dev/null 2>&1";
                         system(cmd.c_str());
 
                         break;
@@ -1520,13 +1520,13 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     }
 
                     //clearout auto move dbroots files
-                    string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                    string cmd = "rm -f /var/lib/columnstore/local/moveDbrootTransactionLog";
                     system(cmd.c_str());
-                    cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                    cmd = "touch /var/lib/columnstore/local/moveDbrootTransactionLog";
                     system(cmd.c_str());
 
 					//clear shared memory
-					cmd = startup::StartUp::installDir() + "/bin/clearShm > /dev/null 2>&1";
+					cmd = "clearShm > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					if (WEXITSTATUS(rtnCode) != 1)
@@ -2772,7 +2772,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
-                    string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
+                    string cmd = "save_brm  > " + logdir + "/save_brm.log1 2>&1";
                     int rtnCode = system(cmd.c_str());
 
                     if (WEXITSTATUS(rtnCode) == 0)
@@ -4885,7 +4885,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     DeviceNetworkConfig devicenetworkconfig;
     Oam oam;
     string Section;
-    string installDir = startup::StartUp::installDir();
 
     pthread_mutex_lock(&THREAD_LOCK);
 
@@ -5118,7 +5117,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                     }
 
 					string loginTmp = tmpLogDir + "/login_test.log";
-                    string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
+                    string cmd = "remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
                     system(cmd.c_str());
 
 					if (!oam.checkLogStatus(loginTmp, "README")) {
@@ -5463,11 +5462,95 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
     listPT = devicenetworklist.begin();
 
+    //distribute config file
+    distributeConfigFile("system");
+    distributeConfigFile("system", "ProcessConfig.xml");
+
     for ( ; listPT != devicenetworklist.end() ; listPT++)
     {
-        string moduleName = (*listPT).DeviceName;
+        string remoteModuleName = (*listPT).DeviceName;
+        string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+        HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+        string remoteModuleIP = (*pt1).IPAddr;
+        string remoteHostName = (*pt1).HostName;
 
-        processManager.configureModule(moduleName);
+        string dir = "/var/lib/columnstore/local/etc" + remoteModuleName;
+
+        cmd = "mkdir " + dir + " > /dev/null 2>&1";
+        system(cmd.c_str());
+
+        if ( remoteModuleType == "um" )
+        {
+            cmd = "cp /var/lib/columnstore/local/etc/um1/* " + dir + "/.";
+            system(cmd.c_str());
+        }
+        else if ( remoteModuleType == "pm" )
+        {
+            cmd = "cp /var/lib/columnstore/local/etc/pm1/* " + dir + "/.";
+            system(cmd.c_str());
+        }
+
+        log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+        //create module file
+        if ( !createModuleFile(remoteModuleName) )
+        {
+            log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
+
+        log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+        if ( remoteModuleType == "pm" )
+        {
+            //setup Standby OAM Parent, if needed
+            if ( config.OAMStandbyName() == oam::UnassignedName )
+                setStandbyModule(remoteModuleName, false);
+        }
+
+        string logFile = tmpLogDir + "/" + remoteModuleName + "_mcs_module_installer.log";
+        log.writeLog(__LINE__, "addModule - mcs_module_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+        cmd = "mcs_module_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " 1 >" + logFile;
+        log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+        int rtnCode = system(cmd.c_str());
+
+        if (WEXITSTATUS(rtnCode) != 0)
+        {
+            log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+            DeviceNetworkList devicenetworklistR;
+            DeviceNetworkConfig devicenetworkconfigR;
+            HostConfig hostconfig;
+
+            devicenetworkconfigR.DeviceName = remoteModuleName;
+
+            hostconfig.IPAddr = oam::UnassignedName;
+
+            hostconfig.HostName = oam::UnassignedName;
+            hostconfig.NicID = 1;
+            devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+            devicenetworklistR.push_back(devicenetworkconfigR);
+
+            processManager.removeModule(devicenetworklistR, false);
+
+            log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+            pthread_mutex_unlock(&THREAD_LOCK);
+            cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+            system(cmd.c_str());
+            processManager.setModuleState(remoteModuleName, oam::FAILED);
+            return API_FAILURE;
+        }
+        if (manualFlag)
+            //set new module to disable state if manual add
+            disableModule(remoteModuleName, true);
+
+        // add to monitor list
+        moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
+
+        processManager.configureModule(remoteModuleName);
     }
 
     //delay to give time for ProcMon to start after the config is sent and procmon restarts
@@ -6552,13 +6635,13 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     if ( skipSession )
         skip = "-s";
 
-    string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
+    string cmd = "reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
     int rtnCode = system(cmd.c_str());
     log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
     
     log.writeLog(__LINE__, "Running DBRM save_brm", LOG_TYPE_DEBUG);
 
-    cmd = startup::StartUp::installDir() + "/bin/save_brm > " + logdir + "/save_brm.log1 2>&1";
+    cmd = "save_brm > " + logdir + "/save_brm.log1 2>&1";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 1)
@@ -6570,7 +6653,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
         
     if ( clearshm )
     {
-        cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
+        cmd = "clearShm -c > /dev/null 2>&1";
         rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 1)
@@ -6630,7 +6713,7 @@ bool ProcessManager::createModuleFile(string remoteModuleName)
 {
     // Read Local Install flag
 
-    string fileName = startup::StartUp::installDir() + "/local/etc/" + remoteModuleName + "/module";
+    string fileName = "/var/lib/columnstore/local/etc/" + remoteModuleName + "/module";
 
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());
@@ -8334,11 +8417,11 @@ bool ProcessManager::updateExtentMap()
 ******************************************************************************************/
 bool ProcessManager::makeXMInittab(std::string moduleName, std::string systemID, std::string parentOAMModuleHostName)
 {
-    string fileName = startup::StartUp::installDir() + "/local/etc/" + moduleName + "/inittab.calpont";
+    string fileName = "/var/lib/columnstore/local/etc/" + moduleName + "/inittab.calpont";
 
     vector <string> lines;
 
-    string init1 = "1" + systemID + ":2345:respawn:" + startup::StartUp::installDir() + "/bin/ProcMon " + parentOAMModuleHostName;
+    string init1 = "1" + systemID + ":2345:respawn:ProcMon " + parentOAMModuleHostName;
 
     lines.push_back(init1);
 
@@ -10572,12 +10655,12 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
     if ( config.moduleName() == moduleName )
     {
 		string tmpMount = tmpLogDir + "/mount.log";
-        string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount;
+        string cmd = "export LC_ALL=C;mount /var/lib/columnstore/data" + dbrootID + " > " + tmpMount;
         system(cmd.c_str());
 
         if ( !rootUser)
         {
-            cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+            cmd = "chown -R " + USER + ":" + USER + " /var/lib/columnstore/data" + dbrootID + " > /dev/null";
             system(cmd.c_str());
         }
 

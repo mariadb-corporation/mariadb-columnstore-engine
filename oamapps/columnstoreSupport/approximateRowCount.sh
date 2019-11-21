@@ -9,7 +9,6 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-	INSTALLDIR="/usr/local/mariadb/columnstore"
 	MYSQLCMD="mysql -u root"
 fi
 
@@ -50,7 +49,7 @@ colWidth=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 #
 # Use editem to count the extents.
 #
-extentCount=`/usr/local/mariadb/columnstore/bin/editem -o $objectid | wc -l`
+extentCount=`editem -o $objectid | wc -l`
 let extentCount-=2 # Take out the 2 extra rows for header and blank line at end.
 let approximateRowCount=$extentCount*8192*1024;
 

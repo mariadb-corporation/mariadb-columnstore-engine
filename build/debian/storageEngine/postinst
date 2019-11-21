@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 rpmmode=install
-prefix=/usr/local
 
 echo "MariaDB ColumnStore install completed"
 
