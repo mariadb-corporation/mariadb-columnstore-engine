@@ -3680,6 +3680,29 @@ ReturnedColumn* buildFunctionColumn(
         fc = buildCaseFunction(ifp, gwi, nonSupport);
     }
 
+    else if ((funcName == "charset" || funcName == "collation") &&
+             ifp->argument_count() == 1 &&
+             ifp->arguments()[0]->type() == Item::FIELD_ITEM)
+    {
+        Item_field *item = reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+        CHARSET_INFO* info = item->charset_for_protocol();
+        ReturnedColumn* rc;
+        string val;
+
+        if (funcName == "charset")
+        {
+            val = info->csname;
+        }
+        else // collation
+        {
+            val = info->name;
+        }
+
+        rc = new ConstantColumn(val, ConstantColumn::LITERAL);
+
+        return rc;
+    }
+
     else if ((functor = funcExp->getFunctor(funcName)))
     {
         // where clause isnull still treated as predicate operator
