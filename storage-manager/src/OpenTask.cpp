@@ -45,7 +45,7 @@ bool OpenTask::run()
         return the result
     */
     SMLogging* logger = SMLogging::get();
-    bool success;
+    int success;
     uint8_t buf[1024] = {0};
     
     if (getLength() > 1023)
@@ -55,7 +55,7 @@ bool OpenTask::run()
     }
     
     success = read(buf, getLength());
-    if (!success)
+    if (success<0)
     {
         handleError("OpenTask read2", errno);
         return false;
