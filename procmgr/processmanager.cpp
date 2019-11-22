@@ -2789,28 +2789,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     if (storageType == "storagemanager")
                     {
-                        string DBRMroot;
-                        oam.getSystemConfig("DBRMRoot", DBRMroot);
-
-                        string currentFileName = DBRMroot + "_current";
-                        IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
-
-                        if (!fs.filesystemSync())
-                        {
-                            ackMsg << (ByteStream::byte) oam::ACK;
-                            ackMsg << actionType;
-                            ackMsg << target;
-                            ackMsg << (ByteStream::byte) API_FAILURE;
-
-                            try
-                            {
-                                fIos.write(ackMsg);
-                            }
-                            catch (...) {}
-
-                            log.writeLog(__LINE__, "SUSPENDWRITES: API_FAILURE filestemSync()",LOG_TYPE_ERROR);
-                            break;
-                        }
                         //sync fs on all pm nodes if up
                         for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
                         {
@@ -2841,12 +2819,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                                 if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
                                     continue;
 
-                                ByteStream msg;
-                                ByteStream::byte requestID = SYNCFSALL;
-
-                                msg << requestID;
-
-                                int returnStatus = processManager.sendMsgProcMon( (*pt).DeviceName, msg, requestID );
+                                int returnStatus = processManager.syncFsAll( (*pt).DeviceName );
 
                                 if (returnStatus != API_SUCCESS)
                                 {
@@ -11193,6 +11166,35 @@ int ProcessManager::glusterUnassign(std::string moduleName, std::string dbroot)
     return returnStatus;
 }
 
+/******************************************************************************************
+* @brief    syncFsALL
+*
+* purpose:  Sync filesystem for backup snapshots on suspenddatabasewrites
+*
+******************************************************************************************/
+int ProcessManager::syncFsAll(std::string moduleName)
+{
+
+    ByteStream msg;
+    ByteStream::byte requestID = SYNCFSALL;
+
+    msg << requestID;
+
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+
+    if ( returnStatus == API_SUCCESS)
+    {
+        //log the success event
+        log.writeLog(__LINE__, "syncFsALL Success: " + moduleName, LOG_TYPE_DEBUG);
+    }
+    else
+    {
+        //log the error event
+        log.writeLog(__LINE__, "syncFsALL FAILED: " + moduleName, LOG_TYPE_ERROR);
+    }
+
+    return returnStatus;
+}
 
 } //end of namespace
 // vim:ts=4 sw=4:

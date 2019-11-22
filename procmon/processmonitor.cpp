@@ -2077,9 +2077,18 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             log.writeLog(__LINE__,  "MSG RECEIVED: SYNC FileSystem...");
             int requestStatus = API_SUCCESS;
             requestStatus = syncFS();
-            ackMsg << (ByteStream::byte) ACK;
-            ackMsg << (ByteStream::byte) SHUTDOWNMODULE;
-            ackMsg << (ByteStream::byte) API_SUCCESS;
+            if (requestStatus == API_SUCCESS)
+            {
+                ackMsg << (ByteStream::byte) ACK;
+                ackMsg << (ByteStream::byte) SYNCFSALL;
+                ackMsg << (ByteStream::byte) API_SUCCESS;
+            }
+            else
+            {
+                ackMsg << (ByteStream::byte) ACK;
+                ackMsg << (ByteStream::byte) SYNCFSALL;
+                ackMsg << (ByteStream::byte) API_FAILURE;
+            }
             mq.write(ackMsg);
 
             log.writeLog(__LINE__, "SYNCFSALL: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
