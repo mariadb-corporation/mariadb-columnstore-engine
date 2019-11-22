@@ -556,6 +556,10 @@ public:
     	*/
     int glusterUnassign(std::string moduleName, std::string dbroot);
 
+    /** @brief sync filesystem for snapshot backups
+        */
+    int syncFsAll(std::string moduleName);
+
 
 private:
 

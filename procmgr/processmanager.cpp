@@ -2712,6 +2712,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     ByteStream::byte ackResponse = API_FAILURE;
                     log.writeLog(__LINE__,  "MSG RECEIVED: suspend database writes");
 
+                    string storageType = Config::makeConfig()->getConfig("Installation", "DBRootStorageType");
+
                     // GRACEFUL_WAIT means that we are Suspending writes, but waiting for all
                     // transactions to finish or rollback as commanded. This is only set if there
                     // are, in fact, transactions active (or cpimport).
@@ -2783,6 +2785,60 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     {
                         ackResponse = API_FAILURE_DB_ERROR;
                         dbrm.setSystemSuspended(false);
+                    }
+
+                    if (storageType == "storagemanager")
+                    {
+                        //sync fs on all pm nodes if up
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
+                                continue;
+
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                int opState = oam::ACTIVE;
+                                bool degraded;
+
+                                try
+                                {
+                                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                                }
+                                catch (...)
+                                {
+                                    log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                                }
+
+                                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                    continue;
+
+                                int returnStatus = processManager.syncFsAll( (*pt).DeviceName );
+
+                                if (returnStatus != API_SUCCESS)
+                                {
+                                    ackMsg << (ByteStream::byte) oam::ACK;
+                                    ackMsg << actionType;
+                                    ackMsg << target;
+                                    ackMsg << (ByteStream::byte) API_FAILURE;
+
+                                    try
+                                    {
+                                        fIos.write(ackMsg);
+                                    }
+                                    catch (...) {}
+
+                                    log.writeLog(__LINE__, "SUSPENDWRITES: API_FAILURE filestemSync() on module " + (*pt).DeviceName,LOG_TYPE_ERROR);
+                                    break;
+                                }
+                            }
+                        }
                     }
 
                     ackMsg.reset();
@@ -11110,6 +11166,35 @@ int ProcessManager::glusterUnassign(std::string moduleName, std::string dbroot)
     return returnStatus;
 }
 
+/******************************************************************************************
+* @brief    syncFsALL
+*
+* purpose:  Sync filesystem for backup snapshots on suspenddatabasewrites
+*
+******************************************************************************************/
+int ProcessManager::syncFsAll(std::string moduleName)
+{
+
+    ByteStream msg;
+    ByteStream::byte requestID = SYNCFSALL;
+
+    msg << requestID;
+
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+
+    if ( returnStatus == API_SUCCESS)
+    {
+        //log the success event
+        log.writeLog(__LINE__, "syncFsALL Success: " + moduleName, LOG_TYPE_DEBUG);
+    }
+    else
+    {
+        //log the error event
+        log.writeLog(__LINE__, "syncFsALL FAILED: " + moduleName, LOG_TYPE_ERROR);
+    }
+
+    return returnStatus;
+}
 
 } //end of namespace
 // vim:ts=4 sw=4:

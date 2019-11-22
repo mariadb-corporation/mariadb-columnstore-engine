@@ -181,8 +181,8 @@ void Ownership::releaseOwnership(const bf::path &p, bool isDtor)
     
     // start flushing
     boost::thread xfer([this, &p, &done] { this->touchFlushing(p, &done); });
-    Cache::get()->dropPrefix(p);
     Synchronizer::get()->dropPrefix(p);
+    Cache::get()->dropPrefix(p);
     done = true;
     xfer.interrupt();
     xfer.join();

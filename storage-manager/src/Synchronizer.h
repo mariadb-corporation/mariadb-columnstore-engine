@@ -53,8 +53,8 @@ class Synchronizer : public boost::noncopyable , public ConfigListener
         void deletedObjects(const boost::filesystem::path &firstDir, const std::vector<std::string> &keys);        
         void flushObject(const boost::filesystem::path &firstDir, const std::string &key);
         void forceFlush();  // ideally, make a version of this that takes a firstDir parameter
-        
-        
+        void syncNow(); // synchronous version of force for SyncTask
+
         void newPrefix(const boost::filesystem::path &p);
         void dropPrefix(const boost::filesystem::path &p);
         
@@ -118,7 +118,7 @@ class Synchronizer : public boost::noncopyable , public ConfigListener
         bool blockNewJobs;
         
         void syncNow(const boost::filesystem::path &prefix);  // a synchronous version of forceFlush()
-        
+
         // some KPIs
         size_t numBytesRead, numBytesWritten, numBytesUploaded, numBytesDownloaded,
             flushesTriggeredBySize, flushesTriggeredByTimer, journalsMerged, objectsSyncedWithNoJournal,

@@ -247,6 +247,20 @@ int SMComm::ping()
     common_exit(command, response, err);
 }
 
+int SMComm::sync()
+{
+    ByteStream *command = buffers.getByteStream();
+    ByteStream *response = buffers.getByteStream();
+    ssize_t err;
+
+    *command << (uint8_t) storagemanager::SYNC;
+    err = sockets.send_recv(*command, response);
+    if (err)
+        common_exit(command, response, err);
+    check_for_error(command, response, err);
+    common_exit(command, response, err);
+}
+
 int SMComm::copyFile(const string &file1, const string &file2)
 {
     ByteStream *command = buffers.getByteStream();
