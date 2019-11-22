@@ -116,7 +116,7 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo) :
     else
         allowDJS = false;
 
-    numCores = sysconf(_SC_NPROCESSORS_ONLN);
+    numCores = resourceManager->numCores();
     if (numCores <= 0)
         numCores = 8;
     /* Debugging, rand() is used to simulate failures
@@ -284,8 +284,10 @@ void TupleHashJoinStep::startSmallRunners(uint index)
         handle abort, out of memory, etc
     */
 
+    /* To measure wall-time spent constructing the small-side tables...
     boost::posix_time::ptime end_time, start_time =
         boost::posix_time::microsec_clock::universal_time();
+    */
 
     stopMemTracking = false;
     uint64_t jobs[numCores];
@@ -324,12 +326,13 @@ void TupleHashJoinStep::startSmallRunners(uint index)
         while (more)
             more = smallDLs[index]->next(smallIts[index], &oneRG);
     }
-    //joiner->doneInserting();
 
+    /* To measure wall-time spent constructing the small-side tables...
     end_time = boost::posix_time::microsec_clock::universal_time();
     if (!(fSessionId & 0x80000000))
         cout << "hash table construction time = " << end_time - start_time <<
         " size = " << joiner->size() << endl;
+    */
 
     extendedInfo += "\n";
 
