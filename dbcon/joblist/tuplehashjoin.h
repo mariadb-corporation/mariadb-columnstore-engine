@@ -75,6 +75,8 @@ public:
     void tableOid1(execplan::CalpontSystemCatalog::OID tableOid1)
     {
         fTableOID1 = tableOid1;
+        if (fTableOID1 < 3000)
+            numCores = 1;   // syscat query, no need for more than 1 thread
     }
     void tableOid2(execplan::CalpontSystemCatalog::OID tableOid2)
     {
@@ -425,7 +427,6 @@ private:
     std::vector<std::vector<uint32_t> > smallSideKeys;
 
     ResourceManager* resourceManager;
-    volatile uint64_t totalUMMemoryUsage;
 
     struct JoinerSorter
     {
@@ -436,16 +437,14 @@ private:
         }
     };
     std::vector<boost::shared_ptr<joiner::TupleJoiner> > joiners;
-
     boost::scoped_array<std::vector<rowgroup::RGData> > rgData;
     TupleBPS* largeBPS;
     rowgroup::RowGroup largeRG, outputRG;
     std::vector<rowgroup::RowGroup> smallRGs;
-    uint64_t pmMemLimit;
-    uint64_t rgDataSize;
+    ssize_t pmMemLimit;
 
     void hjRunner();
-    void smallRunnerFcn(uint32_t index);
+    void smallRunnerFcn(uint32_t index, uint threadID, uint64_t *threads);
 
     struct HJRunner
     {
@@ -462,15 +461,13 @@ private:
         SmallRunner(TupleHashJoinStep* hj, uint32_t i) : HJ(hj), index(i) { }
         void operator()()
         {
-            utils::setThreadName("HJSSmallSide");
-            HJ->smallRunnerFcn(index);
+            HJ->startSmallRunners(index);
         }
         TupleHashJoinStep* HJ;
         uint32_t index;
     };
 
     int64_t mainRunner; // thread handle from thread pool
-    std::vector<uint64_t> smallRunners; // thread handles from thread pool
 
     // for notify TupleAggregateStep PM hashjoin
     // Ideally, hashjoin and delivery communicate with RowGroupDL,
@@ -614,9 +611,18 @@ private:
     std::vector<boost::shared_ptr<joiner::TupleJoiner> > tbpsJoiners;
     std::vector<boost::shared_ptr<joiner::TupleJoiner> > djsJoiners;
     std::vector<int> djsJoinerMap;
-    boost::scoped_array<uint64_t> memUsedByEachJoin;
+    boost::scoped_array<ssize_t> memUsedByEachJoin;
     boost::mutex djsLock;
     boost::shared_ptr<int64_t> sessionMemLimit;
+
+    /* Threaded UM join support */
+    int numCores;
+    boost::mutex dlMutex, memTrackMutex, saneErrMsg;
+    boost::condition memTrackDone;
+    std::atomic<bool> rgdLock;
+    bool stopMemTracking;
+    void trackMem(uint index);
+    void startSmallRunners(uint index);
 
     friend class DiskJoinStep;
 };

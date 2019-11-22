@@ -486,7 +486,7 @@
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
 			files are left behind.  -->
-        <TempFilePath>/var/lib/columnstore/tmp</TempFilePath>
+        <TempFilePath>/var/lib/columnstore/tmp/cs-diskjoin</TempFilePath>
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>

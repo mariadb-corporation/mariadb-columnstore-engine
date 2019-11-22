@@ -1305,7 +1305,7 @@ int8_t setupCwd(joblist::ResourceManager* rm)
 
     if (rc < 0 || access(".", W_OK) != 0)
         rc = chdir("/tmp");
-    
+
     return (rc < 0) ? -5 : rc;
 }
 
@@ -1359,7 +1359,7 @@ void cleanTempDir()
         return;
 
     if (tmpPrefix.empty())
-        tmpPrefix = "/tmp/infinidb";
+        tmpPrefix = "/tmp/cs-diskjoin";
 
     tmpPrefix += "/";
 
@@ -1636,4 +1636,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 // vim:ts=4 sw=4:
-

@@ -495,7 +495,7 @@
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
 			files are left behind.
-		<TempFilePath>/tmp</TempFilePath>  -->
+		<TempFilePath>/tmp/cs-diskjoin</TempFilePath>  -->
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>
