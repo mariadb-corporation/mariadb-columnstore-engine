@@ -86,6 +86,7 @@ FuncExp::FuncExp()
     fFuncMap["atan"] = new Func_atan();
     fFuncMap["atan2"] = new Func_atan();
     fFuncMap["between"] = new Func_between();
+    fFuncMap["bit_count"] = new Func_bit_count();
     fFuncMap["case_searched"] = new Func_searched_case();
     fFuncMap["case_simple"] = new Func_simple_case();
     fFuncMap["cast_as_signed"] = new Func_cast_signed();	//dlh
