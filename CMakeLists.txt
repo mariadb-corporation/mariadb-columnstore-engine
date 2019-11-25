@@ -153,17 +153,6 @@ if (NOT SNAPPY_FOUND)
     MESSAGE(FATAL_ERROR "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
 endif()
 
-# Jemalloc has issues with SLES 12, so disable for now
-IF (EXISTS "/etc/SuSE-release")
-    SET(JEMALLOC_LIBRARIES "")
-ELSE ()
-    INCLUDE (FindJeMalloc)
-    if (NOT JEMALLOC_FOUND)
-        message(FATAL_ERROR "jemalloc not found!")
-        SET(JEMALLOC_LIBRARIES "")
-    endif()
-ENDIF ()
-
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
     message(FATAL_ERROR "awk not found!")
@@ -199,7 +188,7 @@ ENDIF()
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${JEMALLOC_LIBRARIES})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client)
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
