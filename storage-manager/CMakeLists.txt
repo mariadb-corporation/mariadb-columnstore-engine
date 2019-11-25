@@ -95,7 +95,7 @@ add_custom_command(
 # The includes and lib linkages required to link against cloudio ... 
 # pretty crazy.  When lib dependencies are eventually config'd right,
 # change this to only include and link against cloudio.
-include_directories(${CMAKE_SOURCE_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
+include_directories(${ENGINE_SRC_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
 add_executable(smcat src/smcat.cpp)
 target_link_libraries(smcat storagemanager cloudio
     ${ENGINE_LDFLAGS}

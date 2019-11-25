@@ -33,14 +33,20 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
 
-add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
-SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
+if (COMMAND mysql_add_plugin)
+    mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY DEFAULT
+        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool
+        COMPONENT columnstore-engine)
+else ()
+    add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
+    SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
 
-target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
+    target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
-set_target_properties(ha_columnstore PROPERTIES VERSION 1.0.0 SOVERSION 1)
+    set_target_properties(ha_columnstore PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
+    install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
+endif ()
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 

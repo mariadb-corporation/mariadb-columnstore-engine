@@ -34,7 +34,7 @@ using namespace boost;
 #include "exceptclasses.h"
 #include "configcpp.h"
 #include "installdir.h"
-#include "config.h"
+#include "mcsconfig.h"
 
 namespace
 {

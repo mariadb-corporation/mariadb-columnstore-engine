@@ -51,7 +51,7 @@
 #include <boost/regex.hpp>
 #include "liboamcpp.h"
 #include "installdir.h"
-#include "config.h"
+#include "mcsconfig.h"
 
 using namespace std;
 using namespace oam;

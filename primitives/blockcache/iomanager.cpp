@@ -28,7 +28,7 @@
 //
 //
 
-#include "config.h"
+#include "mcsconfig.h"
 
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE

@@ -22,7 +22,7 @@ using namespace std;
 using namespace boost;
 
 #ifndef _MSC_VER
-#include "config.h"
+#include "mcsconfig.h"
 #endif
 
 #include "exceptclasses.h"

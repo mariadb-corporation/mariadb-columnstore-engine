@@ -47,7 +47,7 @@
 #include <netdb.h>
 #include <sys/sysinfo.h>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 

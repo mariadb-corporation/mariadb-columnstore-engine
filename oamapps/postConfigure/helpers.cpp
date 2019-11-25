@@ -25,7 +25,7 @@
 
 #include <readline/readline.h>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "configcpp.h"
 using namespace config;
 

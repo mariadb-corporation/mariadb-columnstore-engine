@@ -25,7 +25,7 @@
 #include <cassert>
 
 #include "columnstoreversion.h"
-#include "config.h"
+#include "mcsconfig.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"

@@ -29,7 +29,7 @@
 #include <netdb.h>
 #include <readline/readline.h>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "installdir.h"

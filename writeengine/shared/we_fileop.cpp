@@ -17,7 +17,7 @@
 
 //  $Id: we_fileop.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 
-#include "config.h"
+#include "mcsconfig.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>

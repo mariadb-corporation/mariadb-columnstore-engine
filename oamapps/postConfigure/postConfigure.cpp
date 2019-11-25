@@ -68,7 +68,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"

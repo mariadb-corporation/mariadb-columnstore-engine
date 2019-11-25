@@ -1,4 +1,4 @@
-include_directories(${ENGINE_COMMON_INCLUDES} ${CMAKE_SOURCE_DIR}/storage-manager/include)
+include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/storage-manager/include)
 
 set(cloudio_LIB_SRCS SMComm.cpp SMDataFile.cpp SMFileFactory.cpp SMFileSystem.cpp SocketPool.cpp cloud_plugin.cpp)
 
