@@ -203,7 +203,6 @@ public:
 private:
     SELECT_LEX* fFromSub;
     std::string fAlias;
-    bool fPushdownHand;
 };
 
 class SelectSubQuery :  public SubQuery

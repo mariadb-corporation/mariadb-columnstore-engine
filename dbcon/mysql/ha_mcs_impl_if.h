@@ -189,7 +189,6 @@ struct cal_table_info
     enum RowSources { FROM_ENGINE, FROM_FILE };
 
     cal_table_info() : tpl_ctx(0),
-        //tpl_scan_ctx(0),
         c(0),
         msTablePtr(0),
         conn_hndl(0),

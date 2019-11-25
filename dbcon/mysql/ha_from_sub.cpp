@@ -326,8 +326,7 @@ FromSubQuery::FromSubQuery(gp_walk_info& gwip,
     SELECT_LEX* sub, 
     bool isPushdownHandler) :
         SubQuery(gwip),
-        fFromSub(sub),
-        fPushdownHand(isPushdownHandler)
+        fFromSub(sub)
 {}
 
 FromSubQuery::~FromSubQuery()
@@ -349,9 +348,7 @@ SCSEP FromSubQuery::transform()
     csep->derivedTbAlias(fAlias); // always lower case
     csep->derivedTbView(fGwip.viewName.alias);
 
-    // DRRTUY isUnion - false. fPushdownHand could be safely set to true
-    // b/c only pushdowns get here.
-    if (getSelectPlan(gwi, *fFromSub, csep, false, fPushdownHand) != 0)
+    if (getSelectPlan(gwi, *fFromSub, csep, false, true) != 0)
     {
         fGwip.fatalParseError = true;
 
