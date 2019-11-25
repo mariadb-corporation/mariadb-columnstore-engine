@@ -268,7 +268,7 @@ bool isDateValid ( int day, int month, int year)
 {
     bool valid = true;
 
-    if ( year == 0 && month == 0 && year == 0 )
+    if ( day == 0 && month == 0 && year == 0 )
     {
         return true;
     }
@@ -1319,7 +1319,7 @@ inline void DataConvert::trimWhitespace(int64_t& charData)
 inline std::string DataConvert::constructRegexp(const std::string& str)
 {
     //In the worst case, every char is quadrupled, plus some leading/trailing cruft...
-    char* cBuf = (char*)alloca(((4 * str.length()) + 3) * sizeof(char));
+    char* cBuf = new char[(4 * str.length()) + 3];
     char c;
     uint32_t i, cBufIdx = 0;
     // translate to regexp symbols
@@ -1392,7 +1392,9 @@ inline std::string DataConvert::constructRegexp(const std::string& str)
 #ifdef VERBOSE
     cerr << "regexified string is " << cBuf << endl;
 #endif
-    return cBuf;
+    std::string ret(cBuf);
+    delete [] cBuf;
+    return ret;
 }
 
 } // namespace dataconvert
