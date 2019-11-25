@@ -40,7 +40,3 @@ server-id = 1
 lower_case_table_names=1
 
 plugin-load-add=ha_columnstore.so
-plugin-load-add=is_columnstore_tables.so
-plugin-load-add=is_columnstore_columns.so
-plugin-load-add=is_columnstore_extents.so
-plugin-load-add=is_columnstore_files.so
