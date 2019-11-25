@@ -222,10 +222,10 @@ size_t idb_wcstombs(char* dest, const wchar_t* src, size_t max)
 inline
 std::wstring utf8_to_wstring (const std::string& str)
 {
-    int bufsize = (int)((str.length() + 1) * sizeof(wchar_t));
+    size_t bufsize = str.length() + 1;
 
     // Convert to wide characters. Do all further work in wide characters
-    wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
+    wchar_t* wcbuf = new wchar_t[bufsize];
     // Passing +1 so that windows is happy to see extra position to place NULL
     size_t strwclen = idb_mbstowcs(wcbuf, str.c_str(), str.length() + 1);
 
@@ -234,7 +234,10 @@ std::wstring utf8_to_wstring (const std::string& str)
     if ( strwclen == static_cast<size_t>(-1) )
         strwclen = 0;
 
-    return std::wstring(wcbuf, strwclen);
+    std::wstring ret(wcbuf, strwclen);
+
+    delete [] wcbuf;
+    return ret;
 }
 
 
@@ -242,7 +245,7 @@ std::wstring utf8_to_wstring (const std::string& str)
 inline
 std::string wstring_to_utf8 (const std::wstring& str)
 {
-    char* outbuf = (char*)alloca((str.length() * MAX_UTF8_BYTES_PER_CHAR) + 1);
+    char* outbuf = new char[(str.length() * MAX_UTF8_BYTES_PER_CHAR) + 1];
     // Passing +1 so that windows is happy to see extra position to place NULL
     size_t strmblen = idb_wcstombs(outbuf, str.c_str(), str.length() * MAX_UTF8_BYTES_PER_CHAR + 1);
 
@@ -251,7 +254,10 @@ std::string wstring_to_utf8 (const std::wstring& str)
     if ( strmblen == static_cast<size_t>(-1) )
         strmblen = 0;
 
-    return std::string(outbuf, strmblen);
+    std::string ret(outbuf, strmblen);
+
+    delete [] outbuf;
+    return ret;
 }
 
 inline

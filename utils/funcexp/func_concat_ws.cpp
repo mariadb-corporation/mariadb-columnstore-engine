@@ -57,7 +57,7 @@ string Func_concat_ws::getStrVal(Row& row,
 #ifdef STRCOLL_ENH__
     wstring wstr;
     size_t strwclen = utf8::idb_mbstowcs(0, delim.c_str(), 0) + 1;
-    wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+    wchar_t* wcbuf = new wchar_t[strwclen];
     strwclen = utf8::idb_mbstowcs(wcbuf, delim.c_str(), strwclen);
     wstring wdelim(wcbuf, strwclen);
 
@@ -75,14 +75,15 @@ string Func_concat_ws::getStrVal(Row& row,
             wstr += wdelim;
 
         size_t strwclen1 = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-        wchar_t* wcbuf1 = (wchar_t*)alloca(strwclen1 * sizeof(wchar_t));
+        wchar_t* wcbuf1 = new wchar_t[strwclen1];
         strwclen1 = utf8::idb_mbstowcs(wcbuf1, tstr.c_str(), strwclen1);
         wstring str1(wcbuf1, strwclen1);
         wstr += str1;
+        delete [] wcbuf1;
     }
 
     size_t strmblen = utf8::idb_wcstombs(0, wstr.c_str(), 0) + 1;
-    char* outbuf = (char*)alloca(strmblen * sizeof(char));
+    char* outbuf = new char[strmblen];
     strmblen = utf8::idb_wcstombs(outbuf, wstr.c_str(), strmblen);
 
     if (strmblen == 0)
@@ -90,7 +91,10 @@ string Func_concat_ws::getStrVal(Row& row,
     else
         isNull = false;
 
-    return string(outbuf, strmblen);
+    std::string ret(outbuf, strmblen);
+    delete [] outbuf;
+    delete [] wcbuf;
+    return ret;
 
 #else
     string str;

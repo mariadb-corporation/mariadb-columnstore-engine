@@ -310,11 +310,8 @@ void pDictionaryScan::addFilter(int8_t COP, const string& value)
     }
     else
     {
-        uint8_t* s = (uint8_t*)alloca(value.size() * sizeof(uint8_t));
-
-        memcpy(s, value.data(), value.size());
         fFilterString << (uint16_t) value.size();
-        fFilterString.append(s, value.size());
+        fFilterString.append((const uint8_t*)value.data(), value.size());
     }
 }
 

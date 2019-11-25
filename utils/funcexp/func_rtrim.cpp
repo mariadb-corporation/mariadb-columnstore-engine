@@ -73,10 +73,10 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
     // determine the size of buffer to allocate, we can be sure the wide
     // char string won't be longer than:
     strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
-    int bufsize = (strwclen + 1) * sizeof(wchar_t);
+    int bufsize = strwclen + 1;
 
     // Convert the string to wide characters. Do all further work in wide characters
-    wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
+    wchar_t* wcbuf = new wchar_t[bufsize];
     strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
 
     // utf8::idb_mbstowcs could return -1 if there is bad chars
@@ -85,8 +85,8 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
 
     // Convert the trim string to wide
     trimwclen = trim.length();  // A guess to start.
-    int trimbufsize = (trimwclen + 1) * sizeof(wchar_t);
-    wchar_t* wctrim = (wchar_t*)alloca(trimbufsize);
+    int trimbufsize = trimwclen + 1;
+    wchar_t* wctrim = new wchar_t[trimbufsize];
     size_t trimlen = utf8::idb_mbstowcs(wctrim, trim.c_str(), trimwclen + 1);
 
     // idb_mbstowcs could return -1 if there is bad chars
@@ -128,7 +128,10 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
     size_t aLen = strwclen - trimCnt;
     wstring trimmed = wstring(aPtr, aLen);
     // Turn back to a string
-    return utf8::wstring_to_utf8(trimmed.c_str());
+    std::string ret(utf8::wstring_to_utf8(trimmed.c_str()));
+    delete [] wctrim;
+    delete [] wcbuf;
+    return ret;
 }
 
 
