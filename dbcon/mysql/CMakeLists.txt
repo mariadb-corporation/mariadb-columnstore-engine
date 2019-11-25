@@ -23,7 +23,11 @@ SET ( libcalmysql_SRCS
     ha_view.cpp sm.cpp
     ha_window_function.cpp
     ha_mcs_partition.cpp
-    ha_pseudocolumn.cpp)
+    ha_pseudocolumn.cpp
+    is_columnstore_tables.cpp
+    is_columnstore_columns.cpp
+    is_columnstore_files.cpp
+    is_columnstore_extents.cpp)
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
@@ -36,56 +40,7 @@ target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NE
 
 set_target_properties(ha_columnstore PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-SET ( is_columnstore_tables_SRCS
-    is_columnstore_tables.cpp
-    sm.cpp
-    )
-add_library(is_columnstore_tables SHARED ${is_columnstore_tables_SRCS})
-
-target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
-
-# Don't prepend .so file with 'lib'
-set_target_properties(is_columnstore_tables PROPERTIES PREFIX "")
-set_target_properties(is_columnstore_tables PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-SET ( is_columnstore_columns_SRCS
-    is_columnstore_columns.cpp
-    sm.cpp
-    )
-add_library(is_columnstore_columns SHARED ${is_columnstore_columns_SRCS})
-
-target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
-
-# Don't prepend .so file with 'lib'
-set_target_properties(is_columnstore_columns PROPERTIES PREFIX "")
-set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-SET ( is_columnstore_extents_SRCS
-    is_columnstore_extents.cpp
-    sm.cpp
-    )
-add_library(is_columnstore_extents SHARED ${is_columnstore_extents_SRCS})
-
-target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
-
-# Don't prepend .so file with 'lib'
-set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
-set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-SET ( is_columnstore_files_SRCS
-    is_columnstore_files.cpp
-    sm.cpp
-    )
-add_library(is_columnstore_files SHARED ${is_columnstore_files_SRCS})
-
-target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
-
-# Don't prepend .so file with 'lib'
-set_target_properties(is_columnstore_files PROPERTIES PREFIX "")
-set_target_properties(is_columnstore_files PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-
-install(TARGETS ha_columnstore is_columnstore_tables is_columnstore_columns is_columnstore_extents is_columnstore_files DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
+install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 
