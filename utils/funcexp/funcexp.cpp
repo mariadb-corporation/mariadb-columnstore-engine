@@ -209,7 +209,7 @@ FuncExp::FuncExp()
     fFuncMap["trim"] = new Func_trim();	//dlh
     fFuncMap["truncate"] = new Func_truncate();	//dlh
     fFuncMap["ucase"] = new Func_ucase();	//dlh
-    //fFuncMap["unhex"] = new Func_unhex();
+    fFuncMap["unhex"] = new Func_unhex();
     fFuncMap["unix_timestamp"] = new Func_unix_timestamp();
     fFuncMap["upper"] = new Func_ucase();	//dlh
     fFuncMap["week"] = new Func_week();	//dlh
