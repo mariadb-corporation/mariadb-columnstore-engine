@@ -1081,7 +1081,7 @@ int FileOp::initColumnExtent(
         // IMO it is better to check bool then to call a function.
         if ( bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpaceDisabled(dbRoot))
                 ? bOptExtension : false;
         }
         // Reduce number of blocks allocated for abbreviated extents thus
@@ -1849,7 +1849,7 @@ int FileOp::initDctnryExtent(
         // CS doesn't optimize non-compressed dict creation.
         if ( bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot)
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpaceDisabled(dbRoot)
                 && m_compressionType) ? bOptExtension : false;
         }
         // Reduce number of blocks allocated for abbreviated extents thus

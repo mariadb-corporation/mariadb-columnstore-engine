@@ -316,11 +316,6 @@ ADD_SUBDIRECTORY(storage-manager)
 
 # WriteEngine component tests
 IF( WITH_SHARED_COMP_TESTS )
-    # search for cppunit
-    INCLUDE (findcppunit.cmake)
-    if (NOT CPPUNIT_FOUND)
-        MESSAGE(FATAL_ERROR "CPPUnit not found please install cppunit-devel for CentOS/RedHat or libcppunit-dev for Ubuntu/Debian")
-    endif()
     ADD_SUBDIRECTORY(writeengine/shared)
 ENDIF( WITH_SHARED_COMP_TESTS )
 

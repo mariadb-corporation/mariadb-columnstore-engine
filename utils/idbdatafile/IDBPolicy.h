@@ -89,7 +89,7 @@ public:
     /**
      * Checks for disk space preallocation feature status for a dbroot
      */
-    static bool PreallocSpace(uint16_t dbRoot);
+    static bool PreallocSpaceDisabled(uint16_t dbRoot);
 
     /**
      * Accessor method that returns whether to use HDFS memory buffers
@@ -137,7 +137,7 @@ public:
     /**
     * This is used in WE shared components Unit Tests
     */
-    static void setPreallocSpace(uint16_t dbRoot);
+    static void enablePreallocSpace(uint16_t dbRoot);
 
 private:
     /**
@@ -178,11 +178,11 @@ bool IDBPolicy::useCloud()
 
 // MCOL-498 Looking for dbRoot in the List set in configIDBPolicy.
 inline
-bool IDBPolicy::PreallocSpace(uint16_t dbRoot)
+bool IDBPolicy::PreallocSpaceDisabled(uint16_t dbRoot)
 {
     std::vector<uint16_t>::iterator dbRootIter =
         find(s_PreallocSpace.begin(), s_PreallocSpace.end(), dbRoot);
-    return dbRootIter != s_PreallocSpace.end();
+    return dbRootIter == s_PreallocSpace.end();
 }
 
 inline
