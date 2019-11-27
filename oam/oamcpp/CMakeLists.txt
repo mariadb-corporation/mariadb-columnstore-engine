@@ -12,7 +12,5 @@ target_link_libraries(oamcpp )
 
 target_compile_options(oamcpp PRIVATE -Wno-unused-result)
 
-set_target_properties(oamcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 

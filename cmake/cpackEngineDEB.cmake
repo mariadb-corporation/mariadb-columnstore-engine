@@ -11,9 +11,9 @@ SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
 # Note that this variable is DEB not DEBIAN! http://public.kitware.com/pipermail/cmake/2014-July/058030.html
 SET(CPACK_DEB_COMPONENT_INSTALL ON)
 
-SET(CPACK_COMPONENTS_ALL platform libs storage-engine)
+SET(CPACK_COMPONENTS_ALL columnstore-platform columnstore-libs columnstore-engine)
 
-SET(CPACK_PACKAGE_NAME "mariadb-columnstore")
+SET(CPACK_PACKAGE_NAME "MariaDB")
 SET(ENGINE_ARCH "amd64")
 
 IF (NOT CPACK_DEBIAN_PACKAGE_VERSION)
@@ -54,9 +54,9 @@ SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DESCRIPTION "MariaDB Columnstore connect
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
 
-SET(CPACK_DEBIAN_LIBS_PACKAGE_PROVIDES "mariadb-columnstore-libs")
-SET(CPACK_DEBIAN_PLATFORM_PACKAGE_PROVIDES "mariadb-columnstore-platform")
-SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
+SET(CPACK_DEBIAN_LIBS_PACKAGE_PROVIDES "MariaDB-columnstore-libs")
+SET(CPACK_DEBIAN_PLATFORM_PACKAGE_PROVIDES "MariaDB-columnstore-platform")
+SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
 
 set(DEBIAN_VERSION_NUMBER OFF)
 if (EXISTS "/etc/debian_version")
@@ -65,14 +65,14 @@ if (EXISTS "/etc/debian_version")
     set(DEBIAN_VERSION_NUMBER "${CMAKE_MATCH_1}")
 endif ()
 if ("${DEBIAN_VERSION_NUMBER}" EQUAL "8")
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, mariadb-columnstore-libs, mariadb-columnstore-server, libsnappy1, libjemalloc1 net-tools")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, MariaDB-columnstore-libs, libsnappy1, libjemalloc1")
 elseif ("${DEBIAN_VERSION_NUMBER}" EQUAL "9")
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, mariadb-columnstore-libs, mariadb-columnstore-server, libsnappy1v5, libreadline5, libjemalloc1 net-tools")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, MariaDB-columnstore-libs, libsnappy1v5, libreadline5, libjemalloc1")
 else()
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libboost-all-dev, libreadline-dev, rsync, libsnappy1v5, net-tools, libjemalloc1 net-tools")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, libdbi-perl, libboost-all-dev, libreadline-dev, rsync, libsnappy1v5, net-tools, libjemalloc1")
 endif ()
 
-SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "mariadb-columnstore-libs")
+SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "MariaDB-columnstore-libs")
 
 
 set( CPACK_DEBIAN_LIBS_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/prerm;" )

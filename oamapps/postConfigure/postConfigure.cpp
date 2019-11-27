@@ -62,8 +62,8 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <readline.h>
+#include <history.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/tokenizer.hpp>

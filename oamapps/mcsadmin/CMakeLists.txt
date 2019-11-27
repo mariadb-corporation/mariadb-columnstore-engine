@@ -10,7 +10,7 @@ add_executable(mcsadmin ${mcsadmin_SRCS})
 
 target_compile_options(mcsadmin PRIVATE -Wno-unused-result)
 
-target_link_libraries(mcsadmin ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_WRITE_LIBS})
+target_link_libraries(mcsadmin ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIBRARY} ncurses ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_WRITE_LIBS})
 
-install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 

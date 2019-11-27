@@ -35,7 +35,7 @@ set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-t
 
 if (COMMAND mysql_add_plugin)
     mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY DEFAULT
-        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool
+        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
         COMPONENT columnstore-engine)
 else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
@@ -43,9 +43,7 @@ else ()
 
     target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
-    set_target_properties(ha_columnstore PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-    install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT storage-engine)
+    install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 endif ()
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
@@ -53,9 +51,9 @@ install(FILES syscatalog_mysql.sql
               calremoveuserpriority.sql 
               calshowprocesslist.sql 
               columnstore_info.sql
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT storage-engine)
+              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 install(PROGRAMS install_mcs_mysql.sh mysql-Columnstore
-    DESTINATION ${ENGINE_SBINDIR} COMPONENT storage-engine)
+    DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
 
 install(FILES columnstore.cnf
-    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT storage-engine)
+    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)

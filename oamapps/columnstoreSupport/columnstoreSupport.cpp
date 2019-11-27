@@ -27,7 +27,7 @@
 #include "stdio.h"
 #include "ctype.h"
 #include <netdb.h>
-#include <readline/readline.h>
+#include <readline.h>
 
 #include "mcsconfig.h"
 #include "liboamcpp.h"

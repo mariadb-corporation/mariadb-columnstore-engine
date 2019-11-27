@@ -23,7 +23,7 @@
 #include <iterator>
 #include <stdio.h>
 
-#include <readline/readline.h>
+#include <readline.h>
 
 #include "mcsconfig.h"
 #include "configcpp.h"

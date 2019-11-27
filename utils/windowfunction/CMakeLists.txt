@@ -26,12 +26,10 @@ set(windowfunction_LIB_SRCS
 
 add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
-set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
-install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 
 if (WITH_SORTING_COMPARATORS_UT)
     add_executable(comparators_tests comparators-tests.cpp)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    install(TARGETS comparators_tests DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+    install(TARGETS comparators_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 endif()
