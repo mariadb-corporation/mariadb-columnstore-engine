@@ -1,5 +1,6 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
    Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -16,8 +17,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-// $Id: ha_mcs_impl_if.h 9701 2013-07-17 18:51:55Z zzhu $
-/** @file */
 #ifndef HA_MCS_IMPL_IF_H__
 #define HA_MCS_IMPL_IF_H__
 #include <string>

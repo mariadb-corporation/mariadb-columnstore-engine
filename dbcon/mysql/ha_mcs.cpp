@@ -197,10 +197,9 @@ ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg) :
     handler(hton, table_arg),
     int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
                     HA_TABLE_SCAN_ON_INDEX |
-                    HA_CAN_TABLE_CONDITION_PUSHDOWN)
-//	int_table_flags(HA_NO_BLOBS | HA_BINLOG_STMT_CAPABLE)
-{
-}
+                    HA_CAN_TABLE_CONDITION_PUSHDOWN |
+                    HA_CAN_DIRECT_UPDATE_AND_DELETE)
+{ }
 
 
 /**
@@ -292,25 +291,7 @@ int ha_mcs::close(void)
     @details
   Example of this would be:
     @code
-  for (Field **field=table->field ; *field ; field++)
-  {
-    ...
-  }
     @endcode
-
-  See ha_tina.cc for an example of extracting all of the data as strings.
-  ha_berekly.cc has an example of how to store it intact by "packing" it
-  for ha_berkeley's own native storage type.
-
-  See the note for update_row() on auto_increments and timestamps. This
-  case also applies to write_row().
-
-  Called from item_sum.cc, item_sum.cc, sql_acl.cc, sql_insert.cc,
-  sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc, and sql_update.cc.
-
-    @see
-  item_sum.cc, item_sum.cc, sql_acl.cc, sql_insert.cc,
-  sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
 int ha_mcs::write_row(const uchar* buf)
@@ -328,14 +309,6 @@ void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
     DBUG_VOID_RETURN;
 }
 
-int ha_mcs::end_bulk_insert(bool abort)
-{
-    DBUG_ENTER("ha_mcs::end_bulk_insert");
-    int rc = ha_mcs_impl_end_bulk_insert(abort, table);
-    DBUG_RETURN(rc);
-}
-
-/**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
 int ha_mcs::end_bulk_insert()
 {
     DBUG_ENTER("ha_mcs::end_bulk_insert");
@@ -351,19 +324,10 @@ int ha_mcs::end_bulk_insert()
   clause was used. Consecutive ordering is not guaranteed.
 
     @details
-  Currently new_data will not have an updated auto_increament record, or
-  and updated timestamp field. You can do these for example by doing:
-    @code
-  if (table->timestamp_field_type & TIMESTAMP_AUTO_SET_ON_UPDATE)
-    table->timestamp_field->set_time();
-  if (table->next_number_field && record == table->record[0])
-    update_auto_increment();
+   @code
     @endcode
 
-  Called from sql_select.cc, sql_acl.cc, sql_update.cc, and sql_insert.cc.
-
     @see
-  sql_select.cc, sql_acl.cc, sql_update.cc and sql_insert.cc
 */
 int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
 {
@@ -373,7 +337,45 @@ int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
     DBUG_RETURN(rc);
 }
 
+// WIP
+/**
+  @brief
+  Yes, update_row() does what you expect, it updates a row. old_data will have
+  the previous row record in it, while new_data will have the newest data in it.
+  Keep in mind that the server can do updates based on ordering if an ORDER BY
+  clause was used. Consecutive ordering is not guaranteed.
 
+    @details
+   @code
+    @endcode
+
+    @see
+*/
+int ha_mcs::direct_update_rows_init(List<Item> *update_fields)
+{
+    DBUG_ENTER("ha_mcs::direct_update_rows_init");
+    DBUG_RETURN(0);
+}
+
+int ha_mcs::direct_update_rows(ha_rows *update_rows)
+{
+    DBUG_ENTER("ha_mcs::direct_update_rows");
+    int rc = ha_mcs_impl_direct_update_delete_rows(update_rows);
+    DBUG_RETURN(rc);
+}
+
+int ha_mcs::direct_delete_rows_init()
+{
+    DBUG_ENTER("ha_mcs::direct_delete_rows_init");
+    DBUG_RETURN(0);
+}
+
+int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
+{
+    DBUG_ENTER("ha_mcs::direct_delete_rows");
+    int rc = ha_mcs_impl_direct_update_delete_rows(deleted_rows);
+    DBUG_RETURN(rc);
+}
 /**
   @brief
   This will delete a row. buf will contain a copy of the row to be deleted.
