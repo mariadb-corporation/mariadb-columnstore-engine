@@ -71,6 +71,7 @@ set(funcexp_LIB_SRCS
     func_pow.cpp
     func_period_add.cpp
     func_period_diff.cpp
+    func_quote.cpp
     func_quarter.cpp
     func_rand.cpp
     func_regexp.cpp
@@ -85,6 +86,7 @@ set(funcexp_LIB_SRCS
     func_sec_to_time.cpp
     func_sha.cpp
     func_sign.cpp
+    func_space.cpp
     func_str_to_date.cpp
     func_strcmp.cpp
     func_substr.cpp

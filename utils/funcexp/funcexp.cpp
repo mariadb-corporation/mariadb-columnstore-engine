@@ -175,6 +175,7 @@ FuncExp::FuncExp()
     fFuncMap["position"] = new Func_instr();	//dlh
     fFuncMap["pow"] = new Func_pow();
     fFuncMap["power"] = new Func_pow();
+    fFuncMap["quote"] = new Func_quote();
     fFuncMap["quarter"] = new Func_quarter();
     fFuncMap["radians"] = new Func_radians();	//dlh
     fFuncMap["rand"] = new Func_rand();
@@ -192,6 +193,7 @@ FuncExp::FuncExp()
     fFuncMap["sha1"] = new Func_sha();
     fFuncMap["sign"] = new Func_sign();
     fFuncMap["sin"] = new Func_sin();
+    fFuncMap["space"] = new Func_space();
     fFuncMap["sqrt"] = new Func_sqrt();
     fFuncMap["str_to_date"] = new Func_str_to_date();
     fFuncMap["strcmp"] = new Func_strcmp();
