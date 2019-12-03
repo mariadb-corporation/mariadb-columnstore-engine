@@ -1195,7 +1195,6 @@ new_plan:
         std::unique_lock<std::mutex> scoped(jlMutex);
         while (destructing > 0)
             jlCleanupDone.wait(scoped);
-        std::cout << "session thread exiting" << std::endl;
     }
 };
 
