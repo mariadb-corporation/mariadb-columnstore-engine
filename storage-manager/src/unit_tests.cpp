@@ -996,7 +996,7 @@ bool listdirtask(bool connectionTest=false)
     return true;
 }
 
-void pingtask(bool connectionTest=false)
+void pingtask()
 {
 	int err=0;
     uint8_t buf[1024];
@@ -1005,47 +1005,25 @@ void pingtask(bool connectionTest=false)
     
     size_t len = sizeof(*cmd);
 
-    // set payload to be shorter than actual message lengh
-    // and send a shortened message.
-    if (connectionTest)
-        len -= 2;
-
     ssize_t result = ::write(sessionSock, cmd, sizeof(*cmd));
     assert(result==(sizeof(*cmd)));
     
-    // set payload to be correct length again
-    if (connectionTest)
-        len += 2;
 
     // process task will look for the full length and
     // will wait on the rest of the message.
+    // don't test connection loss here since this message is only 1 byte
     ProcessTask pt(clientSock, len);
     boost::thread t(pt);
 
-    if (connectionTest)
-    {
-        // make sure the thread is waiting for the rest of the data
-        // then kill the connection. This will trigger the task thread
-        // to exit on an error handling path
-        sleep(1);
-        close(sessionSock);
-        close(clientSock);
-        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-        assert(err == -1);
-        t.join();
-    }
-    else
-    {
-        t.join();
-        // read the response
-        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-        sm_response *resp = (sm_response *) buf;
-        assert(err == sizeof(sm_response));
-        assert(resp->header.type == SM_MSG_START);
-        assert(resp->header.payloadLen == sizeof(ssize_t));
-        assert(resp->header.flags == 0);
-        assert(resp->returnCode == 0);
-    }
+    t.join();
+    // read the response
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == sizeof(ssize_t));
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == 0);
 
     cout << "pingtask OK" << endl;
 }
@@ -1994,21 +1972,29 @@ int main(int argc, char* argv[])
     metadataJournalTestCleanup();
     cout << " DONE" << endl;
 
-    cout << "Testing connection loss..." << endl;
+    cout << "Testing connection loss..." << endl << endl;
 
+    cout << "Check log files for lines:" << endl;
+    cout << "[NameTask read] caught an error: Bad file descriptor."  << endl;
+    cout << "****** socket error!"  << endl;
+    cout << "PosixTask::consumeMsg(): Discarding the tail end of a partial msg." << endl << endl;
     //opentask();
+    cout << "OpenTask read2 connection test " << endl;
     opentask(true);
     makeConnection();
+    cout << "UnlinkTask read connection test " << endl;
     unlinktask(true);
     makeConnection();
+    cout << "StatTask read connection test " << endl;
     stattask(true);
     makeConnection();
+    cout << "TruncateTask read connection test " << endl;
     truncatetask(true);
     makeConnection();
+    cout << "ListDirextoryTask read connection test " << endl;
     listdirtask(true);
     makeConnection();
-    pingtask(true);
-    makeConnection();
+    cout << "CopyTask read connection test " << endl;
     copytask(true);
 
     (Cache::get())->shutdown();
