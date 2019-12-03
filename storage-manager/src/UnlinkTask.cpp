@@ -68,7 +68,7 @@ bool UnlinkTask::run()
     }
     catch (exception &e)
     {
-        logger->log(LOG_DEBUG, "UnlinkTask: caught '%s'", e.what());
+        logger->log(LOG_ERR, "UnlinkTask: caught '%s'", e.what());
         errno = EIO;
         err = -1;
     }

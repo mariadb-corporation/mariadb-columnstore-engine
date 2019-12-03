@@ -75,7 +75,7 @@ bool OpenTask::run()
     }
     catch (exception &e)
     {
-        logger->log(LOG_DEBUG, "OpenTask: caught '%s'", e.what());
+        logger->log(LOG_ERR, "OpenTask: caught '%s'", e.what());
         errno = EIO;
         err = -1;
     }

@@ -90,7 +90,7 @@ bool WriteTask::run()
             }
             catch (exception &e)
             {
-                logger->log(LOG_DEBUG, "WriteTask: caught '%s'", e.what());
+                logger->log(LOG_ERR, "WriteTask: caught '%s'", e.what());
                 errno = EIO;
                 err = -1;
             }
