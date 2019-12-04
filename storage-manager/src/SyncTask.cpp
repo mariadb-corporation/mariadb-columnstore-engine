@@ -43,8 +43,8 @@ bool SyncTask::run()
         return true;
     }
     // consume the msg
-    bool success = read(&buf, getLength());
-    if (!success)
+    int success = read(&buf, getLength());
+    if (success<0)
     {
         handleError("SyncTask", errno);
         return false;
