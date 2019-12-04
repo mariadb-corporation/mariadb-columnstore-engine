@@ -1017,7 +1017,7 @@ public:
 
 
         CPPUNIT_ASSERT(rc == NO_ERROR);
-        CPPUNIT_ASSERT(bFile->size() == 67108864);
+        CPPUNIT_ASSERT(bFile->size() == 2105344);
         fileOp.closeFile(pFile);
         // file has been extended delete the file before
         // the second run
@@ -1046,8 +1046,8 @@ public:
         bFile = new idbdatafile::BufferedFile(fileName, "r+b", 0);
         pFile = dynamic_cast<IDBDataFile*>(bFile);
  
-        // disable disk space preallocation and extend
-        idbdatafile::IDBPolicy::setPreallocSpace(dbRoot);
+        // enable disk space preallocation and extend
+        idbdatafile::IDBPolicy::enablePreallocSpace(dbRoot);
         rc = fileOp.initColumnExtent(pFile,
            dbRoot,
            BYTE_PER_BLOCK, // number of blocks
@@ -1060,7 +1060,7 @@ public:
 
 
         CPPUNIT_ASSERT(rc == NO_ERROR);
-        CPPUNIT_ASSERT(bFile->size() == 2105344);
+        CPPUNIT_ASSERT(bFile->size() == 67108864);
         fileOp.closeFile(pFile);
         // file has been extended
 
@@ -1114,7 +1114,7 @@ public:
             false,
             false ); //enable preallocation
         // Check the file size and remove the file
-        CPPUNIT_ASSERT(bFile->size() == 67379200);
+        CPPUNIT_ASSERT(bFile->size() == 483328);
         CPPUNIT_ASSERT(rc == NO_ERROR);
         fileOp.deleteFile( fileName );
         CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
@@ -1129,8 +1129,8 @@ public:
         bFile = (idbdatafile::BufferedFile*)m_dFile;
         CPPUNIT_ASSERT(m_dFile != NULL);
 
-        // disable preallocation and create a Dictionary
-        idbdatafile::IDBPolicy::setPreallocSpace(dbRoot);
+        // enable preallocation and create a Dictionary
+        idbdatafile::IDBPolicy::enablePreallocSpace(dbRoot);
         m_Dctnry.compressionType(1);
         rc = m_Dctnry.initDctnryExtent( m_dFile,
             dbRoot,
@@ -1141,7 +1141,7 @@ public:
             true ); //skip preallocation
 
         // Check the size and remove the file.
-        CPPUNIT_ASSERT(bFile->size() == 483328);
+        CPPUNIT_ASSERT(bFile->size() == 67379200);
         CPPUNIT_ASSERT(rc == NO_ERROR);
         fileOp.deleteFile(fileName);
         CPPUNIT_ASSERT(fileOp.exists( fileName ) == false);
