@@ -393,21 +393,42 @@ inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long* 
              sec2 = 0,
              msec2 = 0;
 
-    year1 = isDateTime ? (uint32_t)((time1 >> 48) & 0xffff) : 0;
-    month1 = isDateTime ? (uint32_t)((time1 >> 44) & 0xf) : 0;
-    day1 = isDateTime ? (uint32_t)((time1 >> 38) & 0x3f) : (uint32_t)((time1 >> 52) & 0x7ff);
-    hour1 = isDateTime ? (uint32_t)((time1 >> 32) & 0x3f) : (uint32_t)((time1 >> 40) & 0xfff);
-    min1 = isDateTime ? (uint32_t)((time1 >> 26) & 0x3f) : (uint32_t)((time1 >> 32) & 0xff);
-    sec1 = isDateTime ? (uint32_t)((time1 >> 20) & 0x3f) : (uint32_t)((time1 >> 24) & 0xff);
-    msec1 = isDateTime ? (uint32_t)((time1 & 0xfffff)) : (uint32_t)(time1 & 0xffffff);
+    if (isDateTime)
+    {
+        year1 = (uint32_t)((time1 >> 48) & 0xffff);
+        month1 = (uint32_t)((time1 >> 44) & 0xf);
+        day1 = (uint32_t)((time1 >> 38) & 0x3f);
+        hour1 = (uint32_t)((time1 >> 32) & 0x3f);
+        min1 = (uint32_t)((time1 >> 26) & 0x3f);
+        sec1 = (uint32_t)((time1 >> 20) & 0x3f);
+        msec1 = (uint32_t)((time1 & 0xfffff));
 
-    year2 = isDateTime ? (uint32_t)((time2 >> 48) & 0xffff) : 0;
-    month2 = isDateTime ? (uint32_t)((time2 >> 44) & 0xf) : 0;
-    day2 = isDateTime ? (uint32_t)((time2 >> 38) & 0x3f) : (uint32_t)((time2 >> 52) & 0x7ff);;
-    hour2 = isDateTime ? (uint32_t)((time2 >> 32) & 0x3f) : (uint32_t)((time2 >> 40) & 0xfff);
-    min2 = isDateTime ? (uint32_t)((time2 >> 26) & 0x3f) : (uint32_t)((time2 >> 32) & 0xff);
-    sec2 = isDateTime ? (uint32_t)((time2 >> 20) & 0x3f) : (uint32_t)((time2 >> 24) & 0xff);
-    msec2 = isDateTime ? (uint32_t)((time2 & 0xfffff)) : (uint32_t)(time2 & 0xffffff);
+        year2 = (uint32_t)((time2 >> 48) & 0xffff);
+        month2 = (uint32_t)((time2 >> 44) & 0xf);
+        day2 = (uint32_t)((time2 >> 38) & 0x3f);
+        hour2 = (uint32_t)((time2 >> 32) & 0x3f);
+        min2 = (uint32_t)((time2 >> 26) & 0x3f);
+        sec2 = (uint32_t)((time2 >> 20) & 0x3f);
+        msec2 = (uint32_t)(time2 & 0xfffff); 
+    }
+    else 
+    {
+        year1 = 0;
+        month1 = 0;
+        day1 = (time1 >> 52) & 0x7ff;
+        hour1 = (time1 >> 40) & 0xfff;
+        min1 = (time1 >> 32) & 0xff;
+        sec1 = (time1 >> 24) & 0xff;
+        msec1 = time1 & 0xffffff;
+
+        year2 = 0;
+        month2 = 0;
+        day2 = (time2 >> 52) & 0x7ff;
+        hour2 = (time2 >> 40) & 0xfff;
+        min2 = (time2 >> 32) & 0xff;
+        sec2 = (time2 >> 24) & 0xff;
+        msec2 = time2 & 0xffffff;
+    }
 
     days = calc_mysql_daynr(year1, month1, day1);
 
