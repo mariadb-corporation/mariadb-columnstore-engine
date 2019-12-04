@@ -1088,7 +1088,7 @@ new_plan:
                     // msgLog is global scope, and passed by copy, so, unclear
                     // what the warning is about.
                     destructing++;
-                    std::thread bgdtor([jl, &jlMutex, &jlCleanupDone, stmtID, &li, msgLog, &destructing] {
+                    std::thread bgdtor([jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing] {
                         std::unique_lock<std::mutex> scoped(jlMutex);
                         const_cast<joblist::SJLP &>(jl).reset();    // this happens second; does real destruction
                         logging::Message::Args args;
