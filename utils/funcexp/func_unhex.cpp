@@ -36,17 +36,24 @@ using namespace execplan;
 
 namespace
 {
-int64_t hex_to_int(char c)
+inline int hex_to_int(char c, bool& isNull)
 {
     if (c <= '9' && c >= '0')
         return c - '0';
 
-    c = toupper(c);
+    c |= 32;
 
-    if (c <= 'F' && c >= 'A')
-        return c - 'A' + 10;
+    if (c <= 'f' && c >= 'a')
+        return c - 'a' + 10;
 
+    isNull = true;
     return -1;
+}
+
+inline string cleanup(char *to)
+{
+    delete[] to;
+    return "";
 }
 }
 
@@ -65,48 +72,46 @@ string Func_unhex::getStrVal(rowgroup::Row& row,
                              CalpontSystemCatalog::ColType& op_ct)
 {
     const string& from = parm[0]->data()->getStrVal(row, isNull);
-    char* to = new char[2 + from.length() / 2];
 
-    if (!to)
-    {
-        isNull = true;
+    if (isNull)
         return "";
-    }
+
+    char* to = new char[2 + from.size() / 2];
 
     uint64_t from_pos = 0, to_pos = 0;
-    int64_t hex_char = 0;
+    int hex_char = 0;
 
-    if (strlen(from.c_str()) % 2)
+    if (from.size() % 2)
     {
-        hex_char = hex_to_int(from[from_pos++]);
-        to[to_pos++] = hex_char;
+        hex_char = hex_to_int(from[from_pos++], isNull);
 
         if (hex_char == -1)
-            goto nullHandling;
+            return cleanup(to);
+
+        to[to_pos++] = hex_char;
     }
 
-    for (; from_pos < strlen(from.c_str()); from_pos += 2)
+    for (; from_pos < from.size(); from_pos += 2)
     {
-        hex_char = hex_to_int(from[from_pos]) << 4;
+        hex_char = hex_to_int(from[from_pos], isNull) << 4;
 
         if (hex_char == -1)
-            goto nullHandling;
+            return cleanup(to);
 
         to[to_pos] = hex_char;
-        hex_char = hex_to_int(from[from_pos + 1]);
+        hex_char = hex_to_int(from[from_pos + 1], isNull);
 
         if (hex_char == -1)
-            goto nullHandling;
+            return cleanup(to);
 
         to[to_pos++] |= hex_char;
     }
 
     to[to_pos] = 0;
-    return string(to);
+    string tmp = string(to);
+    delete[] to;
 
-nullHandling:
-    isNull = true;
-    return "";
+    return tmp;
 }
 
 
