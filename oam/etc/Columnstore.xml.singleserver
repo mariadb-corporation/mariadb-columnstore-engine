@@ -501,6 +501,8 @@
 			  ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
 			  as many threads are available across all PMs.  -->
 		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
+		<!-- MaxOutstandingRequests is going to default to the num of cores available 
+			 across all performance modules * 4 divided by the ProcessorThreadsPerScan -->
 		<!-- <MaxOutstandingRequests>20</MaxOutstandingRequests> -->
 		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
@@ -510,7 +512,7 @@
 		<MaxBuckets>512</MaxBuckets>            <!-- Number of buckets -->
 	</TupleWSDL>
 	<RowAggregation>
-               <!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is 4 or number of cores when less than 4 -->
+               <!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 	</RowAggregation>
