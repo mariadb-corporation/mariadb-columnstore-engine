@@ -478,7 +478,7 @@
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
 		<FifoSizeLargeSide>64</FifoSizeLargeSide>
-		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide><!-- divide by 48 to get element count -->
+		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
 		<TotalUmMemory>25%</TotalUmMemory>
 		<TotalPmUmMemory>10%</TotalPmUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
