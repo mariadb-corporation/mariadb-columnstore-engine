@@ -28,7 +28,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 #include "columnstoreversion.h"
-#include "config.h"
+#include "mcsconfig.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "processmonitor.h"

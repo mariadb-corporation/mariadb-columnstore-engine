@@ -19,7 +19,7 @@
 * $Id: configcpp.cpp 3899 2013-06-17 20:54:10Z rdempsey $
 *
 ******************************************************************************************/
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <string>
 #include <stdexcept>

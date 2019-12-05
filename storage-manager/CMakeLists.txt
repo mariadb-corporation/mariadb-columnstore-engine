@@ -60,7 +60,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3)
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS} ${JEMALLOC_LIBRARIES})
+target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET storagemanager PROPERTY CXX_STANDARD 11)
 
 add_executable(StorageManager src/main.cpp)
@@ -95,7 +95,7 @@ add_custom_command(
 # The includes and lib linkages required to link against cloudio ... 
 # pretty crazy.  When lib dependencies are eventually config'd right,
 # change this to only include and link against cloudio.
-include_directories(${CMAKE_SOURCE_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
+include_directories(${ENGINE_SRC_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
 add_executable(smcat src/smcat.cpp)
 target_link_libraries(smcat storagemanager cloudio
     ${ENGINE_LDFLAGS}
@@ -126,16 +126,16 @@ target_link_libraries(smrm storagemanager cloudio
 
 install(TARGETS storagemanager
     LIBRARY DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT platform
+    COMPONENT columnstore-platform
 )
 
 install(TARGETS StorageManager smcat smput smls smrm
     RUNTIME DESTINATION ${ENGINE_BINDIR}
-    COMPONENT platform
+    COMPONENT columnstore-platform
 )
 
 
 install(FILES storagemanager.cnf 
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT platform)
+    COMPONENT columnstore-platform)
 

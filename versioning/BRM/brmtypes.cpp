@@ -24,7 +24,7 @@
  * Definitions of the functions declared in brmtypes.h
  */
 
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <errno.h>
 #include <cstring>

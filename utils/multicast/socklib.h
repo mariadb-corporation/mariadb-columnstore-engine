@@ -20,7 +20,7 @@
 
 #ifndef UDPCAST_CONFIG_H
 # define UDPCAST_CONFIG_H
-# include "config.h"
+# include "mcsconfig.h"
 #endif
 
 #include <sys/types.h>

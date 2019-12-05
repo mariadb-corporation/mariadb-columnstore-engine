@@ -19,7 +19,7 @@
 * $Id$
 *
 ******************************************************************************************/
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <string>
 #include <boost/algorithm/string.hpp>

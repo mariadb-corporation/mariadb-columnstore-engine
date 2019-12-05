@@ -19,7 +19,7 @@
 #include "Config.h"
 
 // This one is the build system config
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>

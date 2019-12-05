@@ -20,7 +20,7 @@
 *
 *
 ***********************************************************************/
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <stdexcept>
 #include <string>
