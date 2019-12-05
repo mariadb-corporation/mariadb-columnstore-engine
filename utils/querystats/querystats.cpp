@@ -228,7 +228,7 @@ void QueryStats::insert()
     insert << fNumFiles << ", ";
     insert << fFileBytes << ")"; // the last 2 fields are not populated yet
 
-    ret = mysql.run(insert.str().c_str());
+    ret = mysql.run(insert.str().c_str(), false);
 
     if (ret != 0)
         mysql.handleMySqlError(mysql.getError().c_str(), ret);

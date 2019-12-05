@@ -96,7 +96,7 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 }
 
 
-int LibMySQL::run(const char* query)
+int LibMySQL::run(const char* query, bool resultExpected)
 {
     int ret = 0;
 
@@ -109,7 +109,7 @@ int LibMySQL::run(const char* query)
 
     fRes = mysql_use_result(fCon);
 
-    if (fRes == NULL)
+    if (fRes == NULL && resultExpected)
     {
         fErrStr = "fatal error running mysql_use_result() or empty result set in libmysql_client lib";
         ret = -1;
