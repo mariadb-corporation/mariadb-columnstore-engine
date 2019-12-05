@@ -502,7 +502,8 @@
 			  as many threads are available across all PMs.  -->
 		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
 		<!-- MaxOutstandingRequests is going to default to the num of cores available 
-			 across all performance modules * 4 divided by the ProcessorThreadsPerScan -->
+			 across all performance modules * 4 divided by the ProcessorThreadsPerScan, 
+			 but will be lower bounded by 20 -->
 		<!-- <MaxOutstandingRequests>20</MaxOutstandingRequests> -->
 		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
