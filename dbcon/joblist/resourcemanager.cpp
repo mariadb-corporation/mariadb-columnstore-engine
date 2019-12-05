@@ -141,12 +141,9 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         oam::Oam oam;
         oam::ModuleTypeConfig moduletypeconfig;
         oam.getSystemConfig("pm", moduletypeconfig);
-        const auto temp = moduletypeconfig.ModuleCount * fNumCores * 4 / fJlProcessorThreadsPerScan;
-
-        if (temp > defaultMaxOutstandingRequests)
-        {
-            fJlMaxOutstandingRequests = temp;
-        }
+        const uint temp = moduletypeconfig.ModuleCount * fNumCores * 4 / fJlProcessorThreadsPerScan;
+        const uint minMaxOutstandingRequests = std::max(static_cast<uint>(moduletypeconfig.ModuleCount * 2), defaultMaxOutstandingRequests);
+        fJlMaxOutstandingRequests = temp > minMaxOutstandingRequests ? temp : minMaxOutstandingRequests;
     }
 
     temp = getIntVal(fJobListStr, "NumScanReceiveThreads", -1);
