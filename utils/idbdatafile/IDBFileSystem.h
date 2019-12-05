@@ -129,6 +129,11 @@ public:
         return true;
     }
 
+    virtual bool filesystemSync() const
+    {
+        return true;
+    }
+
 protected:
     IDBFileSystem( Types type );
 

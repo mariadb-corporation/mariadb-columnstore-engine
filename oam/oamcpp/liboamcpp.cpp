@@ -56,7 +56,7 @@
 #ifdef _MSC_VER
 #include "idbregistry.h"
 #endif
-#include "config.h"
+#include "mcsconfig.h"
 #include "installdir.h"
 #include "dbrm.h"
 #include "sessionmanager.h"
@@ -3230,6 +3230,10 @@ void Oam::SuspendWrites(GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag)
 
         case API_CANCELLED:
             cout << endl << "   Suspension of database writes canceled" << endl << endl;
+            break;
+
+        case API_FAILURE:
+            cout << endl << "   Suspension of database writes failed: Filesystem sync failed" << endl << endl;
             break;
 
         default:

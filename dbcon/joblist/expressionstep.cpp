@@ -509,7 +509,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
             CalpontSystemCatalog::OID oid = sc->oid();
             CalpontSystemCatalog::OID dictOid = 0;
             CalpontSystemCatalog::ColType ct;
-            uint32_t key = fColumnKeys[distance(fColumns.begin(), it)];
+            uint32_t key = fColumnKeys[std::distance(fColumns.begin(), it)];
 
             if (sc->schemaName().empty())
             {

@@ -19,6 +19,7 @@
 #define OWNERSHIP_H_
 
 #include <boost/filesystem/path.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 #include <map>
 #include "SMLogging.h"

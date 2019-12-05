@@ -44,6 +44,8 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         bool isDir(const char* pathname) const;
         int copyFile(const char* srcPath, const char* destPath) const;
         bool filesystemIsUp() const;
+        bool filesystemSync() const;
+
 };
 
 }

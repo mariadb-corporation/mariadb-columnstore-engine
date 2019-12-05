@@ -12,5 +12,5 @@ target_compile_options(ProcMgr PRIVATE -Wno-unused-result)
 
 target_link_libraries(ProcMgr ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 

@@ -35,6 +35,7 @@
 #include "messagequeue.h"
 #include "messagequeuepool.h"
 #include "we_messages.h"
+#include "is_columnstore.h"
 
 // Required declaration as it isn't in a MairaDB include
 bool schema_table_store_record(THD* thd, TABLE* table);
@@ -289,7 +290,7 @@ static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     return 0;
 }
 
-static int is_columnstore_files_plugin_init(void* p)
+int is_columnstore_files_plugin_init(void* p)
 {
     ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_files_fields;
@@ -297,24 +298,3 @@ static int is_columnstore_files_plugin_init(void* p)
     return 0;
 }
 
-static struct st_mysql_information_schema is_columnstore_files_plugin_version =
-{ MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION };
-
-maria_declare_plugin(is_columnstore_files_plugin)
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_files_plugin_version,
-    "COLUMNSTORE_FILES",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore filess",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_files_plugin_init,
-    //is_columnstore_files_plugin_deinit,
-    NULL,
-    0x0100,
-    NULL,
-    NULL,
-    "1.0",
-    MariaDB_PLUGIN_MATURITY_STABLE
-}
-maria_declare_plugin_end;

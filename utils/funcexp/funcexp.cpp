@@ -86,6 +86,7 @@ FuncExp::FuncExp()
     fFuncMap["atan"] = new Func_atan();
     fFuncMap["atan2"] = new Func_atan();
     fFuncMap["between"] = new Func_between();
+    fFuncMap["bit_count"] = new Func_bit_count();
     fFuncMap["case_searched"] = new Func_searched_case();
     fFuncMap["case_simple"] = new Func_simple_case();
     fFuncMap["cast_as_signed"] = new Func_cast_signed();	//dlh
@@ -208,7 +209,7 @@ FuncExp::FuncExp()
     fFuncMap["trim"] = new Func_trim();	//dlh
     fFuncMap["truncate"] = new Func_truncate();	//dlh
     fFuncMap["ucase"] = new Func_ucase();	//dlh
-    //fFuncMap["unhex"] = new Func_unhex();
+    fFuncMap["unhex"] = new Func_unhex();
     fFuncMap["unix_timestamp"] = new Func_unix_timestamp();
     fFuncMap["upper"] = new Func_ucase();	//dlh
     fFuncMap["week"] = new Func_week();	//dlh

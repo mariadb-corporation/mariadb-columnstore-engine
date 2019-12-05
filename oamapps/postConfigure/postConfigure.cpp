@@ -62,13 +62,13 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <readline.h>
+#include <history.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
@@ -3875,7 +3875,7 @@ int main(int argc, char* argv[])
 
 		cout << ". " << ProfileFile << endl << endl;
 
-        cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
+        cout << "Enter 'mariadb' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
 
         cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias.sh" << endl << endl;
@@ -3892,7 +3892,7 @@ int main(int argc, char* argv[])
 
 		cout << ". " << ProfileFile << endl << endl;
 
-        cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
+        cout << "Enter 'mariadb' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
 
         cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias" << endl << endl;

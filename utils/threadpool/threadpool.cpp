@@ -29,6 +29,7 @@ using namespace std;
 using namespace logging;
 
 #include "threadpool.h"
+#include "threadnaming.h"
 #include <iomanip>
 #include <sstream>
 #include "boost/date_time/posix_time/posix_time_types.hpp"
@@ -321,6 +322,7 @@ uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 
 void ThreadPool::beginThread() throw()
 {
+    utils::setThreadName("Idle");
     try
     {
         boost::mutex::scoped_lock lock1(fMutex);
@@ -386,6 +388,7 @@ void ThreadPool::beginThread() throw()
 
                     lock1.unlock();
 
+					utils::setThreadName("Unspecified");		
                     try
                     {
                         todo->functor();
@@ -405,6 +408,7 @@ void ThreadPool::beginThread() throw()
 #endif
                     }
 
+                    utils::setThreadName("Idle");
                     lock1.lock();
                     --fIssued;
                     --waitingFunctorsSize;

@@ -359,5 +359,49 @@ int64_t Func_bitxor::getIntVal(Row& row,
 }
 
 
+//
+// BIT COUNT
+//
+
+
+CalpontSystemCatalog::ColType Func_bit_count::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+{
+    return resultType;
+}
+
+int64_t Func_bit_count::getIntVal(Row& row,
+                                  FunctionParm& parm,
+                                  bool& isNull,
+                                  CalpontSystemCatalog::ColType& operationColType)
+{
+    if ( parm.size() != 1 )
+    {
+        isNull = true;
+        return 0;
+    }
+
+    uint64_t val = 0;
+
+    if (!getUIntValFromParm(row, parm[0], val, isNull, fTimeZone))
+    {
+        std::ostringstream oss;
+        oss << "bit_count: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
+        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+    }
+
+    // Refer to Hacker's Delight Chapter 5
+    // for the bit counting algo used here
+    val = val - ((val >> 1) & 0x5555555555555555);
+    val = (val & 0x3333333333333333) + ((val >> 2) & 0x3333333333333333);
+    val = (val + (val >> 4)) & 0x0F0F0F0F0F0F0F0F;
+    val = val + (val >> 8);
+    val = val + (val >> 16);
+    val = val + (val >> 32);
+
+    return (int64_t)(val & 0x000000000000007F);
+
+}
+
+
 } // namespace funcexp
 // vim:ts=4 sw=4:

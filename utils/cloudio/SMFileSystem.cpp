@@ -110,4 +110,9 @@ bool SMFileSystem::filesystemIsUp() const
     return (comm->ping() == 0);
 }
 
+bool SMFileSystem::filesystemSync() const
+{
+    SMComm *comm = SMComm::get();
+    return (comm->sync() == 0);
+}
 }

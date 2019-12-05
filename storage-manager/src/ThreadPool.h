@@ -23,6 +23,7 @@
 #include <set>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/noncopyable.hpp>
 #include "SMLogging.h"
 
 namespace storagemanager

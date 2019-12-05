@@ -14,8 +14,8 @@ files to create your own function or just try that function as is.
     $ cp libudf_mysql.so.1.0.0 libudfsdk.so.1.0.0 /usr/local/mariadb/columnstore/lib/
 - Restart ColumnStore
     $ mcsadmin restartsystem y
-- Using the mcsmysql client add the user defined function, e.g,
-    $ mcsmysql
+- Using the mariadb client add the user defined function, e.g,
+    $ mariadb
     > create function mcs_add returns integer soname 'libudf_mysql.so';
     > create function mcs_isnull returns string soname 'libudf_mysql.so';
 

@@ -28,7 +28,7 @@ using namespace std;
 
 #include <boost/algorithm/string.hpp>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "dbbuilder.h"
 #include "systemcatalog.h"
 #include "liboamcpp.h"

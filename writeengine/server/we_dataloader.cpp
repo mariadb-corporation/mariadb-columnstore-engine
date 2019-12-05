@@ -25,7 +25,7 @@
  *      Author: Boby Paul: bpaul@calpont.com
  */
 
-#include "config.h" // Used to pickup STRERROR_R_CHAR_P definition
+#include "mcsconfig.h" // Used to pickup STRERROR_R_CHAR_P definition
 
 #include <cstdlib>
 #include <csignal>

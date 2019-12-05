@@ -80,6 +80,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     fJlProcessorThreadsPerScan(defaultProcessorThreadsPerScan),
     fJlNumScanReceiveThreads(defaultScanReceiveThreads),
     fTwNumThreads(defaultNumThreads),
+    fJlMaxOutstandingRequests(defaultMaxOutstandingRequests),
     fHJUmMaxMemorySmallSideDistributor(fHashJoinStr,
                                        "UmMaxMemorySmallSide",
                                        getUintVal(fHashJoinStr, "TotalUmMaxMemorySmallSide", defaultTotalUmMemory),
@@ -87,8 +88,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
                                        0),
     fHJPmMaxMemorySmallSideSessionMap(
         getUintVal(fHashJoinStr, "PmMaxMemorySmallSide", defaultHJPmMaxMemorySmallSide)),
-    isExeMgr(runningInExeMgr),
-    fJlMaxOutstandingRequests(defaultMaxOutstandingRequests)
+    isExeMgr(runningInExeMgr)
 {
     int temp;
     int configNumCores = -1;
@@ -231,7 +231,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         fAggNumBuckets = fAggNumThreads * 4;
     else
         fAggNumBuckets = fConfig->uFromText(nb);
-    
+
     nr = fConfig->getConfig("RowAggregation", "RowAggrRowGroupsPerThread");
 
     if (nr.empty())
@@ -415,4 +415,3 @@ bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t> sessi
 
 
 } //namespace
-

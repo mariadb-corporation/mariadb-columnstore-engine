@@ -34,7 +34,7 @@ install(PROGRAMS columnstore-post-install
                 disable-rep-columnstore.sh  
                 mariadb-command-line.sh 
                 mcs_module_installer.sh
-                DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+                DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 
 install(FILES columnstore.service
               columnstoreAlias
@@ -44,7 +44,7 @@ install(FILES columnstore.service
               columnstoreLogRotate
               myCnf-include-args.text
               myCnf-exclude-args.text
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT platform)
+              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
 
-          install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT platform)
+install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-platform)
 

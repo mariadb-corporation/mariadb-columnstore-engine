@@ -33,6 +33,7 @@
 #include "TruncateTask.h"
 #include "UnlinkTask.h"
 #include "WriteTask.h"
+#include "SyncTask.h"
 #include "SessionManager.h"
 #include "SMLogging.h"
 
@@ -108,6 +109,9 @@ void ProcessTask::operator()()
             break;
         case PING:
             task.reset(new PingTask(sock, length));
+            break;
+        case SYNC:
+            task.reset(new SyncTask(sock, length));
             break;
         case COPY:
             task.reset(new CopyTask(sock, length));

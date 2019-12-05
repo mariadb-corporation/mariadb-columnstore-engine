@@ -49,7 +49,7 @@ if [ $vflg -gt 0 ]; then
 fi
 
 while [ $keep_going -ne 0 ]; do
-	$exename $args
+	LD_PRELOAD=libjemalloc.so $exename $args
 	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi

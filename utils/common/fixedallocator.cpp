@@ -50,6 +50,9 @@ FixedAllocator::FixedAllocator(const FixedAllocator& f)
     tmpSpace = f.tmpSpace;
     capacityRemaining = 0;
     currentlyStored = 0;
+    useLock = f.useLock;
+    lock = false;
+
 }
 
 FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
@@ -57,8 +60,20 @@ FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
     elementCount = f.elementCount;
     elementSize = f.elementSize;
     tmpSpace = f.tmpSpace;
+    useLock = f.useLock;
+    lock = false;
     deallocateAll();
     return *this;
+}
+
+void FixedAllocator::setUseLock(bool useIt)
+{
+    useLock = useIt;
+}
+
+void FixedAllocator::setAllocSize(uint allocSize)
+{
+    elementSize = allocSize;
 }
 
 void FixedAllocator::newBlock()
@@ -80,39 +95,15 @@ void FixedAllocator::newBlock()
     }
 }
 
-void* FixedAllocator::allocate()
-{
-    void* ret;
-
-    if (capacityRemaining < elementSize)
-        newBlock();
-
-    ret = nextAlloc;
-    nextAlloc += elementSize;
-    capacityRemaining -= elementSize;
-    currentlyStored += elementSize;
-    return ret;
-}
-
-void* FixedAllocator::allocate(uint32_t len)
-{
-    void* ret;
-
-    if (capacityRemaining < len)
-        newBlock();
-
-    ret = nextAlloc;
-    nextAlloc += len;
-    capacityRemaining -= len;
-    currentlyStored += len;
-    return ret;
-}
-
 void FixedAllocator::truncateBy(uint32_t amt)
 {
+    if (useLock)
+        getSpinlock(lock);
     nextAlloc -= amt;
     capacityRemaining += amt;
     currentlyStored -= amt;
+    if (useLock)
+        releaseSpinlock(lock);
 }
 
 void FixedAllocator::deallocateAll()

@@ -7,9 +7,7 @@ set(configcpp_LIB_SRCS configcpp.cpp xmlparser.cpp configstream.cpp)
 
 add_library(configcpp SHARED ${configcpp_LIB_SRCS})
 
-set_target_properties(configcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
 target_compile_definitions(configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
-install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 

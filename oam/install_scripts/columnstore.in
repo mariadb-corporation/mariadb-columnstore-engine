@@ -56,6 +56,11 @@ start() {
 		exit 0
 	fi
 
+    # Make sure ProcMon is down first
+    touch ${tmpDir}/StopColumnstore
+    pkill ProcMon
+    pkill ProcMgr
+
 	(mkdir -p $lockdir && touch $lockdir/columnstore) >/dev/null 2>&1
 
 	#checkInstallSetup
@@ -70,7 +75,8 @@ start() {
 	fi
 
 	RETVAL=0
-	echo "Starting MariaDB Columnstore Database Platform"
+    moduleName="$(cat /var/lib/columnstore/local/module)"
+	echo "Starting module $moduleName of MariaDB Columnstore Database Platform"
 	rm -f ${tmpDir}/StopColumnstore
 	exec columnstore_run.sh -l ${tmpDir} ProcMon  > /dev/null 2>&1 &
 
@@ -85,6 +91,8 @@ stop() {
 	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
 	mysql-Columnstore stop > /dev/null 2>&1
+    pkill ProcMon
+    pkill ProcMgr
 	return $RETVAL
 }
 restart() {

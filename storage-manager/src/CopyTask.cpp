@@ -43,7 +43,7 @@ CopyTask::~CopyTask()
 
 bool CopyTask::run()
 {
-    bool success;
+    int success;
     SMLogging* logger = SMLogging::get();
 
     uint8_t buf[2048] = {0};
@@ -83,8 +83,7 @@ bool CopyTask::run()
     
     sm_response *resp = (sm_response *) buf;
     resp->returnCode = 0;
-    success = write(*resp, 0);
-    return success;
+    return write(*resp, 0);
 }
 
 }

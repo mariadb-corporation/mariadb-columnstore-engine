@@ -54,7 +54,7 @@ bool ReadTask::run()
         return true;
     }
     
-    bool success;
+    int success;
     success = read(buf, getLength());
     check_error("ReadTask read cmd", false);
     read_cmd *cmd = (read_cmd *) buf;
@@ -103,8 +103,7 @@ bool ReadTask::run()
     }
     if (resp->returnCode >= 0)
         payloadLen = resp->returnCode;
-    success = write(*resp, payloadLen);
-    return success;
+    return write(*resp, payloadLen);
 }
 
 

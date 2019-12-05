@@ -40,9 +40,6 @@
  * front-end.
  */
 
-
-
-#include <mutex>
 #include <iostream>
 #include <cstdint>
 #include <csignal>
@@ -73,7 +70,11 @@
 #include "liboamcpp.h"
 #include "crashtrace.h"
 #include "utils_utf8.h"
-#include "config.h"
+#include "mcsconfig.h"
+
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 
 #if defined(SKIP_OAM_INIT)
 #include "dbrm.h"
@@ -531,6 +532,9 @@ public:
         csep.sessionID(0);
         joblist::SJLP jl;
         bool incSessionThreadCnt = true;
+        std::mutex jlMutex;
+        std::condition_variable jlCleanupDone;
+        int destructing = 0;
 
         bool selfJoin = false;
         bool tryTuples = false;
@@ -545,7 +549,22 @@ public:
                 tryTuples = false;
                 usingTuples = false;
 
-                jl.reset();
+                if (jl)
+                {
+                    // puts the real destruction in another thread to avoid
+                    // making the whole session wait.  It can take several seconds.
+                    std::unique_lock<std::mutex> scoped(jlMutex);
+                    destructing++;
+                    std::thread bgdtor([jl, &jlMutex, &jlCleanupDone, &destructing] {
+                        std::unique_lock<std::mutex> scoped(jlMutex);
+                        const_cast<joblist::SJLP &>(jl).reset();    // this happens second; does real destruction
+                        if (--destructing == 0)
+                            jlCleanupDone.notify_one();
+                    });
+                    jl.reset();     // this runs first
+                    bgdtor.detach();
+                }
+
                 bs = fIos.read();
 
                 if (bs.length() == 0)
@@ -1038,7 +1057,7 @@ new_plan:
                     //@Bug 1306. Added timing info for real time tracking.
                     std::cout << ss << " at " << timeNow() << std::endl;
 
-                    // log query status to debug log file
+                    // log query stats to debug log file
                     args.reset();
                     args.add((int)csep.statementID());
                     args.add(fStats.fMaxMemPct);
@@ -1061,13 +1080,28 @@ new_plan:
                     // here to make sure all syslogging from all the threads
                     // are complete; and that our logDbProfEndStatement will
                     // appear "last" in the syslog for this SQL statement.
-                    jl.reset();
-                    args.reset();
-                    args.add((int)csep.statementID());
-                    msgLog.logMessage(logging::LOG_TYPE_DEBUG,
-                                      logDbProfEndStatement,
-                                      args,
-                                      li);
+                    // puts the real destruction in another thread to avoid
+                    // making the whole session wait.  It can take several seconds.
+                    int stmtID = csep.statementID();
+                    std::unique_lock<std::mutex> scoped(jlMutex);
+                    // C7's compiler complains about the msgLog capture here
+                    // msgLog is global scope, and passed by copy, so, unclear
+                    // what the warning is about.
+                    destructing++;
+                    std::thread bgdtor([jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing] {
+                        std::unique_lock<std::mutex> scoped(jlMutex);
+                        const_cast<joblist::SJLP &>(jl).reset();    // this happens second; does real destruction
+                        logging::Message::Args args;
+                        args.add(stmtID);
+                        msgLog.logMessage(logging::LOG_TYPE_DEBUG,
+                                          logDbProfEndStatement,
+                                          args,
+                                          li);
+                        if (--destructing == 0)
+                            jlCleanupDone.notify_one();
+                    });
+                    jl.reset();   // this happens first
+                    bgdtor.detach();
                 }
                 else
                     // delete sessionMemMap entry for this session's memory % use
@@ -1127,14 +1161,12 @@ new_plan:
                     qts.local_query = csep.localQuery();
                     fTeleClient.postQueryTele(qts);
                 }
-
             }
 
-            jl.reset();
             // Release CSC object (for sessionID) that was added by makeJobList()
-            // Mask 0x80000000 is for associate user query and csc query
+            // Mask 0x80000000 is for associate user query and csc query.
+            // (actual joblist destruction happens at the top of this loop)
             decThreadCntPerSession( csep.sessionID() | 0x80000000 );
-
         }
         catch (std::exception& ex)
         {
@@ -1158,6 +1190,11 @@ new_plan:
             msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
             fIos.close();
         }
+
+        // make sure we don't leave scope while joblists are being destroyed
+        std::unique_lock<std::mutex> scoped(jlMutex);
+        while (destructing > 0)
+            jlCleanupDone.wait(scoped);
     }
 };
 
@@ -1305,7 +1342,7 @@ int8_t setupCwd(joblist::ResourceManager* rm)
 
     if (rc < 0 || access(".", W_OK) != 0)
         rc = chdir("/tmp");
-    
+
     return (rc < 0) ? -5 : rc;
 }
 
@@ -1359,7 +1396,7 @@ void cleanTempDir()
         return;
 
     if (tmpPrefix.empty())
-        tmpPrefix = "/tmp/infinidb";
+        tmpPrefix = "/tmp/cs-diskjoin";
 
     tmpPrefix += "/";
 
@@ -1636,4 +1673,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 // vim:ts=4 sw=4:
-

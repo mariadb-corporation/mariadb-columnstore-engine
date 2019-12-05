@@ -45,7 +45,7 @@ UnlinkTask::~UnlinkTask()
 bool UnlinkTask::run()
 {
     SMLogging* logger = SMLogging::get();
-    bool success;
+    int success;
     uint8_t buf[1024] = {0};
     
     if (getLength() > 1023) {
@@ -81,8 +81,7 @@ bool UnlinkTask::run()
     
     sm_response *resp = (sm_response *) buf;
     resp->returnCode = 0;
-    success = write(*resp, 0);
-    return success;
+    return write(*resp, 0);
 }
 
 }

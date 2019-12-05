@@ -37,7 +37,7 @@ ListDirectoryTask::~ListDirectoryTask()
 }
 
 #define check_error(msg, ret) \
-    if (success<0) \
+    if (!success) \
     { \
         handleError(msg, errno); \
         return ret; \
@@ -85,8 +85,12 @@ bool ListDirectoryTask::run()
         return true;
     }
     
-    success = read(buf, getLength());
-    check_error("ListDirectoryTask read", false);
+    err = read(buf, getLength());
+    if (err<0)
+    {
+        handleError("ListDirectoryTask read", errno);
+        return false;
+    }
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     #ifdef SM_TRACE

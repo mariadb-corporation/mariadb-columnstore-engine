@@ -38,6 +38,8 @@
 #include <vector>
 #include <limits>
 #include <unistd.h>
+#include <atomic>
+#include "spinlock.h"
 
 #if defined(_MSC_VER) && defined(xxxFIXEDALLOCATOR_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -55,11 +57,13 @@ public:
 
     EXPORT FixedAllocator() :
         capacityRemaining(0),
-        elementCount(std::numeric_limits<unsigned long>::max()),
+        elementCount(DEFAULT_NUM_ELEMENTS),
         elementSize(0),
         currentlyStored(0),
         tmpSpace(false),
-        nextAlloc(0) {}
+        nextAlloc(0),
+        useLock(false),
+        lock(false) {}
     EXPORT explicit FixedAllocator(unsigned long allocSize, bool isTmpSpace = false,
                                    unsigned long numElements = DEFAULT_NUM_ELEMENTS) :
         capacityRemaining(0),
@@ -67,7 +71,9 @@ public:
         elementSize(allocSize),
         currentlyStored(0),
         tmpSpace(isTmpSpace),
-        nextAlloc(0) {}
+        nextAlloc(0),
+        useLock(false),
+        lock(false) {}
     EXPORT FixedAllocator(const FixedAllocator&);
     EXPORT FixedAllocator& operator=(const FixedAllocator&);
     virtual ~FixedAllocator() {}
@@ -78,6 +84,8 @@ public:
     void deallocate() { }   // does nothing
     EXPORT void deallocateAll();		// drops all memory in use
     EXPORT uint64_t getMemUsage() const;
+    void setUseLock(bool);
+    void setAllocSize(uint);
 
 private:
     void newBlock();
@@ -89,10 +97,46 @@ private:
     uint64_t currentlyStored;
     bool tmpSpace;
     uint8_t* nextAlloc;
+    bool useLock;
+    std::atomic<bool> lock;
 };
 
+inline void* FixedAllocator::allocate()
+{
+    void* ret;
+
+    if (useLock)
+        getSpinlock(lock);
+    if (capacityRemaining < elementSize)
+        newBlock();
+
+    ret = nextAlloc;
+    nextAlloc += elementSize;
+    capacityRemaining -= elementSize;
+    currentlyStored += elementSize;
+    if (useLock)
+        releaseSpinlock(lock);
+    return ret;
+}
+
+inline void* FixedAllocator::allocate(uint32_t len)
+{
+    void* ret;
+
+    if (useLock)
+        getSpinlock(lock);
+    if (capacityRemaining < len)
+        newBlock();
+
+    ret = nextAlloc;
+    nextAlloc += len;
+    capacityRemaining -= len;
+    currentlyStored += len;
+    if (useLock)
+        releaseSpinlock(lock);
+    return ret;
 }
 
 #undef EXPORT
-
+}  // namespace
 #endif

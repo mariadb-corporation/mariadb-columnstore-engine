@@ -411,6 +411,7 @@ int ColumnInfoCompressed::truncateDctnryStore(
             fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
             fTruncateDctnryFileOp.closeFile( dFile );
 
+            delete [] pointerHdr;
             return rc;
         }
 

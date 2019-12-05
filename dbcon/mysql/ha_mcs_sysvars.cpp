@@ -98,15 +98,6 @@ static MYSQL_THDVAR_BOOL(
     1
 );
 
-static MYSQL_THDVAR_BOOL(
-    processing_handlers_fallback,
-    PLUGIN_VAR_NOCMDARG,
-    "Enable/Disable the unsupported features check in handlers.",
-    NULL,
-    NULL,
-    0
-);
-
 static MYSQL_THDVAR_UINT(
     orderby_threads,
     PLUGIN_VAR_RQCMDARG,
@@ -304,7 +295,6 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(original_optimizer_flags),
   MYSQL_SYSVAR(select_handler),
   MYSQL_SYSVAR(derived_handler),
-  MYSQL_SYSVAR(processing_handlers_fallback),
   MYSQL_SYSVAR(group_by_handler),
   MYSQL_SYSVAR(orderby_threads),
   MYSQL_SYSVAR(decimal_scale),
@@ -391,16 +381,7 @@ void set_group_by_handler(THD* thd, bool value)
     THDVAR(thd, group_by_handler) = value;
 }
 
-bool get_fallback_knob(THD* thd)
-{
-    return ( thd == NULL ) ? false : THDVAR(thd, processing_handlers_fallback);
-}
-void set_fallback_knob(THD* thd, bool value)
-{
-    THDVAR(thd, processing_handlers_fallback) = value;
-}
-
-    void set_compression_type(THD* thd, ulong value)
+void set_compression_type(THD* thd, ulong value)
 {
     THDVAR(thd, compression_type) = value;
 }

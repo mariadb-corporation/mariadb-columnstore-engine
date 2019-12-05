@@ -296,10 +296,9 @@ void IDBPolicy::configIDBPolicy()
 
             if ( setting.length() != 0 )
             {
-                if ( setting.size() == 3
+                if ( setting.size() == 2
                     && ( setting[0] == 'O' || setting[0] == 'o' )
-                    && ( setting[1] == 'F' || setting[1] == 'f' )
-                    && ( setting[2] == 'F' || setting[2] == 'f' )
+                    && ( setting[1] == 'N' || setting[1] == 'n' )
                 )
                 {
                     // int into uint16_t implicit conversion
@@ -310,7 +309,7 @@ void IDBPolicy::configIDBPolicy()
     }
 }
 
-void IDBPolicy::setPreallocSpace(uint16_t dbRoot)
+void IDBPolicy::enablePreallocSpace(uint16_t dbRoot)
 {
    s_PreallocSpace.push_back(dbRoot); 
 }

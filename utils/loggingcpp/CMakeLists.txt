@@ -26,9 +26,7 @@ add_library(loggingcpp SHARED
 
 
 
-set_target_properties(loggingcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
+install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 
-install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
-
-install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT platform)
+install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-platform)
 
