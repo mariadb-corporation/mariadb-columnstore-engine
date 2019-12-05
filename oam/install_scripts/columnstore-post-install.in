@@ -182,15 +182,9 @@ if [ -z "aws" ]; then
 fi
 
 cat <<EOD
-The next step is:
-
-If installation on pm1:
+The next step on the node that will become PM1:
 
 postConfigure
-
-If installing on a node other than pm1:
-
-columnstore start
 
 
 EOD
