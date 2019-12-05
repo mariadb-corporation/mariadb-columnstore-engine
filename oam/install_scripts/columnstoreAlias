@@ -1,6 +1,5 @@
 # MariaDB Columnstore Alias Commands
 #
-alias mcsmysql='mysql -u root'
 alias ma=mcsadmin
 alias core='cd /var/log/mariadb/columnstore/corefiles'
 alias tdebug='tail -f /var/log/mariadb/columnstore/debug.log'

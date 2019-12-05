@@ -33,7 +33,7 @@ extern int h_errno;
 #include <boost/scoped_ptr.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "config.h"
+#include "mcsconfig.h"
 #include "sessionmanager.h"
 #include "dbrm.h"
 #include "messagequeue.h"

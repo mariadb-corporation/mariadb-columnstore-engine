@@ -81,8 +81,7 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row,
     int size = str.length() * count;
 
     //allocate memory
-    char* result = NULL;
-    result = (char*) alloca(size * sizeof(char) + 1);
+    char* result = new char[size + 1];
 
     if (result == NULL)
     {
@@ -97,7 +96,9 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row,
             return "";
     }
 
-    return result;
+    std::string res(result);
+    delete [] result;
+    return res;
 }
 
 

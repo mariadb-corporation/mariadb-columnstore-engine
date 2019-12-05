@@ -18,7 +18,7 @@
 // $Id: main.cpp 2101 2013-01-21 14:12:52Z rdempsey $
 
 
-#include "config.h"
+#include "mcsconfig.h"
 
 #include <iostream>
 #include <sys/types.h>

@@ -55,9 +55,6 @@ void set_derived_handler(THD* thd, bool value);
 bool get_group_by_handler(THD* thd);
 void set_group_by_handler(THD* thd, bool value);
 
-bool get_fallback_knob(THD* thd);
-void set_fallback_knob(THD* thd, bool value);
-
 uint get_orderby_threads(THD* thd);
 void set_orderby_threads(THD* thd, uint value);
 

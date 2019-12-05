@@ -28,6 +28,7 @@
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
 #include "exceptclasses.h"
+#include "is_columnstore.h"
 using namespace logging;
 
 
@@ -260,34 +261,11 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     return 0;
 }
 
-static int is_columnstore_columns_plugin_init(void* p)
+int is_columnstore_columns_plugin_init(void* p)
 {
     ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_columns_fields;
     schema->fill_table = is_columnstore_columns_fill;
     return 0;
 }
-
-static struct st_mysql_information_schema is_columnstore_columns_plugin_version =
-{ MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION };
-
-maria_declare_plugin(is_columnstore_columns_plugin)
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_columns_plugin_version,
-    "COLUMNSTORE_COLUMNS",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore columns",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_columns_plugin_init,
-    //is_columnstore_tables_plugin_deinit,
-    NULL,
-    0x0100,
-    NULL,
-    NULL,
-    "1.0",
-    MariaDB_PLUGIN_MATURITY_STABLE
-}
-maria_declare_plugin_end;
-
 

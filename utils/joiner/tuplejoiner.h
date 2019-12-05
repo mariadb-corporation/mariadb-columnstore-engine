@@ -38,6 +38,7 @@
 #include "../funcexp/funcexpwrapper.h"
 #include "stlpoolallocator.h"
 #include "hasher.h"
+#include "threadpool.h"
 
 namespace joiner
 {
@@ -147,7 +148,8 @@ public:
         const rowgroup::RowGroup& largeInput,
         uint32_t smallJoinColumn,
         uint32_t largeJoinColumn,
-        joblist::JoinType jt);
+        joblist::JoinType jt,
+        threadpool::ThreadPool *jsThreadPool);
 
     /* ctor to use for string & compound join */
     TupleJoiner(
@@ -155,12 +157,14 @@ public:
         const rowgroup::RowGroup& largeInput,
         const std::vector<uint32_t>& smallJoinColumns,
         const std::vector<uint32_t>& largeJoinColumns,
-        joblist::JoinType jt);
+        joblist::JoinType jt,
+        threadpool::ThreadPool *jsThreadPool);
 
     ~TupleJoiner();
 
     size_t size() const;
-    void insert(rowgroup::Row& r, bool zeroTheRid = true);
+    void insert(rowgroup::Row& r, bool zeroTheRid = true);  // not thread-safe
+    void insertRGData(rowgroup::RowGroup &rg, uint threadID);
     void doneInserting();
 
     /* match() returns the small-side rows that match the large-side row.
@@ -187,8 +191,20 @@ public:
     {
         return joinAlg == UM;
     }
+    inline bool onDisk() const
+    {
+        return _convertToDiskJoin;
+    }
     void setInPM();
+    void setInUM(std::vector<rowgroup::RGData> &rgs);
+    void umJoinConvert(uint threadID, std::vector<rowgroup::RGData> &rgs, size_t begin, size_t end);
+
+    // TODO: these are currently in use by edge cases, ex, converting to disk
+    // join.  Would be nice to make those cases use the rgdata variants
+    // above.
     void setInUM();
+    void umJoinConvert(size_t begin, size_t end);
+
     void setThreadCount(uint32_t cnt);
     void setPMJoinResults(boost::shared_array<std::vector<uint32_t> >,
                           uint32_t threadID);
@@ -325,6 +341,7 @@ public:
     {
         return finished;
     }
+    void setConvertToDiskJoin();
 
 private:
     typedef std::tr1::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
@@ -344,13 +361,13 @@ private:
     TupleJoiner();
     TupleJoiner(const TupleJoiner&);
     TupleJoiner& operator=(const TupleJoiner&);
+    void getBucketCount();
 
     rowgroup::RGData smallNullMemory;
 
-
-    boost::scoped_ptr<hash_t> h;  // used for UM joins on ints
-    boost::scoped_ptr<sthash_t> sth;  // used for UM join on ints where the backing table uses a string table
-    boost::scoped_ptr<ldhash_t> ld;  // used for UM join on long double
+    boost::scoped_array<boost::scoped_ptr<hash_t> > h;  // used for UM joins on ints
+    boost::scoped_array<boost::scoped_ptr<sthash_t> > sth;  // used for UM join on ints where the backing table uses a string table
+    boost::scoped_array<boost::scoped_ptr<ldhash_t> > ld;  // used for UM join on long double
     std::vector<rowgroup::Row::Pointer> rows;   // used for PM join
 
     /* This struct is rough.  The BPP-JL stores the parsed results for
@@ -372,16 +389,16 @@ private:
     };
     JoinAlg joinAlg;
     joblist::JoinType joinType;
-    boost::shared_ptr<utils::PoolAllocator> _pool;	// pool for the table and nodes
+    boost::shared_array<boost::shared_ptr<utils::PoolAllocator> > _pool; 	// pools for the table and nodes
     uint32_t threadCount;
     std::string tableName;
 
     /* vars, & fcns for typeless join */
     bool typelessJoin;
     std::vector<uint32_t> smallKeyColumns, largeKeyColumns;
-    boost::scoped_ptr<typelesshash_t> ht;  // used for UM join on strings
+    boost::scoped_array<boost::scoped_ptr<typelesshash_t> > ht;  // used for UM join on strings
     uint32_t keyLength;
-    utils::FixedAllocator storedKeyAlloc;
+    boost::scoped_array<utils::FixedAllocator> storedKeyAlloc;
     boost::scoped_array<utils::FixedAllocator> tmpKeyAlloc;
     bool bSignedUnsignedJoin; // Set if we have a signed vs unsigned compare in a join. When not set, we can save checking for the signed bit.
 
@@ -398,9 +415,27 @@ private:
     boost::scoped_array<std::vector<int64_t> > cpValues;    // if !discreteValues, [0] has min, [1] has max
     uint32_t uniqueLimit;
     bool finished;
+
+    // multithreaded UM hash table construction
+    int numCores;
+    uint bucketCount;
+    uint bucketMask;
+    boost::scoped_array<boost::mutex> m_bucketLocks;
+    boost::mutex m_typelessLock, m_cpValuesLock;
+    utils::Hasher_r bucketPicker;
+    const uint32_t bpSeed = 0x4545e1d7;   // an arbitrary random #
+    threadpool::ThreadPool *jobstepThreadPool;
+    void um_insertTypeless(uint threadID, uint rowcount, rowgroup::Row &r);
+    void um_insertLongDouble(uint rowcount, rowgroup::Row &r);
+    void um_insertInlineRows(uint rowcount, rowgroup::Row &r);
+    void um_insertStringTable(uint rowcount, rowgroup::Row &r);
+
+    template<typename buckets_t, typename hash_table_t>
+    void bucketsToTables(buckets_t *, hash_table_t *);
+
+    bool _convertToDiskJoin;
 };
 
 }
 
 #endif
-

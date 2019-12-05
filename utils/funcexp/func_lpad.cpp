@@ -155,10 +155,10 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     if (strwclen > len)
         alen = strwclen;
 
-    size_t bufsize = (alen + 1) * sizeof(wchar_t);
+    size_t bufsize = alen + 1;
 
     // Convert to wide characters. Do all further work in wide characters
-    wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
+    wchar_t* wcbuf = new wchar_t[bufsize];
     strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
 
     size_t strSize = strwclen;    // The number of significant characters
@@ -190,8 +190,8 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
 
     // Convert the pad string to wide
     padwclen = pad->length();  // A guess to start.
-    size_t padbufsize = (padwclen + 1) * sizeof(wchar_t);
-    wchar_t* wcpad = (wchar_t*)alloca(padbufsize);
+    size_t padbufsize = padwclen + 1;
+    wchar_t* wcpad = new wchar_t[padbufsize];
     // padwclen+1 is for giving count for the terminating null
     size_t padlen = utf8::idb_mbstowcs(wcpad, pad->c_str(), padwclen + 1);
 
@@ -234,7 +234,10 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
 
     wstring padded = wstring(wcbuf, len);
     // Turn back to a string
-    return utf8::wstring_to_utf8(padded.c_str());
+    std::string ret(utf8::wstring_to_utf8(padded.c_str()));
+    delete [] wcpad;
+    delete [] wcbuf;
+    return ret;
 }
 
 

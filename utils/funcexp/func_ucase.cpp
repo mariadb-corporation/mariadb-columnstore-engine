@@ -67,7 +67,7 @@ std::string Func_ucase::getStrVal(rowgroup::Row& row,
         return "";
 
     size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-    wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+    wchar_t* wcbuf = new wchar_t[strwclen];
     strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
     wstring wstr(wcbuf, strwclen);
 
@@ -75,9 +75,12 @@ std::string Func_ucase::getStrVal(rowgroup::Row& row,
         wstr[i] = std::towupper(wstr[i]);
 
     size_t strmblen = utf8::idb_wcstombs(0, wstr.c_str(), 0) + 1;
-    char* outbuf = (char*)alloca(strmblen * sizeof(char));
+    char* outbuf = new char[strmblen];
     strmblen = utf8::idb_wcstombs(outbuf, wstr.c_str(), strmblen);
-    return string(outbuf, strmblen);
+    std::string ret(outbuf, strmblen);
+    delete [] outbuf;
+    delete [] wcbuf;
+    return ret;
 }
 
 

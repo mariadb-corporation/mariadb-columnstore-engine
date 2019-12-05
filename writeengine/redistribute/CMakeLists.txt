@@ -13,10 +13,8 @@ add_library(writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
 
 target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
 
-set_target_properties(writeengineredistribute PROPERTIES VERSION 1.0.0 SOVERSION 1)
-
 target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
 
-install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 

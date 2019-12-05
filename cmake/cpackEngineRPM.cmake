@@ -8,9 +8,9 @@ SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
 
 SET(CPACK_RPM_COMPONENT_INSTALL ON)
 
-SET(CPACK_COMPONENTS_ALL platform libs storage-engine)
+SET(CPACK_COMPONENTS_ALL columnstore-platform columnstore-libs columnstore-engine)
 
-SET(CPACK_PACKAGE_NAME "mariadb-columnstore")
+SET(CPACK_PACKAGE_NAME "MariaDB")
 SET(ENGINE_ARCH "x86_64")
 
 IF (NOT CPACK_RPM_PACKAGE_VERSION)
@@ -68,9 +68,9 @@ MACRO(SETA var)
   ENDFOREACH()
 ENDMACRO(SETA)
 
-SETA(CPACK_RPM_libs_PACKAGE_PROVIDES "mariadb-columnstore-libs")
-SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "mariadb-columnstore-platform")
-SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
+SETA(CPACK_RPM_libs_PACKAGE_PROVIDES "MariaDB-columnstore-libs")
+SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "MariaDB-columnstore-platform")
+SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
 
 
 #boost is a source build in CentOS 6 so don't require it as a package
@@ -87,16 +87,16 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "mariadb-columnstore-shared" "snappy")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "MariaDB-columnstore-libs" "MariaDB-columnstore-shared" "snappy" "net-tools")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
-   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "mariadb-columnstore-libs" "libsnappy1" "jemalloc")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "MariaDB-columnstore-libs" "libsnappy1" "jemalloc" "net-tools")
 else ()
-   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "snappy" "jemalloc")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools")
 endif()
 
-SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
+SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "MariaDB-columnstore-libs")
 
 SET(CPACK_RPM_platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
 SET(CPACK_RPM_libs_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_libs.sh)

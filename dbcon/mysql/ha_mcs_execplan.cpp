@@ -16,11 +16,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-/*
- * $Id: ha_mcs_execplan.cpp 9749 2013-08-15 04:00:39Z zzhu $
- */
- 
-/** @file */
 //#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
@@ -61,7 +56,6 @@ using namespace logging;
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_sysvars.h"
 #include "ha_subquery.h"
-//#include "ha_view.h"
 using namespace cal_impl_if;
 
 #include "calpontselectexecutionplan.h"
@@ -132,7 +126,6 @@ public:
     gp_walk_info* fgwip;
 };
 
-//#define OUTER_JOIN_DEBUG
 namespace
 {
 string lower(string str)
@@ -1321,6 +1314,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 
         if (table_ptr->outer_join && table_ptr->on_expr)
         {
+            // inner tables block
             Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->on_expr);
             gwi_outer.innerTables.insert(tan);
 
@@ -1392,8 +1386,10 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 #endif
             expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
         }
+// *DRRTUY This part is to be removed in 1.4.3
+#if 0
         // @bug 2849
-        else if (table_ptr->embedding && table_ptr->embedding->nested_join)
+        /*else if (table_ptr->embedding && table_ptr->embedding->nested_join)
         {
             // if this is dervied table process phase, mysql may have not developed the plan
             // completely. Return and let it finish. It will come to rnd_init again.
@@ -1434,8 +1430,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
                     }
                 }
             }
-        }
-
+        } */
+#endif
         // Error out subquery in outer join on filter for now
         if (gwi_outer.hasSubSelect)
         {
@@ -1444,9 +1440,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
             return -1;
         }
-
         // build outerjoinon filter
-        ParseTree* filters = NULL, *ptp = NULL, /**rhs = NULL*/*lhs = NULL;
+        ParseTree* filters = NULL, *ptp = NULL, *lhs = NULL;
 
         while (!gwi_outer.ptWorkStack.empty())
         {
@@ -3173,6 +3168,15 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
                 }
                 case STRING_RESULT:
                 {
+                    // Special handling for 0xHHHH literals
+                    const Type_handler *tph = item->type_handler();
+                    if (typeid(*tph) == typeid(Type_handler_hex_hybrid))
+                    {
+                        Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
+                        rc = new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM);
+                        break;
+                    }
+
                     String val, *str = item->val_str(&val);
                     string valStr;
                     valStr.assign(str->ptr(), str->length());
@@ -3678,6 +3682,29 @@ ReturnedColumn* buildFunctionColumn(
     else if (funcName == "case")
     {
         fc = buildCaseFunction(ifp, gwi, nonSupport);
+    }
+
+    else if ((funcName == "charset" || funcName == "collation") &&
+             ifp->argument_count() == 1 &&
+             ifp->arguments()[0]->type() == Item::FIELD_ITEM)
+    {
+        Item_field *item = reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+        CHARSET_INFO* info = item->charset_for_protocol();
+        ReturnedColumn* rc;
+        string val;
+
+        if (funcName == "charset")
+        {
+            val = info->csname;
+        }
+        else // collation
+        {
+            val = info->name;
+        }
+
+        rc = new ConstantColumn(val, ConstantColumn::LITERAL);
+
+        return rc;
     }
 
     else if ((functor = funcExp->getFunctor(funcName)))
@@ -6064,69 +6091,15 @@ bool isMCSTable(TABLE* table_ptr)
         return false;
 }
 
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
-    SCSEP& csep,
-    bool isUnion,
-    bool isPushdownHand)
+/*@brief  set some runtime params to run the query         */
+/***********************************************************
+ * DESCRIPTION:
+ * This function just sets a number of runtime params that
+ * limits resource consumed.
+ ***********************************************************/
+void setExecutionParams(gp_walk_info &gwi, SCSEP &csep)
 {
-#ifdef DEBUG_WALK_COND
-    cerr << "getSelectPlan()" << endl;
-#endif
-
-    // by pass the derived table resolve phase of mysql
-    if ( !isPushdownHand &&
-            !(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
-    {
-        // MCOL-2178 isUnion member only assigned, never used
-        //MIGR::infinidb_vtable.isUnion = false;
-        return -1;
-    }
-
-    // rollup is currently not supported
-    if (select_lex.olap == ROLLUP_TYPE)
-    {
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-    }
-
     gwi.internalDecimalScale = (get_use_decimal_scale(gwi.thd) ? get_decimal_scale(gwi.thd) : -1);
-
-    gwi.subSelectType = csep->subType();
-
-    JOIN* join = select_lex.join;
-    Item_cond* icp = 0;
-
-    if (join != 0)
-        icp = reinterpret_cast<Item_cond*>(join->conds);
-
-    // if icp is null, try to find the where clause other where
-    if (!join && gwi.thd->lex->derived_tables)
-    {
-        if (select_lex.prep_where)
-            icp = (Item_cond*)(select_lex.prep_where);
-        else if (select_lex.where)
-            icp = (Item_cond*)(select_lex.where);
-    }
-    else if (!join && ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
-    {
-        icp = reinterpret_cast<Item_cond*>(select_lex.where);
-    }
-
-    uint32_t sessionID = csep->sessionID();
-    gwi.sessionid = sessionID;
-    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
-    csc->identity(CalpontSystemCatalog::FE);
-    csep->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-    gwi.csc = csc;
-
     // @bug 2123. Override large table estimate if infinidb_ordered hint was used.
     // @bug 2404. Always override if the infinidb_ordered_only variable is turned on.
     if (get_ordered_only(gwi.thd))
@@ -6148,13 +6121,30 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         csep->umMemLimit(numeric_limits<int64_t>::max());
     else
         csep->umMemLimit(get_um_mem_limit(gwi.thd) * 1024ULL * 1024);
+}
 
+/*@brief  Process FROM part of the query or sub-query      */
+/***********************************************************
+ * DESCRIPTION:
+ *  This function processes elements of List<TABLE_LIST> in
+ *  FROM part of the query.
+ *  isUnion tells that CS processes FROM taken from UNION UNIT.
+ *  The notion is described in MDB code.
+ *  on_expr_list ON expressions used in OUTER JOINs. These are
+ *  later used in processWhere()
+ * RETURNS
+ *  error id as an int
+ ***********************************************************/
+int processFrom(bool &isUnion,
+    SELECT_LEX &select_lex,
+    gp_walk_info &gwi,
+    SCSEP &csep,
+    List<Item> &on_expr_list)
+{
     // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
     // all tables on FROM list must have at least one col in colmap
     TABLE_LIST* table_ptr = select_lex.get_table_list();
-    CalpontSelectExecutionPlan::SelectList derivedTbList;
 
-// DEBUG
 #ifdef DEBUG_WALK_COND
     List_iterator<TABLE_LIST> sj_list_it(select_lex.sj_nests);
     TABLE_LIST* sj_nest;
@@ -6163,11 +6153,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     {
         cerr << sj_nest->db.str << "." << sj_nest->table_name.str << endl;
     }
-
 #endif
-
-    // @bug 1796. Remember table order on the FROM list.
-    gwi.clauseType = FROM;
 
     try
     {
@@ -6182,17 +6168,20 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
                 return ER_CHECK_NOT_IMPLEMENTED;
             }
+          
+            // Save on_expr to use it for WHERE processing
+            if (!table_ptr->outer_join && table_ptr->on_expr)
+            {
+                on_expr_list.push_back(table_ptr->on_expr);
+            } 
 
             string viewName = getViewName(table_ptr);
 
             // @todo process from subquery
             if (table_ptr->derived)
             {
-                String str;
-                (table_ptr->derived->first_select())->print(gwi.thd, &str, QT_ORDINARY);
-
                 SELECT_LEX* select_cursor = table_ptr->derived->first_select();
-                FromSubQuery fromSub(gwi, select_cursor, isPushdownHand);
+                FromSubQuery fromSub(gwi, select_cursor, true);
                 string alias(table_ptr->alias.str);
                 fromSub.alias(lower(alias));
 
@@ -6203,7 +6192,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 if (!plan)
                 {
                     setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
-                    CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+                    CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
                     return ER_INTERNAL_ERROR;
                 }
 
@@ -6229,7 +6218,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
                 // trigger system catalog cache
                 if (columnStore)
-                    csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
+                    gwi.csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
 
                 string table_name = table_ptr->table_name.str;
 
@@ -6256,7 +6245,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     catch (IDBExcept& ie)
     {
         setError(gwi.thd, ER_INTERNAL_ERROR, ie.what(), gwi);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
         // @bug 3852. set error status for gwi.
         gwi.fatalParseError = true;
         gwi.parseErrorText = ie.what();
@@ -6269,14 +6258,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         gwi.fatalParseError = true;
         gwi.parseErrorText = emsg;
         setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
         return ER_INTERNAL_ERROR;
     }
 
     csep->tableList(gwi.tbList);
 
+    // Send this recursively to getSelectPlan
     bool unionSel = false;
-
     // UNION master unit check
     // Existed pushdown handlers won't get in this scope
     // except UNION pushdown that is to come.
@@ -6299,25 +6288,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             plan->traceFlags(csep->traceFlags());
             plan->data(csep->data());
 
-            // @bug 3853. When one or more sides or union queries contain derived tables,
-            // sl->join->zero_result_cause is not trustable. Since we've already handled
-            // constant filter now (0/1), we can relax the following checking.
-            // @bug 2547. ignore union unit of zero result set case
-//			if (sl->join)
-//			{
-//				sl->join->optimize();
-            // @bug 3067. not clear MySQL's behavior. when in subquery, this variable
-            // is not trustable.
-//				if (sl->join->zero_result_cause && !gwi.subQuery)
-//					continue;
-//			}
-
             // gwi for the union unit
             gp_walk_info union_gwi;
             union_gwi.thd = gwi.thd;
             uint32_t err = 0;
 
-            if ((err = getSelectPlan(union_gwi, *sl, plan, unionSel, isPushdownHand)) != 0)
+            if ((err = getSelectPlan(union_gwi, *sl, plan, unionSel, true)) != 0)
                 return err;
 
             unionVec.push_back(SCEP(plan));
@@ -6325,63 +6301,67 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             // distinct union num
             if (sl == select_lex.master_unit()->union_distinct)
                 distUnionNum = unionVec.size();
-
-            /*#ifdef DEBUG_WALK_COND
-            			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
-            			JOIN* join = sl->join;
-            			Item_cond* icp = 0;
-            			if (join != 0)
-            				icp = reinterpret_cast<Item_cond*>(join->conds);
-            			if (icp)
-            				icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-            			IDEBUG ( cerr << *plan << endl );
-            			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
-            #endif*/
         }
 
         csep->unionVec(unionVec);
         csep->distinctUnionNum(distUnionNum);
     }
 
-    gwi.clauseType = WHERE;
+
+    return 0;
+}
+
+/*@brief  Process WHERE part of the query or sub-query      */
+/***********************************************************
+ * DESCRIPTION:
+ *  This function processes conditions from either JOIN->conds
+ *  or SELECT_LEX->where|prep_where
+ *  on_expr_list ON expressions used in OUTER JOINs. These are
+ *  populated used in processFrom()
+ * RETURNS
+ *  error id as an int
+ ***********************************************************/
+int processWhere(SELECT_LEX &select_lex,
+    gp_walk_info &gwi,
+    SCSEP &csep,
+    List<Item> &on_expr_list)
+{
+    JOIN* join = select_lex.join;
+    Item_cond* icp = 0;
+
+    if (join != 0)
+        icp = reinterpret_cast<Item_cond*>(join->conds);
+
+    // if icp is null, try to find the where clause other where
+    if (!join && gwi.thd->lex->derived_tables)
+    {
+        if (select_lex.prep_where)
+            icp = (Item_cond*)(select_lex.prep_where);
+        else if (select_lex.where)
+            icp = (Item_cond*)(select_lex.where);
+    }
+    else if (!join && ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
+                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
+                        ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
+                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
+    {
+        icp = reinterpret_cast<Item_cond*>(select_lex.where);
+    }
 
     if (icp)
     {
-// MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-//#if MYSQL_VERSION_ID < 50172
+        // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
         //@bug 3039. fix fields for constants
         if (!icp->is_fixed())
         {
             icp->fix_fields(gwi.thd, (Item**)&icp);
         }
 
-//#endif
         gwi.fatalParseError = false;
 #ifdef DEBUG_WALK_COND
-        cerr << "------------------ WHERE -----------------------" << endl;
+        std::cerr << "------------------ WHERE -----------------------" << std::endl;
         icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        if (join && join->cond_equal)
-        {
-            List_iterator<Item_equal> li(join->cond_equal->current_level);
-            Item_equal *cur_item_eq;
-            while ((cur_item_eq= li++))
-            {
-                // DRRTUY TODO replace the block with
-                //cur_item_eq->traverse_cond(debug_walk, gwip, Item::POSTFIX);
-                std::cerr << "item_equal(";
-                Item *item;
-                Item_equal_fields_iterator it(*cur_item_eq);
-                while ((item= it++))
-                {
-                    std::ostringstream ostream;
-                    std::ostringstream& osr = ostream;
-                    getColNameFromItem(osr, item);
-                    std::cerr << osr.str() << ",";
-                }
-                std::cerr << ")" << std::endl;
-            }
-        }
-        cerr << "------------------------------------------------\n" << endl;
+        std::cerr << "------------------------------------------------\n" << std::endl;
 #endif
 
         icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
@@ -6410,6 +6390,26 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     }
 
+#ifdef DEBUG_WALK_COND
+        std::cerr << "------------------ ON_EXPR -----------------------" << endl;
+#endif
+    // MCOL-3593 MDB now doesn't rewrite and/or consolidate ON and WHERE expressions
+    // and CS handles INNER ON expressions here.
+    if (!on_expr_list.is_empty())
+    {
+        List_iterator<Item> on_expr_it(on_expr_list);
+        Item_cond *on_expr = NULL;
+        while((on_expr = reinterpret_cast<Item_cond*>(on_expr_it++)))
+        {
+            on_expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+#ifdef DEBUG_WALK_COND
+            on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+#endif
+        }
+    }
+#ifdef DEBUG_WALK_COND
+        std::cerr << "-------------------------------------------------\n" << std::endl;
+#endif
 
     // ZZ - the followinig debug shows the structure of nested outer join. should
     // use a recursive function.
@@ -6500,7 +6500,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     // ptWorkStack empty, the item is in rcWorkStack.
     // MySQL 5.6 (MariaDB?). when icp is null and zero_result_cause is set, a constant 0
     // is pushed to rcWorkStack.
-    if (/*icp && */gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
+    if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
     {
         filters = new ParseTree(gwi.rcWorkStack.top());
         gwi.rcWorkStack.pop();
@@ -6515,11 +6515,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             break;
 
         ptp = new ParseTree(new LogicOperator("and"));
-        //ptp->left(filters);
         ptp->right(filters);
         lhs = gwi.ptWorkStack.top();
         gwi.ptWorkStack.pop();
-        //ptp->right(rhs);
         ptp->left(lhs);
         gwi.ptWorkStack.push(ptp);
     }
@@ -6530,6 +6528,68 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         std::string aTmpDir(startup::StartUp::tmpDir());
         aTmpDir = aTmpDir + "/filter1.dot";
         filters->drawTree(aTmpDir);
+    }
+
+    return 0;
+}
+
+/*@brief  Translates SELECT_LEX into CSEP                  */
+/***********************************************************
+ * DESCRIPTION:
+ *  This function takes SELECT_LEX and tries to produce
+ *  a corresponding CSEP out of it. It is made of parts that
+ *  process parts of the query, e.g. FROM, WHERE, SELECT,
+ *  HAVING, GROUP BY, ORDER BY. FROM and WHERE are processed
+ *  by processFrom(), processWhere(). CS calls getSelectPlan()
+ *  recursively to process subqueries.
+ * ARGS
+ *  isUnion if true CS processes UNION unit now
+ *  isPushdownHand legacy to be removed
+ * RETURNS
+ *  error id as an int
+ ***********************************************************/
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
+    SCSEP& csep,
+    bool isUnion,
+    bool isPushdownHand)
+{
+#ifdef DEBUG_WALK_COND
+    cerr << "getSelectPlan()" << endl;
+#endif
+    int rc = 0;
+    // rollup is currently not supported
+    if (select_lex.olap == ROLLUP_TYPE)
+    {
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+    }
+
+    setExecutionParams(gwi, csep);
+ 
+    gwi.subSelectType = csep->subType();
+    uint32_t sessionID = csep->sessionID();
+    gwi.sessionid = sessionID;
+    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    csc->identity(CalpontSystemCatalog::FE);
+    csep->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    gwi.csc = csc;
+
+    CalpontSelectExecutionPlan::SelectList derivedTbList;
+    // @bug 1796. Remember table order on the FROM list.
+    gwi.clauseType = FROM;
+    List<Item> on_expr_list;
+    if ((rc = processFrom(isUnion, select_lex, gwi, csep, on_expr_list)))
+    {
+        return rc;
+    }
+    bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
+
+    gwi.clauseType = WHERE;
+    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list)))
+    {
+        return rc;
     }
 
     gwi.clauseType = SELECT;
@@ -7084,7 +7144,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
     for (uint32_t i = 0; i < funcFieldVec.size(); i++)
     {
-        //SimpleColumn *sc = new SimpleColumn(funcFieldVec[i]->db_name, bestTableName(funcFieldVec[i])/*funcFieldVec[i]->table_name*/, funcFieldVec[i]->field_name, sessionID);
         SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
 
         if (!sc || gwi.fatalParseError)
@@ -7110,7 +7169,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         String str;
         funcFieldVec[i]->print(&str, QT_ORDINARY);
         sc->alias(string(str.c_ptr()));
-        //sc->tableAlias(funcFieldVec[i]->table_name);
         sc->tableAlias(sc->tableAlias());
         SRCP srcp(sc);
         uint32_t j = 0;
@@ -7867,8 +7925,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         {
             uint32_t limitOffset = 0;
 
-            if (join)
+            if (select_lex.join)
             {
+                JOIN* join = select_lex.join;
 #if MYSQL_VERSION_ID >= 50172
 
                 // @bug5729. After upgrade, join->unit sometimes is uninitialized pointer

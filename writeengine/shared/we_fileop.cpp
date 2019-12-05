@@ -17,7 +17,7 @@
 
 //  $Id: we_fileop.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 
-#include "config.h"
+#include "mcsconfig.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -1081,7 +1081,7 @@ int FileOp::initColumnExtent(
         // IMO it is better to check bool then to call a function.
         if ( bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpaceDisabled(dbRoot))
                 ? bOptExtension : false;
         }
         // Reduce number of blocks allocated for abbreviated extents thus
@@ -1849,7 +1849,7 @@ int FileOp::initDctnryExtent(
         // CS doesn't optimize non-compressed dict creation.
         if ( bOptExtension )
         {
-            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot)
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpaceDisabled(dbRoot)
                 && m_compressionType) ? bOptExtension : false;
         }
         // Reduce number of blocks allocated for abbreviated extents thus

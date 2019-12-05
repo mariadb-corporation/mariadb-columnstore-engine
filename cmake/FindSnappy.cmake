@@ -8,7 +8,7 @@
 # to be set before calling find_package:
 #
 #  SNAPPY_ROOT_DIR Set this variable to the root installation of
-#                    jemalloc if the module has problems finding
+#                    snappy if the module has problems finding
 #                    the proper installation path.
 #
 # Variables defined by this module:
@@ -28,7 +28,7 @@ find_library(SNAPPY_LIBRARIES
 
 find_path(SNAPPY_INCLUDE_DIR
     NAMES snappy.h
-    HINTS ${JEMALLOC_ROOT_DIR}/include
+    HINTS ${SNAPPY_ROOT_DIR}/include
 )
 
 include(FindPackageHandleStandardArgs)

@@ -15,7 +15,7 @@ add_executable(DMLProc ${DMLProc_SRCS})
 
 target_link_libraries(DMLProc ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool ddlcleanuputil batchloader)
 
-install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 
 
 

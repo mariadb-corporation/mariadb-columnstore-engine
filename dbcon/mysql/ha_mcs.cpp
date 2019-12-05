@@ -23,6 +23,7 @@
 #include "ha_mcs_pushdown.h"
 #define NEED_CALPONT_EXTERNS
 #include "ha_mcs_impl.h"
+#include "is_columnstore.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -911,6 +912,10 @@ const COND* ha_mcs::cond_push(const COND* cond)
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
+static struct st_mysql_information_schema is_columnstore_plugin_version =
+{ MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION };
+
+
 mysql_declare_plugin(columnstore)
 {
     MYSQL_STORAGE_ENGINE_PLUGIN,
@@ -943,6 +948,70 @@ maria_declare_plugin(columnstore)
   mcs_system_variables,          /* system variables                */
   "1.0",                         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+},
+{
+    MYSQL_INFORMATION_SCHEMA_PLUGIN,
+    &is_columnstore_plugin_version,
+    "COLUMNSTORE_COLUMNS",
+    "MariaDB Corporation",
+    "An information schema plugin to list ColumnStore columns",
+    PLUGIN_LICENSE_GPL,
+    is_columnstore_columns_plugin_init,
+    //is_columnstore_tables_plugin_deinit,
+    NULL,
+    0x0100,
+    NULL,
+    NULL,
+    "1.0",
+    MariaDB_PLUGIN_MATURITY_STABLE
+},
+{
+    MYSQL_INFORMATION_SCHEMA_PLUGIN,
+    &is_columnstore_plugin_version,
+    "COLUMNSTORE_TABLES",
+    "MariaDB Corporation",
+    "An information schema plugin to list ColumnStore tables",
+    PLUGIN_LICENSE_GPL,
+    is_columnstore_tables_plugin_init,
+    //is_columnstore_tables_plugin_deinit,
+    NULL,
+    0x0100,
+    NULL,
+    NULL,
+    "1.0",
+    MariaDB_PLUGIN_MATURITY_STABLE
+},
+{
+    MYSQL_INFORMATION_SCHEMA_PLUGIN,
+    &is_columnstore_plugin_version,
+    "COLUMNSTORE_FILES",
+    "MariaDB Corporation",
+    "An information schema plugin to list ColumnStore filess",
+    PLUGIN_LICENSE_GPL,
+    is_columnstore_files_plugin_init,
+    //is_columnstore_files_plugin_deinit,
+    NULL,
+    0x0100,
+    NULL,
+    NULL,
+    "1.0",
+    MariaDB_PLUGIN_MATURITY_STABLE
+},
+{
+    MYSQL_INFORMATION_SCHEMA_PLUGIN,
+    &is_columnstore_plugin_version,
+    "COLUMNSTORE_EXTENTS",
+    "MariaDB Corporation",
+    "An information schema plugin to list ColumnStore extents",
+    PLUGIN_LICENSE_GPL,
+    is_columnstore_extents_plugin_init,
+    //is_columnstore_extents_plugin_deinit,
+    NULL,
+    0x0100,
+    NULL,
+    NULL,
+    "1.0",
+    MariaDB_PLUGIN_MATURITY_STABLE
 }
 maria_declare_plugin_end;
 

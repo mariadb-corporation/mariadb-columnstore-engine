@@ -33,6 +33,7 @@
 #include "S3Storage.h"
 #include "Utilities.h"
 #include "Synchronizer.h"
+#include "ProcessTask.h"
 
 #include <iostream>
 #include <stdlib.h>
@@ -209,20 +210,39 @@ bool opentask(bool connectionTest=false)
     
     cout << "open file " << filename << endl;
     ::unlink(filename);
-    ssize_t result = ::write(sessionSock, cmd, hdr->payloadLen);
+    
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        hdr->payloadLen -= 2;
+
+    size_t result = ::write(sessionSock, cmd, hdr->payloadLen);
     assert(result==(hdr->payloadLen));
 
-    OpenTask o(clientSock, hdr->payloadLen);
-    o.run();
-    
+    // set payload to be correct length again
+    if (connectionTest)
+        hdr->payloadLen += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, hdr->payloadLen);
+    boost::thread t(pt);
+
     if (connectionTest)
     {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
+        close(sessionSock);
+        close(clientSock);
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
 		// read the response
 		err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
 		sm_response *resp = (sm_response *) buf;
@@ -237,13 +257,14 @@ bool opentask(bool connectionTest=false)
 		assert(_stat->st_uid == getuid());
 		assert(_stat->st_gid == getgid());
 		assert(_stat->st_size == 0);
-    }
-    /* verify the file is there */
-    string metaPath = Config::get()->getValue("ObjectStorage", "metadata_path");
-    assert(!metaPath.empty());
-    metaPath += string("/" + prefix + "/" + testFile + ".meta");
+	    /* verify the file is there */
+	    string metaPath = Config::get()->getValue("ObjectStorage", "metadata_path");
+	    assert(!metaPath.empty());
+	    metaPath += string("/" + prefix + "/" + testFile + ".meta");
 
-    assert(boost::filesystem::exists(metaPath));
+	    assert(boost::filesystem::exists(metaPath));
+    }
+
     cout << "opentask OK" << endl;
     return true;
 }
@@ -498,8 +519,10 @@ void unlinktask(bool connectionTest=false)
     IOCoordinator *ioc = IOCoordinator::get();
     bf::path fullPathMeta = ioc->getMetadataPath()/(string(Metafilename) + ".meta");
     bf::remove(fullPathMeta);
-    
+
     MetadataFile meta(Metafilename);
+    meta.writeMetadata();
+
     assert(bf::exists(fullPathMeta));
     
     uint8_t buf[1024];
@@ -509,19 +532,38 @@ void unlinktask(bool connectionTest=false)
     cmd->flen = strlen(filename);
     memcpy(&cmd->filename, filename, cmd->flen);
     
-    UnlinkTask u(clientSock, sizeof(unlink_cmd) + cmd->flen);
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        cmd->flen -= 2;
+
     size_t result = ::write(sessionSock, cmd, sizeof(unlink_cmd) + cmd->flen);
     assert(result==(sizeof(unlink_cmd) + cmd->flen));
-    u.run();
-    
+
+    // set payload to be correct length again
+    if (connectionTest)
+        cmd->flen += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, sizeof(unlink_cmd) + cmd->flen);
+    boost::thread t(pt);
+
     if (connectionTest)
     {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
+        close(sessionSock);
+        close(clientSock);
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
 		// read the response
 		err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
 	    sm_response *resp = (sm_response *) buf;
@@ -530,10 +572,9 @@ void unlinktask(bool connectionTest=false)
 	    assert(resp->header.payloadLen == sizeof(ssize_t));
 	    assert(resp->header.flags == 0);
 	    assert(resp->returnCode == 0);
+	    // confirm it no longer exists
+	    assert(!bf::exists(fullPathMeta));
     }
-    
-    // confirm it no longer exists
-    assert(!bf::exists(fullPathMeta));
     
     // delete it again, make sure we get an error message & reasonable error code
     // Interesting.  boost::filesystem::remove() doesn't consider it an error if the file doesn't
@@ -545,7 +586,7 @@ void unlinktask(bool connectionTest=false)
     cmd->opcode = UNLINK;
     cmd->flen = strlen(filename);
     memcpy(&cmd->filename, filename, cmd->flen);
-    
+
     UnlinkTask u2(clientSock, sizeof(unlink_cmd) + cmd->flen);
     ssize_t result = ::write(sessionSock, cmd, sizeof(unlink_cmd) + cmd->flen);
     assert(result==(sizeof(unlink_cmd) + cmd->flen));
@@ -586,20 +627,38 @@ bool stattask(bool connectionTest=false)
     cmd->flen = filename.length();
     strcpy((char *) cmd->filename, filename.c_str());
     
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        cmd->flen -= 2;
+
     size_t result = ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
     assert(result==(sizeof(*cmd) + cmd->flen));
 
-    StatTask s(clientSock, sizeof(*cmd) + cmd->flen);
-    s.run();
-    
+    // set payload to be correct length again
+    if (connectionTest)
+        cmd->flen += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, sizeof(*cmd) + cmd->flen);
+    boost::thread t(pt);
+
     if (connectionTest)
     {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
+        close(sessionSock);
+        close(clientSock);
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
         // read the response
         err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
         sm_response *resp = (sm_response *) buf;
@@ -786,20 +845,38 @@ bool truncatetask(bool connectionTest=false)
     cmd->flen = strlen(filename);
     strcpy((char *) cmd->filename, filename);
     
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        cmd->flen -= 2;
+
     size_t result = ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
     assert(result==(sizeof(*cmd) + cmd->flen));
-
-    TruncateTask t(clientSock, sizeof(*cmd) + cmd->flen);
-    t.run();
     
+    // set payload to be correct length again
+    if (connectionTest)
+        cmd->flen += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, sizeof(*cmd) + cmd->flen);
+    boost::thread t(pt);
+
     if (connectionTest)
     {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
+        close(sessionSock);
+        close(clientSock);
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
         // read the response
         err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
         sm_response *resp = (sm_response *) buf;
@@ -808,11 +885,10 @@ bool truncatetask(bool connectionTest=false)
         assert(resp->header.flags == 0);
         assert(resp->header.payloadLen == sizeof(ssize_t));
         assert(resp->returnCode == 0);
+        // reload the metadata, check that it is 1000 bytes
+        meta = MetadataFile(Metafilename);
+        assert(meta.getLength() == 1000);
     }
-    
-    // reload the metadata, check that it is 1000 bytes
-    meta = MetadataFile(Metafilename);
-    assert(meta.getLength() == 1000);
     
     cache->reset();
     ::unlink(metaFullName.c_str());
@@ -848,26 +924,45 @@ bool listdirtask(bool connectionTest=false)
     }
     
     uint8_t buf[8192];
+    memset(buf,0,8192);
     listdir_cmd *cmd = (listdir_cmd *) buf;
     
     cmd->opcode = LIST_DIRECTORY;
     cmd->plen = strlen(relPath);
     memcpy(cmd->path, relPath, cmd->plen);
-    
+
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        cmd->plen -= 2;
+
     size_t result = ::write(sessionSock, cmd, sizeof(*cmd) + cmd->plen);
     assert(result==(sizeof(*cmd) + cmd->plen));
 
-    ListDirectoryTask l(clientSock, sizeof(*cmd) + cmd->plen);
-    l.run();
+    // set payload to be correct length again
+    if (connectionTest)
+        cmd->plen += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, sizeof(*cmd) + cmd->plen);
+    boost::thread t(pt);
 
     if (connectionTest)
     {
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
     	close(sessionSock);
+        close(clientSock);
     	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
     	assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
         /* going to keep this simple. Don't run this in a big dir. */
         /* maybe later I'll make a dir, put a file in it, and etc.  For now run it in a small dir. */
         err = ::recv(sessionSock, buf, 8192, MSG_DONTWAIT);
@@ -895,39 +990,40 @@ bool listdirtask(bool connectionTest=false)
     }
 
     bf::remove_all(tmpPath);
+
+    cout << "listdir task OK" << endl;
+
     return true;
 }
 
-void pingtask(bool connectionTest=false)
+void pingtask()
 {
 	int err=0;
     uint8_t buf[1024];
     ping_cmd *cmd = (ping_cmd *) buf;
     cmd->opcode = PING;
     
+    size_t len = sizeof(*cmd);
+
     ssize_t result = ::write(sessionSock, cmd, sizeof(*cmd));
     assert(result==(sizeof(*cmd)));
-
-    PingTask p(clientSock, sizeof(*cmd));
-    p.run();
     
-    if (connectionTest)
-    {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
-    }
-    else
-    {
-        // read the response
-        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-        sm_response *resp = (sm_response *) buf;
-        assert(err == sizeof(sm_response));
-        assert(resp->header.type == SM_MSG_START);
-        assert(resp->header.payloadLen == sizeof(ssize_t));
-        assert(resp->header.flags == 0);
-        assert(resp->returnCode == 0);
-    }
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    // don't test connection loss here since this message is only 1 byte
+    ProcessTask pt(clientSock, len);
+    boost::thread t(pt);
+
+    t.join();
+    // read the response
+    err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+    sm_response *resp = (sm_response *) buf;
+    assert(err == sizeof(sm_response));
+    assert(resp->header.type == SM_MSG_START);
+    assert(resp->header.payloadLen == sizeof(ssize_t));
+    assert(resp->header.flags == 0);
+    assert(resp->returnCode == 0);
 
     cout << "pingtask OK" << endl;
 }
@@ -962,20 +1058,41 @@ bool copytask(bool connectionTest=false)
     strncpy(file2->filename, dest, file2->flen);
     
     uint len = (uint64_t) &file2->filename[file2->flen] - (uint64_t) buf;
+
+    // set payload to be shorter than actual message lengh
+    // and send a shortened message.
+    if (connectionTest)
+        len -= 2;
+
     ssize_t result = ::write(sessionSock, buf, len);
     assert(result==len);
 
-    CopyTask c(clientSock, len);
-    c.run();
     int err=0;
+
+    // set payload to be correct length again
+    if (connectionTest)
+        len += 2;
+
+    // process task will look for the full length and
+    // will wait on the rest of the message.
+    ProcessTask pt(clientSock, len);
+    boost::thread t(pt);
+
     if (connectionTest)
     {
-    	close(sessionSock);
-    	err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
-    	assert(err == -1);
+        // make sure the thread is waiting for the rest of the data
+        // then kill the connection. This will trigger the task thread
+        // to exit on an error handling path
+        sleep(1);
+        close(sessionSock);
+        close(clientSock);
+        err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
+        assert(err == -1);
+        t.join();
     }
     else
     {
+        t.join();
         // read the response
         err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
         sm_response *resp = (sm_response *) buf;
@@ -984,13 +1101,11 @@ bool copytask(bool connectionTest=false)
         assert(resp->header.payloadLen == sizeof(ssize_t));
         assert(resp->header.flags == 0);
         assert(resp->returnCode == 0);
+        // verify copytest2 is there
+        MetadataFile meta2(Metadest, MetadataFile::no_create_t(),true);
+        assert(meta2.exists());
     }
 
-    
-    // verify copytest2 is there
-    MetadataFile meta2(Metadest, MetadataFile::no_create_t(),true);
-    assert(meta2.exists());
-    
     bf::path metaPath = IOCoordinator::get()->getMetadataPath();
     bf::remove(metaPath/(metaStrSrc + ".meta"));
     bf::remove(metaPath/(metaStrDest + ".meta"));
@@ -1857,33 +1972,29 @@ int main(int argc, char* argv[])
     metadataJournalTestCleanup();
     cout << " DONE" << endl;
 
-    cout << "Testing connection loss..." << endl;
+    cout << "Testing connection loss..." << endl << endl;
 
+    cout << "Check log files for lines:" << endl;
+    cout << "[NameTask read] caught an error: Bad file descriptor."  << endl;
+    cout << "****** socket error!"  << endl;
+    cout << "PosixTask::consumeMsg(): Discarding the tail end of a partial msg." << endl << endl;
     //opentask();
+    cout << "OpenTask read2 connection test " << endl;
     opentask(true);
-    cout << "connecting" << endl;
     makeConnection();
-    cout << "connected" << endl;
+    cout << "UnlinkTask read connection test " << endl;
     unlinktask(true);
-    cout << "connecting" << endl;
     makeConnection();
-    cout << "connected" << endl;
+    cout << "StatTask read connection test " << endl;
     stattask(true);
-    cout << "connecting" << endl;
     makeConnection();
-    cout << "connected" << endl;
+    cout << "TruncateTask read connection test " << endl;
     truncatetask(true);
-    cout << "connecting" << endl;
     makeConnection();
-    cout << "connected" << endl;
+    cout << "ListDirextoryTask read connection test " << endl;
     listdirtask(true);
-    cout << "connecting" << endl;
     makeConnection();
-    cout << "connected" << endl;
-    pingtask(true);
-    cout << "connecting" << endl;
-    makeConnection();
-    cout << "connected" << endl;
+    cout << "CopyTask read connection test " << endl;
     copytask(true);
 
     (Cache::get())->shutdown();
