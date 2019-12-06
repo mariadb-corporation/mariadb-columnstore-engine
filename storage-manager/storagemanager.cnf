@@ -68,7 +68,7 @@ max_concurrent_uploads = 20
 # if you have SM data stored on a distributed filesystem for fault-tolerance
 # reasons, and all nodes have it mounted, SM instances will be able to 
 # negotiate ownership of data from a failed instance. 
-common_prefix_depth = 4
+common_prefix_depth = 3
 
 [S3]
 # These should be self-explanatory.  Region can be blank or commented
