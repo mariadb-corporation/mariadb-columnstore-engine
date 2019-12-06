@@ -7973,9 +7973,6 @@ int processCommand(string* arguments)
                 devicenetworklist.push_back(devicenetworkconfig);
             }
 
-            DeviceNetworkList::iterator pt = devicenetworklist.begin();
-            DeviceNetworkList::iterator endpt = devicenetworklist.end();
-
             if ( devicenetworklist.empty() )
             {
                 cout << endl << "No modules to stop." << endl << endl;

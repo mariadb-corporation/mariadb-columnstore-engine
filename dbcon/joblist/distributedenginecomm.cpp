@@ -833,6 +833,7 @@ void DistributedEngineComm::write(uint32_t senderID, ByteStream& msg)
             case BATCH_PRIMITIVE_CREATE:
                 /* Disable flow control initially */
                 msg << (uint32_t) - 1;
+		    /* FALLTHRU */
 
             case BATCH_PRIMITIVE_DESTROY:
             case BATCH_PRIMITIVE_ADD_JOINER:

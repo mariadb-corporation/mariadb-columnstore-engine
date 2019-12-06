@@ -142,7 +142,7 @@ bool InputMgr::input(int argc, char** argv)
                     return false;
                 }
             }
-
+            /* FALLTHRU */
             case 'd':
             case 's':
             case 'f':

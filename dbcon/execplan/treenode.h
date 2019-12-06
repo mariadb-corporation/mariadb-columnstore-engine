@@ -187,7 +187,7 @@ typedef SP_IDB_Regex SP_CNX_Regex;
 inline std::string removeTrailing0(char* val, uint32_t length)
 {
     char* ptr = val;
-    uint32_t i = 0;
+    int64_t i = 0;
     bool decimal_point = false;
 
     for (; i < length; i++, ptr++)

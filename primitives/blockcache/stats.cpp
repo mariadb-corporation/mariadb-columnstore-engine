@@ -257,7 +257,7 @@ Stats::~Stats()
 
 void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
 {
-    if (lbid < 0 || session == 0) return;
+    if (session == 0) return;
 
     mutex::scoped_lock lk(traceFileMapMutex);
     TraceFileMap_t::iterator iter = traceFileMap.find(session);
@@ -274,7 +274,7 @@ void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
 
 void Stats::markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event)
 {
-    if (lbid < 0 || session == 0) return;
+    if (session == 0) return;
 
     mutex::scoped_lock lk(traceFileMapMutex);
     TraceFileMap_t::iterator iter = traceFileMap.find(session);

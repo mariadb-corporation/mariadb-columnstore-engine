@@ -354,7 +354,7 @@ private:
      *                   F&E framework                                *
      ******************************************************************/
 public:
-    const uint32_t inputIndex() const
+    uint32_t inputIndex() const
     {
         return fInputIndex;
     }
@@ -362,7 +362,7 @@ public:
     {
         fInputIndex = inputIndex;
     }
-    const uint32_t outputIndex() const
+    uint32_t outputIndex() const
     {
         return fOutputIndex;
     }

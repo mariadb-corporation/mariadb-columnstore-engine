@@ -1839,7 +1839,7 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
 #endif
     int entries, i, offset;
 
-    if (OID < 0 || fileBlockOffset < 0)
+    if (OID < 0)
     {
         log("ExtentMap::lookup(): OID and FBO must be >= 0", logging::LOG_TYPE_DEBUG);
         throw invalid_argument("ExtentMap::lookup(): OID and FBO must be >= 0");
@@ -1892,7 +1892,7 @@ int ExtentMap::lookupLocal_DBroot(int OID, uint16_t dbroot, uint32_t partitionNu
 #endif
     int entries, i, offset;
 
-    if (OID < 0 || fileBlockOffset < 0)
+    if (OID < 0)
     {
         log("ExtentMap::lookup(): OID and FBO must be >= 0", logging::LOG_TYPE_DEBUG);
         throw invalid_argument("ExtentMap::lookup(): OID and FBO must be >= 0");
@@ -1955,7 +1955,7 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
 #endif
     int entries, i;
 
-    if (OID < 0 || fileBlockOffset < 0)
+    if (OID < 0)
     {
         log("ExtentMap::lookupLocalStartLbid(): OID and FBO must be >= 0",
             logging::LOG_TYPE_DEBUG);

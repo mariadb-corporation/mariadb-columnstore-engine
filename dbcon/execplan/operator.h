@@ -148,7 +148,7 @@ protected:
      *                  F&E framework                          *
      ***********************************************************/
 public:
-    virtual const OpType op() const
+    virtual OpType op() const
     {
         return fOp;
     }
