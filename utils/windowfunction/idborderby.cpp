@@ -455,8 +455,11 @@ int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    bool b1 = l->row1().isNullValue(fSpec.fIndex);
-    bool b2 = l->row2().isNullValue(fSpec.fIndex);
+    int64_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int64_t v2 = l->row2().getIntField(fSpec.fIndex);
+
+    bool b1 = (joblist::TIMENULL == (uint64_t) v1);
+    bool b2 = (joblist::TIMENULL == (uint64_t) v2);
 
     int ret = 0;
 
