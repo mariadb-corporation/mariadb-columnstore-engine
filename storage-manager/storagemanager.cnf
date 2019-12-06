@@ -59,8 +59,7 @@ max_concurrent_uploads = 20
 # /var/lib/columnstore/data2 differ at the 4th directory element,
 # so they have a common prefix depth of 3.  For Columnstore, it should 
 # be set to the number of directories that precede the data* directories.
-# The default value of 3 will work with package installations and installations
-# to a user's home directory, where data* would be in 
+# The default value of 3 works with package installations, where data* would be in 
 # /var/lib/columnstore
 #
 # This value is used to manage the ownership of prefixes between
