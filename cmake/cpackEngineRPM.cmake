@@ -50,16 +50,16 @@ MariaDB bug reports should be submitted through https://jira.mariadb.org
 
 ")
 
-SET(CPACK_RPM_platform_PACKAGE_DESCRIPTION "MariaDB-Columnstore binary files")
-SET(CPACK_RPM_platform_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
-SET(CPACK_RPM_platform_PACKAGE_GROUP "Applications")
+SET(CPACK_RPM_columnstore-platform_PACKAGE_DESCRIPTION "MariaDB-Columnstore binary files")
+SET(CPACK_RPM_columnstore-platform_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_RPM_columnstore-platform_PACKAGE_GROUP "Applications")
 
-SET(CPACK_RPM_libs_PACKAGE_DESCRIPTION "MariaDB-Columnstore libraries")
-SET(CPACK_RPM_libs_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_RPM_columnstore-libs_PACKAGE_DESCRIPTION "MariaDB-Columnstore libraries")
+SET(CPACK_RPM_columnstore-libs_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
-SET(CPACK_RPM_storage-engine_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
-SET(CPACK_RPM_storage-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
-SET(CPACK_RPM_storage-engine_PACKAGE_GROUP "Applications")
+SET(CPACK_RPM_columnstore-engine_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
+SET(CPACK_RPM_columnstore-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_RPM_columnstore-engine_PACKAGE_GROUP "Applications")
 
 # "set/append array" - append a set of strings, separated by a space
 MACRO(SETA var)
@@ -68,9 +68,9 @@ MACRO(SETA var)
   ENDFOREACH()
 ENDMACRO(SETA)
 
-SETA(CPACK_RPM_libs_PACKAGE_PROVIDES "MariaDB-columnstore-libs")
-SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "MariaDB-columnstore-platform")
-SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
+SETA(CPACK_RPM_columnstore-libs_PACKAGE_PROVIDES "MariaDB-columnstore-libs")
+SETA(CPACK_RPM_columnstore-platform_PACKAGE_PROVIDES "MariaDB-columnstore-platform")
+SETA(CPACK_RPM_columnstore--engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
 
 
 #boost is a source build in CentOS 6 so don't require it as a package
@@ -96,15 +96,15 @@ else ()
     SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools")
 endif()
 
-SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "MariaDB-columnstore-libs")
+SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "MariaDB-columnstore-libs")
 
-SET(CPACK_RPM_platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
-SET(CPACK_RPM_libs_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_libs.sh)
-SET(CPACK_RPM_storage-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
+SET(CPACK_RPM_columnstore-platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
+SET(CPACK_RPM_columnstore-libs_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_libs.sh)
+SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
 
-SET(CPACK_RPM_platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_platform.sh)
-SET(CPACK_RPM_libs_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_libs.sh)
-SET(CPACK_RPM_storage-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_storage_engine.sh)
+SET(CPACK_RPM_columnstore-platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_platform.sh)
+SET(CPACK_RPM_columnstore-libs_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_libs.sh)
+SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_storage_engine.sh)
 
 SET(CPACK_RPM_SPEC_MORE_DEFINE "${CPACK_RPM_SPEC_MORE_DEFINE}
 %define ignore \#
@@ -127,11 +127,11 @@ SET(ignored
 #%define _prefix ${CMAKE_INSTALL_PREFIX}
 #")
 
-SET(CPACK_RPM_platform_USER_FILELIST ${ignored})
+SET(CPACK_RPM_columnstore-platform_USER_FILELIST ${ignored})
 
-SET(CPACK_RPM_libs_USER_FILELIST ${ignored})
+SET(CPACK_RPM_columnstore-libs_USER_FILELIST ${ignored})
 
-SET(CPACK_RPM_storage-engine_USER_FILELIST ${ignored})
+SET(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored})
 
 INCLUDE (CPack)
 
