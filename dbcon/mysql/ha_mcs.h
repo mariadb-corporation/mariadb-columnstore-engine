@@ -144,12 +144,6 @@ public:
     */
     void start_bulk_insert(ha_rows rows, uint flags = 0) ;
 
-    /** @brief
-      We implement this in ha_example.cc. It's not an obligatory method;
-      skip it and and MySQL will treat it as not implemented.
-    */
-    int end_bulk_insert(bool abort) ;
-
     /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
     int end_bulk_insert() ;
 
@@ -158,12 +152,16 @@ public:
       skip it and and MySQL will treat it as not implemented.
     */
     int update_row(const uchar* old_data, uchar* new_data);
+    int direct_update_rows_init(List<Item> *update_fields);
+    int direct_update_rows(ha_rows *update_rows);
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
     int delete_row(const uchar* buf);
+    int direct_delete_rows_init();
+    int direct_delete_rows(ha_rows *deleted_rows);
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
