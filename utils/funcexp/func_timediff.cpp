@@ -45,7 +45,7 @@ namespace funcexp
 namespace helpers
 {
 
-const string timediff( int64_t time1, int64_t time2)
+const string timediff( int64_t time1, int64_t time2, bool isDateTime)
 {
     long long seconds;
     long long microseconds;
@@ -56,9 +56,9 @@ const string timediff( int64_t time1, int64_t time2)
         l_sign = -l_sign;
 
     if ( time1 > time2 )
-        helpers::calc_time_diff(time1, time2, l_sign, &seconds, &microseconds);
+        helpers::calc_time_diff(time1, time2, l_sign, &seconds, &microseconds, isDateTime);
     else
-        helpers::calc_time_diff(time2, time1, l_sign, &seconds, &microseconds);
+        helpers::calc_time_diff(time2, time1, l_sign, &seconds, &microseconds, isDateTime);
 
     long t_seconds;
     int hour = seconds / 3600L;
@@ -92,6 +92,14 @@ const string timediff( int64_t time1, int64_t time2)
 
     return time3;
 }
+}
+
+bool treatIntAsDatetime(const std::string &text)
+{
+    // min used when converting into to datetime is YYYYMMDD
+    // note: time diffing an int perceived to be in the format YYMMDD is actually treated as HHMMSS. Same functionality as MDB
+    bool isNeg = text.find("-") == 0;
+    return (text.length() > 8) || (text.length() >= 8 && !isNeg); 
 }
 
 CalpontSystemCatalog::ColType Func_timediff::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
@@ -162,8 +170,16 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
             text = parm[0]->data()->getStrVal(row, isNull);
-            isTime1 = std::count(text.begin(), text.end(), '-') <= 1; // Time can have at most 1 dash (signifies negative)
-            val1 = dataconvert::DataConvert::stringToDatetime(text, &isDate1);
+            
+            if (text.length() >= 12) // datetime has length at least 12 (YYMMDDHHMMSS), convert others to time
+            {
+                val1 = dataconvert::DataConvert::stringToDatetime(text, &isDate1);
+            }
+            else
+            {
+                val1 = dataconvert::DataConvert::stringToTime(text);
+                isTime1 = true;
+            }
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -171,7 +187,14 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
-            val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);
+            text = parm[0]->data()->getStrVal(row, isNull);
+            if (treatIntAsDatetime(text))
+                val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);            
+            else 
+            {
+                val1 = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
+                isTime1 = true;
+            }
             break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
@@ -182,7 +205,14 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             }
             else
             {
-                val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);
+                text = parm[0]->data()->getStrVal(row, isNull);
+                if (treatIntAsDatetime(text))
+                    val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);
+                else 
+                {
+                    val1 = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
+                    isTime1 = true;
+                }
                 break;
             }
 
@@ -226,8 +256,15 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
             text = parm[1]->data()->getStrVal(row, isNull);
-            isTime2 = std::count(text.begin(), text.end(), '-') <= 1; // Time can have at most 1 dash (signifies negative)
-            val2 = dataconvert::DataConvert::stringToDatetime(text, &isDate2);
+            if (text.length() >= 12) // datetime has length at least 12 (YYMMDDHHMMSS), convert others to time
+            {
+                val2 = dataconvert::DataConvert::stringToDatetime(text, &isDate2);
+            }
+            else
+            {
+                val2 = dataconvert::DataConvert::stringToTime(text);
+                isTime2 = true;
+            }
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -235,7 +272,14 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
-            val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
+            text = parm[1]->data()->getStrVal(row, isNull);
+            if (treatIntAsDatetime(text))
+                val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
+            else 
+            {
+                val2 = dataconvert::DataConvert::intToTime(parm[1]->data()->getIntVal(row, isNull));
+                isTime2 = true;
+            }
             break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
@@ -246,7 +290,14 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             }
             else
             {
-                val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
+                text = parm[1]->data()->getStrVal(row, isNull);
+                if (treatIntAsDatetime(text))
+                    val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
+                else 
+                {
+                    val2 = dataconvert::DataConvert::intToTime(parm[1]->data()->getIntVal(row, isNull));
+                    isTime2 = true;
+                }
                 break;
             }
 
@@ -262,7 +313,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
     // both date format or both datetime format. Diff between time and datetime returns NULL in MariaDB
     if ((isDate1 && isDate2) || ((!isDate1 && !isDate2) && (isTime1 == isTime2)))
-        return helpers::timediff( val1, val2);
+        return helpers::timediff( val1, val2, !isTime1);
 
     isNull = true;
     return "";
@@ -311,8 +362,6 @@ double Func_timediff::getDoubleVal(rowgroup::Row& row,
     //return (double)dataconvert::DataConvert::datetimeToInt(getStrVal(row, fp, isNull, op_ct));
     return atof(getStrVal(row, fp, isNull, op_ct).c_str());
 }
-
-
 
 } // namespace funcexp
 // vim:ts=4 sw=4:
