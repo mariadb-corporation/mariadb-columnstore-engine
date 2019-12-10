@@ -16,7 +16,9 @@ for arg in "$@"; do
 	fi
 done
 
+# DELETE libcalmysql.so entries first as they are in ha_columnstore.so in 1.4.2 onwards
 mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
+DELETE FROM mysql.func WHERE dl='libcalmysql.so';
 INSERT INTO mysql.func VALUES ('calgetstats',0,'ha_columnstore.so','function');
 INSERT INTO mysql.func VALUES ('calsettrace',2,'ha_columnstore.so','function');
 INSERT INTO mysql.func VALUES ('calsetparms',0,'ha_columnstore.so','function');
