@@ -130,6 +130,7 @@ ColumnType::ColumnType(int type) :
 
         case DDL_BIGINT:
             fPrecision = 19;
+	    break;
 
         case DDL_UNSIGNED_BIGINT:
             fPrecision = 20;

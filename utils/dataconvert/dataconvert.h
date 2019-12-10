@@ -338,9 +338,9 @@ bool isTimestampValid ( uint64_t second, uint64_t microsecond )
     // 0x7FFFFFFF. So enforce the same restriction here.
     // TODO: We however store the seconds portion of the timestamp in
     // 44 bits, so change this limit when the server supports higher values.
-    if ( second >= MIN_TIMESTAMP_VALUE && second <= MAX_TIMESTAMP_VALUE )
+    if ( second <= MAX_TIMESTAMP_VALUE )
     {
-        if ( microsecond >= 0 && microsecond <= 999999 )
+        if ( microsecond <= 999999 )
         {
             valid = true;
         }

@@ -96,7 +96,7 @@ const DMLColumn* Row::get_ColumnAt( unsigned int index ) const
 {
     const DMLColumn* columnPtr = 0;
 
-    if ( index >= 0 && index < fColumnList.size() )
+    if ( index < fColumnList.size() )
     {
         columnPtr = fColumnList[index];
     }

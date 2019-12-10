@@ -149,6 +149,12 @@ public:
     {
         return fFunctionId;
     }
+
+    const std::string functionName() const
+    {
+        return fFunctionName;
+    }
+
     void functionId(int id)
     {
         fFunctionId = id;

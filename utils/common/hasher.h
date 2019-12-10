@@ -178,9 +178,11 @@ public:
         {
             case 3:
                 k1 ^= tail[2] << 16;
+		/* FALLTHRU */
 
             case 2:
                 k1 ^= tail[1] << 8;
+		/* FALLTHRU */
 
             case 1:
                 k1 ^= tail[0];
@@ -255,21 +257,27 @@ public:
         {
             case 15:
                 k2 ^= uint64_t(tail[14]) << 48;
+                /* FALLTHRU */
 
             case 14:
                 k2 ^= uint64_t(tail[13]) << 40;
+                /* FALLTHRU */
 
             case 13:
                 k2 ^= uint64_t(tail[12]) << 32;
+                /* FALLTHRU */
 
             case 12:
                 k2 ^= uint64_t(tail[11]) << 24;
+                /* FALLTHRU */
 
             case 11:
                 k2 ^= uint64_t(tail[10]) << 16;
+                /* FALLTHRU */
 
             case 10:
                 k2 ^= uint64_t(tail[9]) << 8;
+                /* FALLTHRU */
 
             case 9:
                 k2 ^= uint64_t(tail[8]) << 0;
@@ -277,27 +285,35 @@ public:
                 k2 = rotl64(k2, 33);
                 k2 *= c1;
                 h2 ^= k2;
+                /* FALLTHRU */
 
             case 8:
                 k1 ^= uint64_t(tail[7]) << 56;
+                /* FALLTHRU */
 
             case 7:
                 k1 ^= uint64_t(tail[6]) << 48;
+                /* FALLTHRU */
 
             case 6:
                 k1 ^= uint64_t(tail[5]) << 40;
+                /* FALLTHRU */
 
             case 5:
                 k1 ^= uint64_t(tail[4]) << 32;
+                /* FALLTHRU */
 
             case 4:
                 k1 ^= uint64_t(tail[3]) << 24;
+                /* FALLTHRU */
 
             case 3:
                 k1 ^= uint64_t(tail[2]) << 16;
+                /* FALLTHRU */
 
             case 2:
                 k1 ^= uint64_t(tail[1]) << 8;
+                /* FALLTHRU */
 
             case 1:
                 k1 ^= uint64_t(tail[0]) << 0;

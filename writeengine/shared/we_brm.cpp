@@ -1749,15 +1749,19 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
                     {
                         case ERR_DEADLOCK:
                             rc = ERR_BRM_DEAD_LOCK;
+			    break;
 
                         case ERR_VBBM_OVERFLOW:
                             rc = ERR_BRM_VB_OVERFLOW;
+			    break;
 
                         case ERR_NETWORK:
                             rc = ERR_BRM_NETWORK;
+			    break;
 
                         case ERR_READONLY:
                             rc = ERR_BRM_READONLY;
+			    break;
 
                         default:
                             rc = ERR_BRM_WR_VB_ENTRY;

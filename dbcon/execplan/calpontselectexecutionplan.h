@@ -209,7 +209,7 @@ public:
     /**
      * Are we in local PM only query mode?
      */
-    const uint32_t localQuery() const
+    uint32_t localQuery() const
     {
         return fLocalQuery;
     }
@@ -301,7 +301,7 @@ public:
     /**
      * location of this select
      */
-    const int location () const
+    int location () const
     {
         return fLocation;
     }
@@ -313,7 +313,7 @@ public:
     /**
      * dependence of this select
      */
-    const bool dependent() const
+    bool dependent() const
     {
         return fDependent;
     }
@@ -382,7 +382,7 @@ public:
     /** session id
      *
      */
-    const uint32_t sessionID() const
+    uint32_t sessionID() const
     {
         return fSessionID;
     }
@@ -394,7 +394,7 @@ public:
     /** transaction id
      *
      */
-    const int txnID() const
+    int txnID() const
     {
         return fTxnID;
     }
@@ -457,7 +457,7 @@ public:
         fTraceFlags = traceFlags;
     }
 
-    const uint32_t statementID() const
+    uint32_t statementID() const
     {
         return fStatementID;
     }
@@ -490,7 +490,7 @@ public:
         fDerivedTableList = derivedTableList;
     }
 
-    const bool distinct() const
+    bool distinct() const
     {
         return fDistinct;
     }
@@ -503,7 +503,7 @@ public:
     {
         fOverrideLargeSideEstimate = over;
     }
-    const bool overrideLargeSideEstimate() const
+    bool overrideLargeSideEstimate() const
     {
         return fOverrideLargeSideEstimate;
     }
@@ -534,7 +534,7 @@ public:
     {
         fSubType = subType;
     }
-    const uint64_t subType() const
+    uint64_t subType() const
     {
         return fSubType;
     }
@@ -556,7 +556,7 @@ public:
     {
         fLimitStart = limitStart;
     }
-    const uint64_t limitStart() const
+    uint64_t limitStart() const
     {
         return fLimitStart;
     }
@@ -565,7 +565,7 @@ public:
     {
         fLimitNum = limitNum;
     }
-    const uint64_t limitNum() const
+    uint64_t limitNum() const
     {
         return fLimitNum;
     }
@@ -592,7 +592,7 @@ public:
     {
         fOrderByThreads = number;
     }
-    const uint32_t orderByThreads() const
+    uint32_t orderByThreads() const
     {
         return fOrderByThreads;
     } 

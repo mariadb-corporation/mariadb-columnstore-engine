@@ -88,17 +88,6 @@ void initCompressedDBFileHeader(void* hdrBuf, int compressionType, int hdrSize)
     hdr->fHeader.fHeaderSize      = hdrSize;
 }
 
-void log(const string& s)
-{
-    logging::MessageLog logger((logging::LoggingID()));
-    logging::Message message;
-    logging::Message::Args args;
-
-    args.add(s);
-    message.format(args);
-    logger.logErrorMessage(message);
-}
-
 } // namespace
 
 

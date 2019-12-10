@@ -67,7 +67,9 @@ boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string
     return func;
 }
 
-WF_udaf::WF_udaf(WF_udaf& rhs) : fUDAFContext(rhs.getContext()),
+WF_udaf::WF_udaf(WF_udaf& rhs) :
+    WindowFunctionType(rhs.functionId(), rhs.functionName()),
+    fUDAFContext(rhs.getContext()),
     bInterrupted(rhs.getInterrupted()),
     fDistinct(rhs.getDistinct())
 {

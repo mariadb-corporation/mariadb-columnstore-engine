@@ -749,6 +749,7 @@ void TupleJoiner::doneInserting()
                     case CalpontSystemCatalog::UFLOAT:
                     {
                         uniquer.insert(*(int64_t*)&dval);
+                        break;
                     }
                     default:
                     {
@@ -1104,6 +1105,7 @@ void TupleJoiner::updateCPData(const Row& r)
                     case CalpontSystemCatalog::UFLOAT:
                     {
                         uval = *(uint64_t*)&dval;
+                        break;
                     }
                     default:
                     {
@@ -1136,6 +1138,7 @@ void TupleJoiner::updateCPData(const Row& r)
                     case CalpontSystemCatalog::UFLOAT:
                     {
                         val = *(int64_t*)&dval;
+                        break;
                     }
                     default:
                     {
