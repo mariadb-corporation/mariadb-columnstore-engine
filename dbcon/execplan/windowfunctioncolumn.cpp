@@ -384,7 +384,8 @@ void WindowFunctionColumn::adjustResultType()
         fResultType = fFunctionParms[0]->resultType();
 
     if (boost::iequals(fFunctionName, "SUM") ||
-        boost::iequals(fFunctionName, "AVG"))
+        boost::iequals(fFunctionName, "AVG") ||
+        boost::iequals(fFunctionName, "AVG_DISTINCT"))
     {
         fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
         fResultType.colWidth = sizeof(long double);
