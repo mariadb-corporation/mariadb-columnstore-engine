@@ -848,6 +848,40 @@ public:
                           execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+
+/** @brief Func_space class
+  */
+class Func_space : public Func_Str
+{
+public:
+    Func_space() : Func_Str("space") {}
+    virtual ~Func_space() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+/** @brief Func_quote class
+  */
+class Func_quote : public Func_Str
+{
+public:
+    Func_quote() : Func_Str("quote") {}
+    virtual ~Func_quote() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
 }
 
 #endif
