@@ -52,7 +52,7 @@ namespace
 {
 
 //Only one of the cacheutils fcns can run at a time
-mutex CacheOpsMutex;
+boost::mutex CacheOpsMutex;
 
 //This global is updated only w/ atomic ops
 volatile uint32_t MultiReturnCode;
@@ -148,7 +148,7 @@ namespace cacheutils
  */
 int flushPrimProcCache()
 {
-    mutex::scoped_lock lk(CacheOpsMutex);
+    boost::mutex::scoped_lock lk(CacheOpsMutex);
 
     try
     {
@@ -176,7 +176,7 @@ int flushPrimProcBlocks(const BRM::BlockList_t& list)
 {
     if (list.empty()) return 0;
 
-    mutex::scoped_lock lk(CacheOpsMutex);
+    boost::mutex::scoped_lock lk(CacheOpsMutex);
 
 #if defined(__LP64__) || defined(_WIN64)
 
@@ -233,7 +233,7 @@ int flushPrimProcAllverBlocks(const vector<LBID_t>& list)
 
     try
     {
-        mutex::scoped_lock lk(CacheOpsMutex);
+        boost::mutex::scoped_lock lk(CacheOpsMutex);
         rc = sendToAll(bs);
         return rc;
     }
@@ -252,7 +252,7 @@ int flushOIDsFromCache(const vector<BRM::OID_t>& oids)
      *    uint32_t * - OID array
      */
 
-    mutex::scoped_lock lk(CacheOpsMutex, defer_lock_t());
+    boost::mutex::scoped_lock lk(CacheOpsMutex, boost::defer_lock_t());
 
     ByteStream bs;
     ISMPacketHeader ism;
@@ -281,7 +281,7 @@ int flushPartition(const std::vector<BRM::OID_t>& oids, set<BRM::LogicalPartitio
      * 		uint32_t * - OID array
      */
 
-    mutex::scoped_lock lk(CacheOpsMutex, defer_lock_t());
+    boost::mutex::scoped_lock lk(CacheOpsMutex, boost::defer_lock_t());
 
     ByteStream bs;
     ISMPacketHeader ism;
@@ -309,7 +309,7 @@ int dropPrimProcFdCache()
 
     try
     {
-        mutex::scoped_lock lk(CacheOpsMutex);
+        boost::mutex::scoped_lock lk(CacheOpsMutex);
         int rc = sendToAll(bs);
         return rc;
     }
