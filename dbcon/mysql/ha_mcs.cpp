@@ -338,19 +338,18 @@ int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
     DBUG_RETURN(rc);
 }
 
-// WIP
 /**
   @brief
-  Yes, update_row() does what you expect, it updates a row. old_data will have
-  the previous row record in it, while new_data will have the newest data in it.
-  Keep in mind that the server can do updates based on ordering if an ORDER BY
-  clause was used. Consecutive ordering is not guaranteed.
+    Durect UPDATE/DELETE are the features that allows engine to run UPDATE
+    or DELETE on its own. There are number of limitations that dissalows
+    the feature.
 
     @details
    @code
     @endcode
 
     @see
+      mysql_update()/mysql_delete
 */
 int ha_mcs::direct_update_rows_init(List<Item> *update_fields)
 {
@@ -362,6 +361,14 @@ int ha_mcs::direct_update_rows(ha_rows *update_rows)
 {
     DBUG_ENTER("ha_mcs::direct_update_rows");
     int rc = ha_mcs_impl_direct_update_delete_rows(update_rows);
+    DBUG_RETURN(rc);
+}
+
+int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
+{
+    DBUG_ENTER("ha_mcs::direct_update_rows");
+    int rc = ha_mcs_impl_direct_update_delete_rows(update_rows);
+    *found_rows = *update_rows;
     DBUG_RETURN(rc);
 }
 
