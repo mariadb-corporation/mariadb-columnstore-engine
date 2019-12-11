@@ -154,6 +154,7 @@ public:
     int update_row(const uchar* old_data, uchar* new_data);
     int direct_update_rows_init(List<Item> *update_fields);
     int direct_update_rows(ha_rows *update_rows);
+    int direct_update_rows(ha_rows *update_rows, ha_rows *found_rows);
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
