@@ -1194,7 +1194,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
     return returnVal;
 }
 
-uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, ha_rows *affected_rows)
+uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 {
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -2218,8 +2218,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, ha_rows *affected_rows)
         }
         else
         {
-            if (affected_rows)
-                *affected_rows = dmlRowCount;
+            ci->affectedRows = dmlRowCount;
         }
 
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
@@ -2227,8 +2226,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, ha_rows *affected_rows)
     else
     {
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
-            if (affected_rows)
-                *affected_rows = dmlRowCount;
+            ci->affectedRows = dmlRowCount;
         //cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
     }
 
@@ -2289,8 +2287,13 @@ int ha_mcs_impl_direct_update_delete_rows(ha_rows *affected_rows)
     cal_impl_if::gp_walk_info gwi;
     gwi.thd = thd;
 
-    int rc = doUpdateDelete(thd, gwi, affected_rows);
-    return rc;
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    if (ci)
+    {
+        *affected_rows = ci->affectedRows;
+    }
+
+    return 0;
 }
 
 int ha_mcs_impl_rnd_init(TABLE* table)
@@ -2352,7 +2355,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd, gwi, NULL);
+        return doUpdateDelete(thd, gwi);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
@@ -4899,7 +4902,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd, gwi, NULL);
+        return doUpdateDelete(thd, gwi);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
