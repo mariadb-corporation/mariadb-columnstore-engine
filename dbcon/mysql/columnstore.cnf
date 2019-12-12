@@ -1,21 +1,12 @@
-# The following options will be passed to all MySQL clients
-[client]
-#password	= your_password
-
-# Here follows entries for some specific programs
-
-# The MySQL server
 [mysqld]
-sql_mode="ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
-#columnstore_processing_handlers_fallback = OFF;
+lower_case_table_names=1
 
-# Enable compression by default on create, set to 0 to turn off
-#columnstore_compression_type=2
+plugin-load-add=ha_columnstore.so
 
-# Default for string table threshhold
-#columnstore_stringtable_threshold=20
+# Enable compression by default on create, set to NONE to turn off
+#columnstore_compression_type=SNAPPY
 
-# infinidb local query flag
+# ColumnStore local query flag
 #columnstore_local_query=0
 
 #columnstore_diskjoin_smallsidelimit=0
@@ -23,20 +14,8 @@ sql_mode="ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
 #columnstore_diskjoin_bucketsize=100
 #columnstore_um_mem_limit=0
 
-#columnstore_use_import_for_batchinsert=1
-#columnstore_import_for_batchinsert_delimiter=7
+# Required for Schema Sync
+#server-id = 1
 
-# Replication Master Server (default)
-# binary logging is required for replication
-# log-bin=mysql-bin
-
-# required unique id between 1 and 2^32 - 1
-# defaults to 1 if master-host
-# uses to 2+ if slave-host
-server-id = 1
-
-# binary logging - not required for slaves, but recommended
-
-lower_case_table_names=1
-
-plugin-load-add=ha_columnstore.so
+# Uncomment for this UM to apply slave DML on ColumnStore tables
+#columnstore_replication_slave=ON
