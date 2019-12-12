@@ -649,6 +649,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                             break;
 
                         default:
+                            (*f)->field_length = 255; // reserve enough space for varchar, was previously displaying only 21 characters
                             f2->store((const char*)row.getStringPointer(s), row.getStringLength(s), f2->charset());
                     }
 
