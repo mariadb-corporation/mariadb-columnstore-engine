@@ -68,7 +68,7 @@ SocketPool::SocketPool()
 
 SocketPool::~SocketPool()
 {
-    boost::mutex::scoped_lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
 
     for (uint i = 0; i < allSockets.size(); i++)
         ::close(allSockets[i]);

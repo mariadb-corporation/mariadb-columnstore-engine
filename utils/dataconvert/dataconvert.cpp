@@ -2353,7 +2353,8 @@ bool DataConvert::isColumnTimeValid( int64_t time )
 bool DataConvert::isColumnTimeStampValid( int64_t timeStamp )
 {
     TimeStamp dt;
-    memcpy(&dt, &timeStamp, sizeof(uint64_t));
+    void* dtp = static_cast<void*>(&dt);
+    memcpy(dtp, &timeStamp, sizeof(uint64_t));
 
     return isTimestampValid(dt.second, dt.msecond);
 }

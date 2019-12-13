@@ -202,8 +202,11 @@ ELSE ()
     # fix our libraries anyway
     STRING(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     # TODO: Re-enable these and fix the warnings they generate
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-vla -Wno-non-virtual-dtor -Wno-extra" DEBUG)
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-vla -Wno-non-virtual-dtor -Wno-extra -D_DEBUG" DEBUG)
 ENDIF()
+
+
+
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client)
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
