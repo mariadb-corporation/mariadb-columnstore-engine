@@ -24,6 +24,7 @@
 #define NEED_CALPONT_EXTERNS
 #include "ha_mcs_impl.h"
 #include "is_columnstore.h"
+#include "ha_mcs_version.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -925,23 +926,6 @@ static struct st_mysql_information_schema is_columnstore_plugin_version =
 { MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION };
 
 
-mysql_declare_plugin(columnstore)
-{
-    MYSQL_STORAGE_ENGINE_PLUGIN,
-    &columnstore_storage_engine,
-    "Columnstore",
-    "MariaDB",
-    "Columnstore storage engine",
-    PLUGIN_LICENSE_GPL,
-    columnstore_init_func,                        /* Plugin Init */
-    columnstore_done_func,                        /* Plugin Deinit */
-    0x0100 /* 1.0 */,
-    mcs_status_variables,                         /* status variables */
-    mcs_system_variables,                         /* system variables */
-    NULL,                                         /* reserved */
-    0                                             /* config flags */
-}
-mysql_declare_plugin_end;
 maria_declare_plugin(columnstore)
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
@@ -952,10 +936,10 @@ maria_declare_plugin(columnstore)
   PLUGIN_LICENSE_GPL,
   columnstore_init_func,
   columnstore_done_func,
-  0x0100, /* 1.0 */
+  MCSVERSIONHEX,
   mcs_status_variables,          /* status variables                */
   mcs_system_variables,          /* system variables                */
-  "1.0",                         /* string version */
+  MCSVERSION,                    /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 },
 {
@@ -968,10 +952,10 @@ maria_declare_plugin(columnstore)
     is_columnstore_columns_plugin_init,
     //is_columnstore_tables_plugin_deinit,
     NULL,
-    0x0100,
+    MCSVERSIONHEX,
     NULL,
     NULL,
-    "1.0",
+    MCSVERSION,
     MariaDB_PLUGIN_MATURITY_STABLE
 },
 {
@@ -984,10 +968,10 @@ maria_declare_plugin(columnstore)
     is_columnstore_tables_plugin_init,
     //is_columnstore_tables_plugin_deinit,
     NULL,
-    0x0100,
+    MCSVERSIONHEX,
     NULL,
     NULL,
-    "1.0",
+    MCSVERSION,
     MariaDB_PLUGIN_MATURITY_STABLE
 },
 {
@@ -1000,10 +984,10 @@ maria_declare_plugin(columnstore)
     is_columnstore_files_plugin_init,
     //is_columnstore_files_plugin_deinit,
     NULL,
-    0x0100,
+    MCSVERSIONHEX,
     NULL,
     NULL,
-    "1.0",
+    MCSVERSION,
     MariaDB_PLUGIN_MATURITY_STABLE
 },
 {
@@ -1016,10 +1000,10 @@ maria_declare_plugin(columnstore)
     is_columnstore_extents_plugin_init,
     //is_columnstore_extents_plugin_deinit,
     NULL,
-    0x0100,
+    MCSVERSIONHEX,
     NULL,
     NULL,
-    "1.0",
+    MCSVERSION,
     MariaDB_PLUGIN_MATURITY_STABLE
 }
 maria_declare_plugin_end;
