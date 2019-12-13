@@ -390,6 +390,32 @@ bool validateNextValue( int type, int64_t value )
     return validValue;
 }
 
+static void decode_objectname(char *buf, const char *path, size_t buf_size)
+{
+    size_t new_path_len = filename_to_tablename(path, buf, buf_size);
+    buf[new_path_len] = '\0';
+}
+
+static void decode_file_path(const char *path, char *decoded_dbname,
+    char *decoded_tbname)
+{
+  // The format cont ains './' in the beginning of a path.
+  char *dbname_start = (char*) path + 2;
+  char *dbname_end = dbname_start;
+  while (*dbname_end != '/')
+    dbname_end++;
+
+  int cnt = dbname_end - dbname_start;
+  char *dbname = (char *)my_alloca(cnt + 1);
+  memcpy(dbname, dbname_start, cnt);
+  dbname[cnt] = '\0';
+  decode_objectname(decoded_dbname, dbname, FN_REFLEN);
+  my_afree(dbname);
+
+  char *tbname_start = dbname_end + 1;
+  decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
+}
+
 bool anyRowInTable(string& schema, string& tableName, int sessionID)
 {
     //find a column in the table
@@ -1203,7 +1229,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         {
             AlterTableStatement* alterTable = dynamic_cast <AlterTableStatement*> ( &stmt );
 
-            alterTable->fTimeZone = thd->variables.time_zone->get_name()->ptr();
+            alterTable->fTimeZone.assign(thd->variables.time_zone->get_name()->ptr());
 
             if ( schema.length() == 0 )
             {
@@ -2275,9 +2301,11 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
     string stmt(query);
     stmt += ";";
     algorithm::to_upper(stmt);
+    
+    string db, tbl;
+    db = table_arg->s->db.str;
+    tbl = table_arg->s->table_name.str;
 
-    string db = table_arg->s->db.str;
-    string tbl = table_arg->s->table_name.str;
     string tablecomment;
     bool isAnyAutoincreCol = false;
     std::string columnName("");
@@ -2594,108 +2622,20 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
     return rc;
 }
 
-
-/**
-  @brief
-  Find and return a pointer to the last slash in the name.
-
-  @details
-  This f() finds and returns position of the last slash sign found in
-  the path or NULL.
-
-  Called from ha_mcs_ddl.cpp by decode_table_name().
-*/
-const char* last_slash_pos(const char *name, size_t name_len)
-{
-#ifdef MCS_DEBUG
-    cout << "Entering last_slash_pos()" << endl;
-#endif
-    const char *slash_pos = name + name_len - 1;
-    while ( *slash_pos != '/' && slash_pos != name )
-        slash_pos--;
-
-    return ( slash_pos != name ) ? slash_pos : NULL;
-}
-
-/**
-  @brief
-  Decodes the table name.
-
-  @details
-  Replaces the encoded table name in the path with a decoded variant,
-  e.g if path contains ./test/d@0024. This f() makes it ./test/d$
-
-  Called from ha_mcs_ddl.cpp by ha_mcs_impl_rename_table_().
-*/
-void decode_table_name(char *buf, const char *path, size_t pathLen)
-{
-#ifdef MCS_DEBUG
-    cout << "Entering decode_table_name()" << endl;
-#endif
-    strncpy(buf, path, pathLen);
-
-    const char *lastSlashPos = last_slash_pos(path, pathLen);
-    if ( lastSlashPos )
-    {
-        size_t prefixLen = ( lastSlashPos - path ) / sizeof(*path);
-        size_t tableLen = strlen(lastSlashPos + 1);
-        char tblBuf[FN_REFLEN];
-        (void) filename_to_tablename(lastSlashPos + 1, tblBuf, sizeof(tblBuf));
-
-        strncpy(buf + ( pathLen - tableLen ), tblBuf, tableLen);
-        buf[prefixLen + tableLen + 1] = '\0';
-    }
-}
-
-/**
-  @brief
-  Parses the path to extract both database and table names.
-
-  @details
-  Parses the path to extract both database
-  and table names. This f() assumes the path format
-  ./test/d$
-  and f() produces a pair of strings 'test' and 'd$'.
-  This f() looks for a '/' symbols only twice to allow '/'
-  symbol in table names. The f() supports international
-  glyphs in db or table names.
-
-  Called from ha_mcs_ddl.cpp by ha_mcs_impl_rename_table_().
-*/
-pair<string, string> parseTableName(const char *path)
-{
-    const char *db_pnt = NULL, *tbl_pnt = NULL, *path_cursor = path;
-    string db, tb;
-    while (*path_cursor != '/')
-    {
-        path_cursor++;
-    }
-    path_cursor++;
-    db_pnt = path_cursor;
-    while (*path_cursor != '/')
-    {
-        path_cursor++;
-    }
-    path_cursor++;
-    tbl_pnt = path_cursor;
-    db.assign(db_pnt, tbl_pnt - 1 - db_pnt);
-    tb.assign(tbl_pnt, path + strlen(path) - tbl_pnt);
-
-    return make_pair(db, tb);
-}
 int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
     string emsg;
 
-    // to and from are rewritten after decode_table_name()
-    // so use a copy of pntrs
-    const char* from_cpy = from;
-    const char* to_cpy = to;
-
-    pair<string, string> fromPair;
-    pair<string, string> toPair;
+    string dbFrom, tblFrom, dbTo, tblTo;
+    char decodedDbFrom[FN_REFLEN];
+    char decodedTblFrom[FN_REFLEN];
+    char decodedDbTo[FN_REFLEN];
+    char decodedTblTo[FN_REFLEN];
+    decode_file_path(from, decodedDbFrom, decodedTblFrom);
+    decode_file_path(to, decodedDbTo, decodedTblTo);
     string stmt;
+
 
     if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
@@ -2709,36 +2649,24 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
         return 1;
     }
 
-    // MCOL-1855 Decode the table name if it contains encoded symbols.
-    size_t pathLen = strlen(from_cpy);
-    char pathCopy[FN_REFLEN];
-    decode_table_name(pathCopy, from_cpy, pathLen);
-    fromPair = parseTableName(const_cast<const char*>(pathCopy));
-
-    pathLen = strlen(to_cpy);
-    decode_table_name(pathCopy, to_cpy, pathLen);
-
-    toPair = parseTableName(const_cast<const char*>(pathCopy));
-
-    // TBD The next two blocks must be removed to allow different dbnames
-    // in RENAME statement.
-    if (fromPair.first != toPair.first)
+    // User moves tables b/w namespaces.
+    size_t tblFromLength= strlen(decodedTblFrom);
+    if (!memcmp(decodedTblFrom, decodedTblTo, tblFromLength))
     {
-        thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Both tables must be in the same database to use RENAME TABLE");
-        return -1;
+        return 0;
     }
 
-    // This explicitely shields both db objects with quotes that the lexer strips down later.
-    stmt = "alter table `" + fromPair.second + "` rename to `" + toPair.second + "`;";
-    string db;
+    stmt.assign("alter table `"); 
+    stmt.append(decodedTblFrom); 
+    stmt.append("` rename to `");
+    stmt.append(decodedTblTo);
+    stmt.append("`;");
 
-    if ( thd->db.length )
-        db = thd->db.str;
-    else if ( fromPair.first.length() != 0 )
-        db = fromPair.first;
-    else
-        db = toPair.first;
+    string db;
+    if (thd->db.length)
+         db = thd->db.str;
+     else
+        db.assign(decodedDbFrom);
 
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 

@@ -396,6 +396,8 @@ group_by_handler*
 create_columnstore_group_by_handler(THD* thd, Query* query)
 {
     ha_mcs_group_by_handler* handler = NULL;
+    // Disable GBH.
+    return handler;
 
     // same as thd->lex->current_select
     SELECT_LEX *select_lex = query->from->select_lex;
@@ -403,7 +405,7 @@ create_columnstore_group_by_handler(THD* thd, Query* query)
     // MCOL-2178 Disable SP support in the group_by_handler for now
     // Check the session variable value to enable/disable use of
     // group_by_handler. There is no GBH if SH works for the query.
-    if (select_lex->select_h || !get_group_by_handler(thd) || (thd->lex)->sphead)
+    if (get_select_handler(thd) || !get_group_by_handler(thd) || (thd->lex)->sphead)
     {
         return handler;
     }
