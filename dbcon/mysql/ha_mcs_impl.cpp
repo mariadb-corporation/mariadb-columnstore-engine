@@ -2281,11 +2281,17 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
     return 0;
 }
 
-int ha_mcs_impl_direct_update_delete_rows(ha_rows *affected_rows)
+int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
 {
     THD* thd = current_thd;
+    int rc = 0;
     cal_impl_if::gp_walk_info gwi;
     gwi.thd = thd;
+
+    if (execute)
+    {
+        rc = doUpdateDelete(thd, gwi);
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     if (ci)

@@ -360,14 +360,14 @@ int ha_mcs::direct_update_rows_init(List<Item> *update_fields)
 int ha_mcs::direct_update_rows(ha_rows *update_rows)
 {
     DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(update_rows);
+    int rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
     DBUG_RETURN(rc);
 }
 
 int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
 {
     DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(update_rows);
+    int rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
     *found_rows = *update_rows;
     DBUG_RETURN(rc);
 }
@@ -381,7 +381,7 @@ int ha_mcs::direct_delete_rows_init()
 int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
 {
     DBUG_ENTER("ha_mcs::direct_delete_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(deleted_rows);
+    int rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows);
     DBUG_RETURN(rc);
 }
 /**
