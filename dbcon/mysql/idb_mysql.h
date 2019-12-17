@@ -72,6 +72,7 @@ template <class T> bool isnan(T);
 #include "tztime.h"
 #include "derived_handler.h"
 #include "select_handler.h"
+#include "rpl_rli.h"
 
 // Now clean up the pollution as best we can...
 #undef min
@@ -113,4 +114,3 @@ inline char* idb_mysql_query_str(THD* thd)
 
 #endif
 // vim:ts=4 sw=4:
-
