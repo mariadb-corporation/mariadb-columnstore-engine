@@ -291,7 +291,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                 addToJoinerLocks[j].reset(new boost::mutex[processorThreads]);
 
             smallSideDataLocks.reset(new boost::mutex[joinerCount]);
-            tJoinerSizes.reset(new uint32_t[joinerCount]);
+            tJoinerSizes.reset(new atomic<uint32_t>[joinerCount]);
             largeSideKeyColumns.reset(new uint32_t[joinerCount]);
             tlLargeSideKeyColumns.reset(new vector<uint32_t>[joinerCount]);
             typelessJoin.reset(new bool[joinerCount]);
@@ -310,7 +310,10 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
             for (i = 0; i < joinerCount; i++)
             {
                 doMatchNulls[i] = false;
-                bs >> tJoinerSizes[i];
+                uint32_t tmp32;
+                bs >> tmp32;
+                tJoinerSizes[i] = tmp32;
+                //bs >> tJoinerSizes[i];
                 //cout << "joiner size = " << tJoinerSizes[i] << endl;
                 bs >> joinTypes[i];
                 bs >> tmp8;
@@ -589,7 +592,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         idbassert(joinerNum < joinerCount);
         arr = (JoinerElements*) bs.buf();
 
-        uint32_t &tJoinerSize = tJoinerSizes[joinerNum];
+        atomic<uint32_t> &tJoinerSize = tJoinerSizes[joinerNum];
 
         // XXXPAT: enormous if stmts are evil.  TODO: move each block into
         // properly-named functions for clarity.
@@ -600,6 +603,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             uint8_t nullFlag;
             PoolAllocator &storedKeyAllocator = storedKeyAllocators[joinerNum];
             // this first loop hashes incoming values into vectors that parallel the hash tables.
+            uint nullCount = 0;
             for (i = 0; i < count; ++i)
             {
                 bs >> nullFlag;
@@ -611,8 +615,9 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                     tmpBuckets[bucket].push_back(make_pair(tlLargeKey, tlIndex));
                 }
                 else
-                    --tJoinerSize;
+                    ++nullCount;
             }
+            tJoinerSize -= nullCount;
 
             bool done = false, didSomeWork;
             //uint loopCounter = 0, noWorkCounter = 0;
