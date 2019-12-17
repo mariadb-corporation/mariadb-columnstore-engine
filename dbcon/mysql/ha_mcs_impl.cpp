@@ -408,7 +408,7 @@ int vbin2hex(const uint8_t* p, const unsigned l, char* o)
 
 // Table Map is used by both cond_push and table mode processing
 // Entries made by cond_push don't have csep though.
-// When 
+// When
 bool onlyOneTableinTM(cal_impl_if::cal_connection_info* ci)
 {
     size_t counter = 0;
@@ -417,7 +417,7 @@ bool onlyOneTableinTM(cal_impl_if::cal_connection_info* ci)
         if (tableMapEntry.second.csep)
             counter++;
         if (counter >= 1)
-            return false; 
+            return false;
     }
 
     return true;
@@ -1265,7 +1265,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
             if (((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
                 args.add("Update");
-            else if (thd->get_command() == COM_SLAVE_SQL)
+            else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0) 
                 args.add("Row based replication event");
             else
                 args.add("Delete");
@@ -1570,7 +1570,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             }
         }
     }
-    else if (thd->get_command() == COM_SLAVE_SQL)
+    else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
         setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
@@ -2349,7 +2349,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    if (thd->slave_thread && thd->get_command() == COM_SLAVE_SQL)
+    if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
         setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
@@ -4159,7 +4159,7 @@ int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos)
  ***********************************************************/
 int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
 {
-    ha_mcs_group_by_handler *group_hand= 
+    ha_mcs_group_by_handler *group_hand=
       reinterpret_cast<ha_mcs_group_by_handler*>(handler_info->hndl_ptr);
     string tableName = group_hand->table_list->table->s->table_name.str;
     IDEBUG( cout << "group_by_init for table " << tableName << endl );
@@ -4859,9 +4859,9 @@ int ha_mcs_impl_group_by_end(TABLE* table)
  * Execute the query and saves derived table query.
  * There is an extra handler argument so I ended up with a
  * new init function. The code is a copy of
- * ha_mcs_impl_rnd_init() mostly. 
+ * ha_mcs_impl_rnd_init() mostly.
  * PARAMETERS:
- * mcs_handler_info* pnt to an envelope struct 
+ * mcs_handler_info* pnt to an envelope struct
  * TABLE* table - dest table to put the results into
  * RETURN:
  *    rc as int
@@ -5047,8 +5047,8 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 dh = reinterpret_cast<derived_handler*>(handler_info->hndl_ptr);
                 status = cs_get_derived_plan(dh, thd, csep, gwi);
             }
-   
-            // Return an error to avoid MDB crash later in end_statement 
+
+            // Return an error to avoid MDB crash later in end_statement
             if (status != 0)
                 goto internal_error;
 
