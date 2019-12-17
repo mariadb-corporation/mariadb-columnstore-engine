@@ -155,6 +155,7 @@ static int columnstore_init_func(void* p)
     mcs_hton->create_group_by = create_columnstore_group_by_handler;
     mcs_hton->create_derived = create_columnstore_derived_handler;
     mcs_hton->create_select = create_columnstore_select_handler;
+    mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
     DBUG_RETURN(0);
 }
 
