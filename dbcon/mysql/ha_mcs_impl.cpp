@@ -1265,8 +1265,10 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
             if (((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
                 args.add("Update");
+#if 0
             else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0) 
                 args.add("Row based replication event");
+#endif
             else
                 args.add("Delete");
 
@@ -1570,12 +1572,14 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             }
         }
     }
+#if 0
     else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
         setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
         return ER_CHECK_NOT_IMPLEMENTED;
     }
+#endif
     else
     {
         updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
@@ -2349,12 +2353,14 @@ int ha_mcs_impl_rnd_init(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
+#if 0
     if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_RBR_EVENT);
         setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
         return ER_CHECK_NOT_IMPLEMENTED;
     }
+#endif
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return 0;
