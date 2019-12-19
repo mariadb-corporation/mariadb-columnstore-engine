@@ -26,6 +26,10 @@
 #include "is_columnstore.h"
 #include "ha_mcs_version.h"
 
+#ifndef COLUMNSTORE_MATURITY
+#define COLUMNSTORE_MATURITY MariaDB_PLUGIN_MATURITY_STABLE
+#endif
+
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
                                        MEM_ROOT* mem_root);
@@ -928,19 +932,19 @@ static struct st_mysql_information_schema is_columnstore_plugin_version =
 
 maria_declare_plugin(columnstore)
 {
-  MYSQL_STORAGE_ENGINE_PLUGIN,
-  &columnstore_storage_engine,
-  "Columnstore",
-  "MariaDB",
-  "Columnstore storage engine",
-  PLUGIN_LICENSE_GPL,
-  columnstore_init_func,
-  columnstore_done_func,
-  MCSVERSIONHEX,
-  mcs_status_variables,          /* status variables                */
-  mcs_system_variables,          /* system variables                */
-  MCSVERSION,                    /* string version */
-  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+    MYSQL_STORAGE_ENGINE_PLUGIN,
+    &columnstore_storage_engine,
+    "ColumnStore",
+    "MariaDB Corporation",
+    "ColumnStore storage engine",
+    PLUGIN_LICENSE_GPL,
+    columnstore_init_func,
+    columnstore_done_func,
+    MCSVERSIONHEX,
+    mcs_status_variables,          /* status variables                */
+    mcs_system_variables,          /* system variables                */
+    MCSVERSION,                    /* string version */
+    COLUMNSTORE_MATURITY           /* maturity */
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
@@ -956,7 +960,7 @@ maria_declare_plugin(columnstore)
     NULL,
     NULL,
     MCSVERSION,
-    MariaDB_PLUGIN_MATURITY_STABLE
+    COLUMNSTORE_MATURITY
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
@@ -972,14 +976,14 @@ maria_declare_plugin(columnstore)
     NULL,
     NULL,
     MCSVERSION,
-    MariaDB_PLUGIN_MATURITY_STABLE
+    COLUMNSTORE_MATURITY
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
     &is_columnstore_plugin_version,
     "COLUMNSTORE_FILES",
     "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore filess",
+    "An information schema plugin to list ColumnStore files",
     PLUGIN_LICENSE_GPL,
     is_columnstore_files_plugin_init,
     //is_columnstore_files_plugin_deinit,
@@ -988,7 +992,7 @@ maria_declare_plugin(columnstore)
     NULL,
     NULL,
     MCSVERSION,
-    MariaDB_PLUGIN_MATURITY_STABLE
+    COLUMNSTORE_MATURITY
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
@@ -1004,7 +1008,7 @@ maria_declare_plugin(columnstore)
     NULL,
     NULL,
     MCSVERSION,
-    MariaDB_PLUGIN_MATURITY_STABLE
+    COLUMNSTORE_MATURITY
 }
 maria_declare_plugin_end;
 
