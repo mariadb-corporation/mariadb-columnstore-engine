@@ -237,7 +237,7 @@ const QueryContext SessionManagerServer::verID()
 {
     QueryContext ret;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     ret.currentScn = _verID;
 
     for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
@@ -250,7 +250,7 @@ const QueryContext SessionManagerServer::sysCatVerID()
 {
     QueryContext ret;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     ret.currentScn = _sysCatVerID;
 
     for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
@@ -264,7 +264,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
     TxnID ret; //ctor must set valid = false
     iterator it;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     // if it already has a txn...
     it = activeTxns.find(session);
@@ -299,7 +299,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
 void SessionManagerServer::finishTransaction(TxnID& txn)
 {
     iterator it;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     bool found = false;
 
     if (!txn.valid)
@@ -335,7 +335,7 @@ const TxnID SessionManagerServer::getTxnID(const SID session)
     TxnID ret;
     iterator it;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     it = activeTxns.find(session);
 
@@ -352,7 +352,7 @@ shared_array<SIDTIDEntry> SessionManagerServer::SIDTIDMap(int& len)
 {
     int j;
     shared_array<SIDTIDEntry> ret;
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     iterator it;
 
     ret.reset(new SIDTIDEntry[activeTxns.size()]);
@@ -371,7 +371,7 @@ shared_array<SIDTIDEntry> SessionManagerServer::SIDTIDMap(int& len)
 
 void SessionManagerServer::setSystemState(uint32_t state)
 {
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     systemState |= state;
     saveSystemState();
@@ -379,7 +379,7 @@ void SessionManagerServer::setSystemState(uint32_t state)
 
 void SessionManagerServer::clearSystemState(uint32_t state)
 {
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     systemState &= ~state;
     saveSystemState();
@@ -387,7 +387,7 @@ void SessionManagerServer::clearSystemState(uint32_t state)
 
 uint32_t SessionManagerServer::getTxnCount()
 {
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
     return activeTxns.size();
 }
 

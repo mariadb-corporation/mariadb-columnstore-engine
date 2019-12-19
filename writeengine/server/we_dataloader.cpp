@@ -585,7 +585,7 @@ void WEDataLoader::onCpimportSuccess()
 
     if (aRet)
     {
-        mutex::scoped_lock aLock(fClntMsgMutex);
+        boost::mutex::scoped_lock aLock(fClntMsgMutex);
         //aBrmRptParser.unserialize(obs);   - was for testing
         updateTxBytes(obs.length());
 
@@ -622,7 +622,7 @@ void WEDataLoader::onCpimportSuccess()
     obs.reset();
     obs << (ByteStream::byte)WE_CLT_SRV_CPIPASS;
     obs << (ByteStream::byte)fPmId;     // PM id
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -679,7 +679,7 @@ void WEDataLoader::onCpimportFailure()
 
     if (aRet)
     {
-        mutex::scoped_lock aLock(fClntMsgMutex);
+        boost::mutex::scoped_lock aLock(fClntMsgMutex);
         updateTxBytes(obs.length());
 
         try
@@ -727,7 +727,7 @@ void WEDataLoader::sendCpimportFailureNotice()
     ByteStream obs;
     obs << (ByteStream::byte)WE_CLT_SRV_CPIFAIL;
     obs << (ByteStream::byte)fPmId;     // PM id
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -773,7 +773,7 @@ void WEDataLoader::onReceiveKeepAlive(ByteStream& Ibs)
     ByteStream obs;
     obs << (ByteStream::byte)WE_CLT_SRV_KEEPALIVE;
     obs << (ByteStream::byte)fPmId;     // PM id
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -832,7 +832,7 @@ void WEDataLoader::onReceiveKeepAlive(ByteStream& Ibs)
             ByteStream obs;
             obs << (ByteStream::byte)WE_CLT_SRV_EOD;
             obs << (ByteStream::byte)fPmId;     // PM id
-            mutex::scoped_lock aLock(fClntMsgMutex);
+            boost::mutex::scoped_lock aLock(fClntMsgMutex);
             updateTxBytes(obs.length());
 
             try
@@ -956,7 +956,7 @@ void WEDataLoader::onReceiveEod(ByteStream& Ibs)
     ByteStream obs;
     obs << (ByteStream::byte)WE_CLT_SRV_EOD;
     obs << (ByteStream::byte)fPmId;     // PM id
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -1058,7 +1058,7 @@ void WEDataLoader::onReceiveMode(ByteStream& Ibs)
     aObs << (ByteStream::byte)WE_CLT_SRV_DBRCNT;
     aObs << (ByteStream::byte)fPmId;
     aObs << (ByteStream::byte)aDbCnt;
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(aObs.length());
 
     try
@@ -1151,7 +1151,7 @@ void WEDataLoader::onReceiveCmdLineArgs(ByteStream& Ibs)
     }
 
     obs << (ByteStream::byte) fPmId; // PM id
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -1290,7 +1290,7 @@ void WEDataLoader::onReceiveCleanup(ByteStream& Ibs)
     else
         obs << (ByteStream::byte)0;		// cleanup failed
 
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -1347,7 +1347,7 @@ void WEDataLoader::onReceiveRollback(ByteStream& Ibs)
     else
         obs << (ByteStream::byte)0;		// Rollback failed
 
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     updateTxBytes(obs.length());
 
     try
@@ -1392,7 +1392,7 @@ void WEDataLoader::onReceiveImportFileName(ByteStream& Ibs)
             obs << (ByteStream::byte)WE_CLT_SRV_IMPFILEERROR;
             obs << (ByteStream::byte)fPmId;
             updateTxBytes(obs.length());
-            mutex::scoped_lock aLock(fClntMsgMutex);
+            boost::mutex::scoped_lock aLock(fClntMsgMutex);
 
             try
             {
@@ -1430,7 +1430,7 @@ void WEDataLoader::onReceiveImportFileName(ByteStream& Ibs)
             ByteStream obs;
             obs << (ByteStream::byte)WE_CLT_SRV_IMPFILEERROR;
             obs << (ByteStream::byte)fPmId;     // PM id
-            mutex::scoped_lock aLock(fClntMsgMutex);
+            boost::mutex::scoped_lock aLock(fClntMsgMutex);
             updateTxBytes(obs.length());
 
             try
@@ -1512,7 +1512,7 @@ void WEDataLoader::onReceiveErrFileRqst(ByteStream& Ibs)
 
     if (aRet)
     {
-        mutex::scoped_lock aLock(fClntMsgMutex);
+        boost::mutex::scoped_lock aLock(fClntMsgMutex);
         updateTxBytes(obs.length());
 
         try
@@ -1561,7 +1561,7 @@ void WEDataLoader::onReceiveBadFileRqst(ByteStream& Ibs)
 
     if (aRet)
     {
-        mutex::scoped_lock aLock(fClntMsgMutex);
+        boost::mutex::scoped_lock aLock(fClntMsgMutex);
         updateTxBytes(obs.length());
 
         try
@@ -1614,7 +1614,7 @@ void WEDataLoader::sendDataRequest()
         }
     }
 
-    mutex::scoped_lock aLock(fClntMsgMutex);
+    boost::mutex::scoped_lock aLock(fClntMsgMutex);
     ByteStream obs;
     obs << (ByteStream::byte)WE_CLT_SRV_DATARQST;
     obs << (ByteStream::byte)fPmId;     // PM id

@@ -38,7 +38,7 @@ namespace bf = boost::filesystem;
 
 namespace
 {   
-    boost::mutex mutex;
+    boost::mutex mdfLock;
     storagemanager::MetadataFile::MetadataConfig *inst = NULL;
     uint64_t metadataFilesAccessed = 0;   
 }
@@ -50,7 +50,7 @@ MetadataFile::MetadataConfig * MetadataFile::MetadataConfig::get()
 {
     if (inst)
         return inst;
-    boost::unique_lock<boost::mutex> s(mutex);
+    boost::unique_lock<boost::mutex> s(mdfLock);
     if (inst)
         return inst;
     inst = new MetadataConfig();
@@ -380,9 +380,9 @@ void MetadataFile::breakout(const string &key, vector<string> &ret)
     
 string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 {
-    mutex.lock();
+    mdfLock.lock();
     boost::uuids::uuid u = boost::uuids::random_generator()();
-    mutex.unlock();
+    mdfLock.unlock();
     
     vector<string> split;
     breakout(key, split);
@@ -393,9 +393,9 @@ string MetadataFile::getNewKeyFromOldKey(const string &key, size_t length)
 
 string MetadataFile::getNewKey(string sourceName, size_t offset, size_t length)
 {
-    mutex.lock();
+    mdfLock.lock();
     boost::uuids::uuid u = boost::uuids::random_generator()();
-    mutex.unlock();
+    mdfLock.unlock();
     stringstream ss;
 
     for (uint i = 0; i < sourceName.length(); i++)

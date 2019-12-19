@@ -57,11 +57,11 @@ const string ResourceManager::fExtentMapStr("ExtentMap");
 const string ResourceManager::fOrderByLimitStr("OrderByLimit");
 
 ResourceManager* ResourceManager::fInstance = NULL;
-mutex mx;
+boost::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr)
 {
-    mutex::scoped_lock lk(mx);
+    boost::mutex::scoped_lock lk(mx);
 
     if (!fInstance)
         fInstance = new ResourceManager(runningInExeMgr);

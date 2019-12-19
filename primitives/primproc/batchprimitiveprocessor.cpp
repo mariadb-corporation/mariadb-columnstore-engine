@@ -773,7 +773,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             // TODO: write an RGData fcn to let it interpret data within a ByteStream to avoid
             // the extra copying.
             offTheWire.deserialize(bs);
-            mutex::scoped_lock lk(smallSideDataLocks[joinerNum]);
+            boost::mutex::scoped_lock lk(smallSideDataLocks[joinerNum]);
             smallSide.setData(&smallSideRowData[joinerNum]);
             smallSide.append(offTheWire, startPos);
 
@@ -790,7 +790,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     {
         joblist::ElementType *et = (joblist::ElementType*) bs.buf();
 
-        mutex::scoped_lock lk(addToJoinerLocks[0][0]);
+        boost::mutex::scoped_lock lk(addToJoinerLocks[0][0]);
         for (i = 0; i < count; i++)
         {
 // 			cout << "BPP: adding <" << et[i].first << ", " << et[i].second << "> to Joiner\n";

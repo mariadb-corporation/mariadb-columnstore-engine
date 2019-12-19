@@ -32,7 +32,7 @@ void ActiveStatementCounter::incr(bool& counted)
         return;
 
     counted = true;
-    mutex::scoped_lock lk(fMutex);
+    boost::mutex::scoped_lock lk(fMutex);
 
     if (upperLimit > 0)
         while (fStatementCount >= upperLimit)
@@ -51,7 +51,7 @@ void ActiveStatementCounter::decr(bool& counted)
         return;
 
     counted = false;
-    mutex::scoped_lock lk(fMutex);
+    boost::mutex::scoped_lock lk(fMutex);
 
     if (fStatementCount == 0)
         return;

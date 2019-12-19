@@ -142,7 +142,7 @@ void TupleHashJoinStep::run()
 {
     uint32_t i;
 
-    mutex::scoped_lock lk(jlLock);
+    boost::mutex::scoped_lock lk(jlLock);
 
     if (runRan)
         return;
@@ -183,7 +183,7 @@ void TupleHashJoinStep::run()
 
 void TupleHashJoinStep::join()
 {
-    mutex::scoped_lock lk(jlLock);
+    boost::mutex::scoped_lock lk(jlLock);
 
     if (joinRan)
         return;
