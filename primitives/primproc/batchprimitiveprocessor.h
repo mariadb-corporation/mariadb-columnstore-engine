@@ -284,7 +284,7 @@ private:
     typedef std::tr1::unordered_multimap<uint64_t, uint32_t,
             joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
             utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t> > > TJoiner;
-            
+
     typedef std::tr1::unordered_multimap<joiner::TypelessData,
             uint32_t, joiner::TupleJoiner::hasher, std::equal_to<joiner::TypelessData>,
             utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t> > > TLJoiner;
@@ -316,7 +316,7 @@ private:
     boost::shared_array<uint32_t> smallSideRowLengths;
     boost::shared_array<joblist::JoinType> joinTypes;
     uint32_t joinerCount;
-    boost::shared_array<uint32_t> tJoinerSizes;
+    boost::shared_array<std::atomic<uint32_t> > tJoinerSizes;
     // LSKC[i] = the column in outputRG joiner i uses as its key column
     boost::shared_array<uint32_t> largeSideKeyColumns;
     // KCPP[i] = true means a joiner uses projection step i as a key column
@@ -398,7 +398,7 @@ private:
     uint processorThreads;
     uint ptMask;
     bool firstInstance;
-    
+
     friend class Command;
     friend class ColumnCommand;
     friend class DictStep;
