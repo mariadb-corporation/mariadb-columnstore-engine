@@ -162,8 +162,8 @@ static const string interval_names[] =
 
 const unsigned NONSUPPORTED_ERR_THRESH = 2000;
 
-ResourceManager* rm = ResourceManager::instance();
-bool useHdfs = rm->useHdfs();
+// HDFS is never used nowadays, so don't bother
+bool useHdfs = false; // ResourceManager::instance()->useHdfs();
 
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)
