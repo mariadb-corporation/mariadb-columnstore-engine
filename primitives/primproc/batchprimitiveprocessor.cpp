@@ -1195,7 +1195,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                  */
 
                 if (((!found || isNull) && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
-                        ((joinTypes[j] & ANTI) && ((isNull && !(joinTypes[j] & MATCHNULLS)) || (found && !isNull))))
+                        ((joinTypes[j] & ANTI) && ((isNull && (joinTypes[j] & MATCHNULLS)) || (found && !isNull))))
                 {
                     //cout << " - not in the result set\n";
                     break;
