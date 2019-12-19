@@ -291,7 +291,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                 addToJoinerLocks[j].reset(new boost::mutex[processorThreads]);
 
             smallSideDataLocks.reset(new boost::mutex[joinerCount]);
-            tJoinerSizes.reset(new atomic<uint32_t>[joinerCount]);
+            tJoinerSizes.reset(new std::atomic<uint32_t>[joinerCount]);
             largeSideKeyColumns.reset(new uint32_t[joinerCount]);
             tlLargeSideKeyColumns.reset(new vector<uint32_t>[joinerCount]);
             typelessJoin.reset(new bool[joinerCount]);
@@ -592,7 +592,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         idbassert(joinerNum < joinerCount);
         arr = (JoinerElements*) bs.buf();
 
-        atomic<uint32_t> &tJoinerSize = tJoinerSizes[joinerNum];
+        std::atomic<uint32_t> &tJoinerSize = tJoinerSizes[joinerNum];
 
         // XXXPAT: enormous if stmts are evil.  TODO: move each block into
         // properly-named functions for clarity.
