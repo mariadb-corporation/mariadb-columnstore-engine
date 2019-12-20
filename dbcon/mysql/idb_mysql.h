@@ -99,6 +99,7 @@ template <class T> bool isnan(T);
 #undef PACKAGE_BUGREPORT
 #undef DEBUG
 #undef set_bits
+#undef likely
 
 namespace
 {

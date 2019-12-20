@@ -77,9 +77,9 @@ using namespace joblist;
 
 namespace
 {
-ResourceManager* rm = ResourceManager::instance();
-uint64_t fBatchInsertGroupRows = rm->getRowsPerBatch();
-bool useHdfs = rm->useHdfs();
+uint64_t fBatchInsertGroupRows = 0; // ResourceManager::instance()->getRowsPerBatch();
+// HDFS is never used nowadays, so don't bother
+bool useHdfs = false; // ResourceManager::instance()->useHdfs();
 
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)
@@ -594,6 +594,9 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
         thd->raise_error_printf(ER_INTERNAL_ERROR, rex.what());
         return rc;
     }
+
+    if (fBatchInsertGroupRows == 0)
+        fBatchInsertGroupRows = ResourceManager::instance()->getRowsPerBatch();
 
     //timer.stop( "buildValueList");
     if ( ci.singleInsert   // Single insert

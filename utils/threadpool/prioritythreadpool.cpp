@@ -73,7 +73,7 @@ PriorityThreadPool::~PriorityThreadPool()
 void PriorityThreadPool::addJob(const Job& job, bool useLock)
 {
     boost::thread* newThread;
-    mutex::scoped_lock lk(mutex, defer_lock_t());
+    boost::mutex::scoped_lock lk(mutex, boost::defer_lock_t());
 
     if (useLock)
         lk.lock();
@@ -115,7 +115,7 @@ void PriorityThreadPool::removeJobs(uint32_t id)
 {
     list<Job>::iterator it;
 
-    mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(mutex);
 
     for (uint32_t i = 0; i < _COUNT; i++)
         for (it = jobQueues[i].begin(); it != jobQueues[i].end();)
@@ -152,7 +152,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
         while (!_stop)
         {
 
-            mutex::scoped_lock lk(mutex);
+            boost::mutex::scoped_lock lk(mutex);
 
             queue = pickAQueue(preferredQueue);
 

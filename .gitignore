@@ -141,3 +141,8 @@ oam/post/mcstest-002.sh
 oam/post/mcstest-003.sh
 oam/post/mcstest-004.sh
 dbcon/mysql/ha_mcs_version.h
+bin
+external
+gitversionEngine
+mcsconfig.h
+storage-manager/unit_tests

@@ -43,14 +43,14 @@ namespace startup
 {
 
 /* static */
-mutex StartUp::fTmpDirLock;
+boost::mutex StartUp::fTmpDirLock;
 /* static */
 string* StartUp::fTmpDirp = 0;
 
 /* static */
 const string StartUp::tmpDir()
 {
-    mutex::scoped_lock lk(fTmpDirLock);
+	boost::mutex::scoped_lock lk(fTmpDirLock);
 
     if (fTmpDirp)
         return *fTmpDirp;
