@@ -932,19 +932,19 @@ static struct st_mysql_information_schema is_columnstore_plugin_version =
 
 maria_declare_plugin(columnstore)
 {
-    MYSQL_STORAGE_ENGINE_PLUGIN,
-    &columnstore_storage_engine,
-    "ColumnStore",
-    "MariaDB Corporation",
-    "ColumnStore storage engine",
-    PLUGIN_LICENSE_GPL,
-    columnstore_init_func,
-    columnstore_done_func,
-    MCSVERSIONHEX,
-    mcs_status_variables,          /* status variables                */
-    mcs_system_variables,          /* system variables                */
-    MCSVERSION,                    /* string version */
-    COLUMNSTORE_MATURITY           /* maturity */
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &columnstore_storage_engine,
+  "Columnstore",
+  "MariaDB Corporation",
+  "ColumnStore storage engine",
+  PLUGIN_LICENSE_GPL,
+  columnstore_init_func,
+  columnstore_done_func,
+  MCSVERSIONHEX,
+  mcs_status_variables,          /* status variables                */
+  mcs_system_variables,          /* system variables                */
+  MCSVERSION,                    /* string version */
+  COLUMNSTORE_MATURITY           /* maturity */
 },
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
