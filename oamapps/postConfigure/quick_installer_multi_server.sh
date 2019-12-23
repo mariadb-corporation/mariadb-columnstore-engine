@@ -27,7 +27,7 @@ for arg in "$@"; do
 		echo "Performace Module (pm) IP addresses are required"
 		echo "User Module (um) IP addresses are option"
 		echo "When only pm IP addresses provided, system is combined setup"
-		echo "When both pm/um IP addresses provided, system is seperate setup"
+		echo "When both pm/um IP addresses provided, system is separate setup"
 		echo
 		echo "--pm-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx"
 		echo "--um-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx, optional"
@@ -51,7 +51,7 @@ else
 		echo""
 	else
 		echo ""
-		echo "NOTE: Performing a Multi-Server Seperate install with um and pm running on seperate servers"
+		echo "NOTE: Performing a Multi-Server separate install with um and pm running on separate servers"
 		echo""
 	fi
 fi
@@ -61,7 +61,7 @@ echo "${bold}Run post-install script${normal}"
 echo ""
 columnstore-post-install
 echo "${bold}Run postConfigure script${normal}"
-echo ""        
+echo ""
 if [[ $umIpAddrs = "" ]]; then
     postConfigure -qm -pm-ip-addrs $pmIpAddrs $systemName
 else
