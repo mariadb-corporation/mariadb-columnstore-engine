@@ -390,9 +390,11 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
         break;
         
         case WriteEngine::WR_BINARY:
+        case WriteEngine::WR_INT128:
         {
             char val = boost::any_cast<char>(data);
             //TODO:FIXME how to determine size ? 16, 32,48 ?
+            // WIP
             size = 16;
             memcpy(value, &val, size);
         }
@@ -503,7 +505,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                 break;
                 
             case WriteEngine::WR_BINARY:
-            case WriteEngine::WR_BCDECIMAL:
+            case WriteEngine::WR_INT128:
                 curStr = boost::any_cast<string>(data);
                 memcpy((char*)valArray + pos * curStr.length(), curStr.c_str(), curStr.length());
                 break;     
@@ -575,9 +577,11 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                 break;
                 
             case WriteEngine::WR_BINARY :
+            case WriteEngine::WR_INT128:
             {
                 char tmp[16];
                 //TODO:FIXME how to determine size ? 16, 32,48 ?
+                // WIP
                 memcpy(tmp, (char*)valArray + pos * 16, 16);
                 curStr = tmp;
                 data = curStr;
@@ -897,6 +901,14 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
                     case WriteEngine::WR_TOKEN:
                         valArray = (Token*) calloc(sizeof(Token), 1);
                         break;
+
+                    case WriteEngine::WR_BINARY:
+                    case WriteEngine::WR_INT128:
+                        // WIP use column width here
+                        // remove all C-casts from above
+                        valArray = calloc(1, 16);
+                        break;
+
                 }
 
                 rc = colOp->writeRows(curCol, ridList.size(), ridList, valArray, 0, true);
@@ -4569,6 +4581,14 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
             case WriteEngine::WR_TOKEN:
                 valArray = (Token*) calloc(sizeof(Token), totalRow);
                 break;
+
+            // WIP
+            case WriteEngine::WR_BINARY:
+            case WriteEngine::WR_INT128:
+                // Use column width and remove all C-casts from above
+                valArray = calloc(totalRow, 16);
+                break;
+ 
         }
 
         // convert values to valArray
@@ -4808,6 +4828,12 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                     case WriteEngine::WR_TOKEN:
                         valArray = (Token*) calloc(sizeof(Token), totalRow1);
                         break;
+
+                    // WIP
+                    case WriteEngine::WR_BINARY:
+                    case WriteEngine::WR_INT128:
+                        valArray = calloc(totalRow1, 16);
+                        break;
                 }
 
                 // convert values to valArray
@@ -4983,6 +5009,13 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 case WriteEngine::WR_TOKEN:
                     valArray = (Token*) calloc(sizeof(Token), totalRow2);
                     break;
+
+                case WriteEngine::WR_BINARY:
+                case WriteEngine::WR_INT128:
+                    // WIP
+                    valArray = calloc(totalRow2, 16);
+                    break;
+
             }
 
             // convert values to valArray
@@ -5158,7 +5191,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                     break;
 
                 case WriteEngine::WR_BINARY:
-                case WriteEngine::WR_BCDECIMAL:
+                case WriteEngine::WR_INT128:
                     valArray =  calloc(colStructList[i].colWidth, totalRow1);
                     break;
             }
@@ -5382,6 +5415,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         break;
                    
                     case WriteEngine::WR_BINARY:
+                    case WriteEngine::WR_INT128:
                          ((uint64_t*)valArray)[j] = curValue; //FIXME maybe
                         break;   
                    
@@ -5530,6 +5564,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         break;
                     
                     case WriteEngine::WR_BINARY:
+                    case WriteEngine::WR_INT128:
                        ((uint64_t*)valArray)[j] = curValue; // FIXME maybe
                         break;
                 }
@@ -5816,6 +5851,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 valArray = (Token*) calloc(sizeof(Token), 1);
                 break;
             case WriteEngine::WR_BINARY:
+            case WriteEngine::WR_INT128:
                 valArray = (char*) calloc(sizeof(char), curColStruct.colWidth); //FIXME maybe
                 break;
         }

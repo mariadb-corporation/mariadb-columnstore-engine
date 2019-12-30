@@ -111,8 +111,9 @@ enum ColType                            /** @brief Column type enumeration*/
     WR_TEXT             = 17,           /** @brief TEXT */
     WR_MEDINT           = 18,           /** @brief Medium Int */
     WR_UMEDINT          = 19,           /** @brief Unsigned Medium Int */
-    WR_BINARY           = 20,           /** @brief BINARY */            
-    WR_BCDECIMAL        = 21            /** @brief BINARY CODED DECIMAL */            
+    WR_BINARY           = 20,           /** @brief BINARY */           
+// WIP We might be good using WR_BINARY 
+    WR_INT128           = 21            /** @brief __int128 */            
 };
 
 // Describes relation of field to column for a bulk load
