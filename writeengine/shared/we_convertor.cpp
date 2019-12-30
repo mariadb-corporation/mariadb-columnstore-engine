@@ -638,7 +638,7 @@ void Convertor::convertColType(ColStruct* curStruct)
                     break;
 
                 default:
-                    *internalType = WriteEngine::WR_BCDECIMAL;
+                    *internalType = WriteEngine::WR_INT128;
                     break;
             }
 
