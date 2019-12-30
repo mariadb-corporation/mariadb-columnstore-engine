@@ -286,8 +286,8 @@ inline bool isEmptyVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
     // WIP ugly speed hack
-    return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW)
-            || (val[0] == joblist::BIGINTEMPTYROW) && (val[1] == joblist::BIGINTEMPTYROW))
+    return (((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW))
+            || ((val[0] == joblist::BIGINTEMPTYROW) && (val[1] == joblist::BIGINTEMPTYROW)))
 ;
 
 }
@@ -1611,7 +1611,6 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
 
     scoped_array<idb_regex_t> std_regex;
     idb_regex_t* regex = NULL;
-    uint8_t likeOps = 0;
 
 // no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL) {
