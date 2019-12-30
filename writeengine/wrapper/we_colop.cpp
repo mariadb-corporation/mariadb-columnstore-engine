@@ -1410,17 +1410,9 @@ void ColumnOp::initColumn(Column& column) const
  ***********************************************************/
 
 // It is called at just 4 places on allocRowId() but all the time inside extend scanning loops 
+// WIP Template this method
 inline bool ColumnOp::isEmptyRow(uint64_t* curVal, uint64_t emptyVal, const int colWidth)
 {
-    //Calling it here makes calling it "i" times from the calling loop at allocRowId()
-    //uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
-    
-    // No need for it if change param type.. just been lazy to add extra castings 
-    //uint64_t &emptyVal = column.emptyVal;
-    
-    //no need to multiply over and over if just increment the pointer on the caller 
-    //uint64_t *curVal = (uint64_t*)(buf + offset * column.colWidth); 
-
     switch(colWidth){
         case 1:
             return *(uint8_t*)curVal == emptyVal;
@@ -1439,8 +1431,10 @@ inline bool ColumnOp::isEmptyRow(uint64_t* curVal, uint64_t emptyVal, const int 
         
         case 32:
             return ((curVal[0] == emptyVal) && (curVal[1] == emptyVal)
-                && (curVal[2] == emptyVal) && (curVal[3] == emptyVal));         
+                && (curVal[2] == emptyVal) && (curVal[3] == emptyVal));
     }
+    // WIP
+    return false;
 }
 
 /***********************************************************
@@ -1687,7 +1681,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
 
             case WriteEngine::WR_BINARY:
-            case WriteEngine::WR_BCDECIMAL:
+            case WriteEngine::WR_INT128:
                 if (!bDelete) pVal = (uint8_t*) valArray + i * curCol.colWidth;
                 
                 break;
