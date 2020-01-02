@@ -48,7 +48,8 @@ public:
         memUsage(0),
         nextAlloc(0),
         useLock(_useLock),
-        lock(false) { }
+        lock(false), nodeDeallocCount(0), nodeAllocCount(0), nodeAllocSize(0), oobAllocCount(0),
+        oobAllocSize(0), oobAllocSizeInPool(0) { }
     PoolAllocator(const PoolAllocator& p) :
         allocSize(p.allocSize),
         tmpSpace(p.tmpSpace),
@@ -56,13 +57,31 @@ public:
         memUsage(0),
         nextAlloc(0),
         useLock(p.useLock),
-        lock(false) { }
-    virtual ~PoolAllocator() {}
+        lock(false), nodeDeallocCount(0), nodeAllocCount(0), nodeAllocSize(0), oobAllocCount(0),
+        oobAllocSize(0), oobAllocSizeInPool(0) { }
+    virtual ~PoolAllocator() {
+        if (oobAllocCount > 0)
+            std::cout << "~PA: nodeDeallocCount = " << nodeDeallocCount <<
+                " nodeAllocCount = " << nodeAllocCount << " nodeAllocSize = " <<
+                nodeAllocSize << " oobAllocCount = " << oobAllocCount 
+                << " oobAllocSize = " << oobAllocSize << " oobAllocInPool = " <<
+                oobAllocSizeInPool <<
+                " avg alloc size = " << oobAllocSize / oobAllocCount <<
+                std::endl;
+        else
+            std::cout << "~PA: nodeDeallocCount = " << nodeDeallocCount <<
+                " nodeAllocCount = " << nodeAllocCount << " nodeAllocSize = " <<
+                nodeAllocSize << " oobAllocCount = " << oobAllocCount <<
+                " oobAllocSize = " << oobAllocSize << " oobAllocInPool = " <<
+                oobAllocSizeInPool <<
+                std::endl;
+
+    }
 
     PoolAllocator& operator=(const PoolAllocator&);
 
-    void* allocate(uint64_t size);
-    void deallocate(void* p);
+    void* allocate(uint64_t size, bool isOOB = false);
+    void deallocate(void* p, bool isOOB = true);
     void deallocateAll();
 
     inline uint64_t getMemUsage() const
@@ -91,6 +110,10 @@ private:
     uint8_t* nextAlloc;
     bool useLock;
     std::atomic<bool> lock;
+    size_t nodeDeallocCount;
+    size_t nodeAllocCount;
+    size_t nodeAllocSize;
+    size_t oobAllocCount, oobAllocSize, oobAllocSizeInPool;
 
     struct OOBMemInfo
     {
@@ -101,7 +124,7 @@ private:
     OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
 };
 
-inline void* PoolAllocator::allocate(uint64_t size)
+inline void* PoolAllocator::allocate(uint64_t size, bool isOOB)
 {
     void *ret;
     bool _false = false;
@@ -110,13 +133,19 @@ inline void* PoolAllocator::allocate(uint64_t size)
         while (!lock.compare_exchange_weak(_false, true, std::memory_order_acquire))
             _false = false;
 
-    if (size > allocSize)
+    if (isOOB || size > allocSize)
     {
+        oobAllocCount++;
+        oobAllocSize += size;
+        if (size > allocSize)
+            oobAllocSizeInPool += size;
         ret = allocOOB(size);
         if (useLock)
             lock.store(false, std::memory_order_release);
         return ret;
     }
+    nodeAllocCount++;
+    nodeAllocSize += size;
 
     if (size > capacityRemaining)
         newBlock();

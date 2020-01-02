@@ -84,8 +84,14 @@ void * PoolAllocator::allocOOB(uint64_t size)
     return ret;
 }
 
-void PoolAllocator::deallocate(void* p)
+void PoolAllocator::deallocate(void* p, bool isOOB)
 {
+    if (!isOOB)
+    {
+        nodeDeallocCount++;
+        return;
+    }
+
     bool _false = false;
     if (useLock)
         while (!lock.compare_exchange_weak(_false, true, std::memory_order_acquire))
@@ -93,7 +99,12 @@ void PoolAllocator::deallocate(void* p)
     OutOfBandMap::iterator it = oob.find(p);
 
     if (it == oob.end())
+    {
+        nodeDeallocCount++;
+        if (useLock)
+            lock.store(false, std::memory_order_release);
         return;
+    }
 
     memUsage -= it->second.size;
     oob.erase(it);
