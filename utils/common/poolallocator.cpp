@@ -93,7 +93,11 @@ void PoolAllocator::deallocate(void* p)
     OutOfBandMap::iterator it = oob.find(p);
 
     if (it == oob.end())
+    {
+        if (useLock)
+            lock.store(false, std::memory_order_release);
         return;
+    }
 
     memUsage -= it->second.size;
     oob.erase(it);
