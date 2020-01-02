@@ -34,11 +34,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#ifndef _MSC_VER
-#include <tr1/unordered_map>
-#else
 #include <unordered_map>
-#endif
 #include <boost/thread.hpp>
 
 #include "errorcodes.h"
@@ -281,11 +277,11 @@ private:
     bool hasRowGroup;
 
     /* Rowgroups + join */
-    typedef std::tr1::unordered_multimap<uint64_t, uint32_t,
+    typedef std::unordered_multimap<uint64_t, uint32_t,
             joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
             utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t> > > TJoiner;
 
-    typedef std::tr1::unordered_multimap<joiner::TypelessData,
+    typedef std::unordered_multimap<joiner::TypelessData,
             uint32_t, joiner::TupleJoiner::hasher, std::equal_to<joiner::TypelessData>,
             utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t> > > TLJoiner;
 

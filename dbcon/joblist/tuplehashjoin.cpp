@@ -274,7 +274,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
     joiners[index] = joiner;
 
     /* check for join types unsupported on the PM. */
-    if (!largeBPS || !isExeMgr)
+    if (true || !largeBPS || !isExeMgr)
         joiner->setInUM(rgData[index]);
 
     /*
