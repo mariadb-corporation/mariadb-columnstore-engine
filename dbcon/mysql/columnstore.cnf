@@ -16,6 +16,7 @@ plugin-load-add=ha_columnstore.so
 
 # Required for Schema Sync
 #server-id = 1
+#log_bin
 
 # Uncomment for this UM to apply slave DML on ColumnStore tables
 #columnstore_replication_slave=ON

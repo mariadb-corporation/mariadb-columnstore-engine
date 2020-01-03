@@ -411,7 +411,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 
                             if ( returnStatus != API_SUCCESS)
                             {
-                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master replication, check " + tmpDir + "master-rep*.logs on " << masterModule << endl;
+                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master replication, check " + tmpDir + "/master-rep*.logs on " << masterModule << endl;
                                 return returnStatus;
                             }
 
