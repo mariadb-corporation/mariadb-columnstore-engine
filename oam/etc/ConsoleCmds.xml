@@ -82,7 +82,7 @@
 	</Cmd10>
 	<Cmd11>
 		<Name>setAlarmConfig</Name>
-		<Desc1>Set a Alarm Configuration parameter</Desc1>
+		<Desc1>Set an Alarm Configuration parameter</Desc1>
 		<Arg1>Required: Alarm-ID is the Alarm to be updated</Arg1>
 		<Arg2>Required: Parameter-name is the parameter to be updated</Arg2>
 		<Arg3>Required: Parameter-value is the parameter value</Arg3>
@@ -261,7 +261,7 @@
 	</Cmd38>
 	<Cmd39>
 		<Name>getSystemDirectories</Name>
-		<Desc1>Get System Installation and Temporary Logging Directories</Desc1>		
+		<Desc1>Get System Installation and Temporary Logging Directories</Desc1>
 	</Cmd39>
 	<Cmd40>
 		<Name>AVAILABLE</Name>
