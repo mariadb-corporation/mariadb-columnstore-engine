@@ -51,7 +51,7 @@
 
 namespace primitiveprocessor
 {
-typedef std::tr1::unordered_map<int64_t, BRM::VSSData> VSSCache;
+typedef std::unordered_map<int64_t, BRM::VSSData> VSSCache;
 };
 
 #include "primitiveserver.h"
