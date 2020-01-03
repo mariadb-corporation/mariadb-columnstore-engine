@@ -134,14 +134,14 @@ typename STLPoolAllocator<T>::pointer
 STLPoolAllocator<T>::allocate(typename STLPoolAllocator<T>::size_type s,
                               typename std::allocator<void>::const_pointer hint)
 {
-    return (pointer) pa->allocate(s * sizeof(T));
+    return (pointer) pa->allocate(s * sizeof(T), s != 1);
 }
 
 template<class T>
 void STLPoolAllocator<T>::deallocate(typename STLPoolAllocator<T>::pointer p,
                                      typename STLPoolAllocator<T>::size_type n)
 {
-    pa->deallocate((void*) p);
+    pa->deallocate((void*) p, n != 1);
 }
 
 template<class T>

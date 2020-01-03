@@ -61,8 +61,8 @@ public:
 
     PoolAllocator& operator=(const PoolAllocator&);
 
-    void* allocate(uint64_t size);
-    void deallocate(void* p);
+    void* allocate(uint64_t size, bool isOOB = false);
+    void deallocate(void* p, bool isOOB = true);
     void deallocateAll();
 
     inline uint64_t getMemUsage() const
@@ -101,7 +101,7 @@ private:
     OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
 };
 
-inline void* PoolAllocator::allocate(uint64_t size)
+inline void* PoolAllocator::allocate(uint64_t size, bool isOOB)
 {
     void *ret;
     bool _false = false;
@@ -110,7 +110,7 @@ inline void* PoolAllocator::allocate(uint64_t size)
         while (!lock.compare_exchange_weak(_false, true, std::memory_order_acquire))
             _false = false;
 
-    if (size > allocSize)
+    if (isOOB || size > allocSize)
     {
         ret = allocOOB(size);
         if (useLock)

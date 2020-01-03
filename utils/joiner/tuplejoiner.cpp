@@ -20,11 +20,8 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
-#ifdef _MSC_VER
 #include <unordered_set>
-#else
-#include <tr1/unordered_set>
-#endif
+
 #include "hasher.h"
 #include "lbidlist.h"
 #include "spinlock.h"
@@ -655,7 +652,6 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
 void TupleJoiner::doneInserting()
 {
-
     // a minor textual cleanup
 #ifdef TJ_DEBUG
 #define CHECKSIZE \
@@ -677,8 +673,8 @@ void TupleJoiner::doneInserting()
 
     for (col = 0; col < smallKeyColumns.size(); col++)
     {
-        tr1::unordered_set<int64_t> uniquer;
-        tr1::unordered_set<int64_t>::iterator uit;
+        unordered_set<int64_t> uniquer;
+        unordered_set<int64_t>::iterator uit;
         sthash_t::iterator sthit;
         hash_t::iterator hit;
         ldhash_t::iterator ldit;
