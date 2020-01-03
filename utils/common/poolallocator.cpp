@@ -71,16 +71,11 @@ void * PoolAllocator::allocOOB(uint64_t size)
     bool _false = false;
     OOBMemInfo memInfo;
 
-    if (useLock)
-        while (!lock.compare_exchange_weak(_false, true, std::memory_order_acquire))
-            _false = false;
     memUsage += size;
     memInfo.mem.reset(new uint8_t[size]);
     memInfo.size = size;
     void *ret = (void*) memInfo.mem.get();
     oob[ret] = memInfo;
-    if (useLock)
-        lock.store(false, std::memory_order_release);
     return ret;
 }
 
