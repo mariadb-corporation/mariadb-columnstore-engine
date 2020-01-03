@@ -4804,6 +4804,12 @@ int ProcessMonitor::changeMyCnf(std::string type)
             }
         }
 
+        pos = buf.find("log_bin", 0);
+        if ( pos != string::npos )
+        {
+            buf = "log_bin";
+        }
+
         // set local query flag if on pm
         if ( (PMwithUM == "y") && config.moduleType() == "pm" )
         {
@@ -4870,13 +4876,12 @@ int ProcessMonitor::changeMyCnf(std::string type)
     system(cmd.c_str());
 
     // restart mysql
-    /*	try {
+	try {
     		oam.actionMysqlCalpont(MYSQL_RESTART);
     		sleep(5);	// give after mysql restart
     	}
     	catch(...)
     	{}
-    */
     log.writeLog(__LINE__, "changeMyCnf function successfully completed", LOG_TYPE_DEBUG);
 
     return oam::API_SUCCESS;
@@ -5076,10 +5081,11 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
         while (file.getline(line, 200))
         {
             buf = line;
-            string::size_type pos = buf.find("mysql-bin", 0);
+            string::size_type pos = buf.find("000", 0);
 
             if ( pos != string::npos )
             {
+                pos = 0;
                 string::size_type pos1 = buf.find("\t", pos);
 
                 if ( pos1 != string::npos )
