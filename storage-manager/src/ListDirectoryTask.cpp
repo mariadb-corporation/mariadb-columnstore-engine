@@ -103,7 +103,7 @@ bool ListDirectoryTask::run()
     }
     catch (exception &e)
     {
-        logger->log(LOG_DEBUG, "ListDirectoryTask: caught '%s'", e.what());
+        logger->log(LOG_ERR, "ListDirectoryTask: caught '%s'", e.what());
         errno = EIO;
         err = -1;
     }

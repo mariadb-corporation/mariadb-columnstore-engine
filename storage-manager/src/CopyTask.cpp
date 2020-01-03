@@ -70,7 +70,7 @@ bool CopyTask::run()
     }
     catch (exception &e)
     {
-        logger->log(LOG_DEBUG, "CopyTask: caught %s", e.what());
+        logger->log(LOG_ERR, "CopyTask: caught %s", e.what());
         err = -1;
         errno = EIO;
     }

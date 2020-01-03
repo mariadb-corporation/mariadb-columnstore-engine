@@ -90,7 +90,7 @@ bool AppendTask::run()
             }
             catch (exception &e)
             {
-                logger->log(LOG_DEBUG, "AppendTask: caught '%s'", e.what());
+                logger->log(LOG_ERR, "AppendTask: caught '%s'", e.what());
                 errno = EIO;
                 err = -1;
             }

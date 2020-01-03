@@ -475,7 +475,7 @@ void SessionManager::socketError(int socket)
 void SessionManager::shutdownSM(int sig){
     boost::mutex::scoped_lock s(ctrlMutex);
     SMLogging* logger = SMLogging::get();
-    logger->log(LOG_INFO,"SessionManager Caught Signal %i",sig);
+    logger->log(LOG_DEBUG,"SessionManager Caught Signal %i",sig);
     int err;
     uint8_t ctrlCode = SHUTDOWN;
     err = ::write(socketCtrl[1], &ctrlCode, 1);
