@@ -48,8 +48,27 @@ if [ $vflg -gt 0 ]; then
 	echo "starting $exename $args with sleep=$sopt and tries=$topt"
 fi
 
+which_jemalloc() {
+	LD_PRELOAD="$1" /bin/true >& /tmp/jemalloc_test
+	grep -i error /tmp/jemalloc_test >& /dev/null
+	if [ $? -ne 0 ] ; then
+		JEMALLOC="$1"
+	else
+		unset JEMALLOC
+	fi
+	rm /tmp/jemalloc_test
+}
+
+which_jemalloc libjemalloc.so
+if [ -z "$JEMALLOC" ] ; then
+	which_jemalloc libjemalloc.so.1
+fi
+if [ -z "$JEMALLOC" ] ; then
+	which_jemalloc libjemalloc.so.2
+fi
+
 while [ $keep_going -ne 0 ]; do
-	LD_PRELOAD=libjemalloc.so $exename $args
+	LD_PRELOAD=$JEMALLOC $exename $args
 	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi
