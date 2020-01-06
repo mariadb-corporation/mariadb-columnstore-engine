@@ -2303,7 +2303,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
         *affected_rows = ci->affectedRows;
     }
 
-    return 0;
+    return rc;
 }
 
 int ha_mcs_impl_rnd_init(TABLE* table)
