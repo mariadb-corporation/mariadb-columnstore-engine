@@ -132,8 +132,9 @@ TupleHashJoinStep::~TupleHashJoinStep()
     if (ownsOutputDL)
         delete outputDL;
 
-    for (uint i = 0 ; i < smallDLs.size(); i++)
-        resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
+    if (memUsedByEachJoin)
+        for (uint i = 0 ; i < smallDLs.size(); i++)
+            resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
 
     //cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
