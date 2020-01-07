@@ -133,8 +133,10 @@ TupleHashJoinStep::~TupleHashJoinStep()
         delete outputDL;
 
     if (memUsedByEachJoin)
+    {
         for (uint i = 0 ; i < smallDLs.size(); i++)
             resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
+    }
 
     //cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
@@ -314,8 +316,6 @@ void TupleHashJoinStep::startSmallRunners(uint index)
     memTrackMutex.unlock();
     jobstepThreadPool.join(memMonitor);
 
-    extendedInfo += "\n";
-
     /* If there was an error or an abort, drain the input DL,
         do endOfInput on the output */
     if (cancelled())
@@ -336,6 +336,8 @@ void TupleHashJoinStep::startSmallRunners(uint index)
         cout << "hash table construction time = " << end_time - start_time <<
         " size = " << joiner->size() << endl;
     */
+
+    extendedInfo += "\n";
 
     ostringstream oss;
     if (!joiner->onDisk())
@@ -707,10 +709,9 @@ void TupleHashJoinStep::hjRunner()
     /* Need to clean this stuff up.  If the query was cancelled before this, and this would have had
        a disk join, it's still necessary to construct the DJS objects to finish the abort.
        Update: Is this more complicated than scanning joiners for either ondisk() or (not isFinished())
-       and draining the corresponding inputs & telling downstream EOF? */
+       and draining the corresponding inputs & telling downstream EOF?  todo, think about it */
     if (!djsJoiners.empty())
     {
-        cout << "Starting disk join" << endl;
         joinIsTooBig = false;
 
         if (!cancelled())
