@@ -7,6 +7,9 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 set(rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp)
 
 #librowgroup_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 
 add_library(rowgroup SHARED ${rowgroup_LIB_SRCS})
 

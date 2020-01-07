@@ -26,6 +26,7 @@
 
 void fatalHandler(int sig)
 {
+    return;
     char filename[128];
     void* addrs[128];
     snprintf(filename, 128, "/var/log/mariadb/columnstore/trace/%s.%d.log", program_invocation_short_name, getpid());

@@ -12,6 +12,9 @@ set(messageqcpp_LIB_SRCS
     iosocket.cpp
     compressed_iss.cpp)
 
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
 
 set_target_properties(messageqcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)

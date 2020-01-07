@@ -57,6 +57,10 @@ set(joblist_LIB_SRCS
     virtualtable.cpp
     windowfunctionstep.cpp)
 
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
+
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)

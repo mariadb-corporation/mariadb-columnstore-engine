@@ -106,6 +106,9 @@ set(funcexp_LIB_SRCS
     func_year.cpp
     func_yearweek.cpp)
 
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 
 target_link_libraries(funcexp ${NETSNMP_LIBRARIES})

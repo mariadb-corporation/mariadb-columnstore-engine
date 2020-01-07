@@ -49,7 +49,7 @@ if [ $vflg -gt 0 ]; then
 fi
 
 while [ $keep_going -ne 0 ]; do
-	$exename $args
+	LD_PRELOAD=/usr/lib64/libasan.so.5.0.0;ASAN_OPTIONS=detect_leaks=0 $exename $args
 	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi

@@ -264,7 +264,7 @@ void Oam::getSystemConfig(SystemModuleTypeConfig& systemmoduletypeconfig)
 /********************************************************************
  *
  * get System Module Configuration Information by Module Type
- *
+ *getSystemConfig
  ********************************************************************/
 
 void Oam::getSystemConfig(const std::string& moduletype, ModuleTypeConfig& moduletypeconfig)
@@ -1278,7 +1278,7 @@ void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string passw
     bool storeHostnames)
 {
     // build and send msg
-    int returnStatus = sendAddModuleToProcMgr(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, storeHostnames, 
+    int returnStatus = sendAddModuleToProcMgr(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, storeHostnames,
         password, mysqlpw);
 
     if (returnStatus != API_SUCCESS)

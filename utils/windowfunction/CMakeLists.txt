@@ -24,6 +24,9 @@ set(windowfunction_LIB_SRCS
     wf_sum_avg.cpp
     wf_udaf.cpp)
 
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
 set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)

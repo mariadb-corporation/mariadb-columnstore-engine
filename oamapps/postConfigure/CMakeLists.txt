@@ -66,4 +66,4 @@ install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 ########### next target ###############
 
 install(PROGRAMS quick_installer_single_server.sh quick_installer_multi_server.sh quick_installer_amazon.sh
-        DESTINATION ${ENGINE_BINDIR} COMPONENT platform)               
+        DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

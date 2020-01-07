@@ -11,6 +11,9 @@ set(querytele_LIB_SRCS
     querytele_types.cpp
     QueryTeleService.cpp
     queryteleprotoimpl.cpp)
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 
 add_library(querytele SHARED ${querytele_LIB_SRCS})
 

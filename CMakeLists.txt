@@ -28,7 +28,7 @@ MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 # default being a community build. This does not impact the feature
 # set that will be compiled in; it's merely provided as a hint to
 # custom packaging steps.
-OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
+OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON)
 
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
@@ -135,31 +135,31 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectori
 
 # enable security hardening features, like most distributions do
 # in our benchmarks that costs about ~1% of performance, depending on the load
-IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6")
-  SET(security_default OFF)
-ELSE()
-  SET(security_default ON)
-ENDIF()
-OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
-OPTION(SECURITY_HARDENED_NEW "Use new security-enhancing compilier features" OFF)
-IF(SECURITY_HARDENED)
-  # security-enhancing flags
-  MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector --param=ssp-buffer-size=4")
-  MY_CHECK_AND_SET_COMPILER_FLAG("-D_FORTIFY_SOURCE=2" RELEASE RELWITHDEBINFO)
-  MY_CHECK_AND_SET_COMPILER_FLAG("-fexceptions")
-  IF(SECURITY_HARDENED_NEW)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-mcet -fcf-protection")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector-strong")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-clash-protection")
-  ENDIF()
-ENDIF()
+#IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6")
+#  SET(security_default OFF)
+#ELSE()
+#  SET(security_default ON)
+#ENDIF()
+#OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
+#OPTION(SECURITY_HARDENED_NEW "Use new security-enhancing compilier features" OFF)
+#IF(SECURITY_HARDENED)
+#  # security-enhancing flags
+#  MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
+#  MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
+#  MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector --param=ssp-buffer-size=4")
+#  MY_CHECK_AND_SET_COMPILER_FLAG("-D_FORTIFY_SOURCE=2" RELEASE RELWITHDEBINFO)
+#  MY_CHECK_AND_SET_COMPILER_FLAG("-fexceptions")
+#  IF(SECURITY_HARDENED_NEW)
+#    MY_CHECK_AND_SET_COMPILER_FLAG("-mcet -fcf-protection")
+#    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector-strong")
+#    MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-clash-protection")
+#  ENDIF()
+#ENDIF()
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 
 
-FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time)
 
 SET (ENGINE_LIBDIR     "${INSTALL_ENGINE}/lib")
 SET (ENGINE_BINDIR     "${INSTALL_ENGINE}/bin")
@@ -174,7 +174,7 @@ SET (ENGINE_LOCALDIR   "${INSTALL_ENGINE}/local")
 SET (ENGINE_MYSQLDIR   "${INSTALL_ENGINE}/mysql")
 SET (ENGINE_TOOLSDIR   "${INSTALL_ENGINE}/tools")
 
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${JEMALLOC_LIBRARIES})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client)
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
@@ -210,8 +210,8 @@ SET (ENGINE_UTILS_IDBDATAFILE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/idbdata
 SET (ENGINE_UTILS_LOGGINGCPP_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/loggingcpp")
 SET (ENGINE_UTILS_CONFIGCPP_INCLUDE   "${CMAKE_CURRENT_SOURCE_DIR}/utils/configcpp")
 SET (ENGINE_UTILS_COMPRESS_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/compress")
-SET (ENGINE_VERSIONING_BRM_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/versioning/BRM") 
-SET (ENGINE_UTILS_ROWGROUP_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/rowgroup") 
+SET (ENGINE_VERSIONING_BRM_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/versioning/BRM")
+SET (ENGINE_UTILS_ROWGROUP_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/rowgroup")
 SET (ENGINE_UTILS_COMMON_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/common")
 SET (ENGINE_UTILS_DATACONVERT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/dataconvert")
 SET (ENGINE_UTILS_RWLOCK_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/rwlock")

@@ -10,6 +10,9 @@ set(common_LIB_SRCS
     MonitorProcMem.cpp
     nullvaluemanip.cpp
     threadnaming.cpp)
+IF(CMAKE-ASAN)
+   MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-blacklist=/home/calpont/mariadb/buildEngine/addressblacklist.txt")
+ENDIF(CMAKE-ASAN)
 
 add_library(common SHARED ${common_LIB_SRCS})
 
