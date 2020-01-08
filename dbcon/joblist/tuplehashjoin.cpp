@@ -1938,6 +1938,7 @@ void TupleHashJoinStep::segregateJoiners()
     }
     #endif
 
+    boost::mutex::scoped_lock sl(djsLock);
     /* For now if there is no largeBPS all joins need to either be DJS or not, not mixed */
     if (!largeBPS)
     {
