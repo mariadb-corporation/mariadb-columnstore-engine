@@ -170,7 +170,7 @@ void S3Storage::testConnectivityAndPerms()
     err = deleteObject(testObjKey);
     if (err)
         FAIL(DELETE)
-    logger->log(LOG_DEBUG, "S3Storage: S3 connectivity & permissions are OK");
+    logger->log(LOG_INFO, "S3Storage: S3 connectivity & permissions are OK");
 }
 
 int S3Storage::getObject(const string &sourceKey, const string &destFile, size_t *size)
@@ -227,10 +227,10 @@ int S3Storage::getObject(const string &_sourceKey, boost::shared_array<uint8_t> 
         if (err && retryable_error(err))
         { 
             if (ms3_server_error(creds))
-                logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s."
+                logger->log(LOG_ERR, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str());
             else 
-                logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.  Retrying...", 
+                logger->log(LOG_ERR, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.  Retrying...",
                     s3err_msgs[err], bucket.c_str(), sourceKey.c_str());
             sleep(5);
         }
@@ -238,10 +238,10 @@ int S3Storage::getObject(const string &_sourceKey, boost::shared_array<uint8_t> 
     if (err)
     {
         if (ms3_server_error(creds))
-            logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s.", 
+            logger->log(LOG_ERR, "S3Storage::getObject(): failed to GET, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), sourceKey.c_str());
         else
-            logger->log(LOG_WARNING, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.", 
+            logger->log(LOG_ERR, "S3Storage::getObject(): failed to GET, got '%s'.  bucket = %s, key = %s.",
                 s3err_msgs[err], bucket.c_str(), sourceKey.c_str());
         data->reset();
         errno = s3err_to_errno[err];
@@ -317,10 +317,10 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
         if (s3err && retryable_error(s3err))
         {
             if (ms3_server_error(creds))
-                logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s."
+                logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), destKey.c_str());
             else
-                logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s."
+                logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s."
                     "  Retrying...", s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
             sleep(5);
         }
@@ -328,7 +328,7 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     if (s3err)
     {
         if (ms3_server_error(creds))
-            logger->log(LOG_WARNING, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s.", 
+            logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), destKey.c_str());
         else
             logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s.",
@@ -351,10 +351,10 @@ int S3Storage::deleteObject(const string &_key)
         if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
             if (ms3_server_error(creds))
-                logger->log(LOG_WARNING, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s."
+                logger->log(LOG_ERR, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), key.c_str());
             else
-                logger->log(LOG_CRIT, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.  Retrying...", 
+                logger->log(LOG_ERR, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.  Retrying...",
                     s3err_msgs[s3err], bucket.c_str(), key.c_str());
             sleep(5);
         }
@@ -363,10 +363,10 @@ int S3Storage::deleteObject(const string &_key)
     if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
     {
         if (ms3_server_error(creds))
-            logger->log(LOG_WARNING, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s.",
+            logger->log(LOG_ERR, "S3Storage::deleteObject(): failed to DELETE, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), key.c_str());
         else
-            logger->log(LOG_CRIT, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.", 
+            logger->log(LOG_ERR, "S3Storage::deleteObject(): failed to DELETE, got '%s'.  bucket = %s, key = %s.",
                 s3err_msgs[s3err], bucket.c_str(), key.c_str());
         return -1;        
     }
@@ -386,10 +386,10 @@ int S3Storage::copyObject(const string &_sourceKey, const string &_destKey)
         if (s3err && retryable_error(s3err))
         {
             if (ms3_server_error(creds))
-                logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
+                logger->log(LOG_ERR, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
                     "destkey = %s.  Retrying...", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             else
-                logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
+                logger->log(LOG_ERR, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
                     " destkey = %s.  Retrying...", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             sleep(5);
         }
@@ -399,10 +399,10 @@ int S3Storage::copyObject(const string &_sourceKey, const string &_destKey)
     {
         // added the add'l check MS3_ERR_NOT_FOUND to suppress error msgs for a legitimate case in IOC::copyFile()
         if (ms3_server_error(creds) && s3err != MS3_ERR_NOT_FOUND)
-            logger->log(LOG_WARNING, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
+            logger->log(LOG_ERR, "S3Storage::copyObject(): failed to copy, server says '%s'.  bucket = %s, srckey = %s, "
                 "destkey = %s.", ms3_server_error(creds), bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         else if (s3err != MS3_ERR_NOT_FOUND)
-            logger->log(LOG_CRIT, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
+            logger->log(LOG_ERR, "S3Storage::copyObject(): failed to copy, got '%s'.  bucket = %s, srckey = %s, "
                 "destkey = %s.", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
         errno = s3err_to_errno[s3err];
         return -1;
@@ -435,10 +435,10 @@ int S3Storage::exists(const string &_key, bool *out)
         if (s3err && s3err != MS3_ERR_NOT_FOUND && retryable_error(s3err))
         {
             if (ms3_server_error(creds))
-                logger->log(LOG_WARNING, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s."
+                logger->log(LOG_ERR, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s."
                     "  Retrying...", ms3_server_error(creds), bucket.c_str(), key.c_str());
             else
-                logger->log(LOG_CRIT, "S3Storage::exists(): failed to HEAD, got '%s'.  bucket = %s, key = %s.  Retrying...",
+                logger->log(LOG_ERR, "S3Storage::exists(): failed to HEAD, got '%s'.  bucket = %s, key = %s.  Retrying...",
                     s3err_msgs[s3err], bucket.c_str(), key.c_str());
             sleep(5);
         }
@@ -447,10 +447,10 @@ int S3Storage::exists(const string &_key, bool *out)
     if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
     {
         if (ms3_server_error(creds))
-            logger->log(LOG_WARNING, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s.",
+            logger->log(LOG_ERR, "S3Storage::exists(): failed to HEAD, server says '%s'.  bucket = %s, key = %s.",
                 ms3_server_error(creds), bucket.c_str(), key.c_str());
         else    
-            logger->log(LOG_CRIT, "S3Storage::exists(): failed to HEAD, got '%s'.  bucket = %s, key = %s.",
+            logger->log(LOG_ERR, "S3Storage::exists(): failed to HEAD, got '%s'.  bucket = %s, key = %s.",
                 s3err_msgs[s3err], bucket.c_str(), key.c_str());
         errno = s3err_to_errno[s3err];
         return -1;

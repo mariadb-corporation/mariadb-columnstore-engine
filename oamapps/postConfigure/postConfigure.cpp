@@ -3539,11 +3539,11 @@ int main(int argc, char* argv[])
             {
                 cout << endl;
                 cout << "Next step is to enter the password to access the other Servers." << endl;
-                cout << "This is either user password or you can default to using a ssh key" << endl;
+                cout << "This is either user password or you can default to using an ssh key" << endl;
                 cout << "If using a user password, the password needs to be the same on all Servers." << endl << endl;
 
                 if ( noPrompting ) {
-                    cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+                    cout << "Enter password, hit 'enter' to default to using an ssh key, or 'exit' > " << endl;
                     password = "ssh";
                 }
 				else
@@ -3552,7 +3552,7 @@ int main(int argc, char* argv[])
         		    {
                 		char  *pass1, *pass2;
 
-                		pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+                		pass1=getpass("Enter password, hit 'enter' to default to using an ssh key, or 'exit' > ");
                 		if ( strcmp(pass1, "") == 0 ) {
                     		password = "ssh";
                     		break;
@@ -3633,7 +3633,7 @@ int main(int argc, char* argv[])
             {
                 cout << endl;
                 cout << "Next step is to enter the password to access the other Servers." << endl;
-                cout << "This is either your password or you can default to using a ssh key" << endl;
+                cout << "This is either your password or you can default to using an ssh key" << endl;
                 cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
             }
 
@@ -3643,7 +3643,7 @@ int main(int argc, char* argv[])
 
                 if ( noPrompting )
                 {
-                    cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+                    cout << "Enter password, hit 'enter' to default to using an ssh key, or 'exit' > " << endl;
 
                     if ( password.empty() )
                         password = "ssh";
@@ -3658,7 +3658,7 @@ int main(int argc, char* argv[])
                     break;
                 }
 
-                pass1 = getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+                pass1 = getpass("Enter password, hit 'enter' to default to using an ssh key, or 'exit' > ");
 
                 if ( strcmp(pass1, "") == 0 )
                 {
@@ -4858,7 +4858,7 @@ bool storageSetup(bool amazonInstall)
         }
     }
     storageManagerInstalled = boost::filesystem::exists(storageManagerLocation);
-        
+
     //
     // get Backend Data storage type
     //
@@ -4871,7 +4871,7 @@ bool storageSetup(bool amazonInstall)
 
     if ( DBRootStorageType == "DataRedundancy" )
         storageType = "3";
-        
+
     if (DBRootStorageType == "storagemanager")
         storageType = "4";
 
@@ -4888,16 +4888,16 @@ bool storageSetup(bool amazonInstall)
             "      before running postConfigure (see storagemanager.cnf)" << endl;
     cout << "  * - This option enables data replication and server failover in a" << endl <<
             "      multi-node configuration." << endl;
-    
+
     cout << endl << "These options are available on this system: [1, 2";
     if (glusterInstalled == "y" && singleServerInstall != "1")
         cout << ", 3";
     if (storageManagerInstalled)
         cout << ", 4";
     cout << "]" << endl;
-    
+
     prompt = "Select the type of data storage (" + storageType + ") > ";
-    
+
     #if 0
     // pre-storagemanager version
     if (( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
@@ -4962,7 +4962,7 @@ bool storageSetup(bool amazonInstall)
           || (storageManagerInstalled && storageType == "4")   // allow storagemanager if installed
           )
             break;
-            
+
         // if it gets here the selection was invalid
         if (noPrompting)
         {
@@ -4970,7 +4970,7 @@ bool storageSetup(bool amazonInstall)
             exit(1);
         }
         cout << endl << "Invalid selection, please re-enter" << endl << endl;
-        
+
         #if 0
         old version
         if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )

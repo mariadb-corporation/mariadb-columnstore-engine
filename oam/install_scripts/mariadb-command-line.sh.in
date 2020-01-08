@@ -50,7 +50,7 @@ cat >${tmpdir}/mariadb-command-line.sql <<EOD
 $command;
 EOD
 
-cat${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log
+cat ${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log
 mysql \
 	--user=root \
 	calpontsys < ${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log 2>&1

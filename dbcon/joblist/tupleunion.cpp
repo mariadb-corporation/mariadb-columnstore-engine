@@ -94,7 +94,6 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
     outputIt(-1),
     memUsage(0),
     rm(jobInfo.rm),
-    allocator(64 * 1024 * 1024 + 1),
     runnersDone(0),
     distinctCount(0),
     distinctDone(0),

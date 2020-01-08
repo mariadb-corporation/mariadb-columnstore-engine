@@ -138,6 +138,7 @@ TupleHashJoinStep::~TupleHashJoinStep()
             resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
     }
 
+
     //cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
 

@@ -25,7 +25,7 @@ for arg in "$@"; do
 		echo "Performace Module (pm) number is required"
 		echo "User Module (um) number is option"
 		echo "When only pm counts provided, system is combined setup"
-		echo "When both pm/um counts provided, system is seperate setup"
+		echo "When both pm/um counts provided, system is separate setup"
 		echo
 		echo "--pm-count=x Number of pm instances to create"
 		echo "--um-count=x Number of um instances to create, optional"
@@ -49,7 +49,7 @@ else
 		echo""
 	else
 		echo ""
-		echo "NOTE: Performing a Multi-Server Seperate install with um and pm running on seperate servers"
+		echo "NOTE: Performing a Multi-Server separate install with um and pm running on separate servers"
 		echo""
 	fi
 fi
