@@ -1629,7 +1629,6 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             memcpy(argVals[argIndex],args->val, W);
             regex[argIndex].used = false;
         }
-
     }
 
 
@@ -1639,7 +1638,6 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
 
     while (!done)
     {
-
 //        if((*((uint64_t *) (bval))) != 0)
 //        {
 //            cout << "rid "<< rid << " value ";

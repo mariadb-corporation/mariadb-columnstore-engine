@@ -399,6 +399,7 @@ public:
     inline void setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex);
 
     inline std::string getBinaryField(uint32_t colIndex) const;
+    inline const uint8_t* getBinaryField2(uint32_t colIndex) const;
     
     inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
     inline void setUserData(mcsv1sdk::mcsv1Context& context,
@@ -797,6 +798,12 @@ inline std::string Row::getStringField(uint32_t colIndex) const
 inline std::string Row::getBinaryField(uint32_t colIndex) const
 {
     return std::string((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
+}
+
+// WIP MCOL-641
+inline const uint8_t* Row::getBinaryField2(uint32_t colIndex) const
+{
+    return &data[offsets[colIndex]];
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
