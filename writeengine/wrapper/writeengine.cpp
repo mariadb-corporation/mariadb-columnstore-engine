@@ -218,6 +218,50 @@ void WriteEngineWrapper::findSmallestColumn(uint32_t& colId, ColStructList colSt
     }
 }
 
+// MCOL-641 WIP
+using int128_t = __int128;
+using uint128_t = unsigned __int128;
+
+struct uint128_pod
+{ 
+  uint64_t lo;
+  uint64_t hi;
+};
+
+
+
+inline void toString(uint128_t i, char *p)
+{ 
+  uint64_t div = 10000000000000000000ULL;
+  size_t div_log = 19;
+  uint128_t high = i;
+  uint128_t low;
+  low = high % div;
+  high /= div;
+  uint128_t mid;
+  mid = high % div;
+  high /= div;
+  
+  uint128_pod *high_pod = reinterpret_cast<uint128_pod*>(&high);
+  uint128_pod *mid_pod = reinterpret_cast<uint128_pod*>(&mid);
+  uint128_pod *low_pod = reinterpret_cast<uint128_pod*>(&low);
+  int printed_chars = 0;
+ 
+  // WIP replace snprintf with streams 
+  if (high_pod->lo != 0) {
+    printed_chars = snprintf(p, div_log+1, "%ld", high_pod->lo);
+    p += printed_chars; 
+    printed_chars = snprintf(p, div_log+1, "%019lu", mid_pod->lo);
+    p += printed_chars;  
+  } else if (mid_pod->lo != 0) {
+    printed_chars = snprintf(p, div_log+1, "%lu", mid_pod->lo);
+    p += printed_chars;
+  }
+  snprintf(p, div_log+1, "%019ld", low_pod->lo);
+}
+
+
+
 /*@convertValArray -  Convert interface values to internal values
  */
 /***********************************************************
@@ -389,8 +433,14 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
         }
         break;
         
-        case WriteEngine::WR_BINARY:
         case WriteEngine::WR_INT128:
+        {
+            int128_t val = boost::any_cast<int128_t>(data);
+            size = 16;
+            // WIP Why do we use memcpy here?
+            memcpy(value, &val, size);
+        }
+        case WriteEngine::WR_BINARY:
         {
             char val = boost::any_cast<char>(data);
             //TODO:FIXME how to determine size ? 16, 32,48 ?
@@ -416,7 +466,6 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
 void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, const size_t pos, boost::any& data, bool fromList)
 {
     string curStr;
-//      ColTuple    curTuple;
 
     if (fromList)
     {
@@ -505,11 +554,15 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                 break;
                 
             case WriteEngine::WR_BINARY:
-            case WriteEngine::WR_INT128:
                 curStr = boost::any_cast<string>(data);
                 memcpy((char*)valArray + pos * curStr.length(), curStr.c_str(), curStr.length());
                 break;     
-           
+            case WriteEngine::WR_INT128:
+                int128_t val = boost::any_cast<int128_t>(data);
+                size_t size = 16;
+                // WIP Why do we use memcpy here?
+                memcpy((uint8_t*)valArray+pos*size, &val, size);
+                break;
         } // end of switch (colType)
     }
     else
@@ -576,8 +629,12 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                 data = ((Token*)valArray)[pos];
                 break;
                 
-            case WriteEngine::WR_BINARY :
             case WriteEngine::WR_INT128:
+            {
+                data = ((int128_t*)valArray)[pos];
+                break;
+            }
+            case WriteEngine::WR_BINARY :
             {
                 char tmp[16];
                 //TODO:FIXME how to determine size ? 16, 32,48 ?
