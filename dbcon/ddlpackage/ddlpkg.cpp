@@ -223,11 +223,10 @@ void ColumnDef::convertDecimal()
         fType->fType = DDL_BIGINT;
         fType->fLength = 8;
     }
-    else if (fType->fPrecision > 19 && fType->fPrecision <39)
+    else if (fType->fPrecision > 18 && fType->fPrecision < 39)
     {
         fType->fType = DDL_BINARY;
         fType->fLength = 16;
-
     }
 }
 } // end of namespace

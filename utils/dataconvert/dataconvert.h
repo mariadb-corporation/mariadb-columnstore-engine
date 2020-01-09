@@ -1011,6 +1011,8 @@ public:
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+    EXPORT static void decimalToString(unsigned __int128 value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+    EXPORT static void toString(unsigned __int128 i, char *p);
     static inline std::string constructRegexp(const std::string& str);
     static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)

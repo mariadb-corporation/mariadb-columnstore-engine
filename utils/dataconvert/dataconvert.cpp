@@ -1172,7 +1172,8 @@ struct uint128_pod
   uint64_t hi;
 };
 
-inline void toString(uint128_t i, char *p)
+// WIP MCOL-641
+void DataConvert::toString(unsigned __int128 i, char *p)
 { 
   uint64_t div = 10000000000000000000ULL;
   size_t div_log = 19;
@@ -1191,7 +1192,7 @@ inline void toString(uint128_t i, char *p)
  
   // WIP replace snprintf with streams 
   if (high_pod->lo != 0) {
-    printed_chars = snprintf(p, div_log+1, "%ld", high_pod->lo);
+    printed_chars = snprintf(p, div_log+1, "%lu", high_pod->lo);
     p += printed_chars; 
     printed_chars = snprintf(p, div_log+1, "%019lu", mid_pod->lo);
     p += printed_chars;  
@@ -1199,10 +1200,11 @@ inline void toString(uint128_t i, char *p)
     printed_chars = snprintf(p, div_log+1, "%lu", mid_pod->lo);
     p += printed_chars;
   }
-  snprintf(p, div_log+1, "%019ld", low_pod->lo);
+  snprintf(p, div_log+1, "%019lu", low_pod->lo);
 }
 
 
+// WIP MCOL-641
 // Template this
 // result must be calloc-ed
 void atoi_(const string &arg, int128_t &res, size_t &size) 
@@ -1211,7 +1213,7 @@ void atoi_(const string &arg, int128_t &res, size_t &size)
     //char buf[40];
     //int128_t *res_ptr = reinterpret_cast<int128_t*>(result);
     res = 0;
-    for (int j = 0; j < arg.size(); j++) 
+    for (size_t j = 0; j < arg.size(); j++) 
     {
         // WIP
         res = res*10 + arg[j] - '0';
@@ -1220,6 +1222,69 @@ void atoi_(const string &arg, int128_t &res, size_t &size)
     //std::cerr << "atoi_ " << buf <<endl;
     //*res_ptr = res;
     size = 16;
+}
+
+// WIP MCOL-641
+void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char* buf, unsigned int buflen,
+                                         execplan::CalpontSystemCatalog::ColDataType colDataType)
+{
+    toString(int_val, buf);
+
+    // Biggest ColumnStore supports is DECIMAL(38,x), or 38 total digits+dp+sign for column
+
+    if (scale == 0)
+        return;
+
+    //we want to move the last scale chars right by one spot to insert the dp
+    //we want to move the trailing null as well, so it's really scale+1 chars
+    size_t l1 = strlen(buf);
+    char* ptr = &buf[0];
+
+    if (int_val < 0)
+    {
+        ptr++;
+        idbassert(l1 >= 2);
+        l1--;
+    }
+
+    //need to make sure we have enough leading zeros for this to work...
+    //at this point scale is always > 0
+    size_t l2 = 1;
+
+    if ((unsigned)scale > l1)
+    {
+        const char* zeros = "00000000000000000000000000000000000000"; //38 0's
+        size_t diff = 0;
+
+        if (int_val != 0)
+            diff = scale - l1; //this will always be > 0
+        else
+            diff = scale;
+
+        memmove((ptr + diff), ptr, l1 + 1); //also move null
+        memcpy(ptr, zeros, diff);
+
+        if (int_val != 0)
+            l1 = 0;
+        else
+            l1 = 1;
+    }
+    else if ((unsigned)scale == l1)
+    {
+        l1 = 0;
+        l2 = 2;
+    }
+    else
+    {
+        l1 -= scale;
+    }
+
+    memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
+
+    if (l2 == 2)
+        *(ptr + l1++) = '0';
+
+    *(ptr + l1) = '.';
 }
 
 boost::any

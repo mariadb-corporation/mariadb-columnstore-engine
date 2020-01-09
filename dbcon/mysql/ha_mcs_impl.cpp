@@ -247,6 +247,9 @@ void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc 
     ci->cal_conn_hndl = 0;
 }
 
+// WIP MCOL-641
+using uint128_t = unsigned __int128;
+
 void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& ct)
 {
     // unset null bit first
@@ -838,15 +841,24 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                 {
+                    // WIP MCOL-641
                     if (row.getPrecision(s) > 18)
                     {
-                        sscanf(row.getBinaryField(s).c_str(), "%ld",&intColVal);
+                        // unset null bit first
+                        if ((*f)->null_ptr)
+                            *(*f)->null_ptr &= ~(*f)->null_bit;
+
+                        const uint128_t val = *reinterpret_cast<const uint128_t*>(row.getBinaryField2(s));
+                        char buf[256];
+                        dataconvert::DataConvert::decimalToString(val, (unsigned)colType.scale, buf, 256, colType.colDataType);
+                        Field_new_decimal* f2 = (Field_new_decimal*)*f;
+                        f2->store(buf, strlen(buf), f2->charset());
                     }
                     else
                     {
                         intColVal = row.getIntField(s);
+                        storeNumericField(f, intColVal, colType);
                     }
-                    storeNumericField(f, intColVal, colType);
                     break;
                 }
 
@@ -2303,13 +2315,12 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
 int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
 {
     THD* thd = current_thd;
-    int rc = 0;
     cal_impl_if::gp_walk_info gwi;
     gwi.thd = thd;
 
     if (execute)
     {
-        rc = doUpdateDelete(thd, gwi);
+        doUpdateDelete(thd, gwi);
     }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
