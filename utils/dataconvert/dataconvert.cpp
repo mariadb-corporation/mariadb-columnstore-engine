@@ -1161,11 +1161,73 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 
 }
 
+// WIP 
+#include <stdio.h>
+using int128_t = __int128;
+using uint128_t = unsigned __int128;
+
+struct uint128_pod
+{ 
+  uint64_t lo;
+  uint64_t hi;
+};
+
+inline void toString(uint128_t i, char *p)
+{ 
+  uint64_t div = 10000000000000000000ULL;
+  size_t div_log = 19;
+  uint128_t high = i;
+  uint128_t low;
+  low = high % div;
+  high /= div;
+  uint128_t mid;
+  mid = high % div;
+  high /= div;
+  
+  uint128_pod *high_pod = reinterpret_cast<uint128_pod*>(&high);
+  uint128_pod *mid_pod = reinterpret_cast<uint128_pod*>(&mid);
+  uint128_pod *low_pod = reinterpret_cast<uint128_pod*>(&low);
+  int printed_chars = 0;
+ 
+  // WIP replace snprintf with streams 
+  if (high_pod->lo != 0) {
+    printed_chars = snprintf(p, div_log+1, "%ld", high_pod->lo);
+    p += printed_chars; 
+    printed_chars = snprintf(p, div_log+1, "%019lu", mid_pod->lo);
+    p += printed_chars;  
+  } else if (mid_pod->lo != 0) {
+    printed_chars = snprintf(p, div_log+1, "%lu", mid_pod->lo);
+    p += printed_chars;
+  }
+  snprintf(p, div_log+1, "%019ld", low_pod->lo);
+}
+
+
+// Template this
+// result must be calloc-ed
+void atoi_(const string &arg, int128_t &res, size_t &size) 
+{
+    // WIP
+    //char buf[40];
+    //int128_t *res_ptr = reinterpret_cast<int128_t*>(result);
+    res = 0;
+    for (int j = 0; j < arg.size(); j++) 
+    {
+        // WIP
+        res = res*10 + arg[j] - '0';
+    }
+    //toString(res, buf);
+    //std::cerr << "atoi_ " << buf <<endl;
+    //*res_ptr = res;
+    size = 16;
+}
+
 boost::any
 DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                                const std::string& dataOrig, bool& pushWarning, const std::string& timeZone, bool nulFlag, bool noRoundup, bool isUpdate)
 {
     boost::any value;
+    // WIP
     std::string data( dataOrig );
     pushWarning = false;
     CalpontSystemCatalog::ColDataType type = colType.colDataType;
@@ -1225,10 +1287,15 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 break;
 
             // MCOL-641 WIP
-            // use string2BCD conversion here + set sign
             case CalpontSystemCatalog::DECIMAL:
                 if (colType.colWidth == 16)
-                    value = data;
+                {
+                    //value = data;
+                    size_t size;
+                    int128_t bigint;
+                    atoi_(data, bigint, size);
+                    value = bigint;
+                }
                 else if (colType.colWidth == 1)
                     value = (char) number_int_value(data, colType, pushWarning, noRoundup);
                 else if (colType.colWidth == 2)
