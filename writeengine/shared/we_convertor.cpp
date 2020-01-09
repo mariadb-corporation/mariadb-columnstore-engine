@@ -638,6 +638,7 @@ void Convertor::convertColType(ColStruct* curStruct)
                     break;
 
                 default:
+                    // WIP replace with BINARY
                     *internalType = WriteEngine::WR_INT128;
                     break;
             }
@@ -772,8 +773,10 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
                 newWidth = 2;
             else if (width <= 4)
                 newWidth = 4;
-            else
+            else if (width <= 8)
                 newWidth = 8;
+            else
+                newWidth = 16;
 
             break;
 
