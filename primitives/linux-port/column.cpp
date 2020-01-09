@@ -1627,9 +1627,9 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             rfs[argIndex] = args->rf;
 
             memcpy(argVals[argIndex],args->val, W);
+            regex[argIndex].used = false;
         }
 
-        regex[argIndex].used = false;
     }
 
 

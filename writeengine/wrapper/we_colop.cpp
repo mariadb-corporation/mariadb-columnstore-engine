@@ -1561,6 +1561,10 @@ void ColumnOp::setColParam(Column& column,
     column.compressionType = compressionType;
 }
 
+// WIP
+using int128_t = __int128;
+using uint128_t = unsigned __int128;
+
 
 /***********************************************************
  * DESCRIPTION:
@@ -1680,10 +1684,12 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 if (!bDelete) pVal = &((uint64_t*) valArray)[i];
                 break;
 
-            case WriteEngine::WR_BINARY:
             case WriteEngine::WR_INT128:
+                pVal = &((uint128_t*) valArray)[i];
+                break;
+
+            case WriteEngine::WR_BINARY:
                 if (!bDelete) pVal = (uint8_t*) valArray + i * curCol.colWidth;
-                
                 break;
                 
             default  :
