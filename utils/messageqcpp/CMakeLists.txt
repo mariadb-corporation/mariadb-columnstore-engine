@@ -12,6 +12,7 @@ set(messageqcpp_LIB_SRCS
     iosocket.cpp
     compressed_iss.cpp
     bytestreampool.cpp
+    unixsocket.cpp
 )
 
 add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
