@@ -1535,6 +1535,16 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 #endif
 }
 
+
+// WIP MCOL-641
+using uint128_t = unsigned __int128;
+using int128_t = __int128;
+
+struct uint128_pod {
+    uint64_t lo;
+    uint64_t hi;
+};
+
 // for BINARY
 template<int W>
 inline void p_Col_bin_ridArray(NewColRequestHeader* in,
@@ -1630,9 +1640,18 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             regex[argIndex].used = false;
         }
     }
-
+    // WIP MCOL-641
+    // we have a pre-parsed filter, and it's in the form of op and value arrays
+    else if (parsedColumnFilter->columnFilterMode == TWO_ARRAYS)
+    {
+        argVals = (binWtype*) parsedColumnFilter->prestored_argVals.get();
+        cops = parsedColumnFilter->prestored_cops.get();
+        rfs = parsedColumnFilter->prestored_rfs.get();
+        regex = parsedColumnFilter->prestored_regex.get();
+    }
 
     // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
+
     bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                 &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
 
@@ -1681,29 +1700,39 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
 
 //               if((*((uint64_t *) (uval))) != 0) cout << "comparing " << dec << (*((uint64_t *) (uval)))  << " to " << (*((uint64_t *) (argVals[argIndex])))  << endl;
 
-                int val1 = memcmp(*bval, &argVals[argIndex], W);
+                // WIP MCOL-641
+                uint128_t val, filterVal;
+                uint128_pod *valPod, *filterValPod;
+                valPod = reinterpret_cast<uint128_pod*>(&val);
+                filterValPod = reinterpret_cast<uint128_pod*>(&filterVal);
+
+                valPod->lo = *reinterpret_cast<uint64_t*>(*bval);
+                valPod->hi = *(reinterpret_cast<uint64_t*>(*bval) + 1);
+
+                filterValPod->lo = *reinterpret_cast<uint64_t*>(argVals[argIndex]);
+                filterValPod->hi = *(reinterpret_cast<uint64_t*>(argVals[argIndex]) + 1);
 
                 switch (cops[argIndex]) {
                     case COMPARE_NIL:
                         cmp = false;
                         break;
                     case COMPARE_LT:
-                        cmp = val1 < 0;
+                        cmp = val < filterVal;
                         break;
                     case COMPARE_EQ:
-                        cmp = val1 == 0;
+                        cmp = val == filterVal;
                         break;
                     case COMPARE_LE:
-                        cmp = val1 <= 0;
+                        cmp = val <= filterVal;
                         break;
                     case COMPARE_GT:
-                        cmp = val1 > 0;
+                        cmp = val > filterVal;
                         break;
                     case COMPARE_NE:
-                        cmp = val1 != 0;
+                        cmp = val != filterVal;
                         break;
                     case COMPARE_GE:
-                        cmp = val1 >= 0;
+                        cmp = val >= filterVal;
                         break;
                     default:
                         logIt(34, cops[argIndex], "colCompare");
@@ -1854,7 +1883,11 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     ret.reset(new ParsedColumnFilter());
 
     ret->columnFilterMode = TWO_ARRAYS;
-    ret->prestored_argVals.reset(new int64_t[filterCount]);
+    // WIP MCOL-641
+    if (colWidth == 16)
+        ret->prestored_argVals.reset(new int64_t[filterCount * 2]);
+    else
+        ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
     ret->prestored_rfs.reset(new uint8_t[filterCount]);
     ret->prestored_regex.reset(new idb_regex_t[filterCount]);
@@ -1949,8 +1982,10 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
                 case 8:
                     ret->prestored_argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
                     break;
+
+                // WIP MCOL-641
                 case 16:
-                     cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+                     memcpy(ret->prestored_argVals.get() + (argIndex * 2), args->val, 16);
             }
         }
 
