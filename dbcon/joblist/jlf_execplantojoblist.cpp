@@ -1592,6 +1592,16 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 }
 
 
+// WIP MCOL-641 put this in dataconvert
+void atoi_(const string &arg, unsigned __int128 &res)
+{
+    res = 0;
+    for (size_t j = 0; j < arg.size(); j++)
+    {
+        res = res*10 + arg[j] - '0';
+    }
+}
+
 const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 {
     JobStepVector jsv;
@@ -1829,6 +1839,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             // @bug 1151 string longer than colwidth of char/varchar.
             int64_t value = 0;
             uint8_t rf = 0;
+            unsigned __int128 val128 = 0;
 #ifdef FAILED_ATOI_IS_ZERO
 
             //if cvn throws (because there's non-digit data in the string, treat that as zero rather than
@@ -1874,8 +1885,17 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             }
 
 #else
-            bool isNull = ConstantColumn::NULLDATA == cc->type();
-            value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+            // WIP MCOL-641
+            if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
+                ct.colWidth == 16)
+            {
+                atoi_(constval, val128);
+            }
+            else
+            {
+                bool isNull = ConstantColumn::NULLDATA == cc->type();
+                value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+            }
 
             if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
             {
@@ -1908,7 +1928,14 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                     pcs = new PseudoColStep(sc->oid(), tbl_oid, pc->pseudoType(), ct, jobInfo);
 
                 if (sc->isColumnStore())
-                    pcs->addFilter(cop, value, rf);
+                {
+                    // WIP MCOL-641
+                    if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
+                        ct.colWidth == 16)
+                        pcs->addFilter(cop, val128, rf);
+                    else
+                        pcs->addFilter(cop, value, rf);
+                }
 
                 pcs->alias(alias);
                 pcs->view(view);

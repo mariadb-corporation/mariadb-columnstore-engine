@@ -633,6 +633,18 @@ void pColStep::addFilter(int8_t COP, int64_t value, uint8_t roundFlag)
     fFilterCount++;
 }
 
+// WIP MCOL-641
+void pColStep::addFilter(int8_t COP, unsigned __int128 value, uint8_t roundFlag)
+{
+    fFilterString << (uint8_t) COP;
+    fFilterString << roundFlag;
+
+    // bitwise copies into the filter ByteStream
+    fFilterString << value;
+
+    fFilterCount++;
+}
+
 void pColStep::setRidList(DataList<ElementType>* dl)
 {
     ridList = dl;
