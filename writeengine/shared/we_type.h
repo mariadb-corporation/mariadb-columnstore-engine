@@ -111,9 +111,9 @@ enum ColType                            /** @brief Column type enumeration*/
     WR_TEXT             = 17,           /** @brief TEXT */
     WR_MEDINT           = 18,           /** @brief Medium Int */
     WR_UMEDINT          = 19,           /** @brief Unsigned Medium Int */
-    WR_BINARY           = 20,           /** @brief BINARY */           
-// WIP We might be good using WR_BINARY 
-    WR_INT128           = 21            /** @brief __int128 */            
+    WR_BINARY           = 20           /** @brief BINARY */
+    // WIP
+    //WR_INT128           
 };
 
 // Describes relation of field to column for a bulk load
@@ -302,6 +302,7 @@ struct ColStruct                        /** @brief Column Interface Struct*/
 typedef std::vector<ColStruct>      ColStructList; /** @brief column struct list */
 typedef std::vector<ColTupleList>   ColValueList;  /** @brief column value list */
 typedef std::vector<RID>            RIDList;       /** @brief RID list */
+typedef std::vector<execplan::CalpontSystemCatalog::ColType>      CSCTypesList; /** @brief CSC column types list */
 
 typedef std::vector<std::string> dictStr;
 typedef std::vector<dictStr> DictStrList;
