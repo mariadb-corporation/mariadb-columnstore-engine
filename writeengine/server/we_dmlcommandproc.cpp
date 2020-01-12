@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -113,6 +113,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     RowList rows = tablePtr->get_RowList();
 
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypes;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
     WriteEngine::ColValueList colValuesList;
@@ -136,12 +137,18 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         {
             Row* rowPtr = rows.at(0);
             ColumnList columns = rowPtr->get_ColumnList();
+            unsigned int numcols = rowPtr->get_NumberOfColumns();
+            cscColTypes.reserve(numcols);
+            // WIP
+            // We presume that DictCols number is low
+            colStructs.reserve(numcols);
             ColumnList::const_iterator column_iterator = columns.begin();
 
             while (column_iterator != columns.end())
             {
                 DMLColumn* columnPtr = *column_iterator;
                 tableColName.column = columnPtr->get_Name();
+                // WIP MCOL-641 replace with getColRidsOidsTypes()
                 CalpontSystemCatalog::ROPair roPair = systemCatalogPtr->columnRID(tableColName);
 
                 CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
@@ -149,6 +156,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 CalpontSystemCatalog::ColType colType;
                 colType = systemCatalogPtr->colType(oid);
 
+                cscColTypes.push_back(colType);
                 WriteEngine::ColStruct colStruct;
                 colStruct.fColDbRoot = dbroot;
                 WriteEngine::DctnryStruct dctnryStruct;
@@ -160,6 +168,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 // Token
                 if ( isDictCol(colType) )
                 {
+                    // WIP Hardcoded value
                     colStruct.colWidth = 8;
                     colStruct.tokenFlag = true;
                 }
@@ -191,7 +200,6 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 ++column_iterator;
             }
 
-            unsigned int numcols = rowPtr->get_NumberOfColumns();
             std::string tmpStr("");
 
             for (unsigned int i = 0; i < numcols; i++)
@@ -207,6 +215,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                     const DMLColumn* columnPtr = rowPtr->get_ColumnAt(i);
 
                     tableColName.column = columnPtr->get_Name();
+                    // WIP MCOL-641 remove these calls
                     CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
 
                     CalpontSystemCatalog::ColType colType;
@@ -300,6 +309,8 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                             {
                                 try
                                 {
+                                    // WIP What if we combine this and previous loop and fail
+                                    // after get nextAIValue ?
                                     nextVal = systemCatalogPtr->nextAutoIncrValue(tableName);
                                     fDbrm.startAISequence(oid, nextVal, colType.colWidth, colType.colDataType);
                                 }
@@ -356,6 +367,8 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                             try
                             {
+                                // WIP
+                                // make convertColumnData a template
                                 datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
@@ -409,6 +422,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
     // call the write engine to write the rows
     int error = NO_ERROR;
+    // WIP
     fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
     cout << "inserting a row with transaction id " << txnid.id << endl;
     fWEWrapper.setIsInsert(true);
@@ -417,6 +431,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     //For hdfs use only
     uint32_t  tblOid = tableRoPair.objnum;
 
+    // WIP are we saving HDFS?
     if (idbdatafile::IDBPolicy::useHdfs())
     {
 
@@ -520,7 +535,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     if (colValuesList[0].size() > 0)
     {
         if (NO_ERROR !=
-                (error = fWEWrapper.insertColumnRec_Single(txnid.id, colStructs, colValuesList, dctnryStructList, dicStringList, tableRoPair.objnum)))
+                (error = fWEWrapper.insertColumnRec_Single(txnid.id, cscColTypes, colStructs, colValuesList, dctnryStructList, dicStringList, tableRoPair.objnum)))
         {
             if (error == ERR_BRM_DEAD_LOCK)
             {

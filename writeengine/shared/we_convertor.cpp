@@ -639,7 +639,8 @@ void Convertor::convertColType(ColStruct* curStruct)
 
                 default:
                     // WIP replace with BINARY
-                    *internalType = WriteEngine::WR_INT128;
+                    //*internalType = WriteEngine::WR_INT128;
+                    *internalType = WriteEngine::WR_BINARY;
                     break;
             }
 
