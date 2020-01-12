@@ -1593,12 +1593,13 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 
 
 // WIP MCOL-641 put this in dataconvert
-void atoi_(const string &arg, unsigned __int128 &res)
+void atoi128(const string& arg, unsigned __int128& res)
 {
     res = 0;
     for (size_t j = 0; j < arg.size(); j++)
     {
-        res = res*10 + arg[j] - '0';
+        if (LIKELY(arg[j]-'0' >= 0))
+            res = res*10 + arg[j] - '0';
     }
 }
 
@@ -1889,7 +1890,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
                 ct.colWidth == 16)
             {
-                atoi_(constval, val128);
+                atoi128(constval, val128);
             }
             else
             {

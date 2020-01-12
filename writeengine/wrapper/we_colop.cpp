@@ -1684,12 +1684,13 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 if (!bDelete) pVal = &((uint64_t*) valArray)[i];
                 break;
 
-            case WriteEngine::WR_INT128:
-                pVal = &((uint128_t*) valArray)[i];
-                break;
+            // WIP 
+            //case WriteEngine::WR_INT128:
 
             case WriteEngine::WR_BINARY:
-                if (!bDelete) pVal = (uint8_t*) valArray + i * curCol.colWidth;
+                // WIP CSCCol type
+                pVal = &((uint128_t*) valArray)[i];
+                //pVal = (uint8_t*) valArray + i * curCol.colWidth;
                 break;
                 
             default  :
