@@ -36,6 +36,7 @@ using namespace boost::algorithm;
 #include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "columnresult.h"
+#include "common/branchpred.h"
 using namespace execplan;
 
 #include "joblisttypes.h"
@@ -1207,7 +1208,9 @@ void DataConvert::toString(unsigned __int128 i, char *p)
 // WIP MCOL-641
 // Template this
 // result must be calloc-ed
-void atoi_(const string &arg, int128_t &res, size_t &size) 
+//template <typename T>
+//void atoi_(const string &arg, T &res) 
+void atoi128(const string& arg, int128_t& res) 
 {
     // WIP
     //char buf[40];
@@ -1215,13 +1218,13 @@ void atoi_(const string &arg, int128_t &res, size_t &size)
     res = 0;
     for (size_t j = 0; j < arg.size(); j++) 
     {
-        // WIP
-        res = res*10 + arg[j] - '0';
+        // WIP Optimize this
+        if (LIKELY(arg[j]-'0' >= 0))
+            res = res*10 + arg[j] - '0';
     }
     //toString(res, buf);
     //std::cerr << "atoi_ " << buf <<endl;
     //*res_ptr = res;
-    size = 16;
 }
 
 // WIP MCOL-641
@@ -1352,13 +1355,15 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 break;
 
             // MCOL-641 WIP
+            // Simplest form of a template will use colType and width as a parameter
+            // There will be lots specializations
             case CalpontSystemCatalog::DECIMAL:
                 if (colType.colWidth == 16)
                 {
-                    //value = data;
-                    size_t size;
                     int128_t bigint;
-                    atoi_(data, bigint, size);
+                    // WIP
+                    //atoi_<int128_t>(data, bigint);
+                    atoi128(data, bigint);
                     value = bigint;
                 }
                 else if (colType.colWidth == 1)
@@ -2651,216 +2656,6 @@ std::string DataConvert::timeToString1( long long  datetimevalue )
     return buf;
 }
 
-#if 0
-bool DataConvert::isNullData(ColumnResult* cr, int rownum, CalpontSystemCatalog::ColType colType)
-{
-    switch (colType.colDataType)
-    {
-        case CalpontSystemCatalog::TINYINT:
-            if (cr->GetData(rownum) == joblist::TINYINTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::SMALLINT:
-            if (cr->GetData(rownum) == joblist::SMALLINTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::INT:
-            if (cr->GetData(rownum) == joblist::INTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::BIGINT:
-            if (cr->GetData(rownum) == static_cast<int64_t>(joblist::BIGINTNULL))
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (colType.colWidth <= CalpontSystemCatalog::FOUR_BYTE)
-            {
-                if (cr->GetData(rownum) == joblist::SMALLINTNULL)
-                    return true;
-
-                return false;
-            }
-            else if (colType.colWidth <= 9)
-            {
-                if (cr->GetData(rownum) == joblist::INTNULL)
-                    return true;
-                else return false;
-            }
-            else if (colType.colWidth <= 18)
-            {
-                if (cr->GetData(rownum) == static_cast<int64_t>(joblist::BIGINTNULL))
-                    return true;
-
-                return false;
-            }
-            else
-            {
-                if (cr->GetStringData(rownum) == "\376\377\377\377\377\377\377\377")
-                    return true;
-
-                return false;
-            }
-        }
-
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::UFLOAT:
-
-            //if (cr->GetStringData(rownum) == joblist::FLOATNULL)
-            if (cr->GetStringData(rownum).compare("null") == 0 )
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::UDOUBLE:
-
-            //if (cr->GetStringData(rownum) == joblist::DOUBLENULL)
-            if (cr->GetStringData(rownum).compare("null") == 0 )
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::DATE:
-            if (cr->GetData(rownum) == joblist::DATENULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::DATETIME:
-            if (cr->GetData(rownum) == static_cast<int64_t>(joblist::DATETIMENULL))
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::CHAR:
-        {
-            std::string charnull;
-
-            if ( cr->GetStringData(rownum) == "")
-            {
-                return true;
-            }
-
-            if (colType.colWidth == 1)
-            {
-                if (cr->GetStringData(rownum) == "\376")
-                    return true;
-
-                return false;
-            }
-            else if (colType.colWidth == 2)
-            {
-                if (cr->GetStringData(rownum) == "\377\376")
-                    return true;
-
-                return false;
-            }
-            else if (( colType.colWidth < 5 ) && ( colType.colWidth > 2 ))
-            {
-                if (cr->GetStringData(rownum) == "\377\377\377\376")
-                    return true;
-
-                return false;
-            }
-            else if (( colType.colWidth < 9 ) && ( colType.colWidth > 4 ))
-            {
-                if (cr->GetStringData(rownum) == "\377\377\377\377\377\377\377\376")
-                    return true;
-
-                return false;
-            }
-            else
-            {
-                if (cr->GetStringData(rownum) == "\376\377\377\377\377\377\377\377")
-                    return true;
-
-                return false;
-            }
-        }
-
-        case CalpontSystemCatalog::VARCHAR:
-        {
-            std::string charnull;
-
-            if ( cr->GetStringData(rownum) == "")
-            {
-                return true;
-            }
-
-            if (colType.colWidth == 1)
-            {
-                if (cr->GetStringData(rownum) == "\377\376")
-                    return true;
-
-                return false;
-            }
-            else if ((colType.colWidth < 4)  && (colType.colWidth > 1))
-            {
-                if (cr->GetStringData(rownum) == "\377\377\377\376")
-                    return true;
-
-                return false;
-            }
-            else if ((colType.colWidth < 8)  && (colType.colWidth > 3))
-            {
-                if (cr->GetStringData(rownum) == "\377\377\377\377\377\377\377\376")
-                    return true;
-
-                return false;
-            }
-            else
-            {
-                WriteEngine::Token nullToken;
-
-                // bytes reversed
-                if (cr->GetStringData(rownum) == "\376\377\377\377\377\377\377\377")
-                    return true;
-
-                return false;
-            }
-        }
-
-        case CalpontSystemCatalog::UTINYINT:
-            if (cr->GetData(rownum) == joblist::UTINYINTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::USMALLINT:
-            if (cr->GetData(rownum) == joblist::USMALLINTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::UMEDINT:
-        case CalpontSystemCatalog::UINT:
-            if (cr->GetData(rownum) == joblist::UINTNULL)
-                return true;
-
-            return false;
-
-        case CalpontSystemCatalog::UBIGINT:
-            if (cr->GetData(rownum) == joblist::UBIGINTNULL)
-                return true;
-
-            return false;
-
-        default:
-            throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
-    }
-}
-#endif
 int64_t DataConvert::dateToInt(const string& date)
 {
     return stringToDate(date);
