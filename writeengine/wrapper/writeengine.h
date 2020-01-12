@@ -157,7 +157,15 @@ public:
     /**
      * @brief Convert interface value list to internal value array
      */
-    EXPORT void convertValArray(size_t totalRow, const ColType colType,
+    EXPORT void convertValArray(const size_t totalRow, 
+                                const execplan::CalpontSystemCatalog::ColType& cscColType,
+                                const ColType colType,
+                                ColTupleList& curTupleList, void* valArray,
+                                bool bFromList = true) ;
+
+    // WIP legacy
+    EXPORT void convertValArray(const size_t totalRow, 
+                                const ColType colType,
                                 ColTupleList& curTupleList, void* valArray,
                                 bool bFromList = true) ;
 
@@ -364,6 +372,7 @@ public:
      * @param dicStringListt dictionary values list
      */
     EXPORT int insertColumnRec_Single(const TxnID& txnid,
+                                      CSCTypesList& cscColTypesList,
                                       ColStructList& colStructList,
                                       ColValueList& colValueList,
                                       DctnryStructList& dctnryStructList,
@@ -650,10 +659,8 @@ private:
    /**
      * @brief Convert interface column type to a internal column type
      */
-    // void convertColType(void* curStruct, const FuncType curType = FUNC_WRITE_ENGINE) const;
-
+    void convertValue(const execplan::CalpontSystemCatalog::ColType &fullColType, ColType colType, void* valArray, size_t pos, boost::any& data, bool fromList = true);
     void convertValue(const ColType colType, void* valArray, size_t pos, boost::any& data, bool fromList = true);
-
     /**
      * @brief Convert column value to its internal representation
      *
@@ -661,6 +668,7 @@ private:
      * @param value Memory pointer for storing output value. Should be pre-allocated
      * @param data Column data
      */
+    void convertValue(const execplan::CalpontSystemCatalog::ColType &fullColType, const ColType colType, void* value, boost::any& data);
     void convertValue(const ColType colType, void* value, boost::any& data);
 
     /**
@@ -690,11 +698,21 @@ private:
     /**
      * @brief Common methods to write values to a column
      */
-    int writeColumnRec(const TxnID& txnid, const ColStructList& colStructList,
+    int writeColumnRec(const TxnID& txnid,
+                       const CSCTypesList& cscColTypes,
+                       const ColStructList& colStructList,
                        ColValueList& colValueList,
                        RID* rowIdArray, const ColStructList& newColStructList,
                        ColValueList& newColValueList, const int32_t tableOid,
                        bool useTmpSuffix, bool versioning = true);
+    // WIP
+    int writeColumnRec(const TxnID& txnid,
+                       const ColStructList& colStructList,
+                       ColValueList& colValueList,
+                       RID* rowIdArray, const ColStructList& newColStructList,
+                       ColValueList& newColValueList, const int32_t tableOid,
+                       bool useTmpSuffix, bool versioning = true);
+
 
     int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                              std::vector<uint64_t>& colValueList,
@@ -705,10 +723,19 @@ private:
 
 
     //@Bug 1886,2870 pass the address of ridList vector
-    int writeColumnRec(const TxnID& txnid, const ColStructList& colStructList,
+    int writeColumnRec(const TxnID& txnid, 
+                       const CSCTypesList& cscColTypes,
+                       const ColStructList& colStructList,
                        const ColValueList& colValueList, std::vector<void*>& colOldValueList,
                        const RIDList& ridList, const int32_t tableOid,
                        bool convertStructFlag = true, ColTupleList::size_type nRows = 0);
+    // WIP legacy
+    int writeColumnRec(const TxnID& txnid, 
+                       const ColStructList& colStructList,
+                       const ColValueList& colValueList, std::vector<void*>& colOldValueList,
+                       const RIDList& ridList, const int32_t tableOid,
+                       bool convertStructFlag = true, ColTupleList::size_type nRows = 0);
+
 
     //For update column from column to use
     int writeColumnRecords(const TxnID& txnid, std::vector<ColStruct>& colStructList,
