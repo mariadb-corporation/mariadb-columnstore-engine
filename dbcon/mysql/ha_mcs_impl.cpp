@@ -1336,10 +1336,10 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             string tmpTableName = bestTableName(item);
 
             //@Bug 5312 populate aliasname with tablename if it is empty
-            if (!item->table_name)
+            if (!item->table_name.str)
                 aliasName = tmpTableName;
             else
-                aliasName = item->table_name;
+                aliasName = item->table_name.str;
 
             if (strcasecmp(tableName.c_str(), "") == 0)
             {
@@ -1355,7 +1355,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 return -1;
             }
 
-            if (!item->db_name)
+            if (!item->db_name.str)
             {
                 //@Bug 5312. if subselect, wait until the schema info is available.
                 if (thd->derived_tables_processing)
@@ -1369,7 +1369,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 }
             }
             else
-                schemaName = string(item->db_name);
+                schemaName = string(item->db_name.str);
 
             columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             if (item->field_type() == MYSQL_TYPE_TIMESTAMP ||
@@ -1460,9 +1460,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                     {
                         sectableName = bestTableName(tmpVec[i]);
 
-                        if ( tmpVec[i]->db_name )
+                        if ( tmpVec[i]->db_name.str )
                         {
-                            secschemaName = string(tmpVec[i]->db_name);
+                            secschemaName = string(tmpVec[i]->db_name.str);
                         }
 
                         if ( (strcasecmp(tableName.c_str(), sectableName.c_str()) != 0) ||
@@ -1479,11 +1479,11 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 isFromCol = true;
                 columnAssignmentPtr->fFromCol = true;
                 Item_field* setIt = reinterpret_cast<Item_field*> (value);
-                string sectableName = string(setIt->table_name);
+                string sectableName = string(setIt->table_name.str);
 
-                if ( setIt->db_name ) //derived table
+                if ( setIt->db_name.str ) //derived table
                 {
-                    string secschemaName = string(setIt->db_name);
+                    string secschemaName = string(setIt->db_name.str);
 
                     if ( (strcasecmp(tableName.c_str(), sectableName.c_str()) != 0) || (strcasecmp(schemaName.c_str(), secschemaName.c_str()) != 0))
                     {

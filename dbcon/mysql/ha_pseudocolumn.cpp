@@ -521,7 +521,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
     Item_field* field = (Item_field*)(ifp->arguments()[0]);
 
     // @todo rule out derive table
-    if (!field->field || !field->db_name || strlen(field->db_name) == 0)
+    if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
         return nullOnError(gwi, funcName);
 
     SimpleColumn* sc = buildSimpleColumn(field, gwi);
