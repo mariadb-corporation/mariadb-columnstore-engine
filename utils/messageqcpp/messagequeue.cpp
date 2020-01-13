@@ -47,6 +47,7 @@ using namespace config;
 #include "compressed_iss.h"
 #endif
 #include "socketclosed.h"
+#include "unixsocket.h"
 
 #define MESSAGEQUEUE_DLLEXPORT
 #include "messagequeue.h"
@@ -86,22 +87,27 @@ void MessageQueueServer::setup(size_t blocksize, int backlog, bool syncProto)
     sinp->sin_family = AF_INET;
     sinp->sin_addr.s_addr = listenAddr.s_addr;
     sinp->sin_port = htons(port);
-
+#if 0
 #ifdef SKIP_IDB_COMPRESSION
     fListenSock.setSocketImpl(new InetStreamSocket(blocksize));
 #else
     fListenSock.setSocketImpl(new CompressedInetStreamSocket());
 #endif
+#endif
+    fListenSock.setSocketImpl(new UnixSocket());
     fListenSock.syncProto(syncProto);
     fListenSock.open();
     fListenSock.bind(&fServ_addr);
     fListenSock.listen(backlog);
 
+#if 0
 #ifdef SKIP_IDB_COMPRESSION
     fClientSock.setSocketImpl(new InetStreamSocket(blocksize));
 #else
     fClientSock.setSocketImpl(new CompressedInetStreamSocket());
 #endif
+#endif
+    fClientSock.setSocketImpl(new UnixSocket());
     fClientSock.syncProto(syncProto);
 }
 
@@ -194,11 +200,14 @@ void MessageQueueClient::setup(bool syncProto)
         fLogger.logMessage(logging::LOG_TYPE_ERROR, logging::M0000, args, li);
     }
 
+#if 0
 #ifdef SKIP_IDB_COMPRESSION
     fClientSock.setSocketImpl(new InetStreamSocket());
 #else
     fClientSock.setSocketImpl(new CompressedInetStreamSocket());
 #endif
+#endif
+    fClientSock.setSocketImpl(new UnixSocket());
     fClientSock.syncProto(syncProto);
     fClientSock.sa(&fServ_addr);
 }
@@ -244,13 +253,16 @@ MessageQueueClient::MessageQueueClient(const string& dnOrIp, uint16_t port, bool
         logging::Message::Args args;
         logging::LoggingID li(31);
         args.add(msg);
-        fLogger.logMessage(logging::LOG_TYPE_ERROR, logging::M0000, args, li);        
+        fLogger.logMessage(logging::LOG_TYPE_ERROR, logging::M0000, args, li);
     }
+#if 0
 #ifdef SKIP_IDB_COMPRESSION
     fClientSock.setSocketImpl(new InetStreamSocket());
 #else
     fClientSock.setSocketImpl(new CompressedInetStreamSocket());
 #endif
+#endif
+    fClientSock.setSocketImpl(new UnixSocket());
     fClientSock.syncProto(syncProto);
     fClientSock.sa(&fServ_addr);
 }

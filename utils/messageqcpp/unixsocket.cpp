@@ -8,7 +8,7 @@ using namespace std;
 namespace messageqcpp
 {
 
-UnixSocket::UnixSocket()
+UnixSocket::UnixSocket() : parms(AF_UNIX, SOCK_STREAM, 0)
 {
     memset(&sun, 0, sizeof(sun));
     sun.sun_family = AF_UNIX;
@@ -22,14 +22,15 @@ UnixSocket::UnixSocket(const UnixSocket &rhs)
 
 UnixSocket::~UnixSocket()
 {
-    if (parms.sd() >= 0)
-        ::close(parms.sd());
 }
 
 UnixSocket & UnixSocket::operator=(const UnixSocket &rhs)
 {
-    if (parms.sd() >= 0)
-        ::close(parms.sd());
+    if (this == &rhs)
+    {
+        cout << "UnixSocket copying itself to itself??" << endl;
+        return *this;
+    }
     parms = rhs.parms;
     memcpy(&sun, &rhs.sun, sizeof(sun));
     return *this;
@@ -37,44 +38,93 @@ UnixSocket & UnixSocket::operator=(const UnixSocket &rhs)
 
 void UnixSocket::open()
 {
-    if (parms.sd() >= 0)
-        ::close(parms.sd());
-    parms.sd(::socket(AF_UNIX, SOCK_STREAM, 0));
+    cout << "open" << endl;
+    int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    parms.sd(fd);
 }
 
-void UnixSocket::connect(const sockaddr *serv_addr)
+void UnixSocket::close()
+{
+    if (parms.sd() >= 0)
+    {
+        cout << "closing " << parms.sd() << endl;
+        ::close(parms.sd());
+        parms.sd(-1);
+    }
+}
+
+void UnixSocket::bind(const sockaddr *serv_addr)
 {
     if (parms.sd() < 0)
-        throw runtime_error("UnixSocket::connect(): no socket");
+        throw runtime_error("UnixSocket::bind(): no socket");
+    if (serv_addr->sa_family != AF_INET || serv_addr->sa_family != PF_INET)
+        throw runtime_error("UnixSocket::bind(): got not-a-sockaddr_in");
     sockaddr_in *sin = (sockaddr_in *) serv_addr;
     uint16_t port = ntohs(sin->sin_port);
 
     memset(&sun, 0, sizeof(sun));
     sun.sun_family = AF_UNIX;
     sprintf(&sun.sun_path[1], "%s%d", &prefix[1], port);
+
+    cout << "binding to " << &sun.sun_path[1] << endl;
+
+    int err = ::bind(parms.sd(), (sockaddr *) &sun, sizeof(sun));
+    if (err < 0)
+    {
+        int l_errno = errno;
+        char buf[80];
+        throw runtime_error(string("UnixSocket::bind(): got ") + strerror_r(l_errno, buf, 80));
+    }
+}
+
+void UnixSocket::listen(int num)
+{
+    cout << "listen " << num << endl;
+    int err = ::listen(parms.sd(), num);
+    if (err < 0)
+    {
+        int l_errno = errno;
+        char buf[80];
+        throw runtime_error(string("UnixSocket::listen(): got ") + strerror_r(l_errno, buf, 80));
+    }
+
+}
+
+void UnixSocket::connect(const sockaddr *serv_addr)
+{
+    if (parms.sd() < 0)
+        throw runtime_error("UnixSocket::connect(): no socket");
+    if (serv_addr->sa_family != AF_INET || serv_addr->sa_family != PF_INET)
+        throw runtime_error("UnixSocket::connect(): got not-a-sockaddr_in");
+    sockaddr_in *sin = (sockaddr_in *) serv_addr;
+    uint16_t port = ntohs(sin->sin_port);
+
+    memset(&sun, 0, sizeof(sun));
+    sun.sun_family = AF_UNIX;
+    sprintf(&sun.sun_path[1], "%s%d", &prefix[1], port);
+    cout << "connecting to " << &sun.sun_path[1] << endl;
     int err = ::connect(parms.sd(), (sockaddr *) &sun, sizeof(sun));
     if (err < 0)
         throw runtime_error(string("UnixSocket::connect(): failed to connect on ") + &sun.sun_path[1]);
+    cout << "US::connect OK: fd = " << parms.sd() << endl;
 }
 
 const IOSocket UnixSocket::accept(const struct timespec *timeout)
 {
+    cout << "accept" << endl;
     IOSocket ret(new UnixSocket());
 
-    if (timeout != NULL)
+    if (timeout)
     {
         struct pollfd pfd[1];
-        pfd[0].fd = socketParms().sd();
+        pfd[0].fd = parms.sd();
         pfd[0].events = POLLIN;
 
-        if (timeout != 0)
-        {
-            int msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
+        int msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
-            if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
-                    pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
-                return ret;
-        }
+        if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
+                pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            return ret;
     }
 
     struct sockaddr remote;
@@ -90,16 +140,17 @@ const IOSocket UnixSocket::accept(const struct timespec *timeout)
 
     if (clientfd < 0)
     {
-        char buf[80], *ctmp;
-        ctmp = strerror_r(err, buf, 80);
-        string msg = string("UnixSocket::accept(): error: ") + ctmp;
+        char buf[80];
+        string msg = string("UnixSocket::accept(): error: ") + strerror_r(err, buf, 80);
         throw runtime_error(msg);
     }
+    cout << "accepted connection" << endl;
 
     SocketParms sp = ret.socketParms();
     sp.sd(clientfd);
     ret.socketParms(sp);
     ret.sa(&remote);
+    cout << "US::accept OK: fd = " << clientfd << endl;
     return ret;
 }
 
@@ -107,6 +158,7 @@ const IOSocket UnixSocket::accept(const struct timespec *timeout)
 with message deliminters, or comprehensive timeout checking yet. */
 const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stats) const
 {
+    cout << "read" << endl;
     SBS ret;
     ssize_t err;
     uint64_t msecs;
@@ -121,14 +173,24 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
     if (timeout)
     {
         msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
-        err = poll(pfd, 1, msecs);
-        if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+        cout << "msecs = " << msecs << " fd = " << parms.sd() << endl;
+        err = ::poll(pfd, 1, msecs);
+        if (err < 0)
         {
             l_errno = errno;
             ostringstream oss;
             char buf[80];
             oss << "UnixSocket::read: I/O error1: " << strerror_r(l_errno, buf, 80);
             throw runtime_error(oss.str());
+        }
+        else if (pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+        {
+            if (pfd[0].revents & POLLNVAL)
+                cout << "got POLLNVAL" << endl;
+            else if (pfd[0].revents & POLLERR)
+                cout << "got POLLERR" << endl;
+            else cout << "got POLLHUP" << endl;
+            throw runtime_error("UnixSocket::read: poll revents has an error");
         }
         if (err == 0)  // timeout
         {
@@ -138,8 +200,9 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
         }
     }
 
-    while (1)
+    while (err != sizeof(msglen))
     {
+        cout << "read msglen loop" << endl;
         err = ::read(parms.sd(), &msglen, sizeof(msglen));
         if (err < 0)
         {
@@ -164,6 +227,7 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
         else if (err != sizeof(msglen))
             throw runtime_error("fixme, unixsocket failed to read 4 bytes at once");
     }
+    cout << " - read msglen = " << msglen << endl;
 
     if (stats)
         stats->dataRecvd(sizeof(msglen));
@@ -174,6 +238,7 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
 
     while (readSoFar < msglen)
     {
+        cout << "main read loop, read so far = " << readSoFar << " msglen = " << msglen << endl;
         err = ::read(parms.sd(), &buf[readSoFar], msglen - readSoFar);
         if (err < 0)
         {
@@ -200,6 +265,8 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
         else
             readSoFar += err;
     }
+
+    cout << "main read loop done" << endl;
     if (stats)
         stats->dataRecvd(msglen);
     ret->advanceInputPtr(msglen);
@@ -240,7 +307,8 @@ void UnixSocket::write(SBS msg, Stats *stats)
 
 void UnixSocket::write(const ByteStream &msg, Stats *stats)
 {
-    ssize_t err;
+    cout << "write bytestream len = " << msg.length() << endl;
+    ssize_t err = 0;
     uint32_t size = msg.length();
     char buf[80];
 
@@ -256,10 +324,12 @@ void UnixSocket::write(const ByteStream &msg, Stats *stats)
                 strerror_r(l_errno, buf, 80));
         }
     }
+    cout << "wrote len" << endl;
 
     if (stats)
         stats->dataSent(sizeof(size));
     write_raw(msg, stats);
+    cout << "wrote msg" << endl;
 }
 
 const bool UnixSocket::isOpen() const
@@ -272,14 +342,18 @@ const SocketParms UnixSocket::socketParms() const
     return parms;
 }
 
+void UnixSocket::socketParms(const SocketParms &other)
+{
+    parms = other;
+}
+
 void UnixSocket::sa(const sockaddr *other)
 {
-    // I think this will always be AF_UNIX..?
     if (other->sa_family == AF_UNIX)
         memcpy(&sun, other, sizeof(sun));
     else if (other->sa_family == PF_INET || other->sa_family == AF_INET)
     {
-        cout << "Not an AF_UNIX scoket" << endl;
+        //cout << "Not an AF_UNIX socket" << endl;
         sockaddr_in *sin = (sockaddr_in *) other;
         uint16_t port = ntohs(sin->sin_port);
         sun.sun_family = AF_UNIX;
@@ -319,7 +393,7 @@ const bool UnixSocket::isSameAddr(const Socket *s) const
         return false;
     else
         return strncmp(&sun.sun_path[1], &(other->sun.sun_path[1]),
-            sizeof(sun.sun_path) - 1);
+            sizeof(sun.sun_path) - 1) == 0;
 }
 
 bool UnixSocket::isConnected() const
