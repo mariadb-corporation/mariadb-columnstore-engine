@@ -2206,9 +2206,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
         //@Bug 2540. Set error status instead of warning
         thd->raise_error_printf(ER_INTERNAL_ERROR, errorMsg.c_str());
         ci->rc = b;
-        // WIP
-        //thd->get_stmt_da()->set_overwrite_status(true);
-        //cout << " error status " << ci->rc << endl;
+        rc = ER_INTERNAL_ERROR; 
     }
 
     if (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)
@@ -2249,7 +2247,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
     delete ci->dmlProc;
     ci->dmlProc = NULL;
-    return 0;
+    return rc;
 }
 
 } //anon namespace
@@ -2303,7 +2301,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
         *affected_rows = ci->affectedRows;
     }
 
-    return 0;
+    return rc;
 }
 
 int ha_mcs_impl_rnd_init(TABLE* table)
