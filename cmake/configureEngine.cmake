@@ -716,9 +716,9 @@ IF (NOT INLINE)
 SET (inline "")
 ENDIF()
 
-IF($ENV{SKIP_OAM_INIT})
-    set(SKIP_OAM_INIT 1 CACHE BOOL "Skip OAM initialization" FORCE)
-ENDIF()
+#IF($ENV{SKIP_OAM_INIT})
+#    set(SKIP_OAM_INIT 1 CACHE BOOL "Skip OAM initialization" FORCE)
+#ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym

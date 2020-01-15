@@ -547,7 +547,7 @@ void WESDHandler::setup()
     }
 
 // getModuleStatus will take too long. Also to test in development
-#if !defined(_MSC_VER) && !defined(SKIP_OAM_INIT)
+    if (getenv("SKIP_OAM_INIT") == NULL)
     {
         vector<unsigned int>& aVec = fRef.fCmdArgs.getPmVec();
 
@@ -578,8 +578,6 @@ void WESDHandler::setup()
             }
         }
     }
-#endif
-
 
     int rtn = fDbrm.getSystemReady();
 
@@ -2997,4 +2995,3 @@ void WESDHandler::setDisconnectFailure(bool Flag)
 //------------------------------------------------------------------------------
 
 } /* namespace WriteEngine */
-

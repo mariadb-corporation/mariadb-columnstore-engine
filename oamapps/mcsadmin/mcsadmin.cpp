@@ -174,11 +174,12 @@ void setupSignalHandlers()
 int main(int argc, char* argv[])
 {
 
-// print a warning if this is a developer build
-#ifdef SKIP_OAM_INIT
-    cout << "SKIP_OAM_INIT is set" << endl;
-    sleep(2);
-#endif
+    // print a warning if this is a developer build
+    if (getenv("SKIP_OAM_INIT"))
+    {
+        cout << "SKIP_OAM_INIT is set" << endl;
+        sleep(2);
+    }
 
 #ifndef _MSC_VER
     setuid(0); // set effective ID to root; ignore return status
@@ -246,7 +247,7 @@ int main(int argc, char* argv[])
 
     if (user != 0)
         rootUser = false;
-        
+
     // create/open command log file if not created
 
     logFile.open(DEFAULT_LOG_FILE.c_str(), ios::app);
@@ -2622,7 +2623,7 @@ int processCommand(string* arguments)
                 if ( DBRootStorageType == "hdfs")
                 {
 					string logFile = tmpDir + "/cc-stop.pdsh";
-					
+
                     cmd = "pdsh -a 'columnstore stop' > " + logFile + " 2>&1";
                     system(cmd.c_str());
 
@@ -4932,7 +4933,7 @@ int processCommand(string* arguments)
         case 39: // getSystemDirectories
         {
 			cout << endl << "System Installation and Temporary File Directories" << endl << endl;
-			
+
 			cout << "System Temporary File Directory = " << tmpDir << endl << endl;
         }
         break;
@@ -5695,7 +5696,7 @@ int processCommand(string* arguments)
             umStorageNames umstoragenames;
             int hostArg;
             int dbrootPerPM = 0;
-            
+
             //check if module type or module name was entered
             if ( arguments[1].size() == 2 )
             {
@@ -5711,7 +5712,7 @@ int processCommand(string* arguments)
                 moduleType = arguments[1];
                 moduleCount = atoi(arguments[2].c_str());
                 hostArg = 4;
-                
+
                 // MCOL-1607.  Check whether we should store host names or IP addresses.
                 if (arguments[3] != "" && (arguments[3][0] == 'y' || arguments[3][0] == 'Y'))
                     storeHostnames = true;
@@ -5746,7 +5747,7 @@ int processCommand(string* arguments)
                 // MCOL-1607.  Check whether we should store host names or IP addresses.
                 if (arguments[2] != "" && (arguments[2][0] == 'y' || arguments[2][0] == 'Y'))
                     storeHostnames = true;
-                
+
                 if (arguments[4] != "")
                     password = arguments[4];
                 else
@@ -6024,7 +6025,7 @@ int processCommand(string* arguments)
                                 // prompt for IP Address
                                 string prompt = "IP Address of " + hostName + " not found, enter IP Address or enter 'abort'";
                                 IPAddress = dataPrompt(prompt);
-    
+
                                 if ( IPAddress == "abort" || !oam.isValidIP(IPAddress) )
                                     return 1;
                             }
@@ -6065,7 +6066,7 @@ int processCommand(string* arguments)
                         DataRedundancyHostname = dataPrompt(prompt);
                         if (storeHostnames)
                             DataRedundancyIPAddress = DataRedundancyHostname;
-                        else 
+                        else
                         {
                             DataRedundancyIPAddress = oam.getIPAddress(DataRedundancyHostname);
 
@@ -6074,7 +6075,7 @@ int processCommand(string* arguments)
                                 // prompt for IP Address
                                 string prompt = "IP Address of " + DataRedundancyHostname + " not found, enter IP Address";
                                 DataRedundancyIPAddress = dataPrompt(prompt);
-    
+
                                 if (!oam.isValidIP(DataRedundancyIPAddress))
                                     return 1;
                             }
@@ -7896,7 +7897,7 @@ int processCommand(string* arguments)
 							gracefulTemp = oam::FORCEFUL;
 							int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
 							switch (returnStatus)
-							{ 
+							{
 								case API_SUCCESS:
 									if ( waitForActive() )
 										cout << endl << "   Successful restart of System " << endl << endl;
@@ -10034,4 +10035,3 @@ bool SendToWES(Oam& oam, ByteStream bs)
     return true;
 }
 // vim:ts=4 sw=4:
-
