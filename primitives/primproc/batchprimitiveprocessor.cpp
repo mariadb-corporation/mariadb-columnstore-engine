@@ -1174,6 +1174,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                     break;
             }
 
+
             if (LIKELY(!typelessJoin[j]))
             {
                 //cout << "not typeless join\n";
@@ -1186,6 +1187,8 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                     largeKey = oldRow.getIntField(colIndex);
                 uint bucket = bucketPicker((char *) &largeKey, 8, bpSeed) & ptMask;
 
+                bool joinerIsEmpty = tJoiners[j][bucket]->empty() ? true : false; 
+
                 found = (tJoiners[j][bucket]->find(largeKey) != tJoiners[j][bucket]->end());
                 isNull = oldRow.isNullValue(colIndex);
                 /* These conditions define when the row is NOT in the result set:
@@ -1195,7 +1198,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                  */
 
                 if (((!found || isNull) && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
-                        ((joinTypes[j] & ANTI) && ((isNull && (joinTypes[j] & MATCHNULLS)) || (found && !isNull))))
+                        ((joinTypes[j] & ANTI) && !joinerIsEmpty && ((isNull && (joinTypes[j] & MATCHNULLS)) || (found && !isNull))))
                 {
                     //cout << " - not in the result set\n";
                     break;
