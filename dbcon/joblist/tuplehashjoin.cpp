@@ -133,8 +133,11 @@ TupleHashJoinStep::~TupleHashJoinStep()
         delete outputDL;
 
     if (memUsedByEachJoin)
+    {
         for (uint i = 0 ; i < smallDLs.size(); i++)
             resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
+    }
+
 
     //cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
@@ -338,32 +341,33 @@ void TupleHashJoinStep::startSmallRunners(uint index)
     extendedInfo += "\n";
 
     ostringstream oss;
-    if (joiner->inPM())
-    {
-        oss << "PM join (" << index << ")" << endl;
-        #ifdef JLF_DEBUG
-        cout << oss.str();
-        #endif
-        extendedInfo += oss.str();
-    }
-    else if (joiner->inUM() && !joiner->onDisk())
-    {
-        oss << "UM join (" << index << ")" << endl;
-        #ifdef JLF_DEBUG
-        cout << oss.str();
-        #endif
-        extendedInfo += oss.str();
-    }
-
-    /* Trying to get the extended info to match the original version
-    It's kind of kludgey at the moment, need to clean it up at some point */
     if (!joiner->onDisk())
     {
-        joiner->doneInserting();
-        boost::mutex::scoped_lock lk(*fStatsMutexPtr);
-        fExtendedInfo += extendedInfo;
-        formatMiniStats(index);
+        // add extended info, and if not aborted then tell joiner
+        // we're done reading the small side.
+        if (joiner->inPM())
+        {
+            oss << "PM join (" << index << ")" << endl;
+            #ifdef JLF_DEBUG
+            cout << oss.str();
+            #endif
+            extendedInfo += oss.str();
+        }
+        else if (joiner->inUM())
+        {
+            oss << "UM join (" << index << ")" << endl;
+            #ifdef JLF_DEBUG
+            cout << oss.str();
+            #endif
+            extendedInfo += oss.str();
+        }
+        if (!cancelled())
+            joiner->doneInserting();
     }
+
+    boost::mutex::scoped_lock lk(*fStatsMutexPtr);
+    fExtendedInfo += extendedInfo;
+    formatMiniStats(index);
 }
 
 /* Index is which small input to read. */
@@ -405,9 +409,16 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
             gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, false);
             if (!gotMem)
             {
+                /*  Mem went over the limit.
+                    If DML or a syscat query, abort.
+                    if disk join is enabled, use it.
+                    else abort.
+                */
                 boost::unique_lock<boost::mutex> sl(saneErrMsg);
-                if (!joinIsTooBig && (isDML || !allowDJS || (fSessionId & 0x80000000) ||
-                    (tableOid() < 3000 && tableOid() >= 1000)))
+                if (cancelled())
+                    return;
+                if (!allowDJS || isDML || (fSessionId & 0x80000000) ||
+                    (tableOid() < 3000 && tableOid() >= 1000))
                 {
                     joinIsTooBig = true;
                     fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_JOIN_TOO_BIG);
@@ -415,13 +426,10 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
                     status(logging::ERR_JOIN_TOO_BIG);
                     cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
                     abort();
-                    break;
                 }
-                else
-                {
+                else if (allowDJS)
                     joiner->setConvertToDiskJoin();
-                    return;
-                }
+                return;
             }
 
             joiner->insertRGData(smallRG, threadID);
@@ -700,7 +708,9 @@ void TupleHashJoinStep::hjRunner()
     segregateJoiners();
 
     /* Need to clean this stuff up.  If the query was cancelled before this, and this would have had
-       a disk join, it's still necessary to construct the DJS objects to finish the abort. */
+       a disk join, it's still necessary to construct the DJS objects to finish the abort.
+       Update: Is this more complicated than scanning joiners for either ondisk() or (not isFinished())
+       and draining the corresponding inputs & telling downstream EOF?  todo, think about it */
     if (!djsJoiners.empty())
     {
         joinIsTooBig = false;
@@ -1895,8 +1905,6 @@ void TupleHashJoinStep::segregateJoiners()
     bool anyTooLarge = false;
     uint32_t smallSideCount = smallDLs.size();
 
-    boost::mutex::scoped_lock sl(djsLock);
-
     for (i = 0; i < smallSideCount; i++)
     {
         allInnerJoins &= (joinTypes[i] == INNER);
@@ -1921,8 +1929,9 @@ void TupleHashJoinStep::segregateJoiners()
     // Debugging code, this makes all eligible joins disk-based.
     else {
     	cout << "making all joins disk-based" << endl;
+		joinIsTooBig = true;
     	for (i = 0; i < smallSideCount; i++) {
-    		joinIsTooBig = true;
+            joiner[i]->setConvertToDiskJoin();
     		djsJoiners.push_back(joiners[i]);
     		djsJoinerMap.push_back(i);
     	}
@@ -1930,6 +1939,7 @@ void TupleHashJoinStep::segregateJoiners()
     }
     #endif
 
+    boost::mutex::scoped_lock sl(djsLock);
     /* For now if there is no largeBPS all joins need to either be DJS or not, not mixed */
     if (!largeBPS)
     {
@@ -1939,6 +1949,7 @@ void TupleHashJoinStep::segregateJoiners()
 
             for (i = 0; i < smallSideCount; i++)
             {
+                joiners[i]->setConvertToDiskJoin();
                 djsJoiners.push_back(joiners[i]);
                 djsJoinerMap.push_back(i);
             }
@@ -1967,6 +1978,7 @@ void TupleHashJoinStep::segregateJoiners()
             else
             {
                 joinIsTooBig = true;
+                joiners[i]->setConvertToDiskJoin();
                 //cout << "1joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> DJS" << endl;
                 djsJoiners.push_back(joiners[i]);
                 djsJoinerMap.push_back(i);
@@ -1991,6 +2003,7 @@ void TupleHashJoinStep::segregateJoiners()
         for (; i < smallSideCount; i++)
         {
             joinIsTooBig = true;
+            joiners[i]->setConvertToDiskJoin();
             //cout << "2joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> DJS" << endl;
             djsJoiners.push_back(joiners[i]);
             djsJoinerMap.push_back(i);
