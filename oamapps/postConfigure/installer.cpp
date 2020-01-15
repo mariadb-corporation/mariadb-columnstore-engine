@@ -183,14 +183,14 @@ int main(int argc, char* argv[])
 
     if (p && *p)
         USER = p;
-        
+
     string tmpDir = startup::StartUp::tmpDir();
 
     // setup to start on reboot, for non-root amazon installs
     if ( !rootUser )
     {
     	system("sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-    }   
+    }
 
     //copy Columnstore.xml.rpmsave if upgrade option is selected
     if ( installType == "upgrade" )
@@ -694,6 +694,12 @@ int main(int argc, char* argv[])
         cmd = "chmod 755 -R /var/lib/columnstore/data1/systemFiles/dbrm > /dev/null 2>&1";
         system(cmd.c_str());
     }
+    
+    if (getenv("SKIP_OAM_INIT"))
+    {
+        cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+        exit(0);
+    }
 
     string idbstartcmd = "columnstore start";
 
@@ -778,7 +784,7 @@ int main(int argc, char* argv[])
                 exit (1);
             }
 		}
-		
+
         cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
@@ -990,7 +996,7 @@ bool updateProcessConfig(int serverTypeInstall)
  */
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
-  
+
       return true;
 
     string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
@@ -1175,4 +1181,3 @@ bool uncommentCalpontXml( string entry)
 }
 
 // vim:ts=4 sw=4:
-

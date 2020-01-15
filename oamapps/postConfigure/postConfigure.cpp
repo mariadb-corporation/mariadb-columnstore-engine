@@ -3731,7 +3731,10 @@ int main(int argc, char* argv[])
     //
 
     if (getenv("SKIP_OAM_INIT"))
+    {
+        cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
         exit(0);
+    }
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
             pmNumber > 1 )
