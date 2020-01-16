@@ -695,12 +695,6 @@ int main(int argc, char* argv[])
         system(cmd.c_str());
     }
     
-    if (getenv("SKIP_OAM_INIT"))
-    {
-        cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
-        exit(0);
-    }
-
     string idbstartcmd = "columnstore start";
 
     {
@@ -716,6 +710,12 @@ int main(int argc, char* argv[])
             // call the mysql setup scripts
             mysqlSetup();
             sleep(5);
+
+            if (getenv("SKIP_OAM_INIT"))
+            {
+                cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                exit(0);
+            }
 
             //start on local module
             int rtnCode = system(idbstartcmd.c_str());
@@ -737,6 +737,12 @@ int main(int argc, char* argv[])
             // call the mysql setup scripts
             mysqlSetup();
             sleep(5);
+
+            if (getenv("SKIP_OAM_INIT"))
+            {
+                cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                exit(0);
+            }
 
             //startup mysqld and infinidb processes
             cout << endl;
