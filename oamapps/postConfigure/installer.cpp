@@ -695,12 +695,6 @@ int main(int argc, char* argv[])
         system(cmd.c_str());
     }
     
-    if (getenv("SKIP_OAM_INIT"))
-    {
-        cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
-        exit(0);
-    }
-
     string idbstartcmd = "columnstore start";
 
     {
