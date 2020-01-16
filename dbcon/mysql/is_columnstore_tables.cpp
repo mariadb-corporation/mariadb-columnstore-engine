@@ -33,13 +33,13 @@ bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_tables_fields[] =
 {
-    {"TABLE_SCHEMA", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"TABLE_NAME", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"CREATION_DATE", 0, MYSQL_TYPE_DATE, 0, 0, 0, 0},
-    {"COLUMN_COUNT", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"AUTOINCREMENT", 11, MYSQL_TYPE_LONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
+    Show::Column("TABLE_SCHEMA", Show::Varchar(64), NOT_NULL),
+    Show::Column("TABLE_NAME", Show::Varchar(64), NOT_NULL),
+    Show::Column("OBJECT_ID", Show::SLong(0), NOT_NULL),
+    Show::Column("CREATION_DATE", Show::Datetime(0), NOT_NULL), // TODO: Make a date if possible
+    Show::Column("COLUMN_COUNT", Show::SLong(0), NOT_NULL),
+    Show::Column("AUTOINCREMENT", Show::SLong(0), NULLABLE),
+    Show::CEnd()
 };
 
 static void get_cond_item(Item_func* item, String** table, String** db)

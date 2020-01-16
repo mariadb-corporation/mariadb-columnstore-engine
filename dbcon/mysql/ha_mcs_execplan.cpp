@@ -215,13 +215,13 @@ void getColNameFromItem(std::ostringstream& ostream, Item* item)
     {
         Item_ident* iip = reinterpret_cast<Item_ident*>(item);
 
-        if (iip->db_name)
-            ostream << iip->db_name << '.';
+        if (iip->db_name.str)
+            ostream << iip->db_name.str << '.';
         else
             ostream << "unknown db" << '.';
 
-        if (iip->table_name)
-            ostream << iip->table_name << '.';
+        if (iip->table_name.str)
+            ostream << iip->table_name.str << '.';
         else
             ostream << "unknown table" << '.';
 
@@ -502,7 +502,7 @@ void debug_walk(const Item* item, void* arg)
         case Item::FIELD_ITEM:
         {
             Item_field* ifp = (Item_field*)item;
-            cerr << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
+            cerr << "FIELD_ITEM: " << (ifp->db_name.str ? ifp->db_name.str : "") << '.' << bestTableName(ifp) <<
                  '.' << ifp->field_name.str << endl;
             break;
         }
@@ -912,7 +912,7 @@ void debug_walk(const Item* item, void* arg)
                     //ifp->cached_table->select_lex->select_number gives the select level.
                     // could be used on alias.
                     // could also be used to tell correlated join (equal level).
-                    cerr << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+                    cerr << "CACHED REF FIELD_ITEM: " << ifp->db_name.str << '.' << bestTableName(ifp) <<
                          '.' << ifp->field_name.str << endl;
                     break;
                 }
@@ -960,7 +960,7 @@ void debug_walk(const Item* item, void* arg)
                         {
                             Item_field* ifp = (Item_field*)(*(ifr->ref));
                             realType = "FIELD_ITEM ";
-                            realType += ifp->db_name;
+                            realType += ifp->db_name.str;
                             realType += '.';
                             realType += bestTableName(ifp);
                             realType += '.';
@@ -1019,7 +1019,7 @@ void debug_walk(const Item* item, void* arg)
                 }
                 else
                 {
-                    cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
+                    cerr << "REF FIELD_ITEM: " << ifp->db_name.str << '.' << bestTableName(ifp) << '.' <<
                          ifp->field_name.str << endl;
                 }
 
@@ -1104,7 +1104,7 @@ void debug_walk(const Item* item, void* arg)
                 //ifp->cached_table->select_lex->select_number gives the select level.
                 // could be used on alias.
                 // could also be used to tell correlated join (equal level).
-                cerr << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+                cerr << "CACHED FIELD_ITEM: " << ifp->db_name.str << '.' << bestTableName(ifp) <<
                      '.' << ifp->field_name.str << endl;
                 break;
             }
@@ -1147,7 +1147,7 @@ void debug_walk(const Item* item, void* arg)
                     {
                         Item_field* ifp = (Item_field*)(*(ifr->ref));
                         realType = "FIELD_ITEM ";
-                        realType += ifp->db_name;
+                        realType += ifp->db_name.str;
                         realType += '.';
                         realType += bestTableName(ifp);
                         realType += '.';
@@ -2350,7 +2350,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
         if (sc) break;
 
         if (!gwi.tbList[i].schema.empty() && !gwi.tbList[i].table.empty() &&
-                (!ifp->table_name || strcasecmp(ifp->table_name, gwi.tbList[i].alias.c_str()) == 0))
+                (!ifp->table_name.str || strcasecmp(ifp->table_name.str, gwi.tbList[i].alias.c_str()) == 0))
         {
             CalpontSystemCatalog::TableName tn(gwi.tbList[i].schema, gwi.tbList[i].table);
             CalpontSystemCatalog::RIDList oidlist = gwi.csc->columnRIDs(tn, true);
@@ -2405,7 +2405,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
         CalpontSelectExecutionPlan* csep = dynamic_cast<CalpontSelectExecutionPlan*>(gwi.derivedTbList[i].get());
         string derivedName = csep->derivedTbAlias();
 
-        if (!ifp->table_name || strcasecmp(ifp->table_name, derivedName.c_str()) == 0)
+        if (!ifp->table_name.str || strcasecmp(ifp->table_name.str, derivedName.c_str()) == 0)
         {
             CalpontSelectExecutionPlan::ReturnedColumnList cols = csep->returnedCols();
 
@@ -2468,7 +2468,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
                     while (tblList)
                     {
-                        if (strcasecmp(tblList->alias.str, ifp->table_name) == 0)
+                        if (strcasecmp(tblList->alias.str, ifp->table_name.str) == 0)
                         {
                             if (!tblList->outer_join)
                             {
@@ -2495,11 +2495,11 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
         Message::Args args;
         string name;
 
-        if (ifp->db_name)
-            name += string(ifp->db_name) + ".";
+        if (ifp->db_name.str)
+            name += string(ifp->db_name.str) + ".";
 
-        if (ifp->table_name)
-            name += string(ifp->table_name) + ".";
+        if (ifp->table_name.str)
+            name += string(ifp->table_name.str) + ".";
 
         if (ifp->name.length)
             name += ifp->name.str;
@@ -2543,7 +2543,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
 
     }
 
-    string tableName = (ifp->table_name ? string(ifp->table_name) : "");
+    string tableName = (ifp->table_name.str ? string(ifp->table_name.str) : "");
     CalpontSelectExecutionPlan::SelectList::const_iterator it = gwi.derivedTbList.begin();
 
     for (uint32_t i = 0; i < gwi.tbList.size(); i++)
@@ -2753,13 +2753,13 @@ const string bestTableName(const Item_field* ifp)
 {
     idbassert(ifp);
 
-    if (!ifp->table_name)
+    if (!ifp->table_name.str)
         return "";
 
     if (!ifp->field)
-        return ifp->table_name;
+        return ifp->table_name.str;
 
-    string table_name(ifp->table_name);
+    string table_name(ifp->table_name.str);
     string field_table_table_name;
 
     if (ifp->cached_table)
@@ -4362,7 +4362,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         isInformationSchema = true;
 
     // support FRPM subquery. columns from the derived table has no definition
-    if ((!ifp->field || !ifp->db_name || strlen(ifp->db_name) == 0) && !isInformationSchema)
+    if ((!ifp->field || !ifp->db_name.str || strlen(ifp->db_name.str) == 0) && !isInformationSchema)
         return buildSimpleColFromDerivedTable(gwi, ifp);
 
     CalpontSystemCatalog::ColType ct;
@@ -4380,7 +4380,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         if (columnStore)
         {
             ct = gwi.csc->colType(
-                     gwi.csc->lookupOID(make_tcn(ifp->db_name, bestTableName(ifp), ifp->field_name.str)));
+                     gwi.csc->lookupOID(make_tcn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str)));
         }
         else
         {
@@ -4400,10 +4400,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     {
         case CalpontSystemCatalog::TINYINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_INT<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4411,10 +4411,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
         case CalpontSystemCatalog::SMALLINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_INT<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4423,10 +4423,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::MEDINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_INT<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
@@ -4434,38 +4434,38 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
         case CalpontSystemCatalog::BIGINT:
             if (ct.scale == 0)
-                sc = new SimpleColumn_INT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_INT<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             else
             {
-                sc = new SimpleColumn_Decimal<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+                sc = new SimpleColumn_Decimal<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
                 ct.colDataType = CalpontSystemCatalog::DECIMAL;
             }
 
             break;
 
         case CalpontSystemCatalog::UTINYINT:
-            sc = new SimpleColumn_UINT<1>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+            sc = new SimpleColumn_UINT<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::USMALLINT:
-            sc = new SimpleColumn_UINT<2>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+            sc = new SimpleColumn_UINT<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
-            sc = new SimpleColumn_UINT<4>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+            sc = new SimpleColumn_UINT<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         case CalpontSystemCatalog::UBIGINT:
-            sc = new SimpleColumn_UINT<8>(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+            sc = new SimpleColumn_UINT<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
             break;
 
         default:
-            sc = new SimpleColumn(ifp->db_name, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
+            sc = new SimpleColumn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
     }
 
     sc->resultType(ct);
-    string tbname(ifp->table_name);
+    string tbname(ifp->table_name.str);
 
     if (isInformationSchema)
     {
@@ -5391,8 +5391,8 @@ void gp_walk(const Item* item, void* arg)
 
                 for (uint32_t i = 0; i < tmpVec.size(); i++)
                 {
-                    if (tmpVec[i]->table_name)
-                        tableSet.insert(tmpVec[i]->table_name);
+                    if (tmpVec[i]->table_name.str)
+                        tableSet.insert(tmpVec[i]->table_name.str);
                 }
 
                 if (tableSet.size() > 1)
@@ -7944,8 +7944,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 }
                 else if (join->unit)
                 {
-                    limitOffset = join->unit->offset_limit_cnt;
-                    limitNum = join->unit->select_limit_cnt - limitOffset;
+                    limitOffset = join->unit->lim.get_offset_limit();
+                    limitNum = join->unit->lim.get_select_limit() - limitOffset;
                 }
 
 #else
@@ -9818,11 +9818,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         Item_field* field = reinterpret_cast<Item_field*>(ord_item);
                         string fullname;
 
-                        if (field->db_name)
-                            fullname += string(field->db_name) + ".";
+                        if (field->db_name.str)
+                            fullname += string(field->db_name.str) + ".";
 
-                        if (field->table_name)
-                            fullname += string(field->table_name) + ".";
+                        if (field->table_name.str)
+                            fullname += string(field->table_name.str) + ".";
 
                         if (field->field_name.length)
                             fullname += string(field->field_name.str);

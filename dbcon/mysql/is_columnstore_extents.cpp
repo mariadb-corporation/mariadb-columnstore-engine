@@ -33,23 +33,23 @@ bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_extents_fields[] =
 {
-    {"OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                     // 0
-    {"OBJECT_TYPE", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},                 // 1
-    {"LOGICAL_BLOCK_START", 19, MYSQL_TYPE_LONGLONG, 0, 0, 0, 0},       // 2
-    {"LOGICAL_BLOCK_END", 19, MYSQL_TYPE_LONGLONG, 0, 0, 0, 0},         // 3
-    {"MIN_VALUE", 19, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, 0, 0}, // 4
-    {"MAX_VALUE", 19, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, 0, 0}, // 5
-    {"WIDTH", 1, MYSQL_TYPE_TINY, 0, 0, 0, 0},                          // 6
-    {"DBROOT", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                        // 7
-    {"PARTITION_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                  // 8
-    {"SEGMENT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                    // 9
-    {"BLOCK_OFFSET", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                  // 10
-    {"MAX_BLOCKS", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},                    // 11
-    {"HIGH_WATER_MARK", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},               // 12
-    {"STATE", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},                       // 13
-    {"STATUS", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},                      // 14
-    {"DATA_SIZE", 19, MYSQL_TYPE_LONGLONG, 0, 0, 0, 0},                 // 15
-    {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
+    Show::Column("OBJECT_ID", Show::ULong(0), NOT_NULL),                      // 0
+    Show::Column("OBJECT_TYPE", Show::Varchar(64), NOT_NULL),                 // 1
+    Show::Column("LOGICAL_BLOCK_START", Show::SLonglong(0), NOT_NULL),        // 2
+    Show::Column("LOGICAL_BLOCK_END", Show::SLonglong(0), NOT_NULL),          // 3
+    Show::Column("MIN_VALUE", Show::SLonglong(0), NULLABLE),                  // 4
+    Show::Column("MAX_VALUE", Show::SLonglong(0), NULLABLE),                  // 5
+    Show::Column("WIDTH", Show::ULong(0), NOT_NULL),                          // 6
+    Show::Column("DBROOT", Show::ULong(0), NOT_NULL),                         // 7
+    Show::Column("PARTITION_ID", Show::ULong(0), NOT_NULL),                   // 8
+    Show::Column("SEGMENT_ID", Show::ULong(0), NOT_NULL),                     // 9
+    Show::Column("BLOCK_OFFSET", Show::ULong(0), NOT_NULL),                   // 10
+    Show::Column("MAX_BLOCKS", Show::ULong(0), NOT_NULL),                     // 11
+    Show::Column("HIGH_WATER_MARK", Show::ULong(0), NOT_NULL),                // 12
+    Show::Column("STATE", Show::Varchar(64), NOT_NULL),                       // 13
+    Show::Column("STATUS", Show::Varchar(64), NOT_NULL),                      // 14
+    Show::Column("DATA_SIZE", Show::ULonglong(0), NOT_NULL),                  // 15
+    Show::CEnd()
 };
 
 static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)

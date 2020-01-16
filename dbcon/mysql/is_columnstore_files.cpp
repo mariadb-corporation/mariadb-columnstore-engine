@@ -42,13 +42,13 @@ bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_files_fields[] =
 {
-    {"OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"SEGMENT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"PARTITION_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"FILENAME", 1024, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"FILE_SIZE", 19, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {"COMPRESSED_DATA_SIZE", 19, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
+    Show::Column("OBJECT_ID", Show::ULong(0), NOT_NULL),
+    Show::Column("SEGMENT_ID", Show::ULong(0), NOT_NULL),
+    Show::Column("PARTITION_ID", Show::ULong(0), NOT_NULL),
+    Show::Column("FILENAME", Show::Varchar(1024), NOT_NULL),
+    Show::Column("FILE_SIZE", Show::ULonglong(0), NULLABLE),
+    Show::Column("COMPRESSED_DATA_SIZE", Show::ULonglong(0), NULLABLE),
+    Show::CEnd()
 };
 
 static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, const char* fileName, off_t* fileSize, off_t* compressedFileSize)

@@ -37,24 +37,23 @@ bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_columns_fields[] =
 {
-    {"TABLE_SCHEMA", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"TABLE_NAME", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"COLUMN_NAME", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"DICTIONARY_OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {"LIST_OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {"TREE_OBJECT_ID", 11, MYSQL_TYPE_LONG, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {"DATA_TYPE", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {"COLUMN_LENGTH", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"COLUMN_POSITION", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"COLUMN_DEFAULT", 0, MYSQL_TYPE_LONG_BLOB, 0, MY_I_S_MAYBE_NULL, 0, 0},
-    {"IS_NULLABLE", 1, MYSQL_TYPE_TINY, 0, 0, 0, 0},
-    {"NUMERIC_PRECISION", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"NUMERIC_SCALE", 11, MYSQL_TYPE_LONG, 0, 0, 0, 0},
-    {"IS_AUTOINCREMENT", 1, MYSQL_TYPE_TINY, 0, 0, 0, 0},
-    {"COMPRESSION_TYPE", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},
-    {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
-
+    Show::Column("TABLE_SCHEMA", Show::Varchar(64), NOT_NULL),
+    Show::Column("TABLE_NAME", Show::Varchar(64), NOT_NULL),
+    Show::Column("COLUMN_NAME", Show::Varchar(64), NOT_NULL),
+    Show::Column("OBJECT_ID", Show::ULong(0), NOT_NULL),
+    Show::Column("DICTIONARY_OBJECT_ID", Show::ULong(0), NULLABLE),
+    Show::Column("LIST_OBJECT_ID", Show::ULong(0), NULLABLE),
+    Show::Column("TREE_OBJECT_ID", Show::ULong(0), NULLABLE),
+    Show::Column("DATA_TYPE", Show::Varchar(64), NOT_NULL),
+    Show::Column("COLUMN_LENGTH", Show::ULong(0), NOT_NULL),
+    Show::Column("COLUMN_POSITION", Show::ULong(0), NOT_NULL),
+    Show::Column("COLUMN_DEFAULT", Show::Blob(255), NULLABLE),
+    Show::Column("IS_NULLABLE", Show::STiny(0), NOT_NULL),
+    Show::Column("NUMERIC_PRECISION", Show::ULong(0), NOT_NULL),
+    Show::Column("NUMERIC_SCALE", Show::ULong(0), NOT_NULL),
+    Show::Column("IS_AUTOINCREMENT", Show::STiny(0), NOT_NULL),
+    Show::Column("COMPRESSION_TYPE", Show::Varchar(64), NOT_NULL),
+    Show::CEnd()
 };
 
 static void get_cond_item(Item_func* item, String** table, String** db)

@@ -149,7 +149,6 @@ static int columnstore_init_func(void* p)
     (void) my_hash_init(&calpont_open_tables, system_charset_info, 32, 0, 0,
                         (my_hash_get_key) calpont_get_key, 0, 0);
 
-    mcs_hton->state =   SHOW_OPTION_YES;
     mcs_hton->create =  calpont_create_handler;
     mcs_hton->flags =   HTON_CAN_RECREATE;
 //  mcs_hton->discover_table= calpont_discover;
