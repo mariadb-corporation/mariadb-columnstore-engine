@@ -618,34 +618,34 @@ int RedistributeControlThread::executeRedistributePlan()
         try
         {
 // skip system status check in case no OAM
-#if !defined(_MSC_VER) && !defined(SKIP_OAM_INIT)
-            // make sure system is in active state
-            bool isActive = false;
-
-            while (!isActive)
+            if (getenv("SKIP_OAM_INIT") == NULL)
             {
-                bool noExcept = true;
-                SystemStatus systemstatus;
+                // make sure system is in active state
+                bool isActive = false;
 
-                try
+                while (!isActive)
                 {
-                    fControl->fOam->getSystemStatus(systemstatus);
-                }
-                catch (const std::exception& ex)
-                {
-                    fErrorMsg += ex.what();
-                    noExcept = false;
-                }
-                catch (...)
-                {
-                    noExcept = false;
-                }
+                    bool noExcept = true;
+                    SystemStatus systemstatus;
 
-                if (noExcept && ((isActive = (systemstatus.SystemOpState == oam::ACTIVE)) == false))
-                    sleep(1);;
+                    try
+                    {
+                        fControl->fOam->getSystemStatus(systemstatus);
+                    }
+                    catch (const std::exception& ex)
+                    {
+                        fErrorMsg += ex.what();
+                        noExcept = false;
+                    }
+                    catch (...)
+                    {
+                        noExcept = false;
+                    }
+
+                    if (noExcept && ((isActive = (systemstatus.SystemOpState == oam::ACTIVE)) == false))
+                        sleep(1);;
+                }
             }
-
-#endif
 
             if (fStopAction)
                 return RED_EC_USER_STOP;
@@ -851,4 +851,3 @@ void RedistributeControlThread::doStopAction()
 } // namespace
 
 // vim:ts=4 sw=4:
-
