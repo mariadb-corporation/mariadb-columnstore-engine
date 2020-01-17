@@ -46,6 +46,7 @@ private:
     const char *prefix = "\0columnstore-";
 
     sockaddr_un sun;
+    sockaddr fake_sa;
     SocketParms parms;
 };
 

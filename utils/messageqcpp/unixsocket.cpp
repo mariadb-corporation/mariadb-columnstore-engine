@@ -11,12 +11,14 @@ namespace messageqcpp
 UnixSocket::UnixSocket() : parms(AF_UNIX, SOCK_STREAM, 0)
 {
     memset(&sun, 0, sizeof(sun));
+    memset(&fake_sa, 0, sizeof(fake_sa));
     sun.sun_family = AF_UNIX;
 }
 
 UnixSocket::UnixSocket(const UnixSocket &rhs)
 {
     parms = rhs.parms;
+    memcpy(&fake_sa, &rhs.fake_sa, sizeof(fake_sa));
     memcpy(&sun, &rhs.sun, sizeof(sun));
 }
 
@@ -32,6 +34,7 @@ UnixSocket & UnixSocket::operator=(const UnixSocket &rhs)
         return *this;
     }
     parms = rhs.parms;
+    memcpy(&fake_sa, &rhs.fake_sa, sizeof(fake_sa));
     memcpy(&sun, &rhs.sun, sizeof(sun));
     return *this;
 }
@@ -235,6 +238,7 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
     ret.reset(new ByteStream(msglen));
     uint8_t *buf = ret->getInputPtr();
     size_t readSoFar = 0;
+    uint64_t sum = 0;
 
     while (readSoFar < msglen)
     {
@@ -266,7 +270,10 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
             readSoFar += err;
     }
 
-    cout << "main read loop done" << endl;
+    for (int i = 0; i < msglen; i++)
+        sum += buf[i];
+
+    cout << "main read loop done sum = " << sum << endl;
     if (stats)
         stats->dataRecvd(msglen);
     ret->advanceInputPtr(msglen);
@@ -280,6 +287,11 @@ void UnixSocket::write_raw(const ByteStream &msg, Stats *stats) const
     ssize_t err;
     int l_errno;
     char errbuf[80];
+
+    uint64_t sum = 0;
+    for (int i = 0; i < toSend; i++)
+        sum += buf[i];
+    cout << "  -- sum is " << sum << endl;
 
     while (sent < toSend)
     {
@@ -349,6 +361,7 @@ void UnixSocket::socketParms(const SocketParms &other)
 
 void UnixSocket::sa(const sockaddr *other)
 {
+    memcpy(&fake_sa, other, sizeof(fake_sa));
     if (other->sa_family == AF_UNIX)
         memcpy(&sun, other, sizeof(sun));
     else if (other->sa_family == PF_INET || other->sa_family == AF_INET)
@@ -390,7 +403,10 @@ const bool UnixSocket::isSameAddr(const Socket *s) const
 {
     const UnixSocket *other = dynamic_cast<const UnixSocket *>(s);
     if (!other)
+    {
+        cout << "compared to not-a-unixsocket?" << endl;
         return false;
+    }
     else
         return strncmp(&sun.sun_path[1], &(other->sun.sun_path[1]),
             sizeof(sun.sun_path) - 1) == 0;
