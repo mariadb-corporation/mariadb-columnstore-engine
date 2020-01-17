@@ -76,10 +76,7 @@
 #include <thread>
 #include <condition_variable>
 
-#if defined(SKIP_OAM_INIT)
 #include "dbrm.h"
-#endif
-
 
 namespace
 {
@@ -1646,11 +1643,12 @@ int main(int argc, char* argv[])
         {
         }
     }
-#if defined(SKIP_OAM_INIT)
-    BRM::DBRM *dbrm = new BRM::DBRM();
-    dbrm->setSystemQueryReady(true);
-    delete dbrm;
-#endif
+    if (getenv("SKIP_OAM_INIT"))
+    {
+        BRM::DBRM *dbrm = new BRM::DBRM();
+        dbrm->setSystemQueryReady(true);
+        delete dbrm;
+    }
 
     threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
     exeMgrThreadPool.setName("ExeMgrServer");

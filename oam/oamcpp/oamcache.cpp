@@ -111,7 +111,7 @@ void OamCache::checkReload()
     // Restore for Windows when we support multiple PMs
     while (it != uniquePids.end())
     {
-#if  !defined(SKIP_OAM_INIT)
+        if (getenv("SKIP_OAM_INIT") == NULL)
         {
             try
             {
@@ -180,10 +180,11 @@ void OamCache::checkReload()
                 break;
             }
         }
-#else
-        pmToConnectionMap[*it] = i++;
-        moduleIds.push_back(*it);
-#endif
+        else
+        {
+            pmToConnectionMap[*it] = i++;
+            moduleIds.push_back(*it);
+        }
         it++;
 
     }
@@ -346,4 +347,3 @@ string OamCache::getModuleName()
 }
 
 } /* namespace oam */
-

@@ -1255,7 +1255,7 @@ void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string passw
     bool storeHostnames)
 {
     // build and send msg
-    int returnStatus = sendAddModuleToProcMgr(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, storeHostnames, 
+    int returnStatus = sendAddModuleToProcMgr(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, storeHostnames,
         password, mysqlpw);
 
     if (returnStatus != API_SUCCESS)
@@ -1953,9 +1953,9 @@ void Oam::getProcessConfig(SystemProcessConfig& systemprocessconfig)
     Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
     Config *csConfig = Config::makeConfig();
     string strStorageManagerEnabled = csConfig->getConfig("StorageManager", "Enabled");
-    bool storageManagerEnabled = !strStorageManagerEnabled.empty() && (strStorageManagerEnabled[0] == 'Y' || 
+    bool storageManagerEnabled = !strStorageManagerEnabled.empty() && (strStorageManagerEnabled[0] == 'Y' ||
         strStorageManagerEnabled[0] == 'y' || strStorageManagerEnabled[0] == 'T' || strStorageManagerEnabled[0] == 't');
-    
+
     for (int processID = 1; processID < MAX_PROCESS + 1; processID++)
     {
         ProcessConfig processconfig;
@@ -1969,7 +1969,7 @@ void Oam::getProcessConfig(SystemProcessConfig& systemprocessconfig)
                               processconfig );
 
         // hide StorageManager from everything else if it is disabled
-        if (processconfig.ProcessName.empty() || 
+        if (processconfig.ProcessName.empty() ||
           (!storageManagerEnabled && processconfig.ProcessName == "StorageManager"))
             continue;
 
@@ -2370,7 +2370,8 @@ void Oam::setProcessStatus(const std::string process, const std::string module, 
 void Oam::processInitComplete(std::string processName, int state)
 {
 //This method takes too long on Windows and doesn't do anything there anyway...
-#if !defined(_MSC_VER) && !defined(SKIP_OAM_INIT)
+    if (getenv("SKIP_OAM_INIT") != NULL)
+        return;
     // get current Module name
     string moduleName;
     oamModuleInfo_t st;
@@ -2414,7 +2415,6 @@ void Oam::processInitComplete(std::string processName, int state)
 
     writeLog("processInitComplete: Status update failed", LOG_TYPE_ERROR );
     exceptionControl("processInitComplete", API_FAILURE);
-#endif
 }
 
 /********************************************************************
@@ -10716,7 +10716,7 @@ void Oam::mountDBRoot(dbrootList dbrootConfigList, bool mount)
     // nothing to do here
     if (DBRootStorageType == "storagemanager")
         return;
-    
+
     string DataRedundancyConfig = "n";
 
     try
@@ -11197,4 +11197,3 @@ namespace procheartbeat
 */
 } // end of namespace
 // vim:ts=4 sw=4:
-

@@ -3730,9 +3730,11 @@ int main(int argc, char* argv[])
     // startup MariaDB ColumnStore
     //
 
-    #ifdef SKIP_OAM_INIT
-    exit(0);
-    #endif
+    if (getenv("SKIP_OAM_INIT"))
+    {
+        cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+        exit(0);
+    }
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
             pmNumber > 1 )
