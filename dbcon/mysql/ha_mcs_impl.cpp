@@ -2362,8 +2362,11 @@ int ha_mcs_impl_rnd_init(TABLE* table)
     }
 #endif
 
-    if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
+    // If ALTER TABLE and not ENGINE= we don't need rnd_init (gets us in a bad state)
+    if ((thd->lex->sql_command == SQLCOM_ALTER_TABLE) && !(thd->lex->create_info.used_fields & HA_CREATE_USED_ENGINE))
+    {
         return 0;
+    }
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
