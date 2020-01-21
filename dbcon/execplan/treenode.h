@@ -36,6 +36,8 @@
 #include "exceptclasses.h"
 #include "dataconvert.h"
 
+using uint128_t = unsigned __int128;
+
 namespace messageqcpp
 {
 class ByteStream;
@@ -61,7 +63,7 @@ typedef execplan::CalpontSystemCatalog::ColType Type;
  */
 struct IDB_Decimal
 {
-    IDB_Decimal(): value(0), scale(0), precision(0) {}
+    IDB_Decimal(): val(0), value(0), scale(0), precision(0) {}
     IDB_Decimal(int64_t val, int8_t s, uint8_t p) :
         value (val),
         scale(s),
@@ -149,9 +151,10 @@ struct IDB_Decimal
             return (decimalComp(rhs) != 0);
     }
 
+    uint128_t val;
     int64_t value;
-    int8_t  scale;	  // 0~18
-    uint8_t precision;  // 1~18
+    int8_t  scale;	  // 0~38
+    uint8_t precision;  // 1~38
 };
 typedef IDB_Decimal CNX_Decimal;
 

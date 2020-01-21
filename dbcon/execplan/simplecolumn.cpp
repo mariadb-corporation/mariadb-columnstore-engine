@@ -625,6 +625,12 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         {
             switch (fResultType.colWidth)
             {
+                case 16:
+                {
+                    fResult.decimalVal.value = row.getIntField<16>(fInputIndex);
+                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                    break;
+                }
                 case 1:
                 {
                     fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
