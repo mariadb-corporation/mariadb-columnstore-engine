@@ -3096,13 +3096,14 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
         {
             Item_decimal* idp = (Item_decimal*)item;
             ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            ct.colWidth = 8;
+            // MCOL-641 WIP Make this dynamic
+            ct.colWidth = (idp->max_length >= 18) ? 16 : 8;
             ct.scale = idp->decimals;
 
             if (ct.scale == 0)
-                ct.precision = idp->max_length - 1;
+                ct.precision = (idp->max_length > 38) ? 38 : idp->max_length - 1;
             else
-                ct.precision = idp->max_length - idp->decimals;
+                ct.precision = (idp->max_length > 38) ? 38 : idp->max_length - idp->decimals;
 
             break;
         }
@@ -3589,10 +3590,8 @@ ArithmeticColumn* buildArithmeticColumn(
         pt->right(rhs);
     }
 
-    //aop->resultType(colType_MysqlToIDB(item));
     // @bug5715. Use InfiniDB adjusted coltype for result type.
     // decimal arithmetic operation gives double result when the session variable is set.
-    //idbassert(pt->left() && pt->right() && pt->left()->data() && pt->right()->data());
     CalpontSystemCatalog::ColType mysql_type = colType_MysqlToIDB(item);
 
     if (get_double_for_decimal_math(current_thd) == true)
