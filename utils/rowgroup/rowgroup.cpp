@@ -953,6 +953,11 @@ bool Row::isNullValue(uint32_t colIndex) const
 
             switch (len)
             {
+                // MCOL-641 WIP
+                case 16:
+                    return (*((int64_t*) &data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
+                    break;
+
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
 
