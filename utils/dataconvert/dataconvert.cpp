@@ -1174,21 +1174,28 @@ struct uint128_pod
 };
 
 // WIP MCOL-641
-void DataConvert::toString(unsigned __int128 i, char *p)
+// Check for overflows with buflen
+template<typename T>
+void DataConvert::toString(T* dec, char *p, size_t buflen)
 { 
   uint64_t div = 10000000000000000000ULL;
   size_t div_log = 19;
-  uint128_t high = i;
+  // template this
+  uint128_t high = *dec;
   uint128_t low;
   low = high % div;
   high /= div;
   uint128_t mid;
   mid = high % div;
   high /= div;
-  
+ 
+  // WIP How to treat PODs here ?
+  // use typeof
+  // Or a templated structure
   uint128_pod *high_pod = reinterpret_cast<uint128_pod*>(&high);
   uint128_pod *mid_pod = reinterpret_cast<uint128_pod*>(&mid);
   uint128_pod *low_pod = reinterpret_cast<uint128_pod*>(&low);
+  char* original_p = p;
   int printed_chars = 0;
  
   // WIP replace snprintf with streams 
@@ -1202,9 +1209,9 @@ void DataConvert::toString(unsigned __int128 i, char *p)
     p += printed_chars;
   }
   snprintf(p, div_log+1, "%019lu", low_pod->lo);
+  if (buflen <= p-original_p)
+    std::cout << "DataConvert::toString char buffer overflow" << std::endl;
 }
-
-
 // WIP MCOL-641
 // Template this
 // result must be calloc-ed
@@ -1213,7 +1220,7 @@ void DataConvert::toString(unsigned __int128 i, char *p)
 void atoi128(const string& arg, int128_t& res) 
 {
     // WIP
-    //char buf[40];
+    //char buf[41];
     //int128_t *res_ptr = reinterpret_cast<int128_t*>(result);
     res = 0;
     for (size_t j = 0; j < arg.size(); j++) 
@@ -1228,10 +1235,14 @@ void atoi128(const string& arg, int128_t& res)
 }
 
 // WIP MCOL-641
-void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char* buf, unsigned int buflen,
-                                         execplan::CalpontSystemCatalog::ColDataType colDataType)
+template <typename T>
+void DataConvert::decimalToString(T* valuePtr,
+    uint8_t scale,
+    char* buf,
+    unsigned int buflen,
+    execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
-    toString(int_val, buf);
+    toString<T>(valuePtr, buf, buflen);
 
     // Biggest ColumnStore supports is DECIMAL(38,x), or 38 total digits+dp+sign for column
 
@@ -1243,7 +1254,7 @@ void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char
     size_t l1 = strlen(buf);
     char* ptr = &buf[0];
 
-    if (int_val < 0)
+    if (*valuePtr < 0)
     {
         ptr++;
         idbassert(l1 >= 2);
@@ -1259,7 +1270,7 @@ void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char
         const char* zeros = "00000000000000000000000000000000000000"; //38 0's
         size_t diff = 0;
 
-        if (int_val != 0)
+        if (*valuePtr != 0)
             diff = scale - l1; //this will always be > 0
         else
             diff = scale;
@@ -1267,7 +1278,7 @@ void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char
         memmove((ptr + diff), ptr, l1 + 1); //also move null
         memcpy(ptr, zeros, diff);
 
-        if (int_val != 0)
+        if (*valuePtr != 0)
             l1 = 0;
         else
             l1 = 1;
@@ -1289,6 +1300,11 @@ void DataConvert::decimalToString(unsigned __int128 int_val, uint8_t scale, char
 
     *(ptr + l1) = '.';
 }
+// Explicit instantiation
+template
+void DataConvert::decimalToString<int128_t>(int128_t* value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+template
+void DataConvert::decimalToString<uint128_t>(uint128_t* value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
 
 boost::any
 DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,

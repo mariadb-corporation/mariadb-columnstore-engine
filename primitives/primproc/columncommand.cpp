@@ -281,6 +281,7 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
+                // WIP
                 // values[i] is 8 Bytes wide so coping the pointer to bpp->outputMsg[pos] and crossing fingers
                 // I dont know the liveness of bpp->outputMsg but also I dont know if there is other memory area I can use
                 values[i] = (int64_t) &bpp->outputMsg[pos];
@@ -591,6 +592,7 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
             mask = 0x01;
             break;
         case 16:
+            // WIP MCOL-641
             cout << __FILE__<< ":" <<__LINE__ << " Fix shift and mask for 16 Bytes ?"<< endl;
             shift = 1;
             mask = 0x01;
@@ -778,10 +780,8 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
                 r.setUintField_offset<4>(*((uint32_t*) msg8), offset);
                 r.nextRow(rowSize);
             }
-
             break;
         }
-
         case 8:
         {
             for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
@@ -789,12 +789,19 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
                 r.setUintField_offset<8>(*((uint64_t*) msg8), offset);
                 r.nextRow(rowSize);
             }
-
             break;
         }
-        
         case 16:
-        cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+        {
+            cout << __FILE__<< ":" <<__LINE__ << " ColumnCommand::projectResultRG " << endl;
+            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
+            {
+                r.setBinaryField(msg8, colType.colWidth, offset);
+                r.nextRow(rowSize);
+            }
+            break;
+        }
+           
     }
 }
 
