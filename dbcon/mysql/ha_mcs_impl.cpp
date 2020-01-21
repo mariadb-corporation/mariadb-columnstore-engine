@@ -145,6 +145,8 @@ extern bool nonConstFunc(Item_func* ifp);
 
 namespace
 {
+    using int128_t = __int128;
+    using uint128_t = unsigned __int128;
 // Calpont vtable non-support error message
 const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by MariaDB Columnstore distributed mode. The execution was switched to standard mode with downgraded performance.";
 
@@ -247,9 +249,6 @@ void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc 
     ci->cal_conn_hndl = 0;
 }
 
-// WIP MCOL-641
-using uint128_t = unsigned __int128;
-
 void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& ct)
 {
     // unset null bit first
@@ -268,6 +267,8 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
             //if (f2->dec < ct.scale)
             //    f2->dec = ct.scale;
 
+            // WIP MCOL-641
+            // This is too much
             char buf[256];
             dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, buf, 256, ct.colDataType);
             (*f)->store(buf, strlen(buf), (*f)->charset());
@@ -808,12 +809,33 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     if (row.getPrecision(s) > 18)
                     {
                         // unset null bit first
+                        // Might be redundant
                         if ((*f)->null_ptr)
                             *(*f)->null_ptr &= ~(*f)->null_bit;
 
-                        const uint128_t val = *reinterpret_cast<const uint128_t*>(row.getBinaryField2(s));
-                        char buf[256];
-                        dataconvert::DataConvert::decimalToString(val, (unsigned)colType.scale, buf, 256, colType.colDataType);
+                        uint128_t* udec;
+                        int128_t* dec;
+                        // We won't have more than 38 digits + sign + dp
+                        // Make this precision based
+                        char buf[41];
+ 
+                        // This C-style cast doesn't look appropriate.
+                        // Is there a way to use decltype instead of if?
+                        if (colType.colDataType == CalpontSystemCatalog::DECIMAL)
+                        {
+                            dec = row.getBinaryField<int128_t>(s);
+                            dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                                (unsigned)colType.scale, buf,
+                                sizeof(buf), colType.colDataType);
+                        }
+                        else
+                        {
+                            udec = row.getBinaryField<uint128_t>(s);
+                            dataconvert::DataConvert::decimalToString<uint128_t>(udec,
+                                (unsigned)colType.scale, buf,
+                                sizeof(buf), colType.colDataType);
+                        }
+
                         Field_new_decimal* f2 = (Field_new_decimal*)*f;
                         f2->store(buf, strlen(buf), f2->charset());
                     }

@@ -399,7 +399,10 @@ public:
     inline void setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex);
 
     inline std::string getBinaryField(uint32_t colIndex) const;
-    inline const uint8_t* getBinaryField2(uint32_t colIndex) const;
+    template <typename T>
+    inline T* getBinaryField(uint32_t colIndex) const;
+    template <typename T>
+    inline T* getBinaryField_offset(uint32_t offset) const;
     
     inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
     inline void setUserData(mcsv1sdk::mcsv1Context& context,
@@ -756,7 +759,7 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
     return strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
 }
 
-
+// Check whether memcpy affects perf here
 inline void Row::setBinaryField(const uint8_t* strdata, uint32_t length, uint32_t offset)
 {
     memcpy(&data[offset], strdata, length);
@@ -801,10 +804,18 @@ inline std::string Row::getBinaryField(uint32_t colIndex) const
 }
 
 // WIP MCOL-641
-inline const uint8_t* Row::getBinaryField2(uint32_t colIndex) const
+template <typename T>
+inline T* Row::getBinaryField(uint32_t colIndex) const
 {
-    return &data[offsets[colIndex]];
+    return reinterpret_cast<T*>(&data[offsets[colIndex]]);
 }
+
+template <typename T>
+inline T* Row::getBinaryField_offset(uint32_t offset) const
+{
+    return reinterpret_cast<T*>(&data[offset]);
+}
+
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 {
@@ -925,10 +936,12 @@ inline void Row::setUintField_offset(uint64_t val, uint32_t offset)
         case 8:
             *((uint64_t*) &data[offset]) = val;
             break;
+        /* This doesn't look like appropriate place
         case 16:
             std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
             *((uint64_t*) &data[offset]) = val;
             break;
+        */
         default:
             idbassert(0);
             throw std::logic_error("Row::setUintField called on a non-uint32_t field");
