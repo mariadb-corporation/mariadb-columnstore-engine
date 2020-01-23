@@ -93,7 +93,19 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
     char oidDirName[WriteEngine::FILE_NAME_SIZE];
     char fullFileName[WriteEngine::FILE_NAME_SIZE];
     char dbDir[WriteEngine::MAX_DB_DIR_LEVEL][WriteEngine::MAX_DB_DIR_NAME_SIZE];
-    config::Config* config = config::Config::makeConfig();
+
+    config::Config* config;
+
+    try
+    {
+        config = config::Config::makeConfig();
+    }
+    catch (std::runtime_error& e)
+    {
+        thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        return ER_INTERNAL_ERROR;
+    }
+
     WriteEngine::Config we_config;
     off_t fileSize = 0;
     off_t compressedFileSize = 0;
