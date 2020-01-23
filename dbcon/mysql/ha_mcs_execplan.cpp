@@ -4559,10 +4559,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     if (gwi.clauseType == SELECT)
         gwi.aggOnSelect = true;
 
-    // N.B. argument_count() is the # of formal parms to the agg fcn. InifniDB only supports 1 argument
-    // TODO: Support more than one parm
-#if 0
-
+    // Argument_count() is the # of formal parms to the agg fcn. Columnstore
+    // only supports 1 argument except UDAnF and GROUP_CONCAT
+    // TODO: Support more than one parm for COUNT(DISTINCT)
     if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC
             && isp->sum_func() != Item_sum::UDF_SUM_FUNC)
     {
@@ -4571,7 +4570,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         return NULL;
     }
 
-#endif
     AggregateColumn* ac = NULL;
 
     if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
