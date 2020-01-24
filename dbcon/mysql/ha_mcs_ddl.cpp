@@ -2400,14 +2400,10 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         return 1;
     }
 
-    // @bug 3908. error out primary key for now.
+    // Send notice if primary key specified that it is not supported
     if (table_arg->key_info && table_arg->key_info->name.length && string(table_arg->key_info->name.str) == "PRIMARY")
     {
-        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS);
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-        ci.alterTableState = cal_connection_info::NOT_ALTER;
-        ci.isAlter = false;
-        return 1;
+        push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED, "INDEXES");
     }
 
     int compressiontype = get_compression_type(thd);
@@ -2452,22 +2448,25 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         return 1;
     }
 
-	//
-	// Check if this is a "CREATE TABLE ... LIKE " statement.
+	// Check if this is one of
+    // * "CREATE TABLE ... LIKE "
+    // * "ALTER TABLE ... ENGINE=Columnstore"
+    // * "CREATE TABLE ... AS ..."
 	// If so generate a full create table statement using the properties of
 	// the source table. Note that source table has to be a columnstore table and
 	// we only check for currently supported options.
 	//
 
-	if (thd->lex->create_info.like())
+	if ((thd->lex->sql_command == SQLCOM_CREATE_TABLE && thd->lex->used_tables) ||
+        (thd->lex->sql_command == SQLCOM_ALTER_TABLE && create_info->used_fields & HA_CREATE_USED_ENGINE) ||
+        (thd->lex->create_info.like()))
 	{
 		TABLE_SHARE *share = table_arg->s;
 		my_bitmap_map *old_map;			// To save the read_set
 		char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
 		String datatype, def_value;
 		ostringstream  oss;
-		string tbl_name (name+2);
-		std::replace(tbl_name.begin(), tbl_name.end(), '/', '.');
+		string tbl_name = string(share->db.str) + "." + string(share->table_name.str);
 
 		// Save the current read_set map and mark it for read
 		old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
@@ -2505,10 +2504,18 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
 		// Process table level options
 
+        /* TODO: uncomment when we support AUTO_INCREMENT
 		if (create_info->auto_increment_value > 1)
 		{
 			oss << " AUTO_INCREMENT=" << create_info->auto_increment_value;
 		}
+        */
+
+        if (create_info->auto_increment_value > 1)
+        {
+            push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED, "AUTO INCREMENT");
+        }
+
 
 		if (share->table_charset)
 		{
@@ -2539,7 +2546,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
 		oss << ";";
 		stmt = oss.str();
- 
+
 		tmp_restore_column_map(table_arg->read_set, old_map);
 	}
 
@@ -2600,7 +2607,7 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
 
     string emsg;
 
-    if (thd->lex->sql_command == SQLCOM_DROP_DB)
+    if ((thd->lex->sql_command == SQLCOM_DROP_DB) || (thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     {
         std::string tableName(name);
         tableName.erase(0, tableName.rfind("/") + 1);
@@ -2636,6 +2643,9 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
     decode_file_path(to, decodedDbTo, decodedTblTo);
     string stmt;
 
+    // This case is already handled
+    if (thd->lex->create_info.used_fields & HA_CREATE_USED_ENGINE)
+		return 0;
 
     if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
