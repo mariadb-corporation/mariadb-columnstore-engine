@@ -42,11 +42,14 @@ using namespace execplan;
 
 #include "nullvaluemanip.h"
 #include "rowgroup.h"
+#include "dataconvert.h"
 
 #include "collation.h"
 
 namespace rowgroup
 {
+
+using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
 StringStore::StringStore() : empty(true), fUseStoreStringMutex(false) { }
 
@@ -630,6 +633,19 @@ string Row::toString() const
                 }
                 case CalpontSystemCatalog::BINARY:
                     std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+                    break;
+                // WIP
+                case CalpontSystemCatalog::DECIMAL:
+                    if (precision[i] > 18)
+                    {
+                        char *buf = (char*)alloca(precision[i] + 3);
+                        // empty the buffer
+                        dataconvert::DataConvert::toString<uint128_t>(getBinaryField<uint128_t>(i),
+                            buf, precision[i]+3);
+                        os << buf << " ";
+                        break;
+                    }
+                    // fallback if the precision < 18
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -866,6 +882,79 @@ void Row::initToNull()
     }
 }
 
+template<typename T, uint8_t cscT, uint32_t width>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    ostringstream os;
+    os << "Row::isNullValue(): got bad column type at offset(";
+    os << offset;
+    os << ").  Width=";
+    os << width << endl;
+    throw logic_error(os.str());
+}
+/*
+// WIP how to make if that enables explicit template for two cscTypes?
+// Method template resolution could impose some perf degradation
+template<int64_t,(uint8_t)CalpontSystemCatalog::DECIMAL,16>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+}
+
+template<int64_t,CalpontSystemCatalog::UDECIMAL,16>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+}
+
+template<int64_t,CalpontSystemCatalog::DECIMAL,8>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+}
+
+template<int64_t,CalpontSystemCatalog::UDECIMAL,8>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+}
+
+template<uint8_t,CalpontSystemCatalog::UDECIMAL,1>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (data[offset] == joblist::TINYINTNULL);
+}
+
+template<uint8_t,CalpontSystemCatalog::DECIMAL,1>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (data[offset] == joblist::TINYINTNULL);
+}
+
+template<int16_t,CalpontSystemCatalog::UDECIMAL,2>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int16_t*>(&data[offset]) == static_cast<int16_t>(joblist::SMALLINTNULL));
+}
+
+template<int16_t,CalpontSystemCatalog::UDECIMAL,2>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int16_t*>(&data[offset]) == static_cast<int16_t>(joblist::SMALLINTNULL));
+}
+
+template<int32_t,CalpontSystemCatalog::UDECIMAL,4>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int32_t*>(&data[offset]) == static_cast<int32_t>(joblist::INTNULL));
+}
+
+template<int32_t,CalpontSystemCatalog::DECIMAL,4>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    return (*reinterpret_cast<int32_t*>(&data[offset]) == static_cast<int32_t>(joblist::INTNULL));
+}
+*/
 bool Row::isNullValue(uint32_t colIndex) const
 {
     switch (types[colIndex])
@@ -1533,6 +1622,13 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
                 out->setUintField(in.getUintField(i), mapping[i]);
             else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
                 out->setLongDoubleField(in.getLongDoubleField(i), mapping[i]);
+            // WIP this doesn't look right b/c we can pushdown colType
+            // Migrate to offset based methods here
+            // code precision 2 width convertor
+            else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DECIMAL &&
+                in.getColumnWidth(i) == 16))
+                out->setBinaryField(in.getBinaryField<uint8_t>(i), 16,
+                    out->getOffset(mapping[i]));
             else if (in.isUnsigned(i))
                 out->setUintField(in.getUintField(i), mapping[i]);
             else
