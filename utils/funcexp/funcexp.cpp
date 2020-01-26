@@ -472,10 +472,26 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
             {
                 IDB_Decimal val = expression[i]->getDecimalVal(row, isNull);
 
-                if (isNull)
-                    row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
+                // WIP
+                if (expression[i]->resultType().precision > 18)
+                {
+                    // WIP make this a separate function w and w/o overflow check
+                    if (expression[i]->resultType().colDataType == execplan::CalpontSystemCatalog::DECIMAL)
+                        row.setBinaryField(reinterpret_cast<uint8_t*>(&val.__v.__s128),
+                            expression[i]->resultType().colWidth,
+                            row.getOffset(expression[i]->outputIndex()));
+                    else
+                        row.setBinaryField(reinterpret_cast<uint8_t*>(&val.__v.__u128),
+                            expression[i]->resultType().colWidth,
+                            row.getOffset(expression[i]->outputIndex()));
+                }
                 else
-                    row.setIntField<8>(val.value, expression[i]->outputIndex());
+                {
+                    if (isNull)
+                        row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
+                    else
+                        row.setIntField<8>(val.value, expression[i]->outputIndex());
+                }
 
                 break;
             }
