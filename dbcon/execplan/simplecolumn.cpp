@@ -51,6 +51,7 @@ using namespace joblist;
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
 #include "../../utils/windowfunction/windowfunction.h"
+#include "utils/common/branchpred.h"
 
 namespace execplan
 {
@@ -469,6 +470,7 @@ void SimpleColumn::setDerivedTable()
 
     // @todo make aggregate filter to having clause. not optimize it for now
     if (fDerivedRefCol &&
+            // WIP replace with typeid()
             (dynamic_cast<AggregateColumn*>(fDerivedRefCol) ||
              dynamic_cast<WindowFunctionColumn*>(fDerivedRefCol)))
         fDerivedTable = "";
@@ -487,6 +489,12 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 // @todo move to inline
 void SimpleColumn::evaluate(Row& row, bool& isNull)
 {
+    // WIP Move this block into an appropriate place
+    if (UNLIKELY(fInputOffset == -1))
+    {
+        fInputOffset = row.getOffset(fInputIndex);
+    }
+
     bool isNull2 = row.isNullValue(fInputIndex);
 
     if (isNull2)
@@ -614,7 +622,16 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             {
                 case 16:
                 {
-                    fResult.decimalVal.value = row.getIntField<16>(fInputIndex);
+                    if (fResultType.colDataType ==  CalpontSystemCatalog::UDECIMAL)
+                    {
+                        fResult.decimalVal.__v.__u128 =
+                            *row.getBinaryField_offset<decltype(fResult.decimalVal.__v.__u128)>(fInputOffset);
+                    }
+                    else
+                    {
+                        fResult.decimalVal.__v.__s128 =
+                            *row.getBinaryField_offset<decltype(fResult.decimalVal.__v.__s128)>(fInputOffset);
+                    }
                     fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
