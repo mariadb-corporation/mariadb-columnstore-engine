@@ -1726,7 +1726,7 @@ void BatchPrimitiveProcessor::execute()
                     if (fe2->evaluate(&fe2In))
                     {
                         applyMapping(fe2Mapping, fe2In, &fe2Out);
-                        //cerr << "   passed. output row: " << fe2Out.toString() << endl;
+                        cerr << "   passed. output row: " << fe2Out.toString() << endl;
                         fe2Out.setRid (fe2In.getRelRid());
                         fe2Output.incRowCount();
                         fe2Out.nextRow();
