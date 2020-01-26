@@ -593,7 +593,7 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
             break;
         case 16:
             // WIP MCOL-641
-            cout << __FILE__<< ":" <<__LINE__ << " Fix shift and mask for 16 Bytes ?"<< endl;
+            cout << __FILE__<< ":" <<__LINE__ << " Set shift and mask for 16 Bytes"<< endl;
             shift = 1;
             mask = 0x01;
             break;

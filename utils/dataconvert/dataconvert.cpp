@@ -1198,7 +1198,7 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
   char* original_p = p;
   int printed_chars = 0;
  
-  // WIP replace snprintf with streams 
+  // WIP replace snprintf with streams
   if (high_pod->lo != 0) {
     printed_chars = snprintf(p, div_log+1, "%lu", high_pod->lo);
     p += printed_chars; 

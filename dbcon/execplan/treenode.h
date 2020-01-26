@@ -36,6 +36,7 @@
 #include "exceptclasses.h"
 #include "dataconvert.h"
 
+using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
 namespace messageqcpp
@@ -63,11 +64,17 @@ typedef execplan::CalpontSystemCatalog::ColType Type;
  */
 struct IDB_Decimal
 {
-    IDB_Decimal(): val(0), value(0), scale(0), precision(0) {}
+    IDB_Decimal(): value(0), scale(0), precision(0)
+    {
+        __v.__s128 = 0;
+    }
     IDB_Decimal(int64_t val, int8_t s, uint8_t p) :
         value (val),
         scale(s),
-        precision(p) {}
+        precision(p)
+    {
+        __v.__s128 = 0;
+    }
 
     int decimalComp(const IDB_Decimal& d) const
     {
@@ -151,7 +158,11 @@ struct IDB_Decimal
             return (decimalComp(rhs) != 0);
     }
 
-    uint128_t val;
+    union {
+        uint128_t __u128;
+        int128_t __s128;
+        int64_t __s64[2];
+    } __v;
     int64_t value;
     int8_t  scale;	  // 0~38
     uint8_t precision;  // 1~38
