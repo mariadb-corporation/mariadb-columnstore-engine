@@ -43,6 +43,7 @@ namespace execplan
 
 class ArithmeticOperator : public Operator
 {
+using cscType = execplan::CalpontSystemCatalog::ColType;
 
 public:
     ArithmeticOperator();
@@ -200,6 +201,7 @@ private:
     template <typename result_t>
     inline result_t execute(result_t op1, result_t op2, bool& isNull);
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
+    inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull, cscType& resultCscType);
     std::string fTimeZone;
 };
 
@@ -236,12 +238,11 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
             fResult.longDoubleVal = execute(lop->getLongDoubleVal(row, isNull), rop->getLongDoubleVal(row, isNull), isNull);
             break;
-
+        // WIP MCOL-641
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-            execute (fResult.decimalVal, lop->getDecimalVal(row, isNull), rop->getDecimalVal(row, isNull), isNull);
+            execute(fResult.decimalVal, lop->getDecimalVal(row, isNull), rop->getDecimalVal(row, isNull), isNull, fOperationType);
             break;
-
         default:
         {
             std::ostringstream oss;
@@ -282,11 +283,21 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
     }
 }
 
-inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull)
+inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull, cscType& resultCscType)
 {
     switch (fOp)
     {
         case OP_ADD:
+            if (resultCscType.precision > 18)
+            {
+                // WIP make this a separate function w and w/o overflow check
+                if (resultCscType.colDataType == execplan::CalpontSystemCatalog::DECIMAL)
+                    result.__v.__s128 = op1.__v.__s128 + op2.__v.__s128;
+                else 
+                    result.__v.__u128 = op1.__v.__u128 + op2.__v.__u128;
+                break;
+            }
+
             if (result.scale == op1.scale && result.scale == op2.scale)
             {
                 result.value = op1.value + op2.value;
