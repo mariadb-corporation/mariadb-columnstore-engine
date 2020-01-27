@@ -713,7 +713,9 @@ int main(int argc, char* argv[])
 
             if (getenv("SKIP_OAM_INIT"))
             {
-                cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                cout << "(2) SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                sysConfig->setConfig("Installation", "MySQLRep", "n");
+                sysConfig->write();
                 exit(0);
             }
 
@@ -740,7 +742,9 @@ int main(int argc, char* argv[])
 
             if (getenv("SKIP_OAM_INIT"))
             {
-                cout << "SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                cout << "(3) SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+                sysConfig->setConfig("Installation", "MySQLRep", "n");
+                sysConfig->write();
                 exit(0);
             }
 

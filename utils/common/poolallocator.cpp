@@ -68,7 +68,6 @@ void PoolAllocator::newBlock()
 
 void * PoolAllocator::allocOOB(uint64_t size)
 {
-    bool _false = false;
     OOBMemInfo memInfo;
 
     memUsage += size;
