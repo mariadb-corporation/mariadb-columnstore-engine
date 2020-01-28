@@ -406,6 +406,10 @@ IF (INSTALL_LAYOUT)
         else ()
             SETA(CPACK_RPM_columnstore-platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
         endif()
+
+        SET(CPACK_RPM_columnstore-platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/postInstall_platform.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preUn_platform.sh PARENT_SCOPE)
+
     ENDIF ()
 ELSE ()
     # MariaDB has its own packaging routines
