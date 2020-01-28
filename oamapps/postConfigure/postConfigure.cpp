@@ -58,6 +58,7 @@
 
 #include <string.h> /* for strncpy */
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <net/if.h>
@@ -569,6 +570,31 @@ int main(int argc, char* argv[])
 
 	cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
     cout << endl;
+
+    // MCOL-3675
+    struct stat dir_info;
+    if (stat(tmpDir.c_str(), &dir_info) != 0)
+    {
+        cerr<<endl<<tmpDir<<" directory not found."<<endl;
+        cerr<<"Make sure columnstore-post-install is run before you run this tool. Exiting."<<endl<<endl;
+        exit(1);
+    }
+
+    string ProfileFile;
+    try
+    {
+        ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+    }
+    catch (...)
+    {}
+
+    // MCOL-3676
+    if (ProfileFile.empty())
+    {
+        cerr<<endl<<"ProfileFile variable not set in the Config file."<<endl;
+        cerr<<"Make sure columnstore-post-install is run before you run this tool. Exiting."<<endl<<endl;
+        exit(1);
+    }
 
 	if (!single_server_quick_install || !multi_server_quick_install || !amazon_quick_install)
 	{
@@ -4141,14 +4167,6 @@ int main(int argc, char* argv[])
 
     cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
     cout.flush();
-
-    string ProfileFile;
-	try
-	{
-		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
-	}
-	catch (...)
-	{}
 
     if ( waitForActive() )
     {
