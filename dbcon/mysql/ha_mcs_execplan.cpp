@@ -5664,6 +5664,11 @@ void gp_walk(const Item* item, void* arg)
             {
                 boost::shared_ptr<SimpleColumn> scsp(sc->clone());
                 gwip->scsp = scsp;
+                
+                if (col->type() == Item::FIELD_ITEM)
+                {
+                    gwip->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(((Item_field*)item)->field_name.str), scsp));
+                }
             }
 
             bool cando = true;
