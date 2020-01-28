@@ -61,7 +61,7 @@ void shutdownSM(int sig)
     if (!signalCaught)
     {
         (SessionManager::get())->shutdownSM(sig);
-        fatalHandler(sig);
+        //fatalHandler(sig);
     }
     signalCaught = true;
 }
