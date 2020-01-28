@@ -3306,6 +3306,11 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
                 case Item::WINDOW_FUNC_ITEM:
                     return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
 
+                case Item::SUBSELECT_ITEM:
+                    gwi.fatalParseError = true;
+                    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
+                    break;
+                    
                 default:
                     gwi.fatalParseError = true;
                     gwi.parseErrorText = "Unknown REF item";
