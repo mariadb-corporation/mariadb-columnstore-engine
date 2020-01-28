@@ -114,18 +114,16 @@ Config* Config::makeConfig(const char* cf)
 Config::Config(const string& configFile) :
     fDoc(0), fConfigFile(configFile), fMtime(0), fParser()
 {
-    for ( int i = 0 ; i < 20 ; i++ )
+    int i = 0;
+    for ( ; i < 2 ; i++ )
     {
-        if (access(fConfigFile.c_str(), R_OK) != 0)
-        {
-            if ( i >= 15 )
-                throw runtime_error("Config::Config: error accessing config file " + fConfigFile);
-
-            sleep (1);
-        }
-        else
+        if (access(fConfigFile.c_str(), R_OK) == 0)
             break;
+        sleep (1);
     }
+
+    if ( i == 2 )
+        throw runtime_error("Config::Config: error accessing config file " + fConfigFile);
 
     struct stat statbuf;
 
