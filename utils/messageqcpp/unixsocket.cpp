@@ -246,7 +246,9 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
     {
         //cout << "main read loop, read so far = " << readSoFar << " msglen = " << msglen << endl;
         err = ::read(parms.sd(), &buf[readSoFar], msglen - readSoFar);
-        if (err < 0)
+        if (err > 0)
+            readSoFar += err;
+        else if (err < 0)
         {
             if (errno == EINTR)
                 continue;
@@ -261,7 +263,7 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
                 throw runtime_error(oss.str());
             }
         }
-        else if (err == 0)
+        else //  err == 0
         {
             if (stats)
                 stats->dataRecvd(readSoFar);
@@ -270,8 +272,6 @@ const SBS UnixSocket::read(const timespec *timeout, bool *isTimeout, Stats *stat
             else
                 return SBS(new ByteStream(0));
         }
-        else
-            readSoFar += err;
     }
 
     //for (int i = 0; i < msglen; i++)
@@ -300,7 +300,9 @@ void UnixSocket::write_raw(const ByteStream &msg, Stats *stats) const
     while (sent < toSend)
     {
         err = ::write(parms.sd(), &buf[sent], toSend - sent);
-        if (err < 0)
+        if (err >= 0)
+            sent += err;
+        else // err < 0
         {
             if (errno == EINTR)
                 continue;
@@ -310,7 +312,6 @@ void UnixSocket::write_raw(const ByteStream &msg, Stats *stats) const
             throw runtime_error(string("UnixSocket:write_raw: got ") +
                 strerror_r(l_errno, errbuf, 80));
         }
-        sent += err;
     }
     if (stats)
         stats->dataSent(sent);
