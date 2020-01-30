@@ -3097,12 +3097,28 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                     }
 
-                    oidsAggPm.push_back(oidsProj[colProj]);
-                    keysAggPm.push_back(aggKey);
-                    typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
-                    scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(-1);
-                    widthAggPm.push_back(sizeof(long double));
+                    // WIP MCOL-641 Replace condition with a
+                    // dynamic one
+                    if (typeProj[colProj] == CalpontSystemCatalog::DECIMAL
+                        && width[colProj] == 16)
+                    { 
+                        oidsAggPm.push_back(oidsProj[colProj]);
+                        keysAggPm.push_back(aggKey);
+                        typeAggPm.push_back(CalpontSystemCatalog::DECIMAL);
+                        scaleAggPm.push_back(0);
+                        // WIP makes this dynamic
+                        precisionAggPm.push_back(38);
+                        widthAggPm.push_back(width[colProj]);
+                    }
+                    else
+                    {
+                        oidsAggPm.push_back(oidsProj[colProj]);
+                        keysAggPm.push_back(aggKey);
+                        typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                        scaleAggPm.push_back(0);
+                        precisionAggPm.push_back(-1);
+                        widthAggPm.push_back(sizeof(long double));
+                    }
                     colAggPm++;
                 }
 
