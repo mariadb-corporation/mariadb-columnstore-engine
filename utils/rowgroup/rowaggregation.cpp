@@ -222,6 +222,11 @@ inline string getStringNullValue()
     return joblist::CPNULLSTRMARK;
 }
 
+inline uint64_t getBinaryNullValue()
+{
+    return joblist::BINARYNULL;
+} 
+
 }
 
 
@@ -413,6 +418,7 @@ void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, i
 inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, int64_t col)
 {
     /* TODO: Can we replace all of this with a call to row.isNullValue(col)? */
+    // WIP MCOL-641 Yes. We can
     bool ret = false;
 
     int colDataType = (pRowGroup->getColTypes())[col];
@@ -536,18 +542,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            int colWidth = pRowGroup->getColumnWidth(col);
-            int64_t val = row.getIntField(col);
-
-            if (colWidth == 1)
-                ret = ((uint8_t)val == joblist::TINYINTNULL);
-            else if (colWidth == 2)
-                ret = ((uint16_t)val == joblist::SMALLINTNULL);
-            else if (colWidth == 4)
-                ret = ((uint32_t)val == joblist::INTNULL);
-            else
-                ret = ((uint64_t)val == joblist::BIGINTNULL);
-
+            row.isNullValue(col);
             break;
         }
 
@@ -1170,7 +1165,20 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 int colWidth = fRowGroupOut->getColumnWidth(colOut);
-                row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
+                if (colWidth <= 8)
+                {
+                    row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
+                }
+                else
+                {
+                    // WIP This is only 1st part of the value
+                    uint64_t nullValue = getBinaryNullValue();
+                    uint32_t offset = row.getOffset(colOut);
+                    row.setBinaryField_offset(&nullValue, sizeof(nullValue),
+                        offset);
+                    row.setBinaryField_offset(&nullValue, sizeof(nullValue),
+                        offset+sizeof(nullValue));
+                }
                 break;
             }
 
@@ -1339,11 +1347,18 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 // Note: NULL value check must be done on UM & PM
 //       UM may receive NULL values, too.
 //------------------------------------------------------------------------------
+// WIP MCOL-641. This and other methods must be type based to avoid needless mem
+// allocation for wide DTs
 void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int funcType)
 {
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
-    long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = NULL;
+    // WIP MCOL-641 Probably the width must be taken
+    // from colOut
+    uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+
     if (isNull(&fRowGroupIn, rowIn, colIn) == true)
         return;
 
@@ -1372,12 +1387,31 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            // WIP MCOL-641 make the size dynamic and use branch prediction cond
+            isWideDataType = (width) > 8 ? true : false;
+            if (!isWideDataType)
             {
-                valIn /= pow(10.0, scale);
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
             }
+            else
+            {
+                if (colDataType == execplan::CalpontSystemCatalog::DECIMAL)
+                {
+                    int128_t *dec = rowIn.getBinaryField<int128_t>(colIn);
+                    wideValInPtr = reinterpret_cast<void*>(dec);
+                }
+                else
+                {
+                    uint128_t *dec = rowIn.getBinaryField<uint128_t>(colIn);
+                    wideValInPtr = reinterpret_cast<void*>(dec);
+                }
+            }
+    
             break;
         }
 
@@ -1428,14 +1462,51 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             break;
         }
     }
-    if (isNull(fRowGroupOut, fRow, colOut))
+    // WIP MCOL-641
+    if (!isWideDataType)
     {
-        fRow.setLongDoubleField(valIn, colOut);
+        if (isNull(fRowGroupOut, fRow, colOut))
+        {
+            fRow.setLongDoubleField(valIn, colOut);
+        }
+        else
+        {
+            long double valOut = fRow.getLongDoubleField(colOut);
+            fRow.setLongDoubleField(valIn+valOut, colOut);
+        }
     }
     else
     {
-        fRow.setLongDoubleField(valIn+valOut, colOut);
-    }
+        if (colDataType == execplan::CalpontSystemCatalog::DECIMAL)
+        {
+            int128_t *dec = reinterpret_cast<int128_t*>(wideValInPtr);
+            // WIP MCOL-641 Replace Row::setBinaryField1
+            if (isNull(fRowGroupOut, fRow, colOut))
+            {
+                fRow.setBinaryField1<int128_t>(dec, width, colOut);
+            }
+            else
+            {
+                int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
+                int128_t sum = *valOutPtr + *dec; 
+                fRow.setBinaryField1<int128_t>(&sum, width, colOut);
+            }
+        }
+        else
+        {
+            uint128_t *dec = reinterpret_cast<uint128_t*>(wideValInPtr);
+            if (isNull(fRowGroupOut, fRow, colOut))
+            {
+                fRow.setBinaryField1<uint128_t>(dec, width, colOut);
+            }
+            else
+            {
+                uint128_t *valOutPtr = fRow.getBinaryField<uint128_t>(colOut);
+                uint128_t sum = *valOutPtr + *dec; 
+                fRow.setBinaryField1<uint128_t>(&sum, width, colOut);
+            }
+        }
+    } // end-of isWideDataType block
 }
 
 //------------------------------------------------------------------------------
