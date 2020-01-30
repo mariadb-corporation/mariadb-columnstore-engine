@@ -66,6 +66,9 @@ typedef const struct charset_info_st CHARSET_INFO;
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
 
+using int128_t = __int128;
+using uint128_t = unsigned __int128;
+
 namespace rowgroup
 {
 
@@ -388,6 +391,10 @@ public:
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
     inline void setBinaryField(const uint8_t* strdata, uint32_t length, uint32_t offset);
+    template<typename T>
+    inline void setBinaryField1(T* strdata, uint32_t width, uint32_t colIndex);
+    template<typename T>
+    inline void setBinaryField_offset(T* strdata, uint32_t width, uint32_t colIndex);
     // support VARBINARY
     // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
     // treated the same, could use one of the length bit to distinguish these two cases.
@@ -766,6 +773,20 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
 inline void Row::setBinaryField(const uint8_t* strdata, uint32_t length, uint32_t offset)
 {
     memcpy(&data[offset], strdata, length);
+}
+
+template<typename T>
+inline void Row::setBinaryField1(T* value, uint32_t width, uint32_t colIndex)
+{
+   memcpy(&data[offsets[colIndex]], value, width);
+}
+
+template<typename T>
+inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
+{
+   // WIP
+   //memcpy(&data[offset], value, width);
+    *reinterpret_cast<T*>(&data[offset]) = *value;
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
