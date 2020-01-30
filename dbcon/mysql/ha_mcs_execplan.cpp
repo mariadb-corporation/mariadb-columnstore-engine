@@ -4588,7 +4588,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
     Item_sum* isp = reinterpret_cast<Item_sum*>(item);
     Item** sfitempp = isp->get_orig_args();
-//	Item** sfitempp = isp->arguments();
     SRCP parm;
 
     // @bug4756
@@ -4808,7 +4807,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
                             if ((fc && fc->functionParms().empty()) || !fc)
                             {
-                                //ac->aggOp(AggregateColumn::COUNT_ASTERISK);
                                 ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
 
                                 if (dynamic_cast<ConstantColumn*>(rc))
@@ -4895,6 +4893,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             // use the first parm for result type.
             parm = ac->aggParms()[0];
 
+            // WIP why do we use LONGDOUBLE for AVG?
             if (isp->sum_func() == Item_sum::AVG_FUNC ||
                     isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
             {
@@ -4917,10 +4916,20 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             else if (isp->sum_func() == Item_sum::SUM_FUNC ||
                      isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
-                CalpontSystemCatalog::ColType ct = parm->resultType();
+                // WIP MCOL-641 This fast hack breaks aggregates for
+                // all float DT's
+                // UPD it doesn't break b/c actual DT for result type
+                // is set during JobList creation.
+                /*CalpontSystemCatalog::ColType ct = parm->resultType();
                 ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
                 ct.colWidth = sizeof(long double);
-                ct.precision = -1;
+                ct.precision = -1;*/
+                CalpontSystemCatalog::ColType ct = parm->resultType();
+                ct.colDataType = CalpontSystemCatalog::DECIMAL;
+                ct.colWidth = 16;
+                ct.precision = 38;
+                // WIP set the scale if argument is a float-based DT
+                ct.scale = 0;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||
