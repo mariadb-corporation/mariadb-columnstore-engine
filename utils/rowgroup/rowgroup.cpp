@@ -814,7 +814,6 @@ void Row::initToNull()
                     default:
                         *((uint64_t*) &data[offsets[i]]) = *((uint64_t*) joblist::CPNULLSTRMARK.c_str());
                         memset(&data[offsets[i] + 8], 0, len - 8);
-                        //strcpy((char *) &data[offsets[i]], joblist::CPNULLSTRMARK.c_str());
                         break;
                 }
 
@@ -843,6 +842,13 @@ void Row::initToNull()
 
                     case 4 :
                         *((int32_t*) &data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL);
+                        break;
+
+                    case 16 :
+                        // WIP MCOL-641
+                        uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
++                       dec[0] = joblist::BINARYNULL;
++                       dec[1] = joblist::BINARYNULL;
                         break;
 
                     default:
@@ -1038,13 +1044,15 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::UDECIMAL:
         {
             uint32_t len = getColumnWidth(colIndex);
+            const uint64_t *dec;
 
             switch (len)
             {
-                // MCOL-641 WIP
+                // MCOL-641
                 case 16:
-                    return (*((int64_t*) &data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
-                    break;
+                    dec = reinterpret_cast<const uint64_t*>(&data[offsets[colIndex]]);
+                    return ((dec[0] == joblist::BINARYNULL)
+                        && (dec[1] == joblist::BINARYNULL));
 
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
