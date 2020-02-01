@@ -7750,7 +7750,7 @@ int Oam::sendDeviceNotification(std::string deviceName, NOTIFICATION_TYPE type, 
  *
  * Function:  actionMysqlCalpont
  *
- * Purpose:   mysql-Columnstore service command
+ * Purpose:   systemctl mariadb.service command
  *
  ****************************************************************************/
 
@@ -7790,8 +7790,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     else
         return;
 
-    // check if mysql-Columnstore is installed
-    string mysqlscript = "mysql-Columnstore";
+    string mysqlscript = "systemctl";
 
     string command;
 
@@ -7801,13 +7800,13 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     {
         case MYSQL_START:
         {
-            command = "start > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+            command = "start";
             break;
         }
 
         case MYSQL_STOP:
         {
-            command = "stop > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+            command = "stop";
 
             //set process status
             try
@@ -7822,25 +7821,25 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
         case MYSQL_RESTART:
         {
-            command = "restart > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+            command = "restart";
             break;
         }
 
         case MYSQL_RELOAD:
         {
-            command = "reload > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+            command = "reload";
             break;
         }
 
         case MYSQL_FORCE_RELOAD:
         {
-            command = "force-reload > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+            command = "force-reload";
             break;
         }
 
         case MYSQL_STATUS:
         {
-            command = "status > " + tmpdir + "/mysql.status";
+            command = "status";
             break;
         }
 
@@ -7852,7 +7851,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     }
 
     //RUN COMMAND
-    string cmd = mysqlscript + " " + command;
+    string cmd = mysqlscript + " " + command + " mariadb.service > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
     system(cmd.c_str());
 
     if (action == MYSQL_START || action == MYSQL_RESTART)

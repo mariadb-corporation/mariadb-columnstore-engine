@@ -90,7 +90,7 @@ stop() {
 	RETVAL=$?
 	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
-	mysql-Columnstore stop > /dev/null 2>&1
+	systemctl stop mariadb.service > /dev/null 2>&1
     pkill ProcMon
     pkill ProcMgr
 	return $RETVAL

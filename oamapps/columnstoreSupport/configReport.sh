@@ -25,9 +25,6 @@ if [ -n "$chkconfig" ]; then
 	echo "################# chkconfig --list | grep columnstore #################"
 	echo " "
 	chkconfig --list | grep columnstore 2>/dev/null
-	echo "################# chkconfig --list | grep mysql-Columnstore #################"
-	echo " "
-	chkconfig --list | grep mysql-Columnstore 2>/dev/null
 fi
 
 systemctl=`which systemctl 2>/dev/null`
@@ -37,9 +34,9 @@ if [ -n "$systemctl" ]; then
 	echo "################# systemctl list-unit-files --type=service | grep columnstore #################"
 	echo " "
 	systemctl list-unit-files --type=service | grep columnstore 2>/dev/null
-	echo "################# systemctl list-unit-files --type=service | grep mysql-Columnstore #################"
+	echo "################# systemctl list-unit-files --type=service | grep mariadb #################"
 	echo " "
-	systemctl list-unit-files --type=service | grep mysql-Columnstore 2>/dev/null
+	systemctl list-unit-files --type=service | grep mariadb 2>/dev/null
 fi
 
 updaterc=`which update-rc.d 2>/dev/null`
@@ -49,9 +46,6 @@ if [ -n "$updaterc" ]; then
 	echo "################# service --status-all | grep columnstore #################"
 	echo " "
 	service --status-all | grep columnstore 2>/dev/null
-	echo "################# service --status-all | grep mysql-Columnstore #################"
-	echo " "
-	service --status-all | grep mysql-Columnstore 2>/dev/null
 fi
 
 

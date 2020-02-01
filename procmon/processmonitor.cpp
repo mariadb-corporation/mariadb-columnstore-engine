@@ -1514,7 +1514,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 system(cmd.c_str());
                 cmd = "post-mysql-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = "mysql-Columnstore start > " + tmpLogDir + "/mysqldstart";
+                cmd = "systemctl start mariadb.service > " + tmpLogDir + "/mysqldstart";
                 system(cmd.c_str());
 
 				string tmpFile = tmpLogDir + "/mysqldstart";
