@@ -7555,6 +7555,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     {
                         gwi.fatalParseError = true;
                     }
+                    else if  ((ord_item->type() == Item::FUNC_ITEM) && (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
+                    {
+                        push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED, "COLLATE is ignored in ColumnStore");
+                        continue;
+                    }
                     else
                     {
                         rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
