@@ -111,6 +111,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
+    hasBinaryColumn(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -155,6 +156,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
+    hasBinaryColumn(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -574,6 +576,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 
     /* skip the header */
     bs.advance(sizeof(ISMPacketHeader) + 3 * sizeof(uint32_t));
+// TODO MCOL-641
 
     bs >> count;
     bs >> startPos;
@@ -1082,8 +1085,16 @@ void BatchPrimitiveProcessor::initProcessor()
             fAggregator->setInputOutput(fe2 ? fe2Output : outputRG, &fAggregateRG);
     }
 
-    minVal = MAX64;
-    maxVal = MIN64;
+    if (!hasBinaryColumn)
+    {
+        minVal = MAX64;
+        maxVal = MIN64;
+    }
+    else
+    {
+        dataconvert::DataConvert::int128Min(bigMaxVal);
+        dataconvert::DataConvert::int128Max(bigMinVal);
+    }
 
     // @bug 1269, initialize data used by execute() for async loading blocks
     // +1 for the scan filter step with no predicate, if any
@@ -1970,8 +1981,18 @@ void BatchPrimitiveProcessor::writeProjectionPreamble()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            *serialized << (uint64_t) minVal;
-            *serialized << (uint64_t) maxVal;
+            if (hasBinaryColumn)
+            {
+                *serialized << (uint8_t) 16; // width of min/max value
+                *serialized << (unsigned __int128) bigMinVal;
+                *serialized << (unsigned __int128) bigMaxVal;
+            }
+            else
+            {
+                *serialized << (uint8_t) 8; // width of min/max value
+                *serialized << (uint64_t) minVal;
+                *serialized << (uint64_t) maxVal;
+            }
         }
         else
         {
@@ -2060,8 +2081,18 @@ void BatchPrimitiveProcessor::makeResponse()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            *serialized << (uint64_t) minVal;
-            *serialized << (uint64_t) maxVal;
+            if (hasBinaryColumn)
+            {
+                *serialized << (uint8_t) 16; // width of min/max value
+                *serialized << (unsigned __int128) bigMinVal;
+                *serialized << (unsigned __int128) bigMaxVal;
+            }
+            else
+            {
+                *serialized << (uint8_t) 8; // width of min/max value
+                *serialized << (uint64_t) minVal;
+                *serialized << (uint64_t) maxVal;
+            }
         }
         else
         {
@@ -2164,8 +2195,16 @@ int BatchPrimitiveProcessor::operator()()
         }
 
         allocLargeBuffers();
-        minVal = MAX64;
-        maxVal = MIN64;
+        if (!hasBinaryColumn)
+        {
+            minVal = MAX64;
+            maxVal = MIN64;
+        }
+        else
+        {
+            dataconvert::DataConvert::int128Min(bigMaxVal);
+            dataconvert::DataConvert::int128Max(bigMinVal);
+        }
         validCPData = false;
 #ifdef PRIMPROC_STOPWATCH
         stopwatch->start("BPP() execute");
