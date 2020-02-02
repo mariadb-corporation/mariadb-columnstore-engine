@@ -649,7 +649,7 @@ inline int BRMWrapper::bulkSetHWMAndCP(
 
 inline int BRMWrapper::setExtentsMaxMin(const BRM::CPInfoList_t& cpinfoList)
 {
-    int rc = blockRsltnMgrPtr->setExtentsMaxMin( cpinfoList );
+    int rc = blockRsltnMgrPtr->setExtentsMaxMin(cpinfoList);
     return getRC( rc, ERR_BRM_SET_EXTENTS_CP );
 }
 

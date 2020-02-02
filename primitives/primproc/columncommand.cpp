@@ -206,6 +206,12 @@ void ColumnCommand::loadData()
                     ByteStream::octbyte o = getEmptyRowValue(colType.colDataType, colType.colWidth);
                     oPtr[idx] = o;
                 }
+                else if (colType.colWidth == 16)
+                {
+                    uint64_t *ptr = reinterpret_cast<uint64_t*>(&bpp->blockData[i * BLOCK_SIZE] + (idx*16) );
+                    *ptr = joblist::BINARYEMPTYROW;
+                    *(ptr + 1) = joblist::BINARYEMPTYROW;
+                }
             }
 
         }// else
@@ -256,8 +262,17 @@ void ColumnCommand::issuePrimitive()
         //if (wasVersioned && outMsg->ValidMinMax)
         //	cout << "CC: versioning overriding min max data\n";
         bpp->lbidForCP = lbid;
-        bpp->maxVal = outMsg->Max;
-        bpp->minVal = outMsg->Min;
+        if (primMsg->DataSize > 8)
+        {
+            bpp->hasBinaryColumn = true;
+            bpp->bigMaxVal = outMsg->Max;
+            bpp->bigMinVal = outMsg->Min;
+        }
+        else
+        {
+            bpp->maxVal = static_cast<int64_t>(outMsg->Max);
+            bpp->minVal = static_cast<int64_t>(outMsg->Min);
+        }
     }
 
 } // issuePrimitive()

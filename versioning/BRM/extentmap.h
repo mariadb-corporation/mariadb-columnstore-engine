@@ -102,14 +102,25 @@ const char CP_VALID = 2;
 
 struct EMCasualPartition_struct
 {
-    RangePartitionData_t hi_val;	// This needs to be reinterpreted as unsigned for uint64_t column types.
+    RangePartitionData_t hi_val;       // This needs to be reinterpreted as unsigned for uint64_t column types.
     RangePartitionData_t lo_val;
     int32_t sequenceNum;
     char isValid; //CP_INVALID - No min/max and no DML in progress. CP_UPDATING - Update in progress. CP_VALID- min/max is valid
     EXPORT EMCasualPartition_struct();
     EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
+    EXPORT EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum);
     EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
     EXPORT EMCasualPartition_struct& operator= (const EMCasualPartition_struct& em);
+    union
+    {
+        __int128 bigLoVal;
+        int64_t loVal;
+    };
+    union
+    {
+        __int128 bigHiVal;
+        int64_t hiVal;
+    };
 };
 typedef EMCasualPartition_struct EMCasualPartition_t;
 
@@ -836,7 +847,8 @@ public:
     */
     void mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock = true);
 
-    EXPORT int getMaxMin(const LBID_t lbidRange, int64_t& max, int64_t& min, int32_t& seqNum);
+    template <typename T>
+    EXPORT int getMaxMin(const LBID_t lbidRange, T& max, T& min, int32_t& seqNum);
 
     inline bool empty()
     {
@@ -916,7 +928,8 @@ private:
                                   uint16_t  dbRoot,
                                   uint32_t  partitionNum,
                                   uint16_t  segmentNum);
-    bool isValidCPRange(int64_t max, int64_t min, execplan::CalpontSystemCatalog::ColDataType type) const;
+    template <typename T>
+    bool isValidCPRange(const T& max, const T& min, execplan::CalpontSystemCatalog::ColDataType type) const;
     void deleteExtent(int emIndex);
     LBID_t getLBIDsFromFreeList(uint32_t size);
     void reserveLBIDRange(LBID_t start, uint8_t size);    // used by load() to allocate pre-existing LBIDs

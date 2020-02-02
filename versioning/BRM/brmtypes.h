@@ -151,6 +151,17 @@ struct CPInfo
     int64_t max;
     int64_t min;
     int32_t seqNum;
+    union
+    {
+        __int128 bigMax;
+        int64_t max_;
+    };
+    union
+    {
+        __int128 bigMin;
+        int64_t min_;
+    };
+    bool isBinaryColumn;
 };
 typedef std::vector<CPInfo> CPInfoList_t;
 
@@ -160,6 +171,17 @@ struct CPMaxMin
     int64_t max;
     int64_t min;
     int32_t seqNum;
+    union
+    {
+        __int128 bigMax;
+        int64_t max_;
+    };
+    union
+    {
+        __int128 bigMin;
+        int64_t min_;
+    };
+    bool isBinaryColumn;
 };
 typedef std::tr1::unordered_map<LBID_t, CPMaxMin> CPMaxMinMap_t;
 
@@ -172,7 +194,18 @@ struct CPInfoMerge
     int64_t min;       // min value to be merged with current min value
     int32_t seqNum;    // sequence number (not currently used)
     execplan::CalpontSystemCatalog::ColDataType type;
+    int32_t colWidth;
     bool	newExtent; // is this to be treated as a new extent
+    union
+    {
+        __int128 bigMax;
+        int64_t max_;
+    };
+    union
+    {
+        __int128 bigMin;
+        int64_t min_;
+    };
 };
 typedef std::vector<CPInfoMerge> CPInfoMergeList_t;
 
@@ -184,7 +217,18 @@ struct CPMaxMinMerge
     int64_t min;
     int32_t seqNum;
     execplan::CalpontSystemCatalog::ColDataType type;
+    int32_t colWidth;
     bool    newExtent;
+    union
+    {
+        __int128 bigMax;
+        int64_t max_;
+    };
+    union
+    {
+        __int128 bigMin;
+        int64_t min_;
+    };
 };
 typedef std::tr1::unordered_map<LBID_t, CPMaxMinMerge> CPMaxMinMergeMap_t;
 

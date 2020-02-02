@@ -294,6 +294,7 @@ void BRMReporter::sendHWMToFile( )
 //------------------------------------------------------------------------------
 // Send Casual Partition update information to BRM
 //------------------------------------------------------------------------------
+// TODO MCOL-641
 void BRMReporter::sendCPToFile( )
 {
     if (fCPInfo.size() > 0)

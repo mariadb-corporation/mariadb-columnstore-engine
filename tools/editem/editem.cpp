@@ -408,11 +408,31 @@ int clearAllCPData()
 
         if (err == 0 && ranges.size() > 0)
         {
+            // Get the extents for a given OID to determine it's column width
+            std::vector<struct EMEntry> entries;
+            CHECK(emp->getExtents(oid, entries, false, false, true));
+
+            if (entries.empty())
+                continue;
+
+            bool isBinaryColumn = entries[0].colWid > 8;
+
             BRM::CPInfo cpInfo;
             BRM::CPInfoList_t vCpInfo;
-            cpInfo.max = numeric_limits<int64_t>::min();
-            cpInfo.min = numeric_limits<int64_t>::max();
+
+            if (!isBinaryColumn)
+            {
+                cpInfo.max = numeric_limits<int64_t>::min();
+                cpInfo.min = numeric_limits<int64_t>::max();
+            }
+            else
+            {
+                dataconvert::DataConvert::int128Min(cpInfo.bigMax);
+                dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+            }
+
             cpInfo.seqNum = -1;
+            cpInfo.isBinaryColumn = isBinaryColumn;
 
             for (uint32_t i = 0; i < ranges.size(); i++)
             {
@@ -433,17 +453,38 @@ int clearAllCPData()
 //------------------------------------------------------------------------------
 int clearmm(OID_t oid)
 {
-
     BRM::LBIDRange_v ranges;
     CHECK(emp->lookup(oid, ranges));
     BRM::LBIDRange_v::size_type rcount = ranges.size();
 
+    // Get the extents for a given OID to determine it's column width
+    std::vector<struct EMEntry> entries;
+    CHECK(emp->getExtents(oid, entries, false, false, true));
+    if (entries.empty())
+    {
+        cerr << "There are no entries in the Extent Map for OID: " << oid << endl;
+        return 1;
+    }
+
+    bool isBinaryColumn = entries[0].colWid > 8;
+
     // @bug 2280.  Changed to use the batch interface to clear the CP info to make the clear option faster.
     BRM::CPInfo cpInfo;
     BRM::CPInfoList_t vCpInfo;
-    cpInfo.max = numeric_limits<int64_t>::min();
-    cpInfo.min = numeric_limits<int64_t>::max();
+
+    if (!isBinaryColumn)
+    {
+        cpInfo.max = numeric_limits<int64_t>::min();
+        cpInfo.min = numeric_limits<int64_t>::max();
+    }
+    else
+    {
+        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
+        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+    }
+
     cpInfo.seqNum = -1;
+    cpInfo.isBinaryColumn = isBinaryColumn;
 
     for (unsigned i = 0; i < rcount; i++)
     {

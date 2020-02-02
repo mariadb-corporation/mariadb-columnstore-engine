@@ -116,8 +116,10 @@ namespace BRM
 
 EMCasualPartition_struct::EMCasualPartition_struct()
 {
-    lo_val = numeric_limits<int64_t>::min();
-    hi_val = numeric_limits<int64_t>::max();
+    lo_val = numeric_limits<int64_t>::max();
+    hi_val = numeric_limits<int64_t>::min();
+    dataconvert::DataConvert::int128Max(bigLoVal);
+    dataconvert::DataConvert::int128Min(bigHiVal);
     sequenceNum = 0;
     isValid = CP_INVALID;
 }
@@ -130,10 +132,20 @@ EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64
     isValid = CP_INVALID;
 }
 
+EMCasualPartition_struct::EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum)
+{
+    bigLoVal = bigLo;
+    bigHiVal = bigHi;
+    sequenceNum = seqNum;
+    isValid = CP_INVALID;
+}
+
 EMCasualPartition_struct::EMCasualPartition_struct(const EMCasualPartition_struct& em)
 {
     lo_val = em.lo_val;
     hi_val = em.hi_val;
+    bigLoVal = em.bigLoVal;
+    bigHiVal = em.bigHiVal;
     sequenceNum = em.sequenceNum;
     isValid = em.isValid;
 }
@@ -142,6 +154,8 @@ EMCasualPartition_struct& EMCasualPartition_struct::operator= (const EMCasualPar
 {
     lo_val = em.lo_val;
     hi_val = em.hi_val;
+    bigLoVal = em.bigLoVal;
+    bigHiVal = em.bigHiVal;
     sequenceNum = em.sequenceNum;
     isValid = em.isValid;
     return *this;
@@ -339,11 +353,15 @@ int ExtentMap::_markInvalid(const LBID_t lbid, const execplan::CalpontSystemCata
                 {
                     fExtentMap[i].partition.cprange.lo_val = numeric_limits<uint64_t>::max();
                     fExtentMap[i].partition.cprange.hi_val = 0;
+                    fExtentMap[i].partition.cprange.bigLoVal = -1;
+                    fExtentMap[i].partition.cprange.bigHiVal = 0;
                 }
                 else
                 {
                     fExtentMap[i].partition.cprange.lo_val = numeric_limits<int64_t>::max();
                     fExtentMap[i].partition.cprange.hi_val = numeric_limits<int64_t>::min();
+                    dataconvert::DataConvert::int128Max(fExtentMap[i].partition.cprange.bigLoVal);
+                    dataconvert::DataConvert::int128Min(fExtentMap[i].partition.cprange.bigHiVal);
                 }
 
                 incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
@@ -459,6 +477,8 @@ int ExtentMap::markInvalid(const vector<LBID_t>& lbids,
 * or increment the sequenceNum value and return a -1.
 
 **/
+
+// TODO MCOL-641 Not adding support here since this function appears to be unused anywhere.
 
 int ExtentMap::setMaxMin(const LBID_t lbid,
                          const int64_t max,
@@ -626,8 +646,16 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
                         fExtentMap[i].partition.cprange.isValid == CP_INVALID)
                 {
                     makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
-                    fExtentMap[i].partition.cprange.hi_val = it->second.max;
-                    fExtentMap[i].partition.cprange.lo_val = it->second.min;
+                    if (it->second.isBinaryColumn)
+                    {
+                        fExtentMap[i].partition.cprange.bigHiVal = it->second.bigMax;
+                        fExtentMap[i].partition.cprange.bigLoVal = it->second.bigMin;
+                    }
+                    else
+                    {
+                        fExtentMap[i].partition.cprange.hi_val = it->second.max;
+                        fExtentMap[i].partition.cprange.lo_val = it->second.min;
+                    }
                     fExtentMap[i].partition.cprange.isValid = CP_VALID;
                     incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
                     extentsUpdated++;
@@ -663,8 +691,16 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
                 else if (it->second.seqNum == -2)
                 {
                     makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
-                    fExtentMap[i].partition.cprange.hi_val = it->second.max;
-                    fExtentMap[i].partition.cprange.lo_val = it->second.min;
+                    if (it->second.isBinaryColumn)
+                    {
+                        fExtentMap[i].partition.cprange.bigHiVal = it->second.bigMax;
+                        fExtentMap[i].partition.cprange.bigLoVal = it->second.bigMin;
+                    }
+                    else
+                    {
+                        fExtentMap[i].partition.cprange.hi_val = it->second.max;
+                        fExtentMap[i].partition.cprange.lo_val = it->second.min;
+                    }
                     fExtentMap[i].partition.cprange.isValid = CP_INVALID;
                     incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
                     extentsUpdated++;
@@ -707,6 +743,7 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 {
     CPMaxMinMergeMap_t::const_iterator it;
 
+    // TODO MCOL-641 Add support in the debugging outputs here.
 #ifdef BRM_DEBUG
     log("ExtentMap::mergeExtentsMaxMin()", logging::LOG_TYPE_DEBUG);
 
@@ -784,13 +821,15 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                 log(os.str(), logging::LOG_TYPE_DEBUG);
 #endif
 
+                bool isBinaryColumn = it->second.colWidth > 8;
+
                 switch (fExtentMap[i].partition.cprange.isValid)
                 {
                     // Merge input min/max with current min/max
                     case CP_VALID:
                     {
-                        if (!isValidCPRange( it->second.max,
-                                             it->second.min,
+                        if (!isValidCPRange( !isBinaryColumn ? it->second.max : it->second.bigMax,
+                                             !isBinaryColumn ? it->second.min : it->second.bigMin,
                                              it->second.type ))
                         {
                             break;
@@ -804,8 +843,8 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                         // min/max needs to be set instead of merged.
 
                         if (isValidCPRange(
-                                    fExtentMap[i].partition.cprange.hi_val,
-                                    fExtentMap[i].partition.cprange.lo_val,
+                                    !isBinaryColumn ? fExtentMap[i].partition.cprange.hi_val : fExtentMap[i].partition.cprange.bigHiVal,
+                                    !isBinaryColumn ? fExtentMap[i].partition.cprange.lo_val : fExtentMap[i].partition.cprange.bigLoVal,
                                     it->second.type))
                         {
                             // Swap byte order to do binary string comparison
@@ -836,39 +875,83 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                             }
                             else if (isUnsigned(it->second.type))
                             {
-                                if (static_cast<uint64_t>(it->second.min) <
-                                        static_cast<uint64_t>(fExtentMap[i].partition.cprange.lo_val))
+                                if (!isBinaryColumn)
                                 {
-                                    fExtentMap[i].partition.cprange.lo_val =
-                                        it->second.min;
-                                }
+                                    if (static_cast<uint64_t>(it->second.min) <
+                                            static_cast<uint64_t>(fExtentMap[i].partition.cprange.lo_val))
+                                    {
+                                        fExtentMap[i].partition.cprange.lo_val =
+                                            it->second.min;
+                                    }
 
-                                if (static_cast<uint64_t>(it->second.max) >
-                                        static_cast<uint64_t>(fExtentMap[i].partition.cprange.hi_val))
+                                    if (static_cast<uint64_t>(it->second.max) >
+                                            static_cast<uint64_t>(fExtentMap[i].partition.cprange.hi_val))
+                                    {
+                                        fExtentMap[i].partition.cprange.hi_val =
+                                            it->second.max;
+                                    }
+                                }
+                                else
                                 {
-                                    fExtentMap[i].partition.cprange.hi_val =
-                                        it->second.max;
+                                    if (static_cast<unsigned __int128>(it->second.bigMin) <
+                                            static_cast<unsigned __int128>(fExtentMap[i].partition.cprange.bigLoVal))
+                                    {
+                                        fExtentMap[i].partition.cprange.bigLoVal =
+                                            it->second.bigMin;
+                                    }
+
+                                    if (static_cast<unsigned __int128>(it->second.bigMax) >
+                                            static_cast<unsigned __int128>(fExtentMap[i].partition.cprange.bigHiVal))
+                                    {
+                                        fExtentMap[i].partition.cprange.bigHiVal =
+                                            it->second.bigMax;
+                                    }
                                 }
                             }
                             else
                             {
-                                if (it->second.min <
-                                        fExtentMap[i].partition.cprange.lo_val)
-                                    fExtentMap[i].partition.cprange.lo_val =
-                                        it->second.min;
+                                if (!isBinaryColumn)
+                                {
+                                    if (it->second.min <
+                                            fExtentMap[i].partition.cprange.lo_val)
+                                        fExtentMap[i].partition.cprange.lo_val =
+                                            it->second.min;
 
-                                if (it->second.max >
-                                        fExtentMap[i].partition.cprange.hi_val)
-                                    fExtentMap[i].partition.cprange.hi_val =
-                                        it->second.max;
+                                    if (it->second.max >
+                                            fExtentMap[i].partition.cprange.hi_val)
+                                        fExtentMap[i].partition.cprange.hi_val =
+                                            it->second.max;
+                                }
+                                else
+                                {
+                                    if (it->second.bigMin <
+                                            fExtentMap[i].partition.cprange.bigLoVal)
+                                        fExtentMap[i].partition.cprange.bigLoVal =
+                                            it->second.bigMin;
+
+                                    if (it->second.bigMax >
+                                            fExtentMap[i].partition.cprange.bigHiVal)
+                                        fExtentMap[i].partition.cprange.bigHiVal =
+                                            it->second.bigMax;
+                                }
                             }
                         }
                         else
                         {
-                            fExtentMap[i].partition.cprange.lo_val =
-                                it->second.min;
-                            fExtentMap[i].partition.cprange.hi_val =
-                                it->second.max;
+                            if (!isBinaryColumn)
+                            {
+                                fExtentMap[i].partition.cprange.lo_val =
+                                    it->second.min;
+                                fExtentMap[i].partition.cprange.hi_val =
+                                    it->second.max;
+                            }
+                            else
+                            {
+                                fExtentMap[i].partition.cprange.bigLoVal =
+                                    it->second.bigMin;
+                                fExtentMap[i].partition.cprange.bigHiVal =
+                                    it->second.bigMax;
+                            }
                         }
 
                         incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
@@ -897,14 +980,24 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 
                         if (it->second.newExtent)
                         {
-                            if (isValidCPRange( it->second.max,
-                                                it->second.min,
+                            if (isValidCPRange( !isBinaryColumn ? it->second.max : it->second.bigMax,
+                                                !isBinaryColumn ? it->second.min : it->second.bigMin,
                                                 it->second.type ))
                             {
-                                fExtentMap[i].partition.cprange.lo_val =
-                                    it->second.min;
-                                fExtentMap[i].partition.cprange.hi_val =
-                                    it->second.max;
+                                if (!isBinaryColumn)
+                                {
+                                    fExtentMap[i].partition.cprange.lo_val =
+                                        it->second.min;
+                                    fExtentMap[i].partition.cprange.hi_val =
+                                        it->second.max;
+                                }
+                                else
+                                {
+                                    fExtentMap[i].partition.cprange.bigLoVal =
+                                        it->second.bigMin;
+                                    fExtentMap[i].partition.cprange.bigHiVal =
+                                        it->second.bigMax;
+                                }
                             }
 
                             // Even if invalid range; we set state to CP_VALID,
@@ -939,22 +1032,51 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 // Range is considered invalid if min or max, are NULL (min()), or EMPTY
 // (min()+1). For unsigned types NULL is max() and EMPTY is max()-1.
 //------------------------------------------------------------------------------
-bool ExtentMap::isValidCPRange(int64_t max, int64_t min, execplan::CalpontSystemCatalog::ColDataType type) const
+template <typename T>
+bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSystemCatalog::ColDataType type) const
 {
     if (isUnsigned(type))
     {
-        if ( (static_cast<uint64_t>(min) >= (numeric_limits<uint64_t>::max() - 1)) ||
-                (static_cast<uint64_t>(max) >= (numeric_limits<uint64_t>::max() - 1)) )
+        if (typeid(T) != typeid(__int128))
         {
-            return false;
+            if ( (static_cast<uint64_t>(min) >= (numeric_limits<uint64_t>::max() - 1)) ||
+                    (static_cast<uint64_t>(max) >= (numeric_limits<uint64_t>::max() - 1)) )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            unsigned __int128 temp;
+            dataconvert::DataConvert::uint128Max(temp);
+
+            if ( (static_cast<unsigned __int128>(min) >= (temp - 1)) ||
+                    (static_cast<unsigned __int128>(max) >= (temp - 1)) )
+            {
+                return false;
+            }
         }
     }
     else
     {
-        if ( (min <= (numeric_limits<int64_t>::min() + 1)) ||
-                (max <= (numeric_limits<int64_t>::min() + 1)) )
+        if (typeid(T) != typeid(__int128))
         {
-            return false;
+            if ( (min <= (numeric_limits<int64_t>::min() + 1)) ||
+                    (max <= (numeric_limits<int64_t>::min() + 1)) )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            __int128 temp;
+            dataconvert::DataConvert::int128Min(temp);
+
+            if ( (min <= (temp + 1)) ||
+                    (max <= (temp + 1)) )
+            {
+                return false;
+            }
         }
     }
 
@@ -969,9 +1091,9 @@ bool ExtentMap::isValidCPRange(int64_t max, int64_t min, execplan::CalpontSystem
 * return the sequenceNum of the extent and the max/min values as -1.
 **/
 
+template <typename T>
 int ExtentMap::getMaxMin(const LBID_t lbid,
-                         int64_t& max,
-                         int64_t& min,
+                         T& max, T& min,
                          int32_t& seqNum)
 {
 #ifdef BRM_INFO
@@ -987,8 +1109,19 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
     }
 
 #endif
-    max = numeric_limits<uint64_t>::max();
-    min = 0;
+    if (typeid(T) == typeid(__int128))
+    {
+        __int128 tmpMax, tmpMin;
+        dataconvert::DataConvert::int128Min(tmpMax);
+        dataconvert::DataConvert::int128Max(tmpMin);
+        max = tmpMax;
+        min = tmpMin;
+    }
+    else
+    {
+        max = numeric_limits<int64_t>::min();
+        min = numeric_limits<int64_t>::max();
+    }
     seqNum *= (-1);
     int entries;
     int i;
@@ -1014,8 +1147,16 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
 
             if (lbid >= fExtentMap[i].range.start && lbid <= lastBlock)
             {
-                max = fExtentMap[i].partition.cprange.hi_val;
-                min = fExtentMap[i].partition.cprange.lo_val;
+                if (typeid(T) == typeid(__int128))
+                {
+                    max = fExtentMap[i].partition.cprange.bigHiVal;
+                    min = fExtentMap[i].partition.cprange.bigLoVal;
+                }
+                else
+                {
+                    max = fExtentMap[i].partition.cprange.hi_val;
+                    min = fExtentMap[i].partition.cprange.lo_val;
+                }
                 seqNum = fExtentMap[i].partition.cprange.sequenceNum;
                 isValid = fExtentMap[i].partition.cprange.isValid;
                 releaseEMEntryTable(READ);
@@ -2569,13 +2710,29 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
 
     if (isUnsigned(colDataType))
     {
-        e->partition.cprange.lo_val = numeric_limits<uint64_t>::max();
-        e->partition.cprange.hi_val = 0;
+        if (colWidth <= 8)
+        {
+            e->partition.cprange.lo_val = numeric_limits<uint64_t>::max();
+            e->partition.cprange.hi_val = 0;
+        }
+        else
+        {
+            e->partition.cprange.bigLoVal = -1;
+            e->partition.cprange.bigHiVal = 0;
+        }
     }
     else
     {
-        e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
-        e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
+        if (colWidth <= 8)
+        {
+            e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
+            e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
+        }
+        else
+        {
+            dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
+            dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
+        }
     }
 
     e->partition.cprange.sequenceNum = 0;
@@ -2764,13 +2921,29 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
 
     if (isUnsigned(colDataType))
     {
-        e->partition.cprange.lo_val = numeric_limits<uint64_t>::max();
-        e->partition.cprange.hi_val = 0;
+        if (colWidth <= 8)
+        {
+            e->partition.cprange.lo_val = numeric_limits<uint64_t>::max();
+            e->partition.cprange.hi_val = 0;
+        }
+        else
+        {
+            e->partition.cprange.bigLoVal = -1;
+            e->partition.cprange.bigHiVal = 0;
+        }
     }
     else
     {
-        e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
-        e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
+        if (colWidth <= 8)
+        {
+            e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
+            e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
+        }
+        else
+        {
+            dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
+            dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
+        }
     }
 
     e->partition.cprange.sequenceNum = 0;
@@ -2955,6 +3128,8 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
     e->status       = EXTENTUNAVAILABLE;// @bug 1911 mark extent as in process
     e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
     e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
+    dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
+    dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
     e->partition.cprange.sequenceNum = 0;
     e->partition.cprange.isValid     = CP_INVALID;
 
@@ -5839,6 +6014,12 @@ void ExtentMap::dumpTo(ostream& os)
 	return 0;
 }
 */
+
+template
+int ExtentMap::getMaxMin<__int128>(const LBID_t lbidRange, __int128& max, __int128& min, int32_t& seqNum);
+
+template
+int ExtentMap::getMaxMin<int64_t>(const LBID_t lbidRange, int64_t& max, int64_t& min, int32_t& seqNum);
 
 }	//namespace
 // vim:ts=4 sw=4:

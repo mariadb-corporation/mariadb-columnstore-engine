@@ -134,8 +134,22 @@ const int32_t MIN_TIMESTAMP_VALUE = 0;
 namespace dataconvert
 {
 
+// Decimal has maximum 38 digits with 3 extra chars for dot(.), minus(-), null character(\0)
+const int MAX_DECIMAL_STRING_LENGTH = 41;
+
+// WIP MCOL-641
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
+
+struct Int128Pod_struct
+{
+  uint64_t lo;
+  uint64_t hi;
+};
+
+typedef Int128Pod_struct Int128Pod_t;
+
+void atoi128(const std::string& arg, int128_t& res); 
 
 enum CalpontDateTimeFormat
 {
@@ -1022,6 +1036,28 @@ public:
 
     template <typename T>
     EXPORT static void toString(T* dec, char *p, size_t buflen);
+
+    static inline void int128Max(int128_t& i)
+    {
+        Int128Pod_t *pod = reinterpret_cast<Int128Pod_t*>(&i);
+        pod->lo = 0xFFFFFFFFFFFFFFFF;
+        pod->hi = 0x7FFFFFFFFFFFFFFF;
+    }
+
+    static inline void int128Min(int128_t& i)
+    {
+        Int128Pod_t *pod = reinterpret_cast<Int128Pod_t*>(&i);
+        pod->lo = 0;
+        pod->hi = 0x8000000000000000;
+    }
+
+    static inline void uint128Max(uint128_t& i)
+    {
+        Int128Pod_t *pod = reinterpret_cast<Int128Pod_t*>(&i);
+        pod->lo = 0xFFFFFFFFFFFFFFFF;
+        pod->hi = 0xFFFFFFFFFFFFFFFF;
+    }
+
     static inline std::string constructRegexp(const std::string& str);
     static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)

@@ -301,6 +301,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
     int32_t     iDate;
     char        charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
     long long   llVal = 0, llDate = 0;
+    __int128 bigllVal = 0;
     uint64_t    tmp64;
     uint32_t    tmp32;
     uint8_t     ubiVal;
@@ -938,7 +939,9 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         // BIG INT
         //----------------------------------------------------------------------
         case WriteEngine::WR_LONGLONG:
+        case WriteEngine::WR_BINARY:
         {
+            // TODO MCOL-641 Add full support here.
             bool bSatVal = false;
 
             if ( column.dataType != CalpontSystemCatalog::DATETIME &&
@@ -983,9 +986,16 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
-                            // errno is initialized and set in convertDecimalString
-                            llVal = Convertor::convertDecimalString(
-                                        field, fieldLength, column.scale );
+                            if (width <= 8)
+                            {
+                                // errno is initialized and set in convertDecimalString
+                                llVal = Convertor::convertDecimalString(
+                                            field, fieldLength, column.scale );
+                            }
+                            else
+                            {
+                                dataconvert::atoi128(string(field), bigllVal);
+                            }
                         }
                         else
                         {
@@ -1016,13 +1026,26 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     bufStats.satCount++;
 
                 // Update min/max range
-                if (llVal < bufStats.minBufferVal)
-                    bufStats.minBufferVal = llVal;
+                if (width <= 8)
+                {
+                    if (llVal < bufStats.minBufferVal)
+                        bufStats.minBufferVal = llVal;
 
-                if (llVal > bufStats.maxBufferVal)
-                    bufStats.maxBufferVal = llVal;
+                    if (llVal > bufStats.maxBufferVal)
+                        bufStats.maxBufferVal = llVal;
 
-                pVal = &llVal;
+                    pVal = &llVal;
+                }
+                else
+                {
+                    if (bigllVal < bufStats.bigMinBufferVal)
+                        bufStats.bigMinBufferVal = bigllVal;
+
+                    if (bigllVal > bufStats.bigMaxBufferVal)
+                        bufStats.bigMaxBufferVal = bigllVal;
+
+                    pVal = &bigllVal;
+                }
             }
             else if (column.dataType == CalpontSystemCatalog::TIME)
             {
@@ -1651,11 +1674,24 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
             // Update CP min/max if this is last row in this extent
             if ( (fStartRowParser + i) == lastInputRowInExtent )
             {
-                columnInfo.updateCPInfo( lastInputRowInExtent,
-                                         bufStats.minBufferVal,
-                                         bufStats.maxBufferVal,
-                                         columnInfo.column.dataType );
+                if (columnInfo.column.width <= 8)
+                {
+                    columnInfo.updateCPInfo( lastInputRowInExtent,
+                                             bufStats.minBufferVal,
+                                             bufStats.maxBufferVal,
+                                             columnInfo.column.dataType,
+                                             columnInfo.column.width );
+                }
+                else
+                {
+                    columnInfo.updateCPInfo( lastInputRowInExtent,
+                                             bufStats.bigMinBufferVal,
+                                             bufStats.bigMaxBufferVal,
+                                             columnInfo.column.dataType,
+                                             columnInfo.column.width );
+                }
 
+                // TODO MCOL-641 Add support here.
                 if (fLog->isDebug( DEBUG_2 ))
                 {
                     ostringstream oss;
@@ -1675,14 +1711,30 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
 
                 if (isUnsigned(columnInfo.column.dataType) || isCharType(columnInfo.column.dataType))
                 {
-                    bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
-                    bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+                    if (columnInfo.column.width <= 8)
+                    {
+                        bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+                        bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+                    }
+                    else
+                    {
+                        bufStats.bigMinBufferVal = -1;
+                        bufStats.bigMaxBufferVal = 0;
+                    }
                     updateCPInfoPendingFlag = false;
                 }
                 else
                 {
-                    bufStats.minBufferVal = MAX_BIGINT;
-                    bufStats.maxBufferVal = MIN_BIGINT;
+                    if (columnInfo.column.width <= 8)
+                    {
+                        bufStats.minBufferVal = MAX_BIGINT;
+                        bufStats.maxBufferVal = MIN_BIGINT;
+                    }
+                    else
+                    {
+                        dataconvert::DataConvert::int128Max(bufStats.bigMinBufferVal);
+                        dataconvert::DataConvert::int128Min(bufStats.bigMaxBufferVal);
+                    }
                     updateCPInfoPendingFlag = false;
                 }
             }
@@ -1690,10 +1742,22 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
 
         if (updateCPInfoPendingFlag)
         {
-            columnInfo.updateCPInfo( lastInputRowInExtent,
-                                     bufStats.minBufferVal,
-                                     bufStats.maxBufferVal,
-                                     columnInfo.column.dataType );
+            if (columnInfo.column.width <= 8)
+            {
+                columnInfo.updateCPInfo( lastInputRowInExtent,
+                                         bufStats.minBufferVal,
+                                         bufStats.maxBufferVal,
+                                         columnInfo.column.dataType,
+                                         columnInfo.column.width );
+            }
+            else
+            {
+                columnInfo.updateCPInfo( lastInputRowInExtent,
+                                         bufStats.bigMinBufferVal,
+                                         bufStats.bigMaxBufferVal,
+                                         columnInfo.column.dataType,
+                                         columnInfo.column.width );
+            }
         }
 
         if (bufStats.satCount) // @bug 3504: increment row saturation count
@@ -1724,6 +1788,7 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
         Stats::stopParseEvent(WE_STATS_PARSE_COL);
 #endif
 
+        // TODO MCOL-641 Add support here.
         if (fLog->isDebug( DEBUG_2 ))
         {
             ostringstream oss;

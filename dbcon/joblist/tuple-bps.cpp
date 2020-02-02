@@ -837,8 +837,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
             scanFlags[idx] = scanFlags[idx] &&
                              (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
                               lbidListVec[i]->CasualPartitionPredicate(
-                                  extent.partition.cprange.lo_val,
-                                  extent.partition.cprange.hi_val,
+                                  extent.partition.cprange,
                                   &(colCmd->getFilterString()),
                                   colCmd->getFilterCount(),
                                   colCmd->getColType(),
@@ -927,7 +926,8 @@ void TupleBPS::prepCasualPartitioning()
 {
     uint32_t i;
     int64_t min, max, seq;
-	boost::mutex::scoped_lock lk(cpMutex);
+    __int128 bigMin, bigMax;
+    boost::mutex::scoped_lock lk(cpMutex);
 
     for (i = 0; i < scannedExtents.size(); i++)
     {
@@ -937,8 +937,18 @@ void TupleBPS::prepCasualPartitioning()
 
             if (scanFlags[i] && lbidList->CasualPartitionDataType(fColType.colDataType,
                     fColType.colWidth))
-                lbidList->GetMinMax(min, max, seq, (int64_t) scannedExtents[i].range.start,
-                                    &scannedExtents, fColType.colDataType);
+            {
+                if (fColType.colWidth <= 8)
+                {
+                    lbidList->GetMinMax(min, max, seq, (int64_t) scannedExtents[i].range.start,
+                                        &scannedExtents, fColType.colDataType);
+                }
+                else if (fColType.colWidth == 16)
+                {
+                    lbidList->GetMinMax(bigMin, bigMax, seq, (int64_t) scannedExtents[i].range.start,
+                                        &scannedExtents, fColType.colDataType);
+                }
+            }
         }
         else
             scanFlags[i] = true;
@@ -1874,8 +1884,17 @@ abort:
 struct _CPInfo
 {
     _CPInfo(int64_t MIN, int64_t MAX, uint64_t l, bool val) : min(MIN), max(MAX), LBID(l), valid(val) { };
-    int64_t min;
-    int64_t max;
+    _CPInfo(__int128 BIGMIN, __int128 BIGMAX, uint64_t l, bool val) : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val) { };
+    union
+    {
+        __int128 bigMin;
+        int64_t min;
+    };
+    union
+    {
+        __int128 bigMax;
+        int64_t max;
+    };
     uint64_t LBID;
     bool valid;
 };
@@ -1893,8 +1912,9 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     vector<RGData> fromPrimProc;
 
     bool validCPData;
-    int64_t min;
-    int64_t max;
+    bool hasBinaryColumn;
+    __int128 min;
+    __int128 max;
     uint64_t lbid;
     vector<_CPInfo> cpv;
     uint32_t cachedIO;
@@ -2169,7 +2189,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
                 fromPrimProc.clear();
                 fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &min, &max,
-                                      &cachedIO, &physIO, &touchedBlocks, &unused, threadID);
+                                      &cachedIO, &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
 
                 /* Another layer of messiness.  Need to refactor this fcn. */
                 while (!fromPrimProc.empty() && !cancelled())
@@ -2333,7 +2353,16 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                     touchedBlocks_Thread += touchedBlocks;
 
                     if (fOid >= 3000 && ffirstStepType == SCAN && bop == BOP_AND)
-                        cpv.push_back(_CPInfo(min, max, lbid, validCPData));
+                    {
+                        if (fColType.colWidth <= 8)
+                        {
+                            cpv.push_back(_CPInfo((int64_t) min, (int64_t) max, lbid, validCPData));
+                        }
+                        else if (fColType.colWidth == 16)
+                        {
+                            cpv.push_back(_CPInfo(min, max, lbid, validCPData));
+                        }
+                    }
                 }  // end of the per-rowgroup processing loop
 
                 // insert the resulting rowgroup data from a single bytestream into dlp
@@ -2359,8 +2388,16 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
                 for (i = 0; i < size; i++)
                 {
-                    lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
-                                           cpv[i].valid);
+                    if (fColType.colWidth > 8)
+                    {
+                        lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, fColType.colDataType,
+                                               cpv[i].valid);
+                    }
+                    else
+                    {
+                        lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
+                                               cpv[i].valid);
+                    }
                 }
 
                 cpMutex.unlock();
@@ -2633,7 +2670,7 @@ out:
         if (ffirstStepType == SCAN && bop == BOP_AND && !cancelled())
         {
             cpMutex.lock();
-            lbidList->UpdateAllPartitionInfo();
+            lbidList->UpdateAllPartitionInfo(fColType);
             cpMutex.unlock();
         }
     }

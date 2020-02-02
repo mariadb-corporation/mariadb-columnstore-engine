@@ -50,11 +50,19 @@ struct MinMaxPartition
 {
     int64_t lbid;
     int64_t lbidmax;
-    int64_t min;
-    int64_t max;
     int64_t seq;
     int     isValid;
     uint32_t blksScanned;
+    union
+    {
+        __int128 bigMin;
+        int64_t min;
+    };
+    union
+    {
+        __int128 bigMax;
+        int64_t max;
+    };
 };
 
 /** @brief class LBIDList
@@ -84,7 +92,8 @@ public:
     // If pEMEntries is provided, then min/max will be extracted from that
     // vector, else extents in BRM will be searched. If type is unsigned, caller
     // should static cast returned min and max to uint64_t
-    bool GetMinMax(int64_t& min, int64_t& max, int64_t& seq, int64_t lbid,
+    template<typename T>
+    bool GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
                    const std::vector<struct BRM::EMEntry>* pEMEntries,
                    execplan::CalpontSystemCatalog::ColDataType type);
 
@@ -92,15 +101,15 @@ public:
                    const std::tr1::unordered_map<int64_t, BRM::EMEntry>& entries,
                    execplan::CalpontSystemCatalog::ColDataType type);
 
-    void UpdateMinMax(int64_t min, int64_t max, int64_t lbid,
+    template <typename T>
+    void UpdateMinMax(T min, T max, int64_t lbid,
                       execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
 
-    void UpdateAllPartitionInfo();
+    void UpdateAllPartitionInfo(const execplan::CalpontSystemCatalog::ColType& colType);
 
     bool IsRangeBoundary(uint64_t lbid);
 
-    bool CasualPartitionPredicate(const int64_t Min,
-                                  const int64_t Max,
+    bool CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                                   const messageqcpp::ByteStream* MsgDataPtr,
                                   const uint16_t NOPS,
                                   const execplan::CalpontSystemCatalog::ColType& ct,
@@ -135,7 +144,8 @@ private:
     template<class T>
     inline bool compareVal(const T& Min, const T& Max, const T& value, char op, uint8_t lcf);
 
-    int  getMinMaxFromEntries(int64_t& min, int64_t& max, int32_t& seq,
+    template <typename T>
+    int  getMinMaxFromEntries(T& min, T& max, int32_t& seq,
                               int64_t lbid, const std::vector<struct BRM::EMEntry>& EMEntries);
 
     boost::shared_ptr<BRM::DBRM> em;
