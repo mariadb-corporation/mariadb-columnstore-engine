@@ -573,6 +573,10 @@ keepGoing:
                 {
                     colDefPtr->fType->fLength = 8;
                 }
+                else if (colDefPtr->fType->fPrecision > 18 && colDefPtr->fType->fPrecision < 39)
+                {
+                    colDefPtr->fType->fLength = 16;
+                }
             }
 
             bytestream << (fStartingColOID + (colNum++) + 1);

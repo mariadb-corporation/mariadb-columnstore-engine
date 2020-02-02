@@ -57,6 +57,7 @@ using namespace execplan;
 #include "IDBPolicy.h"
 #include "MonitorProcMem.h"
 using namespace idbdatafile;
+#include "dataconvert.h"
 
 #ifdef _MSC_VER
 #define isnan _isnan
@@ -1505,8 +1506,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     //--------------------------------------------------------------------------
     if (isFirstBatchPm)
     {
-		currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
-		extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
+	currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
+	extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
         dbRoot = extentInfo[currentDBrootIdx].fDbRoot;
         partitionNum = extentInfo[currentDBrootIdx].fPartition;
 
@@ -1536,24 +1537,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
             BRM::CPInfoList_t cpinfoList;
             BRM::CPInfo cpInfo;
 
-            if (isUnsigned(colStructList[i].colDataType))
-            {
-                cpInfo.max = 0;
-                cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            }
-            else
-            {
-                cpInfo.max = numeric_limits<int64_t>::min();
-                cpInfo.min = numeric_limits<int64_t>::max();
-            }
-
-            cpInfo.seqNum = -1;
-
             for ( i = 0; i < extents.size(); i++)
             {
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
                 colOp->initColumn(curCol);
-				colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
+                colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
                                    colStructList[i].colType, colStructList[i].dataOid, colStructList[i].fCompressionType,
                                    dbRoot, partitionNum, segmentNum);
                 rc = colOp->extendColumn(curCol, false, extents[i].startBlkOffset, extents[i].startLbid, extents[i].allocSize, dbRoot,
@@ -1561,6 +1549,37 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 
                 if (rc != NO_ERROR)
                     return rc;
+
+                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.max = 0;
+                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo.max = numeric_limits<int64_t>::min();
+                        cpInfo.min = numeric_limits<int64_t>::max();
+                    }
+                }
+                else
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.bigMax = 0;
+                        cpInfo.bigMin = -1;
+                    }
+                    else
+                    {
+                        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
+                        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                    }
+                }
+
+                cpInfo.seqNum = -1;
 
                 //mark the extents to invalid
                 cpInfo.firstLbid = extents[i].startLbid;
@@ -2278,19 +2297,6 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
             BRM::CPInfoList_t cpinfoList;
             BRM::CPInfo cpInfo;
 
-            if (isUnsigned(colStructList[i].colDataType))
-            {
-                cpInfo.max = 0;
-                cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            }
-            else
-            {
-                cpInfo.max = numeric_limits<int64_t>::min();
-                cpInfo.min = numeric_limits<int64_t>::max();
-            }
-
-            cpInfo.seqNum = -1;
-
             for ( i = 0; i < extents.size(); i++)
             {
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
@@ -2303,6 +2309,37 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
                 if (rc != NO_ERROR)
                     return rc;
+
+                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.max = 0;
+                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo.max = numeric_limits<int64_t>::min();
+                        cpInfo.min = numeric_limits<int64_t>::max();
+                    }
+                }
+                else
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.bigMax = 0;
+                        cpInfo.bigMin = -1;
+                    }
+                    else
+                    {
+                        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
+                        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                    }
+                }
+
+                cpInfo.seqNum = -1;
 
                 //mark the extents to invalid
                 cpInfo.firstLbid = extents[i].startLbid;
