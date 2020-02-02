@@ -704,8 +704,8 @@ struct NewColResultHeader
     uint16_t NVALS;
     uint16_t ValidMinMax;		// 1 if Min/Max are valid, otherwise 0
     uint32_t OutputType;
-    int64_t Min; 			    // Minimum value in this block for signed data types
-    int64_t Max; 			    // Maximum value in this block for signed data types
+    __int128 Min; 			    // Minimum value in this block for signed data types
+    __int128 Max; 			    // Maximum value in this block for signed data types
     uint32_t CacheIO;			// I/O count from buffer cache
     uint32_t PhysicalIO;		// Physical I/O count from disk
     // if OutputType was OT_DATAVALUE, what follows is DataType[NVALS]

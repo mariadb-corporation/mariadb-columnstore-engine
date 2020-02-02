@@ -1163,22 +1163,12 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 
 }
 
-// WIP MCOL-641 
-#include <stdio.h>
-
-struct uint128_pod
-{ 
-  uint64_t lo;
-  uint64_t hi;
-};
-
 // WIP MCOL-641
 // Check for overflows with buflen
 template<typename T>
 void DataConvert::toString(T* dec, char *p, size_t buflen)
 { 
   uint64_t div = 10000000000000000000ULL;
-  size_t div_log = 19;
   // template this
   uint128_t high = *dec;
   uint128_t low;
@@ -1192,23 +1182,27 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
   // use typeof
   // Or a templated structure
   // Use uint64* to access parts of uint128 and remove pods
-  uint128_pod *high_pod = reinterpret_cast<uint128_pod*>(&high);
-  uint128_pod *mid_pod = reinterpret_cast<uint128_pod*>(&mid);
-  uint128_pod *low_pod = reinterpret_cast<uint128_pod*>(&low);
+  Int128Pod_t *high_pod = reinterpret_cast<Int128Pod_t*>(&high);
+  Int128Pod_t *mid_pod = reinterpret_cast<Int128Pod_t*>(&mid);
+  Int128Pod_t *low_pod = reinterpret_cast<Int128Pod_t*>(&low);
   char* original_p = p;
   int printed_chars = 0;
  
   // WIP replace snprintf with streams
   if (high_pod->lo != 0) {
-    printed_chars = snprintf(p, div_log+1, "%lu", high_pod->lo);
+    printed_chars = sprintf(p, "%lu", high_pod->lo);
+    p += printed_chars; 
+    printed_chars = sprintf(p, "%019lu", mid_pod->lo);
     p += printed_chars;
-    printed_chars = snprintf(p, div_log+1, "%019lu", mid_pod->lo);
-    p += printed_chars;  
+    sprintf(p, "%019lu", low_pod->lo);
   } else if (mid_pod->lo != 0) {
-    printed_chars = snprintf(p, div_log+1, "%lu", mid_pod->lo);
+    printed_chars = sprintf(p, "%lu", mid_pod->lo);
     p += printed_chars;
+    sprintf(p, "%019lu", low_pod->lo);
   }
-  snprintf(p, div_log+1, "%019lu", low_pod->lo);
+  else {
+      sprintf(p, "%lu", low_pod->lo);
+  }
   if (buflen <= p-original_p)
     std::cout << "DataConvert::toString char buffer overflow" << std::endl;
 }
