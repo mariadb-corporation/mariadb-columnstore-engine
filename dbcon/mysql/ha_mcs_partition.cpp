@@ -235,15 +235,30 @@ struct PartitionInfo
 {
     int64_t min;
     int64_t max;
+    union
+    {
+        __int128 bigMin;
+        int64_t min_;
+    };
+    union
+    {
+        __int128 bigMax;
+        int64_t max_;
+    };
     uint64_t status;
     PartitionInfo(): min((uint64_t)0x8000000000000001ULL),
         max((uint64_t) - 0x8000000000000001LL),
-        status(0) {};
+        status(0)
+    {
+        DataConvert::int128Min(bigMin);
+        DataConvert::int128Max(bigMax);
+    };
 };
 
 typedef map<LogicalPartition, PartitionInfo> PartitionMap;
 
-const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
+template <typename T>
+const string format(T v, CalpontSystemCatalog::ColType& ct)
 {
     ostringstream oss;
 
@@ -282,14 +297,23 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            if (ct.scale > 0)
+            if (ct.colWidth <= 8)
             {
-                double d = ((double)(v) / (double)pow((double)10, ct.scale));
-                oss << setprecision(ct.scale) << fixed << d;
+                if (ct.scale > 0)
+                {
+                    double d = ((double)(v) / (double)pow((double)10, ct.scale));
+                    oss << setprecision(ct.scale) << fixed << d;
+                }
+                else
+                {
+                    oss << (int64_t) v;
+                }
             }
             else
             {
-                oss << v;
+                char buf[MAX_DECIMAL_STRING_LENGTH];
+                DataConvert::decimalToString((__int128*)&v, (unsigned)ct.scale, buf, sizeof(buf), ct.colDataType);
+                oss << buf;
             }
 
             break;
@@ -308,7 +332,7 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
             break;
 
         default:
-            oss << v;
+            oss << (int64_t) v;
             break;
     }
 
@@ -1062,7 +1086,13 @@ extern "C"
                         partInfo.status |= ET_DISABLED;
 
                     mapit = partMap.find(logicalPartNum);
-                    int state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
+
+                    int state;
+
+                    if (ct.colWidth <= 8)
+                        state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
+                    else if (ct.colWidth == 16)
+                        state = em.getExtentMaxMin(iter->range.start, partInfo.bigMax, partInfo.bigMin, seqNum);
 
                     // char column order swap for compare
                     if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -1084,8 +1114,16 @@ extern "C"
                         if (mapit->second.status & CPINVALID)
                             continue;
 
-                        mapit->second.min = (partInfo.min < mapit->second.min ? partInfo.min : mapit->second.min);
-                        mapit->second.max = (partInfo.max > mapit->second.max ? partInfo.max : mapit->second.max);
+                        if (ct.colWidth <= 8)
+                        {
+                            mapit->second.min = (partInfo.min < mapit->second.min ? partInfo.min : mapit->second.min);
+                            mapit->second.max = (partInfo.max > mapit->second.max ? partInfo.max : mapit->second.max);
+                        }
+                        else if (ct.colWidth == 16)
+                        {
+                            mapit->second.bigMin = (partInfo.bigMin < mapit->second.bigMin ? partInfo.bigMin : mapit->second.bigMin);
+                            mapit->second.bigMax = (partInfo.bigMax > mapit->second.bigMax ? partInfo.bigMax : mapit->second.bigMax);
+                        }
                     }
                 }
             }
@@ -1105,12 +1143,28 @@ extern "C"
 
         ostringstream output;
         output.setf(ios::left, ios::adjustfield);
-        output << setw(10) << "Part#"
-               << setw(30) << "Min"
-               << setw(30) << "Max" << "Status";
+        if (ct.colWidth <= 8)
+        {
+            output << setw(10) << "Part#"
+                   << setw(30) << "Min"
+                   << setw(30) << "Max" << "Status";
+        }
+        else
+        {
+            output << setw(10) << "Part#"
+                   << setw(40) << "Min"
+                   << setw(40) << "Max" << "Status";
+        }
 
         int64_t maxLimit = numeric_limits<int64_t>::max();
         int64_t minLimit = numeric_limits<int64_t>::min();
+
+        __int128 bigMaxLimit, bigMinLimit;
+        DataConvert::int128Max(bigMaxLimit);
+        DataConvert::int128Min(bigMinLimit);
+        unsigned __int128 ubigMaxLimit, ubigMinLimit;
+        DataConvert::uint128Max(ubigMaxLimit);
+        ubigMinLimit = 0;
 
         // char column order swap for compare in subsequent loop
         if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -1130,24 +1184,48 @@ extern "C"
 
             if (partIt->second.status & CPINVALID)
             {
-                output << setw(30) << "N/A" << setw(30) << "N/A";
+                if (ct.colWidth <= 8)
+                    output << setw(30) << "N/A" << setw(30) << "N/A";
+                else
+                    output << setw(40) << "N/A" << setw(40) << "N/A";
             }
             else
             {
                 if ((isUnsigned(ct.colDataType)))
                 {
-                    if (static_cast<uint64_t>(partIt->second.min) == numeric_limits<uint64_t>::max()
-                            &&  static_cast<uint64_t>(partIt->second.max) == numeric_limits<uint64_t>::min())
-                        output << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
+                    if (ct.colWidth <= 8)
+                    {
+                        if (static_cast<uint64_t>(partIt->second.min) == numeric_limits<uint64_t>::max()
+                                &&  static_cast<uint64_t>(partIt->second.max) == numeric_limits<uint64_t>::min())
+                            output << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
+                        else
+                            output << setw(30) << format(partIt->second.min, ct) << setw(30) << format(partIt->second.max, ct);
+                    }
                     else
-                        output << setw(30) << format(partIt->second.min, ct) << setw(30) << format(partIt->second.max, ct);
+                    {
+                        if (static_cast<unsigned __int128>(partIt->second.bigMin) == ubigMaxLimit
+                                &&  static_cast<uint64_t>(partIt->second.bigMax) == ubigMinLimit)
+                            output << setw(40) << "Empty/Null" << setw(40) << "Empty/Null";
+                        else
+                            output << setw(40) << format(partIt->second.bigMin, ct) << setw(40) << format(partIt->second.bigMax, ct);
+                    }
                 }
                 else
                 {
-                    if (partIt->second.min == maxLimit && partIt->second.max == minLimit)
-                        output << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
+                    if (ct.colWidth <= 8)
+                    {
+                        if (partIt->second.min == maxLimit && partIt->second.max == minLimit)
+                            output << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
+                        else
+                            output << setw(30) << format(partIt->second.min, ct) << setw(30) << format(partIt->second.max, ct);
+                    }
                     else
-                        output << setw(30) << format(partIt->second.min, ct) << setw(30) << format(partIt->second.max, ct);
+                    {
+                        if (partIt->second.bigMin == bigMaxLimit && partIt->second.bigMax == bigMinLimit)
+                            output << setw(40) << "Empty/Null" << setw(40) << "Empty/Null";
+                        else
+                            output << setw(40) << format(partIt->second.bigMin, ct) << setw(40) << format(partIt->second.bigMax, ct);
+                    }
                 }
             }
 

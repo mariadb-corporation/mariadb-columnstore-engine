@@ -293,10 +293,11 @@ struct ColumnInfo
 
     /** @brief Update extent CP information
      */
+    template <typename T>
     void updateCPInfo( RID     lastInputRow,
-                       int64_t minVal,
-                       int64_t maxVal,
-                       ColDataType colDataType );
+                       T minVal, T maxVal,
+                       ColDataType colDataType,
+                       int width );
 
     /** @brief Setup initial extent we will begin loading at start of import.
      *  @param dbRoot    DBRoot of starting extent
@@ -557,13 +558,15 @@ inline unsigned ColumnInfo::rowsPerExtent()
     return fRowsPerExtent;
 }
 
+template <typename T>
 inline void ColumnInfo::updateCPInfo(
     RID     lastInputRow,
-    int64_t minVal,
-    int64_t maxVal,
-    ColDataType colDataType )
+    T minVal,
+    T maxVal,
+    ColDataType colDataType,
+    int width )
 {
-    fColExtInf->addOrUpdateEntry( lastInputRow, minVal, maxVal, colDataType );
+    fColExtInf->addOrUpdateEntry( lastInputRow, minVal, maxVal, colDataType, width );
 }
 
 } // end of namespace

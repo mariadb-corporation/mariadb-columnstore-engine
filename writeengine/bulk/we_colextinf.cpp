@@ -70,10 +70,11 @@ void ColExtInf::addFirstEntry( RID         lastInputRow,
 // buffer is flushed), so we will not have an LBID for the 1st buffer for this
 // extent.
 //------------------------------------------------------------------------------
-void ColExtInf::addOrUpdateEntry( RID     lastInputRow,
-                                  int64_t minVal,
-                                  int64_t maxVal,
-                                  ColDataType colDataType )
+template <typename T>
+void ColExtInf::addOrUpdateEntryTemplate( RID     lastInputRow,
+                                          T minVal, T maxVal,
+                                          ColDataType colDataType,
+                                          int width )
 {
     boost::mutex::scoped_lock lock(fMapMutex);
 
@@ -91,30 +92,65 @@ void ColExtInf::addOrUpdateEntry( RID     lastInputRow,
         // If all rows had null value for this column, then minVal will be
         // MAX_INT and maxVal will be MIN_INT (see getCPInfoForBRM()).
 
-        if (iter->second.fMinVal == LLONG_MIN) // init the range
+        __int128 bigMinValInit;
+        dataconvert::DataConvert::int128Max(bigMinValInit);
+        if ((iter->second.fMinVal == LLONG_MIN && width <= 8) ||
+            (iter->second.fbigMinVal == bigMinValInit && width > 8)) // init the range
         {
-            iter->second.fMinVal = minVal;
-            iter->second.fMaxVal = maxVal;
+            if (width <= 8)
+            {
+                iter->second.fMinVal = minVal;
+                iter->second.fMaxVal = maxVal;
+            }
+            else
+            {
+                iter->second.fbigMinVal = minVal;
+                iter->second.fbigMaxVal = maxVal;
+            }
         }
         else                // Update the range
         {
             if (isUnsigned(colDataType))
             {
-                if (static_cast<uint64_t>(minVal)
-                        < static_cast<uint64_t>(iter->second.fMinVal))
-                    iter->second.fMinVal = minVal;
+                if (width <= 8)
+                {
+                    if (static_cast<uint64_t>(minVal)
+                            < static_cast<uint64_t>(iter->second.fMinVal))
+                        iter->second.fMinVal = minVal;
 
-                if (static_cast<uint64_t>(maxVal)
-                        > static_cast<uint64_t>(iter->second.fMaxVal))
-                    iter->second.fMaxVal = maxVal;
+                    if (static_cast<uint64_t>(maxVal)
+                            > static_cast<uint64_t>(iter->second.fMaxVal))
+                        iter->second.fMaxVal = maxVal;
+                }
+                else
+                {
+                    if (static_cast<unsigned __int128>(minVal)
+                            < static_cast<unsigned __int128>(iter->second.fbigMinVal))
+                        iter->second.fbigMinVal = minVal;
+
+                    if (static_cast<unsigned __int128>(maxVal)
+                            > static_cast<unsigned __int128>(iter->second.fbigMaxVal))
+                        iter->second.fbigMaxVal = maxVal;
+                }
             }
             else
             {
-                if (minVal < iter->second.fMinVal)
-                    iter->second.fMinVal = minVal;
+                if (width <= 8)
+                {
+                    if (minVal < iter->second.fMinVal)
+                        iter->second.fMinVal = minVal;
 
-                if (maxVal > iter->second.fMaxVal)
-                    iter->second.fMaxVal = maxVal;
+                    if (maxVal > iter->second.fMaxVal)
+                        iter->second.fMaxVal = maxVal;
+                }
+                else
+                {
+                    if (minVal < iter->second.fbigMinVal)
+                        iter->second.fbigMinVal = minVal;
+
+                    if (maxVal > iter->second.fbigMaxVal)
+                        iter->second.fbigMaxVal = maxVal;
+                }
             }
         }
     }
@@ -178,6 +214,8 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
         // if applicable (indicating an extent with no non-NULL values).
         int64_t minVal = iter->second.fMinVal;
         int64_t maxVal = iter->second.fMaxVal;
+        __int128 bigMinVal = iter->second.fbigMinVal;
+        __int128 bigMaxVal = iter->second.fbigMaxVal;
 
         if ( bIsChar )
         {
@@ -198,6 +236,7 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
 
         // Log for now; may control with debug flag later
         //if (fLog->isDebug( DEBUG_1 ))
+        // TODO MCOL-641 Add support here.
         {
             std::ostringstream oss;
             oss << "Saving CP  update for OID-" << fColOid <<
@@ -232,11 +271,20 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
 
         BRM::CPInfoMerge cpInfoMerge;
         cpInfoMerge.startLbid = iter->second.fLbid;
-        cpInfoMerge.max       = maxVal;
-        cpInfoMerge.min       = minVal;
+        if (column.width <= 8)
+        {
+            cpInfoMerge.max = maxVal;
+            cpInfoMerge.min = minVal;
+        }
+        else
+        {
+            cpInfoMerge.bigMax = bigMaxVal;
+            cpInfoMerge.bigMin = bigMinVal;
+        }
         cpInfoMerge.seqNum    = -1;     // Not used by mergeExtentsMaxMin
         cpInfoMerge.type      = column.dataType;
         cpInfoMerge.newExtent = iter->second.fNewExtent;
+        cpInfoMerge.colWidth = column.width;
         brmReporter.addToCPInfo( cpInfoMerge );
 
         ++iter;
