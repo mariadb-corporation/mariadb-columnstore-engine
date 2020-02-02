@@ -211,8 +211,8 @@ private:
     bool needStrValues;
 
     /* Common space for primitive data */
-    static const uint32_t BUFFER_SIZE = 65536;
-    uint8_t blockData[BLOCK_SIZE * 8];
+    static const uint32_t BUFFER_SIZE = 131072;
+    uint8_t blockData[BLOCK_SIZE * 16];
     boost::scoped_array<uint8_t> outputMsg;
     uint32_t outMsgSize;
 
@@ -228,9 +228,21 @@ private:
 
     bool hasScan;
     bool validCPData;
-    int64_t minVal, maxVal;    // CP data from a scanned column
-    uint64_t lbidForCP;
+    // CP data from a scanned column
+    union
+    {
+        __int128 bigMinVal;
+        int64_t minVal;
+    };
+    union
+    {
+        __int128 bigMaxVal;
+        int64_t maxVal;
+    };
 
+    uint64_t lbidForCP;
+    // MCOL-641
+    bool hasBinaryColumn;
     // IO counters
     boost::mutex counterLock;
     uint32_t busyLoaderCount;
