@@ -1591,18 +1591,6 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
     return true;
 }
 
-
-// WIP MCOL-641 put this in dataconvert
-void atoi128(const string& arg, unsigned __int128& res)
-{
-    res = 0;
-    for (size_t j = 0; j < arg.size(); j++)
-    {
-        if (LIKELY(arg[j]-'0' >= 0))
-            res = res*10 + arg[j] - '0';
-    }
-}
-
 const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 {
     JobStepVector jsv;
@@ -1886,11 +1874,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             }
 
 #else
-            // WIP MCOL-641
+            // WIP MCOL-641 width check must be a f() not a literal
+            // make a template from convertValueNum to avoid extra if
+            // this condition doesn't support UDECIMAL
             if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
                 ct.colWidth == 16)
             {
-                atoi128(constval, val128);
+                dataconvert::atoi128(constval, val128);
             }
             else
             {

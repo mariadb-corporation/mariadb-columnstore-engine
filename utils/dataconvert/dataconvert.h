@@ -84,6 +84,7 @@ inline uint64_t uint64ToStr(uint64_t n)
     return htonll(n);
 }
 
+using cscDataType = execplan::CalpontSystemCatalog::ColDataType;
 
 #if defined(_MSC_VER) && defined(xxxDATACONVERT_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -114,7 +115,6 @@ const int64_t IDB_pow[19] =
     1000000000000000000LL
 };
 
-
 const int32_t SECS_PER_MIN = 60;
 const int32_t MINS_PER_HOUR = 60;
 const int32_t HOURS_PER_DAY = 24;
@@ -133,6 +133,9 @@ const int32_t MIN_TIMESTAMP_VALUE = 0;
 
 namespace dataconvert
 {
+
+using int128_t = __int128;
+using uint128_t = unsigned __int128;
 
 enum CalpontDateTimeFormat
 {
@@ -156,6 +159,9 @@ struct MySQLTime
         time_type = CALPONTDATETIME_ENUM;
     }
 };
+
+void atoi128(const std::string& arg, int128_t& res); 
+void atoi128(const std::string& arg, uint128_t& res); 
 
 /**
  * This function converts the timezone represented as a string
@@ -1009,10 +1015,10 @@ public:
     EXPORT static bool      isColumnTimeStampValid( int64_t timeStamp );
 
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
-    static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
-    static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+    static inline std::string decimalToString(int64_t value, uint8_t scale, cscDataType colDataType);
+    static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
     template <typename T>
-    EXPORT static void decimalToString(T* value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+    EXPORT static void decimalToString(T* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
     template <typename T>
     EXPORT static void toString(T* dec, char *p, size_t buflen);
@@ -1226,15 +1232,16 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
 #endif
 }
 
-inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType)
+inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, cscDataType colDataType)
 {
+    // This is too much
     char buf[80];
     DataConvert::decimalToString(value, scale, buf, 80, colDataType);
     return std::string(buf);
 }
 
-inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* buf, unsigned int buflen,
-        execplan::CalpontSystemCatalog::ColDataType colDataType)
+inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale,
+    char* buf, unsigned int buflen, cscDataType colDataType)
 {
     // Need to convert a string with a binary unsigned number in it to a 64-bit signed int
 
