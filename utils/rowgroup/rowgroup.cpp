@@ -846,12 +846,12 @@ void Row::initToNull()
                         break;
 
                     case 16 :
-                        // WIP MCOL-641
+                    {
                         uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-+                       dec[0] = joblist::BINARYNULL;
-+                       dec[1] = joblist::BINARYNULL;
+                        dec[0] = joblist::BINARYNULL;
+                        dec[1] = joblist::BINARYNULL;
                         break;
-
+                    }
                     default:
                         *((int64_t*) &data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL);
                         break;
@@ -1045,15 +1045,15 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::UDECIMAL:
         {
             uint32_t len = getColumnWidth(colIndex);
-            const uint64_t *dec;
+            const int64_t *dec;
 
             switch (len)
             {
                 // MCOL-641
                 case 16:
-                    dec = reinterpret_cast<const uint64_t*>(&data[offsets[colIndex]]);
-                    return ((dec[0] == joblist::BINARYNULL)
-                        && (dec[1] == joblist::BINARYNULL));
+                    dec = reinterpret_cast<const int64_t*>(&data[offsets[colIndex]]);
+                    return ((dec[0] == static_cast<int64_t>(joblist::BINARYNULL))
+                        && (dec[1] == static_cast<int64_t>(joblist::BINARYNULL)));
 
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
