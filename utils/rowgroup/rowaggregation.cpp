@@ -542,7 +542,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            row.isNullValue(col);
+            ret = row.isNullValue(col);
             break;
         }
 
