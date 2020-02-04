@@ -1514,8 +1514,17 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 system(cmd.c_str());
                 cmd = "post-mysql-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = "systemctl start mariadb.service > " + tmpLogDir + "/mysqldstart";
-                system(cmd.c_str());
+                int ret = system("systemctl cat mariadb.service > /dev/null 2>&1");
+                if (!ret)
+                {
+                    cmd = "systemctl start mariadb.service > " + tmpLogDir + "/mysqldstart";
+                    system(cmd.c_str());
+                }
+                else
+                {
+                    cmd = "/usr/bin/mysqld_safe & > " + tmpLogDir + "/mysqldstart";
+                    system(cmd.c_str());
+                }
 
 				string tmpFile = tmpLogDir + "/mysqldstart";
                 ifstream file (tmpFile.c_str());

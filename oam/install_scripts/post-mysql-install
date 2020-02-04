@@ -11,7 +11,13 @@ checkForError() {
 	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
 		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
 		  rm -f ${tmpdir}/error.check
-		  systemctl stop mysqld.service
+          # Test we are using systemd
+          systemctl cat mariadb.service > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+              systemctl stop mariadb.service > /dev/null 2>&1
+          else
+              pkill mysqld
+          fi
 		  sleep 2
 		  exit 2;
 	fi
@@ -54,10 +60,22 @@ for arg in "$@"; do
 done
 
 # Restart in the same way that mysqld will be started normally.
-systemctl stop mariadb.service >/dev/null 2>&1
+# Test we are using systemd
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    systemctl stop mariadb.service > /dev/null 2>&1
+else
+    pkill mysqld
+fi
 sleep 2
 export MYSQL_OPTS="--skip-grant-tables"
-systemctl start mariadb.service
+# Test we are using systemd
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    systemctl start mariadb.service
+else
+    /usr/bin/mysqld_safe --skip-grant-tables &
+fi
 unset MYSQL_OPTS
 
 sleep 5
@@ -67,12 +85,24 @@ install_mcs_mysql.sh  --tmpdir=$tmpdir
 checkForError
 if [ $? -ne 0 ]; then
     echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
-    systemctl stop mariadb.service
+    # Test we are using systemd
+    systemctl cat mariadb.service > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        systemctl stop mariadb.service > /dev/null 2>&1
+    else
+        pkill mysqld
+    fi
     sleep 2
     exit 2;
 fi
 
-systemctl stop mariadb.service
+# Test we are using systemd
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    systemctl stop mariadb.service > /dev/null 2>&1
+else
+    pkill mysqld
+fi
 
 
 exit 0

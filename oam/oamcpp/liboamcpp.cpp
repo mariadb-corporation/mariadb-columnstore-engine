@@ -7796,16 +7796,26 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     string pidtmp = tmpdir + "/mysql.pid";
 
+    int no_systemd = system("systemctl cat mariadb.server > /dev/null 2>&1");
+
     switch (action)
     {
         case MYSQL_START:
         {
+            if (no_systemd)
+            {
+                system("/usr/bin/mysqld_safe &");
+            }
             command = "start";
             break;
         }
 
         case MYSQL_STOP:
         {
+            if (no_systemd)
+            {
+                system("pkill mysqld");
+            }
             command = "stop";
 
             //set process status
@@ -7821,18 +7831,31 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
         case MYSQL_RESTART:
         {
+            if (no_systemd)
+            {
+                system("pkill mysqld");
+                system("/usr/bin/mysqld_safe &");
+            }
             command = "restart";
             break;
         }
 
         case MYSQL_RELOAD:
         {
+            if (no_systemd)
+            {
+                system("pkill -HUP mysqld");
+            }
             command = "reload";
             break;
         }
 
         case MYSQL_FORCE_RELOAD:
         {
+            if (no_systemd)
+            {
+                system("pkill -HUP mysqld");
+            }
             command = "force-reload";
             break;
         }
@@ -7851,19 +7874,36 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     }
 
     //RUN COMMAND
-    string cmd = mysqlscript + " " + command + " mariadb.service > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
-    system(cmd.c_str());
+    if (!no_systemd)
+    {
+        string cmd = mysqlscript + " " + command + " mariadb.service > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+        system(cmd.c_str());
+    }
 
     if (action == MYSQL_START || action == MYSQL_RESTART)
     {
-        //get pid
-        char buf[512];
-        FILE *cmd_pipe = popen("pidof -s mysqld", "r");
+        pid_t pid = 0;
+        // Loop check because we mysqld may not start immediately
+        for (int i=0; i < 10; i++)
+        {
+            //get pid
+            char buf[512];
+            FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
-        fgets(buf, 512, cmd_pipe);
-        pid_t pid = strtoul(buf, NULL, 10);
+            fgets(buf, 512, cmd_pipe);
+            pid = strtoul(buf, NULL, 10);
 
-        pclose( cmd_pipe );
+            pclose( cmd_pipe );
+
+            if (pid)
+            {
+                break;
+            }
+            else
+            {
+                sleep(2);
+            }
+        }
 
         if (!pid)
         {
