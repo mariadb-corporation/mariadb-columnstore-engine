@@ -432,6 +432,8 @@ bool WECmdArgs::checkForCornerCases()
             throw(runtime_error("Mode 2 require remote file opts -f and -l or "\
                                 "a fully qualified path for the remote file."
                                 "\nTry 'cpimport -h' for more information."));
+        if (!fS3Key.empty())
+            throw(runtime_error("Mode 2 & an input file on S3 does not make sense."));
     }
 
     if (fMode == 3)
@@ -973,7 +975,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             }
 
             if (optind < argc) // see if input file name is given
-            {
+            {        
                 // 3rd pos parm
                 fLocFile = argv[optind];
 
@@ -1233,7 +1235,6 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             throw (runtime_error("No schema or local filename specified."));
         }
     }
-
 }
 
 std::string WECmdArgs::getJobFileName()

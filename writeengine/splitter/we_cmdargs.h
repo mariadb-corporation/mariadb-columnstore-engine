@@ -37,7 +37,7 @@ class WECmdArgs
 public:
     WECmdArgs(int argc, char** argv);
     virtual ~WECmdArgs() {}
-public:
+
     void appTestFunction();
     void parseCmdLineArgs(int argc, char** argv);
     std::string getCpImportCmdLine();
@@ -54,7 +54,6 @@ public:
                            char* pBuff, int FileIdx);
     void updateWithJobFile(int Idx);
 
-public:
     std::string getJobFileName();
     std::string getBrmRptFileName();
     std::string getTmpFileDir();
@@ -195,19 +194,6 @@ public:
         return fTimeZone;
     }
 
-
-private:	// variables for SplitterApp
-    typedef std::vector<std::string> VecArgs;
-    VecArgs fVecArgs;
-    typedef std::vector<unsigned int> VecInts;
-    VecInts fPmVec;
-
-    VecArgs fVecJobFiles;		//JobFiles splitter from master JobFile
-    int fMultiTableCount;		//MultiTable count
-    VecArgs fColFldsFromJobFile;//List of columns from any job file, that
-    // represent fields in the import data
-
-public:
     bool getPmStatus(int Id);
     bool str2PmList(std::string& PmList, VecInts& V);
     int getPmVecSize()
@@ -252,11 +238,46 @@ public:
     {
         fMultiTableCount = Count;
     }
+    
+    bool isS3Import() const
+    {
+        return !fS3Key.empty();
+    }
+    std::string getS3Key() const
+    {
+        return fS3Key;
+    }
+    std::string getS3Bucket() const
+    {
+        return fS3Bucket;
+    }
+    std::string getS3Host() const
+    {
+        return fS3Host;
+    }
+    std::string getS3Secret() const
+    {
+        return fS3Secret;
+    }
+    std::string getS3Region() const 
+    {
+        return fS3Region;
+    }
 
     std::string PrepMode2ListOfFiles(std::string& FileName); // Bug 4342
     void getColumnList( std::set<std::string>& columnList ) const;
 
 private:	// variables for SplitterApp
+    typedef std::vector<std::string> VecArgs;
+    VecArgs fVecArgs;
+    typedef std::vector<unsigned int> VecInts;
+    VecInts fPmVec;
+
+    VecArgs fVecJobFiles;		//JobFiles splitter from master JobFile
+    int fMultiTableCount;		//MultiTable count
+    VecArgs fColFldsFromJobFile;//List of columns from any job file, that
+    // represent fields in the import data
+
     std::string fJobId;		// JobID
     std::string fOrigJobId;	// Original JobID, in case we have to split it
     bool fJobLogOnly;		// Job number is only for log filename only

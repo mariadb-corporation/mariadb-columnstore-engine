@@ -30,6 +30,8 @@
 #ifndef WE_FILEREADTHREAD_H_
 #define WE_FILEREADTHREAD_H_
 
+#include "libmarias3/marias3.h"
+
 namespace WriteEngine
 {
 
@@ -153,6 +155,16 @@ private:
     char fDelim;						// Column Delimit char
     char* fBuff;			// main data buffer
     int fBuffSize;
+    
+    /* To support mode 1 imports from objects on S3 */
+    void initS3Connection(const WECmdArgs &);
+    bool doS3Import;
+    std::string s3Key;
+    std::string s3Secret;
+    std::string s3Bucket;
+    std::string s3Region;
+    std::string s3Host;
+    ms3_st *s3connection;
 };
 
 } /* namespace WriteEngine */

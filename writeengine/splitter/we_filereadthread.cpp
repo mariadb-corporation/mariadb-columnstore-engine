@@ -98,7 +98,22 @@ WEFileReadThread::WEFileReadThread(WESDHandler& aSdh): fSdh(aSdh),
     }
 
     fBuff = new char [fBuffSize];
-
+    
+    /* Get S3 import params from fSdh.fRef, which is a ref to the we_splitterapp 
+    */
+    const WECmdArgs &args = fSdh.fRef.fCmdArgs;
+    initS3Connection(args);
+    doS3Import = args.isS3Import();
+    if (doS3Import)
+    {
+        s3Key = args.getS3Key();
+        s3Secret = args.getS3Secret();
+        s3Bucket = args.getS3Bucket();
+        s3Region = args.getS3Region();
+        s3Host = args.getS3Host();
+        ms3_library_init();
+        connection = ms3_init(s3Key.c_str(), s3Secret.c_str(), s3Region.c_str(), (s3Host.empty() ? NULL : s3Host.c_str()));)
+    }
 }
 
 //WEFileReadThread::WEFileReadThread(const WEFileReadThread& rhs):fSdh(rhs.fSdh)
@@ -122,6 +137,12 @@ WEFileReadThread::~WEFileReadThread()
     fpThread = 0;
     delete []fBuff;
     //cout << "WEFileReadThread destructor called" << endl;
+
+    if (doS3Import)
+    {
+        ms3_deinit(connection);
+        ms3_library_deinit();
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -451,7 +472,21 @@ void WEFileReadThread::openInFile()
 {
     try
     {
+        /*  If an S3 transfer
+            use ms3 lib to d/l data into mem
+            use boost::iostreams to wrap the mem in an fstream interface
+            assign fiffile and/or finfile to it?
+            
+            example (change file_destriptor_source to array_source)
+            FILE* pipe = popen("find . -type f", "r");
+
+            io::stream_buffer<io::file_descriptor_source> fpstream(fileno(pipe));
+            std::istream in(&fpstream);
+        */
+    
         if (fSdh.getDebugLvl()) cout << "Input FileName: " << fInFileName << endl;
+
+        WORKING HERE
 
         if (fInFileName == "/dev/stdin")
         {
@@ -464,8 +499,6 @@ void WEFileReadThread::openInFile()
                      << "trying to read from STDIN... "
                      << aDefCon << endl;
         }
-
-        cout.flush();
 
         //@BUG 4326
         if (fInFileName != "/dev/stdin")
@@ -590,6 +623,23 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
     }// end of while loop
 
     return pEnd - pBuf;
+}
+
+void WEFileReadThread::initS3Connection(const WE_CmdArgs &args)
+{
+    doS3Import = args.isS3Import();
+    if (doS3Import)
+    {
+        s3Key = args.getS3Key();
+        s3Secret = args.getS3Secret();
+        s3Bucket = args.getS3Bucket();
+        s3Region = args.getS3Region();
+        s3Host = args.getS3Host();
+        ms3_library_init();
+        connection = ms3_init(s3Key.c_str(), s3Secret.c_str(), s3Region.c_str(), (s3Host.empty() ? NULL : s3Host.c_str()));)
+        if (!connection)
+            throw runtime_error("WEFileReadThread::initS3Connection(): Failed to init S3 connection");
+    }
 }
 
 //------------------------------------------------------------------------------
