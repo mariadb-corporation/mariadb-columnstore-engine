@@ -51,6 +51,7 @@ typedef uint32_t ulong;
 
 using namespace logging;
 
+
 namespace
 {
 
@@ -1162,10 +1163,8 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 
 }
 
-// WIP 
+// WIP MCOL-641 
 #include <stdio.h>
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
 
 struct uint128_pod
 { 
@@ -1192,6 +1191,7 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
   // WIP How to treat PODs here ?
   // use typeof
   // Or a templated structure
+  // Use uint64* to access parts of uint128 and remove pods
   uint128_pod *high_pod = reinterpret_cast<uint128_pod*>(&high);
   uint128_pod *mid_pod = reinterpret_cast<uint128_pod*>(&mid);
   uint128_pod *low_pod = reinterpret_cast<uint128_pod*>(&low);
@@ -1201,7 +1201,7 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
   // WIP replace snprintf with streams
   if (high_pod->lo != 0) {
     printed_chars = snprintf(p, div_log+1, "%lu", high_pod->lo);
-    p += printed_chars; 
+    p += printed_chars;
     printed_chars = snprintf(p, div_log+1, "%019lu", mid_pod->lo);
     p += printed_chars;  
   } else if (mid_pod->lo != 0) {
@@ -1215,23 +1215,33 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
 // WIP MCOL-641
 // Template this
 // result must be calloc-ed
-//template <typename T>
-//void atoi_(const string &arg, T &res) 
-void atoi128(const string& arg, int128_t& res) 
+void atoi128(const std::string& arg, int128_t& res)
 {
-    // WIP
-    //char buf[41];
-    //int128_t *res_ptr = reinterpret_cast<int128_t*>(result);
     res = 0;
-    for (size_t j = 0; j < arg.size(); j++) 
+    size_t idx = (arg[0] == '-') ? 1 : 0;
+    for (size_t j = idx; j < arg.size(); j++)
     {
         // WIP Optimize this
         if (LIKELY(arg[j]-'0' >= 0))
             res = res*10 + arg[j] - '0';
     }
+    // Use bit shift if possible
+    if (idx)
+        res *= -1;
     //toString(res, buf);
     //std::cerr << "atoi_ " << buf <<endl;
     //*res_ptr = res;
+}
+
+void atoi128(const std::string& arg, uint128_t& res)
+{
+    res = 0;
+    for (size_t j = 0; j < arg.size(); j++)
+    {
+        // WIP Optimize this
+        if (LIKELY(arg[j]-'0' >= 0))
+            res = res*10 + arg[j] - '0';
+    }
 }
 
 // WIP MCOL-641
@@ -1240,7 +1250,7 @@ void DataConvert::decimalToString(T* valuePtr,
     uint8_t scale,
     char* buf,
     unsigned int buflen,
-    execplan::CalpontSystemCatalog::ColDataType colDataType)
+    cscDataType colDataType)
 {
     toString<T>(valuePtr, buf, buflen);
 
@@ -1302,19 +1312,23 @@ void DataConvert::decimalToString(T* valuePtr,
 }
 // Explicit instantiation
 template
-void DataConvert::decimalToString<int128_t>(int128_t* value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+void DataConvert::decimalToString<int128_t>(int128_t* value, uint8_t scale,
+    char* buf, unsigned int buflen, cscDataType colDataType);
 template
-void DataConvert::decimalToString<uint128_t>(uint128_t* value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
+void DataConvert::decimalToString<uint128_t>(uint128_t* value, uint8_t scale,
+    char* buf, unsigned int buflen, cscDataType colDataType);
 
 boost::any
 DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
-                               const std::string& dataOrig, bool& pushWarning, const std::string& timeZone, bool nulFlag, bool noRoundup, bool isUpdate)
+                                const std::string& dataOrig, bool& pushWarning,
+                                const std::string& timeZone, bool nulFlag,
+                                bool noRoundup, bool isUpdate)
 {
     boost::any value;
     // WIP
     std::string data( dataOrig );
     pushWarning = false;
-    CalpontSystemCatalog::ColDataType type = colType.colDataType;
+    cscDataType type = colType.colDataType;
 
     //if ( !data.empty() )
     if (!nulFlag)
