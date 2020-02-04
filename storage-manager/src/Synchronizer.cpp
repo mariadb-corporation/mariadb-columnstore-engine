@@ -305,7 +305,7 @@ void Synchronizer::syncNow(const bf::path &prefix)
     // this should be redone to only remove items of given prefix eventually
 
     blockNewJobs = true;
-    while (pendingOps.size() != 0 && opsInProgress.size() != 0)
+    while (pendingOps.size() != 0 || opsInProgress.size() != 0)
     {
         for (auto &job : pendingOps)
             makeJob(job.first);
@@ -329,7 +329,7 @@ void Synchronizer::syncNow()
     // Leaving S3 storage and local metadata directories sync'd for snapshot backups.
 
     blockNewJobs = true;
-    while (pendingOps.size() != 0 && opsInProgress.size() != 0)
+    while (pendingOps.size() != 0 || opsInProgress.size() != 0)
     {
         for (auto &job : pendingOps)
             makeJob(job.first);
