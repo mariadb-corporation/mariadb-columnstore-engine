@@ -42,6 +42,26 @@ void disable_indices_for_CEJ(THD *thd_)
     }
 }
 
+bool optimize_unflattened_subqueries_(SELECT_LEX *select_lex)
+{
+    bool result = false;
+    TABLE_LIST *tbl;
+    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
+    while (!result && (tbl= li++))
+    {
+        if (tbl->is_view_or_derived())
+        {
+            SELECT_LEX *dsl = tbl->derived->first_select();
+            result = optimize_unflattened_subqueries_(dsl);
+        }
+    }
+
+    result = (!result) ?
+        select_lex->optimize_unflattened_subqueries(false) : true;
+
+    return result;
+}
+
 void mutate_optimizer_flags(THD *thd_)
 {
     // MCOL-2178 Disable all optimizer flags as it was in the fork.
@@ -775,7 +795,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         }
 
         COND *conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
-        select_lex->optimize_unflattened_subqueries(false);
+        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
+        // an equi-JOIN condition.
+        optimize_unflattened_subqueries_(select_lex);
     
         if (conds)
         {
