@@ -5249,9 +5249,8 @@ void gp_walk(const Item* item, void* arg)
 
                 if (col->type() == Item::FIELD_ITEM)
                 {
-                    const auto &field_name = string(((Item_field*)item)->field_name.str);
-                    const auto colMap = CalpontSelectExecutionPlan::ColumnMap::value_type(field_name, scsp);
-                    gwip->columnMap.insert(colMap);
+                    const std::string field_name = string(((Item_field*)item)->field_name.str);
+                    gwip->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(field_name, scsp));
                 }
             }
 
