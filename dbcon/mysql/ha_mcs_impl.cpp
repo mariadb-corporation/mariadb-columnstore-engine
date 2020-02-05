@@ -2217,6 +2217,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
             ci->rc = b;
             // Turn this on as MariaDB doesn't do it until the next phase
             thd->abort_on_warning = thd->is_strict_mode();
+            rc = ER_INTERNAL_ERROR; 
         }
         else
         {
