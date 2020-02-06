@@ -217,10 +217,10 @@ std::string WECmdArgs::getCpImportCmdLine()
     if (fbTruncationAsError)
         aSS << " -S ";
 
-    if (!fS3Key.empty())
+    if (!fS3Key.empty() && !(fMode == 0 || fMode == 1))
     {
         if (fS3Secret.empty() || fS3Bucket.empty() || fS3Region.empty())
-            throw (runtime_error("Not all requried S3 options provided"));
+            throw (runtime_error("Not all required S3 options provided"));
         aSS << " -y " << fS3Key;
         aSS << " -K " << fS3Secret;
         aSS << " -t " << fS3Bucket;
@@ -433,7 +433,7 @@ bool WECmdArgs::checkForCornerCases()
                                 "a fully qualified path for the remote file."
                                 "\nTry 'cpimport -h' for more information."));
         if (!fS3Key.empty())
-            throw(runtime_error("Mode 2 & an input file on S3 does not make sense."));
+            throw(runtime_error("Mode 2 & an input file from S3 does not make sense."));
     }
 
     if (fMode == 3)
@@ -975,7 +975,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             }
 
             if (optind < argc) // see if input file name is given
-            {        
+            {
                 // 3rd pos parm
                 fLocFile = argv[optind];
 
@@ -1235,6 +1235,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             throw (runtime_error("No schema or local filename specified."));
         }
     }
+    
+    /* check for all-or-nothing cmdline args to enable S3 import */
+    int s3Tmp = (fS3Key.empty() ? 0 : 1) + (fS3Bucket.empty() ? 0 : 1) +
+        (fS3Secret.empty() ? 0 : 1) + (fS3Region.empty() ? 0 : 1);
+    if (s3Tmp != 0 && s3Tmp != 4)
+        throw runtime_error("The access key, secret, bucket, and region are all required to import from S3");
 }
 
 std::string WECmdArgs::getJobFileName()

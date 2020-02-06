@@ -30,7 +30,10 @@
 #ifndef WE_FILEREADTHREAD_H_
 #define WE_FILEREADTHREAD_H_
 
+#include "we_cmdargs.h"
 #include "libmarias3/marias3.h"
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
 
 namespace WriteEngine
 {
@@ -164,7 +167,10 @@ private:
     std::string s3Bucket;
     std::string s3Region;
     std::string s3Host;
-    ms3_st *s3connection;
+    ms3_st *s3Connection;
+    uint8_t *buf;
+    std::unique_ptr<boost::iostreams::array_source> arrSource;
+    std::unique_ptr<boost::iostreams::stream<boost::iostreams::array_source> > s3Stream;
 };
 
 } /* namespace WriteEngine */

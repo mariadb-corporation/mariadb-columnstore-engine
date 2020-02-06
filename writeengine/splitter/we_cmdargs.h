@@ -38,6 +38,9 @@ public:
     WECmdArgs(int argc, char** argv);
     virtual ~WECmdArgs() {}
 
+    typedef std::vector<unsigned int> VecInts;
+    typedef std::vector<std::string> VecArgs;
+
     void appTestFunction();
     void parseCmdLineArgs(int argc, char** argv);
     std::string getCpImportCmdLine();
@@ -268,9 +271,7 @@ public:
     void getColumnList( std::set<std::string>& columnList ) const;
 
 private:	// variables for SplitterApp
-    typedef std::vector<std::string> VecArgs;
     VecArgs fVecArgs;
-    typedef std::vector<unsigned int> VecInts;
     VecInts fPmVec;
 
     VecArgs fVecJobFiles;		//JobFiles splitter from master JobFile
