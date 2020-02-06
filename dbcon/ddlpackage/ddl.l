@@ -70,7 +70,7 @@ self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
 
 digit [0-9]
-ident_start [A-Za-z\200-\377_0-9]
+ident_start [A-Za-z\200-\377_0-9#]
 ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
 extended_identifier {ident_start}{extended_ident_cont}*
