@@ -732,13 +732,25 @@ optional_braces:
 	| '(' ')' {}
 	;
 
+opt_column_charset:
+    /* empty */ {}
+    |
+    IDB_CHAR SET ident {}
+    ;
+
+opt_column_collate:
+    /* empty */ {}
+    |
+    COLLATE ident {}
+    ;
+
 data_type:
-	character_string_type
+	character_string_type opt_column_charset opt_column_collate
 	| binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
-	| text_type
+	| text_type opt_column_charset opt_column_collate
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
