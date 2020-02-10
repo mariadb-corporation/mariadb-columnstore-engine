@@ -111,7 +111,7 @@ public:
     bool releaseTableLocks();
     void check4CpiInvokeMode();
     bool check4PmArguments();
-    bool check4InputFile(std::string InFileName);
+    void setInputFileList(std::string InFileName);
     bool check4CriticalErrMsgs(std::string& Entry);
 
     void onStartCpiResponse(int PmId);

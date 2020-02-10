@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${S3API_DIR} )
 
 
 ########### next target ###############
@@ -17,7 +17,7 @@ set(cpimport_SRCS
 
 add_executable(cpimport ${cpimport_SRCS})
 
-target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} batchloader threadpool)
+target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} batchloader threadpool marias3)
 
 install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 
