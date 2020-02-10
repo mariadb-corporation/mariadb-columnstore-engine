@@ -2,7 +2,7 @@
  * vi: set shiftwidth=4 tabstop=4 expandtab:
  *  :indentSize=4:tabSize=4:noTabs=true:
  *
- * Copyright (C) 2016 MariaDB Corporaton
+ * Copyright (C) 2016 MariaDB Corporation
  *
  * This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -256,7 +256,7 @@ maria_declare_plugin(is_columnstore_columns_plugin)
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
     &is_columnstore_columns_plugin_version,
     "COLUMNSTORE_COLUMNS",
-    "MariaDB Corporaton",
+    "MariaDB Corporation",
     "An information schema plugin to list ColumnStore columns",
     PLUGIN_LICENSE_GPL,
     is_columnstore_columns_plugin_init,
