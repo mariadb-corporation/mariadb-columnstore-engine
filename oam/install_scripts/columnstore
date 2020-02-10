@@ -77,6 +77,9 @@ lockdir=`$InstallDir/bin/getConfig Installation LockFileDirectory`
 #get temp directory
 tmpDir=`$InstallDir/bin/getConfig SystemConfig SystemTempFileDir`
 mkdir $tmpDir >/dev/null 2>&1
+if [ $USER == "root" ]; then
+	chmod 777 $tmpDir
+fi
 
 checkInstallSetup() {
 	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
