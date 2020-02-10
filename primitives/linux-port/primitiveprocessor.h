@@ -33,9 +33,9 @@
 #include <unordered_set>
 #endif
 
-//#ifdef __linux__
-//#define POSIX_REGEX
-//#endif
+#ifdef __linux__
+#define POSIX_REGEX
+#endif
 
 #ifdef POSIX_REGEX
 #include <regex.h>
