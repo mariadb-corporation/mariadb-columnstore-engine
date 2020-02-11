@@ -29,11 +29,6 @@
 #include <cmath>
 #include <boost/shared_ptr.hpp>
 
-#ifdef _MSC_VER
-#include <boost/regex.hpp>
-#else
-#include <regex.h>
-#endif
 #include <stdlib.h>
 #include <unistd.h>
 

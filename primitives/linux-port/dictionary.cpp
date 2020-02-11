@@ -31,6 +31,7 @@ using namespace std;
 #include "messageobj.h"
 #include "exceptclasses.h"
 #include "utils_utf8.h"
+#include "dataconvert.h"
 #include <sstream>
 
 using namespace funcexp;
