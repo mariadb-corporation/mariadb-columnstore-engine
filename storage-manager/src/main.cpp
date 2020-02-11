@@ -86,8 +86,8 @@ int main(int argc, char** argv)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
-    std::vector<int> shutdownSignals{ SIGALRM, SIGHUP, SIGINT, SIGKILL, 
-                                      SIGPOLL, SIGPROF, SIGPWR, SIGTERM, SIGVTALRM};
+    std::vector<int> shutdownSignals{ SIGALRM, SIGHUP, SIGINT, SIGPOLL,
+                                      SIGPROF, SIGPWR, SIGTERM, SIGVTALRM};
 
     std::vector<int> coreSignals{SIGABRT, SIGBUS, SIGFPE, SIGILL, 
                                  SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, 
