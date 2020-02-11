@@ -36,7 +36,16 @@
 #else
 #include <netinet/in.h>
 #endif
+
+#ifdef __linux__
+#define POSIX_REGEX
+#endif
+
+#ifdef POSIX_REGEX
+#include <regex.h>
+#else
 #include <boost/regex.hpp>
+#endif
 
 #include "calpontsystemcatalog.h"
 #include "columnresult.h"
