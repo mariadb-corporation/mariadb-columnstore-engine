@@ -192,6 +192,7 @@ else
 	TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
 	tmpDir=${tmpDir}${TempFileDir}
 	mkdir $tmpDir >/dev/null 2>&1
+	chmod 777 $tmpDir
 fi
 
 #set base columnstore temp file directory
