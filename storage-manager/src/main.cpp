@@ -61,6 +61,15 @@ void shutdownSM(int sig)
     if (!signalCaught)
     {
         (SessionManager::get())->shutdownSM(sig);
+    }
+    signalCaught = true;
+}
+
+void coreSM(int sig)
+{
+    if (!signalCaught)
+    {
+        (SessionManager::get())->shutdownSM(sig);
         fatalHandler(sig);
     }
     signalCaught = true;
@@ -78,15 +87,20 @@ int main(int argc, char** argv)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
-    std::vector<int> shutdownSignals{ SIGHUP, SIGINT, SIGQUIT, SIGILL,
-                                      SIGTRAP, SIGABRT, SIGBUS, SIGFPE,
-                                      SIGSEGV, SIGALRM, SIGTERM, SIGXCPU,
-                                      SIGXFSZ, SIGVTALRM, SIGPROF, SIGPOLL,
-                                      SIGPWR, SIGSYS};
+    std::vector<int> shutdownSignals{ SIGALRM, SIGHUP, SIGINT, SIGKILL, 
+                                      SIGPOLL, SIGPROF, SIGTERM, SIGVTALRM};
+
+    std::vector<int> coreSignals{SIGABRT, SIGBUS, SIGFPE, SIGILL, 
+                                 SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, 
+                                 SIGXCPU, SIGXFSZ};
+
     sa.sa_handler = shutdownSM;
     for (int sig : shutdownSignals)
         sigaction(sig, &sa, NULL);
-
+    
+    sa.sa_handler = coreSM;
+    for (int sig : coreSignals)
+        sigaction(sig, &sa, NULL);
 
     sa.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sa, NULL);
