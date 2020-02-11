@@ -79,6 +79,7 @@ else
 	TempFileDir=`mcsGetConfig SystemConfig TempFileDir`
 	tmpDir=${tmpDir}${TempFileDir}
 	mkdir $tmpDir >/dev/null 2>&1
+	chmod 777 $tmpDir
 fi
 
 #set base columnstore temp file directory

@@ -39,6 +39,9 @@ lockdir=`mcsGetConfig Installation LockFileDirectory`
 #get temp directory
 tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 mkdir $tmpDir >/dev/null 2>&1
+if [ $USER == "root" ]; then
+	chmod 777 $tmpDir
+fi
 
 checkInstallSetup() {
 	InitialInstallFlag=`mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
