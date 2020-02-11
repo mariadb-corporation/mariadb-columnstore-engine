@@ -69,7 +69,6 @@ void coreSM(int sig)
 {
     if (!signalCaught)
     {
-        (SessionManager::get())->shutdownSM(sig);
         fatalHandler(sig);
     }
     signalCaught = true;
@@ -88,7 +87,7 @@ int main(int argc, char** argv)
     memset(&sa, 0, sizeof(sa));
 
     std::vector<int> shutdownSignals{ SIGALRM, SIGHUP, SIGINT, SIGKILL, 
-                                      SIGPOLL, SIGPROF, SIGTERM, SIGVTALRM};
+                                      SIGPOLL, SIGPROF, SIGPWR, SIGTERM, SIGVTALRM};
 
     std::vector<int> coreSignals{SIGABRT, SIGBUS, SIGFPE, SIGILL, 
                                  SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, 
