@@ -18,7 +18,7 @@
 
 // Search simplify_joins() function in the server's code for detail
 COND *
-simplify_joins_(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
+simplify_joins_cs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
                bool in_sj)
 {
   TABLE_LIST *table;
@@ -26,7 +26,7 @@ simplify_joins_(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
   TABLE_LIST *prev_table= 0;
   List_iterator<TABLE_LIST> li(*join_list);
   bool straight_join= MY_TEST(join->select_options & SELECT_STRAIGHT_JOIN);
-  DBUG_ENTER("simplify_joins");
+  DBUG_ENTER("simplify_joins_cs");
 
   /* 
     Try to simplify join operations from join_list.
@@ -54,7 +54,7 @@ simplify_joins_(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
            the outer join is converted to an inner join and
            the corresponding on expression is added to E. 
 	*/ 
-        expr= simplify_joins_(join, &nested_join->join_list,
+        expr= simplify_joins_cs(join, &nested_join->join_list,
                              expr, FALSE, in_sj || table->sj_on_expr);
 
         if (!table->prep_on_expr || expr != table->on_expr)
@@ -67,7 +67,7 @@ simplify_joins_(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
       }
       nested_join->used_tables= (table_map) 0;
       nested_join->not_null_tables=(table_map) 0;
-      conds= simplify_joins_(join, &nested_join->join_list, conds, top, 
+      conds= simplify_joins_cs(join, &nested_join->join_list, conds, top, 
                             in_sj || table->sj_on_expr);
       used_tables= nested_join->used_tables;
       not_null_tables= nested_join->not_null_tables;  
@@ -241,5 +241,5 @@ simplify_joins_(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,
       li.replace(repl_list);
     }
   }
-  DBUG_RETURN(conds); 
+  DBUG_RETURN(conds);
 }
