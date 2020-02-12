@@ -199,7 +199,7 @@ BOOL BOOLEAN MEDIUMINT TIMESTAMP
 %type <sqlStmt>              trunc_table_statement
 %type <sqlStmt>              rename_table_statement
 %type <str>                  ident
-
+%type <str>                  opt_quoted_literal
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -490,9 +490,9 @@ table_option:
  	|
  	DEFAULT IDB_CHAR SET opt_equal ident {$$ = new pair<string,string>("default charset", $5);}
     |
-    DEFAULT COLLATE opt_equal ident {$$ = new pair<string, string>("default collate", $4);}
+    DEFAULT COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $4);}
     |
-    COLLATE opt_equal ident {$$ = new pair<string, string>("default collate", $3);}
+    COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $3);}
 	;
 
 alter_table_statement:
@@ -735,13 +735,13 @@ optional_braces:
 opt_column_charset:
     /* empty */ {}
     |
-    IDB_CHAR SET ident {}
+    IDB_CHAR SET opt_quoted_literal {}
     ;
 
 opt_column_collate:
     /* empty */ {}
     |
-    COLLATE ident {}
+    COLLATE opt_quoted_literal {}
     ;
 
 data_type:
@@ -863,6 +863,12 @@ check_constraint_def:
 string_literal:
 	'\'' SCONST '\'' {$$ = $2;}
 	; 
+
+opt_quoted_literal:
+    string_literal
+    |
+    ident
+    ;
 
 character_string_type:
 	CHARACTER
