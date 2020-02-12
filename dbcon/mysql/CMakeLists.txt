@@ -52,7 +52,7 @@ install(FILES syscatalog_mysql.sql
               calshowprocesslist.sql 
               columnstore_info.sql
               DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
-install(PROGRAMS install_mcs_mysql.sh mysql-Columnstore
+install(PROGRAMS install_mcs_mysql.sh
     DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
 
 install(FILES columnstore.cnf

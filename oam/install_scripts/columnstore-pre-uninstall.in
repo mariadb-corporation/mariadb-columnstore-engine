@@ -25,7 +25,14 @@ done
 
 #stop services
 columnstore stop > /dev/null 2>&1
-mysql-Columnstore stop > /dev/null 2>&1
+
+# Test we are using systemd
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    systemctl stop mariadb.service > /dev/null 2>&1
+else
+    pkill mysqld
+fi
 
 cloud=`mcsGetConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
@@ -55,7 +62,6 @@ rm -f /var/lib/columnstore/local/moveDbrootTransactionLog
 
 lockdir=`mcsGetConfig Installation LockFileDirectory`
 rm -f $lockdir/columnstore
-rm -f $lockdir/mysql-Columnstore
 
 # delete core files
 #rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1

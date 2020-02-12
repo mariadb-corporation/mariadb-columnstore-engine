@@ -108,7 +108,6 @@ fi
 if [ $user = "root" ]; then
 	#setup the columnstore service script
 	rm -f /etc/init.d/columnstore >/dev/null 2>&1
-	rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
 	rm -f /etc/default/columnstore
 
 	systemctl=`which systemctl 2>/dev/null`
@@ -170,7 +169,6 @@ mcsSetConfig -d Installation LockFileDirectory $lockdir
 
 mkdir $lockdir >/dev/null 2>&1
 
-rm -f $lockdir/mysql-Columnstore
 rm -f $lockdir/columnstore
 
 #backup copy of Alarm Config File
