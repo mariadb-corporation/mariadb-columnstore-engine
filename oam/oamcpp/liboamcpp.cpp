@@ -7927,11 +7927,11 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         getProcessStatus("mysqld", moduleName, procstat);
         int state = procstat.ProcessOpState;
         pid_t pidStatus = procstat.ProcessID;
-
+        pid_t pid = 0;
 		string mysqlStatus = tmpdir + "/mysql.status";
-        if (checkLogStatus(mysqlStatus, "MySQL running"))
+        if ( state != ACTIVE )
         {
-            if ( state != ACTIVE )
+            for (int i=0; i < 10; i++)
             {
                 //get pid
                 char buf[512];
@@ -7942,17 +7942,26 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
                 pclose( cmd_pipe );
 
-                //set process status
-                try
+                if (pid)
                 {
-                    setProcessStatus("mysqld", moduleName, ACTIVE, pid);
+                    //set process status
+                    try
+                    {
+                        setProcessStatus("mysqld", moduleName, ACTIVE, pid);
+                    }
+                    catch (...)
+                    {}
+                    return;
                 }
-                catch (...)
-                {}
-
-                return;
+                else
+                {
+                    sleep(2);
+                }
             }
-            else
+        }
+        else
+        {
+            for (int i=0; i < 10; i++)
             {
                 //check if pid has changed
                 char buf[512];
@@ -7963,18 +7972,28 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
                 pclose( cmd_pipe );
 
-                if ( pidStatus != pid )
+                if (pid)
                 {
-                    //set process status
-                    try
+                    if ( pidStatus != pid )
                     {
-                        setProcessStatus("mysqld", moduleName, ACTIVE, pid);
+                        //set process status
+                        try
+                        {
+                            setProcessStatus("mysqld", moduleName, ACTIVE, pid);
+                        }
+                        catch (...)
+                        {}
+                        break;
                     }
-                    catch (...)
-                    {}
+                }
+                else
+                {
+                    sleep(2);
                 }
             }
-
+        }
+        if (pid)
+        {
             //check module status, if DEGRADED set to ACTIVE
             int opState;
             bool degraded;
