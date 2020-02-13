@@ -161,7 +161,7 @@ int64_t Func_floor::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             string str =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), fTimeZone);
+                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
 
             // strip off micro seconds
             str = str.substr(0, 14);
@@ -278,7 +278,7 @@ uint64_t Func_floor::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             string str =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), fTimeZone);
+                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
 
             // strip off micro seconds
             str = str.substr(0, 14);

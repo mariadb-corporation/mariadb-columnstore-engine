@@ -112,7 +112,7 @@ uint64_t Func::stringToDatetime(const string str)
 
 uint64_t Func::stringToTimestamp(const string str)
 {
-    int64_t ret = DataConvert::stringToTimestamp(str, fTimeZone);
+    int64_t ret = DataConvert::stringToTimestamp(str, timeZone());
 
     if (ret == -1)
     {

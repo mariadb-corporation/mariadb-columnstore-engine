@@ -275,7 +275,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row,
             TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
             MySQLTime time;
-            gmtSecToMySQLTime(seconds, time, fTimeZone);
+            gmtSecToMySQLTime(seconds, time, timeZone());
             dt.year = time.year;
             dt.month = time.month;
             dt.day = time.day;
@@ -419,7 +419,7 @@ int64_t Func_date_format::getTimestampIntVal(rowgroup::Row& row,
         bool& isNull,
         CalpontSystemCatalog::ColType& ct)
 {
-    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), fTimeZone);
+    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), timeZone());
 }
 
 
