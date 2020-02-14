@@ -752,7 +752,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3485, reserve enough space for the longest float value
                     // -3.402823466E+38 to -1.175494351E-38, 0, and
                     // 1.175494351E-38 to 3.402823466E+38.
-                    (*f)->field_length = 40;
+                    const_cast<uint32_t&>((*f)->field_length) = 40;
 
                     f2->store(dl);
 
@@ -774,7 +774,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     // bug 3483, reserve enough space for the longest double value
                     // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                     // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 310;
+                    const_cast<uint32_t&>((*f)->field_length) = 310;
 
                     // The server converts dl=-0 to dl=0 in f2->store().
                     // This happens in the call to truncate_double().
@@ -819,7 +819,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                             // bug 3483, reserve enough space for the longest double value
                             // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
                             // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                            (*f)->field_length = 310;
+                            const_cast<uint32_t&>((*f)->field_length) = 310;
 
                             f2->store(static_cast<double>(dl));
                             if ((*f)->null_ptr)
