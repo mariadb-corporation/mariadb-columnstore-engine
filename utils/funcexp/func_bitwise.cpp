@@ -195,8 +195,8 @@ int64_t Func_bitand::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, fTimeZone) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "bitand: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -231,8 +231,8 @@ int64_t Func_leftshift::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, fTimeZone) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "leftshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -267,8 +267,8 @@ int64_t Func_rightshift::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, fTimeZone) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "rightshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -303,8 +303,8 @@ int64_t Func_bitor::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, fTimeZone) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "bitor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -347,8 +347,8 @@ int64_t Func_bitxor::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, fTimeZone) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "bitxor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -382,7 +382,7 @@ int64_t Func_bit_count::getIntVal(Row& row,
 
     uint64_t val = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val, isNull, fTimeZone))
+    if (!getUIntValFromParm(row, parm[0], val, isNull, timeZone()))
     {
         std::ostringstream oss;
         oss << "bit_count: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);

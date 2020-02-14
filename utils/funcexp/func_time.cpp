@@ -123,7 +123,7 @@ string Func_time::getStrVal(rowgroup::Row& row,
             dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
 	    dataconvert::Time time;
             time.hour = m_time.hour;
             time.minute = m_time.minute;

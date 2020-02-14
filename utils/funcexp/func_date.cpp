@@ -78,7 +78,7 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             int64_t val1  = parm[0]->data()->getTimestampIntVal(row, isNull);
-            value = dataconvert::DataConvert::timestampToString(val1, fTimeZone);
+            value = dataconvert::DataConvert::timestampToString(val1, timeZone());
             value = value.substr(0, 10);
             break;
         }

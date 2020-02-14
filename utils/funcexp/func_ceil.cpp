@@ -164,7 +164,7 @@ int64_t Func_ceil::getIntVal(Row& row,
             TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
 
             if (!isNull)
-                ret = dt.convertToMySQLint(fTimeZone);
+                ret = dt.convertToMySQLint(timeZone());
         }
         break;
 
@@ -269,7 +269,7 @@ uint64_t Func_ceil::getUintVal(Row& row,
             TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
 
             if (!isNull)
-                ret = dt.convertToMySQLint(fTimeZone);
+                ret = dt.convertToMySQLint(timeZone());
         }
         break;
 
