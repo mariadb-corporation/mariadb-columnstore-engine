@@ -21,6 +21,7 @@
 
 void check_walk(const Item* item, void* arg);
 
+
 void disable_indices_for_CEJ(THD *thd_)
 {
     TABLE_LIST* global_list;
@@ -41,7 +42,7 @@ void disable_indices_for_CEJ(THD *thd_)
     }
 }
 
-bool optimize_unflattened_subqueries_cs(SELECT_LEX *select_lex)
+bool optimize_unflattened_subqueries_(SELECT_LEX *select_lex)
 {
     bool result = false;
     TABLE_LIST *tbl;
@@ -51,7 +52,7 @@ bool optimize_unflattened_subqueries_cs(SELECT_LEX *select_lex)
         if (tbl->is_view_or_derived())
         {
             SELECT_LEX *dsl = tbl->derived->first_select();
-            result = optimize_unflattened_subqueries_cs(dsl);
+            result = optimize_unflattened_subqueries_(dsl);
         }
     }
 
@@ -545,7 +546,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     //To search for CROSS JOIN-s we use tree invariant
     //G(V,E) where [V] = [E]+1
     List<Item> join_preds_list;
-    TABLE_LIST *tl;
+    TABLE_LIST *tl;   
     for (tl = sl->get_table_list(); !unsupported_feature && tl; tl = tl->next_local)
     {
         Item_cond* where_icp= 0;
@@ -807,6 +808,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
+    bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
     if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
@@ -814,41 +816,28 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         || (thd->lex)->exchange)
         
     {
-        return handler;
+        unsupported_feature = true;
     }
 
-    // We apply dedicated rewrites from MDB here so the data structures
-    // becomes dirty and CS has to raise an error in case of any problem.
-    bool unsupported_feature = false;
-    logging::Message::Args args;
     JOIN *join= select_lex->join;
+    // Next block tries to execute the query using SH very early to fallback
+    // if execution fails.
+    if (!unsupported_feature)
     {
         disable_indices_for_CEJ(thd);
 
         if (select_lex->handle_derived(thd->lex, DT_MERGE))
         {
-            // set to true b/c of an error in handle_derived
-            unsupported_feature = true;
-            args.add("in handle_derived()");
+            // early quit b/c of the error in handle_derived
+            return handler;
         }
 
-        COND *conds;
-        if (!unsupported_feature)
-        {
-            conds = simplify_joins_cs(join, select_lex->join_list,
-                join->conds, TRUE, FALSE);
-        }
-    
+        COND *conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
         // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
         // an equi-JOIN condition.
-        if (!unsupported_feature
-            && optimize_unflattened_subqueries_cs(select_lex))
-        {
-            unsupported_feature = true;
-            args.add("in optimize_unflattened_subqueries_cs()");
-        }
+        optimize_unflattened_subqueries_(select_lex);
     
-        if (!unsupported_feature && conds)
+        if (conds)
         {
 #ifdef DEBUG_WALK_COND
             conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
@@ -856,6 +845,15 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             join->conds = conds;
         }
 
+        // Impossible HAVING or WHERE
+        // TODO replace with function call
+        if (unsupported_feature
+           || select_lex->having_value == Item::COND_FALSE
+            || select_lex->cond_value == Item::COND_FALSE )
+        {
+            unsupported_feature = true;
+            restore_optimizer_flags(thd);
+        }
     }
 
     // Restore back the saved group_list
@@ -876,7 +874,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             item_check(item, &unsupported_feature);
             if (unsupported_feature)
             {
-                args.add("in item_check()");
                 break;
             }
         }
@@ -893,20 +890,13 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         {
             rc= ha_cs_impl_pushdown_init(&mhi, handler->table);
         }
-        unsupported_feature = (rc) ? true : unsupported_feature;
 
         // Return SH even if init fails b/c CS changed SELECT_LEX structures
-        // with simplify_joins_cs and other rewrites()
-        // the handler will return error on next_row()
+        // with simplify_joins_()
+        if (rc)
+            unsupported_feature = true;
         return handler;
     }
-    else
-    {
-        std::string emsg=
-            logging::IDBErrorInfo::instance()->errorMsg(ER_INTERNAL_ERROR, args);
-        thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
-    }
-    restore_optimizer_flags(thd);
 
     return NULL;
 }
