@@ -27,6 +27,7 @@
 #include <string>
 #include <sstream>
 #include <string>
+#include <mutex>
 
 #include "parsetree.h"
 #include "exceptclasses.h"
@@ -73,10 +74,12 @@ public:
 
     const std::string timeZone() const
     {
+        std::unique_lock<std::mutex> l(tzMutex);
         return fTimeZone;
     }
     void timeZone(const std::string timeZone)
     {
+        std::unique_lock<std::mutex> l(tzMutex);
         fTimeZone = timeZone;
     }
 
@@ -201,7 +204,6 @@ protected:
     virtual int64_t addTime(dataconvert::Time& dt1, dataconvert::Time& dt2);
 
     std::string fFuncName;
-    std::string fTimeZone;
 
 private:
     //defaults okay
@@ -213,6 +215,9 @@ private:
     float fFloatNullVal;
     double fDoubleNullVal;
     long double fLongDoubleNullVal;
+
+    std::string fTimeZone;
+    mutable std::mutex tzMutex;
 };
 
 

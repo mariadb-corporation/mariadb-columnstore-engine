@@ -79,7 +79,7 @@ int64_t Func_dayname::getIntVal(rowgroup::Row& row,
 	    dataconvert::TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime time;
-	    dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
+	    dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
             year = time.year;
             month = time.month;
             day = time.day;

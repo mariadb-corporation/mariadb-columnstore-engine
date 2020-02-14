@@ -134,7 +134,7 @@ int64_t Func_if::getIntVal(Row& row,
                            bool& isNull,
                            CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getIntVal(row, isNull);
     }
@@ -151,7 +151,7 @@ string Func_if::getStrVal(Row& row,
                           CalpontSystemCatalog::ColType&)
 {
 
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getStrVal(row, isNull);
     }
@@ -167,7 +167,7 @@ IDB_Decimal Func_if::getDecimalVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getDecimalVal(row, isNull);
     }
@@ -183,7 +183,7 @@ double Func_if::getDoubleVal(Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getDoubleVal(row, isNull);
     }
@@ -198,7 +198,7 @@ long double Func_if::getLongDoubleVal(Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getLongDoubleVal(row, isNull);
     }
@@ -214,7 +214,7 @@ int32_t Func_if::getDateIntVal(Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getDateIntVal(row, isNull);
     }
@@ -230,7 +230,7 @@ int64_t Func_if::getDatetimeIntVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getDatetimeIntVal(row, isNull);
     }
@@ -246,7 +246,7 @@ int64_t Func_if::getTimestampIntVal(Row& row,
                                     bool& isNull,
                                     CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getTimestampIntVal(row, isNull);
     }
@@ -262,7 +262,7 @@ int64_t Func_if::getTimeIntVal(Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType&)
 {
-    if (boolVal(parm[0], row, fTimeZone))
+    if (boolVal(parm[0], row, timeZone()))
     {
         return parm[1]->data()->getTimeIntVal(row, isNull);
     }

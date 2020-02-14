@@ -76,7 +76,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
 	    dataconvert::TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime time;
-	    dataconvert::gmtSecToMySQLTime(seconds, time, fTimeZone);
+	    dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
             hour = time.hour;
             min = time.minute;
             sec = time.second;

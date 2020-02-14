@@ -162,7 +162,7 @@ int64_t Func_bitand::getIntVal(Row& row,
                 TimeStamp timestamp(parm[i]->data()->getTimestampIntVal(row, isNull));
                 int64_t seconds = timestamp.second;
                 MySQLTime m_time;
-                gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+                gmtSecToMySQLTime(seconds, m_time, timeZone());
 
                 values.push_back((m_time.month * 100000000000000) + (m_time.day * 1000000000000) + (m_time.hour * 10000000000) + (m_time.minute * 100000000) + (m_time.second * 1000000) + timestamp.msecond);
             }
