@@ -23,6 +23,7 @@
 #include "ha_mcs_sysvars.h"
 
 extern handlerton* mcs_hton;
+#define CS_WARNING_ID 9999
 
 /** @brief
   COLUMNSTORE_SHARE is a structure that will be shared among all open handlers.

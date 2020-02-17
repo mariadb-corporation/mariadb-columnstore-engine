@@ -786,16 +786,31 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 {
     ha_columnstore_select_handler* handler = NULL;
 
-    // MCOL-2178 Disable SP support in the select_handler for now.
-    // Check the session variable value to enable/disable use of
+    // Check the session variable value to enable/disable
     // select_handler
+    if (!get_select_handler(thd))
+    {
+        return handler;
+    }
+
+    // Disable SP support in the select_handler for now.
+    if ((thd->lex)->sphead)
+    {
+        std::string warnMsg("Select Handler doesn't support SP.");
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+            CS_WARNING_ID, warnMsg.c_str());
+        return handler;
+    }
+
     // Disable processing of select_result_interceptor classes
     // which intercept and transform result set rows. E.g.:
     // select a,b into @a1, @a2 from t1;
-    if (!get_select_handler(thd) || (thd->lex)->sphead ||
-        ((thd->lex)->result &&
+    if (((thd->lex)->result &&
          !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
     {
+        std::string warnMsg("Select Handler doesn't assign variables values.");
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+            CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
@@ -808,7 +823,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
-    bool unsupported_feature = false;
     // Select_handler use the short-cut that effectively disables
     // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
     if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
@@ -816,9 +830,36 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         || (thd->lex)->exchange)
         
     {
-        unsupported_feature = true;
+        std::string warnMsg("Query inserts its result. Select Handler doesn't work.");
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+            CS_WARNING_ID, warnMsg.c_str());
+        return handler;
     }
 
+    bool unsupported_feature = false;
+    logging::Message::Args args;
+    // Iterate and traverse through the item list and do not create SH
+    // if the unsupported (set/get_user_var) functions are present.
+    TABLE_LIST* table_ptr = select_lex->get_table_list();
+    for (; !unsupported_feature && table_ptr; table_ptr = table_ptr->next_global)
+    {
+        List_iterator_fast<Item> it(table_ptr->select_lex->item_list);
+        Item* item;
+        while ((item = it++))
+        {
+            item_check(item, &unsupported_feature);
+            if (unsupported_feature)
+            {
+                std::string warnMsg("Select Handler doesn't work b/c of the unsupported item found in item_check()");
+                push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+                    CS_WARNING_ID, warnMsg.c_str());
+                return handler;
+            }
+        }
+    }
+
+    // We apply dedicated rewrites from MDB here so the data structures
+    // becomes dirty and CS has to raise an error in case of any problem.
     JOIN *join= select_lex->join;
     // Next block tries to execute the query using SH very early to fallback
     // if execution fails.
@@ -832,7 +873,8 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             return handler;
         }
 
-        COND *conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
+        COND *conds = NULL;
+        conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
         // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
         // an equi-JOIN condition.
         optimize_unflattened_subqueries_(select_lex);
@@ -860,23 +902,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     if (group_list_ptrs)
     {
         restore_group_list(select_lex, group_list_ptrs);
-    }
-
-    // Iterate and traverse through the item list and do not create SH
-    // if the unsupported (set/get_user_var) functions are present.
-    TABLE_LIST* table_ptr = select_lex->get_table_list();
-    for (; !unsupported_feature && table_ptr; table_ptr = table_ptr->next_global)
-    {
-        List_iterator_fast<Item> it(table_ptr->select_lex->item_list);
-        Item* item;
-        while ((item = it++))
-        {
-            item_check(item, &unsupported_feature);
-            if (unsupported_feature)
-            {
-                break;
-            }
-        }
     }
 
     if (!unsupported_feature)
