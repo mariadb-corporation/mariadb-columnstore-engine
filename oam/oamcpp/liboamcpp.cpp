@@ -7796,7 +7796,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     string pidtmp = tmpdir + "/mysql.pid";
 
-    int no_systemd = system("systemctl cat mariadb.server > /dev/null 2>&1");
+    int no_systemd = system("systemctl cat mariadb.service > /dev/null 2>&1");
 
     switch (action)
     {
@@ -7938,7 +7938,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                 FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
                 fgets(buf, 512, cmd_pipe);
-                pid_t pid = strtoul(buf, NULL, 10);
+                pid = strtoul(buf, NULL, 10);
 
                 pclose( cmd_pipe );
 
@@ -7968,7 +7968,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                 FILE *cmd_pipe = popen("pidof -s mysqld", "r");
 
                 fgets(buf, 512, cmd_pipe);
-                pid_t pid = strtoul(buf, NULL, 10);
+                pid = strtoul(buf, NULL, 10);
 
                 pclose( cmd_pipe );
 
