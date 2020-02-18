@@ -2299,6 +2299,22 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
   return has_default;
 }
 
+/*
+    Utility function search for ZEROFILL 
+*/
+
+bool hasZerofillDecimal(TABLE *table_arg)
+{
+    for (Field **field= table_arg->field; *field; field++)
+    {
+        if (((*field)->flags & ZEROFILL_FLAG)
+                && typeid (**field) == typeid(Field_new_decimal))
+            return true;
+    }
+
+    return false;
+}
+
 int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
 #ifdef MCS_DEBUG
@@ -2577,6 +2593,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 #ifdef MCS_DEBUG
         cout << "ha_mcs_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
+    }
+    else
+    {
+        if (hasZerofillDecimal(table_arg))
+        {
+            push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+                WARN_OPTION_IGNORED, "ZEROFILL is ignored in ColumnStore");
+        }
     }
 
     return rc;
