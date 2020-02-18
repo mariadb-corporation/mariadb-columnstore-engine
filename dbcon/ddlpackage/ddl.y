@@ -63,6 +63,7 @@ char* copy_string(const char *str);
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
+%debug
 
  /* Bison uses this to generate a C union definition.  This is used to
 	store the application created values associated with syntactic
@@ -104,15 +105,17 @@ char* copy_string(const char *str);
 
 %token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT BLOB IDB_BLOB CASCADE IDB_CHAR
 CHARACTER CHECK CLOB COLUMN
+BOOL BOOLEAN BINARY
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
 DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
 FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
-MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT
+MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT MEDIUMINT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
 REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
-TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
+TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SIGNED SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET COLLATE IDB_IF EXISTS CHANGE TRUNCATE
-BOOL BOOLEAN MEDIUMINT TIMESTAMP BINARY
+TIMESTAMP
+ZEROFILL
 
 %token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE TIME
 
@@ -197,6 +200,8 @@ BOOL BOOLEAN MEDIUMINT TIMESTAMP BINARY
 %type <str> 		     	 opt_display_precision_scale_null
 %type <str>                  opt_if_exists
 %type <str>                  opt_if_not_exists
+%type <str>                  opt_signed
+%type <str>                  opt_zerofill
 %type <sqlStmt>              trunc_table_statement
 %type <sqlStmt>              rename_table_statement
 %type <str>                  ident
@@ -1002,16 +1007,14 @@ exact_numeric_type:
 		$2->fLength = DDLDatatypeLength[DDL_UNSIGNED_NUMERIC];
 		$$ = $2;
 	}
-	| DECIMAL opt_precision_scale
+	| DECIMAL opt_precision_scale opt_signed opt_zerofill
 	{
 		$2->fType = DDL_DECIMAL;
-/*	   	$2->fLength = DDLDatatypeLength[DDL_DECIMAL]; */
 		$$ = $2;
 	}
-	| DECIMAL opt_precision_scale UNSIGNED
+	| DECIMAL opt_precision_scale UNSIGNED opt_zerofill
 	{
 		$2->fType = DDL_UNSIGNED_DECIMAL;
-/*	   	$3->fLength = DDLDatatypeLength[DDL_DECIMAL]; */
 		$$ = $2;
 	}
 	| NUMBER opt_precision_scale
@@ -1105,6 +1108,14 @@ opt_precision_scale:
 	| '(' ICONST ',' ICONST ')' {$$ = new ColumnType(atoi($2), atoi($4));}
 	| {$$ = new ColumnType(10,0);}
 	;
+
+opt_signed:
+    SIGNED {$$ = NULL;}
+    | {$$ = NULL;}
+
+opt_zerofill:
+    ZEROFILL {$$ = NULL;}
+    | {$$ = NULL;}
 
 opt_display_width:
 	'(' ICONST ')' {$$ = NULL;}
