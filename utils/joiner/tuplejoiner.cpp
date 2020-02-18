@@ -1069,15 +1069,15 @@ void TupleJoiner::updateCPData(const Row& r)
 
     for (col = 0; col < smallKeyColumns.size(); col++)
     {
-//        if (r.getColumnWidth(smallKeyColumns[col]) > 8)
-        if (r.isLongString(smallKeyColumns[col]))
+        auto colIdx = smallKeyColumns[col];
+        if (r.isLongString(colIdx))
              continue;
 
-        int64_t& min = cpValues[col][0], &max = cpValues[col][1];
+        auto& min = cpValues[col][0], &max = cpValues[col][1];
 
-        if (r.isCharType(smallKeyColumns[col]))
+        if (r.isCharType(colIdx))
         {
-            int64_t val = r.getIntField(smallKeyColumns[col]);
+            int64_t val = r.getIntField(colIdx);
 
             if (order_swap(val) < order_swap(min) ||
                     min == numeric_limits<int64_t>::max())
@@ -1091,10 +1091,10 @@ void TupleJoiner::updateCPData(const Row& r)
                 max = val;
             }
         }
-        else if (r.isUnsigned(smallKeyColumns[col]))
+        else if (r.isUnsigned(colIdx))
         {
             uint64_t uval;
-            if (r.getColType(smallKeyColumns[col]) == CalpontSystemCatalog::LONGDOUBLE)
+            if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
             {
                 double dval = (double)roundl(r.getLongDoubleField(smallKeyColumns[col]));
                 switch (largeRG.getColType(largeKeyColumns[col]))
@@ -1115,7 +1115,7 @@ void TupleJoiner::updateCPData(const Row& r)
             }
             else
             {
-                uval = r.getUintField(smallKeyColumns[col]);
+                uval = r.getUintField(colIdx);
             }
 
             if (uval > static_cast<uint64_t>(max))
@@ -1127,9 +1127,9 @@ void TupleJoiner::updateCPData(const Row& r)
         else
         {
             int64_t val;
-            if (r.getColType(smallKeyColumns[col]) == CalpontSystemCatalog::LONGDOUBLE)
+            if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
             {
-                double dval = (double)roundl(r.getLongDoubleField(smallKeyColumns[col]));
+                double dval = (double)roundl(r.getLongDoubleField(colIdx));
                 switch (largeRG.getColType(largeKeyColumns[col]))
                 {
                     case CalpontSystemCatalog::DOUBLE:
@@ -1146,9 +1146,16 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
+            else if (utils::isWide(r.getColumnWidth(colIdx))
+                && (r.getColType(colIdx) == CalpontSystemCatalog::DECIMAL
+                    || r.getColType(colIdx) == CalpontSystemCatalog::UDECIMAL))
+            {
+                // WIP MCOL-641
+            }
+
             else
             {
-                val = r.getIntField(smallKeyColumns[col]);
+                val = r.getIntField(colIdx);
             }
 
             if (val > max)
