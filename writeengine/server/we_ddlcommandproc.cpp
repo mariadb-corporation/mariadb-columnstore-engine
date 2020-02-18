@@ -141,6 +141,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
     WriteEngine::ColTuple colTuple;
     WriteEngine::ColStruct colStruct;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::ColTupleList colTuples;
     WriteEngine::dictStr dctColTuples;
     WriteEngine::DctnryStruct dctnryStruct;
@@ -256,6 +257,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
             }
 
             colStructs.push_back(colStruct);
+            cscColTypeList.push_back(column.colType);
             oids[colStruct.dataOid] = colStruct.dataOid;
 
             //oidsToFlush.push_back(colStruct.dataOid);
@@ -294,7 +296,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
             // TODO: This may be redundant
             static boost::mutex dbrmMutex;
             boost::mutex::scoped_lock lk(dbrmMutex);
-            error = fWEWrapper.insertColumnRec_SYS(txnID, colStructs, colValuesList,
+            error = fWEWrapper.insertColumnRec_SYS(txnID, cscColTypeList, colStructs, colValuesList,
                                                    dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);
 
             if (error != WriteEngine::NO_ERROR)
@@ -393,6 +395,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
     WriteEngine::ColTuple colTuple;
     WriteEngine::ColStruct colStruct;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::ColTupleList colTuples;
     WriteEngine::dictStr dctColTuples;
     WriteEngine::DctnryStruct dctnryStruct;
@@ -703,6 +706,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                 {
                     colStructs.push_back(colStruct);
                     dctnryStructList.push_back (dctnryStruct);
+                    cscColTypeList.push_back(column.colType);
                 }
 
                 colList[i].push_back(colTuple);
@@ -734,7 +738,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             }
 
             //fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
-            error = fWEWrapper.insertColumnRec_SYS(txnID, colStructs, colValuesList,
+            error = fWEWrapper.insertColumnRec_SYS(txnID, cscColTypeList, colStructs, colValuesList,
                                                    dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -820,6 +824,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
     WriteEngine::ColStruct colStruct;
     WriteEngine::ColTuple colTuple;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::ColTupleList colTuples;
     WriteEngine::DctColTupleList dctColTuples;
     WriteEngine::ColValueList colValuesList;
@@ -1092,6 +1097,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
 
             colStructs.push_back(colStruct);
             dctnryStructList.push_back (dctnryStruct);
+            cscColTypeList.push_back(column.colType);
             colList[i].push_back(colTuple);
             //colList.push_back(WriteEngine::ColTupleList());
             //colList.back().push_back(colTuple);
@@ -1119,7 +1125,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
             fWEWrapper.startTransaction(txnID);
             int rc1 = 0;
 
-            error = fWEWrapper.insertColumnRec_SYS(txnID, colStructs, colValuesList,
+            error = fWEWrapper.insertColumnRec_SYS(txnID, cscColTypeList, colStructs, colValuesList,
                                                    dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -1369,7 +1375,9 @@ uint8_t WE_DDLCommandProc::deleteSyscolumn(ByteStream& bs, std::string& err)
 
         WriteEngine::ColStruct colStruct;
         WriteEngine::ColStructList colStructs;
+        WriteEngine::CSCTypesList cscColTypeList;
         std::vector<WriteEngine::ColStructList> colExtentsStruct;
+        std::vector<WriteEngine::CSCTypesList> colExtentsColType;
         std::vector<void*> colValuesList;
         WriteEngine::RIDList ridList;
         std::vector<WriteEngine::RIDList> ridLists;
@@ -1404,17 +1412,19 @@ uint8_t WE_DDLCommandProc::deleteSyscolumn(ByteStream& bs, std::string& err)
             oids[colStruct.dataOid] = colStruct.dataOid;
             //oidsToFlush.push_back(colStruct.dataOid);
             colStructs.push_back(colStruct);
+            cscColTypeList.push_back(column.colType);
 
             ++column_iterator;
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         ridLists.push_back(ridList);
 
 
         if (0 != colStructs.size() && 0 != ridLists[0].size())
         {
-            int error = fWEWrapper.deleteRow(txnID, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+            int error = fWEWrapper.deleteRow(txnID, colExtentsColType, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
 
             int rc1 = 0;
 
@@ -1509,7 +1519,9 @@ uint8_t WE_DDLCommandProc::deleteSyscolumnRow(ByteStream& bs, std::string& err)
 
         WriteEngine::ColStruct colStruct;
         WriteEngine::ColStructList colStructs;
+        WriteEngine::CSCTypesList cscColTypeList;
         std::vector<WriteEngine::ColStructList> colExtentsStruct;
+        std::vector<WriteEngine::CSCTypesList> colExtentsColType;
         std::vector<void*> colValuesList;
         WriteEngine::RIDList ridList;
         std::vector<WriteEngine::RIDList> ridLists;
@@ -1538,17 +1550,20 @@ uint8_t WE_DDLCommandProc::deleteSyscolumnRow(ByteStream& bs, std::string& err)
             oids[colStruct.dataOid] = colStruct.dataOid;
             //oidsToFlush.push_back(colStruct.dataOid);
             colStructs.push_back(colStruct);
+            cscColTypeList.push_back(column.colType);
 
             ++column_iterator;
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         ridLists.push_back(ridList);
 
 
         if (0 != colStructs.size() && 0 != ridLists[0].size())
         {
-            int error = fWEWrapper.deleteRow(txnID, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+            int error = fWEWrapper.deleteRow(txnID, colExtentsColType, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+
             int rc1 = 0;
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -1645,7 +1660,9 @@ uint8_t WE_DDLCommandProc::deleteSystable(ByteStream& bs, std::string& err)
 
         WriteEngine::ColStruct colStruct;
         WriteEngine::ColStructList colStructs;
+        WriteEngine::CSCTypesList cscColTypeList;
         std::vector<WriteEngine::ColStructList> colExtentsStruct;
+        std::vector<WriteEngine::CSCTypesList> colExtentsColType;
         std::vector<void*> colValuesList;
         WriteEngine::RIDList ridList;
         std::vector<WriteEngine::RIDList> ridLists;
@@ -1673,17 +1690,20 @@ uint8_t WE_DDLCommandProc::deleteSystable(ByteStream& bs, std::string& err)
             oids[colStruct.dataOid] = colStruct.dataOid;
             //oidsToFlush.push_back(colStruct.dataOid);
             colStructs.push_back(colStruct);
+            cscColTypeList.push_back(column.colType);
 
             ++column_iterator;
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         ridLists.push_back(ridList);
 
 
         if (0 != colStructs.size() && 0 != ridLists[0].size())
         {
-            int error = fWEWrapper.deleteRow(txnID, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+            int error = fWEWrapper.deleteRow(txnID, colExtentsColType, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+
             int rc1 = 0;
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -1756,7 +1776,9 @@ uint8_t WE_DDLCommandProc::deleteSystables(ByteStream& bs, std::string& err)
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
     WriteEngine::ColStruct colStruct;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<void*> colValuesList;
     WriteEngine::RIDList ridList;
     std::vector<WriteEngine::RIDList> ridLists;
@@ -1805,16 +1827,19 @@ uint8_t WE_DDLCommandProc::deleteSystables(ByteStream& bs, std::string& err)
             oids[colStruct.dataOid] = colStruct.dataOid;
             //oidsToFlush.push_back(colStruct.dataOid);
             colStructs.push_back(colStruct);
+            cscColTypeList.push_back(column.colType);
 
             ++column_iterator;
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         ridLists.push_back(ridList);
 
 
         {
-            int error = fWEWrapper.deleteRow(txnID, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+            int error = fWEWrapper.deleteRow(txnID, colExtentsColType, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+
             int rc1 = 0;
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -1868,7 +1893,9 @@ uint8_t WE_DDLCommandProc::deleteSystables(ByteStream& bs, std::string& err)
         CalpontSystemCatalog::RIDList colRidList = systemCatalogPtr->columnRIDs(userTableName);
 
         colStructs.clear();
+        cscColTypeList.clear();
         colExtentsStruct.clear();
+        colExtentsColType.clear();
         colValuesList.clear();
         ridList.clear();
         ridLists.clear();
@@ -1903,17 +1930,20 @@ uint8_t WE_DDLCommandProc::deleteSystables(ByteStream& bs, std::string& err)
 
             colStructs.push_back(colStruct);
             oids[colStruct.dataOid] = colStruct.dataOid;
+            cscColTypeList.push_back(column.colType);
             //oidsToFlush.push_back(colStruct.dataOid);
             ++column_iterator;
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         ridLists.push_back(ridList);
 
 
         if (0 != colStructs.size() && 0 != ridLists[0].size())
         {
-            int error = fWEWrapper.deleteRow(txnID, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+            int error = fWEWrapper.deleteRow(txnID, colExtentsColType, colExtentsStruct, colValuesList, ridLists, SYSCOLUMN_BASE);
+
             int rc1 = 0;
 
             if (idbdatafile::IDBPolicy::useHdfs())
@@ -2036,6 +2066,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnAuto(ByteStream& bs, std::string& err)
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -2076,6 +2107,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnAuto(ByteStream& bs, std::string& err)
     oids[colStruct.dataOid] = colStruct.dataOid;
     //oidsToFlush.push_back(colStruct.dataOid);
     dctnryStructList.push_back(dctnryStruct);
+    cscColTypeList.push_back(column.colType);
 
     for (unsigned int i = 0; i < roList.size(); i++)
     {
@@ -2084,6 +2116,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnAuto(ByteStream& bs, std::string& err)
 
     colValuesList.push_back(aColList);
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
     std::vector<extentInfo> extentsinfo;
     extentInfo aExtentinfo;
@@ -2126,13 +2159,14 @@ uint8_t WE_DDLCommandProc::updateSyscolumnAuto(ByteStream& bs, std::string& err)
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
     if (idbdatafile::IDBPolicy::useHdfs())
         fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -2227,6 +2261,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -2260,6 +2295,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
     //oidsToFlush.push_back(colStruct.dataOid);
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
+    cscColTypeList.push_back(column.colType);
 
     for (unsigned int i = 0; i < roList.size(); i++)
     {
@@ -2297,6 +2333,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
 
     std::vector<WriteEngine::RIDList> ridLists;
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
     ridLists.push_back(ridList);
 
@@ -2315,13 +2352,14 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
     fWEWrapper.setTransId(txnID);
     fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -2397,6 +2435,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     tableName.schema = CALPONT_SCHEMA;
     tableName.table = SYSCOLUMN_TABLE;
@@ -2464,6 +2503,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
 
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
+    cscColTypeList.push_back(column.colType);
 
     for (unsigned int i = 0; i < roList.size(); i++)
     {
@@ -2486,6 +2526,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
     std::vector<extentInfo> extentsinfo;
     extentInfo aExtentinfo;
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
 
     for (unsigned int i = 0; i < roList.size(); i++)
@@ -2522,6 +2563,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
@@ -2530,7 +2572,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
     fWEWrapper.setBulkFlag(false);
     fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -2626,6 +2668,7 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -2659,12 +2702,14 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
     }
 
     colStructs.push_back(colStruct);
+    cscColTypeList.push_back(column.colType);
     oids[colStruct.dataOid] = colStruct.dataOid;
     //oidsToFlush.push_back(colStruct.dataOid);
     dctnryStructList.push_back(dctnryStruct);
     aColList.push_back(colTuple);
     colValuesList.push_back(aColList);
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
 
 
@@ -2702,6 +2747,7 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
         }
 
         colExtentsStruct.push_back(colStructs);
+        colExtentsColType.push_back(cscColTypeList);
         dctnryExtentsStruct.push_back(dctnryStructList);
     }
 
@@ -2711,7 +2757,7 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
     fWEWrapper.setBulkFlag(false);
     fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -2805,6 +2851,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -2854,6 +2901,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -2866,6 +2914,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
     colValuesList.push_back(aColList);
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
 
     dctColList = dictTuple;
     dctRowList.push_back(dctColList);
@@ -2901,6 +2950,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
@@ -2909,7 +2959,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
     fWEWrapper.setBulkFlag(false);
     fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -3033,6 +3083,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -3091,6 +3142,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -3103,6 +3155,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     colValuesList.push_back(aColList);
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
 
     dctColList = dictTuple;
     dctRowList.push_back(dctColList);
@@ -3138,6 +3191,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
@@ -3146,7 +3200,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     fWEWrapper.setBulkFlag(false);
     fWEWrapper.startTransaction(txnID);
 
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -3208,6 +3262,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     colValuesList.clear();
     aColList.clear();
     colStructs.clear();
+    cscColTypeList.clear();
     colOldValuesList.clear();
     oids.clear();
     tableName.schema = CALPONT_SCHEMA;
@@ -3288,6 +3343,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
 
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
+    cscColTypeList.push_back(column.colType);
 
     for (unsigned int i = 0; i < roList.size(); i++)
     {
@@ -3308,6 +3364,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
     dctnryValueList.push_back(dctRowList);
     extentsinfo.clear();
     colExtentsStruct.clear();
+    colExtentsColType.clear();
     dctnryExtentsStruct.clear();
     oid = 1021;
 
@@ -3345,10 +3402,11 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
-    rc = fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    rc = fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
                                     ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE);
 
     if (rc != NO_ERROR)
@@ -3482,11 +3540,13 @@ uint8_t WE_DDLCommandProc::updateSyscolumnColumnposCol(messageqcpp::ByteStream& 
         WriteEngine::ColStruct colStruct;
         WriteEngine::DctnryStructList dctnryStructList;
         WriteEngine::DctnryValueList dctnryValueList;
+        WriteEngine::CSCTypesList cscColTypeList;
+        CalpontSystemCatalog::ColType colType;
         //Build column structure for COLUMNPOS_COL
-        colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
-        colStruct.colWidth = 4;
+        colType.columnOID = colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
+        colType.colWidth = colStruct.colWidth = 4;
         colStruct.tokenFlag = false;
-        colStruct.colDataType = CalpontSystemCatalog::INT;
+        colType.colDataType = colStruct.colDataType = CalpontSystemCatalog::INT;
         colStruct.fColDbRoot = dbRoot;
 
         if (idbdatafile::IDBPolicy::useHdfs())
@@ -3495,9 +3555,10 @@ uint8_t WE_DDLCommandProc::updateSyscolumnColumnposCol(messageqcpp::ByteStream& 
         }
 
         colStructs.push_back(colStruct);
+        cscColTypeList.push_back(colType);
         oids[colStruct.dataOid] = colStruct.dataOid;
         //oidsToFlush.push_back(colStruct.dataOid);
-        rc = fWEWrapper.updateColumnRecs( txnID, colStructs, colValuesList, ridList, SYSCOLUMN_BASE );
+        rc = fWEWrapper.updateColumnRecs( txnID, cscColTypeList, colStructs, colValuesList, ridList, SYSCOLUMN_BASE );
     }
 
     int rc1 = 0;
@@ -3593,7 +3654,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     std::map<uint32_t, uint32_t> oids;
     oids[dataOid] = dataOid;
     oids[refColOID] = refColOID;
-    rc = fWEWrapper.fillColumn(txnID, dataOid, dataType, dataWidth, defaultVal, refColOID, refColDataType,
+    rc = fWEWrapper.fillColumn(txnID, dataOid, colType, defaultVal, refColOID, refColDataType,
                                refColWidth, refCompressionType, isNULL, compressionType, defaultValStr, dictOid, autoincrement);
 
     if ( rc != 0 )
@@ -4164,6 +4225,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList1;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
@@ -4269,6 +4331,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 
     colStructs.push_back(colStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4300,6 +4363,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::RIDList> ridLists;
     ridLists.push_back(ridList);
 
@@ -4330,11 +4394,12 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
 
-    if (NO_ERROR != fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    if (NO_ERROR != fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
             ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE))
     {
         err = "WE: Update failed on: " + atableName.table;
@@ -4440,6 +4505,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
     WriteEngine::ColValueList colValuesList;
     WriteEngine::ColTupleList aColList1;
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     std::vector<void*> colOldValuesList;
     std::map<uint32_t, uint32_t> oids;
     //std::vector<BRM::OID_t>  oidsToFlush;
@@ -4558,6 +4624,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
     colStructs.push_back(colStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column1.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4595,6 +4662,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
     colStructs.push_back(colStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column2.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4628,6 +4696,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
     colStructs.push_back(colStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column3.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4662,6 +4731,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
     colStructs.push_back(colStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column4.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4771,6 +4841,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
     colStructs.push_back(colStruct);
     dctnryStructList.push_back(dctnryStruct);
     oids[colStruct.dataOid] = colStruct.dataOid;
+    cscColTypeList.push_back(column5.colType);
 
     //oidsToFlush.push_back(colStruct.dataOid);
     if (dctnryStruct.dctnryOid > 0)
@@ -4798,6 +4869,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
     dctRowList.push_back(dctColList);
     dctnryValueList.push_back(dctRowList);
     std::vector<WriteEngine::ColStructList> colExtentsStruct;
+    std::vector<WriteEngine::CSCTypesList> colExtentsColType;
     std::vector<WriteEngine::DctnryStructList> dctnryExtentsStruct;
     std::vector<WriteEngine::RIDList> ridLists;
     ridLists.push_back(ridList);
@@ -4829,10 +4901,11 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
         colExtentsStruct.push_back(colStructs);
         dctnryExtentsStruct.push_back(dctnryStructList);
+        colExtentsColType.push_back(cscColTypeList);
     }
 
     // call the write engine to update the row
-    if (NO_ERROR != fWEWrapper.updateColumnRec(txnID, colExtentsStruct, colValuesList, colOldValuesList,
+    if (NO_ERROR != fWEWrapper.updateColumnRec(txnID, colExtentsColType, colExtentsStruct, colValuesList, colOldValuesList,
             ridLists, dctnryExtentsStruct, dctnryValueList, SYSCOLUMN_BASE))
     {
         err = "WE: Update failed on: " + atableName.table;
