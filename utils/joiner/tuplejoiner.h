@@ -39,6 +39,7 @@
 #include "stlpoolallocator.h"
 #include "hasher.h"
 #include "threadpool.h"
+#include "columnwidth.h"
 
 namespace joiner
 {
