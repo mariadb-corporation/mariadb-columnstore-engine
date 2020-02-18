@@ -63,7 +63,6 @@ char* copy_string(const char *str);
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
-%debug
 
  /* Bison uses this to generate a C union definition.  This is used to
 	store the application created values associated with syntactic
@@ -1007,7 +1006,7 @@ exact_numeric_type:
 		$2->fLength = DDLDatatypeLength[DDL_UNSIGNED_NUMERIC];
 		$$ = $2;
 	}
-	| DECIMAL opt_precision_scale opt_signed opt_zerofill
+	| DECIMAL opt_precision_scale opt_signed
 	{
 		$2->fType = DDL_DECIMAL;
 		$$ = $2;
@@ -1113,128 +1112,128 @@ opt_signed:
     SIGNED {$$ = NULL;}
     | {$$ = NULL;}
 
-opt_zerofill:
-    ZEROFILL {$$ = NULL;}
-    | {$$ = NULL;}
+    opt_zerofill:
+        ZEROFILL {$$ = NULL;}
+        | {$$ = NULL;}
 
-opt_display_width:
-	'(' ICONST ')' {$$ = NULL;}
-	| {$$ = NULL;}
-	;
-
-approximate_numeric_type:
-	DOUBLE opt_display_precision_scale_null
-	{
-		$$ = new ColumnType(DDL_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-	| DOUBLE opt_display_precision_scale_null UNSIGNED
-	{
-		$$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-    | DOUBLE PRECISION opt_display_precision_scale_null
-	{
-		$$ = new ColumnType(DDL_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-	| DOUBLE PRECISION opt_display_precision_scale_null UNSIGNED
-	{
-		$$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-	| REAL opt_display_precision_scale_null
-	{
-		$$ = new ColumnType(DDL_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-	| REAL opt_display_precision_scale_null UNSIGNED
-	{
-		$$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
-		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
-	}
-	| IDB_FLOAT opt_display_precision_scale_null
-	{
-		$$ = new ColumnType(DDL_FLOAT);
-		$$->fLength = DDLDatatypeLength[DDL_FLOAT];
-	}
-	| IDB_FLOAT opt_display_precision_scale_null UNSIGNED
-	{
-		$$ = new ColumnType(DDL_UNSIGNED_FLOAT);
-		$$->fLength = DDLDatatypeLength[DDL_FLOAT];
-	}
-	;
-
-opt_display_precision_scale_null:
-		'(' ICONST ')' {$$ = NULL;}
-		|
-        '(' ICONST ',' ICONST ')' {$$ = NULL;}
+    opt_display_width:
+        '(' ICONST ')' {$$ = NULL;}
         | {$$ = NULL;}
         ;
-		
-literal:
-	ICONST
-	| string_literal
-	| FCONST
-	;
 
-datetime_type:
-	DATETIME opt_time_precision
-	{
-		$$ = new ColumnType(DDL_DATETIME);
-		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
-                $$->fPrecision = $2;
-	}
-	|
-	DATE
-	{
-		$$ = new ColumnType(DDL_DATE);
-		$$->fLength = DDLDatatypeLength[DDL_DATE];
-	}
-	|
-	TIME opt_time_precision
-	{
-		$$ = new ColumnType(DDL_TIME);
-		$$->fLength = DDLDatatypeLength[DDL_TIME];
-		$$->fPrecision = $2;
-	}
-	|
-	TIMESTAMP opt_time_precision
-	{
-		$$ = new ColumnType(DDL_TIMESTAMP);
-		$$->fLength = DDLDatatypeLength[DDL_TIMESTAMP];
-		$$->fPrecision = $2;
-	}
+    approximate_numeric_type:
+        DOUBLE opt_display_precision_scale_null
+        {
+            $$ = new ColumnType(DDL_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | DOUBLE opt_display_precision_scale_null UNSIGNED
+        {
+            $$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | DOUBLE PRECISION opt_display_precision_scale_null
+        {
+            $$ = new ColumnType(DDL_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | DOUBLE PRECISION opt_display_precision_scale_null UNSIGNED
+        {
+            $$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | REAL opt_display_precision_scale_null
+        {
+            $$ = new ColumnType(DDL_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | REAL opt_display_precision_scale_null UNSIGNED
+        {
+            $$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
+            $$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+        }
+        | IDB_FLOAT opt_display_precision_scale_null
+        {
+            $$ = new ColumnType(DDL_FLOAT);
+            $$->fLength = DDLDatatypeLength[DDL_FLOAT];
+        }
+        | IDB_FLOAT opt_display_precision_scale_null UNSIGNED
+        {
+            $$ = new ColumnType(DDL_UNSIGNED_FLOAT);
+            $$->fLength = DDLDatatypeLength[DDL_FLOAT];
+        }
+        ;
 
-opt_time_precision:
-	'(' ICONST ')' {$$ = atoi($2);}
-	| {$$ = -1;}
-	;
+    opt_display_precision_scale_null:
+            '(' ICONST ')' {$$ = NULL;}
+            |
+            '(' ICONST ',' ICONST ')' {$$ = NULL;}
+            | {$$ = NULL;}
+            ;
+            
+    literal:
+        ICONST
+        | string_literal
+        | FCONST
+        ;
 
-drop_column_def:
-	DROP column_name drop_behavior {$$ = new AtaDropColumn($2, $3);}
-	| DROP COLUMN column_name drop_behavior {$$ = new AtaDropColumn($3, $4);}
-	| DROP COLUMN '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
-	| DROP '(' column_name_list ')' {$$ = new AtaDropColumns($3);}
-	| DROP COLUMNS '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
-	;
+    datetime_type:
+        DATETIME opt_time_precision
+        {
+            $$ = new ColumnType(DDL_DATETIME);
+            $$->fLength = DDLDatatypeLength[DDL_DATETIME];
+                    $$->fPrecision = $2;
+        }
+        |
+        DATE
+        {
+            $$ = new ColumnType(DDL_DATE);
+            $$->fLength = DDLDatatypeLength[DDL_DATE];
+        }
+        |
+        TIME opt_time_precision
+        {
+            $$ = new ColumnType(DDL_TIME);
+            $$->fLength = DDLDatatypeLength[DDL_TIME];
+            $$->fPrecision = $2;
+        }
+        |
+        TIMESTAMP opt_time_precision
+        {
+            $$ = new ColumnType(DDL_TIMESTAMP);
+            $$->fLength = DDLDatatypeLength[DDL_TIMESTAMP];
+            $$->fPrecision = $2;
+        }
 
-drop_behavior:
-	CASCADE {$$ = DDL_CASCADE;}
-	| RESTRICT {$$ = DDL_RESTRICT;}
-	| {$$ = DDL_NO_ACTION;}
-	;
+    opt_time_precision:
+        '(' ICONST ')' {$$ = atoi($2);}
+        | {$$ = -1;}
+        ;
 
-alter_column_def:
-	ALTER opt_column column_name SET default_clause {$$ = new AtaSetColumnDefault($3, $5);}
-	| 	ALTER opt_column column_name DROP DEFAULT {$$ = new AtaDropColumnDefault($3);}
-	;
+    drop_column_def:
+        DROP column_name drop_behavior {$$ = new AtaDropColumn($2, $3);}
+        | DROP COLUMN column_name drop_behavior {$$ = new AtaDropColumn($3, $4);}
+        | DROP COLUMN '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
+        | DROP '(' column_name_list ')' {$$ = new AtaDropColumns($3);}
+        | DROP COLUMNS '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
+        ;
 
-opt_column:
-	COLUMN
-	|
-	;
+    drop_behavior:
+        CASCADE {$$ = DDL_CASCADE;}
+        | RESTRICT {$$ = DDL_RESTRICT;}
+        | {$$ = DDL_NO_ACTION;}
+        ;
 
-%%
+    alter_column_def:
+        ALTER opt_column column_name SET default_clause {$$ = new AtaSetColumnDefault($3, $5);}
+        | 	ALTER opt_column column_name DROP DEFAULT {$$ = new AtaDropColumnDefault($3);}
+        ;
+
+    opt_column:
+        COLUMN
+        |
+        ;
+
+    %%
 
 
