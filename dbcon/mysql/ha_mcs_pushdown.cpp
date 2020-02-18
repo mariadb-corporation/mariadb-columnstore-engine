@@ -796,9 +796,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // Disable SP support in the select_handler for now.
     if ((thd->lex)->sphead)
     {
-        std::string warnMsg("Select Handler doesn't support SP.");
-        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-            CS_WARNING_ID, warnMsg.c_str());
+        //std::string warnMsg("Select Handler doesn't support SP.");
+        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
@@ -808,9 +808,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     if (((thd->lex)->result &&
          !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
     {
-        std::string warnMsg("Select Handler doesn't assign variables values.");
-        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-            CS_WARNING_ID, warnMsg.c_str());
+        //std::string warnMsg("Select Handler doesn't assign variables values.");
+        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
@@ -830,9 +830,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         || (thd->lex)->exchange)
         
     {
-        std::string warnMsg("Query inserts its result. Select Handler doesn't work.");
-        push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-            CS_WARNING_ID, warnMsg.c_str());
+        //std::string warnMsg("Query inserts its result. Select Handler doesn't work.");
+        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
@@ -850,9 +850,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             item_check(item, &unsupported_feature);
             if (unsupported_feature)
             {
-                std::string warnMsg("Select Handler doesn't work b/c of the unsupported item found in item_check()");
-                push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-                    CS_WARNING_ID, warnMsg.c_str());
+                //std::string warnMsg("Select Handler doesn't work b/c of the unsupported item found in item_check()");
+                //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+                //    CS_WARNING_ID, warnMsg.c_str());
                 return handler;
             }
         }
