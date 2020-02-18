@@ -82,6 +82,7 @@ bool BlockOp::calculateRowId(
  * RETURN:
  *    emptyVal - the value of empty row
  ***********************************************************/
+// TODO MCOL-641 Add support here
 uint64_t BlockOp::getEmptyRowValue(
     const CalpontSystemCatalog::ColDataType colDataType, const int width ) const
 {
@@ -138,8 +139,10 @@ uint64_t BlockOp::getEmptyRowValue(
                 emptyVal = joblist::SMALLINTEMPTYROW;
             else if ( width <= 4 )
                 emptyVal = joblist::INTEMPTYROW;
-            else
+            else if ( width <= 8 )
                 emptyVal = joblist::BIGINTEMPTYROW;
+            else
+                emptyVal = joblist::BINARYEMPTYROW;
 
             break;
 
