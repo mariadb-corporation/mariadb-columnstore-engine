@@ -328,6 +328,7 @@ void Convertor::mapErrnoToString(int errNum, std::string& errString)
  *    none
  ******************************************************************************/
 /* static */
+// TODO MCOL-641
 void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
                                ColType& internalType, bool isToken)
 {
@@ -778,7 +779,6 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
                 newWidth = 8;
             else
                 newWidth = 16;
-
             break;
 
         case CalpontSystemCatalog::DATE:

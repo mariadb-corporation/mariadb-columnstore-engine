@@ -1550,17 +1550,20 @@ void DDLPackageProcessor::updateSyscolumns(execplan::CalpontSystemCatalog::SCN t
     if (result.result != NO_ERROR)
         return;
 
-    WriteEngine::ColStructList  colStructs;
+    WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     //std::vector<ColStruct> colStructs;
     WriteEngine::ColStruct colStruct;
+    execplan::CalpontSystemCatalog::ColType colType;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
     //Build column structure for COLUMNPOS_COL
-    colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
-    colStruct.colWidth = 4;
+    colType.columnOID = colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
+    colType.colWidth = colStruct.colWidth = 4;
     colStruct.tokenFlag = false;
-    colStruct.colDataType = CalpontSystemCatalog::INT;
+    colType.colDataType = colStruct.colDataType = CalpontSystemCatalog::INT;
     colStructs.push_back(colStruct);
+    cscColTypeList.push_back(colType);
     int error;
     std::string err;
     std::vector<void*> colOldValuesList1;
@@ -1568,7 +1571,7 @@ void DDLPackageProcessor::updateSyscolumns(execplan::CalpontSystemCatalog::SCN t
     try
     {
         //@Bug 3051 use updateColumnRecs instead of updateColumnRec to use different value for diffrent rows.
-        if (NO_ERROR != (error = fWriteEngine.updateColumnRecs( txnID, colStructs, colValuesList, ridList )))
+        if (NO_ERROR != (error = fWriteEngine.updateColumnRecs( txnID, cscColTypeList, colStructs, colValuesList, ridList )))
         {
             // build the logging message
             WErrorCodes ec;

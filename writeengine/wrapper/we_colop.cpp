@@ -85,6 +85,7 @@ ColumnOp::~ColumnOp()
  *    NO_ERROR if success
  *    rowIdArray - allocation of the row id left here
  ***********************************************************/
+// TODO MCOL-641 add support here
 int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                          Column& column, uint64_t totalRow, RID* rowIdArray, HWM& hwm, bool& newExtent, uint64_t& rowsLeft, HWM& newHwm,
                          bool& newFile, ColStructList& newColStructList, DctnryStructList& newDctnryStructList, std::vector<boost::shared_ptr<DBRootExtentTracker> >&   dbRootExtentTrackers,
@@ -126,6 +127,9 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
     unsigned char  buf[BYTE_PER_BLOCK];
     unsigned char* curVal;
     int64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth); // Seems is ok have it here and just once  
+    // TODO MCOL-641 consolidate the emptyvalue logic
+    //__int128 bigEmptyVal;
+    //dataconvert::DataConvert::uint128Max(bigEmptyVal);
     
     if (useStartingExtent)
     {
@@ -1455,6 +1459,7 @@ void ColumnOp::initColumn(Column& column) const
 
 // It is called at just 4 places on allocRowId() but all the time inside extend scanning loops 
 // WIP Template this method
+// TODO MCOL-641 Add support here.
 inline bool ColumnOp::isEmptyRow(uint64_t* curVal, uint64_t emptyVal, const int colWidth)
 {
     switch(colWidth){
@@ -1742,6 +1747,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
         }
 
+        // TODO MCOL-641 do we need support here?
         if (bDelete)
         {
             emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);    
@@ -1792,6 +1798,13 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
     char     charTmpBuf[8];
     uint64_t  emptyVal;
     int rc = NO_ERROR;
+
+    int w = 0, incr = 8;
+
+    if (curCol.colType == WriteEngine::WR_BINARY)
+        w = incr = curCol.colWidth;
+    else
+        w = curCol.colWidth > 8 ? 8 : curCol.colWidth;
 
     while (!bExit)
     {
@@ -1922,12 +1935,25 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
 
         if (bDelete)
         {
-            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-            pVal = &emptyVal;
+            if (curCol.colType != WriteEngine::WR_BINARY)
+            {
+                emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+                pVal = &emptyVal;
+            }
+            else
+            {
+                // fix this
+                uint128_t bigEmptyVal;
+                emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+                *(reinterpret_cast<uint64_t*>(&bigEmptyVal)) = emptyVal;
+                *(reinterpret_cast<uint64_t*>(&bigEmptyVal) + 1) = emptyVal;
+                //dataconvert::DataConvert::uint128Max(bigEmptyVal);
+                pVal = &bigEmptyVal;
+            }
         }
 
         // This is the write stuff
-        for(int b = 0, w = curCol.colWidth > 8 ? 8 : curCol.colWidth; b <  curCol.colWidth; b += 8) //FIXME for no loop
+        for (int b = 0; b < curCol.colWidth; b += incr) //FIXME for no loop
             writeBufValue(dataBuf + dataBio + b, pVal, w);
 
         i++;

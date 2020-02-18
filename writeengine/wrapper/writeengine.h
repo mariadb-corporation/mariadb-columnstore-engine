@@ -163,12 +163,6 @@ public:
                                 ColTupleList& curTupleList, void* valArray,
                                 bool bFromList = true) ;
 
-    // WIP legacy
-    EXPORT void convertValArray(const size_t totalRow, 
-                                const ColType colType,
-                                ColTupleList& curTupleList, void* valArray,
-                                bool bFromList = true) ;
-
     /**
      * @brief Create a column, include object ids for column data and bitmap files
      * @param dataOid column datafile object id
@@ -195,8 +189,8 @@ public:
      * @param refColDataType Data-type of the referecne column
      * @param refColWidth Width of the reference column
      */
-    EXPORT int fillColumn(const TxnID& txnid, const OID& dataOid, execplan::CalpontSystemCatalog::ColDataType dataType,
-                          int dataWidth, ColTuple defaultVal,
+    EXPORT int fillColumn(const TxnID& txnid, const OID& dataOid, const execplan::CalpontSystemCatalog::ColType& colType,
+                          ColTuple defaultVal,
                           const OID& refColOID, execplan::CalpontSystemCatalog::ColDataType refColDataType,
                           int refColWidth, int refCompressionType, bool isNULL, int compressionType,
                           const std::string& defaultValStr, const OID& dictOid = 0, bool autoincrement = false);
@@ -230,7 +224,7 @@ public:
      * @param colOldValueList column old values list (return value)
      * @param rowIdList row id list
      */
-    EXPORT int deleteRow(const TxnID& txnid, std::vector<ColStructList>& colExtentsStruct,
+    EXPORT int deleteRow(const TxnID& txnid, const std::vector<CSCTypesList>& colExtentsColType, std::vector<ColStructList>& colExtentsStruct,
                          std::vector<void*>& colOldValueList, std::vector<RIDList>& ridLists, const int32_t tableOid);
 
     /**
@@ -326,6 +320,7 @@ public:
      * @param isFirstBatchPm to track if this batch is first batch for this PM.
      */
     EXPORT int insertColumnRecs(const TxnID& txnid,
+                                const CSCTypesList& cscColTypeList,
                                 ColStructList& colStructList,
                                 ColValueList& colValueList,
                                 DctnryStructList& dctnryStructList,
@@ -359,6 +354,7 @@ public:
      * @param dicStringListt dictionary values list
      */
     EXPORT int insertColumnRec_SYS(const TxnID& txnid,
+                                   const CSCTypesList& cscColTypeList,
                                    ColStructList& colStructList,
                                    ColValueList& colValueList,
                                    DctnryStructList& dctnryStructList,
@@ -372,7 +368,7 @@ public:
      * @param dicStringListt dictionary values list
      */
     EXPORT int insertColumnRec_Single(const TxnID& txnid,
-                                      CSCTypesList& cscColTypesList,
+                                      const CSCTypesList& cscColTypeList,
                                       ColStructList& colStructList,
                                       ColValueList& colValueList,
                                       DctnryStructList& dctnryStructList,
@@ -550,6 +546,7 @@ public:
      * @param ridList row id list
      */
     EXPORT int updateColumnRec(const TxnID& txnid,
+                               const std::vector<CSCTypesList>& colExtentsColType,
                                std::vector<ColStructList>& colExtentsStruct,
                                ColValueList& colValueList,
                                std::vector<void*>& colOldValueList,
@@ -566,6 +563,7 @@ public:
       */
 
     EXPORT int updateColumnRecs(const TxnID& txnid,
+                                const CSCTypesList& cscColTypeList,
                                 std::vector<ColStruct>& colStructList,
                                 ColValueList& colValueList,
                                 const RIDList& ridLists,
@@ -657,10 +655,10 @@ private:
    void findSmallestColumn(uint32_t &colId, ColStructList colStructList);
 
    /**
-     * @brief Convert interface column type to a internal column type
+     * @brief Convert interface column type to an internal column type
      */
-    void convertValue(const execplan::CalpontSystemCatalog::ColType &fullColType, ColType colType, void* valArray, size_t pos, boost::any& data, bool fromList = true);
-    void convertValue(const ColType colType, void* valArray, size_t pos, boost::any& data, bool fromList = true);
+    void convertValue(const execplan::CalpontSystemCatalog::ColType& cscColType, ColType colType, void* valArray, size_t pos, boost::any& data, bool fromList = true);
+
     /**
      * @brief Convert column value to its internal representation
      *
@@ -668,8 +666,7 @@ private:
      * @param value Memory pointer for storing output value. Should be pre-allocated
      * @param data Column data
      */
-    void convertValue(const execplan::CalpontSystemCatalog::ColType &fullColType, const ColType colType, void* value, boost::any& data);
-    void convertValue(const ColType colType, void* value, boost::any& data);
+    void convertValue(const execplan::CalpontSystemCatalog::ColType& cscColType, const ColType colType, void* value, boost::any& data);
 
     /**
      * @brief Print input value from DDL/DML processors
@@ -705,14 +702,6 @@ private:
                        RID* rowIdArray, const ColStructList& newColStructList,
                        ColValueList& newColValueList, const int32_t tableOid,
                        bool useTmpSuffix, bool versioning = true);
-    // WIP
-    int writeColumnRec(const TxnID& txnid,
-                       const ColStructList& colStructList,
-                       ColValueList& colValueList,
-                       RID* rowIdArray, const ColStructList& newColStructList,
-                       ColValueList& newColValueList, const int32_t tableOid,
-                       bool useTmpSuffix, bool versioning = true);
-
 
     int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                              std::vector<uint64_t>& colValueList,
@@ -721,24 +710,17 @@ private:
                              const int32_t tableOid,
                              bool useTmpSuffix, bool versioning = true);
 
-
     //@Bug 1886,2870 pass the address of ridList vector
     int writeColumnRec(const TxnID& txnid, 
-                       const CSCTypesList& cscColTypes,
+                       const CSCTypesList& cscColTypeList,
                        const ColStructList& colStructList,
                        const ColValueList& colValueList, std::vector<void*>& colOldValueList,
                        const RIDList& ridList, const int32_t tableOid,
                        bool convertStructFlag = true, ColTupleList::size_type nRows = 0);
-    // WIP legacy
-    int writeColumnRec(const TxnID& txnid, 
-                       const ColStructList& colStructList,
-                       const ColValueList& colValueList, std::vector<void*>& colOldValueList,
-                       const RIDList& ridList, const int32_t tableOid,
-                       bool convertStructFlag = true, ColTupleList::size_type nRows = 0);
-
 
     //For update column from column to use
-    int writeColumnRecords(const TxnID& txnid, std::vector<ColStruct>& colStructList,
+    int writeColumnRecords(const TxnID& txnid, const CSCTypesList& cscColTypeList,
+                           std::vector<ColStruct>& colStructList,
                            ColValueList& colValueList, const RIDList& ridLists,
                            const int32_t tableOid, bool versioning = true);
 
