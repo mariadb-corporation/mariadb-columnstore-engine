@@ -290,15 +290,6 @@ public:
 
 // End of comparators for variable sized types
 
-class TimeCompare : public Compare
-{
-public:
-    TimeCompare(const IdbSortSpec& spec) : Compare(spec) {}
-
-    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
-};
-
-
 class CompareRule
 {
 public:
