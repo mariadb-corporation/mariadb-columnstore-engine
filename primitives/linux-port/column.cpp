@@ -285,7 +285,6 @@ template<>
 inline bool isEmptyVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-    // WIP ugly speed hack
     return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW));
 
 }
@@ -415,15 +414,15 @@ template<>
 inline bool isNullVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-    return ((val[0] == joblist::BINARYNULL) && (val[1] == joblist::BINARYNULL));
+    return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYNULL));
 }
 
 template<>
 inline bool isNullVal<32>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival); 
-    return ((val[0] == joblist::BINARYNULL) && (val[1] == joblist::BINARYNULL)
-            && (val[2] == joblist::BINARYNULL) && (val[3] == joblist::BINARYNULL));
+    return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW)
+            && (val[2] == joblist::BINARYEMPTYROW) && (val[3] == joblist::BINARYNULL));
 }
 
 template<>
@@ -614,7 +613,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
 
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
-                return (in->DataSize <= 16);
+                return (in->DataSize <= 16 );
 
             default:
                 return false;
