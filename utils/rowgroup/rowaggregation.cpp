@@ -224,7 +224,12 @@ inline string getStringNullValue()
 inline uint64_t getBinaryNullValue()
 {
     return joblist::BINARYNULL;
-} 
+}
+
+inline uint64_t getBinaryEmptyValue()
+{
+    return joblist::BINARYEMPTYROW;
+}
 
 }
 
@@ -1172,10 +1177,11 @@ void RowAggregation::makeAggFieldsNull(Row& row)
                 {
                     // WIP This is only 1st part of the value
                     uint64_t nullValue = getBinaryNullValue();
+                    uint64_t emptyValue = getBinaryEmptyValue(); 
                     uint32_t offset = row.getOffset(colOut);
                     row.setBinaryField_offset(&nullValue, sizeof(nullValue),
                         offset);
-                    row.setBinaryField_offset(&nullValue, sizeof(nullValue),
+                    row.setBinaryField_offset(&emptyValue, sizeof(nullValue),
                         offset+sizeof(nullValue));
                 }
                 break;

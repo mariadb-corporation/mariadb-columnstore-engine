@@ -45,6 +45,8 @@ class ByteStreamTestSuite;
 #define EXPORT
 #endif
 
+using uint128_t = unsigned __int128;
+
 namespace messageqcpp
 {
 
@@ -74,6 +76,7 @@ public:
     typedef uint16_t doublebyte;
     typedef uint32_t quadbyte;
     typedef uint64_t octbyte;
+    typedef uint128_t hexbyte;
     typedef boost::uuids::uuid uuid;
 
     /**
@@ -147,7 +150,7 @@ public:
     /**
      *	push an unsigned __int128 onto the end of the stream. The byte order is whatever the native byte order is.
      */
-    EXPORT ByteStream& operator<<(const unsigned __int128 o);
+    EXPORT ByteStream& operator<<(const uint128_t o);
     /**
      *  push a float onto the end of the stream. The byte order is
      *  whatever the native byte order is.
@@ -216,7 +219,7 @@ public:
     /**
      *	extract an unsigned __int128 from the front of the stream. The byte order is whatever the native byte order is.
      */
-    EXPORT ByteStream& operator>>(unsigned __int128& o);
+    EXPORT ByteStream& operator>>(uint128_t& o);
     /**
      *  extract a float from the front of the stream. The byte
      *  order is whatever the native byte order is.
@@ -291,7 +294,7 @@ public:
     /**
      *	Peek at an unsigned __int128 from the front of the stream. The byte order is whatever the native byte order is.
      */
-    EXPORT void peek(unsigned __int128& o) const;
+    EXPORT void peek(uint128_t& o) const;
     /**
      *  Peek at a float from the front of the stream. The byte order
      *  is whatever the native byte order is.

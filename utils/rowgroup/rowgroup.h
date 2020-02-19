@@ -28,7 +28,6 @@
 #ifndef ROWGROUP_H_
 #define ROWGROUP_H_
 
-#include <iostream>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -72,7 +71,6 @@ using uint128_t = unsigned __int128;
 namespace rowgroup
 {
 
-//using cscType = execplan::CalpontSystemCatalog::ColDataType;
 const int16_t rgCommonSize = 8192;
 
 /*
@@ -419,7 +417,7 @@ public:
 
     uint64_t getNullValue(uint32_t colIndex) const;
     bool isNullValue(uint32_t colIndex) const;
-    template<typename T, uint8_t cscT, uint32_t len>
+    template<cscDataType cscDT, uint32_t len>
     inline bool isNullValue_offset(uint32_t offset) const;
 
     // when NULLs are pulled out via getIntField(), they come out with these values.
@@ -784,7 +782,7 @@ inline void Row::setBinaryField1(T* value, uint32_t width, uint32_t colIndex)
 template<typename T>
 inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
 {
-   // WIP
+   // WIP Compare performance.
    //memcpy(&data[offset], value, width);
     *reinterpret_cast<T*>(&data[offset]) = *value;
 }
