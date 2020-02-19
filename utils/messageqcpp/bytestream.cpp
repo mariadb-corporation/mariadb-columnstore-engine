@@ -236,12 +236,12 @@ ByteStream& ByteStream::operator<<(const uint64_t o)
 }
 
 // WIP MCOL-641
-ByteStream& ByteStream::operator<<(const unsigned __int128 o)
+ByteStream& ByteStream::operator<<(const uint128_t o)
 {
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
 
-    *((unsigned __int128*) fCurInPtr) = o;
+    *((uint128_t*) fCurInPtr) = o;
     fCurInPtr += 16;
 
     return *this;
@@ -332,7 +332,7 @@ ByteStream& ByteStream::operator>>(uint64_t& o)
 }
 
 // WIP MCOL-641
-ByteStream& ByteStream::operator>>(unsigned __int128& o)
+ByteStream& ByteStream::operator>>(uint128_t& o)
 {
     peek(o);
     fCurOutPtr += 16;
@@ -420,13 +420,13 @@ void ByteStream::peek(uint64_t& o) const
 }
 
 // WIP MCOL-641
-void ByteStream::peek(unsigned __int128& o) const
+void ByteStream::peek(uint128_t& o) const
 {
 
     if (length() < 16)
-        throw underflow_error("ByteStream>unsigned __int128: not enough data in stream to fill datatype");
+        throw underflow_error("ByteStream>uint128_t: not enough data in stream to fill datatype");
 
-    o = *((unsigned __int128*) fCurOutPtr);
+    o = *((uint128_t*) fCurOutPtr);
 }
 
 void ByteStream::peek(string& s) const

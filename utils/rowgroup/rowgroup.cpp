@@ -848,7 +848,7 @@ void Row::initToNull()
                     case 16 :
                     {
                         uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-                        dec[0] = joblist::BINARYNULL;
+                        dec[0] = joblist::BINARYEMPTYROW;
                         dec[1] = joblist::BINARYNULL;
                         break;
                     }
@@ -888,7 +888,7 @@ void Row::initToNull()
     }
 }
 
-template<typename T, uint8_t cscT, uint32_t width>
+template<cscDataType cscDT, uint32_t width>
 inline bool Row::isNullValue_offset(uint32_t offset) const
 {
     ostringstream os;
@@ -898,69 +898,76 @@ inline bool Row::isNullValue_offset(uint32_t offset) const
     os << width << endl;
     throw logic_error(os.str());
 }
-/*
-// WIP how to make if that enables explicit template for two cscTypes?
-// Method template resolution could impose some perf degradation
-template<int64_t,(uint8_t)CalpontSystemCatalog::DECIMAL,16>
-inline bool Row::isNullValue_offset(uint32_t offset) const
+
+// WIP Method template resolution could impose some perf degradation
+// Compare perf with switch-case
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,32>(
+    uint32_t offset) const
 {
-    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
+        (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
+        (intPtr[2] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
+        (intPtr[3] == static_cast<int64_t>(joblist::BINARYNULL)));
 }
 
-template<int64_t,CalpontSystemCatalog::UDECIMAL,16>
-inline bool Row::isNullValue_offset(uint32_t offset) const
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
+    uint32_t offset) const
 {
-    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW))
+        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYNULL)));
 }
 
-template<int64_t,CalpontSystemCatalog::DECIMAL,8>
-inline bool Row::isNullValue_offset(uint32_t offset) const
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
+    uint32_t offset) const
 {
-    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW))
+        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYNULL)));
 }
 
-template<int64_t,CalpontSystemCatalog::UDECIMAL,8>
-inline bool Row::isNullValue_offset(uint32_t offset) const
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,8>(
+    uint32_t offset) const
 {
-    return (*reinterpret_cast<int64_t*>(&data[offset]) == static_cast<int64_t>(joblist::BIGINTNULL));
+    return (*reinterpret_cast<int64_t*>(&data[offset])
+        == static_cast<int64_t>(joblist::BIGINTNULL));
 }
 
-template<uint8_t,CalpontSystemCatalog::UDECIMAL,1>
-inline bool Row::isNullValue_offset(uint32_t offset) const
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,4>(
+    uint32_t offset) const
+{
+    return (*reinterpret_cast<int32_t*>(&data[offset])
+        == static_cast<int32_t>(joblist::INTNULL));
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,2>(
+    uint32_t offset) const
+{
+    return (*reinterpret_cast<int16_t*>(&data[offset])
+        == static_cast<int16_t>(joblist::SMALLINTNULL));
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,1>(
+    uint32_t offset) const
 {
     return (data[offset] == joblist::TINYINTNULL);
 }
 
-template<uint8_t,CalpontSystemCatalog::DECIMAL,1>
-inline bool Row::isNullValue_offset(uint32_t offset) const
-{
-    return (data[offset] == joblist::TINYINTNULL);
-}
-
-template<int16_t,CalpontSystemCatalog::UDECIMAL,2>
-inline bool Row::isNullValue_offset(uint32_t offset) const
-{
-    return (*reinterpret_cast<int16_t*>(&data[offset]) == static_cast<int16_t>(joblist::SMALLINTNULL));
-}
-
-template<int16_t,CalpontSystemCatalog::UDECIMAL,2>
-inline bool Row::isNullValue_offset(uint32_t offset) const
-{
-    return (*reinterpret_cast<int16_t*>(&data[offset]) == static_cast<int16_t>(joblist::SMALLINTNULL));
-}
-
-template<int32_t,CalpontSystemCatalog::UDECIMAL,4>
-inline bool Row::isNullValue_offset(uint32_t offset) const
-{
-    return (*reinterpret_cast<int32_t*>(&data[offset]) == static_cast<int32_t>(joblist::INTNULL));
-}
-
-template<int32_t,CalpontSystemCatalog::DECIMAL,4>
-inline bool Row::isNullValue_offset(uint32_t offset) const
-{
-    return (*reinterpret_cast<int32_t*>(&data[offset]) == static_cast<int32_t>(joblist::INTNULL));
-}
-*/
 bool Row::isNullValue(uint32_t colIndex) const
 {
     switch (types[colIndex])
@@ -1044,16 +1051,22 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t len = getColumnWidth(colIndex);
-            const int64_t *dec;
+            // WIP MCOL-641 Allmighty hack.
+            const uint32_t len = 16;
+            uint32_t* lenPtr = const_cast<uint32_t*>(&len);
+            *lenPtr = getColumnWidth(colIndex);
+            return isNullValue_offset
+                <execplan::CalpontSystemCatalog::DECIMAL,len>(offsets[colIndex]);
 
+// WIP
+/*
+            const int64_t *dec;
             switch (len)
             {
                 // MCOL-641
                 case 16:
-                    dec = reinterpret_cast<const int64_t*>(&data[offsets[colIndex]]);
-                    return ((dec[0] == static_cast<int64_t>(joblist::BINARYNULL))
-                        && (dec[1] == static_cast<int64_t>(joblist::BINARYNULL)));
+                    return isNullValue_offset
+                        <execplan::CalpontSystemCatalog::DECIMAL,len>(offsets[colIndex]);
 
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
@@ -1067,7 +1080,7 @@ bool Row::isNullValue(uint32_t colIndex) const
                 default:
                     return (*((int64_t*) &data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
             }
-
+*/
             break;
         }
 
@@ -1112,12 +1125,11 @@ bool Row::isNullValue(uint32_t colIndex) const
 
         case CalpontSystemCatalog::BINARY:
         {
-            // When is null? I dont know. Wait for bitmap null empty implemtenttion ? 
-            // Also still pendig rework discussed use pointers for empty null values
-            
-            std::cout << __FILE__<< ":" << __LINE__ << " isNullValue  value " << (*((uint64_t*) &data[offsets[colIndex]])) << std::endl;  
-            //return false; 
-            return (*((uint64_t*) &data[offsets[colIndex]]) == joblist::BINARYEMPTYROW);
+            const uint32_t len = 16;
+            uint32_t* lenPtr = const_cast<uint32_t*>(&len);
+            *lenPtr = getColumnWidth(colIndex);
+            return isNullValue_offset
+                <execplan::CalpontSystemCatalog::BINARY,len>(offsets[colIndex]);
         }
        
         default:
