@@ -165,6 +165,7 @@ void ColumnCommand::loadData()
         {
             // fill remaining blocks with empty values when col scan
             int blockLen = BLOCK_SIZE / colType.colWidth;
+            ByteStream::hexbyte* hPtr = NULL;
             ByteStream::octbyte* oPtr = NULL;
             ByteStream::quadbyte* qPtr = NULL;
             ByteStream::byte* bPtr = NULL;
@@ -182,6 +183,10 @@ void ColumnCommand::loadData()
 
             if (colType.colWidth == 8)
                 oPtr = reinterpret_cast<ByteStream::octbyte*>(&bpp->blockData[i * BLOCK_SIZE]);
+
+            if (colType.colWidth == 16)
+                hPtr = reinterpret_cast<ByteStream::hexbyte*>(&bpp->blockData[i * BLOCK_SIZE]);
+
 
             for (int idx = 0; idx < blockLen; idx++)
             {
@@ -208,9 +213,7 @@ void ColumnCommand::loadData()
                 }
                 else if (colType.colWidth == 16)
                 {
-                    uint64_t *ptr = reinterpret_cast<uint64_t*>(&bpp->blockData[i * BLOCK_SIZE] + (idx*16) );
-                    *ptr = joblist::BINARYEMPTYROW;
-                    *(ptr + 1) = joblist::BINARYEMPTYROW;
+                    getEmptyRowValue(colType.colDataType, colType.colWidth, &hPtr[idx]);
                 }
             }
 
@@ -965,7 +968,7 @@ void ColumnCommand::enableFilters()
 * RETURN:
 *    emptyVal - the value of empty row
 ***********************************************************/
-uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCatalog::ColDataType dataType, const int width ) const
+const uint64_t ColumnCommand::getEmptyRowValue( const CSCDataType dataType, const int width ) const
 {
     uint64_t emptyVal = 0;
     int offset;
@@ -1055,6 +1058,16 @@ uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCatalog::
 
     return emptyVal;
 }
+
+void ColumnCommand::getEmptyRowValue(const CSCDataType dataType,
+    const int width, messageqcpp::ByteStream::hexbyte* space) const
+{
+    uint64_t *ptr = reinterpret_cast<uint64_t*>(space);
+    ptr[0] = joblist::BINARYEMPTYROW;
+    ptr[1] = joblist::BINARYEMPTYROW;
+}
+
+
 
 void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
 {
