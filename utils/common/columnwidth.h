@@ -19,6 +19,7 @@
 #define UTILS_COLWIDTH_H
 
 #define MAXLEGACYWIDTH 8
+#define MAXCOLUMNWIDTH 16
 
 namespace utils
 {
