@@ -1529,6 +1529,17 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 isFromCol = true;
                 columnAssignmentPtr->fFromCol = true;
                 Item_field* setIt = reinterpret_cast<Item_field*> (value);
+
+                // Minor optimization:
+                // do not perform updates of the form "update t1 set a = a;"
+                if (!strcmp(item->name.str, setIt->name.str)
+                    && item->table_name && setIt->table_name && !strcmp(item->table_name, setIt->table_name)
+                    && item->db_name && setIt->db_name && !strcmp(item->db_name, setIt->db_name))
+                {
+                    delete columnAssignmentPtr;
+                    continue;
+                }
+
                 string sectableName = string(setIt->table_name.str);
 
                 if ( setIt->db_name.str ) //derived table
@@ -1636,6 +1647,13 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         ci->stats.fQueryType = updateCP->queryType();
     }
 
+    // Exit early if there is nothing to update
+    if (colAssignmentListPtr->empty())
+    {
+        ci->affectedRows = 0;
+        return 0;
+    }
+
     //save table oid for commit/rollback to use
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
@@ -1666,7 +1684,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         dmlStatement.set_DMLStatementType( DML_DELETE );
 
     TableName* qualifiedTablName = new TableName();
-
 
     UpdateSqlStatement updateStmt;
     //@Bug 2753. To make sure the momory is freed.
