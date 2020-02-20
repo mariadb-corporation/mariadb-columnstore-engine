@@ -609,7 +609,7 @@ int main(int argc, char** argv)
     // @BUG4343
     if( setuid( 0 ) < 0 )
     {
-        std::cerr << " we_splitterapp: setuid failed " << std::endl;
+        std::cerr << " we_splitterapp: couldn't set uid " << std::endl;
     }
 
     std::cin.sync_with_stdio(false);

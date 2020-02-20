@@ -455,23 +455,47 @@ int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     l->row1().setData(r1);
     l->row2().setData(r2);
 
-    int ret = 0;
-    uint64_t v1 = l->row1().getUintField(fSpec.fIndex);
-    uint64_t v2 = l->row2().getUintField(fSpec.fIndex);
+    int64_t v1 = l->row1().getIntField(fSpec.fIndex);
+    int64_t v2 = l->row2().getIntField(fSpec.fIndex);
 
-    if (v1 == joblist::TIMENULL || v2 == joblist::TIMENULL)
+    bool b1 = (joblist::TIMENULL == (uint64_t) v1);
+    bool b2 = (joblist::TIMENULL == (uint64_t) v2);
+
+    int ret = 0;
+
+    if (b1 == true || b2 == true)
     {
-        if (v1 != joblist::TIMENULL && v2 == joblist::TIMENULL)
+        if (b1 == false && b2 == true)
             ret = fSpec.fNf;
-        else if (v1 == joblist::TIMENULL && v2 != joblist::TIMENULL)
+        else if (b1 == true && b2 == false)
             ret = -fSpec.fNf;
     }
     else
     {
-        if (v1 > v2)
-            ret = fSpec.fAsc;
-        else if (v1 < v2)
-            ret = -fSpec.fAsc;
+        int64_t v1 = l->row1().getIntField(fSpec.fIndex);
+        int64_t v2 = l->row2().getIntField(fSpec.fIndex);
+
+        // ((int64_t) -00:00:26) > ((int64_t) -00:00:25)
+        // i.e. For 2 negative TIME values, we invert the order of
+        // comparison operations to force "-00:00:26" to appear before
+        // "-00:00:25" in ascending order.
+        if (v1 < 0 && v2 < 0)
+        {
+            // Unset the MSB.
+            v1 &= ~(1ULL << 63);
+            v2 &= ~(1ULL << 63);
+            if (v1 < v2)
+                ret = fSpec.fAsc;
+            else if (v1 > v2)
+                ret = -fSpec.fAsc;
+        }
+        else
+        {
+            if (v1 > v2)
+                ret = fSpec.fAsc;
+            else if (v1 < v2)
+                ret = -fSpec.fAsc;
+        }
     }
 
     return ret;
@@ -814,8 +838,8 @@ uint64_t IdbOrderBy::Hasher::operator()(const Row::Pointer& p) const
 {
     Row& row = ts->row1;
     row.setPointer(p);
-    // MCOL-1829 Row::h uses colcount as an array idx down a callstack.
-    uint64_t ret = row.hash();
+    // MCOL-1829 Row::hash uses colcount - 1 as an array idx down a callstack.
+    uint64_t ret = row.hash(colCount - 1);
     return ret;
 }
 
@@ -825,7 +849,7 @@ bool IdbOrderBy::Eq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) 
     r1.setPointer(d1);
     r2.setPointer(d2);
     // MCOL-1829 Row::equals uses 2nd argument as key columns container size boundary
-    bool ret = r1.equals(r2, colCount);
+    bool ret = r1.equals(r2, colCount - 1);
 
     return ret;
 }

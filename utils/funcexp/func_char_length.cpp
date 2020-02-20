@@ -83,9 +83,9 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
                 return 0;
 
             size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-            wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+            wchar_t* wcbuf = new wchar_t[strwclen];
             strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-
+            delete [] wcbuf;
             return (int64_t)strwclen;
         }
 

@@ -425,9 +425,9 @@ public:
     struct TableAliasName
     {
         TableAliasName (): fIsInfiniDB (true) {}
-        TableAliasName (std::string sch, std::string tb, std::string al) :
+        TableAliasName (const std::string &sch, const std::string &tb, const std::string &al) :
             schema (sch), table (tb), alias (al), fIsInfiniDB(true) {}
-        TableAliasName (std::string sch, std::string tb, std::string al, std::string v) :
+        TableAliasName (const std::string &sch, const std::string &tb, const std::string &al, const std::string &v) :
             schema (sch), table (tb), alias (al), view(v), fIsInfiniDB(true) {}
         std::string schema;
         std::string table;

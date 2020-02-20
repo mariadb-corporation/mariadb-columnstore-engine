@@ -11,6 +11,7 @@ ADD_CUSTOM_COMMAND(
 
 ADD_CUSTOM_TARGET(dml-lexer DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
 ADD_CUSTOM_TARGET(dml-parser DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp)
+set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 ########### next target ###############
 

@@ -718,7 +718,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     errno   = 0;
 
                     origVal = strtoll(field, 0, 10);
-                    
+
                     if (errno == ERANGE)
                         bSatVal = true;
                 }
@@ -803,7 +803,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                         strcpy(field, "1");
                         fieldLength = 1;
                     }
-                    
+
                     if ( (column.dataType == CalpontSystemCatalog::DECIMAL ) ||
                             (column.dataType == CalpontSystemCatalog::UDECIMAL))
                     {
@@ -977,7 +977,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                             strcpy(field, "1");
                             fieldLength = 1;
                         }
-                        
+
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
@@ -1354,7 +1354,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                             strcpy(field, "1");
                             fieldLength = 1;
                         }
-                    
+
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
@@ -1585,7 +1585,7 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
                 tokenNullFlag = true;
             }
 
-            // convert the data into appropriate format.
+            // convert the data into appropriate format and update CP values
             convert(field, tokenLength, tokenNullFlag,
                     buf + i * columnInfo.column.width,
                     columnInfo.column, bufStats);
@@ -1616,7 +1616,7 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
 
                 lastInputRowInExtent += columnInfo.rowsPerExtent();
 
-                if (isUnsigned(columnInfo.column.dataType))
+                if (isUnsigned(columnInfo.column.dataType) || isCharType(columnInfo.column.dataType))
                 {
                     bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
                     bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);

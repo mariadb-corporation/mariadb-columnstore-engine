@@ -683,7 +683,7 @@ inline bool PrimitiveProcessor::isEscapedChar(char c)
 int PrimitiveProcessor::convertToRegexp(idb_regex_t* regex, const p_DataValue* str)
 {
     //In the worst case, every char is quadrupled, plus some leading/trailing cruft...
-    char* cBuf = (char*)alloca(((4 * str->len) + 3) * sizeof(char));
+    char* cBuf = new char[(4 * str->len) + 3];
     char c;
     int i, cBufIdx = 0;
     // translate to regexp symbols
@@ -764,6 +764,7 @@ int PrimitiveProcessor::convertToRegexp(idb_regex_t* regex, const p_DataValue* s
     regex->regex = cBuf;
 #endif
     regex->used = true;
+    delete [] cBuf;
     return 0;
 }
 
