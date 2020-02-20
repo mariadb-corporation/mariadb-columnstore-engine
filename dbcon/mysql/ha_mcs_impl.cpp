@@ -3912,8 +3912,6 @@ int ha_mcs_impl_close_connection (handlerton* hton, THD* thd)
         ci->cal_conn_hndl = 0;
     }
 
-    thd_set_ha_data(thd, hton, NULL);
-
     return rc;
 }
 
