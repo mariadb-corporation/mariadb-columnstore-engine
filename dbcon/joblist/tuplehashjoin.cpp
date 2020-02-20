@@ -1828,8 +1828,6 @@ void TupleHashJoinStep::segregateJoiners()
     bool anyTooLarge = false;
     uint32_t smallSideCount = smallDLs.size();
 
-    boost::mutex::scoped_lock sl(djsLock);
-
     for (i = 0; i < smallSideCount; i++)
     {
         allInnerJoins &= (joinTypes[i] == INNER);
@@ -1861,6 +1859,8 @@ void TupleHashJoinStep::segregateJoiners()
     	return;
     }
     */
+
+    boost::mutex::scoped_lock sl(djsLock);
 
     /* For now if there is no largeBPS all joins need to either be DJS or not, not mixed */
     if (!largeBPS)
