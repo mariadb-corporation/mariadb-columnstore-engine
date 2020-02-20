@@ -43,6 +43,7 @@ using namespace execplan;
 #include "nullvaluemanip.h"
 #include "rowgroup.h"
 #include "dataconvert.h"
+#include "columnwidth.h"
 
 #include "collation.h"
 
@@ -635,16 +636,17 @@ string Row::toString() const
                     break;
                 // WIP
                 case CalpontSystemCatalog::DECIMAL:
-                    if (precision[i] > 18)
+                case CalpontSystemCatalog::UDECIMAL:
+                    if (colWidths[i] > MAXLEGACYWIDTH)
                     {
                         char *buf = (char*)alloca(precision[i] + 3);
                         // empty the buffer
-                        dataconvert::DataConvert::toString<uint128_t>(getBinaryField<uint128_t>(i),
+                        dataconvert::DataConvert::toString<int128_t>(getBinaryField<int128_t>(i),
                             buf, precision[i]+3);
                         os << buf << " ";
                         break;
                     }
-                    // fallback if the precision < 18
+                    // fallback if the the legacy DECIMAL
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -707,7 +709,8 @@ string Row::toCSV() const
                     break;
                 }
                 case CalpontSystemCatalog::BINARY:
-                std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
+                    std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
+
                 default:
                     os << getIntField(i);
                     break;
@@ -876,7 +879,13 @@ void Row::initToNull()
                 *((uint64_t*) &data[offsets[i]]) = joblist::UBIGINTNULL;
                 break;
             case CalpontSystemCatalog::BINARY:
-                std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+                {
+                    uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
+                    dec[0] = joblist::BINARYEMPTYROW;
+                    dec[1] = joblist::BINARYNULL;
+                }
+                break;
+
             default:
                 ostringstream os;
                 os << "Row::initToNull(): got bad column type (" << types[i] <<
@@ -887,7 +896,7 @@ void Row::initToNull()
     }
 }
 
-template<cscDataType cscDT, uint32_t width>
+template<cscDataType cscDT, int width>
 inline bool Row::isNullValue_offset(uint32_t offset) const
 {
     ostringstream os;
@@ -1051,21 +1060,13 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::UDECIMAL:
         {
             // WIP MCOL-641 Allmighty hack.
-            const uint32_t len = 16;
-            uint32_t* lenPtr = const_cast<uint32_t*>(&len);
-            *lenPtr = getColumnWidth(colIndex);
-            return isNullValue_offset
-                <execplan::CalpontSystemCatalog::DECIMAL,len>(offsets[colIndex]);
-
-// WIP
-/*
-            const int64_t *dec;
-            switch (len)
+            int32_t width = getColumnWidth(colIndex);
+            switch (width)
             {
                 // MCOL-641
                 case 16:
                     return isNullValue_offset
-                        <execplan::CalpontSystemCatalog::DECIMAL,len>(offsets[colIndex]);
+                        <execplan::CalpontSystemCatalog::DECIMAL,16>(offsets[colIndex]);
 
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
@@ -1079,7 +1080,7 @@ bool Row::isNullValue(uint32_t colIndex) const
                 default:
                     return (*((int64_t*) &data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
             }
-*/
+
             break;
         }
 
@@ -1642,7 +1643,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
             // code precision 2 width convertor
             else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DECIMAL &&
                 in.getColumnWidth(i) == 16))
-                out->setBinaryField(in.getBinaryField<uint8_t>(i), 16,
+                out->setBinaryField_offset(in.getBinaryField<uint8_t>(i), 16,
                     out->getOffset(mapping[i]));
             else if (in.isUnsigned(i))
                 out->setUintField(in.getUintField(i), mapping[i]);
