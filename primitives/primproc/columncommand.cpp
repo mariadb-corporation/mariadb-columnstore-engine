@@ -814,7 +814,7 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
             cout << __FILE__<< ":" <<__LINE__ << " ColumnCommand::projectResultRG " << endl;
             for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
             {
-                r.setBinaryField(msg8, colType.colWidth, offset);
+                r.setBinaryField_offset(msg8, colType.colWidth, offset);
                 r.nextRow(rowSize);
             }
             break;
