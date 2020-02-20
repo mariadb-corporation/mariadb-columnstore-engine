@@ -1483,19 +1483,19 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
     }
     else
     {
+        uint32_t offset = fRow.getOffset(colOut);
         if (colDataType == execplan::CalpontSystemCatalog::DECIMAL)
         {
             int128_t *dec = reinterpret_cast<int128_t*>(wideValInPtr);
-            // WIP MCOL-641 Replace Row::setBinaryField1
             if (isNull(fRowGroupOut, fRow, colOut))
             {
-                fRow.setBinaryField1<int128_t>(dec, width, colOut);
+                fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
             }
             else
             {
-                int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
+                int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
                 int128_t sum = *valOutPtr + *dec; 
-                fRow.setBinaryField1<int128_t>(&sum, width, colOut);
+                fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
             }
         }
         else
@@ -1503,13 +1503,13 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             uint128_t *dec = reinterpret_cast<uint128_t*>(wideValInPtr);
             if (isNull(fRowGroupOut, fRow, colOut))
             {
-                fRow.setBinaryField1<uint128_t>(dec, width, colOut);
+                fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
             }
             else
             {
-                uint128_t *valOutPtr = fRow.getBinaryField<uint128_t>(colOut);
+                uint128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
                 uint128_t sum = *valOutPtr + *dec; 
-                fRow.setBinaryField1<uint128_t>(&sum, width, colOut);
+                fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
             }
         }
     } // end-of isWideDataType block

@@ -716,7 +716,9 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         case CalpontSystemCatalog::BINARY:
             
         {
-            fResult.strVal = row.getBinaryField(fInputIndex);
+            // WIP MCOL-641 Binary representation could contain \0.
+            std::string value(row.getBinaryField<char>(fInputIndex));
+            fResult.strVal.swap(value);
             break;
         }
         
