@@ -1382,6 +1382,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             // Simplest form of a template will use colType and width as a parameter
             // There will be lots specializations
             case CalpontSystemCatalog::DECIMAL:
+                // TODO MCOL-641 implement decimal38 version of number_int_value
                 if (colType.colWidth == 16)
                 {
                     int128_t bigint;

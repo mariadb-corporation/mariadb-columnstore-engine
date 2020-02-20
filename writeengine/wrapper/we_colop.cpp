@@ -1733,9 +1733,6 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 if (!bDelete) pVal = &((uint64_t*) valArray)[i];
                 break;
 
-            // WIP 
-            //case WriteEngine::WR_INT128:
-
             case WriteEngine::WR_BINARY:
                 // WIP CSCCol type
                 pVal = &((uint128_t*) valArray)[i];
@@ -1838,102 +1835,73 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
 
         // This is a awkward way to convert void* and get ith element, I just don't have a good solution for that
         // How about pVal = valArray? You're always getting the 0'th element here anyways.
-        switch (curCol.colType)
+        // TODO MCOL-641 add support here
+        // This branch does not seem to be called from anywhere
+        if (!bDelete)
         {
-//               case WriteEngine::WR_LONG :   pVal = &((long *) valArray)[i]; break;
-            case WriteEngine::WR_FLOAT :
-                if (!bDelete) pVal = &((float*) valArray)[0];
-
-                //pOldVal = &((float *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_DOUBLE :
-                if (!bDelete) pVal = &((double*) valArray)[0];
-
-                //pOldVal = &((double *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_VARBINARY :   // treat same as char for now
-            case WriteEngine::WR_BLOB :
-            case WriteEngine::WR_TEXT :
-            case WriteEngine::WR_CHAR :
-                if (!bDelete)
-                {
+            switch (curCol.colType)
+            {
+                case WriteEngine::WR_FLOAT :
+                    pVal = &((float*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_DOUBLE :
+                    pVal = &((double*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_VARBINARY :   // treat same as char for now
+                case WriteEngine::WR_BLOB :
+                case WriteEngine::WR_TEXT :
+                case WriteEngine::WR_CHAR :
                     memcpy(charTmpBuf, (char*)valArray, 8);
                     pVal = charTmpBuf;
-                }
-
-                //pOldVal = (char*)oldValArray + i*8;
-                break;
-
-//          case WriteEngine::WR_BIT :    pVal = &((bool *) valArray)[i]; break;
-            case WriteEngine::WR_SHORT :
-                if (!bDelete) pVal = &((short*) valArray)[0];
-
-                //pOldVal = &((short *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_BYTE :
-                if (!bDelete) pVal = &((char*) valArray)[0];
-
-                //pOldVal = &((char *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                if (!bDelete) pVal = &((long long*) valArray)[0];
-
-                //pOldVal = &((long long *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                if (!bDelete) pVal = &((Token*) valArray)[0];
-
-                //pOldVal = &((Token *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_INT :
-            case WriteEngine::WR_MEDINT :
-                if (!bDelete) pVal = &((int*) valArray)[0];
-
-                //pOldVal = &((int *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_USHORT :
-                if (!bDelete) pVal = &((uint16_t*) valArray)[0];
-
-                //pOldVal = &((uint16_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_UBYTE :
-                if (!bDelete) pVal = &((uint8_t*) valArray)[0];
-
-                //pOldVal = &((uint8_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                if (!bDelete) pVal = &((uint64_t*) valArray)[0];
-
-                //pOldVal = &((uint64_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_UINT :
-            case WriteEngine::WR_UMEDINT :
-                if (!bDelete) pVal = &((uint32_t*) valArray)[0];
-
-                //pOldVal = &((uint32_t *) oldValArray)[i];
-                break;
-
-            default  :
-                if (!bDelete) pVal = &((int*) valArray)[0];
-
-                //pOldVal = &((int *) oldValArray)[i];
-                break;
+                    break;
+    
+                // case WriteEngine::WR_BIT :    pVal = &((bool *) valArray)[i]; break;
+                case WriteEngine::WR_SHORT :
+                    pVal = &((short*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_BYTE :
+                    pVal = &((char*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_LONGLONG:
+                    pVal = &((long long*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_TOKEN:
+                    pVal = &((Token*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_INT :
+                case WriteEngine::WR_MEDINT :
+                    pVal = &((int*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_USHORT :
+                    pVal = &((uint16_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_UBYTE :
+                    pVal = &((uint8_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_ULONGLONG:
+                    pVal = &((uint64_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_UINT :
+                case WriteEngine::WR_UMEDINT :
+                    pVal = &((uint32_t*) valArray)[0];
+                    break;
+    
+                default  :
+                    pVal = &((int*) valArray)[0];
+                    break;
+            }
         }
-
-        // This is the stuff to retrieve old value
-        //memcpy(pOldVal, dataBuf + dataBio, curCol.colWidth);
-
-        if (bDelete)
+        else
         {
             if (curCol.colType != WriteEngine::WR_BINARY)
             {
@@ -2082,6 +2050,10 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
             case WriteEngine::WR_UINT :
             case WriteEngine::WR_UMEDINT :
                 pVal = &((uint32_t*) valArray)[i];
+                break;
+
+            case WriteEngine::WR_BINARY:
+                pVal = &((int128_t*) valArray)[i];
                 break;
 
             default  :

@@ -4376,9 +4376,6 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
         const int32_t tableOid)
 {
     //Mark extents invalid
-    //int rc = 0;
-    //if (colExtentsStruct[0].dataOid < 3000)
-    //{
     vector<BRM::LBID_t> lbids;
     vector<CalpontSystemCatalog::ColDataType> colDataTypes;
     ColumnOp* colOp = NULL;
@@ -4414,15 +4411,13 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
 
     if (lbids.size() > 0)
     {
-//        cout << "BRMWrapper::getInstance()->markExtentsInvalid(lbids); " << lbids.size() << " lbids" << endl;
         rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
     }
 
-    //}
-    if ( m_opType != DELETE)
+    if (m_opType != DELETE)
         m_opType = UPDATE;
 
-    rc = writeColumnRecords (txnid, cscColTypeList, colExtentsStruct, colValueList, ridLists, tableOid);
+    rc = writeColumnRecords(txnid, cscColTypeList, colExtentsStruct, colValueList, ridLists, tableOid);
     m_opType = NOOP;
     return rc;
 }
@@ -4438,6 +4433,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
     void*          valArray = NULL;
     Column         curCol;
     ColStruct      curColStruct;
+    CalpontSystemCatalog::ColType curColType;
     ColTupleList   curTupleList;
     ColStructList::size_type  totalColumn;
     ColStructList::size_type  i;
@@ -4452,6 +4448,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
     {
         valArray = NULL;
         curColStruct = colStructList[i];
+        curColType = cscColTypeList[i];
         curTupleList = colValueList[i];
         ColumnOp* colOp = m_colOp[op(curColStruct.fCompressionType)];
 
@@ -4568,11 +4565,10 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
                 valArray = (Token*) calloc(sizeof(Token), totalRow);
                 break;
 
-            // WIP
+            // WIP MCOL-641
             case WriteEngine::WR_BINARY:
-            //case WriteEngine::WR_INT128:
                 // Use column width and remove all C-casts from above
-                valArray = calloc(totalRow, 16);
+                valArray = calloc(totalRow, curColType.colWidth);
                 break;
  
         }
