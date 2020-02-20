@@ -2631,6 +2631,7 @@ uint8_t WE_DMLCommandProc::rollbackBatchAutoOff(messageqcpp::ByteStream& bs, std
     //Rollbacked all versioned blocks
     return rc;
 }
+
 uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         std::string& err,
         ByteStream::quadbyte& PMId,
@@ -2804,54 +2805,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
     for (unsigned int j = 0; j < columnsUpdated.size(); j++)
     {
-        /*		WriteEngine::ColTupleList colTupleList;
-        		//timer.start("lookupsyscat");
-        		tableColName.column  = columnsUpdated[j]->get_Name();
-        		try
-        		{
-        			oid = systemCatalogPtr->lookupOID(tableColName);
-        		}
-        		catch  (std::exception& ex)
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "lookupOID got exception " << ex.what() << " with column " << tableColName.schema << "." << tableColName.table << "." << tableColName.column;
-        			err = oss.str();
-        		}
-        		catch ( ... )
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss <<  "lookupOID got unknown exception with column " << tableColName.schema << "." << tableColName.table << "." << tableColName.column;
-        			err = oss.str();
-        		}
-
-        		if (rc != 0)
-        			return rc;
-
-        		CalpontSystemCatalog::ColType colType;
-        		try
-        		{
-        			colType = systemCatalogPtr->colType(oid);
-        		}
-        		catch  (std::exception& ex)
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "colType got exception " << ex.what() << " with column oid " << oid;
-        			err = oss.str();
-        		}
-        		catch ( ... )
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "colType got unknown exception with column oid " << oid;
-        			err = oss.str();
-        		}
-
-        		if (rc !=0)
-        			return rc;
-        		*/
         WriteEngine::ColTupleList colTupleList;
         CalpontSystemCatalog::ColType colType = colTypes[j];
         oid = oids[j];
@@ -2874,13 +2827,15 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 rid = relativeRID;
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
-                uint32_t colWidth = (colTypes[j].colWidth > 8 ? 8 : colTypes[j].colWidth);
+                uint32_t colWidth = ((colTypes[j].colWidth > 8 &&
+                                     !(colTypes[j].colDataType == CalpontSystemCatalog::DECIMAL ||
+                                       colTypes[j].colDataType == CalpontSystemCatalog::UDECIMAL)) ? 8 : colTypes[j].colWidth);
 		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
                 // populate stats.blocksChanged 
 		if (rrid > preBlkNums[j])
                 {
-			preBlkNums[j] = rrid ;
-                        blocksChanged++;
+		    preBlkNums[j] = rrid ;
+                    blocksChanged++;
 		}
 
             }
@@ -3044,12 +2999,22 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::DECIMAL:
                         case CalpontSystemCatalog::UDECIMAL:
                         {
+                            // WIP MCOL-641
                             // decimal width > 8 cannot be stored in an integer
                             if (fetchColColwidths[fetchColPos] > 8)
                             {
-                                value = row.getStringField(fetchColPos);
-                                unsigned i = strlen(value.c_str());
-                                value = value.substr(0, i);
+                                int128_t* dec;
+                                char buf[41];
+                                dec = row.getBinaryField<int128_t>(fetchColPos);
+                                dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                                    (unsigned)fetchColScales[fetchColPos], buf,
+                                    sizeof(buf), fetchColTypes[fetchColPos]);
+
+                                value = buf;
+
+                                //value = row.getStringField(fetchColPos);
+                                //unsigned i = strlen(value.c_str());
+                                //value = value.substr(0, i);
                                 break;
                             }
 
@@ -3403,12 +3368,22 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::DECIMAL:
                             case CalpontSystemCatalog::UDECIMAL:
                             {
+                                // WIP MCOL-641
                                 // decimal width > 8 cannot be stored in an integer
                                 if (fetchColColwidths[fetchColPos] > 8)
                                 {
-                                    value = row.getStringField(fetchColPos);
-                                    unsigned i = strlen(value.c_str());
-                                    value = value.substr(0, i);
+                                    int128_t* dec;
+                                    char buf[41];
+                                    dec = row.getBinaryField<int128_t>(fetchColPos);
+                                    dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                                        (unsigned)fetchColScales[fetchColPos], buf,
+                                        sizeof(buf), fetchColTypes[fetchColPos]);
+
+                                    value = buf;
+
+                                    //value = row.getStringField(fetchColPos);
+                                    //unsigned i = strlen(value.c_str());
+                                    //value = value.substr(0, i);
                                     break;
                                 }
 
