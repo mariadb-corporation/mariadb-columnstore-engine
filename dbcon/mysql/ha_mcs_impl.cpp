@@ -861,14 +861,14 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         if (colType.colDataType == CalpontSystemCatalog::DECIMAL)
                         {
                             dec = row.getBinaryField<int128_t>(s);
-                            dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                            dataconvert::DataConvert::decimalToString(dec,
                                 (unsigned)colType.scale, buf,
                                 sizeof(buf), colType.colDataType);
                         }
                         else
                         {
                             udec = row.getBinaryField<uint128_t>(s);
-                            dataconvert::DataConvert::decimalToString<uint128_t>(udec,
+                            dataconvert::DataConvert::decimalToString(udec,
                                 (unsigned)colType.scale, buf,
                                 sizeof(buf), colType.colDataType);
                         }
@@ -898,7 +898,9 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 case CalpontSystemCatalog::BINARY:
                 {
                     Field_varstring* f2 = (Field_varstring*)*f;
-                    f2->store(row.getBinaryField(s).c_str(), 16, f2->charset());
+                    // WIP MCOL-641 Binary representation could contain \0.
+                    char* binaryString = row.getBinaryField<char>(s);
+                    f2->store(binaryString, colType.colWidth, f2->charset());
 
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
