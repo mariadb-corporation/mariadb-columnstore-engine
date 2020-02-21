@@ -28,6 +28,7 @@
 #include <ctime>
 #include <stdlib.h>
 #include <string.h>
+#include <type_traits>
 using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string.hpp>
@@ -1164,7 +1165,110 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 }
 
 // WIP MCOL-641
-// Check for overflows with buflen
+// Second DT is for POD representation.
+template <typename T>
+size_t DataConvert::writeIntPart(T* dec, char* p,
+    const uint16_t buflen,
+    const uint8_t scale)
+{
+  T intPart = *dec;
+  if (scale)
+  {
+    // optimize this
+    for (size_t i = 0; i < scale; i++)
+        intPart /= 10;
+  }
+
+  // optimize for less then uint64_t values
+  uint64_t div = 10000000000000000000ULL;
+  T high = intPart;
+  T low;
+  low = high % div;
+  high /= div;
+  T mid;
+  mid = high % div;
+  high /= div;
+
+  // pod[0] is high 8 byte, pod[1] is low
+  uint64_t* high_pod = reinterpret_cast<uint64_t*>(&high);
+  uint64_t* mid_pod = reinterpret_cast<uint64_t*>(&mid);
+  uint64_t* low_pod = reinterpret_cast<uint64_t*>(&low);
+  char* original_p = p;
+  int written = 0;
+ 
+  // WIP replace snprintf with streams
+  if (high_pod[0] != 0)
+  {
+    written = sprintf(p, "%lu", high_pod[0]);
+    p += written;
+    written = sprintf(p, "%019lu", mid_pod[0]);
+    p += written;
+    sprintf(p, "%019lu", low_pod[0]);
+  }
+  else if (mid_pod[0] != 0)
+  {
+    written = sprintf(p, "%lu", mid_pod[0]);
+    p += written;
+    written = sprintf(p, "%019lu", low_pod[0]);
+    p += written;
+  }
+  else
+  {
+      written = sprintf(p, "%lu", low_pod[0]);
+      p += written;
+  }
+
+  if (buflen <= p-original_p)
+  {
+    throw QueryDataExcept("toString() char buffer overflow.", formatErr);
+  }
+  return p-original_p;
+}
+
+template<typename T>
+size_t DataConvert::writeFractionalPart(T* dec, char* p,
+    const uint16_t buflen,
+    const uint8_t scale)
+{
+  T scaleDivisor = 10;
+  for (size_t i = 1; i < scale; i++)
+    scaleDivisor *= 10;
+  
+  T fractionalPart = *dec % scaleDivisor;
+  return writeIntPart(&fractionalPart, p, buflen, 0);
+}
+
+// WIP MCOL-641
+// Limit this to Decimal only
+// Replace decimalToString with this one
+template<typename T>
+void DataConvert::toString1(T* dec, char *p, const uint16_t buflen,
+    const uint8_t scale)
+{
+  if (*dec < static_cast<T>(0))
+  {
+    *p++ = '-';
+    *dec *= -1;
+  }
+
+  char* original_p = p;
+  size_t written = 0;
+  written = writeIntPart<T>(dec, p, buflen, scale);
+  p += written;
+
+  // WIP To be finished for 0.042
+  if (scale)
+  {
+    *p++ = '.';
+    p += writeFractionalPart(dec, p, p-original_p, scale);
+  }
+
+  if (buflen <= p-original_p)
+  {
+    throw QueryDataExcept("toString() char buffer overflow.", formatErr);
+  }
+}
+
 template<typename T>
 void DataConvert::toString(T* dec, char *p, size_t buflen)
 { 
@@ -1206,6 +1310,7 @@ void DataConvert::toString(T* dec, char *p, size_t buflen)
   if (buflen <= p-original_p)
     std::cout << "DataConvert::toString char buffer overflow" << std::endl;
 }
+
 // WIP MCOL-641
 // Template this
 // result must be calloc-ed
@@ -1239,13 +1344,20 @@ void atoi128(const std::string& arg, uint128_t& res)
 }
 
 // WIP MCOL-641
+// Doesn't work for -0.042
 template <typename T>
 void DataConvert::decimalToString(T* valuePtr,
     uint8_t scale,
     char* buf,
     unsigned int buflen,
-    cscDataType colDataType)
+    cscDataType colDataType) // We don't need the last one
 {
+    if (*valuePtr < static_cast<T>(0))
+    {
+        *buf++ = '-';
+        *valuePtr *= -1;
+    }
+
     toString<T>(valuePtr, buf, buflen);
 
     // Biggest ColumnStore supports is DECIMAL(38,x), or 38 total digits+dp+sign for column

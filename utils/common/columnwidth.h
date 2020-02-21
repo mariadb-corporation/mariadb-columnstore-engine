@@ -69,6 +69,18 @@ namespace utils
             return 16;
         }
     }
+    inline uint8_t precisionByWidth(unsigned w)
+    {
+        switch(w)
+        {
+            case 16:
+                return 38;
+            // In case we will support decimals that spans 32 bytes.
+            default:
+                return 65;
+        }
+    }
+
 
 }
 

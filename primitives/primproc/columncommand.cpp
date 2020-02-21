@@ -1067,8 +1067,6 @@ void ColumnCommand::getEmptyRowValue(const CSCDataType dataType,
     ptr[1] = joblist::BINARYEMPTYROW;
 }
 
-
-
 void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
 {
     int64_t firstLBID = lbid, lastLBID = firstLBID + (loopCount * colType.colWidth) - 1, i;

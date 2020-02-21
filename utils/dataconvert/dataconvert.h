@@ -1034,8 +1034,19 @@ public:
     template <typename T>
     EXPORT static void decimalToString(T* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
+    template<typename T>
+    static void toString(T* dec, char *p, size_t buflen);
     template <typename T>
-    EXPORT static void toString(T* dec, char *p, size_t buflen);
+    EXPORT static void toString1(T* dec, char* p, const uint16_t buflen,
+        const uint8_t scale = 0);
+    template <typename T>
+    static size_t writeIntPart(T* dec, char* p, const uint16_t buflen,
+        const uint8_t scale);
+    template <typename T>
+    static size_t writeFractionalPart(T* dec, char* p,
+    const uint16_t buflen, const uint8_t scale);
+
+
 
     static inline void int128Max(int128_t& i)
     {
