@@ -641,8 +641,8 @@ string Row::toString() const
                     {
                         char *buf = (char*)alloca(precision[i] + 3);
                         // empty the buffer
-                        dataconvert::DataConvert::toString<int128_t>(getBinaryField<int128_t>(i),
-                            buf, precision[i]+3);
+                        dataconvert::DataConvert::toString(getBinaryField<int128_t>(i),
+                            buf, precision[i]+3); //WIP scale[i]
                         os << buf << " ";
                         break;
                     }
@@ -850,8 +850,8 @@ void Row::initToNull()
                     case 16 :
                     {
                         uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-                        dec[0] = joblist::BINARYEMPTYROW;
-                        dec[1] = joblist::BINARYNULL;
+                        dec[0] = joblist::BINARYNULL;
+                        dec[1] = joblist::BINARYEMPTYROW;
                         break;
                     }
                     default:
@@ -881,8 +881,8 @@ void Row::initToNull()
             case CalpontSystemCatalog::BINARY:
                 {
                     uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-                    dec[0] = joblist::BINARYEMPTYROW;
-                    dec[1] = joblist::BINARYNULL;
+                    dec[0] = joblist::BINARYNULL;
+                    dec[1] = joblist::BINARYEMPTYROW;
                 }
                 break;
 
@@ -915,10 +915,10 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,32>(
     uint32_t offset) const
 {
     const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL)) &&
         (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
         (intPtr[2] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
-        (intPtr[3] == static_cast<int64_t>(joblist::BINARYNULL)));
+        (intPtr[3] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
 }
 
 template<>
@@ -927,8 +927,8 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
     uint32_t offset) const
 {
     const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW))
-        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYNULL)));
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL))
+        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
 }
 
 template<>
@@ -937,8 +937,8 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
     uint32_t offset) const
 {
     const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYEMPTYROW))
-        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYNULL)));
+    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL))
+        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
 }
 
 template<>
