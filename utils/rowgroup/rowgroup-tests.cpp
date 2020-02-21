@@ -1,8 +1,10 @@
 #include <gtest/gtest.h> // googletest header file
+#include <iostream>
+
 #include "rowgroup.h"
 #include "columnwidth.h"
 #include "joblisttypes.h"
-#include "iostream"
+#include "dataconvert.h"
 
 #define WIDE_DEC_PRECISION 38U
 #define INITIAL_ROW_OFFSET 2
@@ -60,7 +62,6 @@ class RowDecimalTest : public ::testing::Test {
         false //useStringTable
     );
 
-    //std::cout << inRG.toString() << std::endl;
     rg = inRG;
     rgD.reinit(rg);
     rg.setData(&rgD);
@@ -74,9 +75,14 @@ class RowDecimalTest : public ::testing::Test {
     uint64_t* uint128_pod = reinterpret_cast<uint64_t*>(&nullValue);
     uint128_pod[0] = joblist::BINARYEMPTYROW;
     uint128_pod[1] = joblist::BINARYNULL;
-    bigValue = 42*0xFFFFFFFFFFFFFFFFLL;
-
-    sValueVector.push_back(nullValue);
+    bigValue = -static_cast<int128_t>(0xFFFFFFFF)*0xFFFFFFFFFFFFFFFF;
+    //char buf[utils::precisionByWidth(16)+3];
+    //memset(&buf[0], 0, sizeof(buf));
+    //int scale1 = 3;
+    //dataconvert::DataConvert::decimalToString(&bigValue, scale1, buf,
+    //    utils::precisionByWidth(sizeof(bigValue))+3,types[0]);
+    //std::cout << buf << std::endl;
+    sValueVector.push_back(nullValue-2);
     sValueVector.push_back(-42);
     sValueVector.push_back(bigValue);
     sValueVector.push_back(0);
@@ -106,15 +112,15 @@ class RowDecimalTest : public ::testing::Test {
     s32ValueVector.push_back(0x81);
     s32ValueVector.push_back(joblist::INTNULL-1);
 
-    s64ValueVector.push_back(joblist::INTNULL);
+    s64ValueVector.push_back(joblist::BIGINTNULL);
     s64ValueVector.push_back(-0x79);
     s64ValueVector.push_back(0);
     s64ValueVector.push_back(0x81);
-    s64ValueVector.push_back(joblist::INTNULL-1);
+    s64ValueVector.push_back(joblist::BIGINTNULL-1);
 
-    r.initToNull();
-    r.nextRow(rowSize);
-    for(size_t i = 1; i < sValueVector.size(); i++) {
+    //r.initToNull();
+    //r.nextRow(rowSize);
+    for(size_t i = 0; i < sValueVector.size(); i++) {
         r.setBinaryField_offset(&sValueVector[i],
             sizeof(sValueVector[0]), offsets[0]);
         r.setBinaryField_offset(&uValueVector[i],
@@ -123,7 +129,6 @@ class RowDecimalTest : public ::testing::Test {
         r.setIntField(s32ValueVector[i], 3);
         r.setIntField(s16ValueVector[i], 4);
         r.setIntField(s8ValueVector[i], 5);
-        //std::cout << r.toString() << std::endl;
         r.nextRow(rowSize);
     }
     rowCount = sValueVector.size();
@@ -159,6 +164,7 @@ TEST_F(RowDecimalTest, NonNULLValuesCheck) {
 
 TEST_F(RowDecimalTest, initToNullANDisNullValueValueCheck) {
     rg.getRow(0, &r);
+    r.initToNull();
     EXPECT_TRUE(r.isNullValue(0));
     EXPECT_TRUE(r.isNullValue(1));
     EXPECT_TRUE(r.isNullValue(2));
@@ -176,29 +182,37 @@ TEST_F(RowDecimalTest, getBinaryFieldCheck) {
 
     for (size_t i = 0; i < sValueVector.size(); i++) {
         s128Value = r.getBinaryField<int128_t>(0);
-        EXPECT_EQ(*s128Value, sValueVector[i]);
+        EXPECT_EQ(sValueVector[i], *s128Value);
         u128Value = r.getBinaryField<uint128_t>(1);
-        EXPECT_EQ(*u128Value, uValueVector[i]);
-        //EXPECT_EQ(r.getIntField(2),s64ValueVector[i]);
-        //EXPECT_EQ(r.getIntField(3),s32ValueVector[i]);
+        EXPECT_EQ(uValueVector[i], *u128Value);
+        //EXPECT_EQ(s64ValueVector[i], r.getIntField(2));
+        //EXPECT_EQ(s32ValueVector[i],r.getIntField(3));
         //EXPECT_EQ(r.getIntField(4),s16ValueVector[i]);
         //EXPECT_EQ(r.getIntField(5),s8ValueVector[i]);
         r.nextRow(rowSize);
     }
 }
+
+// TBD Need to add asserts when toString will be finished
 TEST_F(RowDecimalTest, toStringCheck) {
-    std::string exemplar1("0: NULL NULL NULL NULL NULL NULL ");
+    std::vector<std::string> exemplarVector;
+    exemplarVector.push_back(std::string("0: NULL NULL NULL NULL NULL NULL "));
+    exemplarVector.push_back(std::string("0: -42 42 -121 -121 -121 -121 "));
+    exemplarVector.push_back(std::string("0: -79228162495817593515539431425 -79228162495817593515539431425 0 0 0 0 "));
+    exemplarVector.push_back(std::string("0: 0 0 129 129 129 -127 "));
+    exemplarVector.push_back(std::string("0: -18446744073709551618 -18446744073709551618 9223372036854775807 2147483647 32767 127 "));
+
     rg.getRow(0, &r);
-    EXPECT_EQ(r.toString(), exemplar1);
-    r.nextRow(rowSize);
-    std::cout << r.toString() << std::endl;
-    r.nextRow(rowSize);
-    std::cout << r.toString() << std::endl;
-    r.nextRow(rowSize);
-    std::cout << r.toString() << std::endl;
+    r.initToNull();
+    for (auto &el: exemplarVector) {
+        EXPECT_EQ(el, r.toString());
+        r.nextRow(rowSize);
+    }
 }
 
-//toString
-//toCSV
-//applyMapping
-//equals
+TEST_F(RowDecimalTest, toCSVCheck) {
+}
+TEST_F(RowDecimalTest, applyMappingCheck) {
+}
+TEST_F(RowDecimalTest, equalsCheck) {
+}
