@@ -963,8 +963,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T
     return ret;
 }
 
-template<int W>
-inline void p_Col_ridArray(NewColRequestHeader* in,
+template<typename T, int W>
+static void p_Col_ridArray(NewColRequestHeader* in,
                            NewColResultHeader* out,
                            unsigned outSize,
                            unsigned* written, int* block, Stats* fStatsPtr, unsigned itemsPerBlk,
@@ -1016,7 +1016,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         out->Max = 0;
     }
 
-    const ColArgs* args = NULL;
     int64_t val = 0;
     uint64_t uval = 0;
     int nextRidIndex = 0, argIndex = 0;
@@ -1024,134 +1023,20 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
     uint16_t rid = 0;
     prestored_set_t::const_iterator it;
 
-    int64_t* std_argVals = (int64_t*)alloca(in->NOPS * sizeof(int64_t));
-    uint8_t* std_cops = (uint8_t*)alloca(in->NOPS * sizeof(uint8_t));
-    uint8_t* std_rfs = (uint8_t*)alloca(in->NOPS * sizeof(uint8_t));
-    int64_t* argVals = NULL;
-    uint64_t* uargVals = NULL;
-    uint8_t* cops = NULL;
-    uint8_t* rfs = NULL;
-
-    scoped_array<idb_regex_t> std_regex;
-    idb_regex_t* regex = NULL;
-    uint8_t likeOps = 0;
-
-    // no pre-parsed column filter is set, parse the filter in the message
+    // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL)
-    {
-        std_regex.reset(new idb_regex_t[in->NOPS]);
-        regex = &(std_regex[0]);
+        parsedColumnFilter = parseColumnFilter_T<T>((uint8_t*)in + sizeof(NewColRequestHeader), in->DataType, in->NOPS, in->BOP);
 
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
-        {
-            uargVals = reinterpret_cast<uint64_t*>(std_argVals);
-            cops = std_cops;
-            rfs = std_rfs;
+    // Now we have a parsed filter, and it's in the form of op and value arrays
+    auto argVals = parsedColumnFilter->prestored_argVals.get();
+    auto uargVals = reinterpret_cast<uint64_t*>(parsedColumnFilter->prestored_argVals.get());
+    auto cops = parsedColumnFilter->prestored_cops.get();
+    auto rfs = parsedColumnFilter->prestored_rfs.get();
+    auto regex = parsedColumnFilter->prestored_regex.get();
 
-            for (argIndex = 0; argIndex < in->NOPS; argIndex++)
-            {
-                args = reinterpret_cast<const ColArgs*>(&in8[sizeof(NewColRequestHeader) +
-                                                                                    (argIndex * filterSize)]);
-                cops[argIndex] = args->COP;
-                rfs[argIndex] = args->rf;
-
-                switch (W)
-                {
-                    case 1:
-                        uargVals[argIndex] = *reinterpret_cast<const uint8_t*>(args->val);
-                        break;
-
-                    case 2:
-                        uargVals[argIndex] = *reinterpret_cast<const uint16_t*>(args->val);
-                        break;
-
-                    case 4:
-                        uargVals[argIndex] = *reinterpret_cast<const uint32_t*>(args->val);
-                        break;
-
-                    case 8:
-                        uargVals[argIndex] = *reinterpret_cast<const uint64_t*>(args->val);
-                        break;
-                }
-
-                regex[argIndex].used = false;
-            }
-        }
-        else
-        {
-            argVals = std_argVals;
-            cops = std_cops;
-            rfs = std_rfs;
-
-            for (argIndex = 0; argIndex < in->NOPS; argIndex++)
-            {
-                args = reinterpret_cast<const ColArgs*>(&in8[sizeof(NewColRequestHeader) +
-                                                                                    (argIndex * filterSize)]);
-                cops[argIndex] = args->COP;
-                rfs[argIndex] = args->rf;
-
-                switch (W)
-                {
-                    case 1:
-                        argVals[argIndex] = args->val[0];
-                        break;
-
-                    case 2:
-                        argVals[argIndex] = *reinterpret_cast<const int16_t*>(args->val);
-                        break;
-
-                    case 4:
-#if 0
-                        if (in->DataType == CalpontSystemCatalog::FLOAT)
-                        {
-                            double dTmp;
-
-                            dTmp = (double) * ((const float*) args->val);
-                            argVals[argIndex] = *((int64_t*) &dTmp);
-                        }
-                        else
-                            argVals[argIndex] = *reinterpret_cast<const int32_t*>(args->val);
-
-#else
-                        argVals[argIndex] = *reinterpret_cast<const int32_t*>(args->val);
-#endif
-                        break;
-
-                    case 8:
-                        argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
-                        break;
-                }
-
-                if (COMPARE_LIKE & args->COP)
-                {
-                    p_DataValue dv = convertToPDataValue(&argVals[argIndex], W);
-                    int err = PrimitiveProcessor::convertToRegexp(&regex[argIndex], &dv);
-
-                    if (err)
-                    {
-                        throw runtime_error("PrimitiveProcessor::p_Col_ridarray(): Could not create regular expression for LIKE operator");
-                    }
-
-                    ++likeOps;
-                }
-                else
-                    regex[argIndex].used = false;
-            }
-        }
-    }
-    // we have a pre-parsed filter, and it's in the form of op and value arrays
-    else if (parsedColumnFilter->columnFilterMode == TWO_ARRAYS)
-    {
-        argVals = parsedColumnFilter->prestored_argVals.get();
-        uargVals = reinterpret_cast<uint64_t*>(parsedColumnFilter->prestored_argVals.get());
-        cops = parsedColumnFilter->prestored_cops.get();
-        rfs = parsedColumnFilter->prestored_rfs.get();
-        regex = parsedColumnFilter->prestored_regex.get();
-        likeOps = parsedColumnFilter->likeOps;
-
-    }
-
-    // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
+    // ... well, unless it's an unordered set for quick == comparisons
+    if (UNORDERED_SET == parsedColumnFilter->columnFilterMode)
+        cops = NULL;
 
     if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
     {
@@ -1166,7 +1051,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
     while (!done)
     {
-        if (cops == NULL)    // implies parsedColumnFilter && columnFilterMode == SET
+        if (cops == NULL)    // implies columnFilterMode == UNORDERED_SET
         {
             /* bug 1920: ignore NULLs in the set and in the column data */
             if (!(isNull && in->BOP == BOP_AND))
@@ -1341,27 +1226,27 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
         fStatsPtr->markEvent(in->LBID, pthread_self(), in->hdr.SessionID, 'B');
 #endif
 
-    switch (in->DataSize)
+    if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
     {
-        case 8:
-            p_Col_ridArray<8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
-            break;
-
-        case 4:
-            p_Col_ridArray<4>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
-            break;
-
-        case 2:
-            p_Col_ridArray<2>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
-            break;
-
-        case 1:
-            p_Col_ridArray<1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
-            break;
-
-        default:
-            idbassert(0);
-            break;
+        switch (in->DataSize)
+        {
+            case 1:  p_Col_ridArray< uint8_t,1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 2:  p_Col_ridArray<uint16_t,2>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 4:  p_Col_ridArray<uint32_t,4>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 8:  p_Col_ridArray<uint64_t,8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            default: idbassert(0);
+        }
+    }
+    else
+    {
+        switch (in->DataSize)
+        {
+            case 1:  p_Col_ridArray< int8_t,1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 2:  p_Col_ridArray<int16_t,2>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 4:  p_Col_ridArray<int32_t,4>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 8:  p_Col_ridArray<int64_t,8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            default: idbassert(0);
+        }
     }
 
     if (fStatsPtr)
