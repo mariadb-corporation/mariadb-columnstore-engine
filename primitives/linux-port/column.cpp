@@ -1096,6 +1096,106 @@ inline void p_Col_noprid(const NewColRequestHeader* in, NewColResultHeader* out,
     }
 }
 #endif
+
+
+// Compile column filter from BLOB into structure optimized for fast filtering.
+// Returns the compiled filter.
+template<typename T>                // C++ integer type corresponding to colType
+boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T
+    (const uint8_t* filterString,   // Filter represented as BLOB
+    uint32_t colType,               // Column datatype as ColDataType
+    uint32_t filterCount,           // Number of filter elements contained in filterString
+    uint32_t BOP)                   // Operation (and/or/xor/none) that combines all filter elements
+{
+    const uint32_t colWidth = sizeof(T);  // Sizeof of the column to be filtered
+
+    boost::shared_ptr<ParsedColumnFilter> ret;  // Place for building the value to return
+    if (filterCount == 0)
+        return ret;
+
+    // Allocate the compiled filter structure with space for filterCount filters.
+    // No need to init arrays since they will be filled on the fly.
+    ret.reset(new ParsedColumnFilter());
+    ret->columnFilterMode = TWO_ARRAYS;
+    ret->prestored_argVals.reset(new int64_t[filterCount]);
+    ret->prestored_cops.reset(new uint8_t[filterCount]);
+    ret->prestored_rfs.reset(new uint8_t[filterCount]);
+    ret->prestored_regex.reset(new idb_regex_t[filterCount]);
+
+    // Parse the filter predicates and insert them into argVals and cops
+    for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
+    {
+        // Size of single filter element in filterString BLOB
+        const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + colWidth;
+        // Pointer to ColArgs structure representing argIndex'th element in the BLOB
+        auto args = reinterpret_cast<const ColArgs*>(filterString + (argIndex * filterSize));
+        ret->prestored_cops[argIndex] = args->COP;
+        ret->prestored_rfs[argIndex] = args->rf;
+
+#if 0
+        if (colType == CalpontSystemCatalog::FLOAT)
+        {
+            double dTmp;
+
+            dTmp = (double) * ((const float*) args->val);
+            ret->prestored_argVals[argIndex] = *((int64_t*) &dTmp);
+        }
+        else
+#else
+        ret->prestored_argVals[argIndex] = *reinterpret_cast<const T*>(args->val);
+#endif
+
+//      cout << "inserted* " << hex << ret->prestored_argVals[argIndex] << dec <<
+//        " COP = " << (int) ret->prestored_cops[argIndex] << endl;
+
+        bool useRegex = ((COMPARE_LIKE & args->COP) != 0);
+        ret->prestored_regex[argIndex].used = useRegex;
+
+        if (useRegex)
+        {
+            p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
+            if (PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv))
+                throw runtime_error("PrimitiveProcessor::parseColumnFilter(): Could not create regular expression for LIKE operator");
+            ++ret->likeOps;
+        }
+    }
+
+
+    /*  Decide which structure to use.  I think the only cases where we can use the set
+        are when NOPS > 1, BOP is OR, and every COP is ==,
+        and when NOPS > 1, BOP is AND, and every COP is !=.
+
+        If there were no predicates that violate the condition for using a set,
+        insert argVals into a set.
+    */
+    if (filterCount > 1)
+    {
+        for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
+        {
+            auto cop = ret->prestored_cops[argIndex];
+
+            if ((BOP == BOP_OR && cop != COMPARE_EQ) ||
+                (BOP == BOP_AND && cop != COMPARE_NE) ||
+                (cop == COMPARE_NIL))
+            {
+                goto skipConversion;
+            }
+        }
+
+        ret->columnFilterMode = UNORDERED_SET;
+        ret->prestored_set.reset(new prestored_set_t());
+
+        // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+        for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
+            if (ret->prestored_rfs[argIndex] == 0)
+                ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+
+        skipConversion:;
+    }
+
+    return ret;
+}
+
 template<int W>
 inline void p_Col_ridArray(NewColRequestHeader* in,
                            NewColResultHeader* out,
@@ -1506,151 +1606,39 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
 #endif
 }
 
+
+// Compile column filter from BLOB into structure optimized for fast filtering.
+// Returns the compiled filter.
 boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
-(const uint8_t* filterString, uint32_t colWidth, uint32_t colType, uint32_t filterCount,
- uint32_t BOP)
+    (const uint8_t* filterString,   // Filter represented as BLOB
+    uint32_t colWidth,              // Sizeof of the column to be filtered
+    uint32_t colType,               // Column datatype as ColDataType
+    uint32_t filterCount,           // Number of filter elements contained in filterString
+    uint32_t BOP)                   // Operation (and/or/xor/none) that combines all filter elements
 {
-    boost::shared_ptr<ParsedColumnFilter> ret;
-    uint32_t argIndex;
-    const ColArgs* args;
-    bool convertToSet = true;
-
-    if (filterCount == 0)
-        return ret;
-
-    ret.reset(new ParsedColumnFilter());
-
-    ret->columnFilterMode = TWO_ARRAYS;
-    ret->prestored_argVals.reset(new int64_t[filterCount]);
-    ret->prestored_cops.reset(new uint8_t[filterCount]);
-    ret->prestored_rfs.reset(new uint8_t[filterCount]);
-    ret->prestored_regex.reset(new idb_regex_t[filterCount]);
-
-    /*
-    for (unsigned ii = 0; ii < filterCount; ii++)
+    // Dispatch by the column type to make it faster
+    if (isUnsigned((CalpontSystemCatalog::ColDataType)colType))
     {
-    	ret->prestored_argVals[ii] = 0;
-    	ret->prestored_cops[ii] = 0;
-    	ret->prestored_rfs[ii] = 0;
-    	ret->prestored_regex[ii].used = 0;
+        switch (colWidth)
+        {
+            case 1:  return parseColumnFilter_T< uint8_t>(filterString, colType, filterCount, BOP);
+            case 2:  return parseColumnFilter_T<uint16_t>(filterString, colType, filterCount, BOP);
+            case 4:  return parseColumnFilter_T<uint32_t>(filterString, colType, filterCount, BOP);
+            case 8:  return parseColumnFilter_T<uint64_t>(filterString, colType, filterCount, BOP);
+        }
     }
-    */
-
-    const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + colWidth;
-
-    /*  Decide which structure to use.  I think the only cases where we can use the set
-    	are when NOPS > 1, BOP is OR, and every COP is ==,
-    	and when NOPS > 1, BOP is AND, and every COP is !=.
-
-    	Parse the filter predicates and insert them into argVals and cops.
-    	If there were no predicates that violate the condition for using a set,
-    	insert argVals into a set.
-    */
-    if (filterCount == 1)
-        convertToSet = false;
-
-    for (argIndex = 0; argIndex < filterCount; argIndex++)
+    else
     {
-        args = reinterpret_cast<const ColArgs*>(filterString + (argIndex * filterSize));
-        ret->prestored_cops[argIndex] = args->COP;
-        ret->prestored_rfs[argIndex] = args->rf;
-
-        if ((BOP == BOP_OR && args->COP != COMPARE_EQ) ||
-                (BOP == BOP_AND && args->COP != COMPARE_NE) ||
-                (args->COP == COMPARE_NIL))
-            convertToSet = false;
-
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)colType))
+        switch (colWidth)
         {
-            switch (colWidth)
-            {
-                case 1:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const uint8_t*>(args->val);
-                    break;
-
-                case 2:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const uint16_t*>(args->val);
-                    break;
-
-                case 4:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const uint32_t*>(args->val);
-                    break;
-
-                case 8:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const uint64_t*>(args->val);
-                    break;
-            }
+            case 1:  return parseColumnFilter_T< int8_t>(filterString, colType, filterCount, BOP);
+            case 2:  return parseColumnFilter_T<int16_t>(filterString, colType, filterCount, BOP);
+            case 4:  return parseColumnFilter_T<int32_t>(filterString, colType, filterCount, BOP);
+            case 8:  return parseColumnFilter_T<int64_t>(filterString, colType, filterCount, BOP);
         }
-        else
-        {
-            switch (colWidth)
-            {
-                case 1:
-                    ret->prestored_argVals[argIndex] = args->val[0];
-                    break;
-
-                case 2:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const int16_t*>(args->val);
-                    break;
-
-                case 4:
-#if 0
-                    if (colType == CalpontSystemCatalog::FLOAT)
-                    {
-                        double dTmp;
-
-                        dTmp = (double) * ((const float*) args->val);
-                        ret->prestored_argVals[argIndex] = *((int64_t*) &dTmp);
-                    }
-                    else
-                        ret->prestored_argVals[argIndex] =
-                            *reinterpret_cast<const int32_t*>(args->val);
-
-#else
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const int32_t*>(args->val);
-#endif
-                    break;
-
-                case 8:
-                    ret->prestored_argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
-                    break;
-            }
-        }
-
-// 		cout << "inserted* " << hex << ret->prestored_argVals[argIndex] << dec <<
-// 		  " COP = " << (int) ret->prestored_cops[argIndex] << endl;
-
-        if (COMPARE_LIKE & args->COP)
-        {
-            p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
-            int err = PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv);
-
-            if (err)
-            {
-                throw runtime_error("PrimitiveProcessor::parseColumnFilter(): Could not create regular expression for LIKE operator");
-            }
-
-            ++ret->likeOps;
-        }
-        else
-        {
-            ret->prestored_regex[argIndex].used = false;
-        }
-
     }
 
-    if (convertToSet)
-    {
-        ret->columnFilterMode = UNORDERED_SET;
-        ret->prestored_set.reset(new prestored_set_t());
-
-        // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
-        for (argIndex = 0; argIndex < filterCount; argIndex++)
-            if (ret->prestored_rfs[argIndex] == 0)
-                ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
-    }
-
-    return ret;
+    return NULL;   ///// throw error ???
 }
 
 } // namespace primitives
