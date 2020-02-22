@@ -617,113 +617,48 @@ inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_
         return false;
 }
 
-inline void store(const NewColRequestHeader* in,
-                  NewColResultHeader* out,
-                  unsigned outSize,
-                  unsigned* written,
-                  uint16_t rid, const uint8_t* block8)
-{
-    uint8_t* out8 = reinterpret_cast<uint8_t*>(out);
 
-    if (in->OutputType & OT_RID)
-    {
-#ifdef PRIM_DEBUG
-
-        if (*written + 2 > outSize)
-        {
-            logIt(35, 1);
-            throw logic_error("PrimitiveProcessor::store(): output buffer is too small");
-        }
-
-#endif
-        out->RidFlags |= (1 << (rid >> 10)); // set the (row/1024)'th bit
-        memcpy(&out8[*written], &rid, 2);
-        *written += 2;
-    }
-
-    if (in->OutputType & OT_TOKEN || in->OutputType & OT_DATAVALUE)
-    {
-#ifdef PRIM_DEBUG
-
-        if (*written + in->DataSize > outSize)
-        {
-            logIt(35, 2);
-            throw logic_error("PrimitiveProcessor::store(): output buffer is too small");
-        }
-
-#endif
-
-        void* ptr1 = &out8[*written];
-        const uint8_t* ptr2 = &block8[0];
-
-        switch (in->DataSize)
-        {
-            default:
-            case 8:
-                ptr2 += (rid << 3);
-                memcpy(ptr1, ptr2, 8);
-                break;
-
-            case 4:
-                ptr2 += (rid << 2);
-                memcpy(ptr1, ptr2, 4);
-                break;
-
-            case 2:
-                ptr2 += (rid << 1);
-                memcpy(ptr1, ptr2, 2);
-                break;
-
-            case 1:
-                ptr2 += (rid << 0);
-                memcpy(ptr1, ptr2, 1);
-                break;
-        }
-
-        *written += in->DataSize;
-    }
-
-    out->NVALS++;
-}
-
+// Reads one ColValue from the input data.
+// Returns true on success, false on EOF.
 template<typename T, int W>
 inline bool nextColValue(
-    int64_t* result,
+    int64_t* result,            // Put here the value read
     int type,
     const uint16_t* ridArray,
-    int NVALS,
+    int ridSize,                // Number of values in ridArray
     int* index,
     bool* isNull,
     bool* isEmpty,
     uint16_t* rid,
-    uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
+    uint8_t OutputType,
+    const T* srcArray,
+    unsigned srcSize)
 {
     auto i = *index;
-    T* val = reinterpret_cast<T*>(val8);
 
     if (ridArray == NULL)
     {
-        while (static_cast<unsigned>(i) < itemsPerBlk &&
-                isEmptyVal<W>(type, &val[i]) &&
-                (OutputType & OT_RID))
+        while (static_cast<unsigned>(i) < srcSize &&
+                isEmptyVal<W>(type, &srcArray[i]) &&
+                (OutputType & OT_RID))                      //// the only way to get Empty value
         {
             i++;
         }
 
-        if (static_cast<unsigned>(i) >= itemsPerBlk)
+        if (static_cast<unsigned>(i) >= srcSize)
             return false;
 
         *rid = i;
     }
     else
     {
-        while (i < NVALS &&
-                isEmptyVal<W>(type, &val[ridArray[i]]))
+        while (i < ridSize &&
+                isEmptyVal<W>(type, &srcArray[ridArray[i]]))
         {
             i++;
         }
 
-        if (i >= NVALS)
+        if (i >= ridSize)
             return false;
 
         *rid = ridArray[i];
@@ -737,20 +672,66 @@ inline bool nextColValue(
     if (type == CalpontSystemCatalog::FLOAT)
     {
         // convert the float to a 64-bit type, return that w/o conversion
-        int32_t* val32 = reinterpret_cast<int32_t*>(val8);
-        double dTmp;
-        dTmp = (double) * ((float*) &val32[*rid]);
-        return *((int64_t*) &dTmp);
+        double dTmp = (double) * ((float*) &srcArray[*rid]);
+        *result = *((int64_t*) &dTmp);
     }
     else
-        *result = val[*rid];
+        *result = srcArray[*rid];
 #endif
 
     *index = i+1;
-    *result = val[*rid];
+    *result = srcArray[*rid];
     *isNull = isNullVal<W>(type, result);
     *isEmpty = isEmptyVal<W>(type, result);
     return true;
+}
+
+
+// Append value to the output buffer with debug-time check for buffer overflow
+template<typename T>
+inline void checkedWriteValue(
+    void* out,
+    unsigned outSize,
+    unsigned* outPos,
+    const T* src,
+    int errSubtype)
+{
+#ifdef PRIM_DEBUG
+
+    if (sizeof(T) > outSize - *outPos)
+    {
+        logIt(35, errSubtype);
+        throw logic_error("PrimitiveProcessor::checkedWriteValue(): output buffer is too small");   //// is it OK to change errmsg?
+    }
+
+#endif
+
+    uint8_t* out8 = reinterpret_cast<uint8_t*>(out);
+    memcpy(out8 + *outPos, src, sizeof(T));
+    *outPos += sizeof(T);
+}
+
+template<typename T>
+inline void writeColValue(
+    const NewColRequestHeader* in,
+    NewColResultHeader* out,
+    unsigned outSize,
+    unsigned* written,
+    uint16_t rid,
+    const T* srcArray)
+{
+    if (in->OutputType & OT_RID)
+    {
+        checkedWriteValue(out, outSize, written, &rid, 1);
+        out->RidFlags |= (1 << (rid >> 10)); // set the (row/1024)'th bit
+    }
+
+    if (in->OutputType & OT_TOKEN || in->OutputType & OT_DATAVALUE)
+    {
+        checkedWriteValue(out, outSize, written, &srcArray[rid], 2);
+    }
+
+    out->NVALS++;   //// Can be computed at the end from *written value
 }
 
 
@@ -856,18 +837,24 @@ template<typename T, int W>
 static void p_Col_ridArray(NewColRequestHeader* in,
                            NewColResultHeader* out,
                            unsigned outSize,
-                           unsigned* written, int* block, Stats* fStatsPtr, unsigned itemsPerBlk,
+                           unsigned* written,
+                           int* srcArray16,
+                           unsigned srcSize,
+                           Stats* fStatsPtr,
                            boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
+    const T* srcArray = reinterpret_cast<const T*>(srcArray16);
+
     const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
     uint16_t* ridArray = 0;
+    int ridSize = in->NVALS;                // Number of values in ridArray
 
-    if (in->NVALS > 0)
+    if (ridSize > 0)
         ridArray = reinterpret_cast<uint16_t*>((uint8_t*)in + sizeof(NewColRequestHeader) + (in->NOPS * filterSize));
 
     if (ridArray && 1 == in->sort )
     {
-        qsort(ridArray, in->NVALS, sizeof(uint16_t), compareBlock<uint16_t>);
+        qsort(ridArray, ridSize, sizeof(uint16_t), compareBlock<uint16_t>);
 
         if (fStatsPtr)
 #ifdef _MSC_VER
@@ -915,7 +902,7 @@ static void p_Col_ridArray(NewColRequestHeader* in,
 
     // Now we have a parsed filter, and it's in the form of op and value arrays
     auto argVals = parsedColumnFilter->prestored_argVals.get();
-    auto uargVals = reinterpret_cast<uint64_t*>(parsedColumnFilter->prestored_argVals.get());
+    auto uargVals = reinterpret_cast<uint64_t*>(argVals);
     auto cops = parsedColumnFilter->prestored_cops.get();
     auto rfs = parsedColumnFilter->prestored_rfs.get();
     auto regex = parsedColumnFilter->prestored_regex.get();
@@ -924,8 +911,8 @@ static void p_Col_ridArray(NewColRequestHeader* in,
     if (UNORDERED_SET == parsedColumnFilter->columnFilterMode)
         cops = NULL;
 
-    while (nextColValue<T,W>(&val, in->DataType, ridArray, in->NVALS, &nextRidIndex, &isNull, &isEmpty,
-                             &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk))
+    while (nextColValue<T,W>(&val, in->DataType, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
+                             &rid, in->OutputType, srcArray, srcSize))
     {
         auto uval = static_cast<uint64_t>(val);
 
@@ -939,7 +926,7 @@ static void p_Col_ridArray(NewColRequestHeader* in,
 
                 // Assume either BOP_OR && COMPARE_EQ or BOP_AND && COMPARE_NE
                 if (in->BOP == BOP_OR? found : !found)
-                    store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    writeColValue<T>(in, out, outSize, written, rid, srcArray);
             }
         }
         else
@@ -961,7 +948,7 @@ static void p_Col_ridArray(NewColRequestHeader* in,
                 {
                     if (cmp == true)
                     {
-                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                        writeColValue<T>(in, out, outSize, written, rid, srcArray);
                     }
 
                     break;
@@ -972,21 +959,20 @@ static void p_Col_ridArray(NewColRequestHeader* in,
                 }
                 else if (in->BOP == BOP_OR && cmp == true)
                 {
-                    store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    writeColValue<T>(in, out, outSize, written, rid, srcArray);
                     break;
                 }
             }
 
             if ((argIndex == in->NOPS && in->BOP == BOP_AND) || in->NOPS == 0)
             {
-                store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                writeColValue<T>(in, out, outSize, written, rid, srcArray);
             }
         }
 
         // Set the min and max if necessary.  Ignore nulls.
         if (out->ValidMinMax && !isNull && !isEmpty)
         {
-
             if ((in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR ||
                     in->DataType == CalpontSystemCatalog::BLOB || in->DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
             {
@@ -1076,10 +1062,10 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
     {
         switch (in->DataSize)
         {
-            case 1:  p_Col_ridArray< uint8_t,1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 2:  p_Col_ridArray<uint16_t,2>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 4:  p_Col_ridArray<uint32_t,4>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 8:  p_Col_ridArray<uint64_t,8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 1:  p_Col_ridArray< uint8_t,1>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 2:  p_Col_ridArray<uint16_t,2>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 4:  p_Col_ridArray<uint32_t,4>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 8:  p_Col_ridArray<uint64_t,8>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
@@ -1087,10 +1073,10 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
     {
         switch (in->DataSize)
         {
-            case 1:  p_Col_ridArray< int8_t,1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 2:  p_Col_ridArray<int16_t,2>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 4:  p_Col_ridArray<int32_t,4>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
-            case 8:  p_Col_ridArray<int64_t,8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);  break;
+            case 1:  p_Col_ridArray< int8_t,1>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 2:  p_Col_ridArray<int16_t,2>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 4:  p_Col_ridArray<int32_t,4>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
+            case 8:  p_Col_ridArray<int64_t,8>(in, out, outSize, written, block, itemsPerBlk, fStatsPtr, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
