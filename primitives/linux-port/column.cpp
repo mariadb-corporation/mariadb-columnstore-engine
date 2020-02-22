@@ -226,10 +226,10 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
 }
 
 template<int>
-inline bool isEmptyVal(uint8_t type, const uint8_t* val8);
+inline bool isEmptyVal(uint8_t type, const void* val8);
 
 template<>
-inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
+inline bool isEmptyVal<8>(uint8_t type, const void* ival)
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
 
@@ -261,7 +261,7 @@ inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
+inline bool isEmptyVal<4>(uint8_t type, const void* ival)
 {
     const uint32_t* val = reinterpret_cast<const uint32_t*>(ival);
 
@@ -293,7 +293,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
+inline bool isEmptyVal<2>(uint8_t type, const void* ival)
 {
     const uint16_t* val = reinterpret_cast<const uint16_t*>(ival);
 
@@ -320,7 +320,7 @@ inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
+inline bool isEmptyVal<1>(uint8_t type, const void* ival)
 {
     const uint8_t* val = reinterpret_cast<const uint8_t*>(ival);
 
@@ -347,10 +347,10 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
 }
 
 template<int>
-inline bool isNullVal(uint8_t type, const uint8_t* val8);
+inline bool isNullVal(uint8_t type, const void* val8);
 
 template<>
-inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
+inline bool isNullVal<8>(uint8_t type, const void* ival)
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
 
@@ -384,7 +384,7 @@ inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
+inline bool isNullVal<4>(uint8_t type, const void* ival)
 {
     const uint32_t* val = reinterpret_cast<const uint32_t*>(ival);
 
@@ -418,7 +418,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
+inline bool isNullVal<2>(uint8_t type, const void* ival)
 {
     const uint16_t* val = reinterpret_cast<const uint16_t*>(ival);
 
@@ -445,7 +445,7 @@ inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
 }
 
 template<>
-inline bool isNullVal<1>(uint8_t type, const uint8_t* ival)
+inline bool isNullVal<1>(uint8_t type, const void* ival)
 {
     const uint8_t* val = reinterpret_cast<const uint8_t*>(ival);
 
@@ -698,38 +698,35 @@ inline bool nextColValue(
     uint16_t* rid,
     uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
 {
+    auto i = *index;
+    T* val = reinterpret_cast<T*>(val8);
+
     if (ridArray == NULL)
     {
-        while (static_cast<unsigned>(*index) < itemsPerBlk &&
-                isEmptyVal<W>(type, &val8[*index * W]) &&
+        while (static_cast<unsigned>(i) < itemsPerBlk &&
+                isEmptyVal<W>(type, &val[i]) &&
                 (OutputType & OT_RID))
         {
-            (*index)++;
+            i++;
         }
 
-        if (static_cast<unsigned>(*index) >= itemsPerBlk)
+        if (static_cast<unsigned>(i) >= itemsPerBlk)
             return false;
 
-        auto vp = &val8[*index * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = (*index)++;
+        *rid = i;
     }
     else
     {
-        while (*index < NVALS &&
-                isEmptyVal<W>(type, &val8[ridArray[*index] * W]))
+        while (i < NVALS &&
+                isEmptyVal<W>(type, &val[ridArray[i]]))
         {
-            (*index)++;
+            i++;
         }
 
-        if (*index >= NVALS)
+        if (i >= NVALS)
             return false;
 
-        auto vp = &val8[ridArray[*index] * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = ridArray[(*index)++];
+        *rid = ridArray[i];
     }
 
     // at this point, nextRid is the index to return, and index is...
@@ -746,9 +743,13 @@ inline bool nextColValue(
         return *((int64_t*) &dTmp);
     }
     else
+        *result = val[*rid];
 #endif
 
-    *result = reinterpret_cast<T*>(val8)[*rid];
+    *index = i+1;
+    *result = val[*rid];
+    *isNull = isNullVal<W>(type, result);
+    *isEmpty = isEmptyVal<W>(type, result);
     return true;
 }
 
