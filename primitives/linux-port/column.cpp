@@ -686,19 +686,18 @@ inline void store(const NewColRequestHeader* in,
     out->NVALS++;
 }
 
-template<int W>
-inline uint64_t nextUnsignedColValue(int type,
-                                     const uint16_t* ridArray,
-                                     int NVALS,
-                                     int* index,
-                                     bool* done,
-                                     bool* isNull,
-                                     bool* isEmpty,
-                                     uint16_t* rid,
-                                     uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
+template<typename T, int W>
+inline bool nextColValue(
+    int64_t* result,
+    int type,
+    const uint16_t* ridArray,
+    int NVALS,
+    int* index,
+    bool* isNull,
+    bool* isEmpty,
+    uint16_t* rid,
+    uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
 {
-    const uint8_t* vp = 0;
-
     if (ridArray == NULL)
     {
         while (static_cast<unsigned>(*index) < itemsPerBlk &&
@@ -709,12 +708,9 @@ inline uint64_t nextUnsignedColValue(int type,
         }
 
         if (static_cast<unsigned>(*index) >= itemsPerBlk)
-        {
-            *done = true;
-            return 0;
-        }
+            return false;
 
-        vp = &val8[*index * W];
+        auto vp = &val8[*index * W];
         *isNull = isNullVal<W>(type, vp);
         *isEmpty = isEmptyVal<W>(type, vp);
         *rid = (*index)++;
@@ -728,12 +724,9 @@ inline uint64_t nextUnsignedColValue(int type,
         }
 
         if (*index >= NVALS)
-        {
-            *done = true;
-            return 0;
-        }
+            return false;
 
-        vp = &val8[ridArray[*index] * W];
+        auto vp = &val8[ridArray[*index] * W];
         *isNull = isNullVal<W>(type, vp);
         *isEmpty = isEmptyVal<W>(type, vp);
         *rid = ridArray[(*index)++];
@@ -743,125 +736,20 @@ inline uint64_t nextUnsignedColValue(int type,
     //   if RIDs are not specified, nextRid + 1,
     //	 if RIDs are specified, it's the next index in the rid array.
     //Bug 838, tinyint null problem
-    switch (W)
-    {
-        case 1:
-            return reinterpret_cast<uint8_t*> (val8)[*rid];
-
-        case 2:
-            return reinterpret_cast<uint16_t*>(val8)[*rid];
-
-        case 4:
-            return reinterpret_cast<uint32_t*>(val8)[*rid];
-
-        case 8:
-            return reinterpret_cast<uint64_t*>(val8)[*rid];
-
-        default:
-            logIt(33, W);
-
-#ifdef PRIM_DEBUG
-            throw logic_error("PrimitiveProcessor::nextColValue() bad width");
-#endif
-            return -1;
-    }
-}
-
-template<int W>
-inline int64_t nextColValue(int type,
-                            const uint16_t* ridArray,
-                            int NVALS,
-                            int* index,
-                            bool* done,
-                            bool* isNull,
-                            bool* isEmpty,
-                            uint16_t* rid,
-                            uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    const uint8_t* vp = 0;
-
-    if (ridArray == NULL)
-    {
-        while (static_cast<unsigned>(*index) < itemsPerBlk &&
-                isEmptyVal<W>(type, &val8[*index * W]) &&
-                (OutputType & OT_RID))
-        {
-            (*index)++;
-        }
-
-        if (static_cast<unsigned>(*index) >= itemsPerBlk)
-        {
-            *done = true;
-            return 0;
-        }
-
-        vp = &val8[*index * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = (*index)++;
-    }
-    else
-    {
-        while (*index < NVALS &&
-                isEmptyVal<W>(type, &val8[ridArray[*index] * W]))
-        {
-            (*index)++;
-        }
-
-        if (*index >= NVALS)
-        {
-            *done = true;
-            return 0;
-        }
-
-        vp = &val8[ridArray[*index] * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = ridArray[(*index)++];
-    }
-
-    // at this point, nextRid is the index to return, and index is...
-    //   if RIDs are not specified, nextRid + 1,
-    //	 if RIDs are specified, it's the next index in the rid array.
-    //Bug 838, tinyint null problem
-    switch (W)
-    {
-        case 1:
-            return reinterpret_cast<int8_t*> (val8)[*rid];
-
-        case 2:
-            return reinterpret_cast<int16_t*>(val8)[*rid];
-
-        case 4:
 #if 0
-            if (type == CalpontSystemCatalog::FLOAT)
-            {
-                // convert the float to a 64-bit type, return that w/o conversion
-                int32_t* val32 = reinterpret_cast<int32_t*>(val8);
-                double dTmp;
-                dTmp = (double) * ((float*) &val32[*rid]);
-                return *((int64_t*) &dTmp);
-            }
-            else
-            {
-                return reinterpret_cast<int32_t*>(val8)[*rid];
-            }
-
-#else
-            return reinterpret_cast<int32_t*>(val8)[*rid];
-#endif
-
-        case 8:
-            return reinterpret_cast<int64_t*>(val8)[*rid];
-
-        default:
-            logIt(33, W);
-
-#ifdef PRIM_DEBUG
-            throw logic_error("PrimitiveProcessor::nextColValue() bad width");
-#endif
-            return -1;
+    if (type == CalpontSystemCatalog::FLOAT)
+    {
+        // convert the float to a 64-bit type, return that w/o conversion
+        int32_t* val32 = reinterpret_cast<int32_t*>(val8);
+        double dTmp;
+        dTmp = (double) * ((float*) &val32[*rid]);
+        return *((int64_t*) &dTmp);
     }
+    else
+#endif
+
+    *result = reinterpret_cast<T*>(val8)[*rid];
+    return true;
 }
 
 
@@ -970,16 +858,11 @@ static void p_Col_ridArray(NewColRequestHeader* in,
                            unsigned* written, int* block, Stats* fStatsPtr, unsigned itemsPerBlk,
                            boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
+    const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
     uint16_t* ridArray = 0;
-    uint8_t* in8 = reinterpret_cast<uint8_t*>(in);
-    const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
-    idb_regex_t placeholderRegex;
-
-    placeholderRegex.used = false;
 
     if (in->NVALS > 0)
-        ridArray = reinterpret_cast<uint16_t*>(&in8[sizeof(NewColRequestHeader) +
-                                                                           (in->NOPS * filterSize)]);
+        ridArray = reinterpret_cast<uint16_t*>((uint8_t*)in + sizeof(NewColRequestHeader) + (in->NOPS * filterSize));
 
     if (ridArray && 1 == in->sort )
     {
@@ -1017,11 +900,13 @@ static void p_Col_ridArray(NewColRequestHeader* in,
     }
 
     int64_t val = 0;
-    uint64_t uval = 0;
     int nextRidIndex = 0, argIndex = 0;
-    bool done = false, cmp = false, isNull = false, isEmpty = false;
+    bool cmp = false, isNull = false, isEmpty = false;
     uint16_t rid = 0;
     prestored_set_t::const_iterator it;
+
+    idb_regex_t placeholderRegex;
+    placeholderRegex.used = false;
 
     // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL)
@@ -1038,49 +923,22 @@ static void p_Col_ridArray(NewColRequestHeader* in,
     if (UNORDERED_SET == parsedColumnFilter->columnFilterMode)
         cops = NULL;
 
-    if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+    while (nextColValue<T,W>(&val, in->DataType, ridArray, in->NVALS, &nextRidIndex, &isNull, &isEmpty,
+                             &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk))
     {
-        uval = nextUnsignedColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
-                                       &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
-    }
-    else
-    {
-        val = nextColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
-                              &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
-    }
+        auto uval = static_cast<uint64_t>(val);
 
-    while (!done)
-    {
         if (cops == NULL)    // implies columnFilterMode == UNORDERED_SET
         {
             /* bug 1920: ignore NULLs in the set and in the column data */
             if (!(isNull && in->BOP == BOP_AND))
             {
-                if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
-                {
-                    it = parsedColumnFilter->prestored_set->find(*reinterpret_cast<int64_t*>(&uval));
-                }
-                else
-                {
-                    it = parsedColumnFilter->prestored_set->find(val);
-                }
+                bool found = (parsedColumnFilter->prestored_set->find(val)  //// Check on uint32/64 types!
+                           != parsedColumnFilter->prestored_set->end());
 
-                if (in->BOP == BOP_OR)
-                {
-                    // assume COP == COMPARE_EQ
-                    if (it != parsedColumnFilter->prestored_set->end())
-                    {
-                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
-                    }
-                }
-                else if (in->BOP == BOP_AND)
-                {
-                    // assume COP == COMPARE_NE
-                    if (it == parsedColumnFilter->prestored_set->end())
-                    {
-                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
-                    }
-                }
+                // Assume either BOP_OR && COMPARE_EQ or BOP_AND && COMPARE_NE
+                if (in->BOP == BOP_OR? found : !found)
+                    store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
             }
         }
         else
@@ -1143,7 +1001,7 @@ static void p_Col_ridArray(NewColRequestHeader* in,
                     out->Min = static_cast<int64_t>(uval);
 
                 if (static_cast<uint64_t>(out->Max) < uval)
-                    out->Max = static_cast<int64_t>(uval);;
+                    out->Max = static_cast<int64_t>(uval);
             }
             else
             {
@@ -1153,19 +1011,6 @@ static void p_Col_ridArray(NewColRequestHeader* in,
                 if (out->Max < val)
                     out->Max = val;
             }
-        }
-
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
-        {
-            uval = nextUnsignedColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done,
-                                           &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
-                                           itemsPerBlk);
-        }
-        else
-        {
-            val = nextColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done,
-                                  &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
-                                  itemsPerBlk);
         }
     }
 
