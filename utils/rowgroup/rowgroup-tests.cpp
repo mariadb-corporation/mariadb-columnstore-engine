@@ -67,14 +67,15 @@ class RowDecimalTest : public ::testing::Test {
     rg.setData(&rgD);
 
     rg.initRow(&r);
+    rg.initRow(&rOutMappingCheck);
     rowSize = r.getSize();
     rg.getRow(0, &r);
 
     int128_t nullValue = 0;
     int128_t bigValue = 0;
     uint64_t* uint128_pod = reinterpret_cast<uint64_t*>(&nullValue);
-    uint128_pod[0] = joblist::BINARYEMPTYROW;
-    uint128_pod[1] = joblist::BINARYNULL;
+    uint128_pod[0] = joblist::BINARYNULL;
+    uint128_pod[1] = joblist::BINARYEMPTYROW;
     bigValue = -static_cast<int128_t>(0xFFFFFFFF)*0xFFFFFFFFFFFFFFFF;
     //char buf[utils::precisionByWidth(16)+3];
     //memset(&buf[0], 0, sizeof(buf));
@@ -82,7 +83,7 @@ class RowDecimalTest : public ::testing::Test {
     //dataconvert::DataConvert::decimalToString(&bigValue, scale1, buf,
     //    utils::precisionByWidth(sizeof(bigValue))+3,types[0]);
     //std::cout << buf << std::endl;
-    sValueVector.push_back(nullValue-2);
+    sValueVector.push_back(nullValue);
     sValueVector.push_back(-42);
     sValueVector.push_back(bigValue);
     sValueVector.push_back(0);
@@ -136,6 +137,7 @@ class RowDecimalTest : public ::testing::Test {
   // void TearDown() override {}
 
   rowgroup::Row r;
+  rowgroup::Row rOutMappingCheck;
   rowgroup::RowGroup rg;
   rowgroup::RGData rgD;
   uint32_t rowSize;
@@ -200,7 +202,7 @@ TEST_F(RowDecimalTest, toStringCheck) {
     exemplarVector.push_back(std::string("0: -42 42 -121 -121 -121 -121 "));
     exemplarVector.push_back(std::string("0: -79228162495817593515539431425 -79228162495817593515539431425 0 0 0 0 "));
     exemplarVector.push_back(std::string("0: 0 0 129 129 129 -127 "));
-    exemplarVector.push_back(std::string("0: -18446744073709551618 -18446744073709551618 9223372036854775807 2147483647 32767 127 "));
+    exemplarVector.push_back(std::string("0: -3 -3 9223372036854775807 2147483647 32767 127 "));
 
     rg.getRow(0, &r);
     r.initToNull();
@@ -212,7 +214,22 @@ TEST_F(RowDecimalTest, toStringCheck) {
 
 TEST_F(RowDecimalTest, toCSVCheck) {
 }
+
 TEST_F(RowDecimalTest, applyMappingCheck) {
+    int mapping[] = {0, 1, -1, -1, -1, -1};
+    rg.getRow(1, &r);
+    rg.getRow(2, &rOutMappingCheck);
+    int128_t* s128Value = rOutMappingCheck.getBinaryField<int128_t>(0);
+    uint128_t* u128Value = rOutMappingCheck.getBinaryField<uint128_t>(1);
+    EXPECT_NE(sValueVector[1], *s128Value);
+    EXPECT_NE(uValueVector[1], *u128Value);
+    applyMapping(mapping, r, &rOutMappingCheck);
+    s128Value = rOutMappingCheck.getBinaryField<int128_t>(0);
+    EXPECT_EQ(sValueVector[1], *s128Value);
+    u128Value = rOutMappingCheck.getBinaryField<uint128_t>(1);
+    EXPECT_EQ(uValueVector[1], *u128Value);
 }
-TEST_F(RowDecimalTest, equalsCheck) {
+
+// WIP
+TEST_F(RowDecimalTest, RowEqualsCheck) {
 }
