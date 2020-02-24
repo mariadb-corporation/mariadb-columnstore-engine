@@ -2266,7 +2266,7 @@ void SlaveComm::saveDelta()
     {
         uint32_t len = delta.length();
 
-        
+        journalh->seek(0, SEEK_END);
         journalh->write((const char*) &len, sizeof(len));
         journalh->write((const char*) delta.buf(), delta.length());
         journalh->flush();
