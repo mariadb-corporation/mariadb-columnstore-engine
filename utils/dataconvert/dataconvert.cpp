@@ -1220,7 +1220,7 @@ size_t DataConvert::writeIntPart(T* dec, char* p,
 
   if (buflen <= p-original_p)
   {
-    throw QueryDataExcept("toString() char buffer overflow.", formatErr);
+    throw QueryDataExcept("writeIntPart() char buffer overflow.", formatErr);
   }
   return p-original_p;
 }
@@ -1352,30 +1352,26 @@ void DataConvert::decimalToString(T* valuePtr,
     unsigned int buflen,
     cscDataType colDataType) // We don't need the last one
 {
-    if (*valuePtr < static_cast<T>(0))
+    T value = *valuePtr;
+    char* ptr = &buf[0];
+    size_t l1 = buflen;
+    if (value < static_cast<T>(0))
     {
-        *buf++ = '-';
-        *valuePtr *= -1;
+        *ptr++ = '-';
+        value *= -1;
+        idbassert(l1 >= 2);
+        l1--;
     }
 
-    toString<T>(valuePtr, buf, buflen);
+    //we want to move the last scale chars right by one spot to insert the dp
+    //we want to move the trailing null as well, so it's really scale+1 chars
+
+    toString<T>(&value, ptr, buflen);
 
     // Biggest ColumnStore supports is DECIMAL(38,x), or 38 total digits+dp+sign for column
 
     if (scale == 0)
         return;
-
-    //we want to move the last scale chars right by one spot to insert the dp
-    //we want to move the trailing null as well, so it's really scale+1 chars
-    size_t l1 = strlen(buf);
-    char* ptr = &buf[0];
-
-    if (*valuePtr < 0)
-    {
-        ptr++;
-        idbassert(l1 >= 2);
-        l1--;
-    }
 
     //need to make sure we have enough leading zeros for this to work...
     //at this point scale is always > 0

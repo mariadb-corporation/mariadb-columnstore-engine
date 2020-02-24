@@ -17,10 +17,9 @@ find_library(PTHREAD_LIBRARY
     HINTS ${GTEST_ROOT_DIR}/lib
 )
 
-
 find_path(GTEST_INCLUDE_DIR
     NAMES gtest.h
-    HINTS ${GTEST_ROOT_DIR}/include
+    HINTS ${GTEST_ROOT_DIR}/include/gtest
 )
 
 include(FindPackageHandleStandardArgs)

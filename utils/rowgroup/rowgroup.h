@@ -333,6 +333,8 @@ public:
     inline uint64_t getUintField(uint32_t colIndex) const;
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
     inline int64_t getIntField(uint32_t colIndex) const;
+    template<typename T>
+    inline bool equals(T* value, uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
     inline bool equals(const std::string& val, uint32_t colIndex) const;
@@ -611,6 +613,12 @@ inline bool Row::inStringTable(uint32_t col) const
     return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
 }
 
+template<typename T>
+inline bool Row::equals(T* value, uint32_t colIndex) const
+{
+    return reinterpret_cast<T*>(&data[offsets[colIndex]]) == value;
+}
+
 template<int len>
 inline bool Row::equals(uint64_t val, uint32_t colIndex) const
 {
@@ -628,8 +636,6 @@ inline bool Row::equals(uint64_t val, uint32_t colIndex) const
 
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]) == val;
-        case 16:
-            std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
         default:
             idbassert(0);
             throw std::logic_error("Row::equals(): bad length.");
@@ -669,8 +675,6 @@ inline uint64_t Row::getUintField(uint32_t colIndex) const
 
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]);
-        case 16:
-            std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
         default:
             idbassert(0);
             throw std::logic_error("Row::getUintField(): bad length.");
@@ -689,8 +693,6 @@ inline uint64_t Row::getUintField(uint32_t colIndex) const
 
         case 4:
             return *((uint32_t*) &data[offsets[colIndex]]);
-        case 16:
-            std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]);
 
@@ -1246,11 +1248,18 @@ inline bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) con
     {
         const uint32_t& col = keyCols[i];
 
+        cscDataType columnType = getColType(i);
+
         if (!isLongString(col))
         {
-            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(i) != r2.getLongDoubleField(i))
+                    return false;
+            }
+            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            {
+                if (getBinaryField<int128_t>(i) != r2.getBinaryField<int128_t>(i))
                     return false;
             }
             else if (getUintField(col) != r2.getUintField(col))
@@ -1279,13 +1288,21 @@ inline bool Row::equals(const Row& r2, uint32_t lastCol) const
         return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
 
     for (uint32_t i = 0; i <= lastCol; i++)
+    {
+        cscDataType columnType = getColType(i);
         if (!isLongString(i))
         {
-            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(i) != r2.getLongDoubleField(i))
                     return false;
             }
+            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            {
+                if (getBinaryField<int128_t>(i) != r2.getBinaryField<int128_t>(i))
+                    return false;
+            }
+
             else if (getUintField(i) != r2.getUintField(i))
                 return false;
         }
@@ -1299,6 +1316,7 @@ inline bool Row::equals(const Row& r2, uint32_t lastCol) const
             if (memcmp(getStringPointer(i), r2.getStringPointer(i), len))
                 return false;
         }
+    }
 
     return true;
 }
