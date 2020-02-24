@@ -41,7 +41,7 @@ else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
     SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
 
-    target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
+    target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} mysqlservices threadpool)
 
     install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 endif ()
