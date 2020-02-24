@@ -1004,6 +1004,12 @@ inline bool isNumeric(const execplan::CalpontSystemCatalog::ColDataType type)
     }
 }
 
+inline bool isDecimal(const execplan::CalpontSystemCatalog::ColDataType type)
+{
+    return (type == execplan::CalpontSystemCatalog::DECIMAL ||
+         type == execplan::CalpontSystemCatalog::UDECIMAL);
+}
+
 /** convenience function to determine if column type is an
  *  unsigned type
  */

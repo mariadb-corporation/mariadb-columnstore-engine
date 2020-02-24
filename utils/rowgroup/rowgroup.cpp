@@ -638,12 +638,12 @@ string Row::toString() const
                 // WIP
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
-                    if (colWidths[i] > MAXLEGACYWIDTH)
+                    if (colWidths[i] == sizeof(int128_t))
                     {
                         char *buf = (char*)alloca(precision[i] + 3);
                         // empty the buffer
-                        dataconvert::DataConvert::toString(getBinaryField<int128_t>(i),
-                            buf, precision[i]+3); //WIP scale[i]
+                        dataconvert::DataConvert::decimalToString(getBinaryField<int128_t>(i),
+                            scale[i], buf, precision[i]+3, types[i]); 
                         os << buf << " ";
                         break;
                     }
@@ -1048,8 +1048,6 @@ bool Row::isNullValue(uint32_t colIndex) const
                 case 8:
                     return
                         (*((uint64_t*) &data[offsets[colIndex]]) == joblist::CHAR8NULL);
-                case 16:
-                    std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
                 default:
                     return (*((uint64_t*) &data[offsets[colIndex]]) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
             }
@@ -1646,10 +1644,10 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
             // WIP this doesn't look right b/c we can pushdown colType
             // Migrate to offset based methods here
             // code precision 2 width convertor
-            else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DECIMAL &&
-                in.getColumnWidth(i) == 16))
-                out->setBinaryField_offset(in.getBinaryField<uint8_t>(i), 16,
-                    out->getOffset(mapping[i]));
+            else if (UNLIKELY(execplan::isDecimal(in.getColTypes()[i])
+                && in.getColumnWidth(i) == 16))
+                    out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16,
+                        out->getOffset(mapping[i]));
             else if (in.isUnsigned(i))
                 out->setUintField(in.getUintField(i), mapping[i]);
             else
