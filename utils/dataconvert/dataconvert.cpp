@@ -37,7 +37,6 @@ using namespace boost::algorithm;
 #include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "columnresult.h"
-#include "common/branchpred.h"
 using namespace execplan;
 
 #include "joblisttypes.h"
@@ -79,6 +78,30 @@ const int64_t columnstore_precision[19] =
     999999999999999999LL
 };
 
+const string columnstore_big_precision[20] =
+{
+    "9999999999999999999",
+    "99999999999999999999",
+    "999999999999999999999",
+    "9999999999999999999999",
+    "99999999999999999999999",
+    "999999999999999999999999",
+    "9999999999999999999999999",
+    "99999999999999999999999999",
+    "999999999999999999999999999",
+    "9999999999999999999999999999",
+    "99999999999999999999999999999",
+    "999999999999999999999999999999",
+    "9999999999999999999999999999999",
+    "99999999999999999999999999999999",
+    "999999999999999999999999999999999",
+    "9999999999999999999999999999999999",
+    "99999999999999999999999999999999999",
+    "999999999999999999999999999999999999",
+    "9999999999999999999999999999999999999",
+    "99999999999999999999999999999999999999"
+};
+
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base & (*f)(std::ios_base&))
 {
@@ -103,10 +126,17 @@ bool number_value ( const string& data )
     return true;
 }
 
-int64_t number_int_value(const string& data,
-                         const CalpontSystemCatalog::ColType& ct,
-                         bool& pushwarning,
-                         bool  noRoundup)
+} // namespace anon
+
+namespace dataconvert
+{
+
+template <typename T>
+void number_int_value(const string& data,
+                      const CalpontSystemCatalog::ColType& ct,
+                      bool& pushwarning,
+                      bool noRoundup,
+                      T& intVal)
 {
     // copy of the original input
     string valStr(data);
@@ -132,11 +162,13 @@ int64_t number_int_value(const string& data,
 
     if (boost::iequals(valStr, "true"))
     {
-        return 1;
+        intVal = 1;
+        return;
     }
     if (boost::iequals(valStr, "false"))
     {
-        return 0;
+        intVal = 0;
+        return;
     }
 
     // convert to fixed-point notation if input is in scientific notation
@@ -152,9 +184,9 @@ int64_t number_int_value(const string& data,
         // get the exponent
         string exp = valStr.substr(epos + 1);
         bool overflow = false;
-        int64_t exponent = dataconvert::string_to_ll(exp, overflow);
+        T exponent = dataconvert::string_to_ll<T>(exp, overflow);
 
-        // if the exponent can not be held in 64-bit, not supported or saturated.
+        // if the exponent can not be held in 64 or 128 bits, not supported or saturated.
         if (overflow)
             throw QueryDataExcept("value is invalid.", formatErr);
 
@@ -265,7 +297,7 @@ int64_t number_int_value(const string& data,
     if (dp != string::npos)
     {
         //Check if need round up
-        int frac1 = dataconvert::string_to_ll(valStr.substr(dp + 1, 1), pushwarning);
+        int frac1 = dataconvert::string_to_ll<int64_t>(valStr.substr(dp + 1, 1), pushwarning);
 
         if ((!noRoundup) && frac1 >= 5)
             roundup = 1;
@@ -281,11 +313,11 @@ int64_t number_int_value(const string& data,
         }
     }
 
-    int64_t intVal = dataconvert::string_to_ll(intStr, pushwarning);
+    intVal = dataconvert::string_to_ll<T>(intStr, pushwarning);
     //@Bug 3350 negative value round up.
     intVal += intVal >= 0 ? roundup : -roundup;
     bool dummy = false;
-    int64_t frnVal = (frnStr.length() > 0) ? dataconvert::string_to_ll(frnStr, dummy) : 0;
+    T frnVal = (frnStr.length() > 0) ? dataconvert::string_to_ll<T>(frnStr, dummy) : 0;
 
     if (frnVal != 0)
         pushwarning = true;
@@ -406,6 +438,16 @@ int64_t number_int_value(const string& data,
                     pushwarning = true;
                 }
             }
+            else if (ct.colWidth == 16)
+            {
+                int128_t tmp;
+                utils::int128Min(tmp);
+                if (intVal < tmp + 2) // + 2 for NULL and EMPTY values
+                {
+                    intVal = tmp + 2;
+                    pushwarning = true;
+                }
+            }
 
             break;
 
@@ -418,8 +460,20 @@ int64_t number_int_value(const string& data,
             (ct.colDataType == CalpontSystemCatalog::UDECIMAL) ||
             (ct.scale > 0))
     {
-        int64_t rangeUp = columnstore_precision[ct.precision];
-        int64_t rangeLow = -rangeUp;
+        T rangeUp, rangeLow;
+
+        if (ct.precision < 19)
+        {
+            rangeUp = (T) columnstore_precision[ct.precision];
+        }
+        else
+        {
+            bool dummy = false;
+            char *ep = NULL;
+            rangeUp = (T) dataconvert::strtoll128(columnstore_big_precision[ct.precision - 19].c_str(), dummy, &ep);
+        }
+
+        rangeLow = -rangeUp;
 
         if (intVal > rangeUp)
         {
@@ -432,9 +486,22 @@ int64_t number_int_value(const string& data,
             pushwarning = true;
         }
     }
-
-    return intVal;
 }
+
+// Explicit template instantiation
+template
+void number_int_value<int64_t>(const std::string& data,
+                               const execplan::CalpontSystemCatalog::ColType& ct,
+                               bool& pushwarning,
+                               bool noRoundup,
+                               int64_t& intVal);
+
+template
+void number_int_value<int128_t>(const std::string& data,
+                                const execplan::CalpontSystemCatalog::ColType& ct,
+                                bool& pushwarning,
+                                bool noRoundup,
+                                int128_t& intVal);
 
 uint64_t number_uint_value(const string& data,
                            const CalpontSystemCatalog::ColType& ct,
@@ -476,7 +543,7 @@ uint64_t number_uint_value(const string& data,
         // get the exponent
         string exp = valStr.substr(epos + 1);
         bool overflow = false;
-        int64_t exponent = dataconvert::string_to_ll(exp, overflow);
+        int64_t exponent = dataconvert::string_to_ll<int64_t>(exp, overflow);
 
         // if the exponent can not be held in 64-bit, not supported or saturated.
         if (overflow)
@@ -595,11 +662,6 @@ uint64_t number_uint_value(const string& data,
 
     return uintVal;
 }
-
-} // namespace anon
-
-namespace dataconvert
-{
 
 /**
  * This function reads a decimal value from a string.  It will stop processing
@@ -1427,6 +1489,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                                 bool noRoundup, bool isUpdate)
 {
     boost::any value;
+    int64_t val64;
     // WIP
     std::string data( dataOrig );
     pushWarning = false;
@@ -1453,7 +1516,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                     data.replace (x, 1, " ");
                 }
 
-                if (number_int_value (data, colType, pushWarning, noRoundup))
+                int64_t tmp = 0;
+
+                number_int_value (data, colType, pushWarning, noRoundup, tmp);
+
+                if (tmp)
                 {
                     bool bitvalue;
 
@@ -1470,54 +1537,65 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             break;
 
             case CalpontSystemCatalog::TINYINT:
-                value = (char) number_int_value(data, colType, pushWarning, noRoundup);
+                number_int_value(data, colType, pushWarning, noRoundup, val64);
+                value = (char) val64;
                 break;
 
             case CalpontSystemCatalog::SMALLINT:
-                value = (short) number_int_value(data, colType, pushWarning, noRoundup);
+                number_int_value(data, colType, pushWarning, noRoundup, val64);
+                value = (short) val64;
                 break;
 
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
-                value = (int) number_int_value(data, colType, pushWarning, noRoundup);
+                number_int_value(data, colType, pushWarning, noRoundup, val64);
+                value = (int) val64;
                 break;
 
             case CalpontSystemCatalog::BIGINT:
-                value = (long long) number_int_value(data, colType, pushWarning, noRoundup);
+                number_int_value(data, colType, pushWarning, noRoundup, val64);
+                value = (long long) val64;
                 break;
 
-            // MCOL-641 WIP
-            // Simplest form of a template will use colType and width as a parameter
-            // There will be lots specializations
             case CalpontSystemCatalog::DECIMAL:
-                // TODO MCOL-641 implement decimal38 version of number_int_value
-                if (colType.colWidth == 16)
+                if (colType.colWidth == 1)
                 {
-                    int128_t bigint;
-                    // WIP
-                    //atoi_<int128_t>(data, bigint);
-                    atoi128(data, bigint);
-                    value = bigint;
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (char) val64;
                 }
-                else if (colType.colWidth == 1)
-                    value = (char) number_int_value(data, colType, pushWarning, noRoundup);
                 else if (colType.colWidth == 2)
-                    value = (short) number_int_value(data, colType, pushWarning, noRoundup);
+                {
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (short) val64;
+                }
                 else if (colType.colWidth == 4)
-                    value = (int) number_int_value(data, colType, pushWarning, noRoundup);
+                {
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (int) val64;
+                }
                 else if (colType.colWidth == 8)
-                    value = (long long) number_int_value(data, colType, pushWarning, noRoundup);
-                else if (colType.colWidth == 32)
-                    value = data;
+                {
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (long long) val64;
+                }
+                else if (colType.colWidth == 16)
+                {
+                    int128_t val128;
+                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+                    value = (int128_t) val128;
+                }
+                //else if (colType.colWidth == 32)
+                //    value = data;
 
                 break;
-            // MCOL-641 Implement UDECIMAL
+
             case CalpontSystemCatalog::UDECIMAL:
 
                 // UDECIMAL numbers may not be negative
                 if (colType.colWidth == 1)
                 {
-                    char ival = (char) number_int_value(data, colType, pushWarning, noRoundup);
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    char ival = (char) val64;
 
                     if (ival < 0 &&
                             ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
@@ -1531,7 +1609,8 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 2)
                 {
-                    short ival = (short) number_int_value(data, colType, pushWarning, noRoundup);
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    short ival = (short) val64;
 
                     if (ival < 0 &&
                             ival != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
@@ -1545,7 +1624,8 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 4)
                 {
-                    int ival = static_cast<int>(number_int_value(data, colType, pushWarning, noRoundup));
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    int ival = static_cast<int>(val64);
 
                     if (ival < 0 &&
                             ival != static_cast<int>(joblist::INTEMPTYROW) &&
@@ -1559,7 +1639,8 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 8)
                 {
-                    long long ival = static_cast<long long>(number_int_value(data, colType, pushWarning, noRoundup));
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    long long ival = static_cast<long long>(val64);
 
                     if (ival < 0 &&
                             ival != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
@@ -1570,6 +1651,21 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                     }
 
                     value = ival;
+                }
+                else if (colType.colWidth == 16)
+                {
+                    int128_t val128;
+                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+
+                    if (val128 < 0 &&
+                        !utils::isWideDecimalNullValue(val128) &&
+                        !utils::isWideDecimalEmptyValue(val128))
+                    {
+                        val128 = 0;
+                        pushWarning = true;
+                    }
+
+                    value = val128;
                 }
 
                 break;

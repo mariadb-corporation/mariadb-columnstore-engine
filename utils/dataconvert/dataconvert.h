@@ -50,6 +50,9 @@
 #include "calpontsystemcatalog.h"
 #include "columnresult.h"
 #include "exceptclasses.h"
+#include "common/branchpred.h"
+
+#include "widedecimalutils.h"
 
 // remove this block if the htonll is defined in library
 #ifdef __linux__
@@ -822,8 +825,8 @@ void TimeStamp::reset()
     second = 0xFFFFFFFFFFF;
 }
 
-inline
-int64_t string_to_ll( const std::string& data, bool& bSaturate )
+template<typename T=int64_t>
+inline T string_to_ll( const std::string& data, bool& bSaturate )
 {
     // This function doesn't take into consideration our special values
     // for NULL and EMPTY when setting the saturation point. Should it?
@@ -869,6 +872,13 @@ uint64_t string_to_ull( const std::string& data, bool& bSaturate )
 
     return value;
 }
+
+template <typename T>
+void number_int_value(const std::string& data,
+                      const execplan::CalpontSystemCatalog::ColType& ct,
+                      bool& pushwarning,
+                      bool noRoundup,
+                      T& intVal);
 
 /** @brief DataConvert is a component for converting string data to Calpont format
   */
@@ -1044,9 +1054,7 @@ public:
         const uint8_t scale);
     template <typename T>
     static size_t writeFractionalPart(T* dec, char* p,
-    const uint16_t buflen, const uint8_t scale);
-
-
+        const uint16_t buflen, const uint8_t scale);
 
     static inline void int128Max(int128_t& i)
     {
@@ -1463,6 +1471,107 @@ inline std::string DataConvert::constructRegexp(const std::string& str)
     std::string ret(cBuf);
     delete [] cBuf;
     return ret;
+}
+
+inline int128_t add128(int128_t a, int128_t b)
+{
+    return a + b;
+}
+
+inline int128_t subtract128(int128_t a, int128_t b)
+{
+    return a - b;
+}
+
+inline bool lessThan128(int128_t a, int128_t b)
+{
+    return a < b;
+}
+
+inline bool greaterThan128(int128_t a, int128_t b)
+{
+    return a > b;
+}
+
+// Naive __int128 version of strtoll
+inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
+{
+    int128_t res = 0;
+
+    if (*data == '\0')
+    {
+        if (ep) 
+            *ep = (char*)data;
+        return res;
+    }
+
+    // skip leading whitespace characters
+    while (*data != '\0' && 
+           (*data == ' ' || *data == '\t' || *data == '\n'))
+        data++;
+
+    int128_t (*op)(int128_t, int128_t);
+    op = add128;
+    bool (*compare)(int128_t, int128_t);
+    compare = lessThan128;
+
+    // check the -ve sign
+    bool is_neg = false;
+    if (*data == '-')
+    {
+        is_neg = true;
+        op = subtract128;
+        compare = greaterThan128;
+        data++;
+    }
+
+    int128_t tmp;
+
+    for (; *data != '\0' && isdigit(*data); data++)
+    {
+        tmp = op(res*10, *data - '0');
+
+        if (UNLIKELY(compare(tmp, res)))
+        {
+            saturate = true;
+
+            if (is_neg)
+                utils::int128Min(res);
+            else
+                utils::int128Max(res);
+
+            while (*data != '\0' && isdigit(*data))
+                data++;
+
+            if (ep)
+                *ep = (char*)data;
+
+            return res;
+        }
+
+        res = tmp;
+    }
+
+    if (ep)
+        *ep = (char*)data;
+
+    return res;
+}
+
+template<>
+inline int128_t string_to_ll<int128_t> ( const std::string& data, bool& bSaturate )
+{
+    // This function doesn't take into consideration our special values
+    // for NULL and EMPTY when setting the saturation point. Should it?
+    char* ep = NULL;
+    const char* str = data.c_str();
+    int128_t value = strtoll128(str, bSaturate, &ep);
+
+    //  (no digits) || (more chars)
+    if ((ep == str) || (*ep != '\0'))
+        throw logging::QueryDataExcept("value is not numerical.", logging::formatErr);
+
+    return value;
 }
 
 } // namespace dataconvert
