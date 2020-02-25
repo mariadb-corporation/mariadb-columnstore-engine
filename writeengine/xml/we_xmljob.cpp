@@ -48,6 +48,7 @@ using namespace execplan;
 namespace WriteEngine
 {
 // Maximum saturation value for DECIMAL types based on precision
+// TODO MCOL-641 add support here. see dataconvert.cpp
 const long long columnstore_precision[19] =
 {
     0,
