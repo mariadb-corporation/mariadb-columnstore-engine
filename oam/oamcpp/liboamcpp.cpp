@@ -32,6 +32,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
+
 #elif defined (_MSC_VER)
 #elif defined (__FreeBSD__)
 #include <sys/socket.h>
@@ -7794,9 +7796,39 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     string command;
 
-    string pidtmp = tmpdir + "/mysql.pid";
+    int no_systemd = -1;
 
-    int no_systemd = system("systemctl cat mariadb.service > /dev/null 2>&1");
+    // This is here because calling system() is problematic with ProcMon
+    //  which has its own signalHandler for SIGCHLD. Therefore since this
+    //  is only needed when doing non MYSQL_STATUS commands, only check
+    //  for systemctl and mariadb.service when doing other commands.
+    if (action != MYSQL_STATUS)
+    {
+        pid_t cPid;
+        int status;
+
+        cPid = fork();
+
+        if (cPid == 0)
+        {
+            execlp("systemctl","systemctl","cat","mariadb.service",NULL);
+        }
+        else if (cPid > 0)
+        {
+            waitpid(cPid, &status, 0);
+            if (!WIFEXITED(status))
+            {
+                writeLog("Oam::actionMysqlCalpont: systemctl Failed", LOG_TYPE_ERROR);
+                exceptionControl("actionMysqlCalpont", API_FAILURE);
+            }
+            no_systemd = WEXITSTATUS(status);
+        }
+        else
+        {
+            writeLog("Oam::actionMysqlCalpont: Fork Failed", LOG_TYPE_ERROR);
+            exceptionControl("actionMysqlCalpont", API_FAILURE);
+        }
+    }
 
     switch (action)
     {
@@ -7876,7 +7908,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     //RUN COMMAND
     if (!no_systemd)
     {
-        string cmd = mysqlscript + " " + command + " mariadb.service > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
+        string cmd = mysqlscript + " " + command + " mariadb.service > " + tmpdir + "/" + command + ".log 2>&1";
         system(cmd.c_str());
     }
 
@@ -7928,7 +7960,6 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         int state = procstat.ProcessOpState;
         pid_t pidStatus = procstat.ProcessID;
         pid_t pid = 0;
-		string mysqlStatus = tmpdir + "/mysql.status";
         if ( state != ACTIVE )
         {
             for (int i=0; i < 10; i++)
