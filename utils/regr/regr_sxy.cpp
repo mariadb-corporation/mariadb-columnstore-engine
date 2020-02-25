@@ -142,15 +142,10 @@ mcsv1_UDAF::ReturnCode regr_sxy::subEvaluate(mcsv1Context* context, const UserDa
 mcsv1_UDAF::ReturnCode regr_sxy::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     struct regr_sxy_data* data = (struct regr_sxy_data*)context->getUserData()->data;
-    double N = data->cnt;
+    long double N = data->cnt;
     if (N > 0)
     {
-        long double sumx = data->sumx;
-        long double sumy = data->sumy;
-        long double sumxy = data->sumxy;
-
-        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
-        long double regr_sxy = data->cnt * covar_pop;
+        long double regr_sxy = (data->sumxy - ((data->sumx * data->sumy) / N));
         valOut = static_cast<double>(regr_sxy);
     }
     return mcsv1_UDAF::SUCCESS;
