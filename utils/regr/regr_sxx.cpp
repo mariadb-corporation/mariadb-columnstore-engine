@@ -125,14 +125,11 @@ mcsv1_UDAF::ReturnCode regr_sxx::subEvaluate(mcsv1Context* context, const UserDa
 mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     struct regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
-    double N = data->cnt;
+    long double N = data->cnt;
     if (N > 0)
     {
-        long double sumx = data->sumx;
-        long double sumx2 = data->sumx2;
-
-        long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-        valOut = static_cast<double>(N * var_popx);
+        long double var_popx = (data->sumx2 - (data->sumx * data->sumx / N));
+        valOut = static_cast<double>(var_popx);
     }
     return mcsv1_UDAF::SUCCESS;
 }
