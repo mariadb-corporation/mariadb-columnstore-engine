@@ -65,14 +65,8 @@ inline uint64_t order_swap(uint64_t x)
 template <int W>
 inline string fixChar(int64_t intval);
 
-template <class T>
-inline int  compareBlock(  const void* a, const void* b )
-{
-    return ( (*(T*)a) - (*(T*)b) );
-}
-
 //this function is out-of-band, we don't need to inline it
-void logIt(int mid, int arg1, const string& arg2 = string())
+static void logIt(int mid, int arg1, const string& arg2 = string())
 {
     MessageLog logger(LoggingID(28));
     logging::Message::Args args;
@@ -471,26 +465,6 @@ inline bool isNullVal<1>(uint8_t type, const void* ival)
     return (*val == joblist::TINYINTNULL);
 }
 
-/* A generic isNullVal */
-inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
-{
-    switch (length)
-    {
-        case 8:
-            return isNullVal<8>(type, val8);
-
-        case 4:
-            return isNullVal<4>(type, val8);
-
-        case 2:
-            return isNullVal<2>(type, val8);
-
-        case 1:
-            return isNullVal<1>(type, val8);
-    };
-
-    return false;
-}
 
 // Set the minimum and maximum in the return header if we will be doing a block scan and
 // we are dealing with a type that is comparable as a 64 bit integer.  Subsequent calls can then
@@ -550,7 +524,8 @@ inline string fixChar(int64_t intval)
     return string(chval);
 }
 
-inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+template <int W>
+inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, const idb_regex_t& regex, bool isNull = false)
 {
 // 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
 
@@ -593,7 +568,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     /* isNullVal should work on the normalized value on little endian machines */
     else
     {
-        bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
+        bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
 
         if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
             return colCompare_(val1, val2, COP, rf);
@@ -602,14 +577,15 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     }
 }
 
-inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+template <int W>
+inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, const idb_regex_t& regex, bool isNull = false)
 {
 // 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
 
     if (COMPARE_NIL == COP) return false;
 
     /* isNullVal should work on the normalized value on little endian machines */
-    bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
+    bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
 
     if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
         return colCompare_(val1, val2, COP, rf);
@@ -618,8 +594,8 @@ inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_
 }
 
 
-// Reads one ColValue from the input data.
-// Returns true on success, false on EOF.
+// Read one ColValue from the input data.
+// Return true on success, false on EOF.
 template<typename T, int W>
 inline bool nextColValue(
     int64_t* result,            // Put here the value read
@@ -738,8 +714,8 @@ inline void writeColValue(
 // Compile column filter from BLOB into structure optimized for fast filtering.
 // Returns the compiled filter.
 template<typename T>                // C++ integer type corresponding to colType
-boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T
-    (const uint8_t* filterString,   // Filter represented as BLOB
+boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
+    const uint8_t* filterString,    // Filter represented as BLOB
     uint32_t colType,               // Column datatype as ColDataType
     uint32_t filterCount,           // Number of filter elements contained in filterString
     uint32_t BOP)                   // Operation (and/or/xor/none) that combines all filter elements
@@ -840,18 +816,20 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T
 
 
 // Return true if curValue matches the filter represented by all those arrays
-template<int W>
+template<int W, bool isColUnsigned>
 inline bool matchingColValue(
-    int64_t curValue,
-    bool isNull,
-    CalpontSystemCatalog::ColDataType DataType,  // Column datatype
+    // Value description
+    int64_t curValue,               // The value
+    bool isNull,                    // Is the value null?
+    CalpontSystemCatalog::ColDataType DataType,  // Value datatype
+    // Filter description
     uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
     uint8_t* filterCmpOps,          //   comparison operation
     int64_t* filterValues,          //   value to compare to
-    uint8_t* filterRFs,             //   ?
-    idb_regex_t* filterRegexes)     //   regex for string-LIKE operation
+    uint8_t* filterRFs,             ////   ?
+    idb_regex_t* filterRegexes)     //   regex for string-LIKE comparison operation
 {
     if (filterSet)    // implies columnFilterMode == UNORDERED_SET
     {
@@ -874,15 +852,15 @@ inline bool matchingColValue(
         for (int argIndex = 0; argIndex < filterCount; argIndex++)
         {
             bool cmp;
-            if (isUnsigned(DataType))
+            if (isColUnsigned)
             {
-                cmp = colCompareUnsigned(unsignedCurValue, unsignedFilterValues[argIndex], filterCmpOps[argIndex],
-                                         filterRFs[argIndex], DataType, W, filterRegexes[argIndex], isNull);
+                cmp = colCompareUnsigned<W>(unsignedCurValue, unsignedFilterValues[argIndex], filterCmpOps[argIndex],
+                                            filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
             }
             else
             {
-                cmp = colCompare(curValue, filterValues[argIndex], filterCmpOps[argIndex],
-                                 filterRFs[argIndex], DataType, W, filterRegexes[argIndex], isNull);
+                cmp = colCompare<W>(curValue, filterValues[argIndex], filterCmpOps[argIndex],
+                                    filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
             }
 
             // Short-circuit the filter evaluation - true || ... == true, false && ... = false
@@ -901,7 +879,7 @@ inline bool matchingColValue(
 // Copy data matching parsedColumnFilter from input to output.
 // Input is srcArray[srcSize], optionally accessed in the order defined by ridArray[ridSize].
 // Output is BLOB out[outSize], written starting at offset *written, which is updated afterward.
-template<typename T, int W>
+template<typename T>
 static void filterColumnData(
     NewColRequestHeader* in,
     NewColResultHeader* out,
@@ -913,6 +891,10 @@ static void filterColumnData(
     unsigned srcSize,
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
+    constexpr int W = sizeof(T);
+    constexpr bool isColUnsigned = (numeric_limits<T>::min() == 0);
+    using colWideType = typename std::conditional<isColUnsigned, uint64_t, int64_t>::type;
+
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
     CalpontSystemCatalog::ColDataType DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
@@ -920,7 +902,7 @@ static void filterColumnData(
     uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
     bool isStringDataType = (W > 1) && (DataType == CalpontSystemCatalog::CHAR ||
                                         DataType == CalpontSystemCatalog::VARCHAR ||
-                                        DataType == CalpontSystemCatalog::BLOB ||
+                                        DataType == CalpontSystemCatalog::BLOB ||       //// colCompare don't treat it special
                                         DataType == CalpontSystemCatalog::TEXT );
 
     // If no pre-parsed column filter is set, parse the filter in the message
@@ -939,16 +921,8 @@ static void filterColumnData(
 
     if (out->ValidMinMax)
     {
-        if (isUnsigned(DataType))
-        {
-            out->Min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            out->Max = 0;
-        }
-        else
-        {
-            out->Min = numeric_limits<int64_t>::max();
-            out->Max = numeric_limits<int64_t>::min();
-        }
+        out->Min = static_cast<int64_t>(numeric_limits<colWideType>::max());
+        out->Max = static_cast<int64_t>(numeric_limits<colWideType>::min());
     }
     else
     {
@@ -968,7 +942,7 @@ static void filterColumnData(
     while (nextColValue<T,W>(&curValue, DataType, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
                              &rid, in->OutputType, srcArray, srcSize))
     {
-        if (matchingColValue<W>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
+        if (matchingColValue<W, isColUnsigned>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
                                 filterCmpOps, filterValues, filterRFs, filterRegexes))
         {
             writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
@@ -979,26 +953,18 @@ static void filterColumnData(
         {
             if (isStringDataType)
             {
-                if (colCompare(out->Min, curValue, COMPARE_GT, false, DataType, W, placeholderRegex))
+                if (colCompare<W>(out->Min, curValue, COMPARE_GT, false, DataType, placeholderRegex))
                     out->Min = curValue;
 
-                if (colCompare(out->Max, curValue, COMPARE_LT, false, DataType, W, placeholderRegex))
-                    out->Max = curValue;
-            }
-            else if (isUnsigned(DataType))
-            {
-                if (static_cast<uint64_t>(out->Min) > static_cast<uint64_t>(curValue))
-                    out->Min = curValue;
-
-                if (static_cast<uint64_t>(out->Max) < static_cast<uint64_t>(curValue))
+                if (colCompare<W>(out->Max, curValue, COMPARE_LT, false, DataType, placeholderRegex))
                     out->Max = curValue;
             }
             else
             {
-                if (out->Min > curValue)
+                if (static_cast<colWideType>(out->Min) > static_cast<colWideType>(curValue))
                     out->Min = curValue;
 
-                if (out->Max < curValue)
+                if (static_cast<colWideType>(out->Max) < static_cast<colWideType>(curValue))
                     out->Max = curValue;
             }
         }
@@ -1053,29 +1019,30 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
 
     markEvent('B');
 
-    // Prepare index array
+    // Prepare ridArray (the row index array)
     uint16_t* ridArray = 0;
     int ridSize = in->NVALS;                // Number of values in ridArray
     if (ridSize > 0)
     {
-        const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + in->DataSize;
+        int filterSize = sizeof(uint8_t) + sizeof(uint8_t) + in->DataSize;
         ridArray = reinterpret_cast<uint16_t*>((uint8_t*)in + sizeof(NewColRequestHeader) + (in->NOPS * filterSize));
 
         if (1 == in->sort )
         {
-            qsort(ridArray, ridSize, sizeof(uint16_t), compareBlock<uint16_t>);
+            std::sort(ridArray, ridArray + ridSize);
             markEvent('O');
         }
     }
 
+    // Dispatch by the column type to make it faster
     if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
     {
         switch (in->DataSize)
         {
-            case 1:  filterColumnData< uint8_t,1>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 2:  filterColumnData<uint16_t,2>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 4:  filterColumnData<uint32_t,4>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 8:  filterColumnData<uint64_t,8>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 1:  filterColumnData< uint8_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 2:  filterColumnData<uint16_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 4:  filterColumnData<uint32_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 8:  filterColumnData<uint64_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
@@ -1083,10 +1050,10 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
     {
         switch (in->DataSize)
         {
-            case 1:  filterColumnData< int8_t,1>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 2:  filterColumnData<int16_t,2>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 4:  filterColumnData<int32_t,4>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 8:  filterColumnData<int64_t,8>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 1:  filterColumnData< int8_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 2:  filterColumnData<int16_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 4:  filterColumnData<int32_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 8:  filterColumnData<int64_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
@@ -1098,8 +1065,8 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
 
 // Compile column filter from BLOB into structure optimized for fast filtering.
 // Returns the compiled filter.
-boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
-    (const uint8_t* filterString,   // Filter represented as BLOB
+boost::shared_ptr<ParsedColumnFilter> parseColumnFilter(
+    const uint8_t* filterString,    // Filter represented as BLOB
     uint32_t colWidth,              // Sizeof of the column to be filtered
     uint32_t colType,               // Column datatype as ColDataType
     uint32_t filterCount,           // Number of filter elements contained in filterString
