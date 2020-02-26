@@ -906,15 +906,15 @@ static void filterColumnData(
                                         DataType == CalpontSystemCatalog::TEXT );
 
     // If no pre-parsed column filter is set, parse the filter in the message
-    if (parsedColumnFilter.get() == NULL)
+    if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
         parsedColumnFilter = parseColumnFilter_T<T>((uint8_t*)in + sizeof(NewColRequestHeader), in->DataType, in->NOPS, in->BOP);
 
     // For better speed, we cache parsedColumnFilter fields into local variables
-    auto filterValues  = parsedColumnFilter->prestored_argVals.get();
-    auto filterCmpOps  = parsedColumnFilter->prestored_cops.get();
-    auto filterRFs     = parsedColumnFilter->prestored_rfs.get();
-    auto filterSet     = parsedColumnFilter->prestored_set.get();
-    auto filterRegexes = parsedColumnFilter->prestored_regex.get();
+    auto filterValues  = (filterCount==0? NULL : parsedColumnFilter->prestored_argVals.get());
+    auto filterCmpOps  = (filterCount==0? NULL : parsedColumnFilter->prestored_cops.get());
+    auto filterRFs     = (filterCount==0? NULL : parsedColumnFilter->prestored_rfs.get());
+    auto filterSet     = (filterCount==0? NULL : parsedColumnFilter->prestored_set.get());
+    auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
     // Set boolean indicating whether to capture the min and max values
     out->ValidMinMax = isMinMaxValid(in);
