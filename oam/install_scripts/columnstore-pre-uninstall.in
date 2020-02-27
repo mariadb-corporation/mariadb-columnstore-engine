@@ -94,6 +94,7 @@ fi
 if [ $quiet != 1 ]; then
 	#make copy of Columnstore.xml
 	/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave > /dev/null 2>&1
+	/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave > /dev/null 2>&1
 	/bin/cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave > /dev/null 2>&1
 	cp @ENGINE_SUPPORTDIR@/myCnf-include-args.text @ENGINE_SUPPORTDIR@/myCnf-include-args.text.rpmsave >& /dev/null
 	rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
