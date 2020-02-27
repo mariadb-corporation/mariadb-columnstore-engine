@@ -48,7 +48,11 @@ using namespace execplan;
 
 namespace
 {
+// We need to split all column datatypes into only a few kinds
+// for the purpose of compile-time specialization in the filtering
+enum KIND {KIND_DEFAULT, KIND_UNSIGNED, KIND_TEXT, KIND_FLOAT};
 
+// File-local event logging helper
 static void logIt(int mid, int arg1, const char* arg2 = NULL)
 {
     MessageLog logger(LoggingID(28));
@@ -551,8 +555,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     {
         if (!regex.used && !rf)
         {
-            // MCOL-1246 Trim trailing whitespace for matching, but not for
-            // regex
+            // MCOL-1246 Trim trailing whitespace for matching, but not for regex
             dataconvert::DataConvert::trimWhitespace(val1);
             dataconvert::DataConvert::trimWhitespace(val2);
             return colCompare_(order_swap(val1), order_swap(val2), COP);
@@ -561,7 +564,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
             return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
     }
 
-    /* isNullVal should work on the normalized value on little endian machines */
+    // isNullVal should work on the normalized value on little endian machines
     else
     {
         bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
@@ -580,7 +583,7 @@ inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_
 
     if (COMPARE_NIL == COP) return false;
 
-    /* isNullVal should work on the normalized value on little endian machines */
+    // isNullVal should work on the normalized value on little endian machines
     bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
 
     if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
@@ -874,7 +877,7 @@ inline bool matchingColValue(
 // Copy data matching parsedColumnFilter from input to output.
 // Input is srcArray[srcSize], optionally accessed in the order defined by ridArray[ridSize].
 // Output is BLOB out[outSize], written starting at offset *written, which is updated afterward.
-template<typename T>
+template<typename T, KIND COL_KIND>
 static void filterColumnData(
     NewColRequestHeader* in,
     NewColResultHeader* out,
@@ -892,12 +895,9 @@ static void filterColumnData(
 
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
-    CalpontSystemCatalog::ColDataType DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
+    auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
     uint32_t filterCount = in->NOPS;           // Number of elements in the filter
     uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
-    bool isStringDataType = (W > 1) && (DataType == CalpontSystemCatalog::CHAR ||
-                                        DataType == CalpontSystemCatalog::VARCHAR ||
-                                        DataType == CalpontSystemCatalog::TEXT );
 
     // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
@@ -911,9 +911,10 @@ static void filterColumnData(
     auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
     // Set boolean indicating whether to capture the min and max values
-    out->ValidMinMax = isMinMaxValid(in);
+    bool ValidMinMax = isMinMaxValid(in);
+    out->ValidMinMax = ValidMinMax;
 
-    if (out->ValidMinMax)
+    if (ValidMinMax)
     {
         out->Min = static_cast<int64_t>(numeric_limits<colWideType>::max());
         out->Max = static_cast<int64_t>(numeric_limits<colWideType>::min());
@@ -943,9 +944,9 @@ static void filterColumnData(
         }
 
         // Update the min and max if necessary.  Ignore nulls.
-        if (out->ValidMinMax && !isNull && !isEmpty)
+        if (ValidMinMax && !isNull && !isEmpty)
         {
-            if (isStringDataType)
+            if ((KIND_TEXT == COL_KIND) && (W > 1))
             {
                 if (colCompare<W>(out->Min, curValue, COMPARE_GT, false, DataType, placeholderRegex))
                     out->Min = curValue;
@@ -1028,15 +1029,40 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
         }
     }
 
-    // Dispatch by the column type to make it faster
-    if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+    auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;
+
+    // Dispatch filtering by the column datatype/width in order to make it faster
+    if (DataType == CalpontSystemCatalog::FLOAT)
+    {
+        idbassert(in->DataSize == 4);
+        filterColumnData<int32_t, KIND_FLOAT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    }
+    else if (DataType == CalpontSystemCatalog::DOUBLE)
+    {
+        idbassert(in->DataSize == 8);
+        filterColumnData<int64_t, KIND_FLOAT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    }
+    else if (DataType == CalpontSystemCatalog::CHAR ||
+             DataType == CalpontSystemCatalog::VARCHAR ||
+             DataType == CalpontSystemCatalog::TEXT)
     {
         switch (in->DataSize)
         {
-            case 1:  filterColumnData< uint8_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 2:  filterColumnData<uint16_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 4:  filterColumnData<uint32_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 8:  filterColumnData<uint64_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 1:  filterColumnData< int8_t, KIND_TEXT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 2:  filterColumnData<int16_t, KIND_TEXT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 4:  filterColumnData<int32_t, KIND_TEXT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 8:  filterColumnData<int64_t, KIND_TEXT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            default: idbassert(0);
+        }
+    }
+    else if (isUnsigned(DataType))
+    {
+        switch (in->DataSize)
+        {
+            case 1:  filterColumnData< uint8_t, KIND_UNSIGNED>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 2:  filterColumnData<uint16_t, KIND_UNSIGNED>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 4:  filterColumnData<uint32_t, KIND_UNSIGNED>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 8:  filterColumnData<uint64_t, KIND_UNSIGNED>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
@@ -1044,10 +1070,10 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
     {
         switch (in->DataSize)
         {
-            case 1:  filterColumnData< int8_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 2:  filterColumnData<int16_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 4:  filterColumnData<int32_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
-            case 8:  filterColumnData<int64_t>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 1:  filterColumnData< int8_t, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 2:  filterColumnData<int16_t, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 4:  filterColumnData<int32_t, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
+            case 8:  filterColumnData<int64_t, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);  break;
             default: idbassert(0);
         }
     }
