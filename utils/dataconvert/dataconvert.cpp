@@ -1227,16 +1227,16 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 }
 
 // WIP MCOL-641
-// Second DT is for POD representation.
 template <typename T>
 size_t DataConvert::writeIntPart(T* dec, char* p,
     const uint16_t buflen,
-    const uint8_t scale)
+    const uint8_t scale) //don't need this
 {
   T intPart = *dec;
   if (scale)
   {
-    // optimize this
+    //TODO Use dictionary to produce divisor
+    // instead of a loop
     for (size_t i = 0; i < scale; i++)
         intPart /= 10;
   }
@@ -1292,90 +1292,84 @@ size_t DataConvert::writeFractionalPart(T* dec, char* p,
     const uint16_t buflen,
     const uint8_t scale)
 {
-  T scaleDivisor = 10;
-  for (size_t i = 1; i < scale; i++)
-    scaleDivisor *= 10;
+    //TODO Use dictionary instead of multiplication.
+    T scaleDivisor = 10;
+    for (size_t i = 1; i < scale; i++)
+        scaleDivisor *= 10;
   
-  T fractionalPart = *dec % scaleDivisor;
-  return writeIntPart(&fractionalPart, p, buflen, 0);
+    T fractionalPart = *dec % scaleDivisor;
+    // divide by the base untill we have non-zero quotinent
+    size_t written = 0;
+    scaleDivisor /= 10;
+    while (scaleDivisor > 1 && *dec / scaleDivisor == 0)
+    {
+        *p++ = '0';
+        written++;
+        scaleDivisor /= 10;
+    }
+    written += writeIntPart(&fractionalPart, p, buflen, 0);
+    if (written < scale)
+    {
+        p += written;
+        for (size_t left = written; left < scale; left++)
+        {
+            *p++ = '0';
+        }
+    }
+    return scale;
 }
 
-// WIP MCOL-641
-// Limit this to Decimal only
-// Replace decimalToString with this one
 template<typename T>
-void DataConvert::toString1(T* dec, char *p, const uint16_t buflen,
-    const uint8_t scale)
+void DataConvert::toString(T* dec, uint8_t scale,
+    char *p, unsigned int buflen)
 {
-  if (*dec < static_cast<T>(0))
-  {
-    *p++ = '-';
-    *dec *= -1;
-  }
+    char* original_p = p;
+    size_t written = 0;
+    // Early return for NULL value
+    int128_t sign = 0;
+    // WIP use constants here
+    // WIP Treat both magics here
+    uint64_t* signPod = reinterpret_cast<uint64_t*>(&sign);
+    signPod[1] = utils::BINARYNULLVALUEHIGH;
 
-  char* original_p = p;
-  size_t written = 0;
-  written = writeIntPart<T>(dec, p, buflen, scale);
-  p += written;
+    if (*dec == sign)
+    {
+        *p++ = '0';
+        if (scale)
+        {
+            *p++ = '.';
+            while (scale-- > 0)
+                *p++ = '0';
+        }
+        return;
+    }
 
-  // WIP To be finished for 0.042
-  if (scale)
-  {
-    *p++ = '.';
-    p += writeFractionalPart(dec, p, p-original_p, scale);
-  }
+    if (*dec < static_cast<T>(0))
+    {
+        *p++ = '-';
+        *dec *= -1;
+    }
 
-  if (buflen <= p-original_p)
-  {
-    throw QueryDataExcept("toString() char buffer overflow.", formatErr);
-  }
+    written = writeIntPart<T>(dec, p, buflen, scale);
+    p += written;
+
+    if (scale)
+    {
+        *p++ = '.';
+        p += writeFractionalPart(dec, p, buflen-(p-original_p), scale);
+    }
+
+    if (buflen <= p-original_p)
+    {
+        throw QueryDataExcept("toString() char buffer overflow.", formatErr);
+    }
 }
 
-template<typename T>
-void DataConvert::toString(T* dec, char *p, size_t buflen)
-{ 
-  uint64_t div = 10000000000000000000ULL;
-  // template this
-  uint128_t high = *dec;
-  uint128_t low;
-  low = high % div;
-  high /= div;
-  uint128_t mid;
-  mid = high % div;
-  high /= div;
- 
-  // WIP How to treat PODs here ?
-  // use typeof
-  // Or a templated structure
-  // Use uint64* to access parts of uint128 and remove pods
-  Int128Pod_t *high_pod = reinterpret_cast<Int128Pod_t*>(&high);
-  Int128Pod_t *mid_pod = reinterpret_cast<Int128Pod_t*>(&mid);
-  Int128Pod_t *low_pod = reinterpret_cast<Int128Pod_t*>(&low);
-  char* original_p = p;
-  int printed_chars = 0;
- 
-  // WIP replace snprintf with streams
-  if (high_pod->lo != 0) {
-    printed_chars = sprintf(p, "%lu", high_pod->lo);
-    p += printed_chars; 
-    printed_chars = sprintf(p, "%019lu", mid_pod->lo);
-    p += printed_chars;
-    sprintf(p, "%019lu", low_pod->lo);
-  } else if (mid_pod->lo != 0) {
-    printed_chars = sprintf(p, "%lu", mid_pod->lo);
-    p += printed_chars;
-    sprintf(p, "%019lu", low_pod->lo);
-  }
-  else {
-      sprintf(p, "%lu", low_pod->lo);
-  }
-  if (buflen <= p-original_p)
-    std::cout << "DataConvert::toString char buffer overflow" << std::endl;
-}
+template
+void DataConvert::toString<int128_t>(int128_t* dec, uint8_t scale,
+    char *p, unsigned int buflen);
 
 // WIP MCOL-641
-// Template this
-// result must be calloc-ed
 void atoi128(const std::string& arg, int128_t& res)
 {
     res = 0;
@@ -1386,14 +1380,12 @@ void atoi128(const std::string& arg, int128_t& res)
         if (LIKELY(arg[j]-'0' >= 0))
             res = res*10 + arg[j] - '0';
     }
-    // Use bit shift if possible
     if (idx)
         res *= -1;
-    //toString(res, buf);
-    //std::cerr << "atoi_ " << buf <<endl;
-    //*res_ptr = res;
 }
 
+// WIP MCOL-641
+// remove this as we don't need this for wide-DECIMAL
 void atoi128(const std::string& arg, uint128_t& res)
 {
     res = 0;
@@ -1414,65 +1406,8 @@ void DataConvert::decimalToString(T* valuePtr,
     unsigned int buflen,
     cscDataType colDataType) // We don't need the last one
 {
-    T value = *valuePtr;
-    char* ptr = &buf[0];
-    size_t l1 = buflen;
-    if (value < static_cast<T>(0))
-    {
-        *ptr++ = '-';
-        value *= -1;
-        idbassert(l1 >= 2);
-        l1--;
-    }
 
-    //we want to move the last scale chars right by one spot to insert the dp
-    //we want to move the trailing null as well, so it's really scale+1 chars
-
-    toString<T>(&value, ptr, buflen);
-
-    // Biggest ColumnStore supports is DECIMAL(38,x), or 38 total digits+dp+sign for column
-
-    if (scale == 0)
-        return;
-
-    //need to make sure we have enough leading zeros for this to work...
-    //at this point scale is always > 0
-    size_t l2 = 1;
-
-    if ((unsigned)scale > l1)
-    {
-        const char* zeros = "00000000000000000000000000000000000000"; //38 0's
-        size_t diff = 0;
-
-        if (*valuePtr != 0)
-            diff = scale - l1; //this will always be > 0
-        else
-            diff = scale;
-
-        memmove((ptr + diff), ptr, l1 + 1); //also move null
-        memcpy(ptr, zeros, diff);
-
-        if (*valuePtr != 0)
-            l1 = 0;
-        else
-            l1 = 1;
-    }
-    else if ((unsigned)scale == l1)
-    {
-        l1 = 0;
-        l2 = 2;
-    }
-    else
-    {
-        l1 -= scale;
-    }
-
-    memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
-
-    if (l2 == 2)
-        *(ptr + l1++) = '0';
-
-    *(ptr + l1) = '.';
+    toString<T>(valuePtr, scale, buf, buflen);
 }
 // Explicit instantiation
 template

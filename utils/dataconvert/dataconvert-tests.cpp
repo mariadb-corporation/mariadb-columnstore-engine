@@ -24,6 +24,10 @@ using namespace std;
 using namespace execplan;
 #include "dataconvert.h"
 using namespace dataconvert;
+#include "joblisttypes.h"
+#include "columnwidth.h"
+
+using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
 
 TEST(DataConvertTest, Strtoll128)
 {
@@ -540,3 +544,102 @@ TEST(DataConvertTest, NumberIntValue)
     EXPECT_EQ(b2, b4);
     EXPECT_TRUE(pushWarning);
 }
+
+TEST(DataConvertTest, atoiCheck) {
+    std::vector<int128_t> expected;
+    std::vector<std::string> decimalAsStringVec;
+    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("0");
+    decimalAsStringVec.push_back("-0.042");
+    expected.push_back(10000000000000000000ULL*(uint128_t)9999999999999999999ULL
+        +9999999999999999999ULL);
+    expected.push_back(-1*expected[0]);
+    expected.push_back(0);
+    expected.push_back(-42);
+    for (int i=0; i < expected.size(); i++) {
+        int128_t value;
+        dataconvert::atoi128(decimalAsStringVec[i], value);
+        EXPECT_EQ(expected[i], value);
+        EXPECT_NE(expected[i], value-1);
+    }
+}
+
+TEST(DataConvertTest, DecimalToStringCheckScale3) {
+    std::vector<std::string> expected;
+    std::vector<std::string> decimalAsStringVec;
+    // scale 3
+    uint8_t scale3 = 3;
+    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("0");
+    decimalAsStringVec.push_back("-0.042");
+    expected.push_back("99999999999999999999999999999999999.999");
+    expected.push_back("-99999999999999999999999999999999999.999");
+    expected.push_back("0.000");
+    expected.push_back("-0.042");
+    char buf[42];
+    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
+    for (int i=0; i < expected.size(); i++) {
+        int128_t value = -4;
+        memset(buf, 0, 42);
+        dataconvert::atoi128(decimalAsStringVec[i], value);
+        dataconvert::DataConvert::decimalToString(&value, scale3, buf,
+        utils::precisionByWidth(sizeof(value))+4, type);
+        EXPECT_EQ(expected[i], std::string(buf));
+    }
+}
+
+TEST(DataConvertTest, DecimalToStringCheckScale37) {
+    std::vector<std::string> expected;
+    std::vector<std::string> decimalAsStringVec;
+    uint8_t scale37 = 37;
+    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("0");
+    decimalAsStringVec.push_back("-42");
+    decimalAsStringVec.push_back("-19999999999999999999999999999999999999");
+    expected.push_back("9.9999999999999999999999999999999999999");
+    expected.push_back("-9.9999999999999999999999999999999999999");
+    expected.push_back("0.0000000000000000000000000000000000000");
+    expected.push_back("-0.0000000000000000000000000000000000042");
+    expected.push_back("-1.9999999999999999999999999999999999999");
+    char buf[42];
+    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
+    for (int i=0; i < expected.size(); i++) {
+        int128_t value = -4;
+        memset(buf, 0, 41);
+        dataconvert::atoi128(decimalAsStringVec[i], value);
+        dataconvert::DataConvert::decimalToString(&value, scale37, buf,
+        utils::precisionByWidth(sizeof(value))+4, type);
+        EXPECT_EQ(expected[i], std::string(buf));
+    }
+}
+
+TEST(DataConvertTest, DecimalToStringCheckScale38) {
+    std::vector<std::string> expected;
+    std::vector<std::string> decimalAsStringVec;
+    uint8_t scale38 = 38;
+    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
+    decimalAsStringVec.push_back("0");
+    decimalAsStringVec.push_back("-42");
+    expected.push_back("0.99999999999999999999999999999999999999");
+    expected.push_back("-0.99999999999999999999999999999999999999");
+    expected.push_back("0.00000000000000000000000000000000000000");
+    expected.push_back("-0.00000000000000000000000000000000000042");
+    char buf[42];
+    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
+    for (int i=0; i < expected.size(); i++) {
+        int128_t value = -4;
+        memset(buf, 0, 41);
+        dataconvert::atoi128(decimalAsStringVec[i], value);
+        dataconvert::DataConvert::decimalToString(&value, scale38, buf,
+        utils::precisionByWidth(sizeof(value))+4, type);
+        EXPECT_EQ(expected[i], std::string(buf));
+    }
+}
+
+TEST(DataConvertTest, ConvertColumnData) {
+}
+
