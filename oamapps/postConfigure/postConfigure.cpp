@@ -157,7 +157,21 @@ string UMVolumeIOPS = oam::UnassignedName;
 int DBRootCount;
 string deviceName;
 
-Config* sysConfig = Config::makeConfig();
+Config* postConfigureMakeConfig()
+{
+    // MCOL-3507
+    struct stat file_info;
+    std::string confFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml";
+    if (stat(confFileName.c_str(), &file_info) != 0)
+    {
+	cerr<<endl<<confFileName<<" not found, exiting"<<endl;
+	exit(1);
+    }
+
+    return Config::makeConfig();
+}
+
+Config* sysConfig = postConfigureMakeConfig();
 string SystemSection = "SystemConfig";
 string InstallSection = "Installation";
 string ModuleSection = "SystemModuleConfig";
@@ -259,7 +273,7 @@ int main(int argc, char* argv[])
             HOME = p;
     }
 
-	tmpDir = startup::StartUp::tmpDir();
+    tmpDir = startup::StartUp::tmpDir();
 
     for ( int i = 1; i < argc; i++ )
     {
@@ -496,7 +510,7 @@ int main(int argc, char* argv[])
     cout << "Installation of all of the Servers within the System that is being configured." << endl;
     cout << endl;
 
-	cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
+    cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
     cout << endl;
 
     // MCOL-3675
