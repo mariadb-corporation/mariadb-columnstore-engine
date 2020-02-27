@@ -98,6 +98,7 @@ endif()
 
 SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "MariaDB-columnstore-libs")
 
+SET(CPACK_RPM_columnstore-platform_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_platform.sh)
 SET(CPACK_RPM_columnstore-platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
 SET(CPACK_RPM_columnstore-libs_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_libs.sh)
 SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
