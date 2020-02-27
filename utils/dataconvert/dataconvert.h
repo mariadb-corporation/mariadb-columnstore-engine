@@ -1044,11 +1044,8 @@ public:
     template <typename T>
     EXPORT static void decimalToString(T* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
-    template<typename T>
-    static void toString(T* dec, char *p, size_t buflen);
     template <typename T>
-    EXPORT static void toString1(T* dec, char* p, const uint16_t buflen,
-        const uint8_t scale = 0);
+    static void toString(T* dec, uint8_t scale, char* p, unsigned int buflen);
     template <typename T>
     static size_t writeIntPart(T* dec, char* p, const uint16_t buflen,
         const uint8_t scale);
