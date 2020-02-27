@@ -113,7 +113,6 @@ struct ParsedColumnFilter
     boost::shared_array<uint8_t> prestored_rfs;
     boost::shared_ptr<prestored_set_t> prestored_set;
     boost::shared_array<idb_regex_t> prestored_regex;
-    uint8_t  likeOps;
 
     ParsedColumnFilter();
     ~ParsedColumnFilter();

@@ -49,6 +49,21 @@ using namespace execplan;
 namespace
 {
 
+static void logIt(int mid, int arg1, const char* arg2 = NULL)
+{
+    MessageLog logger(LoggingID(28));
+    logging::Message::Args args;
+    Message msg(mid);
+
+    args.add(arg1);
+
+    if (arg2 && *arg2)
+        args.add(arg2);
+
+    msg.format(args);
+    logger.logErrorMessage(msg);
+}
+
 inline uint64_t order_swap(uint64_t x)
 {
     uint64_t ret = (x >> 56) |
@@ -62,28 +77,20 @@ inline uint64_t order_swap(uint64_t x)
     return ret;
 }
 
+//char(8) values lose their null terminator
 template <int W>
-inline string fixChar(int64_t intval);
-
-//this function is out-of-band, we don't need to inline it
-static void logIt(int mid, int arg1, const string& arg2 = string())
+inline string fixChar(int64_t intval)
 {
-    MessageLog logger(LoggingID(28));
-    logging::Message::Args args;
-    Message msg(mid);
+    char chval[W + 1];
+    memcpy(chval, &intval, W);
+    chval[W] = '\0';
 
-    args.add(arg1);
-
-    if (arg2.length() > 0)
-        args.add(arg2);
-
-    msg.format(args);
-    logger.logErrorMessage(msg);
+    return string(chval);
 }
 
 //FIXME: what are we trying to accomplish here? It looks like we just want to count
 // the chars in a string arg?
-p_DataValue convertToPDataValue(const void* val, int W)
+inline p_DataValue convertToPDataValue(const void* val, int W)
 {
     p_DataValue dv;
     string str;
@@ -163,7 +170,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
     }
 }
 
-bool isLike(const char* val, const idb_regex_t* regex)
+static bool isLike(const char* val, const idb_regex_t* regex)
 {
     if (!regex)
         throw runtime_error("PrimitiveProcessor::isLike: Missing regular expression for LIKE operator");
@@ -469,7 +476,7 @@ inline bool isNullVal<1>(uint8_t type, const void* ival)
 // Set the minimum and maximum in the return header if we will be doing a block scan and
 // we are dealing with a type that is comparable as a 64 bit integer.  Subsequent calls can then
 // skip this block if the value being searched is outside of the Min/Max range.
-inline bool isMinMaxValid(const NewColRequestHeader* in)
+static bool isMinMaxValid(const NewColRequestHeader* in)
 {
     if (in->NVALS != 0)
     {
@@ -511,17 +518,6 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
                 return false;
         }
     }
-}
-
-//char(8) values lose their null terminator
-template <int W>
-inline string fixChar(int64_t intval)
-{
-    char chval[W + 1];
-    memcpy(chval, &intval, W);
-    chval[W] = '\0';
-
-    return string(chval);
 }
 
 template <int W>
@@ -616,7 +612,7 @@ inline bool nextColValue(
     {
         while (static_cast<unsigned>(i) < srcSize &&
                 isEmptyVal<W>(type, &srcArray[i]) &&
-                (OutputType & OT_RID))                      //// the only way to get Empty value
+                (OutputType & OT_RID))
         {
             i++;
         }
@@ -677,7 +673,7 @@ inline void checkedWriteValue(
     if (sizeof(T) > outSize - *outPos)
     {
         logIt(35, errSubtype);
-        throw logic_error("PrimitiveProcessor::checkedWriteValue(): output buffer is too small");   //// is it OK to change errmsg?
+        throw logic_error("PrimitiveProcessor::checkedWriteValue(): output buffer is too small");
     }
 
 #endif
@@ -707,14 +703,14 @@ inline void writeColValue(
         checkedWriteValue(out, outSize, written, &srcArray[rid], 2);
     }
 
-    out->NVALS++;   //// Can be computed at the end from *written value
+    out->NVALS++;   //TODO: Can be computed at the end from *written value
 }
 
 
 // Compile column filter from BLOB into structure optimized for fast filtering.
 // Returns the compiled filter.
 template<typename T>                // C++ integer type corresponding to colType
-boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
+static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     const uint8_t* filterString,    // Filter represented as BLOB
     uint32_t colType,               // Column datatype as ColDataType
     uint32_t filterCount,           // Number of filter elements contained in filterString
@@ -769,7 +765,6 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
             p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
             if (PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv))
                 throw runtime_error("PrimitiveProcessor::parseColumnFilter(): Could not create regular expression for LIKE operator");
-            ++ret->likeOps;     //// used nowhere
         }
     }
 
@@ -828,7 +823,7 @@ inline bool matchingColValue(
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
     uint8_t* filterCmpOps,          //   comparison operation
     int64_t* filterValues,          //   value to compare to
-    uint8_t* filterRFs,             ////   ?
+    uint8_t* filterRFs,
     idb_regex_t* filterRegexes)     //   regex for string-LIKE comparison operation
 {
     if (filterSet)    // implies columnFilterMode == UNORDERED_SET
@@ -836,7 +831,7 @@ inline bool matchingColValue(
         /* bug 1920: ignore NULLs in the set and in the column data */
         if (!(isNull && filterBOP == BOP_AND))
         {
-            bool found = (filterSet->find(curValue) != filterSet->end());  //// Check on uint32/64 types!
+            bool found = (filterSet->find(curValue) != filterSet->end());
 
             // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
             if (filterBOP == BOP_OR?  found  :  !found)
@@ -902,7 +897,6 @@ static void filterColumnData(
     uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
     bool isStringDataType = (W > 1) && (DataType == CalpontSystemCatalog::CHAR ||
                                         DataType == CalpontSystemCatalog::VARCHAR ||
-                                        DataType == CalpontSystemCatalog::BLOB ||       //// colCompare don't treat it special
                                         DataType == CalpontSystemCatalog::TEXT );
 
     // If no pre-parsed column filter is set, parse the filter in the message
@@ -1058,7 +1052,6 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
         }
     }
 
-    markEvent('K');  //// does it make sense?
     markEvent('C');
 }
 
@@ -1094,7 +1087,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter(
         }
     }
 
-    return NULL;   ///// throw error ???
+    logIt(36, colType*100 + colWidth, "parseColumnFilter");
+    return NULL;   //FIXME: support for wider columns
 }
 
 } // namespace primitives
