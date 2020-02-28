@@ -50,7 +50,7 @@ namespace
 {
 // We need to split all column datatypes into only a few kinds
 // for the purpose of compile-time specialization in the filtering
-enum KIND {KIND_DEFAULT, KIND_UNSIGNED, KIND_TEXT, KIND_FLOAT};
+enum ENUM_KIND {KIND_DEFAULT, KIND_UNSIGNED, KIND_TEXT, KIND_FLOAT};
 
 // File-local event logging helper
 static void logIt(int mid, int arg1, const char* arg2 = NULL)
@@ -524,7 +524,7 @@ static bool isMinMaxValid(const NewColRequestHeader* in)
     }
 }
 
-template <int W>
+template<ENUM_KIND KIND, int W>
 inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, const idb_regex_t& regex, bool isNull = false)
 {
 // 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
@@ -532,11 +532,11 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     if (COMPARE_NIL == COP) return false;
 
     //@bug 425 added isNull condition
-    else if ( !isNull && (type == CalpontSystemCatalog::FLOAT || type == CalpontSystemCatalog::DOUBLE))
+    else if (KIND_FLOAT == KIND  &&  !isNull)
     {
         double dVal1, dVal2;
 
-        if (type == CalpontSystemCatalog::FLOAT)
+        if (W == 4)
         {
             dVal1 = *((float*) &val1);
             dVal2 = *((float*) &val2);
@@ -550,8 +550,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
         return colCompare_(dVal1, dVal2, COP);
     }
 
-    else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR ||
-               type == CalpontSystemCatalog::TEXT) && !isNull )
+    else if (KIND_TEXT == KIND  &&  !isNull)
     {
         if (!regex.used && !rf)
         {
@@ -570,26 +569,18 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
         bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
 
         if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
-            return colCompare_(val1, val2, COP, rf);
+        {
+            if (KIND_UNSIGNED == KIND)
+            {
+                uint64_t uval1 = val1, uval2 = val2;
+                return colCompare_(uval1, uval2, COP, rf);
+            }
+            else
+                return colCompare_(val1, val2, COP, rf);
+        }
         else
             return false;
     }
-}
-
-template <int W>
-inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, const idb_regex_t& regex, bool isNull = false)
-{
-// 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
-
-    if (COMPARE_NIL == COP) return false;
-
-    // isNullVal should work on the normalized value on little endian machines
-    bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
-
-    if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
-        return colCompare_(val1, val2, COP, rf);
-    else
-        return false;
 }
 
 
@@ -814,7 +805,7 @@ static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 
 
 // Return true if curValue matches the filter represented by all those arrays
-template<int W, bool isColUnsigned>
+template<ENUM_KIND KIND, int W>
 inline bool matchingColValue(
     // Value description
     int64_t curValue,               // The value
@@ -844,22 +835,10 @@ inline bool matchingColValue(
     }
     else
     {
-        auto unsignedCurValue = static_cast<uint64_t>(curValue);
-        auto unsignedFilterValues = reinterpret_cast<uint64_t*>(filterValues);
-
         for (int argIndex = 0; argIndex < filterCount; argIndex++)
         {
-            bool cmp;
-            if (isColUnsigned)
-            {
-                cmp = colCompareUnsigned<W>(unsignedCurValue, unsignedFilterValues[argIndex], filterCmpOps[argIndex],
-                                            filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
-            }
-            else
-            {
-                cmp = colCompare<W>(curValue, filterValues[argIndex], filterCmpOps[argIndex],
-                                    filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
-            }
+            bool cmp = colCompare<KIND, W>(curValue, filterValues[argIndex], filterCmpOps[argIndex],
+                                           filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
 
             // Short-circuit the filter evaluation - true || ... == true, false && ... = false
             if (filterBOP == BOP_OR  &&  cmp == true)
@@ -877,7 +856,7 @@ inline bool matchingColValue(
 // Copy data matching parsedColumnFilter from input to output.
 // Input is srcArray[srcSize], optionally accessed in the order defined by ridArray[ridSize].
 // Output is BLOB out[outSize], written starting at offset *written, which is updated afterward.
-template<typename T, KIND COL_KIND>
+template<typename T, ENUM_KIND KIND>
 static void filterColumnData(
     NewColRequestHeader* in,
     NewColResultHeader* out,
@@ -890,8 +869,7 @@ static void filterColumnData(
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
     constexpr int W = sizeof(T);
-    constexpr bool isColUnsigned = (numeric_limits<T>::min() == 0);
-    using colWideType = typename std::conditional<isColUnsigned, uint64_t, int64_t>::type;
+    using VALTYPE = typename std::conditional<KIND_UNSIGNED == KIND, uint64_t, int64_t>::type;
 
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
@@ -916,8 +894,8 @@ static void filterColumnData(
 
     if (ValidMinMax)
     {
-        out->Min = static_cast<int64_t>(numeric_limits<colWideType>::max());
-        out->Max = static_cast<int64_t>(numeric_limits<colWideType>::min());
+        out->Min = static_cast<int64_t>(numeric_limits<VALTYPE>::max());
+        out->Max = static_cast<int64_t>(numeric_limits<VALTYPE>::min());
     }
     else
     {
@@ -937,7 +915,7 @@ static void filterColumnData(
     while (nextColValue<T,W>(&curValue, DataType, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
                              &rid, in->OutputType, srcArray, srcSize))
     {
-        if (matchingColValue<W, isColUnsigned>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
+        if (matchingColValue<KIND, W>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
                                 filterCmpOps, filterValues, filterRFs, filterRegexes))
         {
             writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
@@ -946,20 +924,20 @@ static void filterColumnData(
         // Update the min and max if necessary.  Ignore nulls.
         if (ValidMinMax && !isNull && !isEmpty)
         {
-            if ((KIND_TEXT == COL_KIND) && (W > 1))
+            if ((KIND_TEXT == KIND) && (W > 1))
             {
-                if (colCompare<W>(out->Min, curValue, COMPARE_GT, false, DataType, placeholderRegex))
+                if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, DataType, placeholderRegex))
                     out->Min = curValue;
 
-                if (colCompare<W>(out->Max, curValue, COMPARE_LT, false, DataType, placeholderRegex))
+                if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, DataType, placeholderRegex))
                     out->Max = curValue;
             }
             else
             {
-                if (static_cast<colWideType>(out->Min) > static_cast<colWideType>(curValue))
+                if (static_cast<VALTYPE>(out->Min) > static_cast<VALTYPE>(curValue))
                     out->Min = curValue;
 
-                if (static_cast<colWideType>(out->Max) < static_cast<colWideType>(curValue))
+                if (static_cast<VALTYPE>(out->Max) < static_cast<VALTYPE>(curValue))
                     out->Max = curValue;
             }
         }
