@@ -230,19 +230,17 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
     }
 }
 
-template<int>
-inline bool isEmptyVal(uint8_t type, const void* val8);
+template<int W>
+static uint64_t getEmptyValue(uint8_t type);
 
 template<>
-inline bool isEmptyVal<8>(uint8_t type, const void* ival)
+uint64_t getEmptyValue<8>(uint8_t type)
 {
-    const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
-            return (joblist::DOUBLEEMPTYROW == *val);
+            return joblist::DOUBLEEMPTYROW;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
@@ -253,28 +251,24 @@ inline bool isEmptyVal<8>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
-            return (*val == joblist::CHAR8EMPTYROW);
+            return joblist::CHAR8EMPTYROW;
 
         case CalpontSystemCatalog::UBIGINT:
-            return (joblist::UBIGINTEMPTYROW == *val);
+            return joblist::UBIGINTEMPTYROW;
 
         default:
-            break;
+            return joblist::BIGINTEMPTYROW;
     }
-
-    return (joblist::BIGINTEMPTYROW == *val);
 }
 
 template<>
-inline bool isEmptyVal<4>(uint8_t type, const void* ival)
+uint64_t getEmptyValue<4>(uint8_t type)
 {
-    const uint32_t* val = reinterpret_cast<const uint32_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
-            return (joblist::FLOATEMPTYROW == *val);
+            return joblist::FLOATEMPTYROW;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
@@ -284,24 +278,20 @@ inline bool isEmptyVal<4>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR4EMPTYROW == *val);
+            return joblist::CHAR4EMPTYROW;
 
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
-            return (joblist::UINTEMPTYROW == *val);
+            return joblist::UINTEMPTYROW;
 
         default:
-            break;
+            return joblist::INTEMPTYROW;
     }
-
-    return (joblist::INTEMPTYROW == *val);
 }
 
 template<>
-inline bool isEmptyVal<2>(uint8_t type, const void* ival)
+uint64_t getEmptyValue<2>(uint8_t type)
 {
-    const uint16_t* val = reinterpret_cast<const uint16_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::CHAR:
@@ -312,23 +302,19 @@ inline bool isEmptyVal<2>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR2EMPTYROW == *val);
+            return joblist::CHAR2EMPTYROW;
 
         case CalpontSystemCatalog::USMALLINT:
-            return (joblist::USMALLINTEMPTYROW == *val);
+            return joblist::USMALLINTEMPTYROW;
 
         default:
-            break;
+            return joblist::SMALLINTEMPTYROW;
     }
-
-    return (joblist::SMALLINTEMPTYROW == *val);
 }
 
 template<>
-inline bool isEmptyVal<1>(uint8_t type, const void* ival)
+uint64_t getEmptyValue<1>(uint8_t type)
 {
-    const uint8_t* val = reinterpret_cast<const uint8_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::CHAR:
@@ -339,17 +325,16 @@ inline bool isEmptyVal<1>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (*val == joblist::CHAR1EMPTYROW);
+            return joblist::CHAR1EMPTYROW;
 
         case CalpontSystemCatalog::UTINYINT:
-            return (*val == joblist::UTINYINTEMPTYROW);
+            return joblist::UTINYINTEMPTYROW;
 
         default:
-            break;
+            return joblist::TINYINTEMPTYROW;
     }
-
-    return (*val == joblist::TINYINTEMPTYROW);
 }
+
 
 template<int>
 inline bool isNullVal(uint8_t type, const void* val8);
@@ -598,14 +583,15 @@ inline bool nextColValue(
     uint16_t* rid,
     uint8_t OutputType,
     const T* srcArray,
-    unsigned srcSize)
+    unsigned srcSize,
+    T EMPTY_VALUE)
 {
     auto i = *index;
 
     if (ridArray == NULL)
     {
         while (static_cast<unsigned>(i) < srcSize &&
-                isEmptyVal<W>(type, &srcArray[i]) &&
+                (srcArray[i] == EMPTY_VALUE) &&
                 (OutputType & OT_RID))
         {
             i++;
@@ -615,11 +601,12 @@ inline bool nextColValue(
             return false;
 
         *rid = i;
+        *isEmpty = (srcArray[i] == EMPTY_VALUE);
     }
     else
     {
         while (i < ridSize &&
-                isEmptyVal<W>(type, &srcArray[ridArray[i]]))
+                (srcArray[ridArray[i]] == EMPTY_VALUE))
         {
             i++;
         }
@@ -628,6 +615,7 @@ inline bool nextColValue(
             return false;
 
         *rid = ridArray[i];
+        *isEmpty = false;
     }
 
     // at this point, nextRid is the index to return, and index is...
@@ -648,7 +636,6 @@ inline bool nextColValue(
     *index = i+1;
     *result = srcArray[*rid];
     *isNull = isNullVal<W>(type, result);
-    *isEmpty = isEmptyVal<W>(type, result);
     return true;
 }
 
@@ -869,6 +856,7 @@ static void filterColumnData(
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
     constexpr int W = sizeof(T);
+    // Internally, filtering works with values of this type
     using VALTYPE = typename std::conditional<KIND_UNSIGNED == KIND, uint64_t, int64_t>::type;
 
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
@@ -876,6 +864,7 @@ static void filterColumnData(
     auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
     uint32_t filterCount = in->NOPS;           // Number of elements in the filter
     uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
+    T EMPTY_VALUE =  static_cast<T>(getEmptyValue<W>(DataType));
 
     // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
@@ -913,7 +902,7 @@ static void filterColumnData(
 
     // Loop over the column values, storing those matching the filter, and updating the min..max range
     while (nextColValue<T,W>(&curValue, DataType, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
-                             &rid, in->OutputType, srcArray, srcSize))
+                             &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE))
     {
         if (matchingColValue<KIND, W>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
                                 filterCmpOps, filterValues, filterRFs, filterRegexes))
