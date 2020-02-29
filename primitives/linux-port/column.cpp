@@ -48,12 +48,20 @@ using namespace execplan;
 
 namespace
 {
-// We need to split all column datatypes into only a few kinds
-// for the purpose of compile-time specialization in the filtering
-enum ENUM_KIND {KIND_DEFAULT, KIND_UNSIGNED, KIND_TEXT, KIND_FLOAT};
+// Column filtering is dispatched 4-way based on the column type,
+// which defines implementation of comparison operations for the column values
+enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
+                KIND_UNSIGNED,  // compared as unsigned integers
+                KIND_FLOAT,     // compared as floating-point numbers
+                KIND_TEXT};     // whitespace-trimmed and then compared as signed integers
+
+
+/*****************************************************************************
+ *** AUXILIARY FUNCTIONS *****************************************************
+ *****************************************************************************/
 
 // File-local event logging helper
-static void logIt(int mid, int arg1, const char* arg2 = NULL)
+void logIt(int mid, int arg1, const char* arg2 = NULL)
 {
     MessageLog logger(LoggingID(28));
     logging::Message::Args args;
@@ -68,6 +76,7 @@ static void logIt(int mid, int arg1, const char* arg2 = NULL)
     logger.logErrorMessage(msg);
 }
 
+// Reverse the byte order
 inline uint64_t order_swap(uint64_t x)
 {
     uint64_t ret = (x >> 56) |
@@ -81,7 +90,7 @@ inline uint64_t order_swap(uint64_t x)
     return ret;
 }
 
-//char(8) values lose their null terminator
+// char(8) values lose their null terminator
 template <int W>
 inline string fixChar(int64_t intval)
 {
@@ -110,128 +119,13 @@ inline p_DataValue convertToPDataValue(const void* val, int W)
 }
 
 
-template<class T>
-inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
-{
-    switch (COP)
-    {
-        case COMPARE_NIL:
-            return false;
+/*****************************************************************************
+ *** NULL/EMPTY VALUES FOR EVERY COLUMN TYPE/WIDTH ***************************
+ *****************************************************************************/
 
-        case COMPARE_LT:
-            return val1 < val2;
-
-        case COMPARE_EQ:
-            return val1 == val2;
-
-        case COMPARE_LE:
-            return val1 <= val2;
-
-        case COMPARE_GT:
-            return val1 > val2;
-
-        case COMPARE_NE:
-            return val1 != val2;
-
-        case COMPARE_GE:
-            return val1 >= val2;
-
-        default:
-            logIt(34, COP, "colCompare_");
-            return false;						// throw an exception here?
-    }
-}
-
-template<class T>
-inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
-{
-    switch (COP)
-    {
-        case COMPARE_NIL:
-            return false;
-
-        case COMPARE_LT:
-            return val1 < val2 || (val1 == val2 && (rf & 0x01));
-
-        case COMPARE_LE:
-            return val1 < val2 || (val1 == val2 && rf ^ 0x80);
-
-        case COMPARE_EQ:
-            return val1 == val2 && rf == 0;
-
-        case COMPARE_NE:
-            return val1 != val2 || rf != 0;
-
-        case COMPARE_GE:
-            return val1 > val2 || (val1 == val2 && rf ^ 0x01);
-
-        case COMPARE_GT:
-            return val1 > val2 || (val1 == val2 && (rf & 0x80));
-
-        default:
-            logIt(34, COP, "colCompare_l");
-            return false;						// throw an exception here?
-    }
-}
-
-static bool isLike(const char* val, const idb_regex_t* regex)
-{
-    if (!regex)
-        throw runtime_error("PrimitiveProcessor::isLike: Missing regular expression for LIKE operator");
-
-#ifdef POSIX_REGEX
-    return (regexec(&regex->regex, val, 0, NULL, 0) == 0);
-#else
-    return regex_match(val, regex->regex);
-#endif
-}
-
-//@bug 1828  Like must be a string compare.
-inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, const idb_regex_t* regex)
-{
-    switch (COP)
-    {
-        case COMPARE_NIL:
-            return false;
-
-        case COMPARE_LT:
-            return val1 < val2 || (val1 == val2 && rf != 0);
-
-        case COMPARE_LE:
-            return val1 <= val2;
-
-        case COMPARE_EQ:
-            return val1 == val2 && rf == 0;
-
-        case COMPARE_NE:
-            return val1 != val2 || rf != 0;
-
-        case COMPARE_GE:
-            return val1 > val2 || (val1 == val2 && rf == 0);
-
-        case COMPARE_GT:
-            return val1 > val2;
-
-        case COMPARE_LIKE:
-        case COMPARE_NLIKE:
-        {
-            /* LIKE comparisons are string comparisons so we reverse the order again.
-            	Switching the order twice is probably as efficient as evaluating a guard.  */
-            char tmp[9];
-            val1 = order_swap(val1);
-            memcpy(tmp, &val1, 8);
-            tmp[8] = '\0';
-            return (COP & COMPARE_NOT ? !isLike(tmp, regex) : isLike(tmp, regex));
-        }
-
-        default:
-            logIt(34, COP, "colCompare_l");
-            return false;						// throw an exception here?
-    }
-}
-
+// Bit pattern representing EMPTY value for given column type/width
 template<int W>
-static uint64_t getEmptyValue(uint8_t type);
+uint64_t getEmptyValue(uint8_t type);
 
 template<>
 uint64_t getEmptyValue<8>(uint8_t type)
@@ -336,8 +230,9 @@ uint64_t getEmptyValue<1>(uint8_t type)
 }
 
 
+// Bit pattern representing NULL value for given column type/width
 template<int W>
-static uint64_t getNullValue(uint8_t type);
+uint64_t getNullValue(uint8_t type);
 
 template<>
 uint64_t getNullValue<8>(uint8_t type)
@@ -446,7 +341,7 @@ uint64_t getNullValue<1>(uint8_t type)
 // A few types has one more, alternative representation for the NULL value.
 // For other types, we return their main NULL value.
 template<int W>
-static uint64_t getAlternativeNullValue(uint8_t type)
+uint64_t getAlternativeNullValue(uint8_t type)
 {
     if (W == 8)
     {
@@ -471,10 +366,260 @@ static uint64_t getAlternativeNullValue(uint8_t type)
 }
 
 
+/*****************************************************************************
+ *** COMPARISON OPERATIONS FOR COLUMN VALUES *********************************
+ *****************************************************************************/
+
+bool isLike(const char* val, const idb_regex_t* regex)
+{
+    if (!regex)
+        throw runtime_error("PrimitiveProcessor::isLike: Missing regular expression for LIKE operator");
+
+#ifdef POSIX_REGEX
+    return (regexec(&regex->regex, val, 0, NULL, 0) == 0);
+#else
+    return regex_match(val, regex->regex);
+#endif
+}
+
+template<class T>
+inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
+{
+    switch (COP)
+    {
+        case COMPARE_NIL:
+            return false;
+
+        case COMPARE_LT:
+            return val1 < val2;
+
+        case COMPARE_EQ:
+            return val1 == val2;
+
+        case COMPARE_LE:
+            return val1 <= val2;
+
+        case COMPARE_GT:
+            return val1 > val2;
+
+        case COMPARE_NE:
+            return val1 != val2;
+
+        case COMPARE_GE:
+            return val1 >= val2;
+
+        default:
+            logIt(34, COP, "colCompare_");
+            return false;						// throw an exception here?
+    }
+}
+
+template<class T>
+inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
+{
+    switch (COP)
+    {
+        case COMPARE_NIL:
+            return false;
+
+        case COMPARE_LT:
+            return val1 < val2 || (val1 == val2 && (rf & 0x01));
+
+        case COMPARE_LE:
+            return val1 < val2 || (val1 == val2 && rf ^ 0x80);
+
+        case COMPARE_EQ:
+            return val1 == val2 && rf == 0;
+
+        case COMPARE_NE:
+            return val1 != val2 || rf != 0;
+
+        case COMPARE_GE:
+            return val1 > val2 || (val1 == val2 && rf ^ 0x01);
+
+        case COMPARE_GT:
+            return val1 > val2 || (val1 == val2 && (rf & 0x80));
+
+        default:
+            logIt(34, COP, "colCompare_l");
+            return false;						// throw an exception here?
+    }
+}
+
+//@bug 1828  Like must be a string compare.
+inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, const idb_regex_t* regex)
+{
+    switch (COP)
+    {
+        case COMPARE_NIL:
+            return false;
+
+        case COMPARE_LT:
+            return val1 < val2 || (val1 == val2 && rf != 0);
+
+        case COMPARE_LE:
+            return val1 <= val2;
+
+        case COMPARE_EQ:
+            return val1 == val2 && rf == 0;
+
+        case COMPARE_NE:
+            return val1 != val2 || rf != 0;
+
+        case COMPARE_GE:
+            return val1 > val2 || (val1 == val2 && rf == 0);
+
+        case COMPARE_GT:
+            return val1 > val2;
+
+        case COMPARE_LIKE:
+        case COMPARE_NLIKE:
+        {
+            /* LIKE comparisons are string comparisons so we reverse the order again.
+            	Switching the order twice is probably as efficient as evaluating a guard.  */
+            char tmp[9];
+            val1 = order_swap(val1);
+            memcpy(tmp, &val1, 8);
+            tmp[8] = '\0';
+            return (COP & COMPARE_NOT ? !isLike(tmp, regex) : isLike(tmp, regex));
+        }
+
+        default:
+            logIt(34, COP, "colStrCompare_");
+            return false;						//TODO:  throw an exception here?
+    }
+}
+
+
+// Compare two column values using given comparison operation,
+// taking into account all rules about NULL values, string trimming and so on
+template<ENUM_KIND KIND, int W, bool isNull = false>
+inline bool colCompare(
+    int64_t val1,
+    int64_t val2,
+    uint8_t COP,
+    uint8_t rf,
+    const idb_regex_t& regex,
+    bool isVal2Null = false)
+{
+// 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
+
+    if (COMPARE_NIL == COP) return false;
+
+    //@bug 425 added isNull condition
+    else if (KIND_FLOAT == KIND  &&  !isNull)
+    {
+        double dVal1, dVal2;
+
+        if (W == 4)     //// instead, we can just compare the floats directly
+        {
+            dVal1 = *((float*) &val1);
+            dVal2 = *((float*) &val2);
+        }
+        else
+        {
+            dVal1 = *((double*) &val1);
+            dVal2 = *((double*) &val2);
+        }
+
+        return colCompare_(dVal1, dVal2, COP);
+    }
+
+    else if (KIND_TEXT == KIND  &&  !isNull)
+    {
+        if (!regex.used && !rf)
+        {
+            // MCOL-1246 Trim trailing whitespace for matching, but not for regex
+            dataconvert::DataConvert::trimWhitespace(val1);
+            dataconvert::DataConvert::trimWhitespace(val2);
+            return colCompare_(order_swap(val1), order_swap(val2), COP);
+        }
+        else
+            return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
+    }
+
+    //// outdated comment?
+    // isNullVal should work on the normalized value on little endian machines
+    else
+    {
+        if (isNull == isVal2Null || (isVal2Null && COP == COMPARE_NE))
+        {
+            if (KIND_UNSIGNED == KIND)
+            {
+                uint64_t uval1 = val1, uval2 = val2;
+                return colCompare_(uval1, uval2, COP, rf);
+            }
+            else
+                return colCompare_(val1, val2, COP, rf);
+        }
+        else
+            return false;
+    }
+}
+
+
+/*****************************************************************************
+ *** FILTER/READ/WRITE A COLUMN VALUE ****************************************
+ *****************************************************************************/
+
+// Return true if curValue matches the filter represented by all those arrays
+template<ENUM_KIND KIND, int W, bool isNull = false, typename T>
+inline bool matchingColValue(
+    // Value description
+    int64_t curValue,               // The value (isNull - is the value null?)
+    // Filter description
+    uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
+    prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
+    uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
+    uint8_t* filterCmpOps,          //   comparison operation
+    int64_t* filterValues,          //   value to compare to
+    uint8_t* filterRFs,
+    idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
+    // Bit patterns representing NULL value
+    T NULL_VALUE, T ALT_NULL_VALUE)
+{
+    if (filterSet)    // implies columnFilterMode == UNORDERED_SET
+    {
+        /* bug 1920: ignore NULLs in the set and in the column data */
+        if (!(isNull && filterBOP == BOP_AND))
+        {
+            bool found = (filterSet->find(curValue) != filterSet->end());
+
+            // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
+            if (filterBOP == BOP_OR?  found  :  !found)
+                return true;
+        }
+        return false;
+    }
+    else
+    {
+        for (int argIndex = 0; argIndex < filterCount; argIndex++)
+        {
+            auto filterValue = filterValues[argIndex];
+            bool isFilterValueNull = ((static_cast<T>(filterValue) == NULL_VALUE) ||
+                                      (static_cast<T>(filterValue) == ALT_NULL_VALUE));
+
+            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCmpOps[argIndex],
+                                           filterRFs[argIndex], filterRegexes[argIndex],
+                                           isFilterValueNull);
+
+            // Short-circuit the filter evaluation - true || ... == true, false && ... = false
+            if (filterBOP == BOP_OR  &&  cmp == true)
+                return true;
+            else if (filterBOP == BOP_AND  &&  cmp == false)
+                return false;
+        }
+
+        // BOP_AND can get here only if all filters returned true, BOP_OR - only if they all returned false
+        return (filterBOP == BOP_AND  ||  filterCount == 0);
+    }
+}
+
+
 // Set the minimum and maximum in the return header if we will be doing a block scan and
 // we are dealing with a type that is comparable as a 64 bit integer.  Subsequent calls can then
 // skip this block if the value being searched is outside of the Min/Max range.
-static bool isMinMaxValid(const NewColRequestHeader* in)
+bool isMinMaxValid(const NewColRequestHeader* in)
 {
     if (in->NVALS != 0)
     {
@@ -515,70 +660,6 @@ static bool isMinMaxValid(const NewColRequestHeader* in)
             default:
                 return false;
         }
-    }
-}
-
-template<ENUM_KIND KIND, int W>
-inline bool colCompare(
-    int64_t val1,
-    int64_t val2,
-    uint8_t COP,
-    uint8_t rf,
-    const idb_regex_t& regex,
-    bool isNull = false,
-    bool isVal2Null = false)
-{
-// 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
-
-    if (COMPARE_NIL == COP) return false;
-
-    //@bug 425 added isNull condition
-    else if (KIND_FLOAT == KIND  &&  !isNull)
-    {
-        double dVal1, dVal2;
-
-        if (W == 4)
-        {
-            dVal1 = *((float*) &val1);
-            dVal2 = *((float*) &val2);
-        }
-        else
-        {
-            dVal1 = *((double*) &val1);
-            dVal2 = *((double*) &val2);
-        }
-
-        return colCompare_(dVal1, dVal2, COP);
-    }
-
-    else if (KIND_TEXT == KIND  &&  !isNull)
-    {
-        if (!regex.used && !rf)
-        {
-            // MCOL-1246 Trim trailing whitespace for matching, but not for regex
-            dataconvert::DataConvert::trimWhitespace(val1);
-            dataconvert::DataConvert::trimWhitespace(val2);
-            return colCompare_(order_swap(val1), order_swap(val2), COP);
-        }
-        else
-            return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
-    }
-
-    // isNullVal should work on the normalized value on little endian machines
-    else
-    {
-        if (isNull == isVal2Null || (isVal2Null && COP == COMPARE_NE))
-        {
-            if (KIND_UNSIGNED == KIND)
-            {
-                uint64_t uval1 = val1, uval2 = val2;
-                return colCompare_(uval1, uval2, COP, rf);
-            }
-            else
-                return colCompare_(val1, val2, COP, rf);
-        }
-        else
-            return false;
     }
 }
 
@@ -677,6 +758,9 @@ inline void checkedWriteValue(
     *outPos += sizeof(T);
 }
 
+
+// Write the value index in srcArray and/or the value itself, depending on bits in OutputType,
+// into the output buffer and update the output pointer.
 template<typename T>
 inline void writeColValue(
     uint8_t OutputType,
@@ -701,10 +785,14 @@ inline void writeColValue(
 }
 
 
+/*****************************************************************************
+ *** COMPILE A COLUMN FILTER / RUN DATA THROUGH IT ***************************
+ *****************************************************************************/
+
 // Compile column filter from BLOB into structure optimized for fast filtering.
-// Returns the compiled filter.
+// Return the compiled filter.
 template<typename T>                // C++ integer type corresponding to colType
-static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
+boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     const uint8_t* filterString,    // Filter represented as BLOB
     uint32_t colType,               // Column datatype as ColDataType
     uint32_t filterCount,           // Number of filter elements contained in filterString
@@ -758,7 +846,7 @@ static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
         {
             p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
             if (PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv))
-                throw runtime_error("PrimitiveProcessor::parseColumnFilter(): Could not create regular expression for LIKE operator");
+                throw runtime_error("PrimitiveProcessor::parseColumnFilter_T(): Could not create regular expression for LIKE operator");
         }
     }
 
@@ -804,66 +892,11 @@ static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 }
 
 
-// Return true if curValue matches the filter represented by all those arrays
-template<ENUM_KIND KIND, int W, typename T>
-inline bool matchingColValue(
-    // Value description
-    int64_t curValue,               // The value
-    bool isNull,                    // Is the value null?
-    // Filter description
-    uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
-    prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
-    uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
-    uint8_t* filterCmpOps,          //   comparison operation
-    int64_t* filterValues,          //   value to compare to
-    uint8_t* filterRFs,
-    idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
-    // Bit patterns representing NULL value
-    T NULL_VALUE, T ALT_NULL_VALUE)
-{
-    if (filterSet)    // implies columnFilterMode == UNORDERED_SET
-    {
-        /* bug 1920: ignore NULLs in the set and in the column data */
-        if (!(isNull && filterBOP == BOP_AND))
-        {
-            bool found = (filterSet->find(curValue) != filterSet->end());
-
-            // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
-            if (filterBOP == BOP_OR?  found  :  !found)
-                return true;
-        }
-        return false;
-    }
-    else
-    {
-        for (int argIndex = 0; argIndex < filterCount; argIndex++)
-        {
-            auto filterValue = filterValues[argIndex];
-            bool isFilterValueNull = ((static_cast<T>(filterValue) == NULL_VALUE) ||
-                                      (static_cast<T>(filterValue) == ALT_NULL_VALUE));
-
-            bool cmp = colCompare<KIND, W>(curValue, filterValue, filterCmpOps[argIndex],
-                                           filterRFs[argIndex], filterRegexes[argIndex],
-                                           isNull, isFilterValueNull);
-
-            // Short-circuit the filter evaluation - true || ... == true, false && ... = false
-            if (filterBOP == BOP_OR  &&  cmp == true)
-                return true;
-            else if (filterBOP == BOP_AND  &&  cmp == false)
-                return false;
-        }
-
-        // BOP_AND can get here only if all filters returned true, BOP_OR - only if they all returned false
-        return (filterBOP == BOP_AND  ||  filterCount == 0);
-    }
-}
-
-
 // Copy data matching parsedColumnFilter from input to output.
 // Input is srcArray[srcSize], optionally accessed in the order defined by ridArray[ridSize].
 // Output is BLOB out[outSize], written starting at offset *written, which is updated afterward.
 template<typename T, ENUM_KIND KIND>
-static void filterColumnData(
+void filterColumnData(
     NewColRequestHeader* in,
     NewColResultHeader* out,
     unsigned outSize,
@@ -881,12 +914,14 @@ static void filterColumnData(
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
     auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
-    uint32_t filterCount = in->NOPS;           // Number of elements in the filter
-    uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
+    uint32_t filterCount = in->NOPS;    // Number of elements in the filter
+    uint32_t filterBOP = in->BOP;       // Operation (and/or/xor/none) that combines all filter elements
 
-    T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));  // Bit pattern in srcArray[i] representing an empty row
-    T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));  // ... representing the NULL value
-    T ALT_NULL_VALUE = static_cast<T>(getAlternativeNullValue<W>(DataType));   // Alternative NULL representation for a few types
+    // Bit patterns in srcArray[i] representing an empty row, the NULL value,
+    // and alternative NULL value representation for a few types
+    T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));
+    T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
+    T ALT_NULL_VALUE = static_cast<T>(getAlternativeNullValue<W>(DataType));
 
     // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
@@ -926,7 +961,19 @@ static void filterColumnData(
     while (nextColValue<T,W>(&curValue, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
                              &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
     {
-        if (matchingColValue<KIND, W>(curValue, isNull, filterBOP, filterSet, filterCount,
+        if (isNull)
+        {
+            if (matchingColValue<KIND, W, true>(curValue, filterBOP, filterSet, filterCount,
+                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
+                                    NULL_VALUE, ALT_NULL_VALUE))
+            {
+                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+            }
+
+            continue;
+        }
+
+        if (matchingColValue<KIND, W>(curValue, filterBOP, filterSet, filterCount,
                                 filterCmpOps, filterValues, filterRFs, filterRegexes,
                                 NULL_VALUE, ALT_NULL_VALUE))
         {
@@ -934,9 +981,9 @@ static void filterColumnData(
         }
 
         // Update the min and max if necessary.  Ignore nulls.
-        if (ValidMinMax && !isNull && !isEmpty)
+        if (ValidMinMax && !isEmpty)
         {
-            if ((KIND_TEXT == KIND) && (W > 1))
+            if ((KIND_TEXT == KIND) && (W > 1))     //// but for filtering, we go through trimWhitespace() even with W==1
             {
                 if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, placeholderRegex))
                     out->Min = curValue;
@@ -944,7 +991,7 @@ static void filterColumnData(
                 if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, placeholderRegex))
                     out->Max = curValue;
             }
-            else
+            else    //// Without (W>1) above, we can use colCompare<KIND,W> for all types
             {
                 if (static_cast<VALTYPE>(out->Min) > static_cast<VALTYPE>(curValue))
                     out->Min = curValue;
