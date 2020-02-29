@@ -137,7 +137,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
             return val1 >= val2;
 
         default:
-            logIt(34, COP, "colCompare");
+            logIt(34, COP, "colCompare_");
             return false;						// throw an exception here?
     }
 }
@@ -336,19 +336,17 @@ uint64_t getEmptyValue<1>(uint8_t type)
 }
 
 
-template<int>
-inline bool isNullVal(uint8_t type, const void* val8);
+template<int W>
+static uint64_t getNullValue(uint8_t type);
 
 template<>
-inline bool isNullVal<8>(uint8_t type, const void* ival)
+uint64_t getNullValue<8>(uint8_t type)
 {
-    const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
-            return (joblist::DOUBLENULL == *val);
+            return joblist::DOUBLENULL;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
@@ -359,59 +357,49 @@ inline bool isNullVal<8>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
-            //@bug 339 might be a token here
-            //TODO: what's up with the second const here?
-            return (*val == joblist::CHAR8NULL || 0xFFFFFFFFFFFFFFFELL == *val);
+            return joblist::CHAR8NULL;
 
         case CalpontSystemCatalog::UBIGINT:
-            return (joblist::UBIGINTNULL == *val);
+            return joblist::UBIGINTNULL;
 
         default:
-            break;
+            return joblist::BIGINTNULL;
     }
-
-    return (joblist::BIGINTNULL == *val);
 }
 
 template<>
-inline bool isNullVal<4>(uint8_t type, const void* ival)
+uint64_t getNullValue<4>(uint8_t type)
 {
-    const uint32_t* val = reinterpret_cast<const uint32_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
-            return (joblist::FLOATNULL == *val);
+            return joblist::FLOATNULL;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
-            return (joblist::CHAR4NULL == *val);
+            return joblist::CHAR4NULL;
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::DATENULL == *val);
+            return joblist::DATENULL;
 
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
-            return (joblist::UINTNULL == *val);
+            return joblist::UINTNULL;
 
         default:
-            break;
+            return joblist::INTNULL;
     }
-
-    return (joblist::INTNULL == *val);
 }
 
 template<>
-inline bool isNullVal<2>(uint8_t type, const void* ival)
+uint64_t getNullValue<2>(uint8_t type)
 {
-    const uint16_t* val = reinterpret_cast<const uint16_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::CHAR:
@@ -422,23 +410,19 @@ inline bool isNullVal<2>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR2NULL == *val);
+            return joblist::CHAR2NULL;
 
         case CalpontSystemCatalog::USMALLINT:
-            return (joblist::USMALLINTNULL == *val);
+            return joblist::USMALLINTNULL;
 
         default:
-            break;
+            return joblist::SMALLINTNULL;
     }
-
-    return (joblist::SMALLINTNULL == *val);
 }
 
 template<>
-inline bool isNullVal<1>(uint8_t type, const void* ival)
+uint64_t getNullValue<1>(uint8_t type)
 {
-    const uint8_t* val = reinterpret_cast<const uint8_t*>(ival);
-
     switch (type)
     {
         case CalpontSystemCatalog::CHAR:
@@ -449,16 +433,41 @@ inline bool isNullVal<1>(uint8_t type, const void* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (*val == joblist::CHAR1NULL);
+            return joblist::CHAR1NULL;
 
         case CalpontSystemCatalog::UTINYINT:
-            return (joblist::UTINYINTNULL == *val);
+            return joblist::UTINYINTNULL;
 
         default:
-            break;
+            return joblist::TINYINTNULL;
+    }
+}
+
+// A few types has one more, alternative representation for the NULL value.
+// For other types, we return their main NULL value.
+template<int W>
+static uint64_t getAlternativeNullValue(uint8_t type)
+{
+    if (W == 8)
+    {
+        switch (type)
+        {
+            case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::DATE:
+            case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIMESTAMP:
+            case CalpontSystemCatalog::TIME:
+            case CalpontSystemCatalog::VARBINARY:
+            case CalpontSystemCatalog::BLOB:
+            case CalpontSystemCatalog::TEXT:
+                //@bug 339 might be a token here
+                //TODO: what's up with the second const here?
+                return 0xFFFFFFFFFFFFFFFELL;
+        }
     }
 
-    return (*val == joblist::TINYINTNULL);
+    return getNullValue<W>(type);
 }
 
 
@@ -510,7 +519,14 @@ static bool isMinMaxValid(const NewColRequestHeader* in)
 }
 
 template<ENUM_KIND KIND, int W>
-inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, const idb_regex_t& regex, bool isNull = false)
+inline bool colCompare(
+    int64_t val1,
+    int64_t val2,
+    uint8_t COP,
+    uint8_t rf,
+    const idb_regex_t& regex,
+    bool isNull = false,
+    bool isVal2Null = false)
 {
 // 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
 
@@ -551,9 +567,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     // isNullVal should work on the normalized value on little endian machines
     else
     {
-        bool val2Null = isNullVal<W>(type, (uint8_t*) &val2);
-
-        if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
+        if (isNull == isVal2Null || (isVal2Null && COP == COMPARE_NE))
         {
             if (KIND_UNSIGNED == KIND)
             {
@@ -574,7 +588,6 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
 template<typename T, int W>
 inline bool nextColValue(
     int64_t* result,            // Put here the value read
-    int type,
     const uint16_t* ridArray,
     int ridSize,                // Number of values in ridArray
     int* index,
@@ -584,7 +597,7 @@ inline bool nextColValue(
     uint8_t OutputType,
     const T* srcArray,
     unsigned srcSize,
-    T EMPTY_VALUE)
+    T EMPTY_VALUE, T NULL_VALUE, T ALT_NULL_VALUE)
 {
     auto i = *index;
 
@@ -635,7 +648,7 @@ inline bool nextColValue(
 
     *index = i+1;
     *result = srcArray[*rid];
-    *isNull = isNullVal<W>(type, result);
+    *isNull = (srcArray[*rid] == NULL_VALUE) || (srcArray[*rid] == ALT_NULL_VALUE);
     return true;
 }
 
@@ -792,12 +805,11 @@ static boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 
 
 // Return true if curValue matches the filter represented by all those arrays
-template<ENUM_KIND KIND, int W>
+template<ENUM_KIND KIND, int W, typename T>
 inline bool matchingColValue(
     // Value description
     int64_t curValue,               // The value
     bool isNull,                    // Is the value null?
-    CalpontSystemCatalog::ColDataType DataType,  // Value datatype
     // Filter description
     uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
@@ -805,7 +817,9 @@ inline bool matchingColValue(
     uint8_t* filterCmpOps,          //   comparison operation
     int64_t* filterValues,          //   value to compare to
     uint8_t* filterRFs,
-    idb_regex_t* filterRegexes)     //   regex for string-LIKE comparison operation
+    idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
+    // Bit patterns representing NULL value
+    T NULL_VALUE, T ALT_NULL_VALUE)
 {
     if (filterSet)    // implies columnFilterMode == UNORDERED_SET
     {
@@ -824,8 +838,13 @@ inline bool matchingColValue(
     {
         for (int argIndex = 0; argIndex < filterCount; argIndex++)
         {
-            bool cmp = colCompare<KIND, W>(curValue, filterValues[argIndex], filterCmpOps[argIndex],
-                                           filterRFs[argIndex], DataType, filterRegexes[argIndex], isNull);
+            auto filterValue = filterValues[argIndex];
+            bool isFilterValueNull = ((static_cast<T>(filterValue) == NULL_VALUE) ||
+                                      (static_cast<T>(filterValue) == ALT_NULL_VALUE));
+
+            bool cmp = colCompare<KIND, W>(curValue, filterValue, filterCmpOps[argIndex],
+                                           filterRFs[argIndex], filterRegexes[argIndex],
+                                           isNull, isFilterValueNull);
 
             // Short-circuit the filter evaluation - true || ... == true, false && ... = false
             if (filterBOP == BOP_OR  &&  cmp == true)
@@ -864,7 +883,10 @@ static void filterColumnData(
     auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
     uint32_t filterCount = in->NOPS;           // Number of elements in the filter
     uint32_t filterBOP = in->BOP;              // Operation (and/or/xor/none) that combines all filter elements
-    T EMPTY_VALUE =  static_cast<T>(getEmptyValue<W>(DataType));
+
+    T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));  // Bit pattern in srcArray[i] representing an empty row
+    T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));  // ... representing the NULL value
+    T ALT_NULL_VALUE = static_cast<T>(getAlternativeNullValue<W>(DataType));   // Alternative NULL representation for a few types
 
     // If no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
@@ -901,11 +923,12 @@ static void filterColumnData(
     placeholderRegex.used = false;
 
     // Loop over the column values, storing those matching the filter, and updating the min..max range
-    while (nextColValue<T,W>(&curValue, DataType, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
-                             &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE))
+    while (nextColValue<T,W>(&curValue, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
+                             &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
     {
-        if (matchingColValue<KIND, W>(curValue, isNull, DataType, filterBOP, filterSet, filterCount,
-                                filterCmpOps, filterValues, filterRFs, filterRegexes))
+        if (matchingColValue<KIND, W>(curValue, isNull, filterBOP, filterSet, filterCount,
+                                filterCmpOps, filterValues, filterRFs, filterRegexes,
+                                NULL_VALUE, ALT_NULL_VALUE))
         {
             writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
         }
@@ -915,10 +938,10 @@ static void filterColumnData(
         {
             if ((KIND_TEXT == KIND) && (W > 1))
             {
-                if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, DataType, placeholderRegex))
+                if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, placeholderRegex))
                     out->Min = curValue;
 
-                if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, DataType, placeholderRegex))
+                if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, placeholderRegex))
                     out->Max = curValue;
             }
             else
