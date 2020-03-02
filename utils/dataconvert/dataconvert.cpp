@@ -1920,6 +1920,12 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                     long long eightbyte = joblist::BIGINTNULL;
                     value = eightbyte;
                 }
+                else if (colType.colWidth == 16)
+                {
+                    int128_t val;
+                    utils::setWideDecimalNullValue(val);
+                    value = val;
+                }
                 else
                 {
                     WriteEngine::Token nullToken;

@@ -57,6 +57,7 @@ typedef uint32_t        FID;            /** @brief File ID */
 typedef uint64_t        RID;            /** @brief Row ID */
 typedef uint32_t        TxnID;          /** @brief Transaction ID (New)*/
 typedef uint32_t        HWM;            /** @brief high water mark */
+typedef unsigned __int128 uint128_t;
 
 /************************************************************************
  * Type enumerations
@@ -347,7 +348,7 @@ struct JobColumn                        /** @brief Job Column Structure */
     execplan::CalpontSystemCatalog::ColDataType    dataType;            /** @brief column data type */
     ColType        weType;              /** @brief write engine data type */
     std::string    typeName;            /** @brief data type name */
-    uint64_t       emptyVal;            /** @brief default empty value */
+    uint128_t       emptyVal;            /** @brief default empty value */
     int            width;               /** @brief column width; for a dictionary column, this is "eventually" the token width */
     int            definedWidth;        /** @brief column width as defined in the table, used for non-dictionary strings */
     int            dctnryWidth;         /** @brief dictionary width */
