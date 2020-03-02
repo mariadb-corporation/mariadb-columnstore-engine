@@ -1041,17 +1041,13 @@ public:
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, cscDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
-    template <typename T>
-    EXPORT static void decimalToString(T* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
+    static void decimalToString(int128_t* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
-    template <typename T>
-    static void toString(T* dec, uint8_t scale, char* p, unsigned int buflen);
-    template <typename T>
-    static size_t writeIntPart(T* dec, char* p, const uint16_t buflen,
+    static void toString(int128_t* dec, uint8_t scale, char* p, unsigned int buflen);
+    static size_t writeIntPart(int128_t* dec, char* p, const uint16_t buflen,
         const uint8_t scale);
-    template <typename T>
-    static size_t writeFractionalPart(T* dec, char* p,
-        const uint16_t buflen, const uint8_t scale);
+    static size_t writeFractionalPart(int128_t* dec, char* p, const uint16_t buflen,
+        const uint8_t scale);
 
     static inline void int128Max(int128_t& i)
     {

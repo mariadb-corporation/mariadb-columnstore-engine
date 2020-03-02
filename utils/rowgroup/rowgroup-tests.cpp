@@ -91,15 +91,9 @@ class RowDecimalTest : public ::testing::Test {
     int128_t nullValue = 0;
     int128_t bigValue = 0;
     uint64_t* uint128_pod = reinterpret_cast<uint64_t*>(&nullValue);
-    uint128_pod[0] = joblist::BINARYNULL;
-    uint128_pod[1] = joblist::BINARYEMPTYROW;
+    uint128_pod[0] = joblist::UBIGINTNULL;
+    uint128_pod[1] = joblist::UBIGINTEMPTYROW;
     bigValue = -static_cast<int128_t>(0xFFFFFFFF)*0xFFFFFFFFFFFFFFFF;
-    //char buf[utils::precisionByWidth(16)+3];
-    //memset(&buf[0], 0, sizeof(buf));
-    //int scale1 = 3;
-    //dataconvert::DataConvert::decimalToString(&bigValue, scale1, buf,
-    //    utils::precisionByWidth(sizeof(bigValue))+3,types[0]);
-    //std::cout << buf << std::endl;
     sValueVector.push_back(nullValue);
     sValueVector.push_back(-42);
     sValueVector.push_back(bigValue);
@@ -136,8 +130,6 @@ class RowDecimalTest : public ::testing::Test {
     s64ValueVector.push_back(0x81);
     s64ValueVector.push_back(joblist::BIGINTNULL-1);
 
-    //r.initToNull();
-    //r.nextRow(rowSize);
     for(size_t i = 0; i < sValueVector.size(); i++) {
         r.setBinaryField_offset(&sValueVector[i],
             sizeof(sValueVector[0]), offsets[0]);

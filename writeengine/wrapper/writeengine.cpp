@@ -58,6 +58,7 @@ using namespace execplan;
 #include "MonitorProcMem.h"
 using namespace idbdatafile;
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 
 #ifdef _MSC_VER
 #define isnan _isnan
@@ -3973,11 +3974,16 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
                     curStr = boost::lexical_cast<string>(boost::any_cast<float>(curTuple.data));
                 else if (curTuple.data.type() == typeid(long long))
                     curStr = boost::lexical_cast<string>(boost::any_cast<long long>(curTuple.data));
+                else if (curTuple.data.type() == typeid(int128_t))
+                {
+                    // WIP replace with a single call
+                    char buf[utils::MAXLENGTH16BYTES];
+                    int128_t val = boost::any_cast<int128_t>(curTuple.data);
+                    dataconvert::DataConvert::toString(&val, 0, buf, utils::MAXLENGTH16BYTES);
+                    curStr.assign(buf);
+                }
                 else if (curTuple.data.type() == typeid(double))
                     curStr = boost::lexical_cast<string>(boost::any_cast<double>(curTuple.data));
-//               else
-//               if (curTuple.data.type() == typeid(bool))
-//                  curStr = boost::lexical_cast<string>(boost::any_cast<bool>(curTuple.data));
                 else if (curTuple.data.type() == typeid(short))
                     curStr = boost::lexical_cast<string>(boost::any_cast<short>(curTuple.data));
                 else if (curTuple.data.type() == typeid(char))

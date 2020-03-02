@@ -40,6 +40,7 @@ using namespace std;
 #include "primitiveserver.h"
 #include "primproc.h"
 #include "stats.h"
+#include "widedecimalutils.h"
 
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -1062,9 +1063,8 @@ const uint64_t ColumnCommand::getEmptyRowValue( const CSCDataType dataType, cons
 void ColumnCommand::getEmptyRowValue(const CSCDataType dataType,
     const int width, messageqcpp::ByteStream::hexbyte* space) const
 {
-    uint64_t *ptr = reinterpret_cast<uint64_t*>(space);
-    ptr[0] = joblist::BINARYEMPTYROW;
-    ptr[1] = joblist::BINARYEMPTYROW;
+    int128_t *val = reinterpret_cast<int128_t*>(space);
+    utils::setWideDecimalEMptyValue(*val);
 }
 
 void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)

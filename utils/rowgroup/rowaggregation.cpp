@@ -49,7 +49,7 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-//#include "utils_utf8.h"
+#include "widedecimalutils.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
@@ -222,18 +222,7 @@ inline string getStringNullValue()
     return joblist::CPNULLSTRMARK;
 }
 
-inline uint64_t getBinaryNullValue()
-{
-    return joblist::BINARYNULL;
 }
-
-inline uint64_t getBinaryEmptyValue()
-{
-    return joblist::BINARYEMPTYROW;
-}
-
-}
-
 
 namespace rowgroup
 {
@@ -1191,14 +1180,11 @@ void RowAggregation::makeAggFieldsNull(Row& row)
                 }
                 else
                 {
-                    // WIP This is only 1st part of the value
-                    uint64_t nullValue = getBinaryNullValue();
-                    uint64_t emptyValue = getBinaryEmptyValue(); 
+                    int128_t nullValue = 0;
+                    utils::setWideDecimalNullValue(nullValue);
                     uint32_t offset = row.getOffset(colOut);
                     row.setBinaryField_offset(&nullValue, sizeof(nullValue),
                         offset);
-                    row.setBinaryField_offset(&emptyValue, sizeof(nullValue),
-                        offset+sizeof(nullValue));
                 }
                 break;
             }
