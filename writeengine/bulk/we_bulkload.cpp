@@ -544,9 +544,10 @@ int BulkLoad::preProcess( Job& job, int tableNo,
         job.jobTableList[tableNo].colList[i].weType   = curColStruct.colType;
         // set width to correct column width
         job.jobTableList[tableNo].colList[i].width    = curColStruct.colWidth;
-        job.jobTableList[tableNo].colList[i].emptyVal = getEmptyRowValue(
-                    job.jobTableList[tableNo].colList[i].dataType,
-                    job.jobTableList[tableNo].colList[i].width );
+        getEmptyRowValue(
+            job.jobTableList[tableNo].colList[i].dataType,
+            job.jobTableList[tableNo].colList[i].width,
+            (uint8_t*)&job.jobTableList[tableNo].colList[i].emptyVal);
 
         // check HWM for column file
         rc = BRMWrapper::getInstance()->getDbRootHWMInfo( curJobCol.mapOid,

@@ -167,7 +167,7 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
                         << *(((int64_t*) bpp->values[i]) +1)
                         << endl;
                 // values[i]  is 8 bytes so it contains the pointer to bpp->outputMsg set by ColumnCommand::process_OT_BOTH() 
-                r.setBinaryField_offset((uint8_t*)bpp->values[i], 16, offset);
+                r.setBinaryField_offset((uint128_t*)bpp->values[i], 16, offset);
                
                 r.nextRow(rowSize);
             }

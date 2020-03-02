@@ -821,7 +821,8 @@ int ChunkManager::fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*&
 void ChunkManager::initializeColumnChunk(char* buf, CompFileData* fileData)
 {
     int size = UNCOMPRESSED_CHUNK_SIZE;
-    uint64_t emptyVal = fFileOp->getEmptyRowValue(fileData->fColDataType, fileData->fColWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(fileData->fColWidth);
+    fFileOp->getEmptyRowValue(fileData->fColDataType, fileData->fColWidth, emptyVal);
     fFileOp->setEmptyBuf((unsigned char*)buf, size, emptyVal, fileData->fColWidth);
 }
 
@@ -1342,7 +1343,7 @@ inline int ChunkManager::writeHeader_(CompFileData* fileData, int ptrSecSize)
 // For the specified segment file (pFile), read in an abbreviated/compressed
 // chunk extent, uncompress, and expand to a full chunk for a full extent.
 //------------------------------------------------------------------------------
-int ChunkManager::expandAbbrevColumnExtent(IDBDataFile* pFile, uint64_t emptyVal, int width)
+int ChunkManager::expandAbbrevColumnExtent(IDBDataFile* pFile, uint8_t* emptyVal, int width)
 {
     map<IDBDataFile*, CompFileData*>::iterator i = fFilePtrMap.find(pFile);
 
