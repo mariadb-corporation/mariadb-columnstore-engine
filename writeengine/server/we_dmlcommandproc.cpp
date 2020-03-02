@@ -51,8 +51,8 @@ using namespace BRM;
 #include "cacheutils.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
-
 #include "checks.h"
+#include "columnwidth.h"
 
 namespace WriteEngine
 {
@@ -3000,21 +3000,16 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::UDECIMAL:
                         {
                             // WIP MCOL-641
-                            // decimal width > 8 cannot be stored in an integer
-                            if (fetchColColwidths[fetchColPos] > 8)
+                            if (fetchColColwidths[fetchColPos] == 16)
                             {
                                 int128_t* dec;
-                                char buf[41];
+                                char buf[utils::MAXLENGTH16BYTES];
                                 dec = row.getBinaryField<int128_t>(fetchColPos);
-                                dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                                dataconvert::DataConvert::decimalToString(dec,
                                     (unsigned)fetchColScales[fetchColPos], buf,
                                     sizeof(buf), fetchColTypes[fetchColPos]);
 
-                                value = buf;
-
-                                //value = row.getStringField(fetchColPos);
-                                //unsigned i = strlen(value.c_str());
-                                //value = value.substr(0, i);
+                                value.assign(buf);
                                 break;
                             }
 
@@ -3368,22 +3363,17 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::DECIMAL:
                             case CalpontSystemCatalog::UDECIMAL:
                             {
-                                // WIP MCOL-641
-                                // decimal width > 8 cannot be stored in an integer
-                                if (fetchColColwidths[fetchColPos] > 8)
+                                if (fetchColColwidths[fetchColPos] == 16)
                                 {
+                                    // WIP MCOL-641
                                     int128_t* dec;
-                                    char buf[41];
+                                    char buf[utils::MAXLENGTH16BYTES];
                                     dec = row.getBinaryField<int128_t>(fetchColPos);
-                                    dataconvert::DataConvert::decimalToString<int128_t>(dec,
+                                    dataconvert::DataConvert::decimalToString(dec,
                                         (unsigned)fetchColScales[fetchColPos], buf,
                                         sizeof(buf), fetchColTypes[fetchColPos]);
 
                                     value = buf;
-
-                                    //value = row.getStringField(fetchColPos);
-                                    //unsigned i = strlen(value.c_str());
-                                    //value = value.substr(0, i);
                                     break;
                                 }
 
