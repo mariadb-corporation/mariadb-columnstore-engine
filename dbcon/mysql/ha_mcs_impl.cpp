@@ -1608,7 +1608,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     }
 
     // Exit early if there is nothing to update
-    if (colAssignmentListPtr->empty())
+    if (colAssignmentListPtr->empty() &&
+        (((thd->lex)->sql_command == SQLCOM_UPDATE) ||
+        ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI)))
     {
         ci->affectedRows = 0;
         return 0;
