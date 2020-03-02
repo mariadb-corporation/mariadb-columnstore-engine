@@ -40,6 +40,7 @@ using namespace boost;
 #include "stats.h"
 #include "primproc.h"
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -277,16 +278,17 @@ template<>
 inline bool isEmptyVal<32>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-    return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW)
-            && (val[2] == joblist::BINARYEMPTYROW) && (val[3] == joblist::BINARYEMPTYROW));
+    return ((val[0] == joblist::BINARYEMPTYVALUELOW)
+            && (val[1] == joblist::BINARYNULLVALUELOW)
+            && (val[2] == joblist::BINARYNULLVALUELOW)
+            && (val[3] == joblist::BINARYEMPTYVALUEHIGH));
 }
 
 template<>
 inline bool isEmptyVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
-    const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-    return ((val[0] == joblist::BINARYEMPTYROW) && (val[1] == joblist::BINARYEMPTYROW));
-
+    const int128_t* val = reinterpret_cast<const int128_t*>(ival);
+    return utils::isWideDecimalEmptyValue (*val);
 }
 
 template<>
@@ -410,19 +412,22 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
 template<int>
 inline bool isNullVal(uint8_t type, const uint8_t* val8);
 
+// WIP This method only works for wide DECIMAL so far.
 template<>
 inline bool isNullVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
-    const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
-    return ((val[0] == joblist::BINARYNULL) && (val[1] == joblist::BINARYEMPTYROW));
+    const int128_t* val = reinterpret_cast<const int128_t*>(ival);
+    return utils::isWideDecimalNullValue (*val);
 }
 
 template<>
 inline bool isNullVal<32>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival); 
-    return ((val[0] == joblist::BINARYNULL) && (val[1] == joblist::BINARYEMPTYROW)
-            && (val[2] == joblist::BINARYEMPTYROW) && (val[3] == joblist::BINARYEMPTYROW));
+    return ((val[0] == joblist::BINARYNULLVALUELOW)
+            && (val[1] == joblist::BINARYNULLVALUELOW)
+            && (val[2] == joblist::BINARYNULLVALUELOW)
+            && (val[3] == joblist::BINARYNULLVALUEHIGH));
 }
 
 template<>

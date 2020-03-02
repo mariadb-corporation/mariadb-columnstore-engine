@@ -778,20 +778,25 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
     memcpy(&data[offset], strdata, length);
 }*/
 
-// WIP MCOL-641. This method can be applied to uint8_t* buffers.
+// MCOL-641. This method can be applied to uint8_t* buffers.
 template<typename T>
 inline void Row::setBinaryField(T* value, uint32_t width, uint32_t colIndex)
 {
     memcpy(&data[offsets[colIndex]], value, width);
 }
 
-// WIP MCOL-641. This method !cannot! be applied to uint8_t* buffers.
+// MCOL-641. This method !cannot! be applied to uint8_t* buffers.
 template<typename T>
 inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
 {
-   // WIP Compare performance.
-   //memcpy(&data[offset], value, width);
+    // WIP Compare performance.
     *reinterpret_cast<T*>(&data[offset]) = *value;
+}
+
+template<>
+inline void Row::setBinaryField_offset<uint8_t>(uint8_t* value, uint32_t width, uint32_t offset)
+{
+   memcpy(&data[offset], value, width);
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)

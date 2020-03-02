@@ -102,6 +102,29 @@ const string columnstore_big_precision[20] =
     "99999999999999999999999999999999999999"
 };
 
+const uint64_t columnstore_pow_10[20] =
+{
+    1ULL,
+    10ULL,
+    100ULL,
+    1000ULL,
+    10000ULL,
+    100000ULL,
+    1000000ULL,
+    10000000ULL,
+    100000000ULL,
+    1000000000ULL,
+    10000000000ULL,
+    100000000000ULL,
+    1000000000000ULL,
+    10000000000000ULL,
+    100000000000000ULL,
+    1000000000000000ULL,
+    10000000000000000ULL,
+    100000000000000000ULL,
+    1000000000000000000ULL,
+    10000000000000000000ULL
+};
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base & (*f)(std::ios_base&))
 {
@@ -1226,32 +1249,37 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 
 }
 
-// WIP MCOL-641
-template <typename T>
-size_t DataConvert::writeIntPart(T* dec, char* p,
+size_t DataConvert::writeIntPart(int128_t* dec, char* p,
     const uint16_t buflen,
-    const uint8_t scale) //don't need this
+    const uint8_t scale)
 {
-  T intPart = *dec;
+  int128_t intPart = *dec;
   if (scale)
   {
-    //TODO Use dictionary to produce divisor
-    // instead of a loop
-    for (size_t i = 0; i < scale; i++)
-        intPart /= 10;
+    uint8_t maxPowOf10 = sizeof(columnstore_pow_10)/sizeof(columnstore_pow_10[0])-1;
+    switch (scale/maxPowOf10)
+    {
+        case(2):
+            intPart /= columnstore_pow_10[maxPowOf10];
+            intPart /= columnstore_pow_10[maxPowOf10];
+            break;
+        case(1):
+            intPart /= columnstore_pow_10[maxPowOf10];
+        case(0):
+            intPart /= columnstore_pow_10[scale%maxPowOf10];
+    }
   }
 
-  // optimize for less then uint64_t values
   uint64_t div = 10000000000000000000ULL;
-  T high = intPart;
-  T low;
+  int128_t high = intPart;
+  int128_t low;
   low = high % div;
   high /= div;
-  T mid;
+  int128_t mid;
   mid = high % div;
   high /= div;
 
-  // pod[0] is high 8 byte, pod[1] is low
+  // pod[0] is low 8 byte, pod[1] is high
   uint64_t* high_pod = reinterpret_cast<uint64_t*>(&high);
   uint64_t* mid_pod = reinterpret_cast<uint64_t*>(&mid);
   uint64_t* low_pod = reinterpret_cast<uint64_t*>(&low);
@@ -1287,17 +1315,29 @@ size_t DataConvert::writeIntPart(T* dec, char* p,
   return p-original_p;
 }
 
-template<typename T>
-size_t DataConvert::writeFractionalPart(T* dec, char* p,
+size_t DataConvert::writeFractionalPart(int128_t* dec, char* p,
     const uint16_t buflen,
     const uint8_t scale)
 {
-    //TODO Use dictionary instead of multiplication.
-    T scaleDivisor = 10;
-    for (size_t i = 1; i < scale; i++)
-        scaleDivisor *= 10;
+    int128_t scaleDivisor = 1;
+
+    uint8_t maxPowOf10 = sizeof(columnstore_pow_10)/sizeof(columnstore_pow_10[0])-1;
+    switch (scale/maxPowOf10)
+    {
+        case(2):
+            scaleDivisor *= columnstore_pow_10[maxPowOf10];
+            scaleDivisor *= columnstore_pow_10[maxPowOf10];
+            break;
+        case(1):
+            scaleDivisor *= columnstore_pow_10[maxPowOf10];
+        case(0):
+            scaleDivisor *= columnstore_pow_10[scale%maxPowOf10];
+    }
+
+    //for (size_t i = 1; i < scale; i++)
+    //    scaleDivisor *= 10;
   
-    T fractionalPart = *dec % scaleDivisor;
+    int128_t fractionalPart = *dec % scaleDivisor;
     // divide by the base untill we have non-zero quotinent
     size_t written = 0;
     scaleDivisor /= 10;
@@ -1319,38 +1359,24 @@ size_t DataConvert::writeFractionalPart(T* dec, char* p,
     return scale;
 }
 
-template<typename T>
-void DataConvert::toString(T* dec, uint8_t scale,
+void DataConvert::toString(int128_t* dec, uint8_t scale,
     char *p, unsigned int buflen)
 {
     char* original_p = p;
     size_t written = 0;
-    // Early return for NULL value
-    int128_t sign = 0;
-    // WIP use constants here
-    // WIP Treat both magics here
-    uint64_t* signPod = reinterpret_cast<uint64_t*>(&sign);
-    signPod[1] = utils::BINARYNULLVALUEHIGH;
-
-    if (*dec == sign)
+    // Raise exception on NULL and EMPTY value
+    if (utils::isWideDecimalNullValue(*dec) || utils::isWideDecimalEmptyValue(*dec))
     {
-        *p++ = '0';
-        if (scale)
-        {
-            *p++ = '.';
-            while (scale-- > 0)
-                *p++ = '0';
-        }
-        return;
+        throw QueryDataExcept("toString() char buffer overflow.", formatErr);
     }
 
-    if (*dec < static_cast<T>(0))
+    if (*dec < static_cast<int128_t>(0))
     {
         *p++ = '-';
         *dec *= -1;
     }
 
-    written = writeIntPart<T>(dec, p, buflen, scale);
+    written = writeIntPart(dec, p, buflen, scale);
     p += written;
 
     if (scale)
@@ -1364,10 +1390,6 @@ void DataConvert::toString(T* dec, uint8_t scale,
         throw QueryDataExcept("toString() char buffer overflow.", formatErr);
     }
 }
-
-template
-void DataConvert::toString<int128_t>(int128_t* dec, uint8_t scale,
-    char *p, unsigned int buflen);
 
 // WIP MCOL-641
 void atoi128(const std::string& arg, int128_t& res)
@@ -1397,25 +1419,14 @@ void atoi128(const std::string& arg, uint128_t& res)
     }
 }
 
-// WIP MCOL-641
-// Doesn't work for -0.042
-template <typename T>
-void DataConvert::decimalToString(T* valuePtr,
+void DataConvert::decimalToString(int128_t* valuePtr,
     uint8_t scale,
     char* buf,
     unsigned int buflen,
     cscDataType colDataType) // We don't need the last one
 {
-
-    toString<T>(valuePtr, scale, buf, buflen);
+    toString(valuePtr, scale, buf, buflen);
 }
-// Explicit instantiation
-template
-void DataConvert::decimalToString<int128_t>(int128_t* value, uint8_t scale,
-    char* buf, unsigned int buflen, cscDataType colDataType);
-template
-void DataConvert::decimalToString<uint128_t>(uint128_t* value, uint8_t scale,
-    char* buf, unsigned int buflen, cscDataType colDataType);
 
 boost::any
 DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
