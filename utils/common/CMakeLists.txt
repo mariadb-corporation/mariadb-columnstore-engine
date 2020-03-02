@@ -10,7 +10,8 @@ set(common_LIB_SRCS
     MonitorProcMem.cpp
     nullvaluemanip.cpp
     threadnaming.cpp
-    utils_utf8.cpp)
+    utils_utf8.cpp
+    emptyvaluemanip.cpp)
 
 add_library(common SHARED ${common_LIB_SRCS})
 

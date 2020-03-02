@@ -18,6 +18,8 @@
 #ifndef WIDE_DECIMAL_UTILS_H
 #define WIDE_DECIMAL_UTILS_H
 
+#include <cstdint>
+
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
@@ -48,7 +50,7 @@ namespace utils
         ptr[1] = BINARYNULLVALUEHIGH;
     }
 
-    inline void setWideDecimalEMptyValue(int128_t& val)
+    inline void setWideDecimalEmptyValue(int128_t& val)
     {
         uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
         ptr[0] = BINARYEMPTYVALUELOW;
@@ -62,7 +64,7 @@ namespace utils
         ptr[1] = BINARYNULLVALUEHIGH;
     }
 
-    inline void setWideDecimalEMptyValue(int128_t* val)
+    inline void setWideDecimalEmptyValue(int128_t* val)
     {
         uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
         ptr[0] = BINARYEMPTYVALUELOW;
