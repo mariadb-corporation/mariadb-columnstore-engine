@@ -28,7 +28,7 @@ extern handlerton* mcs_hton;
   COLUMNSTORE_SHARE is a structure that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
 */
-typedef struct st_calpont_share
+typedef struct st_mcs_share
 {
     char* table_name;
     uint32_t table_name_length, use_count;

@@ -294,13 +294,24 @@ extern "C"
 
         try
         {
-            oam.getSystemStatus(systemstatus);
-
-            if (systemstatus.SystemOpState == ACTIVE
-                    && dbrm.getSystemReady()
-                    && dbrm.getSystemQueryReady())
+            if (getenv("SKIP_OAM_INIT"))
             {
-                return 1;
+                if (dbrm.getSystemReady()
+                    && dbrm.getSystemQueryReady())
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                oam.getSystemStatus(systemstatus);
+
+                if (systemstatus.SystemOpState == ACTIVE
+                        && dbrm.getSystemReady()
+                        && dbrm.getSystemQueryReady())
+                {
+                    return 1;
+                }
             }
         }
         catch (...)

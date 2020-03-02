@@ -390,32 +390,6 @@ bool validateNextValue( int type, int64_t value )
     return validValue;
 }
 
-static void decode_objectname(char *buf, const char *path, size_t buf_size)
-{
-    size_t new_path_len = filename_to_tablename(path, buf, buf_size);
-    buf[new_path_len] = '\0';
-}
-
-static void decode_file_path(const char *path, char *decoded_dbname,
-    char *decoded_tbname)
-{
-  // The format cont ains './' in the beginning of a path.
-  char *dbname_start = (char*) path + 2;
-  char *dbname_end = dbname_start;
-  while (*dbname_end != '/')
-    dbname_end++;
-
-  int cnt = dbname_end - dbname_start;
-  char *dbname = (char *)my_alloca(cnt + 1);
-  memcpy(dbname, dbname_start, cnt);
-  dbname[cnt] = '\0';
-  decode_objectname(decoded_dbname, dbname, FN_REFLEN);
-  my_afree(dbname);
-
-  char *tbname_start = dbname_end + 1;
-  decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
-}
-
 bool anyRowInTable(string& schema, string& tableName, int sessionID)
 {
     //find a column in the table
@@ -913,18 +887,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         if ( typeid ( stmt ) == typeid ( CreateTableStatement ) )
         {
             CreateTableStatement* createTable = dynamic_cast <CreateTableStatement*> ( &stmt );
-
-            //@Bug 5767. To handle key words inside `` for a tablename.
-            if (!(boost::iequals(schema, createTable->fTableDef->fQualifiedName->fSchema)) || !(boost::iequals(table, createTable->fTableDef->fQualifiedName->fName)))
-            {
-                rc = 1;
-                thd->get_stmt_da()->set_overwrite_status(true);
-
-                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_DATATYPE_NOT_SUPPORT)).c_str());
-                ci->alterTableState = cal_connection_info::NOT_ALTER;
-                ci->isAlter = false;
-                return rc;
-            }
 
             bool matchedCol = false;
             bool isFirstTimestamp = true;
@@ -2400,14 +2362,10 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         return 1;
     }
 
-    // @bug 3908. error out primary key for now.
+    // Send notice if primary key specified that it is not supported
     if (table_arg->key_info && table_arg->key_info->name.length && string(table_arg->key_info->name.str) == "PRIMARY")
     {
-        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS);
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-        ci.alterTableState = cal_connection_info::NOT_ALTER;
-        ci.isAlter = false;
-        return 1;
+        push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED, "INDEXES");
     }
 
     int compressiontype = get_compression_type(thd);
@@ -2452,22 +2410,25 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         return 1;
     }
 
-	//
-	// Check if this is a "CREATE TABLE ... LIKE " statement.
+	// Check if this is one of
+    // * "CREATE TABLE ... LIKE "
+    // * "ALTER TABLE ... ENGINE=Columnstore"
+    // * "CREATE TABLE ... AS ..."
 	// If so generate a full create table statement using the properties of
 	// the source table. Note that source table has to be a columnstore table and
 	// we only check for currently supported options.
 	//
 
-	if (thd->lex->create_info.like())
+	if ((thd->lex->sql_command == SQLCOM_CREATE_TABLE && thd->lex->used_tables) ||
+        (thd->lex->sql_command == SQLCOM_ALTER_TABLE && create_info->used_fields & HA_CREATE_USED_ENGINE) ||
+        (thd->lex->create_info.like()))
 	{
 		TABLE_SHARE *share = table_arg->s;
 		my_bitmap_map *old_map;			// To save the read_set
 		char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
 		String datatype, def_value;
 		ostringstream  oss;
-		string tbl_name (name+2);
-		std::replace(tbl_name.begin(), tbl_name.end(), '/', '.');
+        string tbl_name = string(share->db.str) + "." + string(share->table_name.str);
 
 		// Save the current read_set map and mark it for read
 		old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
@@ -2505,10 +2466,18 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
 		// Process table level options
 
+        /* TODO: uncomment when we support AUTO_INCREMENT
 		if (create_info->auto_increment_value > 1)
 		{
 			oss << " AUTO_INCREMENT=" << create_info->auto_increment_value;
 		}
+        */
+
+        if (create_info->auto_increment_value > 1)
+        {
+            push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED, "AUTO INCREMENT");
+        }
+
 
 		if (share->table_charset)
 		{
@@ -2539,7 +2508,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
 		oss << ";";
 		stmt = oss.str();
- 
+
 		tmp_restore_column_map(table_arg->read_set, old_map);
 	}
 
@@ -2600,7 +2569,7 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
 
     string emsg;
 
-    if (thd->lex->sql_command == SQLCOM_DROP_DB)
+    if ((thd->lex->sql_command == SQLCOM_DROP_DB) || (thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     {
         std::string tableName(name);
         tableName.erase(0, tableName.rfind("/") + 1);
@@ -2627,18 +2596,27 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
     THD* thd = current_thd;
     string emsg;
 
-    string dbFrom, tblFrom, dbTo, tblTo;
-    char decodedDbFrom[FN_REFLEN];
-    char decodedTblFrom[FN_REFLEN];
-    char decodedDbTo[FN_REFLEN];
-    char decodedTblTo[FN_REFLEN];
-    decode_file_path(from, decodedDbFrom, decodedTblFrom);
-    decode_file_path(to, decodedDbTo, decodedTblTo);
-    string stmt;
+    string tblFrom (from+2);
+    size_t pos = tblFrom.find("/");
+    std::string dbFrom = tblFrom.substr(0, pos);
+    tblFrom = tblFrom.erase(0, pos + 1);
 
+    string tblTo (to+2);
+    pos = tblTo.find("/");
+    std::string dbTo = tblTo.substr(0, pos);
+    tblTo = tblTo.erase(0, pos + 1);
+
+    string stmt;
 
     if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
+
+    // This is a temporary table rename, we don't use the temporary table name
+    // so this is a NULL op
+    if (tblFrom.compare(0, 4, "#sql") == 0)
+    {
+        return 0;
+    }
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
     // When the statement gets here, it's NOT SSO or RESTRICT
@@ -2649,24 +2627,21 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
         return 1;
     }
 
-    // User moves tables b/w namespaces.
-    size_t tblFromLength= strlen(decodedTblFrom);
-    if (!memcmp(decodedTblFrom, decodedTblTo, tblFromLength))
-    {
-        return 0;
-    }
-
-    stmt.assign("alter table `"); 
-    stmt.append(decodedTblFrom); 
+    stmt.assign("alter table `");
+    stmt.append(dbFrom);
+    stmt.append("`.`");
+    stmt.append(tblFrom);
     stmt.append("` rename to `");
-    stmt.append(decodedTblTo);
+    stmt.append(dbTo);
+    stmt.append("`.`");
+    stmt.append(tblTo);
     stmt.append("`;");
 
     string db;
     if (thd->db.length)
          db = thd->db.str;
      else
-        db.assign(decodedDbFrom);
+        db.assign(dbFrom);
 
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 

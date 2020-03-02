@@ -490,7 +490,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
 
             string value;
             if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
-                value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), fTimeZone);
+                value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
             else
                 value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
 

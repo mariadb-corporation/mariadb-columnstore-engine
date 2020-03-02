@@ -501,14 +501,9 @@ void WESDHandler::setup()
     //fLog.setLogFileName(aLogName.c_str(), aErrLogName.c_str(), false);
     fLog.setLogFileName(aLogName.c_str(), aErrLogName.c_str(), getConsoleLog());
 
-    // In mode 0 and Mode 1, we need to check for local file availability
-    if ((0 == fRef.fCmdArgs.getMode()) || (1 == fRef.fCmdArgs.getMode()))
-    {
-        if (!check4InputFile(fRef.getLocFile()))
-        {
-            throw (runtime_error("Could not open Input file " + fRef.getLocFile()));
-        }
-    }
+    // In mode 0 and Mode 1, we need to construct the input file list and check availability
+    if (0 == fRef.fCmdArgs.getMode() || 1 == fRef.fCmdArgs.getMode())
+        setInputFileList(fRef.getLocFile());
 
     fImportRslt.startTimer();
 
@@ -547,7 +542,7 @@ void WESDHandler::setup()
     }
 
 // getModuleStatus will take too long. Also to test in development
-#if !defined(_MSC_VER) && !defined(SKIP_OAM_INIT)
+    if (getenv("SKIP_OAM_INIT") == NULL)
     {
         vector<unsigned int>& aVec = fRef.fCmdArgs.getPmVec();
 
@@ -578,8 +573,6 @@ void WESDHandler::setup()
             }
         }
     }
-#endif
-
 
     int rtn = fDbrm.getSystemReady();
 
@@ -2728,28 +2721,9 @@ std::string WESDHandler::getTime2Str() const
 
 //------------------------------------------------------------------------------
 
-bool WESDHandler::check4InputFile(std::string InFileName)
+void WESDHandler::setInputFileList(std::string InFileName)
 {
-    bool aRet = false;
-
-    if ((0 == InFileName.compare("STDIN")) || (0 == InFileName.compare("stdin")))
-    {
-        fFileReadThread.add2InputDataFileList(InFileName);
-        return true;
-    }
-    else
-    {
-        //BUG 4342 - Need to support "list of infiles"
-        fFileReadThread.chkForListOfFiles(InFileName);
-        std::string aFileName = fFileReadThread.getNextInputDataFile();
-        std::ifstream aFile(aFileName.c_str());
-        aRet = (aFile.good()) ? true : false;
-
-        // add back to list, which we pop_front for checking the file.
-        if (aRet) fFileReadThread.add2InputDataFileList(aFileName);
-    }
-
-    return aRet;
+    fFileReadThread.chkForListOfFiles(InFileName);
 }
 
 //------------------------------------------------------------------------------
@@ -2997,4 +2971,3 @@ void WESDHandler::setDisconnectFailure(bool Flag)
 //------------------------------------------------------------------------------
 
 } /* namespace WriteEngine */
-

@@ -30,14 +30,14 @@
 #define COLUMNSTORE_MATURITY MariaDB_PLUGIN_MATURITY_STABLE
 #endif
 
-static handler* calpont_create_handler(handlerton* hton,
-                                       TABLE_SHARE* table,
-                                       MEM_ROOT* mem_root);
+static handler* mcs_create_handler(handlerton* hton,
+                                   TABLE_SHARE* table,
+                                   MEM_ROOT* mem_root);
 
-static int calpont_commit(handlerton* hton, THD* thd, bool all);
+static int mcs_commit(handlerton* hton, THD* thd, bool all);
 
-static int calpont_rollback(handlerton* hton, THD* thd, bool all);
-static int calpont_close_connection ( handlerton* hton, THD* thd );
+static int mcs_rollback(handlerton* hton, THD* thd, bool all);
+static int mcs_close_connection(handlerton* hton, THD* thd );
 handlerton* mcs_hton;
 char cs_version[25];
 char cs_commit_hash[41]; // a commit hash is 40 characters
@@ -59,11 +59,11 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
    Hash used to track the number of open tables; variable for example share
    methods
 */
-static HASH calpont_open_tables;
+static HASH mcs_open_tables;
 
 #ifndef _MSC_VER
 /* The mutex used to init the hash; variable for example share methods */
-pthread_mutex_t calpont_mutex;
+pthread_mutex_t mcs_mutex;
 #endif
 
 #ifdef DEBUG_ENTER
@@ -79,20 +79,20 @@ pthread_mutex_t calpont_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* calpont_get_key(COLUMNSTORE_SHARE* share, size_t* length,
-                              my_bool not_used __attribute__((unused)))
+static uchar* mcs_get_key(COLUMNSTORE_SHARE* share, size_t* length,
+                          my_bool not_used __attribute__((unused)))
 {
     *length = share->table_name_length;
     return (uchar*) share->table_name;
 }
 
 // This one is unused
-int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
+int mcs_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
-    DBUG_ENTER("calpont_discover");
-    DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
+    DBUG_ENTER("mcs_discover");
+    DBUG_PRINT("mcs_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
 #ifdef INFINIDB_DEBUG
-    fprintf(stderr, "calpont_discover()\n");
+    fprintf(stderr, "mcs_discover()\n");
 #endif
 
     uchar* frm_data = NULL;
@@ -114,8 +114,8 @@ int calpont_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 }
 
 // This f() is also unused
-int calpont_discover_existence(handlerton* hton, const char* db,
-                               const char* table_name)
+int mcs_discover_existence(handlerton* hton, const char* db,
+                           const char* table_name)
 {
     return ha_mcs_impl_discover_existence(db, table_name);
 }
@@ -144,18 +144,18 @@ static int columnstore_init_func(void* p)
 
     mcs_hton = (handlerton*)p;
 #ifndef _MSC_VER
-    (void) pthread_mutex_init(&calpont_mutex, MY_MUTEX_INIT_FAST);
+    (void) pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
 #endif
-    (void) my_hash_init(&calpont_open_tables, system_charset_info, 32, 0, 0,
-                        (my_hash_get_key) calpont_get_key, 0, 0);
+    (void) my_hash_init(&mcs_open_tables, system_charset_info, 32, 0, 0,
+                        (my_hash_get_key) mcs_get_key, 0, 0);
 
-    mcs_hton->create =  calpont_create_handler;
+    mcs_hton->create =  mcs_create_handler;
     mcs_hton->flags =   HTON_CAN_RECREATE;
-//  mcs_hton->discover_table= calpont_discover;
-//  mcs_hton->discover_table_existence= calpont_discover_existence;
-    mcs_hton->commit = calpont_commit;
-    mcs_hton->rollback = calpont_rollback;
-    mcs_hton->close_connection = calpont_close_connection;
+//  mcs_hton->discover_table = mcs_discover;
+//  mcs_hton->discover_table_existence = mcs_discover_existence;
+    mcs_hton->commit = mcs_commit;
+    mcs_hton->rollback = mcs_rollback;
+    mcs_hton->close_connection = mcs_close_connection;
     mcs_hton->create_group_by = create_columnstore_group_by_handler;
     mcs_hton->create_derived = create_columnstore_derived_handler;
     mcs_hton->create_select = create_columnstore_select_handler;
@@ -165,37 +165,64 @@ static int columnstore_init_func(void* p)
 
 static int columnstore_done_func(void* p)
 {
-    DBUG_ENTER("calpont_done_func");
+    DBUG_ENTER("columnstore_done_func");
 
-    my_hash_free(&calpont_open_tables);
+    my_hash_free(&mcs_open_tables);
 #ifndef _MSC_VER
-    pthread_mutex_destroy(&calpont_mutex);
+    pthread_mutex_destroy(&mcs_mutex);
 #endif
     DBUG_RETURN(0);
 }
 
-static handler* calpont_create_handler(handlerton* hton,
-                                       TABLE_SHARE* table,
-                                       MEM_ROOT* mem_root)
+static handler* mcs_create_handler(handlerton* hton,
+                                   TABLE_SHARE* table,
+                                   MEM_ROOT* mem_root)
 {
     return new (mem_root) ha_mcs(hton, table);
 }
 
-static int calpont_commit(handlerton* hton, THD* thd, bool all)
+static int mcs_commit(handlerton* hton, THD* thd, bool all)
 {
-    int rc = ha_mcs_impl_commit( hton, thd, all);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_commit(hton, thd, all);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     return rc;
 }
 
-static int calpont_rollback(handlerton* hton, THD* thd, bool all)
+static int mcs_rollback(handlerton* hton, THD* thd, bool all)
 {
-    int rc = ha_mcs_impl_rollback( hton, thd, all);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_rollback(hton, thd, all);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     return rc;
 }
 
-static int calpont_close_connection ( handlerton* hton, THD* thd )
+static int mcs_close_connection(handlerton* hton, THD* thd)
 {
-    int rc = ha_mcs_impl_close_connection( hton, thd);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_close_connection(hton, thd);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     return rc;
 }
 
@@ -256,7 +283,16 @@ int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
 {
     DBUG_ENTER("ha_mcs::open");
 
-    int rc = ha_mcs_impl_open(name, mode, test_if_locked);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_open(name, mode, test_if_locked);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -282,7 +318,16 @@ int ha_mcs::close(void)
 {
     DBUG_ENTER("ha_mcs::close");
 
-    int rc = ha_mcs_impl_close();
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_close();
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -303,7 +348,16 @@ int ha_mcs::close(void)
 int ha_mcs::write_row(const uchar* buf)
 {
     DBUG_ENTER("ha_mcs::write_row");
-    int rc = ha_mcs_impl_write_row(buf, table);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_write_row(buf, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -311,14 +365,30 @@ int ha_mcs::write_row(const uchar* buf)
 void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
 {
     DBUG_ENTER("ha_mcs::start_bulk_insert");
-    ha_mcs_impl_start_bulk_insert(rows, table);
+    try
+    {
+        ha_mcs_impl_start_bulk_insert(rows, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    }
     DBUG_VOID_RETURN;
 }
 
 int ha_mcs::end_bulk_insert()
 {
     DBUG_ENTER("ha_mcs::end_bulk_insert");
-    int rc = ha_mcs_impl_end_bulk_insert(false, table);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_end_bulk_insert(false, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -339,7 +409,16 @@ int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
 {
 
     DBUG_ENTER("ha_mcs::update_row");
-    int rc = ha_mcs_impl_update_row();
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_update_row();
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -365,15 +444,33 @@ int ha_mcs::direct_update_rows_init(List<Item> *update_fields)
 int ha_mcs::direct_update_rows(ha_rows *update_rows)
 {
     DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
 int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
 {
     DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
-    *found_rows = *update_rows;
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+        *found_rows = *update_rows;
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -386,7 +483,16 @@ int ha_mcs::direct_delete_rows_init()
 int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
 {
     DBUG_ENTER("ha_mcs::direct_delete_rows");
-    int rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 /**
@@ -412,7 +518,16 @@ int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
 int ha_mcs::delete_row(const uchar* buf)
 {
     DBUG_ENTER("ha_mcs::delete_row");
-    int rc = ha_mcs_impl_delete_row();
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_delete_row();
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -511,7 +626,15 @@ int ha_mcs::rnd_init(bool scan)
     int rc = 0;
     if(scan)
     {
-        rc = ha_mcs_impl_rnd_init(table);
+        try
+        {
+            rc = ha_mcs_impl_rnd_init(table);
+        }
+        catch (std::runtime_error& e)
+        {
+            current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+            rc = ER_INTERNAL_ERROR;
+        }
     }
 
     DBUG_RETURN(rc);
@@ -521,7 +644,16 @@ int ha_mcs::rnd_end()
 {
     DBUG_ENTER("ha_mcs::rnd_end");
 
-    int rc = ha_mcs_impl_rnd_end(table);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_rnd_end(table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -545,7 +677,16 @@ int ha_mcs::rnd_next(uchar* buf)
 {
     DBUG_ENTER("ha_mcs::rnd_next");
 
-    int rc = ha_mcs_impl_rnd_next(buf, table);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_rnd_next(buf, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -601,7 +742,16 @@ void ha_mcs::position(const uchar* record)
 int ha_mcs::rnd_pos(uchar* buf, uchar* pos)
 {
     DBUG_ENTER("ha_mcs::rnd_pos");
-    int rc = ha_mcs_impl_rnd_pos(buf, pos);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_rnd_pos(buf, pos);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -754,11 +904,20 @@ int ha_mcs::external_lock(THD* thd, int lock_type)
 {
     DBUG_ENTER("ha_mcs::external_lock");
 
-    //@Bug 2526 Only register the transaction when autocommit is off
-    if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-        trans_register_ha( thd, true, mcs_hton);
+    int rc;
+    try
+    {
+        //@Bug 2526 Only register the transaction when autocommit is off
+        if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
+            trans_register_ha( thd, true, mcs_hton);
 
-    int rc = ha_mcs_impl_external_lock(thd, table, lock_type);
+        rc = ha_mcs_impl_external_lock(thd, table, lock_type);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -839,7 +998,17 @@ int ha_mcs::delete_table(const char* name)
     DBUG_ENTER("ha_mcs::delete_table");
     /* This is not implemented but we want someone to be able that it works. */
 
-    int rc = ha_mcs_impl_delete_table(name);
+    int rc;
+
+    try
+    {
+        rc = ha_mcs_impl_delete_table(name);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -862,7 +1031,16 @@ int ha_mcs::delete_table(const char* name)
 int ha_mcs::rename_table(const char* from, const char* to)
 {
     DBUG_ENTER("ha_mcs::rename_table ");
-    int rc = ha_mcs_impl_rename_table(from, to);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_rename_table(from, to);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
@@ -912,14 +1090,32 @@ int ha_mcs::create(const char* name, TABLE* table_arg,
 {
     DBUG_ENTER("ha_mcs::create");
 
-    int rc = ha_mcs_impl_create(name, table_arg, create_info);
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_create(name, table_arg, create_info);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
     DBUG_RETURN(rc);
 }
 
 const COND* ha_mcs::cond_push(const COND* cond)
 {
     DBUG_ENTER("ha_mcs::cond_push");
-    DBUG_RETURN(ha_mcs_impl_cond_push(const_cast<COND*>(cond), table));
+    COND* ret_cond = NULL;
+    try
+    {
+        ret_cond = ha_mcs_impl_cond_push(const_cast<COND*>(cond), table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    }
+    DBUG_RETURN(ret_cond);
 }
 
 

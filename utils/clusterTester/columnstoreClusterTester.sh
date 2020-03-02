@@ -753,7 +753,7 @@ checkMysqlPassword()
   
   #get MariaDB password
   pass=true
-  `mysql-Columnstore start > /dev/null 2>&1`
+  `systemctl start mariadb.service > /dev/null 2>&1`
   `mariadb-command-line.sh > /dev/null 2>&1`
   if [ "$?" -eq 2 ]; then
       echo "${bold}Failed${normal}, Local Node MariaDB login failed with missing password file, /root/.my.cnf"
@@ -763,7 +763,7 @@ checkMysqlPassword()
     `/bin/cp -f mariadb-command-line.sh ${tmpDir}/.`
 
     for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `remote_command.sh $ipadd $PASSWORD mysql-Columnstore start > /dev/null 2>&1`
+      `remote_command.sh $ipadd $PASSWORD systemctl start mariadb.service > /dev/null 2>&1`
       `remote_scp_put.sh $ipadd $PASSWORD ${tmpDir}/mariadb-command-line.sh 1 > ${tmpDir}/remote_scp_put_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_put.sh to $ipadd Node, check ${tmpDir}/remote_scp_put_check"

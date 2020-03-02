@@ -77,7 +77,7 @@ string Func_time_format::getStrVal(rowgroup::Row& row,
             dataconvert::TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, fTimeZone);
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
             hour = m_time.hour;
             min = m_time.minute;
             sec = m_time.second;

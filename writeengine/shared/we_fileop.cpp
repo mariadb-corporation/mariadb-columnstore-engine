@@ -1130,7 +1130,7 @@ int FileOp::initColumnExtent(
         // Couldn't avoid preallocation for full extents,
         // e.g. ADD COLUMN DDL b/c CS has to fill the file
         // with empty magics.
-        if ( !bOptExtension )
+        if ( !bOptExtension || !m_compressionType )
         {
 #ifdef PROFILE
             Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);

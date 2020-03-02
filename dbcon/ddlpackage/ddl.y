@@ -111,7 +111,7 @@ MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
 REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
-VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
+VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET COLLATE IDB_IF EXISTS CHANGE TRUNCATE
 BOOL BOOLEAN MEDIUMINT TIMESTAMP
 
 %token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE TIME
@@ -199,7 +199,7 @@ BOOL BOOLEAN MEDIUMINT TIMESTAMP
 %type <sqlStmt>              trunc_table_statement
 %type <sqlStmt>              rename_table_statement
 %type <str>                  ident
-
+%type <str>                  opt_quoted_literal
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -485,8 +485,14 @@ table_option:
     }
  	|
  	DEFAULT CHARSET opt_equal ident {$$ = new pair<string,string>("default charset", $4);}
+    |
+    CHARSET opt_equal ident {$$ = new pair<string, string>("default charset", $3);}
  	|
  	DEFAULT IDB_CHAR SET opt_equal ident {$$ = new pair<string,string>("default charset", $5);}
+    |
+    DEFAULT COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $4);}
+    |
+    COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $3);}
 	;
 
 alter_table_statement:
@@ -726,13 +732,25 @@ optional_braces:
 	| '(' ')' {}
 	;
 
+opt_column_charset:
+    /* empty */ {}
+    |
+    IDB_CHAR SET opt_quoted_literal {}
+    ;
+
+opt_column_collate:
+    /* empty */ {}
+    |
+    COLLATE opt_quoted_literal {}
+    ;
+
 data_type:
-	character_string_type
+	character_string_type opt_column_charset opt_column_collate
 	| binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
-	| text_type
+	| text_type opt_column_charset opt_column_collate
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
@@ -845,6 +863,12 @@ check_constraint_def:
 string_literal:
 	'\'' SCONST '\'' {$$ = $2;}
 	; 
+
+opt_quoted_literal:
+    string_literal
+    |
+    ident
+    ;
 
 character_string_type:
 	CHARACTER
