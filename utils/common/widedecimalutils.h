@@ -18,30 +18,58 @@
 #ifndef WIDE_DECIMAL_UTILS_H
 #define WIDE_DECIMAL_UTILS_H
 
-namespace utils
-{
-
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
-const uint64_t BINARYNULLVALUELOW = 0ULL;
-const uint64_t BINARYNULLVALUEHIGH = 0x8000000000000000ULL;
-const uint64_t BINARYEMPTYVALUELOW = 1ULL;
-const uint64_t BINARYEMPTYVALUEHIGH = 0x8000000000000000ULL;
+namespace utils
+{
+    const uint64_t BINARYNULLVALUELOW = 0ULL;
+    const uint64_t BINARYNULLVALUEHIGH = 0x8000000000000000ULL;
+    const uint64_t BINARYEMPTYVALUELOW = 1ULL;
+    const uint64_t BINARYEMPTYVALUEHIGH = 0x8000000000000000ULL;
+    const uint8_t MAXLENGTH16BYTES = 42;
 
-    inline bool isWideDecimalNullValue(const int128_t val)
+    inline bool isWideDecimalNullValue(const int128_t& val)
     {
         const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
         return (ptr[0] == BINARYNULLVALUELOW && ptr[1] == BINARYNULLVALUEHIGH);
     }
 
-    inline bool isWideDecimalEmptyValue(const int128_t val)
+    inline bool isWideDecimalEmptyValue(const int128_t& val)
     {
         const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
         return (ptr[0] == BINARYEMPTYVALUELOW && ptr[1] == BINARYEMPTYVALUEHIGH);
     }
 
-    inline void int128Max(int128_t& val)
+    inline void setWideDecimalNullValue(int128_t& val)
+    {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
+        ptr[0] = BINARYNULLVALUELOW;
+        ptr[1] = BINARYNULLVALUEHIGH;
+    }
+
+    inline void setWideDecimalEMptyValue(int128_t& val)
+    {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
+        ptr[0] = BINARYEMPTYVALUELOW;
+        ptr[1] = BINARYEMPTYVALUEHIGH;
+    }
+
+     inline void setWideDecimalNullValue(int128_t* val)
+    {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
+        ptr[0] = BINARYNULLVALUELOW;
+        ptr[1] = BINARYNULLVALUEHIGH;
+    }
+
+    inline void setWideDecimalEMptyValue(int128_t* val)
+    {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
+        ptr[0] = BINARYEMPTYVALUELOW;
+        ptr[1] = BINARYEMPTYVALUEHIGH;
+    }
+
+   inline void int128Max(int128_t& val)
     {
         uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
         ptr[0] = 0xFFFFFFFFFFFFFFFF;
@@ -61,7 +89,6 @@ const uint64_t BINARYEMPTYVALUEHIGH = 0x8000000000000000ULL;
         ptr[0] = 0xFFFFFFFFFFFFFFFF;
         ptr[1] = 0xFFFFFFFFFFFFFFFF;
     }
-
 }
 
 #endif // WIDE_DECIMAL_UTILS_H
