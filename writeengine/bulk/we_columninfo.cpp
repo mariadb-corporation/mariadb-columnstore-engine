@@ -895,7 +895,7 @@ int ColumnInfo::extendColumnOldExtent(
         }
 
         rc = colOp->expandAbbrevColumnExtent( pFile, dbRootNext,
-                                              column.emptyVal, column.width);
+                                              (uint8_t*)&column.emptyVal, column.width);
 
         if (rc != NO_ERROR)
         {

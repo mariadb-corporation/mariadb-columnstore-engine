@@ -1537,11 +1537,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 #endif
 }
 
-
-// WIP MCOL-641
-using uint128_t = unsigned __int128;
-using int128_t = __int128;
-
 // for BINARY
 template<int W>
 inline void p_Col_bin_ridArray(NewColRequestHeader* in,

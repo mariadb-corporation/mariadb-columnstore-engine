@@ -168,7 +168,6 @@ int WriteEngineWrapper::checkValid(const TxnID& txnid, const ColStructList& colS
     structListSize = colStructList.size() ;
     valListSize = colValueList.size();
 
-//      if (colStructList.size() !=  colValueList.size())
     if (structListSize != valListSize)
         return ERR_STRUCT_VALUE_NOT_MATCH;
 
@@ -400,16 +399,16 @@ void WriteEngineWrapper::convertValue(const execplan::CalpontSystemCatalog::ColT
         }
         break;
         
-        // WIP MCOL-641
         case WriteEngine::WR_BINARY:
         {
             size = cscColType.colWidth;
-            if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL)
+            if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
             {
                 int128_t val = boost::any_cast<int128_t>(data);
                 memcpy(value, &val, size);
             }
-            else
+            else // for CalpontSystemCatalog::BINARY
             {
                 char val = boost::any_cast<char>(data);
                 memcpy(value, &val, size);
@@ -521,19 +520,19 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
                 ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
                 break;
                 
+            // WIP MCOL-641
             case WriteEngine::WR_BINARY:
-                if (cscColType.colDataType != CalpontSystemCatalog::DECIMAL)
-                {
-                    curStr = boost::any_cast<string>(data);
-                    // String length or column width?
-                    memcpy((char*)valArray + pos * curStr.length(), curStr.c_str(), curStr.length());
-                }
-                else
+                size_t size = cscColType.colWidth;
+                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
                 {
                     int128_t val = boost::any_cast<int128_t>(data);
-                    size_t size = cscColType.colWidth;
-                    // WIP Why do we use memcpy here?
-                    memcpy((uint8_t*)valArray+pos*size, &val, size);
+                    memcpy((uint8_t*)valArray + pos * size, &val, size);
+                }
+                else // for CalpontSystemCatalog::BINARY
+                {
+                    char val = boost::any_cast<char>(data);
+                    memcpy((uint8_t*)valArray + pos * size, &val, size);
                 }
 
                 break;
@@ -602,17 +601,19 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
             case WriteEngine::WR_TOKEN:
                 data = ((Token*)valArray)[pos];
                 break;
-            // WIP
+            // WIP MCOL-641
             case WriteEngine::WR_BINARY :
-                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL)
+                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
                 {
                     data = ((int128_t*)valArray)[pos];
                 }
-                else
+                else // for CalpontSystemCatalog::BINARY
                 {
                     // WIP do we need tmp here?
-                    char *tmp = (char*) alloca (sizeof(char) * cscColType.colWidth);
-                    memcpy(tmp, (char*)valArray + pos * cscColType.colWidth, cscColType.colWidth);
+                    size_t size = cscColType.colWidth;
+                    char *tmp = (char*) alloca (sizeof(char) * size);
+                    memcpy(tmp, (uint8_t*)valArray + pos * size, size);
                     curStr = tmp;
                     data = curStr;
                 }
@@ -778,7 +779,6 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
     DctnryValueList  dctnryValueList;
     ColStructList    colStructList;
     CSCTypesList     cscColTypeList;
-    uint64_t         emptyVal;
     int              rc;
     string           tmpStr("");
     vector<DctnryStructList> dctnryExtentsStruct;
@@ -789,6 +789,8 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
     // set transaction id
     setTransId(txnid);
     unsigned numExtents = colExtentsStruct.size();
+
+    uint128_t emptyVal;
 
     for (unsigned extent = 0; extent < numExtents; extent++)
     {
@@ -802,23 +804,21 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
             cscColType = cscColTypeList[i];
             Convertor::convertColType(&curColStruct);
 
-            if (curColStruct.colType == WriteEngine::WR_BINARY)
+            /*if (curColStruct.colType == WriteEngine::WR_BINARY)
             {
                 uint128_t bigEmptyVal;
                 emptyVal = m_colOp[op(curColStruct.fCompressionType)]->
                            getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth);
                 *(reinterpret_cast<uint64_t*>(&bigEmptyVal)) = emptyVal;
                 *(reinterpret_cast<uint64_t*>(&bigEmptyVal) + 1) = emptyVal;
-                //dataconvert::DataConvert::uint128Max(bigEmptyVal);
                 curTuple.data = bigEmptyVal;
             }
             else
-            {
-                emptyVal = m_colOp[op(curColStruct.fCompressionType)]->
-                           getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth);
-
+            {*/
+                m_colOp[op(curColStruct.fCompressionType)]->
+                    getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth, (uint8_t*)&emptyVal);
                 curTuple.data = emptyVal;
-            }
+            //}
 
             curTupleList.push_back(curTuple);
             colValueList.push_back(curTupleList);
@@ -848,6 +848,75 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
     m_opType = NOOP;
 
     return rc;
+}
+
+inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow,
+                             ColType colType, int colWidth)
+{
+    valArray = calloc(totalRow, colWidth);
+    // TODO MCOL-641 is commenting out the switch statement below correct?
+#if 0
+    switch (colType)
+    {
+        case WriteEngine::WR_INT:
+        case WriteEngine::WR_MEDINT:
+            valArray = (int*) calloc(sizeof(int), totalRow);
+            break;
+
+        case WriteEngine::WR_UINT:
+        case WriteEngine::WR_UMEDINT:
+            valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow);
+            break;
+
+        case WriteEngine::WR_VARBINARY : // treat same as char for now
+        case WriteEngine::WR_CHAR:
+        case WriteEngine::WR_BLOB:
+        case WriteEngine::WR_TEXT:
+            valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
+            break;
+
+        case WriteEngine::WR_FLOAT:
+            valArray = (float*) calloc(sizeof(float), totalRow);
+            break;
+
+        case WriteEngine::WR_DOUBLE:
+            valArray = (double*) calloc(sizeof(double), totalRow);
+            break;
+
+        case WriteEngine::WR_BYTE:
+            valArray = (char*) calloc(sizeof(char), totalRow);
+            break;
+
+        case WriteEngine::WR_UBYTE:
+            valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow);
+            break;
+
+        case WriteEngine::WR_SHORT:
+            valArray = (short*) calloc(sizeof(short), totalRow);
+            break;
+
+        case WriteEngine::WR_USHORT:
+            valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow);
+            break;
+
+        case WriteEngine::WR_LONGLONG:
+            valArray = (long long*) calloc(sizeof(long long), totalRow);
+            break;
+
+        case WriteEngine::WR_ULONGLONG:
+            valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow);
+            break;
+
+        case WriteEngine::WR_TOKEN:
+            valArray = (Token*) calloc(sizeof(Token), totalRow);
+            break;
+
+        case WriteEngine::WR_BINARY:
+            valArray = calloc(totalRow, colWidth);
+            break;
+
+    }
+#endif
 }
 
 int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStructs,
@@ -889,69 +958,7 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
                     throw std::runtime_error(oss.str());
                 }
 
-                switch (colStructs[i].colType)
-                {
-                    case WriteEngine::WR_INT:
-                    case WriteEngine::WR_MEDINT:
-                        valArray = (int*) calloc(sizeof(int), 1);
-                        break;
-
-                    case WriteEngine::WR_UINT:
-                    case WriteEngine::WR_UMEDINT:
-                        valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
-                        break;
-
-                    case WriteEngine::WR_VARBINARY : // treat same as char for now
-                    case WriteEngine::WR_CHAR:
-                    case WriteEngine::WR_BLOB:
-                    case WriteEngine::WR_TEXT:
-                        valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
-                        break;
-
-                    case WriteEngine::WR_FLOAT:
-                        valArray = (float*) calloc(sizeof(float), 1);
-                        break;
-
-                    case WriteEngine::WR_DOUBLE:
-                        valArray = (double*) calloc(sizeof(double), 1);
-                        break;
-
-                    case WriteEngine::WR_BYTE:
-                        valArray = (char*) calloc(sizeof(char), 1);
-                        break;
-
-                    case WriteEngine::WR_UBYTE:
-                        valArray = (uint8_t*) calloc(sizeof(uint8_t), 1);
-                        break;
-
-                    case WriteEngine::WR_SHORT:
-                        valArray = (short*) calloc(sizeof(short), 1);
-                        break;
-
-                    case WriteEngine::WR_USHORT:
-                        valArray = (uint16_t*) calloc(sizeof(uint16_t), 1);
-                        break;
-
-                    case WriteEngine::WR_LONGLONG:
-                        valArray = (long long*) calloc(sizeof(long long), 1);
-                        break;
-
-                    case WriteEngine::WR_ULONGLONG:
-                        valArray = (uint64_t*) calloc(sizeof(uint64_t), 1);
-                        break;
-
-                    case WriteEngine::WR_TOKEN:
-                        valArray = (Token*) calloc(sizeof(Token), 1);
-                        break;
-
-                    case WriteEngine::WR_BINARY:
-                    //case WriteEngine::WR_INT128:
-                        // WIP use column width here
-                        // remove all C-casts from above
-                        valArray = calloc(1, 16);
-                        break;
-
-                }
+                allocateValArray(valArray, 1, colStructs[i].colType, colStructs[i].colWidth);
 
                 rc = colOp->writeRows(curCol, ridList.size(), ridList, valArray, 0, true);
 
@@ -3270,8 +3277,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         printInputValue(colStructList, colValueList, ridList);
     }
 
-    // end
-
     //Convert data type and column width to write engine specific
     for (i = 0; i < colStructList.size(); i++)
         Convertor::convertColType(&colStructList[i]);
@@ -3299,7 +3304,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // allocate row id(s)
     //--------------------------------------------------------------------------
-	curColStruct = colStructList[colId];
+    curColStruct = colStructList[colId];
     colOp = m_colOp[op(curColStruct.fCompressionType)];
 
     colOp->initColumn(curCol);
@@ -3336,7 +3341,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
 
     oldHwm = hwm; //Save this info for rollback
     //need to pass real dbRoot, partition, and segment to setColParam
-	colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
+    colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        dbRoot, partitionNum, segmentNum);
 
@@ -3455,12 +3460,12 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     // if totalRow == rowsLeft, then not adding rows to 1st extent, so skip it.
     //--------------------------------------------------------------------------
     // DMC-SHARED_NOTHING_NOTE: Is it safe to assume only part0 seg0 is abbreviated?
-	if ((colStructList[colId].fColPartition == 0) &&
-		(colStructList[colId].fColSegment   == 0) &&
-            ((totalRow - rowsLeft) > 0) &&
-            (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
+    if ((colStructList[colId].fColPartition == 0) &&
+	(colStructList[colId].fColSegment   == 0) &&
+        ((totalRow - rowsLeft) > 0) &&
+        (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-		for (unsigned k=0; k<colStructList.size(); k++)
+	for (unsigned k=0; k<colStructList.size(); k++)
         {
             if (k == colId)
                continue;
@@ -3685,7 +3690,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         lastRidNew = rowIdArray[totalRow - 1];
     }
 
-    //cout << "rowid allocated is "  << lastRid << endl;
     //if a new extent is created, all the columns in this table should
     //have their own new extent
 
@@ -3716,9 +3720,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
             succFlag = colOp->calculateRowId(lastRid,
                                              BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
-            //cout << "insertcolumnrec   oid:rid:fbo:hwm = " <<
-            //colStructList[i].dataOid << ":" << lastRid << ":" <<
-            //curFbo << ":" << hwm << endl;
             if (succFlag)
             {
                 if ((HWM)curFbo > oldHwm)
@@ -3811,7 +3812,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         }
     }
 
-    //cout << "lbids size = " << lbids.size()<< endl;
     if (lbids.size() > 0)
         rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
 
@@ -4516,68 +4516,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
             break;
         }
 
-        switch (curColStruct.colType)
-        {
-            case WriteEngine::WR_INT:
-            case WriteEngine::WR_MEDINT:
-                valArray = (int*) calloc(sizeof(int), totalRow);
-                break;
-
-            case WriteEngine::WR_UINT:
-            case WriteEngine::WR_UMEDINT:
-                valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow);
-                break;
-
-            case WriteEngine::WR_VARBINARY : // treat same as char for now
-            case WriteEngine::WR_CHAR:
-            case WriteEngine::WR_BLOB:
-            case WriteEngine::WR_TEXT:
-                valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
-                break;
-
-            case WriteEngine::WR_FLOAT:
-                valArray = (float*) calloc(sizeof(float), totalRow);
-                break;
-
-            case WriteEngine::WR_DOUBLE:
-                valArray = (double*) calloc(sizeof(double), totalRow);
-                break;
-
-            case WriteEngine::WR_BYTE:
-                valArray = (char*) calloc(sizeof(char), totalRow);
-                break;
-
-            case WriteEngine::WR_UBYTE:
-                valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow);
-                break;
-
-            case WriteEngine::WR_SHORT:
-                valArray = (short*) calloc(sizeof(short), totalRow);
-                break;
-
-            case WriteEngine::WR_USHORT:
-                valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow);
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                valArray = (long long*) calloc(sizeof(long long), totalRow);
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow);
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                valArray = (Token*) calloc(sizeof(Token), totalRow);
-                break;
-
-            // WIP MCOL-641
-            case WriteEngine::WR_BINARY:
-                // Use column width and remove all C-casts from above
-                valArray = calloc(totalRow, curColType.colWidth);
-                break;
- 
-        }
+        allocateValArray(valArray, totalRow, curColStruct.colType, curColStruct.colWidth);
 
         // convert values to valArray
         bExcp = false;
@@ -4679,16 +4618,11 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
     StopWatch timer;
 #endif
 
+    totalRow1 = colValueList[0].size();
+    totalRow2 = 0;
+
     if (newColValueList.size() > 0)
-    {
-        totalRow1 = colValueList[0].size();
         totalRow2 = newColValueList[0].size();
-    }
-    else
-    {
-        totalRow1 = colValueList[0].size();
-        totalRow2 = 0;
-    }
 
     TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
 
@@ -4763,74 +4697,10 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
                 // WIP We can allocate based on column size and not colType
                 // have to init the size here
-                valArray = calloc(totalRow1, colStructList[i].colWidth);
-#if 0
-                switch (colStructList[i].colType)
-                {
-                    // WIP we don't need type cast here only size
-                    case WriteEngine::WR_INT:
-                    case WriteEngine::WR_MEDINT:
-                        valArray = (int*) calloc(sizeof(int), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_UINT:
-                    case WriteEngine::WR_UMEDINT:
-                        valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_VARBINARY : // treat same as char for now
-                    case WriteEngine::WR_CHAR:
-                    case WriteEngine::WR_BLOB:
-                    case WriteEngine::WR_TEXT:
-                        valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
-                        break;
-
-                    case WriteEngine::WR_FLOAT:
-                        valArray = (float*) calloc(sizeof(float), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_DOUBLE:
-                        valArray = (double*) calloc(sizeof(double), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_BYTE:
-                        valArray = (char*) calloc(sizeof(char), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_UBYTE:
-                        valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_SHORT:
-                        valArray = (short*) calloc(sizeof(short), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_USHORT:
-                        valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_LONGLONG:
-                        valArray = (long long*) calloc(sizeof(long long), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_ULONGLONG:
-                        valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_TOKEN:
-                        valArray = (Token*) calloc(sizeof(Token), totalRow1);
-                        break;
-
-                    // WIP
-                    case WriteEngine::WR_BINARY:
-                        valArray = calloc(totalRow1, colStructList[i].colWidth);
-                        break;
-                }
-#endif
+                allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
                 // convert values to valArray
-                // WIP
-                // Is this m_opType ever set to DELETE?
+                // WIP Is m_opType ever set to DELETE?
                 if (m_opType != DELETE)
                 {
                     bExcp = false;
@@ -4857,7 +4727,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                     }
 
 #ifdef PROFILE
-                    iimer.start("writeRow ");
+                    timer.start("writeRow ");
 #endif
                     rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray);
 #ifdef PROFILE
@@ -4950,71 +4820,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 }
             }
 
-            // have to init the size here
-            // TODO MCOL-641 is commenting out the switch statement below correct?
-            valArray = calloc(totalRow2, newColStructList[i].colWidth);
-            /*switch (newColStructList[i].colType)
-            {
-                case WriteEngine::WR_INT:
-                case WriteEngine::WR_MEDINT:
-                    valArray = (int*) calloc(sizeof(int), totalRow2);
-                    break;
-
-                case WriteEngine::WR_UINT:
-                case WriteEngine::WR_UMEDINT:
-                    valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_VARBINARY : // treat same as char for now
-                case WriteEngine::WR_CHAR:
-                case WriteEngine::WR_BLOB:
-                case WriteEngine::WR_TEXT:
-                    valArray = (char*) calloc(sizeof(char), totalRow2 * MAX_COLUMN_BOUNDARY);
-                    break;
-
-                case WriteEngine::WR_FLOAT:
-                    valArray = (float*) calloc(sizeof(float), totalRow2);
-                    break;
-
-                case WriteEngine::WR_DOUBLE:
-                    valArray = (double*) calloc(sizeof(double), totalRow2);
-                    break;
-
-                case WriteEngine::WR_BYTE:
-                    valArray = (char*) calloc(sizeof(char), totalRow2);
-                    break;
-
-                case WriteEngine::WR_UBYTE:
-                    valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_SHORT:
-                    valArray = (short*) calloc(sizeof(short), totalRow2);
-                    break;
-
-                case WriteEngine::WR_USHORT:
-                    valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_LONGLONG:
-                    valArray = (long long*) calloc(sizeof(long long), totalRow2);
-                    break;
-
-                case WriteEngine::WR_ULONGLONG:
-                    valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_TOKEN:
-                    valArray = (Token*) calloc(sizeof(Token), totalRow2);
-                    break;
-
-                case WriteEngine::WR_BINARY:
-                //case WriteEngine::WR_INT128:
-                    // WIP
-                    valArray = calloc(totalRow2, 16);
-                    break;
-
-            }*/
+            allocateValArray(valArray, totalRow2, newColStructList[i].colType, newColStructList[i].colWidth);
 
             // convert values to valArray
             if (m_opType != DELETE)
@@ -5131,71 +4937,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 }
             }
 
-            // have to init the size here
-            // shared pointers or memory in a stack
-            // TODO MCOL-641 is commenting out the switch statement below correct?
-            valArray = calloc(totalRow1, colStructList[i].colWidth);
-            // WIP
-            /*switch (colStructList[i].colType)
-            {
-                case WriteEngine::WR_INT:
-                case WriteEngine::WR_MEDINT:
-                    valArray = (int*) calloc(sizeof(int), totalRow1);
-                    break;
-
-                case WriteEngine::WR_UINT:
-                case WriteEngine::WR_UMEDINT:
-                    valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_VARBINARY : // treat same as char for now
-                case WriteEngine::WR_CHAR:
-                case WriteEngine::WR_BLOB:
-                case WriteEngine::WR_TEXT:
-                    valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
-                    break;
-
-                case WriteEngine::WR_FLOAT:
-                    valArray = (float*) calloc(sizeof(float), totalRow1);
-                    break;
-
-                case WriteEngine::WR_DOUBLE:
-                    valArray = (double*) calloc(sizeof(double), totalRow1);
-                    break;
-
-                case WriteEngine::WR_BYTE:
-                    valArray = (char*) calloc(sizeof(char), totalRow1);
-                    break;
-
-                case WriteEngine::WR_UBYTE:
-                    valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_SHORT:
-                    valArray = (short*) calloc(sizeof(short), totalRow1);
-                    break;
-
-                case WriteEngine::WR_USHORT:
-                    valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_LONGLONG:
-                    valArray = (long long*) calloc(sizeof(long long), totalRow1);
-                    break;
-
-                case WriteEngine::WR_ULONGLONG:
-                    valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_TOKEN:
-                    valArray = (Token*) calloc(sizeof(Token), totalRow1);
-                    break;
-
-                case WriteEngine::WR_BINARY:
-                //case WriteEngine::WR_INT128:
-                    valArray =  calloc(colStructList[i].colWidth, totalRow1);
-                    break;
-            }*/
+            allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
             // convert values to valArray
             if (m_opType != DELETE)
@@ -5415,9 +5157,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
                    
-                    case WriteEngine::WR_BINARY:
                     // WIP
-                    //case WriteEngine::WR_INT128:
+                    case WriteEngine::WR_BINARY:
                          ((uint64_t*)valArray)[j] = curValue; //FIXME maybe
                         break;   
                    
@@ -5565,9 +5306,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
                     
-                    case WriteEngine::WR_BINARY:
                     // WIP
-                    //case WriteEngine::WR_INT128:
+                    case WriteEngine::WR_BINARY:
                        ((uint64_t*)valArray)[j] = curValue; // FIXME maybe
                         break;
                 }
@@ -5786,64 +5526,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             break;
         }
 
-        switch (curColStruct.colType)
-        {
-            case WriteEngine::WR_INT:
-            case WriteEngine::WR_MEDINT:
-                valArray = (int*) calloc(sizeof(int), 1);
-                break;
-
-            case WriteEngine::WR_UINT:
-            case WriteEngine::WR_UMEDINT:
-                valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
-                break;
-
-            case WriteEngine::WR_VARBINARY : // treat same as char for now
-            case WriteEngine::WR_CHAR:
-            case WriteEngine::WR_BLOB:
-            case WriteEngine::WR_TEXT:
-                valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
-                break;
-
-            case WriteEngine::WR_FLOAT:
-                valArray = (float*) calloc(sizeof(float), 1);
-                break;
-
-            case WriteEngine::WR_DOUBLE:
-                valArray = (double*) calloc(sizeof(double), 1);
-                break;
-
-            case WriteEngine::WR_BYTE:
-                valArray = (char*) calloc(sizeof(char), 1);
-                break;
-
-            case WriteEngine::WR_UBYTE:
-                valArray = (uint8_t*) calloc(sizeof(uint8_t), 1);
-                break;
-
-            case WriteEngine::WR_SHORT:
-                valArray = (short*) calloc(sizeof(short), 1);
-                break;
-
-            case WriteEngine::WR_USHORT:
-                valArray = (uint16_t*) calloc(sizeof(uint16_t), 1);
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                valArray = (long long*) calloc(sizeof(long long), 1);
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                valArray = (uint64_t*) calloc(sizeof(uint64_t), 1);
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                valArray = (Token*) calloc(sizeof(Token), 1);
-                break;
-            case WriteEngine::WR_BINARY:
-                valArray = calloc(1, curColStruct.colWidth);
-                break;
-        }
+        allocateValArray(valArray, 1, curColStruct.colType, curColStruct.colWidth);
 
         // convert values to valArray
         if (m_opType != DELETE)
