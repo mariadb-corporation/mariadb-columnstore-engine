@@ -214,7 +214,7 @@ public:
     void cleanUp(const std::map<FID, FID>& columOids);
 
     // @brief Expand an initial column, not dictionary, extent to a full extent.
-    int expandAbbrevColumnExtent(IDBDataFile* pFile, uint64_t emptyVal, int width);
+    int expandAbbrevColumnExtent(IDBDataFile* pFile, uint8_t* emptyVal, int width);
 
     // @brief Update column extent
     int updateColumnExtent(IDBDataFile* pFile, int addBlockCount);

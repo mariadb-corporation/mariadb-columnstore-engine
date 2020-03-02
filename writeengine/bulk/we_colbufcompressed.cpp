@@ -132,7 +132,7 @@ int ColumnBufferCompressed::resetToBeCompressedColBuf(
 
     BlockOp::setEmptyBuf( fToBeCompressedBuffer,
                           IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
-                          fColInfo->column.emptyVal,
+                          (uint8_t*)&fColInfo->column.emptyVal,
                           fColInfo->column.width );
 
     if (fLog->isDebug( DEBUG_2 ))
@@ -317,7 +317,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
                 // Start over again loading a new to-be-compressed buffer
                 BlockOp::setEmptyBuf( fToBeCompressedBuffer,
                                       IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
-                                      fColInfo->column.emptyVal,
+                                      (uint8_t*)&fColInfo->column.emptyVal,
                                       fColInfo->column.width );
 
                 fToBeCompressedCapacity =
@@ -628,7 +628,7 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
             new unsigned char[IDBCompressInterface::UNCOMPRESSED_INBUF_LEN];
         BlockOp::setEmptyBuf( fToBeCompressedBuffer,
                               IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
-                              fColInfo->column.emptyVal,
+                              (uint8_t*)&fColInfo->column.emptyVal,
                               fColInfo->column.width );
         bNewBuffer = true;
     }
@@ -743,7 +743,7 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
         {
             BlockOp::setEmptyBuf( fToBeCompressedBuffer,
                                   IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
-                                  fColInfo->column.emptyVal,
+                                  (uint8_t*)&fColInfo->column.emptyVal,
                                   fColInfo->column.width );
         }
 

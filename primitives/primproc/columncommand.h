@@ -84,9 +84,6 @@ public:
         makeAbsRids = m;
     }
     bool willPrefetch();
-    const uint64_t getEmptyRowValue( const CSCDataType dataType, const int width ) const;
-    void getEmptyRowValue(const CSCDataType dataType,
-        const int width, messageqcpp::ByteStream::hexbyte* space) const;
     const int64_t getLastLbid();
     void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids);
 

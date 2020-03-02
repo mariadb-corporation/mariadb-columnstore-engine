@@ -111,7 +111,7 @@ public:
     /**
     * @brief virtual method in FileOp
     */
-    int expandAbbrevColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, uint64_t emptyVal, int width);
+    int expandAbbrevColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, uint8_t* emptyVal, int width);
 
     /**
     * @brief virtual method in ColumnOp

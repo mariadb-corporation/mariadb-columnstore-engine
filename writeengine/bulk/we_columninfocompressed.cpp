@@ -540,7 +540,7 @@ int ColumnInfoCompressed::extendColumnOldExtent(
     int rc = colOp->fillCompColumnExtentEmptyChunks(
                  curCol.dataFile.fid,
                  curCol.colWidth,
-                 column.emptyVal,
+                 (uint8_t*)&column.emptyVal,
                  curCol.dataFile.fDbRoot,
                  curCol.dataFile.fPartition,
                  curCol.dataFile.fSegment,

@@ -306,7 +306,8 @@ void BulkRollbackFile::reInitTruncColumnExtent(
     }
 
     // Initialize the remainder of the extent after the HWM block
-    uint64_t emptyVal = fDbFile.getEmptyRowValue( colType, colWidth );
+    uint8_t* emptyVal = (uint8_t*) alloca(colWidth);
+    fDbFile.getEmptyRowValue( colType, colWidth, emptyVal );
 
     int rc = fDbFile.reInitPartialColumnExtent( pFile,
              startOffset,

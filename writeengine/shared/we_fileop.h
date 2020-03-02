@@ -90,7 +90,7 @@ public:
                                     int& allocSize,
                                     uint16_t dbRoot, uint32_t partition,
                                     execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                    uint64_t emptyVal = 0, int width = 1 ) ;
+                                    uint8_t* emptyVal, int width = 1 ) ;
 
 
     /**
@@ -98,7 +98,7 @@ public:
      * Changed to public for UT.
      */
     int                 createFile( const char* fileName, int fileSize,
-                                    uint64_t emptyVal, int width,
+                                    uint8_t* emptyVal, int width,
                                     uint16_t dbRoot );
 
     /**
@@ -161,7 +161,7 @@ public:
     EXPORT virtual int  expandAbbrevColumnExtent(
         IDBDataFile*    pFile,
         uint16_t dbRoot,
-        uint64_t      emptyVal,
+        uint8_t*      emptyVal,
         int      width );
 
     /**
@@ -196,7 +196,7 @@ public:
      * @param hdrs (in/out) Contents of headers, if file is compressed.
      * @return returns NO_ERROR if success.
      */
-    EXPORT int          extendFile(OID oid, uint64_t emptyVal,
+    EXPORT int          extendFile(OID oid, uint8_t* emptyVal,
                                    int          width,
                                    HWM          hwm,
                                    BRM::LBID_t  startLbid,
@@ -224,7 +224,7 @@ public:
      * @param newFile (out) Indicates if a new file was created for the extent
      * @param hdrs (in/out) Contents of headers, if file is compressed.
      */
-    EXPORT int          addExtentExactFile(OID oid, uint64_t emptyVal,
+    EXPORT int          addExtentExactFile(OID oid, uint8_t* emptyVal,
                                            int          width,
                                            int&         allocSize,
                                            uint16_t     dbRoot,
@@ -251,7 +251,7 @@ public:
      */
     EXPORT int          fillCompColumnExtentEmptyChunks(OID oid,
             int          colWidth,
-            uint64_t          emptyVal,
+            uint8_t*          emptyVal,
             uint16_t     dbRoot,
             uint32_t     partition,
             uint16_t     segment,
@@ -431,7 +431,7 @@ public:
     EXPORT int          reInitPartialColumnExtent( IDBDataFile* pFile,
             long long startOffset,
             int       nBlocks,
-            uint64_t  emptyVal,
+            uint8_t*  emptyVal,
             int       width );
 
     /**
@@ -495,7 +495,7 @@ public:
     int                 initColumnExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
                                           int      nBlocks,
-                                          uint64_t emptyVal,
+                                          uint8_t* emptyVal,
                                           int      width,
                                           bool     bNewFile,
                                           bool     bExpandExtent,
@@ -514,7 +514,7 @@ private:
     FileOp& operator=(const FileOp& rhs);
 
     int                 expandAbbrevColumnChunk( IDBDataFile* pFile,
-            uint64_t   emptyVal,
+            uint8_t*   emptyVal,
             int   colWidth,
             const compress::CompChunkPtr& chunkInPtr,
             compress::CompChunkPtr& chunkOutPt);
@@ -522,7 +522,7 @@ private:
     int                 initAbbrevCompColumnExtent( IDBDataFile* pFile,
             uint16_t dbRoot,
             int      nBlocks,
-            uint64_t      emptyVal,
+            uint8_t*      emptyVal,
             int      width);
 
     static void         initDbRootExtentMutexes();
@@ -531,7 +531,7 @@ private:
     int                 writeInitialCompColumnChunk( IDBDataFile* pFile,
             int      nBlocksAllocated,
             int      nRows,
-            uint64_t emptyVal,
+            uint8_t* emptyVal,
             int      width,
             char*    hdrs);
 

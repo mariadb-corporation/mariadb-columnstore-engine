@@ -161,7 +161,7 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
  *    ERR_FILE_CREATE if can not create the file
  ***********************************************************/
 int FileOp::createFile( const char* fileName, int numOfBlock,
-                        uint64_t emptyVal, int width,
+                        uint8_t* emptyVal, int width,
                         uint16_t dbRoot )
 {
     IDBDataFile* pFile =
@@ -228,7 +228,7 @@ int FileOp::createFile(FID fid,
                        uint16_t dbRoot,
                        uint32_t partition,
                        execplan::CalpontSystemCatalog::ColDataType colDataType,
-                       uint64_t  emptyVal,
+                       uint8_t*  emptyVal,
                        int      width)
 {
     //std::cout << "Creating file oid: " << fid <<
@@ -569,7 +569,7 @@ bool FileOp::existsOIDDir( FID fid ) const
  ***********************************************************/
 int FileOp::extendFile(
     OID          oid,
-    uint64_t     emptyVal,
+    uint8_t*     emptyVal,
     int          width,
     HWM          hwm,
     BRM::LBID_t  startLbid,
@@ -868,7 +868,7 @@ int FileOp::extendFile(
  ***********************************************************/
 int FileOp::addExtentExactFile(
     OID          oid,
-    uint64_t     emptyVal,
+    uint8_t*     emptyVal,
     int          width,
     int&         allocSize,
     uint16_t     dbRoot,
@@ -1038,7 +1038,7 @@ int FileOp::initColumnExtent(
     IDBDataFile* pFile,
     uint16_t dbRoot,
     int      nBlocks,
-    uint64_t emptyVal,
+    uint8_t* emptyVal,
     int      width,
     bool     bNewFile,
     bool     bExpandExtent,
@@ -1218,7 +1218,7 @@ int FileOp::initAbbrevCompColumnExtent(
     IDBDataFile* pFile,
     uint16_t dbRoot,
     int      nBlocks,
-    uint64_t emptyVal,
+    uint8_t* emptyVal,
     int      width)
 {
     // Reserve disk space for optimized abbreviated extent
@@ -1278,7 +1278,7 @@ int FileOp::writeInitialCompColumnChunk(
     IDBDataFile* pFile,
     int      nBlocksAllocated,
     int      nRows,
-    uint64_t emptyVal,
+    uint8_t* emptyVal,
     int      width,
     char*    hdrs)
 {
@@ -1359,7 +1359,7 @@ int FileOp::writeInitialCompColumnChunk(
  ***********************************************************/
 int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
         int          colWidth,
-        uint64_t     emptyVal,
+        uint8_t*     emptyVal,
         uint16_t     dbRoot,
         uint32_t     partition,
         uint16_t     segment,
@@ -1664,7 +1664,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
  ***********************************************************/
 int FileOp::expandAbbrevColumnChunk(
     IDBDataFile* pFile,
-    uint64_t emptyVal,
+    uint8_t* emptyVal,
     int   colWidth,
     const CompChunkPtr& chunkInPtr,
     CompChunkPtr& chunkOutPtr )
@@ -2029,7 +2029,7 @@ int FileOp::reInitPartialColumnExtent(
     IDBDataFile* pFile,
     long long startOffset,
     int      nBlocks,
-    uint64_t emptyVal,
+    uint8_t* emptyVal,
     int      width )
 {
     int rc = setFileOffset( pFile, startOffset, SEEK_SET );
@@ -2868,7 +2868,7 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
 int FileOp::expandAbbrevColumnExtent(
     IDBDataFile* pFile,   // FILE ptr to file where abbrev extent is to be expanded
     uint16_t dbRoot,  // The DBRoot of the file with the abbreviated extent
-    uint64_t emptyVal,// Empty value to be used in expanding the extent
+    uint8_t* emptyVal,// Empty value to be used in expanding the extent
     int      width )  // Width of the column (in bytes)
 {
     // Based on extent size, see how many blocks to add to fill the extent

@@ -48,6 +48,8 @@ using namespace rowgroup;
 #include "messageids.h"
 using namespace logging;
 
+#include "emptyvaluemanip.h"
+
 #ifdef _MSC_VER
 #define llabs labs
 #endif
@@ -193,28 +195,34 @@ void ColumnCommand::loadData()
             {
                 if (bPtr && colType.colWidth == 1)
                 {
-                    ByteStream::byte b = getEmptyRowValue(colType.colDataType, colType.colWidth);
+                    ByteStream::byte b;
+                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&b);
                     bPtr[idx] = b;
                 }
                 //@Bug 1812. Added two bytes column handling
                 else if (dPtr && colType.colWidth == 2)
                 {
-                    ByteStream::doublebyte d = getEmptyRowValue(colType.colDataType, colType.colWidth);
+                    ByteStream::doublebyte d;
+                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&d);
                     dPtr[idx] = d;
                 }
                 else if (qPtr && colType.colWidth == 4)
                 {
-                    ByteStream::quadbyte q = getEmptyRowValue(colType.colDataType, colType.colWidth);
+                    ByteStream::quadbyte q;
+                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&q);
                     qPtr[idx] = q;
                 }
                 else if (oPtr && colType.colWidth == 8)
                 {
-                    ByteStream::octbyte o = getEmptyRowValue(colType.colDataType, colType.colWidth);
+                    ByteStream::octbyte o;
+                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&o);
                     oPtr[idx] = o;
                 }
                 else if (colType.colWidth == 16)
                 {
-                    getEmptyRowValue(colType.colDataType, colType.colWidth, &hPtr[idx]);
+                    ByteStream::hexbyte h;
+                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&h);
+                    hPtr[idx] = h;
                 }
             }
 
@@ -957,114 +965,6 @@ void ColumnCommand::enableFilters()
 {
     suppressFilter = false;
     prep(primMsg->OutputType, makeAbsRids);
-}
-
-
-/***********************************************************
-* DESCRIPTION:
-*    Get the value that represents empty row
-* PARAMETERS:
-*    dataType - data type
-*    width - data width in byte
-* RETURN:
-*    emptyVal - the value of empty row
-***********************************************************/
-const uint64_t ColumnCommand::getEmptyRowValue( const CSCDataType dataType, const int width ) const
-{
-    uint64_t emptyVal = 0;
-    int offset;
-
-    offset = ( dataType == execplan::CalpontSystemCatalog::VARCHAR ) ? -1 : 0;
-
-    switch ( dataType )
-    {
-        case execplan::CalpontSystemCatalog::TINYINT :
-            emptyVal = joblist::TINYINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::SMALLINT:
-            emptyVal = joblist::SMALLINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::MEDINT :
-        case execplan::CalpontSystemCatalog::INT :
-            emptyVal = joblist::INTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::BIGINT :
-            emptyVal = joblist::BIGINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::UTINYINT :
-            emptyVal = joblist::UTINYINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::USMALLINT:
-            emptyVal = joblist::USMALLINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::UMEDINT :
-        case execplan::CalpontSystemCatalog::UINT :
-            emptyVal = joblist::UINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::UBIGINT :
-            emptyVal = joblist::UBIGINTEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::FLOAT :
-        case execplan::CalpontSystemCatalog::UFLOAT :
-            emptyVal = joblist::FLOATEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::DOUBLE :
-        case execplan::CalpontSystemCatalog::UDOUBLE :
-            emptyVal = joblist::DOUBLEEMPTYROW;
-            break;
-
-        case execplan::CalpontSystemCatalog::DECIMAL :
-        case execplan::CalpontSystemCatalog::UDECIMAL :
-            if ( width <= 1 )
-                emptyVal = joblist::TINYINTEMPTYROW;
-            else if (width <= 2)
-                emptyVal = joblist::SMALLINTEMPTYROW;
-            else if ( width <= 4 )
-                emptyVal = joblist::INTEMPTYROW;
-            else
-                emptyVal = joblist::BIGINTEMPTYROW;
-
-            break;
-
-        case execplan::CalpontSystemCatalog::CHAR :
-        case execplan::CalpontSystemCatalog::VARCHAR :
-        case execplan::CalpontSystemCatalog::DATE :
-        case execplan::CalpontSystemCatalog::DATETIME :
-        case execplan::CalpontSystemCatalog::TIMESTAMP :
-        case execplan::CalpontSystemCatalog::TIME :
-        case execplan::CalpontSystemCatalog::VARBINARY :
-        case execplan::CalpontSystemCatalog::BLOB :
-        case execplan::CalpontSystemCatalog::TEXT :
-        default:
-            emptyVal = joblist::CHAR1EMPTYROW;
-
-            if ( width == (2 + offset) )
-                emptyVal = joblist::CHAR2EMPTYROW;
-            else if ( width >= (3 + offset) && width <= ( 4 + offset ) )
-                emptyVal = joblist::CHAR4EMPTYROW;
-            else if ( width >= (5 + offset)  )
-                emptyVal = joblist::CHAR8EMPTYROW;
-
-            break;
-    }
-
-    return emptyVal;
-}
-
-void ColumnCommand::getEmptyRowValue(const CSCDataType dataType,
-    const int width, messageqcpp::ByteStream::hexbyte* space) const
-{
-    int128_t *val = reinterpret_cast<int128_t*>(space);
-    utils::setWideDecimalEMptyValue(*val);
 }
 
 void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)

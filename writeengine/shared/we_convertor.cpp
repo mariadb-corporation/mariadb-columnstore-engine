@@ -639,8 +639,6 @@ void Convertor::convertColType(ColStruct* curStruct)
                     break;
 
                 default:
-                    // WIP replace with BINARY
-                    //*internalType = WriteEngine::WR_INT128;
                     *internalType = WriteEngine::WR_BINARY;
                     break;
             }
@@ -710,14 +708,8 @@ void Convertor::convertColType(ColStruct* curStruct)
 
     // check whether width is in sync with the requirement
     *width = getCorrectRowWidth(dataType, *width);
-
-    // This is the patch for the decimal thing, override
-//  if (dataType == CalpontSystemCatalog::DECIMAL)
-//  {
-//      *internalType = *width <= 4 ?
-//                      WriteEngine::WR_INT : WriteEngine::WR_LONGLONG;
-//  }
 }
+
 
 /*******************************************************************************
  * DESCRIPTION:

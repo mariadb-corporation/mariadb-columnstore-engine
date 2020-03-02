@@ -191,7 +191,7 @@ int ColumnOpCompress1::flushFile(int rc, std::map<FID, FID>& columnOids)
 
 
 int ColumnOpCompress1::expandAbbrevColumnExtent(
-    IDBDataFile* pFile, uint16_t dbRoot, uint64_t emptyVal, int width)
+    IDBDataFile* pFile, uint16_t dbRoot, uint8_t* emptyVal, int width)
 {
     // update the uncompressed initial chunk to full chunk
     int rc = m_chunkManager->expandAbbrevColumnExtent(pFile, emptyVal, width);
