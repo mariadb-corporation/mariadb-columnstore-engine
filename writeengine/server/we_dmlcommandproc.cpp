@@ -369,8 +369,6 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                             try
                             {
-                                // WIP
-                                // make convertColumnData a template
                                 datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
@@ -387,7 +385,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                                 return rc;
                             }
 
-                            if ( pushWarning)
+                            if (pushWarning)
                             {
                                 if (!isWarningSet)
                                     isWarningSet = true;
@@ -545,7 +543,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 WErrorCodes ec;
                 err = ec.errorString(error);
             }
-            else if ( error == ERR_BRM_VB_OVERFLOW )
+            else if (error == ERR_BRM_VB_OVERFLOW)
             {
                 rc = dmlpackageprocessor::DMLPackageProcessor::VB_OVERFLOW_ERROR;
                 err = IDBErrorInfo::instance()->errorMsg(ERR_VERSIONBUFFER_OVERFLOW);
@@ -560,9 +558,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     }
 
     std::map<uint32_t, uint32_t> oids;
-    std::vector<BRM::OID_t>  oidsToFlush;
+    std::vector<BRM::OID_t> oidsToFlush;
 
-    for ( unsigned i = 0; i < colStructs.size(); i++)
+    for (unsigned i = 0; i < colStructs.size(); i++)
     {
         oids[colStructs[i].dataOid] = colStructs[i].dataOid;
         oidsToFlush.push_back(colStructs[i].dataOid);
