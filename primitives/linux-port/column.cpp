@@ -957,47 +957,57 @@ void filterColumnData(
     idb_regex_t placeholderRegex;
     placeholderRegex.used = false;
 
+    // Precalulate filter results for EMPTY and NULL values
+    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, filterBOP, filterSet, filterCount,
+                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
+                                    NULL_VALUE, ALT_NULL_VALUE);
+
+    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, filterBOP, filterSet, filterCount,
+                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
+                                    NULL_VALUE, ALT_NULL_VALUE);
+
     // Loop over the column values, storing those matching the filter, and updating the min..max range
     while (nextColValue<T,W>(&curValue, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
                              &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
     {
-        if (isNull)
+        if (isEmpty)
         {
-            if (matchingColValue<KIND, W, true>(curValue, filterBOP, filterSet, filterCount,
-                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
-                                    NULL_VALUE, ALT_NULL_VALUE))
+            if (isEmptyValueMatches)
+                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+        }
+        else if (isNull)
+        {
+            if (isNullValueMatches)
+                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+        }
+        else
+        {
+            if (matchingColValue<KIND, W>(curValue, filterBOP, filterSet, filterCount,
+                                filterCmpOps, filterValues, filterRFs, filterRegexes,
+                                NULL_VALUE, ALT_NULL_VALUE))
             {
                 writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
             }
 
-            continue;
-        }
-
-        if (matchingColValue<KIND, W>(curValue, filterBOP, filterSet, filterCount,
-                                filterCmpOps, filterValues, filterRFs, filterRegexes,
-                                NULL_VALUE, ALT_NULL_VALUE))
-        {
-            writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
-        }
-
-        // Update the min and max if necessary.  Ignore nulls.
-        if (ValidMinMax && !isEmpty)
-        {
-            if ((KIND_TEXT == KIND) && (W > 1))     //// but for filtering, we go through trimWhitespace() even with W==1
+            // Update the min and max if necessary.  Ignore nulls.
+            if (ValidMinMax)
             {
-                if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, placeholderRegex))
-                    out->Min = curValue;
+                if ((KIND_TEXT == KIND) && (W > 1))     //// but for filtering, we go through trimWhitespace() even with W==1
+                {
+                    if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, placeholderRegex))
+                        out->Min = curValue;
 
-                if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, placeholderRegex))
-                    out->Max = curValue;
-            }
-            else    //// Without (W>1) above, we can use colCompare<KIND,W> for all types
-            {
-                if (static_cast<VALTYPE>(out->Min) > static_cast<VALTYPE>(curValue))
-                    out->Min = curValue;
+                    if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, placeholderRegex))
+                        out->Max = curValue;
+                }
+                else    //// Without (W>1) above, we can use colCompare<KIND,W> for all types
+                {
+                    if (static_cast<VALTYPE>(out->Min) > static_cast<VALTYPE>(curValue))
+                        out->Min = curValue;
 
-                if (static_cast<VALTYPE>(out->Max) < static_cast<VALTYPE>(curValue))
-                    out->Max = curValue;
+                    if (static_cast<VALTYPE>(out->Max) < static_cast<VALTYPE>(curValue))
+                        out->Max = curValue;
+                }
             }
         }
     }
