@@ -842,36 +842,21 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                 {
-                    // WIP MCOL-641
-                    if (row.getPrecision(s) > 18)
+                    if (colType.colWidth == 16)
                     {
                         // unset null bit first
                         // Might be redundant
                         if ((*f)->null_ptr)
                             *(*f)->null_ptr &= ~(*f)->null_bit;
 
-                        uint128_t* udec;
                         int128_t* dec;
-                        // We won't have more than 38 digits + sign + dp
-                        // Make this precision based
-                        char buf[41];
+                        // We won't have more than [+-][0][.] + up to 38 digits
+                        char buf[utils::MAXLENGTH16BYTES];
  
-                        // This C-style cast doesn't look appropriate.
-                        // Is there a way to use decltype instead of if?
-                        if (colType.colDataType == CalpontSystemCatalog::DECIMAL)
-                        {
-                            dec = row.getBinaryField<int128_t>(s);
-                            dataconvert::DataConvert::decimalToString(dec,
-                                (unsigned)colType.scale, buf,
-                                sizeof(buf), colType.colDataType);
-                        }
-                        else
-                        {
-                            udec = row.getBinaryField<uint128_t>(s);
-                            dataconvert::DataConvert::decimalToString(udec,
-                                (unsigned)colType.scale, buf,
-                                sizeof(buf), colType.colDataType);
-                        }
+                        dec = row.getBinaryField<int128_t>(s);
+                        dataconvert::DataConvert::decimalToString(dec,
+                            (unsigned)colType.scale, buf,
+                            sizeof(buf), colType.colDataType);
 
                         Field_new_decimal* f2 = (Field_new_decimal*)*f;
                         f2->store(buf, strlen(buf), f2->charset());

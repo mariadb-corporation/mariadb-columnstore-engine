@@ -477,11 +477,11 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
                 {
                     // WIP make this a separate function w and w/o overflow check
                     if (expression[i]->resultType().colDataType == execplan::CalpontSystemCatalog::DECIMAL)
-                        row.setBinaryField_offset(reinterpret_cast<uint8_t*>(&val.__v.__s128),
+                        row.setBinaryField_offset(&val.__v.__s128,
                             expression[i]->resultType().colWidth,
                             row.getOffset(expression[i]->outputIndex()));
                     else
-                        row.setBinaryField_offset(reinterpret_cast<uint8_t*>(&val.__v.__u128),
+                        row.setBinaryField_offset(&val.__v.__u128,
                             expression[i]->resultType().colWidth,
                             row.getOffset(expression[i]->outputIndex()));
                 }

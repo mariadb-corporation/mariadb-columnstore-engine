@@ -44,6 +44,7 @@ using namespace execplan;
 #include "rowgroup.h"
 #include "dataconvert.h"
 #include "columnwidth.h"
+#include "widedecimalutils.h"
 
 #include "collation.h"
 
@@ -849,9 +850,7 @@ void Row::initToNull()
 
                     case 16 :
                     {
-                        uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-                        dec[0] = joblist::BINARYNULL;
-                        dec[1] = joblist::BINARYEMPTYROW;
+                        utils::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
                         break;
                     }
                     default:
@@ -880,9 +879,7 @@ void Row::initToNull()
                 break;
             case CalpontSystemCatalog::BINARY:
                 {
-                    uint64_t *dec = reinterpret_cast<uint64_t*>(&data[offsets[i]]);
-                    dec[0] = joblist::BINARYNULL;
-                    dec[1] = joblist::BINARYEMPTYROW;
+                    utils::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
                 }
                 break;
 
@@ -914,11 +911,11 @@ inline bool
 Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,32>(
     uint32_t offset) const
 {
-    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL)) &&
-        (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
-        (intPtr[2] == static_cast<int64_t>(joblist::BINARYEMPTYROW)) &&
-        (intPtr[3] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
+    const uint64_t *intPtr = reinterpret_cast<const uint64_t*>(&data[offset]);
+    return ((intPtr[0] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[1] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[2] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[3] == static_cast<uint64_t>(utils::BINARYEMPTYVALUEHIGH)));
 }
 
 template<>
@@ -926,9 +923,8 @@ inline bool
 Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
     uint32_t offset) const
 {
-    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL))
-        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
+    const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
+    return  utils::isWideDecimalNullValue (*intPtr);
 }
 
 template<>
@@ -936,9 +932,8 @@ inline bool
 Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
     uint32_t offset) const
 {
-    const int64_t *intPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<int64_t>(joblist::BINARYNULL))
-        && (intPtr[1] == static_cast<int64_t>(joblist::BINARYEMPTYROW)));
+    const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
+    return  utils::isWideDecimalNullValue (*intPtr);
 }
 
 template<>
@@ -1058,8 +1053,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::UDECIMAL:
         {
             // WIP MCOL-641 Allmighty hack.
-            int32_t width = getColumnWidth(colIndex);
-            switch (width)
+            switch (getColumnWidth(colIndex))
             {
                 // MCOL-641
                 case 16:
