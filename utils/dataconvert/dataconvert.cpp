@@ -1334,14 +1334,11 @@ size_t DataConvert::writeFractionalPart(int128_t* dec, char* p,
             scaleDivisor *= columnstore_pow_10[scale%maxPowOf10];
     }
 
-    //for (size_t i = 1; i < scale; i++)
-    //    scaleDivisor *= 10;
-  
     int128_t fractionalPart = *dec % scaleDivisor;
     // divide by the base untill we have non-zero quotinent
     size_t written = 0;
     scaleDivisor /= 10;
-    while (scaleDivisor > 1 && *dec / scaleDivisor == 0)
+    while (scaleDivisor > 1 && fractionalPart/scaleDivisor == 0)
     {
         *p++ = '0';
         written++;
@@ -1384,6 +1381,8 @@ void DataConvert::toString(int128_t* dec, uint8_t scale,
         *p++ = '.';
         p += writeFractionalPart(dec, p, buflen-(p-original_p), scale);
     }
+
+    *p = '\0';
 
     if (buflen <= p-original_p)
     {

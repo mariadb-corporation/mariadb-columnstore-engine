@@ -590,6 +590,31 @@ TEST(DataConvertTest, DecimalToStringCheckScale3) {
     }
 }
 
+TEST(DataConvertTest, DecimalToStringCheckScale10) {
+    std::vector<std::string> expected;
+    std::vector<std::string> decimalAsStringVec;
+    // scale 3
+    uint8_t scale3 = 10;
+    decimalAsStringVec.push_back("10000000009");
+    decimalAsStringVec.push_back("-10000000009");
+    decimalAsStringVec.push_back("0");
+    decimalAsStringVec.push_back("-10000000010");
+    expected.push_back("1.0000000009");
+    expected.push_back("-1.0000000009");
+    expected.push_back("0.0000000000");
+    expected.push_back("-1.0000000010");
+    char buf[42];
+    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
+    for (int i=0; i < expected.size(); i++) {
+        int128_t value = -4;
+        memset(buf, 0, 42);
+        dataconvert::atoi128(decimalAsStringVec[i], value);
+        dataconvert::DataConvert::decimalToString(&value, scale3, buf,
+        utils::precisionByWidth(sizeof(value))+4, type);
+        EXPECT_EQ(expected[i], std::string(buf));
+    }
+}
+
 TEST(DataConvertTest, DecimalToStringCheckScale37) {
     std::vector<std::string> expected;
     std::vector<std::string> decimalAsStringVec;

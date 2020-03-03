@@ -1,0 +1,19 @@
+include_directories( ${ENGINE_COMMON_INCLUDES} )
+
+if (WITH_ROWGROUP_UT)
+    add_executable(rowgroup_tests rowgroup-tests.cpp)
+    target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS}) 
+    install(TARGETS rowgroup_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+endif()
+
+if (WITH_ARITHMETICOPERATOR_UT)
+    add_executable(arithmeticoperator_tests arithmeticoperator-tests.cpp)
+    target_link_libraries(arithmeticoperator_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS}) 
+    install(TARGETS rowgroup_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+endif()
+
+if (WITH_DATACONVERT_UT)
+    add_executable(dataconvert_tests dataconvert-tests.cpp)
+    target_link_libraries(dataconvert_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS}) 
+    install(TARGETS dataconvert_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+endif()
