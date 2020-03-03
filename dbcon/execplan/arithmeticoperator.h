@@ -288,13 +288,9 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
     switch (fOp)
     {
         case OP_ADD:
-            if (resultCscType.precision > 18)
+            if (resultCscType.colWidth == 16)
             {
-                // WIP make this a separate function w and w/o overflow check
-                if (resultCscType.colDataType == execplan::CalpontSystemCatalog::DECIMAL)
-                    result.__v.__s128 = op1.__v.__s128 + op2.__v.__s128;
-                else 
-                    result.__v.__u128 = op1.__v.__u128 + op2.__v.__u128;
+                result.s128Value = op1.s128Value + op2.s128Value;
                 break;
             }
 

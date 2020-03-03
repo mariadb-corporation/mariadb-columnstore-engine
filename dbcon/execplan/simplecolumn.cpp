@@ -622,16 +622,8 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             {
                 case 16:
                 {
-                    if (fResultType.colDataType ==  CalpontSystemCatalog::UDECIMAL)
-                    {
-                        fResult.decimalVal.__v.__u128 =
-                            *row.getBinaryField_offset<decltype(fResult.decimalVal.__v.__u128)>(fInputOffset);
-                    }
-                    else
-                    {
-                        fResult.decimalVal.__v.__s128 =
-                            *row.getBinaryField_offset<decltype(fResult.decimalVal.__v.__s128)>(fInputOffset);
-                    }
+                    fResult.decimalVal.s128Value =
+                        *row.getBinaryField_offset<decltype(fResult.decimalVal.s128Value)>(fInputOffset);
                     fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
