@@ -4,7 +4,7 @@
 #
 # Post-install steps for calpont-mysql install
 
-# check if inside dockerr
+# check if inside docker
 running_in_docker() {
     awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
