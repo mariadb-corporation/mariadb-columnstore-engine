@@ -152,8 +152,6 @@ struct Int128Pod_struct
 
 typedef Int128Pod_struct Int128Pod_t;
 
-void atoi128(const std::string& arg, int128_t& res); 
-
 enum CalpontDateTimeFormat
 {
     CALPONTDATE_ENUM     = 1, // date format is: "YYYY-MM-DD"
@@ -176,9 +174,6 @@ struct MySQLTime
         time_type = CALPONTDATETIME_ENUM;
     }
 };
-
-void atoi128(const std::string& arg, int128_t& res); 
-void atoi128(const std::string& arg, uint128_t& res); 
 
 /**
  * This function converts the timezone represented as a string
@@ -1041,12 +1036,11 @@ public:
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, cscDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
-    static void decimalToString(int128_t* value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
-    static void toString(int128_t* dec, uint8_t scale, char* p, unsigned int buflen);
-    static size_t writeIntPart(int128_t* dec, char* p, const uint16_t buflen,
+    static void decimalToString(int128_t* dec, const uint8_t scale, char* buf, const unsigned int buflen, cscDataType colDataType);
+    static size_t writeIntPart(int128_t* dec, char* p, const unsigned int buflen,
         const uint8_t scale);
-    static size_t writeFractionalPart(int128_t* dec, char* p, const uint16_t buflen,
+    static size_t writeFractionalPart(int128_t* dec, char* p, const unsigned int buflen,
         const uint8_t scale);
 
     static inline void int128Max(int128_t& i)

@@ -994,7 +994,9 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                             }
                             else
                             {
-                                dataconvert::atoi128(string(field), bigllVal);
+                                bool saturate = false;
+                                bigllVal = dataconvert::string_to_ll<int128_t>(string(field), saturate);
+                                // TODO MCOL-641 check saturate
                             }
                         }
                         else
