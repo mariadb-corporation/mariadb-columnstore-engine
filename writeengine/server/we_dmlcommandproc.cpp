@@ -815,24 +815,19 @@ uint8_t WE_DMLCommandProc::rollbackVersion(ByteStream& bs, std::string& err)
 uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId)
 {
     int rc = 0;
-    //cout << "processBatchInsert received bytestream length " << bs.length() << endl;
 
     InsertDMLPackage insertPkg;
     ByteStream::quadbyte tmp32;
     bs >> tmp32;
-    //cout << "processBatchInsert got transaction id " << tmp32 << endl;
     bs >> PMId;
-    //cout << "processBatchInsert gor PMId " << PMId << endl;
     insertPkg.read( bs);
     uint32_t sessionId = insertPkg.get_SessionID();
-    //cout << " processBatchInsert for session " << sessionId << endl;
     DMLTable* tablePtr = insertPkg.get_Table();
     bool isAutocommitOn = insertPkg.get_isAutocommitOn();
 
     if (idbdatafile::IDBPolicy::useHdfs())
         isAutocommitOn = true;
 
-    //cout << "This session isAutocommitOn is " << isAutocommitOn << endl;
     BRM::TxnID txnid;
     txnid.id  = tmp32;
     txnid.valid = true;
@@ -858,7 +853,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     try
     {
         ridList = systemCatalogPtr->columnRIDs(tableName, true);
-        roPair = systemCatalogPtr->tableRID( tableName);
+        roPair = systemCatalogPtr->tableRID(tableName);
     }
     catch (std::exception& ex)
     {
@@ -866,7 +861,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
         rc = 1;
         return rc;
     }
-
 
     std::vector<OID>    dctnryStoreOids(ridList.size()) ;
     std::vector<Column> columns;
@@ -919,13 +913,9 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 if (i == 0)
                 {
                     rc = pDBRootExtentTracker->selectFirstSegFile(dbRootExtent, bFirstExtentOnThisPM, bEmptyPM, trkErrMsg);
-                    /*	cout << "bEmptyPM = " << (int) bEmptyPM << " bFirstExtentOnThisPM= " << (int)bFirstExtentOnThisPM <<
-                    	" oid:dbroot:hwm = " << ridList[i].objnum << ":"<<dbRootExtent.fDbRoot << ":"
-                    	<<":"<<dbRootExtent.fLocalHwm << " err = " << trkErrMsg << endl; */
                 }
                 else
                     pDBRootExtentTracker->assignFirstSegFile(*(dbRootExtTrackerVec[0].get()), dbRootExtent);
-
 
                 colDBRootExtentInfo.push_back(dbRootExtent);
 
@@ -984,7 +974,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     std::vector<BRM::LBIDRange>   rangeList;
 
     // use of MetaFile for bulk rollback support
-    if ( fIsFirstBatchPm && isAutocommitOn)
+    if (fIsFirstBatchPm && isAutocommitOn)
     {
         //save meta data, version last block for each dbroot at the start of batch insert
         try
@@ -992,10 +982,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             fRBMetaWriter->init(tblOid, tableName.table);
             fRBMetaWriter->saveBulkRollbackMetaData(columns, dctnryStoreOids, dbRootHWMInfoColVec);
 
-            //cout << "Saved meta files" << endl;
             if (!bFirstExtentOnThisPM)
             {
-                //cout << "Backing up hwm chunks" << endl;
                 for (unsigned i = 0; i < dctnryList.size(); i++) //back up chunks for compressed dictionary
                 {
                     // @bug 5572 HDFS tmp file - Ignoring return flag, don't need in this context
@@ -1310,7 +1298,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     int error = NO_ERROR;
 
     //fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
-    //cout << "Batch inserting a row with transaction id " << txnid.id << endl;
     if (colValuesList.size() > 0)
     {
         if (colValuesList[0].size() > 0)
@@ -1361,7 +1348,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     if ( isWarningSet && ( rc == NO_ERROR ) )
     {
         rc = dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING;
-        //cout << "Got warning" << endl;
         Message::Args args;
         string cols = "'" + colNames[0] + "'";
 
