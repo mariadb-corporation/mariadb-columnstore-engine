@@ -250,7 +250,7 @@ public:
      * a NewColResultHeader, followed by the output type specified by in->OutputType.
      * \li If OT_RID, it will be an array of RIDs
      * \li If OT_DATAVALUE, it will be an array of matching data values stored in the column
-     * \li If OT_BOTH, it will be an array of <DataValue, RID> pairs
+     * \li If OT_BOTH, it will be an array of <RID, DataValue> pairs
      * @param outSize The size of the output buffer in bytes.
      * @param written (out parameter) A pointer to 1 int, which will contain the
      * number of bytes written to out.

@@ -571,7 +571,7 @@ inline bool matchingColValue(
     uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
-    uint8_t* filterCmpOps,          //   comparison operation
+    uint8_t* filterCOPs,            //   comparison operation
     int64_t* filterValues,          //   value to compare to
     uint8_t* filterRFs,
     idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
@@ -599,7 +599,7 @@ inline bool matchingColValue(
             bool isFilterValueNull = ((static_cast<T>(filterValue) == NULL_VALUE) ||
                                       (static_cast<T>(filterValue) == ALT_NULL_VALUE));
 
-            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCmpOps[argIndex],
+            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
                                            filterRFs[argIndex], filterRegexes[argIndex],
                                            isFilterValueNull);
 
@@ -795,7 +795,7 @@ inline void writeColValue(
         out->RidFlags |= (1 << (rid >> 10)); // set the (row/1024)'th bit
     }
 
-    if (OutputType & OT_TOKEN || OutputType & OT_DATAVALUE)
+    if (OutputType & (OT_TOKEN | OT_DATAVALUE))
     {
         checkedWriteValue(out, outSize, written, &srcArray[rid], 2);
     }
@@ -927,14 +927,24 @@ void filterColumnData(
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
     constexpr int W = sizeof(T);
-    // Internally, filtering works with values of this type
-    using VALTYPE = typename std::conditional<KIND_UNSIGNED == KIND, uint64_t, int64_t>::type;
-
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
+    // Cache some structure fields in local vars
     auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
-    uint32_t filterCount = in->NOPS;    // Number of elements in the filter
-    uint32_t filterBOP = in->BOP;       // Operation (and/or/xor/none) that combines all filter elements
+    uint32_t filterCount = in->NOPS;        // Number of elements in the filter
+    uint32_t filterBOP   = in->BOP;         // Operation (and/or/xor/none) that combines all filter elements
+    uint8_t  OutputType  = in->OutputType;
+
+    // If no pre-parsed column filter is set, parse the filter in the message
+    if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
+        parsedColumnFilter = parseColumnFilter_T<T>((uint8_t*)in + sizeof(NewColRequestHeader), in->DataType, in->NOPS, in->BOP);
+
+    // Cache parsedColumnFilter fields in local vars
+    auto filterValues  = (filterCount==0? NULL : parsedColumnFilter->prestored_argVals.get());
+    auto filterCOPs    = (filterCount==0? NULL : parsedColumnFilter->prestored_cops.get());
+    auto filterRFs     = (filterCount==0? NULL : parsedColumnFilter->prestored_rfs.get());
+    auto filterSet     = (filterCount==0? NULL : parsedColumnFilter->prestored_set.get());
+    auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
     // Bit patterns in srcArray[i] representing an empty row, the NULL value,
     // and alternative NULL value representation for a few types
@@ -942,95 +952,94 @@ void filterColumnData(
     T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
     T ALT_NULL_VALUE = static_cast<T>(getAlternativeNullValue<W>(DataType));
 
-    // If no pre-parsed column filter is set, parse the filter in the message
-    if (parsedColumnFilter.get() == NULL  &&  filterCount > 0)
-        parsedColumnFilter = parseColumnFilter_T<T>((uint8_t*)in + sizeof(NewColRequestHeader), in->DataType, in->NOPS, in->BOP);
+    // Precompute filter results for EMPTY and NULL values
+    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, filterBOP, filterSet, filterCount,
+                                    filterCOPs, filterValues, filterRFs, filterRegexes,
+                                    NULL_VALUE, ALT_NULL_VALUE);
 
-    // For better speed, we cache parsedColumnFilter fields into local variables
-    auto filterValues  = (filterCount==0? NULL : parsedColumnFilter->prestored_argVals.get());
-    auto filterCmpOps  = (filterCount==0? NULL : parsedColumnFilter->prestored_cops.get());
-    auto filterRFs     = (filterCount==0? NULL : parsedColumnFilter->prestored_rfs.get());
-    auto filterSet     = (filterCount==0? NULL : parsedColumnFilter->prestored_set.get());
-    auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
+    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, filterBOP, filterSet, filterCount,
+                                    filterCOPs, filterValues, filterRFs, filterRegexes,
+                                    NULL_VALUE, ALT_NULL_VALUE);
 
-    // Set boolean indicating whether to capture the min and max values
+    // Boolean indicating whether to capture the min and max values
     bool ValidMinMax = isMinMaxValid(in);
-    out->ValidMinMax = ValidMinMax;
-
-    if (ValidMinMax)
-    {
-        out->Min = static_cast<int64_t>(numeric_limits<VALTYPE>::max());
-        out->Max = static_cast<int64_t>(numeric_limits<VALTYPE>::min());
-    }
-    else
-    {
-        out->Min = 0;
-        out->Max = 0;
-    }
+    // Real type of values captured in Min/Max
+    using VALTYPE = typename std::conditional<KIND_UNSIGNED == KIND, uint64_t, int64_t>::type;
+    // Local vars to capture the min and max values
+    auto Min = static_cast<int64_t>(numeric_limits<VALTYPE>::max());
+    auto Max = static_cast<int64_t>(numeric_limits<VALTYPE>::min());
 
     // Loop-local variables
     int64_t curValue = 0;
     uint16_t rid = 0;
-    int nextRidIndex = 0;
     bool isNull = false, isEmpty = false;
     idb_regex_t placeholderRegex;
     placeholderRegex.used = false;
 
-    // Precalulate filter results for EMPTY and NULL values
-    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, filterBOP, filterSet, filterCount,
-                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
-                                    NULL_VALUE, ALT_NULL_VALUE);
-
-    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, filterBOP, filterSet, filterCount,
-                                    filterCmpOps, filterValues, filterRFs, filterRegexes,
-                                    NULL_VALUE, ALT_NULL_VALUE);
-
     // Loop over the column values, storing those matching the filter, and updating the min..max range
-    while (nextColValue<T,W>(&curValue, &isEmpty, &isNull,
-                             &nextRidIndex, &rid,
-                             srcArray, srcSize, ridArray, ridSize,
-                             in->OutputType, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
+    for (int i = 0;
+         nextColValue<T,W>(&curValue, &isEmpty, &isNull,
+                           &i, &rid,
+                           srcArray, srcSize, ridArray, ridSize,
+                           OutputType, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE); )
     {
         if (isEmpty)
         {
+            // If EMPTY values match the filter, write curValue to the output buffer
             if (isEmptyValueMatches)
-                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+                writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
         }
         else if (isNull)
         {
+            // If NULL values match the filter, write curValue to the output buffer
             if (isNullValueMatches)
-                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+                writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
         }
         else
         {
-            if (matchingColValue<KIND, W>(curValue, filterBOP, filterSet, filterCount,
-                                filterCmpOps, filterValues, filterRFs, filterRegexes,
+            // If curValue matches the filter, write it to the output buffer
+            if (matchingColValue<KIND, W, false>(curValue, filterBOP, filterSet, filterCount,
+                                filterCOPs, filterValues, filterRFs, filterRegexes,
                                 NULL_VALUE, ALT_NULL_VALUE))
             {
-                writeColValue<T>(in->OutputType, out, outSize, written, rid, srcArray);
+                writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
             }
 
-            // Update the min and max if necessary.  Ignore nulls.
+            // Update Min and Max if necessary.  EMPTY/NULL values can't appear here.
             if (ValidMinMax)
             {
                 if ((KIND_TEXT == KIND) && (W > 1))     //// but for filtering, we go through trimWhitespace() even with W==1
                 {
-                    if (colCompare<KIND, W>(out->Min, curValue, COMPARE_GT, false, placeholderRegex))
-                        out->Min = curValue;
+                    if (colCompare<KIND, W>(Min, curValue, COMPARE_GT, false, placeholderRegex))
+                        Min = curValue;
 
-                    if (colCompare<KIND, W>(out->Max, curValue, COMPARE_LT, false, placeholderRegex))
-                        out->Max = curValue;
+                    if (colCompare<KIND, W>(Max, curValue, COMPARE_LT, false, placeholderRegex))
+                        Max = curValue;
                 }
                 else    //// Without (W>1) above, we can use colCompare<KIND,W> for all types
                 {
-                    if (static_cast<VALTYPE>(out->Min) > static_cast<VALTYPE>(curValue))
-                        out->Min = curValue;
+                    if (static_cast<VALTYPE>(Min) > static_cast<VALTYPE>(curValue))
+                        Min = curValue;
 
-                    if (static_cast<VALTYPE>(out->Max) < static_cast<VALTYPE>(curValue))
-                        out->Max = curValue;
+                    if (static_cast<VALTYPE>(Max) < static_cast<VALTYPE>(curValue))
+                        Max = curValue;
                 }
             }
         }
+    }
+
+
+    // Store Min/Max values captured to *out
+    out->ValidMinMax = ValidMinMax;
+    if (ValidMinMax)
+    {
+        out->Min = Min;
+        out->Max = Max;
+    }
+    else
+    {
+        out->Min = 0;   //// can we just save arbitrary data here when ValidMinMax == false?
+        out->Max = 0;
     }
 }
 
