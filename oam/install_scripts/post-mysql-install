@@ -4,6 +4,11 @@
 #
 # Post-install steps for calpont-mysql install
 
+# check if inside dockerr
+running_in_docker() {
+    awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+}
+
 # check log for error
 checkForError() {
 	# check for password error
@@ -11,12 +16,17 @@ checkForError() {
 	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
 		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
 		  rm -f ${tmpdir}/error.check
-          # Test we are using systemd
-          systemctl cat mariadb.service > /dev/null 2>&1
-          if [ $? -eq 0 ]; then
-              systemctl stop mariadb.service > /dev/null 2>&1
+          # Test we are using docker
+          if [ running_in_docker ]; then
+              /usr/share/mysql/mysql.server stop
           else
-              pkill mysqld
+              # Test we are using systemd
+              systemctl cat mariadb.service > /dev/null 2>&1
+              if [ $? -eq 0 ]; then
+                  systemctl stop mariadb.service > /dev/null 2>&1
+              else
+                  pkill mysqld
+              fi
           fi
 		  sleep 2
 		  exit 2;
@@ -60,23 +70,31 @@ for arg in "$@"; do
 done
 
 # Restart in the same way that mysqld will be started normally.
-# Test we are using systemd
-systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    systemctl stop mariadb.service > /dev/null 2>&1
+# Test we are using docker
+if [ running_in_docker ]; then
+    /usr/share/mysql/mysql.server stop > /dev/null 2>&1
+    sleep 2
+    /usr/share/mysql/mysql.server start --skip-grant-tables
 else
-    pkill mysqld
+    # Test we are using systemd
+    systemctl cat mariadb.service > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        systemctl stop mariadb.service > /dev/null 2>&1
+    else
+        pkill mysqld
+    fi
+
+    sleep 2
+    export MYSQL_OPTS="--skip-grant-tables" export MYSQL_OPTS="--skip-grant-tables"
+    # Test we are using systemd
+    systemctl cat mariadb.service > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        systemctl start mariadb.service
+    else
+        /usr/bin/mysqld_safe --skip-grant-tables &
+    fi
+    unset MYSQL_OPTS
 fi
-sleep 2
-export MYSQL_OPTS="--skip-grant-tables"
-# Test we are using systemd
-systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    systemctl start mariadb.service
-else
-    /usr/bin/mysqld_safe --skip-grant-tables &
-fi
-unset MYSQL_OPTS
 
 sleep 5
 
@@ -85,6 +103,24 @@ install_mcs_mysql.sh  --tmpdir=$tmpdir
 checkForError
 if [ $? -ne 0 ]; then
     echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+    if [ running_in_docker ]; then
+        /usr/share/mysql/mysql.server stop
+    else
+        # Test we are using systemd
+        systemctl cat mariadb.service > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            systemctl stop mariadb.service > /dev/null 2>&1
+        else
+            pkill mysqld
+        fi
+    fi
+    sleep 2
+    exit 2;
+fi
+
+if [ running_in_docker ]; then
+    /usr/share/mysql/mysql.server stop
+else
     # Test we are using systemd
     systemctl cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ]; then
@@ -92,16 +128,6 @@ if [ $? -ne 0 ]; then
     else
         pkill mysqld
     fi
-    sleep 2
-    exit 2;
-fi
-
-# Test we are using systemd
-systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    systemctl stop mariadb.service > /dev/null 2>&1
-else
-    pkill mysqld
 fi
 
 
