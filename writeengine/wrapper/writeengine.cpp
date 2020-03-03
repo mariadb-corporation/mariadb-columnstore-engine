@@ -1129,7 +1129,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         //----------------------------------------------------------------------
         if (bFirstExtentOnThisPM)
         {
-            //cout << "bFirstExtentOnThisPM is " << bFirstExtentOnThisPM << endl;
             std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
             BRM::CreateStripeColumnExtentsArgIn createStripeColumnExtentsArgIn;
 
@@ -1234,8 +1233,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 colStructList[i].fColPartition =  tmpExtentInfo[currentDBrootIdx].fPartition;
                 colStructList[i].fColSegment = tmpExtentInfo[currentDBrootIdx].fSegment;
                 colStructList[i].fColDbRoot = tmpExtentInfo[currentDBrootIdx].fDbRoot;
-                //cout << "Load from dbrootExtenttracker oid:dbroot:part:seg = " <<colStructList[i].dataOid<<":"
-                //<<colStructList[i].fColDbRoot<<":"<<colStructList[i].fColPartition<<":"<<colStructList[i].fColSegment<<endl;
                 dctnryStructList[i].fColPartition = tmpExtentInfo[currentDBrootIdx].fPartition;
                 dctnryStructList[i].fColSegment = tmpExtentInfo[currentDBrootIdx].fSegment;
                 dctnryStructList[i].fColDbRoot = tmpExtentInfo[currentDBrootIdx].fDbRoot;
@@ -1271,7 +1268,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 {
                     aExt.hwm = extents[i].startBlkOffset;
                     aExt.isNewExt = true;
-                    //cout << "adding a ext to metadata" << endl;
                 }
                 else
                 {
@@ -1279,12 +1275,10 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                     tmpExtentInfo = dbRootExtentTrackers[i]->getDBRootExtentList();
                     aExt.isNewExt = false;
                     aExt.hwm = tmpExtentInfo[currentDBrootIdx].fLocalHwm;
-                    //cout << "oid " << colStructList[i].dataOid << " gets hwm " << aExt.hwm << endl;
                 }
 
                 aExt.current = true;
                 aColExtsInfo.push_back(aExt);
-                //cout << "get from extentinfo oid:hwm = " << colStructList[i].dataOid << ":" << aExt.hwm << endl;
             }
 
             tableMetaData->setColExtsInfo(colStructList[i].dataOid, aColExtsInfo);
@@ -1387,7 +1381,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     if (it != aColExtsInfo.end())
     {
         hwm = it->hwm;
-		//cout << "Got from colextinfo hwm for oid " << colStructList[colId].dataOid << " is " << hwm << " and seg is " << colStructList[0].fColSegment << endl;
     }
 
     oldHwm = hwm; //Save this info for rollback
@@ -1422,8 +1415,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent, rowsLeft, newHwm, newFile,
                            newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm);
 
-    //cout << "after allocrowid, total row = " <<totalRow << " newExtent is " << newExtent << endl; 
-    //cout << "column oid " << curColStruct.dataOid << " has hwm:newHwm = " << hwm <<":" << newHwm<< endl;
     if (rc != NO_ERROR) //Clean up is already done
         return rc;
 
@@ -1441,7 +1432,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-       for (unsigned k=0; k<colStructList.size(); k++)
+        for (unsigned k=0; k<colStructList.size(); k++)
         {
            // Skip the selected column
            if (k == colId)
@@ -1505,7 +1496,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 return rc;
             }
 
-            for (uint32_t     rows = 0; rows < (totalRow - rowsLeft); rows++)
+            for (uint32_t rows = 0; rows < (totalRow - rowsLeft); rows++)
             {
                 if (dctStr_iter->length() == 0)
                 {
@@ -1560,7 +1551,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 if (rc != NO_ERROR)
                     return rc;
 
-                for (uint32_t     rows = 0; rows < rowsLeft; rows++)
+                for (uint32_t rows = 0; rows < rowsLeft; rows++)
                 {
                     if (dctStr_iter->length() == 0)
                     {
@@ -1627,13 +1618,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         lastRidNew = rowIdArray[totalRow - 1];
     }
 
-    //cout << "rowid allocated is "  << lastRid << endl;
     //if a new extent is created, all the columns in this table should have their own new extent
     //First column already processed
 
     //@Bug 1701. Close the file (if uncompressed)
     m_colOp[op(curCol.compressionType)]->clearColumn(curCol);
-    //cout << "Saving hwm info for new ext batch" << endl;
     //Update hwm to set them in the end
     bool succFlag = false;
     unsigned colWidth = 0;
@@ -1663,7 +1652,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         colWidth = colStructList[i].colWidth;
         succFlag = colOp->calculateRowId(lastRid, BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
-        //cout << "insertcolumnrec   oid:rid:fbo:oldhwm = " << colStructList[i].dataOid << ":" << lastRid << ":" << curFbo << ":" << oldHwm << endl;
         if (succFlag)
         {
             if ((HWM)curFbo >= oldHwm)
@@ -1677,8 +1665,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 it->current = false;
             }
 
-            //cout << "updated old ext info for oid " << colStructList[i].dataOid << " dbroot:part:seg:hwm:current = "
-            //<< it->dbRoot<<":"<<it->partNum<<":"<<it->segNum<<":"<<it->hwm<<":"<< it->current<< " and newExtent is " << newExtent << endl;
         }
         else
             return ERR_INVALID_PARAM;
@@ -1734,7 +1720,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         colNewValueList.push_back(newColTupleList);
         newColTupleList.clear();
 
-        //upate the oldvalue list for the old extent
+        //update the oldvalue list for the old extent
         for (uint64_t j = 0; j < (totalRow - rowsLeft); j++)
         {
             firstPartTupleList.push_back(colTupleList[j]);
@@ -1749,7 +1735,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 #ifdef PROFILE
     timer.start("writeColumnRec");
 #endif
-//cout << "Writing column record" << endl;
 
     if (rc == NO_ERROR)
     {
@@ -3979,7 +3964,7 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
                     // WIP replace with a single call
                     char buf[utils::MAXLENGTH16BYTES];
                     int128_t val = boost::any_cast<int128_t>(curTuple.data);
-                    dataconvert::DataConvert::toString(&val, 0, buf, utils::MAXLENGTH16BYTES);
+                    dataconvert::DataConvert::decimalToString(&val, 0, buf, utils::MAXLENGTH16BYTES, curColStruct.colDataType);
                     curStr.assign(buf);
                 }
                 else if (curTuple.data.type() == typeid(double))
