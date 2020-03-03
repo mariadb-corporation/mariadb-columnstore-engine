@@ -2781,7 +2781,7 @@ int processCommand(string* arguments)
                     if ( DBRootStorageType == "hdfs")
                     {
 						string logFile = tmpDir + "/cc-restart.pdsh";
-                        cmd = "pdsh -a 'columnstore restart' > " + logFile + " 2>&1";
+                        cmd = "pdsh -a 'columnstore start' > " + logFile + " 2>&1";
                         system(cmd.c_str());
 
                         if (oam.checkLogStatus(logFile, "exit") )
@@ -2818,12 +2818,12 @@ int processCommand(string* arguments)
 
                                 if ( modulename == localModule )
                                 {
-                                    cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
+                                    cmd = "columnstore start > " + tmpDir + "/startSystem.log 2>&1";
                                     int rtnCode = system(cmd.c_str());
 
                                     if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0)
                                     {
-                                        cout << endl << "error with running 'columnstore restart' on local module " << endl;
+                                        cout << endl << "error with running 'columnstore start' on local module " << endl;
                                         cout << endl << "**** startSystem Failed" << endl;
                                         break;
                                     }
@@ -2836,7 +2836,7 @@ int processCommand(string* arguments)
                                 for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
                                 {
                                     //run remote command script
-                                    cmd = "remote_command.sh " + (*pt1).IPAddr + " " + password + " 'columnstore restart' 0";
+                                    cmd = "remote_command.sh " + (*pt1).IPAddr + " " + password + " 'columnstore start' 0";
                                     int rtnCode = system(cmd.c_str());
 
                                     if (WEXITSTATUS(rtnCode) < 0)
@@ -2885,7 +2885,7 @@ int processCommand(string* arguments)
                     //just kick off local server
                     cout << endl << "   System being started, please wait...";
                     cout.flush();
-                    cmd = "columnstore restart > " + tmpDir + "/start.log 2>&1";
+                    cmd = "columnstore start > " + tmpDir + "/startSystem.log 2>&1";
                     int rtnCode = system(cmd.c_str());
 
                     if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0)

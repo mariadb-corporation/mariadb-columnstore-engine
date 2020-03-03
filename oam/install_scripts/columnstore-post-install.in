@@ -31,6 +31,11 @@ if [ ! -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml ]; then
 	exit 1
 fi
 
+if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
+    /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.new
+    /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf
+fi
+
 touch /dev/shm/columnstore-test && rm /dev/shm/columnstore-test
 if [ $? -ne 0 ] ; then
     echo "User $user will need R/W access to /dev/shm."
