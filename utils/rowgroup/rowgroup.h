@@ -439,6 +439,9 @@ public:
     // that's not string-table safe, this one is
     inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
+    // WIP MCOL-641
+    inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
+
     std::string toString() const;
     std::string toCSV() const;
 
@@ -1191,6 +1194,12 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
         out.setLongDoubleField(getLongDoubleField(srcIndex), destIndex);
     else
         out.setIntField(getIntField(srcIndex), destIndex);
+}
+
+// WIP MCOL-641
+inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
+{
+    out.setBinaryField<int128_t>(getBinaryField<int128_t>(srcIndex), 16, destIndex);
 }
 
 inline void Row::setRid(uint64_t rid)
