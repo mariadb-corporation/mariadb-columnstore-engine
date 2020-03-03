@@ -154,10 +154,7 @@ void DmlReadThread::operator()()
 
                 case WE_SVR_BATCH_INSERT:
                 {
-                    //timer.start("processBatchInsert");
                     rc = fWeDMLprocessor->processBatchInsert(ibs, errMsg, PMId);
-                    //timer.stop("processBatchInsert");
-                    //cout << "fWeDMLprocessor " << fWeDMLprocessor << " is processing batchinsert ..." << endl;
                     break;
                 }
 

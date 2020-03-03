@@ -545,126 +545,189 @@ TEST(DataConvertTest, NumberIntValue)
     EXPECT_TRUE(pushWarning);
 }
 
-TEST(DataConvertTest, atoiCheck) {
-    std::vector<int128_t> expected;
-    std::vector<std::string> decimalAsStringVec;
-    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("0");
-    decimalAsStringVec.push_back("-0.042");
-    expected.push_back(10000000000000000000ULL*(uint128_t)9999999999999999999ULL
-        +9999999999999999999ULL);
-    expected.push_back(-1*expected[0]);
-    expected.push_back(0);
-    expected.push_back(-42);
-    for (int i=0; i < expected.size(); i++) {
-        int128_t value;
-        dataconvert::atoi128(decimalAsStringVec[i], value);
-        EXPECT_EQ(expected[i], value);
-        EXPECT_NE(expected[i], value-1);
-    }
+TEST(DataConvertTest, DecimalToStringCheckScale0)
+{
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    char buf[42];
+    string input, expected;
+    ct.precision = 38;
+    ct.scale = 0;
+    int128_t res;
+
+    // test simple values
+    res = 0;
+    expected = "0";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 2;
+    expected = "2";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -2;
+    expected = "-2";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 123;
+    expected = "123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -123;
+    expected = "-123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "99999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-99999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+}
+TEST(DataConvertTest, DecimalToStringCheckScale10)
+{
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    char buf[42];
+    string input, expected;
+    ct.precision = 38;
+    ct.scale = 10;
+    int128_t res;
+
+    // test simple values
+    res = 0;
+    expected = "0.0000000000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 2;
+    expected = "0.0000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -2;
+    expected = "-0.0000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 123;
+    expected = "0.0000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -123;
+    expected = "-0.0000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 12345678901;
+    expected = "1.2345678901";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -12345678901;
+    expected = "-1.2345678901";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "9999999999999999999999999999.9999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-9999999999999999999999999999.9999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "0.0000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-0.0000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test leading zeros
+    res = 10000000009;
+    expected = "1.0000000009";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-1.0000000009";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
 }
 
-TEST(DataConvertTest, DecimalToStringCheckScale3) {
-    std::vector<std::string> expected;
-    std::vector<std::string> decimalAsStringVec;
-    // scale 3
-    uint8_t scale3 = 3;
-    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("0");
-    decimalAsStringVec.push_back("-0.042");
-    expected.push_back("99999999999999999999999999999999999.999");
-    expected.push_back("-99999999999999999999999999999999999.999");
-    expected.push_back("0.000");
-    expected.push_back("-0.042");
+TEST(DataConvertTest, DecimalToStringCheckScale38)
+{
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::DECIMAL;
     char buf[42];
-    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
-    for (int i=0; i < expected.size(); i++) {
-        int128_t value = -4;
-        memset(buf, 0, 42);
-        dataconvert::atoi128(decimalAsStringVec[i], value);
-        dataconvert::DataConvert::decimalToString(&value, scale3, buf,
-        utils::precisionByWidth(sizeof(value))+4, type);
-        EXPECT_EQ(expected[i], std::string(buf));
-    }
-}
+    string input, expected;
+    ct.precision = 38;
+    ct.scale = 38;
+    int128_t res;
 
-TEST(DataConvertTest, DecimalToStringCheckScale10) {
-    std::vector<std::string> expected;
-    std::vector<std::string> decimalAsStringVec;
-    // scale 3
-    uint8_t scale3 = 10;
-    decimalAsStringVec.push_back("10000000009");
-    decimalAsStringVec.push_back("-10000000009");
-    decimalAsStringVec.push_back("0");
-    decimalAsStringVec.push_back("-10000000010");
-    expected.push_back("1.0000000009");
-    expected.push_back("-1.0000000009");
-    expected.push_back("0.0000000000");
-    expected.push_back("-1.0000000010");
-    char buf[42];
-    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
-    for (int i=0; i < expected.size(); i++) {
-        int128_t value = -4;
-        memset(buf, 0, 42);
-        dataconvert::atoi128(decimalAsStringVec[i], value);
-        dataconvert::DataConvert::decimalToString(&value, scale3, buf,
-        utils::precisionByWidth(sizeof(value))+4, type);
-        EXPECT_EQ(expected[i], std::string(buf));
-    }
-}
+    // test simple values
+    res = 0;
+    expected = "0.00000000000000000000000000000000000000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 2;
+    expected = "0.00000000000000000000000000000000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -2;
+    expected = "-0.00000000000000000000000000000000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 123;
+    expected = "0.00000000000000000000000000000000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -123;
+    expected = "-0.00000000000000000000000000000000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = ((((((int128_t)1234567890 * 10000000000) + 1234567890) * 10000000000) + 1234567890) * 100000000 ) + 12345678;
+    expected = "0.12345678901234567890123456789012345678";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-0.12345678901234567890123456789012345678";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
 
-TEST(DataConvertTest, DecimalToStringCheckScale37) {
-    std::vector<std::string> expected;
-    std::vector<std::string> decimalAsStringVec;
-    uint8_t scale37 = 37;
-    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("0");
-    decimalAsStringVec.push_back("-42");
-    decimalAsStringVec.push_back("-19999999999999999999999999999999999999");
-    expected.push_back("9.9999999999999999999999999999999999999");
-    expected.push_back("-9.9999999999999999999999999999999999999");
-    expected.push_back("0.0000000000000000000000000000000000000");
-    expected.push_back("-0.0000000000000000000000000000000000042");
-    expected.push_back("-1.9999999999999999999999999999999999999");
-    char buf[42];
-    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
-    for (int i=0; i < expected.size(); i++) {
-        int128_t value = -4;
-        memset(buf, 0, 41);
-        dataconvert::atoi128(decimalAsStringVec[i], value);
-        dataconvert::DataConvert::decimalToString(&value, scale37, buf,
-        utils::precisionByWidth(sizeof(value))+4, type);
-        EXPECT_EQ(expected[i], std::string(buf));
-    }
-}
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "0.99999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-0.99999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
 
-TEST(DataConvertTest, DecimalToStringCheckScale38) {
-    std::vector<std::string> expected;
-    std::vector<std::string> decimalAsStringVec;
-    uint8_t scale38 = 38;
-    decimalAsStringVec.push_back("99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("-99999999999999999999999999999999999999");
-    decimalAsStringVec.push_back("0");
-    decimalAsStringVec.push_back("-42");
-    expected.push_back("0.99999999999999999999999999999999999999");
-    expected.push_back("-0.99999999999999999999999999999999999999");
-    expected.push_back("0.00000000000000000000000000000000000000");
-    expected.push_back("-0.00000000000000000000000000000000000042");
-    char buf[42];
-    CSCDataType type = execplan::CalpontSystemCatalog::DECIMAL;
-    for (int i=0; i < expected.size(); i++) {
-        int128_t value = -4;
-        memset(buf, 0, 41);
-        dataconvert::atoi128(decimalAsStringVec[i], value);
-        dataconvert::DataConvert::decimalToString(&value, scale38, buf,
-        utils::precisionByWidth(sizeof(value))+4, type);
-        EXPECT_EQ(expected[i], std::string(buf));
-    }
+    // test trailing zeros
+    res = 123000;
+    expected = "0.00000000000000000000000000000000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-0.00000000000000000000000000000000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
 }
 
 TEST(DataConvertTest, ConvertColumnData) {
 }
-
