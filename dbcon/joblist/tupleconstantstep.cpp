@@ -528,7 +528,11 @@ void TupleConstantStep::fillInConstants(const rowgroup::Row& rowIn, rowgroup::Ro
 
         //fRowConst.copyField(rowOut.getData()+2, 0); // hardcoded 2 for rid length
         for (uint32_t i = 1; i < rowOut.getColumnCount(); i++)
-            rowIn.copyField(rowOut, i, i - 1);
+            // WIP MCOL-641 implement copyBinaryField inside copyField
+            if (UNLIKELY(rowIn.getColumnWidth(i - 1) == 16))
+                rowIn.copyBinaryField(rowOut, i, i - 1);
+            else
+                rowIn.copyField(rowOut, i, i - 1);
 
         //memcpy(rowOut.getData()+rowOut.getOffset(1), rowIn.getData()+2, n);
     }

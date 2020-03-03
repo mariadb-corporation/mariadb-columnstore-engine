@@ -633,22 +633,23 @@ string Row::toString() const
                     os << " " << dec;
                     break;
                 }
+                // WIP MCOL-641
                 case CalpontSystemCatalog::BINARY:
                     std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
                     break;
-                // WIP
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
-                    if (colWidths[i] == sizeof(int128_t))
+                    if (utils::isWide(colWidths[i]))
                     {
-                        char *buf = (char*)alloca(precision[i] + 3);
+                        unsigned int buflen = precision[i] + 3;
+                        char *buf = (char*)alloca(buflen);
                         // empty the buffer
                         dataconvert::DataConvert::decimalToString(getBinaryField<int128_t>(i),
-                            scale[i], buf, precision[i]+3, types[i]); 
+                            scale[i], buf, buflen, types[i]);
                         os << buf << " ";
                         break;
                     }
-                    // fallback if the the legacy DECIMAL
+                    // fallthrough if the legacy DECIMAL
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -850,10 +851,8 @@ void Row::initToNull()
                         break;
 
                     case 16 :
-                    {
                         utils::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
                         break;
-                    }
                     default:
                         *((int64_t*) &data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL);
                         break;
