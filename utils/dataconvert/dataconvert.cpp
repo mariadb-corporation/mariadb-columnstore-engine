@@ -125,6 +125,7 @@ const uint64_t columnstore_pow_10[20] =
     1000000000000000000ULL,
     10000000000000000000ULL
 };
+
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base & (*f)(std::ios_base&))
 {
@@ -1249,115 +1250,144 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const str
 
 }
 
-size_t DataConvert::writeIntPart(int128_t* dec, char* p,
-    const uint16_t buflen,
+size_t DataConvert::writeIntPart(int128_t* dec,
+    char* p,
+    const unsigned int buflen,
     const uint8_t scale)
 {
-  int128_t intPart = *dec;
-  if (scale)
-  {
-    uint8_t maxPowOf10 = sizeof(columnstore_pow_10)/sizeof(columnstore_pow_10[0])-1;
-    switch (scale/maxPowOf10)
+    int128_t intPart = *dec;
+    int128_t high = 0, mid = 0, low = 0;
+    uint64_t div = 10000000000000000000ULL;
+
+    if (scale)
     {
-        case(2):
-            intPart /= columnstore_pow_10[maxPowOf10];
-            intPart /= columnstore_pow_10[maxPowOf10];
-            break;
-        case(1):
-            intPart /= columnstore_pow_10[maxPowOf10];
-        case(0):
-            intPart /= columnstore_pow_10[scale%maxPowOf10];
+        const uint8_t maxPowOf10 =
+            (sizeof(columnstore_pow_10) / sizeof(columnstore_pow_10[0])) - 1;
+
+        // Assuming scale = [0, 56]
+        switch (scale / maxPowOf10)
+        {
+            case 2: // scale = [38, 56]
+                intPart /= columnstore_pow_10[maxPowOf10];
+                intPart /= columnstore_pow_10[maxPowOf10];
+                low = intPart;
+                break;
+            case 1: // scale = [19, 37]
+                intPart /= columnstore_pow_10[maxPowOf10];
+                intPart /= columnstore_pow_10[scale % maxPowOf10];
+                low = intPart % div;
+                mid = intPart / div;
+                break;
+            case 0: // scale = [0, 18]
+                intPart /= columnstore_pow_10[scale % maxPowOf10];
+                low = intPart % div;
+                intPart /= div;
+                mid = intPart % div;
+                high = intPart / div;
+                break;
+            default:
+                throw QueryDataExcept("writeIntPart() bad scale", formatErr);
+        }
     }
-  }
+    else
+    {
+        low = intPart % div;
+        intPart /= div;
+        mid = intPart % div;
+        high = intPart / div;
+    }
 
-  uint64_t div = 10000000000000000000ULL;
-  int128_t high = intPart;
-  int128_t low;
-  low = high % div;
-  high /= div;
-  int128_t mid;
-  mid = high % div;
-  high /= div;
+    // pod[0] is low 8 bytes, pod[1] is high 8 bytes
+    uint64_t* high_pod = reinterpret_cast<uint64_t*>(&high);
+    uint64_t* mid_pod = reinterpret_cast<uint64_t*>(&mid);
+    uint64_t* low_pod = reinterpret_cast<uint64_t*>(&low);
+    char* original_p = p;
 
-  // pod[0] is low 8 byte, pod[1] is high
-  uint64_t* high_pod = reinterpret_cast<uint64_t*>(&high);
-  uint64_t* mid_pod = reinterpret_cast<uint64_t*>(&mid);
-  uint64_t* low_pod = reinterpret_cast<uint64_t*>(&low);
-  char* original_p = p;
-  int written = 0;
+    // WIP replace sprintf with streams
+    if (high_pod[0] != 0)
+    {
+        p += sprintf(p, "%lu", high_pod[0]);
+        p += sprintf(p, "%019lu", mid_pod[0]);
+        p += sprintf(p, "%019lu", low_pod[0]);
+    }
+    else if (mid_pod[0] != 0)
+    {
+        p += sprintf(p, "%lu", mid_pod[0]);
+        p += sprintf(p, "%019lu", low_pod[0]);
+    }
+    else
+    {
+        p += sprintf(p, "%lu", low_pod[0]);
+    }
  
-  // WIP replace snprintf with streams
-  if (high_pod[0] != 0)
-  {
-    written = sprintf(p, "%lu", high_pod[0]);
-    p += written;
-    written = sprintf(p, "%019lu", mid_pod[0]);
-    p += written;
-    sprintf(p, "%019lu", low_pod[0]);
-  }
-  else if (mid_pod[0] != 0)
-  {
-    written = sprintf(p, "%lu", mid_pod[0]);
-    p += written;
-    written = sprintf(p, "%019lu", low_pod[0]);
-    p += written;
-  }
-  else
-  {
-      written = sprintf(p, "%lu", low_pod[0]);
-      p += written;
-  }
+    size_t written = p - original_p;
 
-  if (buflen <= p-original_p)
-  {
-    throw QueryDataExcept("writeIntPart() char buffer overflow.", formatErr);
-  }
-  return p-original_p;
+    if (buflen <= written)
+    {
+        throw QueryDataExcept("writeIntPart() char buffer overflow.", formatErr);
+    }
+
+    return written;
 }
 
-size_t DataConvert::writeFractionalPart(int128_t* dec, char* p,
-    const uint16_t buflen,
+size_t DataConvert::writeFractionalPart(int128_t* dec,
+    char* p,
+    const unsigned int buflen,
     const uint8_t scale)
 {
     int128_t scaleDivisor = 1;
 
-    uint8_t maxPowOf10 = sizeof(columnstore_pow_10)/sizeof(columnstore_pow_10[0])-1;
-    switch (scale/maxPowOf10)
+    const uint8_t maxPowOf10 =
+        (sizeof(columnstore_pow_10) / sizeof(columnstore_pow_10[0])) - 1;
+
+    switch (scale / maxPowOf10)
     {
-        case(2):
+        case 2:
             scaleDivisor *= columnstore_pow_10[maxPowOf10];
             scaleDivisor *= columnstore_pow_10[maxPowOf10];
             break;
-        case(1):
+        case 1:
             scaleDivisor *= columnstore_pow_10[maxPowOf10];
-        case(0):
-            scaleDivisor *= columnstore_pow_10[scale%maxPowOf10];
+        case 0:
+            scaleDivisor *= columnstore_pow_10[scale % maxPowOf10];
     }
 
     int128_t fractionalPart = *dec % scaleDivisor;
-    // divide by the base untill we have non-zero quotinent
+
+    // divide by the base until we have non-zero quotient
     size_t written = 0;
     scaleDivisor /= 10;
-    while (scaleDivisor > 1 && fractionalPart/scaleDivisor == 0)
+
+    char* original_p = p;
+
+    while (scaleDivisor > 1 && fractionalPart / scaleDivisor == 0)
     {
         *p++ = '0';
         written++;
         scaleDivisor /= 10;
     }
-    written += writeIntPart(&fractionalPart, p, buflen, 0);
+
+    p += writeIntPart(&fractionalPart, p, buflen - written, 0);
+
+    written = p - original_p;
+
+    // this should never be true
     if (written < scale)
     {
-        p += written;
         for (size_t left = written; left < scale; left++)
         {
             *p++ = '0';
         }
     }
-    return scale;
+
+    return written;
 }
 
-void DataConvert::toString(int128_t* dec, uint8_t scale,
-    char *p, unsigned int buflen)
+void DataConvert::decimalToString(int128_t* dec,
+    const uint8_t scale,
+    char *p,
+    const unsigned int buflen,
+    cscDataType colDataType) // colDataType is redundant
 {
     char* original_p = p;
     size_t written = 0;
@@ -1379,52 +1409,18 @@ void DataConvert::toString(int128_t* dec, uint8_t scale,
     if (scale)
     {
         *p++ = '.';
-        p += writeFractionalPart(dec, p, buflen-(p-original_p), scale);
+        written = p - original_p;
+        p += writeFractionalPart(dec, p, buflen - written, scale);
     }
 
     *p = '\0';
 
-    if (buflen <= p-original_p)
+    written = p - original_p;
+
+    if (buflen <= written)
     {
         throw QueryDataExcept("toString() char buffer overflow.", formatErr);
     }
-}
-
-// WIP MCOL-641
-void atoi128(const std::string& arg, int128_t& res)
-{
-    res = 0;
-    size_t idx = (arg[0] == '-') ? 1 : 0;
-    for (size_t j = idx; j < arg.size(); j++)
-    {
-        // WIP Optimize this
-        if (LIKELY(arg[j]-'0' >= 0))
-            res = res*10 + arg[j] - '0';
-    }
-    if (idx)
-        res *= -1;
-}
-
-// WIP MCOL-641
-// remove this as we don't need this for wide-DECIMAL
-void atoi128(const std::string& arg, uint128_t& res)
-{
-    res = 0;
-    for (size_t j = 0; j < arg.size(); j++)
-    {
-        // WIP Optimize this
-        if (LIKELY(arg[j]-'0' >= 0))
-            res = res*10 + arg[j] - '0';
-    }
-}
-
-void DataConvert::decimalToString(int128_t* valuePtr,
-    uint8_t scale,
-    char* buf,
-    unsigned int buflen,
-    cscDataType colDataType) // We don't need the last one
-{
-    toString(valuePtr, scale, buf, buflen);
 }
 
 boost::any

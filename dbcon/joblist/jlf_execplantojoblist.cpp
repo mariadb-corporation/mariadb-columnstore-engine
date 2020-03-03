@@ -1893,7 +1893,9 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
                 ct.colWidth == 16)
             {
-                dataconvert::atoi128(constval, val128);
+                bool saturate = false;
+                val128 = dataconvert::string_to_ll<int128_t>(constval, saturate);
+                // TODO MCOL-641 check saturate
             }
             else
             {
