@@ -666,52 +666,71 @@ bool isMinMaxValid(const NewColRequestHeader* in)
 
 // Read one ColValue from the input data.
 // Return true on success, false on EOF.
+// Values are read from srcArray either in natural order or in the order defined by ridArray.
+// Empty values are skipped, unless ridArray==0 && !(OutputType & OT_RID).
 template<typename T, int W>
 inline bool nextColValue(
-    int64_t* result,            // Put here the value read
-    const uint16_t* ridArray,
-    int ridSize,                // Number of values in ridArray
-    int* index,
-    bool* isNull,
-    bool* isEmpty,
-    uint16_t* rid,
-    uint8_t OutputType,
-    const T* srcArray,
-    unsigned srcSize,
+    int64_t* result,            // Place for the value returned
+    bool* isEmpty,              // ... and flag whether it's EMPTY
+    bool* isNull,               // ... and flag whether it's NULL
+    int* index,                 // Successive index either in srcArray (going from 0 to srcSize-1) or ridArray (0..ridSize-1)
+    uint16_t* rid,              // Index in srcArray of the value returned
+    const T* srcArray,          // Input array
+    const unsigned srcSize,     // ... and its size
+    const uint16_t* ridArray,   // Optional array of indexes into srcArray, that defines the read order
+    const int ridSize,          // ... and its size
+    const uint8_t OutputType,   // Used to decide whether to skip EMPTY values
     T EMPTY_VALUE, T NULL_VALUE, T ALT_NULL_VALUE)
 {
-    auto i = *index;
+    auto i = *index;    // local copy of *index to speed up loops
+    T value;            // value to be written into *result, local for the same reason
 
-    if (ridArray == NULL)
+    if (ridArray)
     {
-        while (static_cast<unsigned>(i) < srcSize &&
-                (srcArray[i] == EMPTY_VALUE) &&
-                (OutputType & OT_RID))
+        // Read next non-empty value in the order defined by ridArray
+        for( ; ; i++)
         {
-            i++;
+            if (i >= ridSize)
+                return false;
+
+            value = srcArray[ridArray[i]];
+
+            if (value != EMPTY_VALUE)
+                break;
         }
-
-        if (static_cast<unsigned>(i) >= srcSize)
-            return false;
-
-        *rid = i;
-        *isEmpty = (srcArray[i] == EMPTY_VALUE);
-    }
-    else
-    {
-        while (i < ridSize &&
-                (srcArray[ridArray[i]] == EMPTY_VALUE))
-        {
-            i++;
-        }
-
-        if (i >= ridSize)
-            return false;
 
         *rid = ridArray[i];
         *isEmpty = false;
     }
+    else if (OutputType & OT_RID)
+    {
+        // Read next non-empty value in the natural order
+        for( ; ; i++)
+        {
+            if (i >= srcSize)
+                return false;
 
+            value = srcArray[i];
+
+            if (value != EMPTY_VALUE)
+                break;
+        }
+
+        *rid = i;
+        *isEmpty = false;
+    }
+    else
+    {
+        // Read next value in the natural order
+        if (i >= srcSize)
+            return false;
+
+        *rid = i;
+        value = srcArray[i];
+        *isEmpty = (value == EMPTY_VALUE);
+    }
+
+    //// outdated comment
     // at this point, nextRid is the index to return, and index is...
     //   if RIDs are not specified, nextRid + 1,
     //	 if RIDs are specified, it's the next index in the rid array.
@@ -728,8 +747,8 @@ inline bool nextColValue(
 #endif
 
     *index = i+1;
-    *result = srcArray[*rid];
-    *isNull = (srcArray[*rid] == NULL_VALUE) || (srcArray[*rid] == ALT_NULL_VALUE);
+    *result = value;
+    *isNull = (value == NULL_VALUE) || (value == ALT_NULL_VALUE);
     return true;
 }
 
@@ -967,8 +986,10 @@ void filterColumnData(
                                     NULL_VALUE, ALT_NULL_VALUE);
 
     // Loop over the column values, storing those matching the filter, and updating the min..max range
-    while (nextColValue<T,W>(&curValue, ridArray, ridSize, &nextRidIndex, &isNull, &isEmpty,
-                             &rid, in->OutputType, srcArray, srcSize, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
+    while (nextColValue<T,W>(&curValue, &isEmpty, &isNull,
+                             &nextRidIndex, &rid,
+                             srcArray, srcSize, ridArray, ridSize,
+                             in->OutputType, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE))
     {
         if (isEmpty)
         {
