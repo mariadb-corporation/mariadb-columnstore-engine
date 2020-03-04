@@ -595,7 +595,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        cout << "The utility 'pidod' is not installed. Can't check for MariaDB server already running Exiting..." << endl;
+        cout << "The utility 'pidof' is not installed. Can't check for MariaDB server already running Exiting..." << endl;
         exit (1);
     }
     //check Config saved files
