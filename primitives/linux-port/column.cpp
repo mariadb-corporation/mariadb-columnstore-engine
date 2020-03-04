@@ -600,7 +600,7 @@ inline bool matchingColValue(
         }
         return false;
     }
-    else
+    else if (filterBOP == BOP_AND)
     {
         for (int argIndex = 0; argIndex < filterCount; argIndex++)
         {
@@ -609,15 +609,30 @@ inline bool matchingColValue(
                                            filterRFs[argIndex], filterRegexes[argIndex],
                                            isNullValue<T>(filterValue, NULL_VALUE, ALT_NULL_VALUE));
 
-            // Short-circuit the filter evaluation - true || ... == true, false && ... = false
-            if (filterBOP == BOP_OR  &&  cmp == true)
-                return true;
-            else if (filterBOP == BOP_AND  &&  cmp == false)
+            // Short-circuit the filter evaluation - false && ... = false
+            if (cmp == false)
                 return false;
         }
 
-        // BOP_AND can get here only if all filters returned true, BOP_OR - only if they all returned false
-        return (filterBOP == BOP_AND  ||  filterCount == 0);
+        // We can get here only if all filters returned true
+        return true;
+    }
+    else  // Otherwise we assume either BOP_OR or filterCount<=1
+    {
+        for (int argIndex = 0; argIndex < filterCount; argIndex++)
+        {
+            auto filterValue = filterValues[argIndex];
+            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
+                                           filterRFs[argIndex], filterRegexes[argIndex],
+                                           isNullValue<T>(filterValue, NULL_VALUE, ALT_NULL_VALUE));
+
+            // Short-circuit the filter evaluation - true || ... == true
+            if (cmp == true)
+                return true;
+        }
+
+        // We can get here only if all filters returned false
+        return (filterCount == 0);
     }
 }
 
