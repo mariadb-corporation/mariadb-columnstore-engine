@@ -338,40 +338,17 @@ uint64_t getNullValue<1>(uint8_t type)
     }
 }
 
-// A few types has one more, alternative representation for the NULL value.
-// For other types, we return their main NULL value.
-template<int W>
-uint64_t getAlternativeNullValue(uint8_t type)
+// Check whether val is NULL (or alternative NULL bit pattern for 64-bit string types)
+template<ENUM_KIND KIND, typename T>
+inline bool isNullValue(int64_t val, T NULL_VALUE)
 {
-    if (W == 8)
-    {
-        switch (type)
-        {
-            case CalpontSystemCatalog::CHAR:
-            case CalpontSystemCatalog::VARCHAR:
-            case CalpontSystemCatalog::DATE:
-            case CalpontSystemCatalog::DATETIME:
-            case CalpontSystemCatalog::TIMESTAMP:
-            case CalpontSystemCatalog::TIME:
-            case CalpontSystemCatalog::VARBINARY:
-            case CalpontSystemCatalog::BLOB:
-            case CalpontSystemCatalog::TEXT:
-                //@bug 339 might be a token here
-                //TODO: what's up with the second const here?
-                return 0xFFFFFFFFFFFFFFFELL;
-        }
-    }
+    //@bug 339 might be a token here
+    //TODO: what's up with the alternative NULL here?
+    uint64_t ALT_NULL_VALUE = 0xFFFFFFFFFFFFFFFELL;
 
-    return getNullValue<W>(type);
-}
-
-// Check whether val is NULL (we use the fact that alternative NULL may exist only for W==8)
-template<typename T>
-bool isNullValue(int64_t val, T NULL_VALUE, T ALT_NULL_VALUE)
-{
     constexpr int W = sizeof(T);
     return (static_cast<T>(val) == NULL_VALUE) ||
-           ((W == 8) && (static_cast<T>(val) == ALT_NULL_VALUE));
+           ((KIND_TEXT == KIND)  &&  (W == 8)  &&  (val == ALT_NULL_VALUE));
 }
 
 
@@ -584,8 +561,7 @@ inline bool matchingColValue(
     int64_t* filterValues,          //   value to compare to
     uint8_t* filterRFs,
     idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
-    // Bit patterns representing NULL value
-    T NULL_VALUE, T ALT_NULL_VALUE)
+    T NULL_VALUE)                   // Bit pattern representing NULL value for this column type/width
 {
     if (filterSet)    // implies columnFilterMode == UNORDERED_SET
     {
@@ -607,7 +583,7 @@ inline bool matchingColValue(
             auto filterValue = filterValues[argIndex];
             bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
                                            filterRFs[argIndex], filterRegexes[argIndex],
-                                           isNullValue<T>(filterValue, NULL_VALUE, ALT_NULL_VALUE));
+                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
             // Short-circuit the filter evaluation - false && ... = false
             if (cmp == false)
@@ -624,7 +600,7 @@ inline bool matchingColValue(
             auto filterValue = filterValues[argIndex];
             bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
                                            filterRFs[argIndex], filterRegexes[argIndex],
-                                           isNullValue<T>(filterValue, NULL_VALUE, ALT_NULL_VALUE));
+                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
             // Short-circuit the filter evaluation - true || ... == true
             if (cmp == true)
@@ -898,13 +874,13 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     */
     if (filterCount > 1)
     {
+        // Check that all COPs are of right kind that depends on BOP
         for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
         {
             auto cop = ret->prestored_cops[argIndex];
 
-            if ((BOP == BOP_OR && cop != COMPARE_EQ) ||
-                (BOP == BOP_AND && cop != COMPARE_NE) ||
-                (cop == COMPARE_NIL))
+            if (! (BOP == BOP_OR  && cop == COMPARE_EQ) ||
+                  (BOP == BOP_AND && cop == COMPARE_NE))
             {
                 goto skipConversion;
             }
@@ -965,20 +941,16 @@ void filterColumnData(
     auto filterSet     = (filterCount==0? NULL : parsedColumnFilter->prestored_set.get());
     auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
-    // Bit patterns in srcArray[i] representing an empty row, the NULL value,
-    // and alternative NULL value representation for a few types
+    // Bit patterns in srcArray[i] representing an empty row and the NULL value
     T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));
     T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
-    T ALT_NULL_VALUE = static_cast<T>(getAlternativeNullValue<W>(DataType));
 
     // Precompute filter results for EMPTY and NULL values
     bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, filterBOP, filterSet, filterCount,
-                                    filterCOPs, filterValues, filterRFs, filterRegexes,
-                                    NULL_VALUE, ALT_NULL_VALUE);
+                                    filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
     bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, filterBOP, filterSet, filterCount,
-                                    filterCOPs, filterValues, filterRFs, filterRegexes,
-                                    NULL_VALUE, ALT_NULL_VALUE);
+                                    filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
     // Boolean indicating whether to capture the min and max values
     bool ValidMinMax = isMinMaxValid(in);
@@ -1008,7 +980,7 @@ void filterColumnData(
             if (isEmptyValueMatches)
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
         }
-        else if (isNullValue<T>(curValue, NULL_VALUE, ALT_NULL_VALUE))
+        else if (isNullValue<KIND,T>(curValue, NULL_VALUE))
         {
             // If NULL values match the filter, write curValue to the output buffer
             if (isNullValueMatches)
@@ -1018,8 +990,7 @@ void filterColumnData(
         {
             // If curValue matches the filter, write it to the output buffer
             if (matchingColValue<KIND, W, false>(curValue, filterBOP, filterSet, filterCount,
-                                filterCOPs, filterValues, filterRFs, filterRegexes,
-                                NULL_VALUE, ALT_NULL_VALUE))
+                                filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE))
             {
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
             }
