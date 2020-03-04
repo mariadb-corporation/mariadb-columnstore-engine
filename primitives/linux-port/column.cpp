@@ -365,6 +365,15 @@ uint64_t getAlternativeNullValue(uint8_t type)
     return getNullValue<W>(type);
 }
 
+// Check whether val is NULL (we use the fact that alternative NULL may exist only for W==8)
+template<typename T>
+bool isNullValue(int64_t val, T NULL_VALUE, T ALT_NULL_VALUE)
+{
+    constexpr int W = sizeof(T);
+    return (static_cast<T>(val) == NULL_VALUE) ||
+           ((W == 8) && (static_cast<T>(val) == ALT_NULL_VALUE));
+}
+
 
 /*****************************************************************************
  *** COMPARISON OPERATIONS FOR COLUMN VALUES *********************************
@@ -596,12 +605,9 @@ inline bool matchingColValue(
         for (int argIndex = 0; argIndex < filterCount; argIndex++)
         {
             auto filterValue = filterValues[argIndex];
-            bool isFilterValueNull = ((static_cast<T>(filterValue) == NULL_VALUE) ||
-                                      (static_cast<T>(filterValue) == ALT_NULL_VALUE));
-
             bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
                                            filterRFs[argIndex], filterRegexes[argIndex],
-                                           isFilterValueNull);
+                                           isNullValue<T>(filterValue, NULL_VALUE, ALT_NULL_VALUE));
 
             // Short-circuit the filter evaluation - true || ... == true, false && ... = false
             if (filterBOP == BOP_OR  &&  cmp == true)
@@ -672,7 +678,6 @@ template<typename T, int W>
 inline bool nextColValue(
     int64_t* result,            // Place for the value returned
     bool* isEmpty,              // ... and flag whether it's EMPTY
-    bool* isNull,               // ... and flag whether it's NULL
     int* index,                 // Successive index either in srcArray (going from 0 to srcSize-1) or ridArray (0..ridSize-1)
     uint16_t* rid,              // Index in srcArray of the value returned
     const T* srcArray,          // Input array
@@ -680,7 +685,7 @@ inline bool nextColValue(
     const uint16_t* ridArray,   // Optional array of indexes into srcArray, that defines the read order
     const int ridSize,          // ... and its size
     const uint8_t OutputType,   // Used to decide whether to skip EMPTY values
-    T EMPTY_VALUE, T NULL_VALUE, T ALT_NULL_VALUE)
+    T EMPTY_VALUE)
 {
     auto i = *index;    // local copy of *index to speed up loops
     T value;            // value to be written into *result, local for the same reason
@@ -748,7 +753,6 @@ inline bool nextColValue(
 
     *index = i+1;
     *result = value;
-    *isNull = (value == NULL_VALUE) || (value == ALT_NULL_VALUE);
     return true;
 }
 
@@ -972,16 +976,16 @@ void filterColumnData(
     // Loop-local variables
     int64_t curValue = 0;
     uint16_t rid = 0;
-    bool isNull = false, isEmpty = false;
+    bool isEmpty = false;
     idb_regex_t placeholderRegex;
     placeholderRegex.used = false;
 
     // Loop over the column values, storing those matching the filter, and updating the min..max range
     for (int i = 0;
-         nextColValue<T,W>(&curValue, &isEmpty, &isNull,
+         nextColValue<T,W>(&curValue, &isEmpty,
                            &i, &rid,
                            srcArray, srcSize, ridArray, ridSize,
-                           OutputType, EMPTY_VALUE, NULL_VALUE, ALT_NULL_VALUE); )
+                           OutputType, EMPTY_VALUE); )
     {
         if (isEmpty)
         {
@@ -989,7 +993,7 @@ void filterColumnData(
             if (isEmptyValueMatches)
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
         }
-        else if (isNull)
+        else if (isNullValue<T>(curValue, NULL_VALUE, ALT_NULL_VALUE))
         {
             // If NULL values match the filter, write curValue to the output buffer
             if (isNullValueMatches)
