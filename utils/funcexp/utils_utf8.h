@@ -62,6 +62,7 @@ std::string idb_setlocale()
     // get and set locale language
     std::string systemLang("C");
     oam::Oam oam;
+    static bool loggedMsg = false;
 
     try
     {
@@ -78,11 +79,27 @@ std::string idb_setlocale()
     {
         try
         {
-            //send alarm
-            alarmmanager::ALARMManager alarmMgr;
-            std::string alarmItem = "system";
-            alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::SET);
-            printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
+            if (!loggedMsg)
+            {
+                //send alarm
+                alarmmanager::ALARMManager alarmMgr;
+                std::string alarmItem = "system";
+                alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, alarmmanager::SET);
+                
+                // Log one line
+                logging::LoggingID lid(17);  // ProcessManager -- probably the only one to find this for now
+                logging::MessageLog ml(lid);
+                logging::Message msg(1);
+                logging::Message::Args args;
+                args.add("Failed to set locale ");
+                args.add(systemLang.c_str());
+                args.add(": Setting to 'C'. Critical alarm generated");
+                msg.format( args );
+                ml.logErrorMessage(msg);
+                
+                loggedMsg = true;
+            }
+            systemLang = "C";
         }
         catch (...)
         {
