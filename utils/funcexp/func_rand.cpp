@@ -77,7 +77,7 @@ double Func_rand::getDoubleVal(rowgroup::Row& row,
         fSeedSet = false;
         fSeedIndex += 1;
     }
-    else if (fFirstRow == 0)
+    else if (fFirstRow == nullptr)
     {
         // Store first row
         fFirstRow = row.getData();
