@@ -25,7 +25,7 @@ namespace funcexp
 class Func_rand : public Func
 {
 public:
-    Func_rand() : Func("rand"), fSeed1(0), fSeed2(0), fSeedSet(false), fMultipleSeedsSet(false), fFirstRow(NULL){}
+    Func_rand() : Func("rand"), fSeed1(0), fSeed2(0), fSeedSet(false), fMultipleSeedsSet(false), fFirstRow(NULL), fSeeds(){}
     virtual ~Func_rand() {}
 
     double getRand();
@@ -33,7 +33,6 @@ public:
     {
         fSeedSet = seedSet;
         fMultipleSeedsSet = seedSet;
-        fFirstRow = NULL;
     }
     execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
