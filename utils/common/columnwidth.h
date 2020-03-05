@@ -18,6 +18,7 @@
 #ifndef UTILS_COLWIDTH_H
 #define UTILS_COLWIDTH_H
 
+#include "branchpred.h"
 
 namespace utils
 {
@@ -34,10 +35,12 @@ namespace utils
         return width <= MAXLEGACYWIDTH;
     }
 
-    // WIP MCOL-641 Replace with template
     /** @brief Map a DECIMAL precision to data width in bytes */
     inline uint8_t widthByPrecision(unsigned p)
     {
+        if (LIKELY(p > 18 && p < 39))
+            return 16;
+
         switch (p)
         {
             case 1:
@@ -70,6 +73,7 @@ namespace utils
             return 16;
         }
     }
+
     inline uint8_t precisionByWidth(unsigned w)
     {
         switch(w)

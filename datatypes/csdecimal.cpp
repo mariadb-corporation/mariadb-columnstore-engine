@@ -15,18 +15,16 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef H_DECIMALDATATYPE
-#define H_DECIMALDATATYPE
+#include "csdecimal.h"
+
+const datatypes::Decimal someDecimal;
 
 namespace datatypes
 {
 
-class Decimal
-{
-    public:
-        Decimal() { };
-        ~Decimal() { };
-};
+    int Decimal::compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r)
+    {
+        return 0;
+    }
 
-} //end of namespace
-#endif
+} // end of namespace

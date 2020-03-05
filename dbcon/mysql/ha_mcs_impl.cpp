@@ -143,10 +143,10 @@ namespace cal_impl_if
 extern bool nonConstFunc(Item_func* ifp);
 }
 
+using int128_t = __int128;
+
 namespace
 {
-    using int128_t = __int128;
-    using uint128_t = unsigned __int128;
 // Calpont vtable non-support error message
 const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by MariaDB Columnstore distributed mode. The execution was switched to standard mode with downgraded performance.";
 
