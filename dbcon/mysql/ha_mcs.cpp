@@ -351,7 +351,7 @@ int ha_mcs::write_row(const uchar* buf)
     int rc;
     try
     {
-        rc = ha_mcs_impl_write_row(buf, table);
+        rc = ha_mcs_impl_write_row(buf, table, rows_changed);
     }
     catch (std::runtime_error& e)
     {
