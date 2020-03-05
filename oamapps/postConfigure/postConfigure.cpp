@@ -566,14 +566,22 @@ int main(int argc, char* argv[])
     }
 
     char buf[512];
-    FILE *cmd_pipe = popen("pidof -s mysqld", "r");
-    fgets(buf, 512, cmd_pipe);
-    pid_t pid = strtoul(buf, NULL, 10);
-    pclose(cmd_pipe);
-
-    if (pid)
+    *(int64_t*)buf = 0;
+    FILE* cmd_pipe = popen("pidof -s mysqld", "r");
+    if (cmd_pipe)
     {
-        cout << "MariaDB Server is currently running on PID " << pid << ". Cannot run postConfigure whilst this is running. Exiting.." << endl;
+        fgets(buf, 512, cmd_pipe);
+        pid_t pid = strtoul(buf, NULL, 10);
+        pclose(cmd_pipe);
+        if (pid)
+        {
+            cout << "MariaDB Server is currently running on PID " << pid << ". Cannot run postConfigure whilst this is running. Exiting.." << endl;
+            exit (1);
+        }
+    }
+    else
+    {
+        cout << "The utility 'pidof' is not installed. Can't check for MariaDB server already running Exiting..." << endl;
         exit (1);
     }
 
