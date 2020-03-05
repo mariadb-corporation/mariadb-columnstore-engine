@@ -32,7 +32,7 @@ extern int ha_mcs_impl_close(void);
 extern int ha_mcs_impl_rnd_init(TABLE* table);
 extern int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table);
 extern int ha_mcs_impl_rnd_end(TABLE* table, bool is_derived_hand = false);
-extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table);
+extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed);
 extern void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table);
 extern int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table);
 extern int ha_mcs_impl_rename_table(const char* from, const char* to);
