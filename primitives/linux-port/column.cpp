@@ -495,20 +495,18 @@ inline bool colCompare(
     //@bug 425 added isNull condition
     else if (KIND_FLOAT == KIND  &&  !isNull)
     {
-        double dVal1, dVal2;
-
-        if (W == 4)     //// instead, we can just compare the floats directly
+        if (W == 4)
         {
-            dVal1 = *((float*) &val1);
-            dVal2 = *((float*) &val2);
+            float dVal1 = *((float*) &val1);
+            float dVal2 = *((float*) &val2);
+            return colCompare_(dVal1, dVal2, COP);
         }
         else
         {
-            dVal1 = *((double*) &val1);
-            dVal2 = *((double*) &val2);
+            double dVal1 = *((double*) &val1);
+            double dVal2 = *((double*) &val2);
+            return colCompare_(dVal1, dVal2, COP);
         }
-
-        return colCompare_(dVal1, dVal2, COP);
     }
 
     else if (KIND_TEXT == KIND  &&  !isNull)
@@ -524,8 +522,6 @@ inline bool colCompare(
             return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
     }
 
-    //// outdated comment?
-    // isNullVal should work on the normalized value on little endian machines
     else
     {
         if (isNull == isVal2Null || (isVal2Null && COP == COMPARE_NE))
@@ -941,7 +937,7 @@ void filterColumnData(
     auto filterSet     = (filterCount==0? NULL : parsedColumnFilter->prestored_set.get());
     auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
-    // Bit patterns in srcArray[i] representing an empty row and the NULL value
+    // Bit patterns in srcArray[i] representing EMPTY and NULL values
     T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));
     T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
 
@@ -998,15 +994,16 @@ void filterColumnData(
             // Update Min and Max if necessary.  EMPTY/NULL values can't appear here.
             if (ValidMinMax)
             {
-                if ((KIND_TEXT == KIND) && (W > 1))     //// but for filtering, we go through trimWhitespace() even with W==1
+                if ((KIND_TEXT == KIND) && (W > 1))
                 {
+                    // When computing Min/Max for string fields, we compare them trimWhitespace()'d
                     if (colCompare<KIND, W>(Min, curValue, COMPARE_GT, false, placeholderRegex))
                         Min = curValue;
 
                     if (colCompare<KIND, W>(Max, curValue, COMPARE_LT, false, placeholderRegex))
                         Max = curValue;
                 }
-                else    //// Without (W>1) above, we can use colCompare<KIND,W> for all types
+                else
                 {
                     if (static_cast<VALTYPE>(Min) > static_cast<VALTYPE>(curValue))
                         Min = curValue;
@@ -1019,17 +1016,12 @@ void filterColumnData(
     }
 
 
-    // Store Min/Max values captured to *out
+    // Write captured Min/Max values to *out
     out->ValidMinMax = ValidMinMax;
     if (ValidMinMax)
     {
         out->Min = Min;
         out->Max = Max;
-    }
-    else
-    {
-        out->Min = 0;   //// can we just save arbitrary data here when ValidMinMax == false?
-        out->Max = 0;
     }
 }
 
