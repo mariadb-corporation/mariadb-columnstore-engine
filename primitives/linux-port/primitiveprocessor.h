@@ -57,13 +57,6 @@ class PrimTest;
 namespace primitives
 {
 
-enum ColumnFilterMode
-{
-    STANDARD,
-    TWO_ARRAYS,
-    UNORDERED_SET
-};
-
 class pcfHasher
 {
 public:
@@ -105,9 +98,18 @@ struct idb_regex_t
     }
 };
 
+enum ColumnFilterMode
+{
+    ALWAYS_TRUE,            // empty filter is always true
+    SINGLE_COMPARISON,      // filter consisting of one comparison operation
+    ANY_COMPARISON_TRUE,    // filter is true if ANY comparison is true (BOP_OR)
+    ALL_COMPARISONS_TRUE,   // filter is true only if ALL comparisons are true (BOP_AND)
+    UNORDERED_SET
+};
+
 struct ParsedColumnFilter
 {
-    ColumnFilterMode columnFilterMode;
+    ColumnFilterMode columnFilterMode = ALWAYS_TRUE;
     boost::shared_array<int64_t> prestored_argVals;
     boost::shared_array<uint8_t> prestored_cops;
     boost::shared_array<uint8_t> prestored_rfs;

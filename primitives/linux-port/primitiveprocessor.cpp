@@ -58,7 +58,7 @@ void PrimitiveProcessor::setParsedColumnFilter(boost::shared_ptr<ParsedColumnFil
     parsedColumnFilter = pcf;
 }
 
-ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(STANDARD)
+ParsedColumnFilter::ParsedColumnFilter()
 {
 }
 

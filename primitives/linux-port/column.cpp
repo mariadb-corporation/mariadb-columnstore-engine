@@ -550,6 +550,7 @@ inline bool matchingColValue(
     // Value description
     int64_t curValue,               // The value (isNull - is the value null?)
     // Filter description
+    ColumnFilterMode columnFilterMode,
     uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
@@ -559,52 +560,72 @@ inline bool matchingColValue(
     idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
     T NULL_VALUE)                   // Bit pattern representing NULL value for this column type/width
 {
-    if (filterSet)    // implies columnFilterMode == UNORDERED_SET
+    switch (columnFilterMode)
     {
-        /* bug 1920: ignore NULLs in the set and in the column data */
-        if (!(isNull && filterBOP == BOP_AND))
-        {
-            bool found = (filterSet->find(curValue) != filterSet->end());
+        case ALWAYS_TRUE:           // empty filter is always true
+            return true;
 
-            // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
-            if (filterBOP == BOP_OR?  found  :  !found)
-                return true;
-        }
-        return false;
-    }
-    else if (filterBOP == BOP_AND)
-    {
-        for (int argIndex = 0; argIndex < filterCount; argIndex++)
-        {
-            auto filterValue = filterValues[argIndex];
-            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
-                                           filterRFs[argIndex], filterRegexes[argIndex],
-                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
-            // Short-circuit the filter evaluation - false && ... = false
-            if (cmp == false)
-                return false;
-        }
+        case SINGLE_COMPARISON:     // filter consisting of one comparison operation
+            {
+                auto filterValue = filterValues[0];
+                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[0],
+                                               filterRFs[0], filterRegexes[0],
+                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+                return cmp;
+            }
 
-        // We can get here only if all filters returned true
-        return true;
-    }
-    else  // Otherwise we assume either BOP_OR or filterCount<=1
-    {
-        for (int argIndex = 0; argIndex < filterCount; argIndex++)
-        {
-            auto filterValue = filterValues[argIndex];
-            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
-                                           filterRFs[argIndex], filterRegexes[argIndex],
-                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
-            // Short-circuit the filter evaluation - true || ... == true
-            if (cmp == true)
-                return true;
-        }
+        case ANY_COMPARISON_TRUE:   // filter is true if ANY comparison is true (BOP_OR)
+            for (int argIndex = 0; argIndex < filterCount; argIndex++)
+            {
+                auto filterValue = filterValues[argIndex];
+                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
+                                               filterRFs[argIndex], filterRegexes[argIndex],
+                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
-        // We can get here only if all filters returned false
-        return (filterCount == 0);
+                // Short-circuit the filter evaluation - true || ... == true
+                if (cmp == true)
+                    return true;
+            }
+
+            // We can get here only if all filters returned false
+            return false;
+
+
+        case ALL_COMPARISONS_TRUE:  // filter is true only if ALL comparisons are true (BOP_AND)
+            for (int argIndex = 0; argIndex < filterCount; argIndex++)
+            {
+                auto filterValue = filterValues[argIndex];
+                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
+                                               filterRFs[argIndex], filterRegexes[argIndex],
+                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+
+                // Short-circuit the filter evaluation - false && ... = false
+                if (cmp == false)
+                    return false;
+            }
+
+            // We can get here only if all filters returned true
+            return true;
+
+
+        case UNORDERED_SET:
+            /* bug 1920: ignore NULLs in the set and in the column data */
+            if (!(isNull && filterBOP == BOP_AND))
+            {
+                bool found = (filterSet->find(curValue) != filterSet->end());
+
+                // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
+                if (filterBOP == BOP_OR?  found  :  !found)
+                    return true;
+            }
+            return false;
+
+
+        default:
+            idbassert(0);
+            return true;
     }
 }
 
@@ -801,7 +822,7 @@ inline void writeColValue(
 
 // Compile column filter from BLOB into structure optimized for fast filtering.
 // Return the compiled filter.
-template<typename T>                // C++ integer type corresponding to colType
+template<typename T>                // C++ integer type providing storage for colType
 boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     const uint8_t* filterString,    // Filter represented as BLOB
     uint32_t colType,               // Column datatype as ColDataType
@@ -817,19 +838,31 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     // Allocate the compiled filter structure with space for filterCount filters.
     // No need to init arrays since they will be filled on the fly.
     ret.reset(new ParsedColumnFilter());
-    ret->columnFilterMode = TWO_ARRAYS;
     ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
     ret->prestored_rfs.reset(new uint8_t[filterCount]);
     ret->prestored_regex.reset(new idb_regex_t[filterCount]);
+
+    // Choose initial filter mode based on operation and number of filter elements
+    if (filterCount == 1)
+        ret->columnFilterMode = SINGLE_COMPARISON;
+    else if (BOP == BOP_OR)
+        ret->columnFilterMode = ANY_COMPARISON_TRUE;
+    else if (BOP == BOP_AND)
+        ret->columnFilterMode = ALL_COMPARISONS_TRUE;
+    else
+        idbassert(0);   // we don't support BOP_XOR operation yet, while BOP_NONE is compatible only with filterCount <= 1
+
 
     // Parse the filter predicates and insert them into argVals and cops
     for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
     {
         // Size of single filter element in filterString BLOB
         const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + colWidth;
+
         // Pointer to ColArgs structure representing argIndex'th element in the BLOB
         auto args = reinterpret_cast<const ColArgs*>(filterString + (argIndex * filterSize));
+
         ret->prestored_cops[argIndex] = args->COP;
         ret->prestored_rfs[argIndex] = args->rf;
 
@@ -931,6 +964,7 @@ void filterColumnData(
         parsedColumnFilter = parseColumnFilter_T<T>((uint8_t*)in + sizeof(NewColRequestHeader), in->DataType, in->NOPS, in->BOP);
 
     // Cache parsedColumnFilter fields in local vars
+    auto columnFilterMode = (filterCount==0? ALWAYS_TRUE : parsedColumnFilter->columnFilterMode);
     auto filterValues  = (filterCount==0? NULL : parsedColumnFilter->prestored_argVals.get());
     auto filterCOPs    = (filterCount==0? NULL : parsedColumnFilter->prestored_cops.get());
     auto filterRFs     = (filterCount==0? NULL : parsedColumnFilter->prestored_rfs.get());
@@ -942,10 +976,10 @@ void filterColumnData(
     T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
 
     // Precompute filter results for EMPTY and NULL values
-    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, filterBOP, filterSet, filterCount,
+    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, columnFilterMode, filterBOP, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
-    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, filterBOP, filterSet, filterCount,
+    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, columnFilterMode, filterBOP, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
     // Boolean indicating whether to capture the min and max values
@@ -985,7 +1019,7 @@ void filterColumnData(
         else
         {
             // If curValue matches the filter, write it to the output buffer
-            if (matchingColValue<KIND, W, false>(curValue, filterBOP, filterSet, filterCount,
+            if (matchingColValue<KIND, W, false>(curValue, columnFilterMode, filterBOP, filterSet, filterCount,
                                 filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE))
             {
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
