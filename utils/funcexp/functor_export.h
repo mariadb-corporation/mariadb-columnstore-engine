@@ -33,6 +33,8 @@ public:
     {
         fSeedSet = seedSet;
         fMultipleSeedsSet = seedSet;
+        fFirstRow = NULL;
+        fSeeds.clear();
     }
     execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
