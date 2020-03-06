@@ -101,9 +101,10 @@ struct idb_regex_t
 enum ColumnFilterMode
 {
     ALWAYS_TRUE,            // empty filter is always true
-    SINGLE_COMPARISON,      // filter consisting of one comparison operation
+    SINGLE_COMPARISON,      // exactly one comparison operation
     ANY_COMPARISON_TRUE,    // ANY comparison is true (BOP_OR)
     ALL_COMPARISONS_TRUE,   // ALL comparisons are true (BOP_AND)
+    XOR_COMPARISONS,        // XORing results of comparisons (BOP_XOR)
     ONE_OF_VALUES_IN_SET,   // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
     NONE_OF_VALUES_IN_SET,  // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
 };

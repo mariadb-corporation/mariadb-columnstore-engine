@@ -559,6 +559,10 @@ inline bool matchingColValue(
     idb_regex_t* filterRegexes,     //   regex for string-LIKE comparison operation
     T NULL_VALUE)                   // Bit pattern representing NULL value for this column type/width
 {
+    /* In order to make filtering as fast as possible, we replaced the single generic algorithm
+       with several algorithms, better tailored for more specific cases:
+       empty filter, single comparison, and/or/xor comparison results, one/none of small/large set of values
+    */
     switch (columnFilterMode)
     {
         // Empty filter is always true
@@ -566,19 +570,20 @@ inline bool matchingColValue(
             return true;
 
 
-        // Filter consisting of one comparison operation
+        // Filter consisting of exactly one comparison operation
         case SINGLE_COMPARISON:
-            {
-                auto filterValue = filterValues[0];
-                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[0],
-                                               filterRFs[0], filterRegexes[0],
-                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
-                return cmp;
-            }
+        {
+            auto filterValue = filterValues[0];
+            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[0],
+                                           filterRFs[0], filterRegexes[0],
+                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
+            return cmp;
+        }
 
 
         // Filter is true if ANY comparison is true (BOP_OR)
         case ANY_COMPARISON_TRUE:
+        {
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
@@ -593,10 +598,12 @@ inline bool matchingColValue(
 
             // We can get here only if all filters returned false
             return false;
+        }
 
 
         // Filter is true only if ALL comparisons are true (BOP_AND)
         case ALL_COMPARISONS_TRUE:
+        {
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
@@ -611,10 +618,30 @@ inline bool matchingColValue(
 
             // We can get here only if all filters returned true
             return true;
+        }
+
+
+        // XORing results of comparisons (BOP_XOR)
+        case XOR_COMPARISONS:
+        {
+            bool result = false;
+
+            for (int argIndex = 0; argIndex < filterCount; argIndex++)
+            {
+                auto filterValue = filterValues[argIndex];
+                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
+                                               filterRFs[argIndex], filterRegexes[argIndex],
+                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+                result ^= cmp;
+            }
+
+            return result;
+        }
 
 
         case ONE_OF_VALUES_IN_SET:
         case NONE_OF_VALUES_IN_SET:
+        {
             /* bug 1920: ignore NULLs in the set and in the column data */
             if (!(isNull && columnFilterMode == NONE_OF_VALUES_IN_SET))
             {
@@ -623,6 +650,7 @@ inline bool matchingColValue(
                     return true;
             }
             return false;
+        }
 
 
         default:
@@ -852,8 +880,10 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
         ret->columnFilterMode = ANY_COMPARISON_TRUE;
     else if (BOP == BOP_AND)
         ret->columnFilterMode = ALL_COMPARISONS_TRUE;
+    else if (BOP == BOP_XOR)
+        ret->columnFilterMode = XOR_COMPARISONS;
     else
-        idbassert(0);   // we don't support BOP_XOR operation yet, while BOP_NONE is compatible only with filterCount <= 1
+        idbassert(0);   // BOP_NONE is compatible only with filterCount <= 1
 
 
     // Parse the filter predicates and insert them into argVals and cops
@@ -910,8 +940,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
         {
             auto cop = ret->prestored_cops[argIndex];
 
-            if (! (BOP == BOP_OR  && cop == COMPARE_EQ) ||
-                  (BOP == BOP_AND && cop == COMPARE_NE))
+            if (! ((BOP == BOP_OR  && cop == COMPARE_EQ) ||
+                   (BOP == BOP_AND && cop == COMPARE_NE)))
             {
                 goto skipConversion;
             }
