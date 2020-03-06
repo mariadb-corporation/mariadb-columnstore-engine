@@ -35,17 +35,13 @@ namespace primitives
 PrimitiveProcessor::PrimitiveProcessor(int debugLevel) :
     fDebugLevel(debugLevel), fStatsPtr(NULL), logicalBlockMode(false)
 {
-
 // 	This does
 //	masks[11] = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023 };
-    int acc, i;
 
-    for (acc = 0, i = 0; i < 11; i++)
+    for (int i = 0; i < 11; i++)
     {
-        masks[i] = acc;
-        acc = acc << 1 | 1;
+        masks[i] = (1 << i) - 1;
     }
-
 }
 
 PrimitiveProcessor::~PrimitiveProcessor()

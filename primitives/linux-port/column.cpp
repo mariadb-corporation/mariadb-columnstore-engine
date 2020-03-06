@@ -639,17 +639,23 @@ inline bool matchingColValue(
         }
 
 
+        // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
         case ONE_OF_VALUES_IN_SET:
+        {
+            bool found = (filterSet->find(curValue) != filterSet->end());
+            return found;
+        }
+
+
+        // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
         case NONE_OF_VALUES_IN_SET:
         {
-            /* bug 1920: ignore NULLs in the set and in the column data */
-            if (!(isNull && columnFilterMode == NONE_OF_VALUES_IN_SET))
-            {
-                bool found = (filterSet->find(curValue) != filterSet->end());
-                if (columnFilterMode == ONE_OF_VALUES_IN_SET?  found  :  !found)
-                    return true;
-            }
-            return false;
+            // bug 1920: ignore NULLs in the set and in the column data
+            if (isNull)
+                return false;
+
+            bool found = (filterSet->find(curValue) != filterSet->end());
+            return !found;
         }
 
 
