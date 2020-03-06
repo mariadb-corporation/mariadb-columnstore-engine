@@ -102,9 +102,10 @@ enum ColumnFilterMode
 {
     ALWAYS_TRUE,            // empty filter is always true
     SINGLE_COMPARISON,      // filter consisting of one comparison operation
-    ANY_COMPARISON_TRUE,    // filter is true if ANY comparison is true (BOP_OR)
-    ALL_COMPARISONS_TRUE,   // filter is true only if ALL comparisons are true (BOP_AND)
-    UNORDERED_SET
+    ANY_COMPARISON_TRUE,    // ANY comparison is true (BOP_OR)
+    ALL_COMPARISONS_TRUE,   // ALL comparisons are true (BOP_AND)
+    ONE_OF_VALUES_IN_SET,   // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
+    NONE_OF_VALUES_IN_SET,  // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
 };
 
 struct ParsedColumnFilter

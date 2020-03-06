@@ -551,7 +551,6 @@ inline bool matchingColValue(
     int64_t curValue,               // The value (isNull - is the value null?)
     // Filter description
     ColumnFilterMode columnFilterMode,
-    uint32_t filterBOP,             // Operation (and/or/xor/none) that combines all filter elements
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
     uint8_t* filterCOPs,            //   comparison operation
@@ -562,11 +561,13 @@ inline bool matchingColValue(
 {
     switch (columnFilterMode)
     {
-        case ALWAYS_TRUE:           // empty filter is always true
+        // Empty filter is always true
+        case ALWAYS_TRUE:
             return true;
 
 
-        case SINGLE_COMPARISON:     // filter consisting of one comparison operation
+        // Filter consisting of one comparison operation
+        case SINGLE_COMPARISON:
             {
                 auto filterValue = filterValues[0];
                 bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[0],
@@ -576,7 +577,8 @@ inline bool matchingColValue(
             }
 
 
-        case ANY_COMPARISON_TRUE:   // filter is true if ANY comparison is true (BOP_OR)
+        // Filter is true if ANY comparison is true (BOP_OR)
+        case ANY_COMPARISON_TRUE:
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
@@ -593,7 +595,8 @@ inline bool matchingColValue(
             return false;
 
 
-        case ALL_COMPARISONS_TRUE:  // filter is true only if ALL comparisons are true (BOP_AND)
+        // Filter is true only if ALL comparisons are true (BOP_AND)
+        case ALL_COMPARISONS_TRUE:
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
@@ -610,14 +613,13 @@ inline bool matchingColValue(
             return true;
 
 
-        case UNORDERED_SET:
+        case ONE_OF_VALUES_IN_SET:
+        case NONE_OF_VALUES_IN_SET:
             /* bug 1920: ignore NULLs in the set and in the column data */
-            if (!(isNull && filterBOP == BOP_AND))
+            if (!(isNull && columnFilterMode == NONE_OF_VALUES_IN_SET))
             {
                 bool found = (filterSet->find(curValue) != filterSet->end());
-
-                // Assume that we have either  BOP_OR && COMPARE_EQ  or  BOP_AND && COMPARE_NE
-                if (filterBOP == BOP_OR?  found  :  !found)
+                if (columnFilterMode == ONE_OF_VALUES_IN_SET?  found  :  !found)
                     return true;
             }
             return false;
@@ -915,10 +917,14 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
             }
         }
 
-        ret->columnFilterMode = UNORDERED_SET;
-        ret->prestored_set.reset(new prestored_set_t());
+        // Assign filter mode of set-based filtering
+        if (BOP == BOP_OR)
+            ret->columnFilterMode = ONE_OF_VALUES_IN_SET;
+        else
+            ret->columnFilterMode = NONE_OF_VALUES_IN_SET;
 
         // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+        ret->prestored_set.reset(new prestored_set_t());
         for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
             if (ret->prestored_rfs[argIndex] == 0)
                 ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
@@ -956,7 +962,6 @@ void filterColumnData(
     // Cache some structure fields in local vars
     auto DataType = (CalpontSystemCatalog::ColDataType) in->DataType;  // Column datatype
     uint32_t filterCount = in->NOPS;        // Number of elements in the filter
-    uint32_t filterBOP   = in->BOP;         // Operation (and/or/xor/none) that combines all filter elements
     uint8_t  OutputType  = in->OutputType;
 
     // If no pre-parsed column filter is set, parse the filter in the message
@@ -976,10 +981,10 @@ void filterColumnData(
     T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
 
     // Precompute filter results for EMPTY and NULL values
-    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, columnFilterMode, filterBOP, filterSet, filterCount,
+    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, columnFilterMode, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
-    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, columnFilterMode, filterBOP, filterSet, filterCount,
+    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, columnFilterMode, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
     // Boolean indicating whether to capture the min and max values
@@ -1019,7 +1024,7 @@ void filterColumnData(
         else
         {
             // If curValue matches the filter, write it to the output buffer
-            if (matchingColValue<KIND, W, false>(curValue, columnFilterMode, filterBOP, filterSet, filterCount,
+            if (matchingColValue<KIND, W, false>(curValue, columnFilterMode, filterSet, filterCount,
                                 filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE))
             {
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
