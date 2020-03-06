@@ -2101,7 +2101,7 @@ static void statusControlThread()
             }
         }
 
-        log.writeLog(__LINE__, "System/Module Status shared Memory allociated and Initialized", LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "System/Module Status shared Memory allocated and Initialized", LOG_TYPE_DEBUG);
     }
 
     //
@@ -2134,7 +2134,7 @@ static void statusControlThread()
             memcpy(fShmNICStatus[i].Name, hostNameList[i].c_str(), NAMESIZE);
         }
 
-        log.writeLog(__LINE__, "NIC Status shared Memory allociated and Initialized", LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "NIC Status shared Memory allocated and Initialized", LOG_TYPE_DEBUG);
     }
 
     //
@@ -2191,7 +2191,7 @@ static void statusControlThread()
             memcpy(fShmExtDeviceStatus[i].Name, extDeviceNameList[i].c_str(), NAMESIZE);
         }
 
-        log.writeLog(__LINE__, "Ext Device Status shared Memory allociated and Initialized", LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "Ext Device Status shared Memory allocated and Initialized", LOG_TYPE_DEBUG);
     }
 
     //
@@ -2258,7 +2258,7 @@ static void statusControlThread()
             memcpy(fShmDbrootStatus[i].Name, dbrootList[i].c_str(), NAMESIZE);
         }
 
-        log.writeLog(__LINE__, "Dbroot Status shared Memory allociated and Initialized", LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "Dbroot Status shared Memory allocated and Initialized", LOG_TYPE_DEBUG);
     }
 
     //Set mainResumeFlag, to start up main thread
