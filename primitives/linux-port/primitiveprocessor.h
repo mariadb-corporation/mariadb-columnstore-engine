@@ -107,6 +107,8 @@ enum ColumnFilterMode
     XOR_COMPARISONS,        // XORing results of comparisons (BOP_XOR)
     ONE_OF_VALUES_IN_SET,   // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
     NONE_OF_VALUES_IN_SET,  // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
+    ONE_OF_VALUES_IN_ARRAY, // ONE of the values in the small set represented by an array (BOP_OR + all COMPARE_EQ)
+    NONE_OF_VALUES_IN_ARRAY,// NONE of the values in the small set represented by an array (BOP_AND + all COMPARE_NE)
 };
 
 struct ParsedColumnFilter

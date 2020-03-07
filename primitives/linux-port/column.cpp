@@ -639,6 +639,32 @@ inline bool matchingColValue(
         }
 
 
+        // ONE of the values in the small set represented by an array (BOP_OR + all COMPARE_EQ)
+        case ONE_OF_VALUES_IN_ARRAY:
+        {
+            for (int argIndex = 0; argIndex < filterCount; argIndex++)
+            {
+                if (curValue == filterValues[argIndex])
+                    return true;
+            }
+
+            return false;
+        }
+
+
+        // NONE of the values in the small set represented by an array (BOP_AND + all COMPARE_NE)
+        case NONE_OF_VALUES_IN_ARRAY:
+        {
+            for (int argIndex = 0; argIndex < filterCount; argIndex++)
+            {
+                if (curValue == filterValues[argIndex])
+                    return false;
+            }
+
+            return true;
+        }
+
+
         // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
         case ONE_OF_VALUES_IN_SET:
         {
@@ -953,19 +979,36 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
             }
         }
 
-        // Assign filter mode of set-based filtering
-        if (BOP == BOP_OR)
-            ret->columnFilterMode = ONE_OF_VALUES_IN_SET;
+
+        // Now we found that conversion is possible. Let's choose between array-based search
+        // and set-based search depending on the set size.
+        //TODO: Tailor the threshold based on the actual search algorithms used and colWidth/simdWidth
+
+        if (filterCount <= 8)
+        {
+            // Assign filter mode of array-based filtering
+            if (BOP == BOP_OR)
+                ret->columnFilterMode = ONE_OF_VALUES_IN_ARRAY;
+            else
+                ret->columnFilterMode = NONE_OF_VALUES_IN_ARRAY;
+        }
         else
-            ret->columnFilterMode = NONE_OF_VALUES_IN_SET;
+        {
+            // Assign filter mode of set-based filtering
+            if (BOP == BOP_OR)
+                ret->columnFilterMode = ONE_OF_VALUES_IN_SET;
+            else
+                ret->columnFilterMode = NONE_OF_VALUES_IN_SET;
 
-        // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
-        ret->prestored_set.reset(new prestored_set_t());
-        for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
-            if (ret->prestored_rfs[argIndex] == 0)
-                ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+            // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+            ret->prestored_set.reset(new prestored_set_t());
+            for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
+                if (ret->prestored_rfs[argIndex] == 0)
+                    ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
 
-        ret->prestored_argVals.reset();
+            ret->prestored_argVals.reset();
+        }
+
         ret->prestored_cops.reset();
         ret->prestored_rfs.reset();
         ret->prestored_regex.reset();
