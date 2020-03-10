@@ -44,6 +44,7 @@
 #include "bytestream.h"
 #include "joblisttypes.h"
 #include "stdexcept"
+#include "widedecimalutils.h"
 
 #undef min
 #undef max
@@ -1043,6 +1044,11 @@ inline bool isSignedInteger(const execplan::CalpontSystemCatalog::ColDataType ty
         default:
             return false;
     }
+}
+
+inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::ColType& ct)
+{
+    return utils::isWideDecimalNullValue(val);
 }
 
 inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& ct)

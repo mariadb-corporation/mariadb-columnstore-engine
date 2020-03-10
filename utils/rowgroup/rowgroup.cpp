@@ -638,7 +638,7 @@ string Row::toString() const
                     break;
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
-                    if (utils::isWide(colWidths[i]))
+                    if (colWidths[i] == utils::MAXCOLUMNWIDTH)
                     {
                         unsigned int buflen = precision[i] + 3;
                         char *buf = (char*)alloca(buflen);

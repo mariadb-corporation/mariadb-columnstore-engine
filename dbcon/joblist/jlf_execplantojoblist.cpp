@@ -88,7 +88,7 @@ using namespace logging;
 #include "jlf_common.h"
 #include "jlf_subquery.h"
 #include "jlf_tuplejoblist.h"
-
+#include "columnwidth.h"
 
 namespace
 {
@@ -312,11 +312,17 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& time
     return n;
 }
 
-int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf, const string& timeZone)
+template <typename T>
+void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf, const string& timeZone, T& v)
 {
-    if (str.size() == 0 || isNull ) return valueNullNum(ct, timeZone);
+    if (str.size() == 0 || isNull )
+    {
+        v = valueNullNum(ct, timeZone);
+        return;
+    }
 
-    int64_t v = 0;
+
+    v = 0;
     rf = 0;
     bool pushWarning = false;
     boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, timeZone, false, true, false);
@@ -450,8 +456,10 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 #else
                 v = boost::any_cast<int32_t>(anyVal);
 #endif
-            else
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
                 v = boost::any_cast<long long>(anyVal);
+            else
+                v = boost::any_cast<int128_t>(anyVal);
 
             break;
 
@@ -485,8 +493,6 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 
         rf = (data[0] == '-') ? ROUND_NEG : ROUND_POS;
     }
-
-    return v;
 }
 
 //TODO: make this totaly case-insensitive
@@ -1840,8 +1846,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         {
             // @bug 1151 string longer than colwidth of char/varchar.
             int64_t value = 0;
+            int128_t value128 = 0;
             uint8_t rf = 0;
-            unsigned __int128 val128 = 0;
 #ifdef FAILED_ATOI_IS_ZERO
 
             //if cvn throws (because there's non-digit data in the string, treat that as zero rather than
@@ -1849,7 +1855,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             try
             {
                 bool isNull = ConstantColumn::NULLDATA == cc->type();
-                value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
                 if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                 {
@@ -1887,21 +1893,14 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             }
 
 #else
+            bool isNull = ConstantColumn::NULLDATA == cc->type();
             // WIP MCOL-641 width check must be a f() not a literal
             // make a template from convertValueNum to avoid extra if
             // this condition doesn't support UDECIMAL
-            if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
-                ct.colWidth == 16)
-            {
-                bool saturate = false;
-                val128 = dataconvert::string_to_ll<int128_t>(constval, saturate);
-                // TODO MCOL-641 check saturate
-            }
+            if (utils::isWideDecimalType(ct))
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
             else
-            {
-                bool isNull = ConstantColumn::NULLDATA == cc->type();
-                value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
-            }
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
             if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
             {
@@ -1935,10 +1934,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
                 if (sc->isColumnStore())
                 {
-                    // WIP MCOL-641
-                    if (ct.colDataType == CalpontSystemCatalog::DECIMAL &&
-                        ct.colWidth == 16)
-                        pcs->addFilter(cop, val128, rf);
+                    if (utils::isWideDecimalType(ct))
+                        pcs->addFilter(cop, value128, rf);
                     else
                         pcs->addFilter(cop, value, rf);
                 }
@@ -3008,12 +3005,17 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     //add each filter to pColStep
                     int8_t cop = op2num(sop);
                     int64_t value = 0;
+                    int128_t value128 = 0;
                     string constval = cc->constval();
 
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;
                     bool isNull = ConstantColumn::NULLDATA == cc->type();
-                    value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+
+                    if (utils::isWideDecimalType(ct))
+                        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
+                    else
+                        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
                     if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                     {
@@ -3030,7 +3032,10 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    pcs->addFilter(cop, value, rf);
+                    if (utils::isWideDecimalType(ct))
+                        pcs->addFilter(cop, value128, rf);
+                    else
+                        pcs->addFilter(cop, value, rf);
                 }
             }
 
@@ -3453,7 +3458,6 @@ JLF_ExecPlanToJobList::walkTree(execplan::ParseTree* n, JobInfo& jobInfo)
             break;
 
         case CONSTANTFILTER:
-            //cout << "ConstantFilter" << endl;
             jsv = doConstantFilter(dynamic_cast<const ConstantFilter*>(tn), jobInfo);
             JLF_ExecPlanToJobList::addJobSteps(jsv, jobInfo, false);
             break;
