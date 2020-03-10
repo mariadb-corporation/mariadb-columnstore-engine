@@ -18,6 +18,7 @@
 #ifndef UTILS_COLWIDTH_H
 #define UTILS_COLWIDTH_H
 
+#include "calpontsystemcatalog.h"
 #include "branchpred.h"
 
 namespace utils
@@ -33,6 +34,13 @@ namespace utils
     inline bool isNarrow(uint8_t width)
     {
         return width <= MAXLEGACYWIDTH;
+    }
+
+    inline bool isWideDecimalType(const execplan::CalpontSystemCatalog::ColType& ct)
+    {
+        return ((ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+            ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
+            ct.colWidth == MAXCOLUMNWIDTH);
     }
 
     /** @brief Map a DECIMAL precision to data width in bytes */
