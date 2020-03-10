@@ -513,7 +513,9 @@ int ServicePrimProc::Child()
     // do not allow to read beyond the end of an extent
     const int MaxReadAheadSz = (extentRows) / BLOCK_SIZE;
     //defaultBufferSize = 512 * 1024; // @bug 2627 - changed default dict buffer from 256K to 512K, allows for cols w/ length of 61.
-    defaultBufferSize = 100 * 1024; // 1/17/12 - made the dict buffer dynamic, max size for a numeric col is 80k + ovrhd
+    // WIP MCOL-641 Check with Patrick on this. Changed it from 100*1024 to 128*1024
+    // to match with BatchPrimitiveProcessor::BUFFER_SIZE
+    defaultBufferSize = 128 * 1024; // 1/17/12 - made the dict buffer dynamic, max size for a numeric col is 80k + ovrhd
 
 
     // This parm controls whether we rotate through the output sockets

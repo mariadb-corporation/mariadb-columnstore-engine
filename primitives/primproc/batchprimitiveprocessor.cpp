@@ -99,6 +99,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    hasWideDecimalType(false),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -144,6 +145,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    hasWideDecimalType(false),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -217,6 +219,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 {
     uint32_t i;
     uint8_t tmp8;
+    uint16_t tmp16;
     Command::CommandType type;
 
     bs.advance(sizeof(ISMPacketHeader));  // skip the header
@@ -228,15 +231,16 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
     bs >> uniqueID;
     bs >> versionInfo;
 
-    bs >> tmp8;
-    needStrValues = tmp8 & NEED_STR_VALUES;
-    gotAbsRids = tmp8 & GOT_ABS_RIDS;
-    gotValues = tmp8 & GOT_VALUES;
-    LBIDTrace = tmp8 & LBID_TRACE;
-    sendRidsAtDelivery = tmp8 & SEND_RIDS_AT_DELIVERY;
-    doJoin = tmp8 & HAS_JOINER;
-    hasRowGroup = tmp8 & HAS_ROWGROUP;
-    getTupleJoinRowGroupData = tmp8 & JOIN_ROWGROUP_DATA;
+    bs >> tmp16;
+    needStrValues = tmp16 & NEED_STR_VALUES;
+    gotAbsRids = tmp16 & GOT_ABS_RIDS;
+    gotValues = tmp16 & GOT_VALUES;
+    LBIDTrace = tmp16 & LBID_TRACE;
+    sendRidsAtDelivery = tmp16 & SEND_RIDS_AT_DELIVERY;
+    doJoin = tmp16 & HAS_JOINER;
+    hasRowGroup = tmp16 & HAS_ROWGROUP;
+    getTupleJoinRowGroupData = tmp16 & JOIN_ROWGROUP_DATA;
+    hasWideDecimalType = tmp16 & HAS_WIDE_DECIMAL;
 
     // This used to signify that there was input row data from previous jobsteps, and
     // it never quite worked right. No need to fix it or update it; all BPP's have started
@@ -1018,6 +1022,8 @@ void BatchPrimitiveProcessor::initProcessor()
             fFiltRidCount[i] = 0;
             fFiltCmdRids[i].reset(new uint16_t[LOGICAL_BLOCK_RIDS]);
             fFiltCmdValues[i].reset(new int64_t[LOGICAL_BLOCK_RIDS]);
+            if (hasWideDecimalType)
+                fFiltCmdBinaryValues[i].reset(new int128_t[LOGICAL_BLOCK_RIDS]);
 
             if (filtOnString) fFiltStrValues[i].reset(new string[LOGICAL_BLOCK_RIDS]);
         }
@@ -1538,6 +1544,11 @@ void BatchPrimitiveProcessor::execute()
                         projectSteps[j]->projectIntoRowGroup(fe1Input, projectForFE1[j]);
 
                 for (j = 0; j < ridCount; j++, fe1In.nextRow())
+                    // TODO MCOL-641
+                    // WHERE clause on a numeric and a non-numeric column
+                    // leads to this execution path:
+                    // SELECT a, b from t1 where a!=b
+                    // Here, a is e.g., decimal(38), b is varchar(15)
                     if (fe1->evaluate(&fe1In))
                     {
                         applyMapping(fe1ToProjection, fe1In, &fe1Out);
@@ -2338,6 +2349,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
     bpp->stepID = stepID;
     bpp->uniqueID = uniqueID;
     bpp->needStrValues = needStrValues;
+    bpp->hasWideDecimalType = hasWideDecimalType;
     bpp->gotAbsRids = gotAbsRids;
     bpp->gotValues = gotValues;
     bpp->LBIDTrace = LBIDTrace;

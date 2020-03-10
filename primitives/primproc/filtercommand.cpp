@@ -174,7 +174,8 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
 }
 
 
-FilterCommand::FilterCommand() : Command(FILTER_COMMAND), fBOP(0)
+FilterCommand::FilterCommand() : Command(FILTER_COMMAND), fBOP(0),
+    hasWideDecimalType(false)
 {
 }
 
@@ -247,6 +248,9 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
 {
     leftColType = left;
     rightColType = right;
+
+    if (utils::isWideDecimalType(left) || utils::isWideDecimalType(right))
+        hasWideDecimalType = true;
 }
 
 
@@ -254,6 +258,13 @@ void FilterCommand::doFilter()
 {
     bpp->ridMap = 0;
     bpp->ridCount = 0;
+
+    bool (FilterCommand::*compareFunc)(uint64_t, uint64_t);
+
+    if (hasWideDecimalType)
+        compareFunc = &FilterCommand::binaryCompare;
+    else
+        compareFunc = &FilterCommand::compare;
 
     // rids in [0] is used for scan [1], so [1] is a subset of [0], and same order.
     // -- see makeFilterCommand() above.
@@ -265,10 +276,15 @@ void FilterCommand::doFilter()
         }
         else
         {
-            if (compare(i, j) == true)
+            if ((this->*compareFunc)(i, j) == true)
             {
                 bpp->relRids[bpp->ridCount] = bpp->fFiltCmdRids[0][i];
-                bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
+                // WIP MCOL-641 How is bpp->(binary)values used given that
+                // we are setting the relRids?
+                if (utils::isWideDecimalType(leftColType))
+                    bpp->binaryValues[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
+                else
+                    bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
                 bpp->ridMap |= 1 << (bpp->relRids[bpp->ridCount] >> 10);
                 bpp->ridCount++;
             }
@@ -313,6 +329,70 @@ bool FilterCommand::compare(uint64_t i, uint64_t j)
 
         case COMPARE_NE:
             return bpp->fFiltCmdValues[0][i] != bpp->fFiltCmdValues[1][j];
+            break;
+
+        default:
+            return false;
+            break;
+    }
+}
+
+bool FilterCommand::binaryCompare(uint64_t i, uint64_t j)
+{
+    // We type-promote to int128_t if either of the columns are
+    // not int128_t
+    int128_t leftVal, rightVal;
+
+    if (utils::isWideDecimalType(leftColType))
+    {
+        if (execplan::isNull(bpp->fFiltCmdBinaryValues[0][i], leftColType))
+            return false;
+        leftVal = bpp->fFiltCmdBinaryValues[0][i];
+    }
+    else
+    {
+        if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType))
+            return false;
+        leftVal = bpp->fFiltCmdValues[0][i];
+    }
+
+    if (utils::isWideDecimalType(rightColType))
+    {
+        if (execplan::isNull(bpp->fFiltCmdBinaryValues[1][j], rightColType))
+            return false;
+        rightVal = bpp->fFiltCmdBinaryValues[1][j];
+    }
+    else
+    {
+        if (execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+            return false;
+        rightVal = bpp->fFiltCmdValues[1][j];
+    }
+
+    switch (fBOP)
+    {
+        case COMPARE_GT:
+            return leftVal > rightVal;
+            break;
+
+        case COMPARE_LT:
+            return leftVal < rightVal;
+            break;
+
+        case COMPARE_EQ:
+            return leftVal == rightVal;
+            break;
+
+        case COMPARE_GE:
+            return leftVal >= rightVal;
+            break;
+
+        case COMPARE_LE:
+            return leftVal <= rightVal;
+            break;
+
+        case COMPARE_NE:
+            return leftVal != rightVal;
             break;
 
         default:
