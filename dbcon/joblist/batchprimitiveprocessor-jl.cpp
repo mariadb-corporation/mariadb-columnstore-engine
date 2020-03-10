@@ -60,6 +60,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm) 
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    hasWideDecimalType(false),
     filterCount(0),
     projectCount(0),
     needRidsAtDelivery(false),
@@ -100,6 +101,8 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan, vector<B
     filterSteps.push_back(cc);
     filterCount++;
     _hasScan = true;
+    if (utils::isWide(cc->getWidth()))
+        hasWideDecimalType = true;
     idbassert(sessionID == scan.sessionId());
 }
 
@@ -114,6 +117,9 @@ void BatchPrimitiveProcessorJL::addFilterStep(const PseudoColStep& pcs)
     cc->setStepUuid(uuid);
     filterSteps.push_back(cc);
     filterCount++;
+    // TODO MCOL-641 How do we get to this execution path?
+    //if (utils::isWide(cc->getWidth()))
+    //    hasWideDecimalType = true;
     idbassert(sessionID == pcs.sessionId());
 }
 
@@ -128,6 +134,8 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColStep& step)
     cc->setStepUuid(uuid);
     filterSteps.push_back(cc);
     filterCount++;
+    if (utils::isWide(cc->getWidth()))
+        hasWideDecimalType = true;
     idbassert(sessionID == step.sessionId());
 }
 
@@ -182,6 +190,9 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PseudoColStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
+    // TODO MCOL-641 How do we get to this execution path?
+    //if (utils::isWide(cc->getWidth()))
+    //    hasWideDecimalType = true;
     idbassert(sessionID == step.sessionId());
 }
 
@@ -198,6 +209,8 @@ void BatchPrimitiveProcessorJL::addProjectStep(const pColStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
+    if (utils::isWide(cc->getWidth()))
+        hasWideDecimalType = true;
     idbassert(sessionID == step.sessionId());
 }
 
@@ -214,6 +227,9 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PassThruStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
+
+    if (utils::isWide(cc->getWidth()))
+        hasWideDecimalType = true;
 
     if (filterCount == 0 && !sendRowGroups)
         sendValues = true;
@@ -958,7 +974,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
 {
     ISMPacketHeader ism;
     uint32_t i;
-    uint8_t flags = 0;
+    uint16_t flags = 0;
 
     ism.Command = BATCH_PRIMITIVE_CREATE;
 
@@ -993,6 +1009,9 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
 
     if (sendTupleJoinRowGroupData)
         flags |= JOIN_ROWGROUP_DATA;
+
+    if (hasWideDecimalType)
+        flags |= HAS_WIDE_DECIMAL;
 
     bs << flags;
 
