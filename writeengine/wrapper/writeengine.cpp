@@ -70,6 +70,9 @@ namespace WriteEngine
 {
 StopWatch timer;
 
+using dataconvert::int128_t;
+using dataconvert::uint128_t;
+
 /**@brief WriteEngineWrapper Constructor
 */
 WriteEngineWrapper::WriteEngineWrapper() :  m_opType(NOOP)
@@ -218,10 +221,6 @@ void WriteEngineWrapper::findSmallestColumn(uint32_t& colId, ColStructList colSt
         }
     }
 }
-
-// MCOL-641 WIP
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
 
 /*@convertValArray - Convert interface values to internal values
  */

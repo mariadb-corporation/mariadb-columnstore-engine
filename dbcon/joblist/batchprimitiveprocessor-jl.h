@@ -281,9 +281,14 @@ private:
 
     uint16_t relRids[LOGICAL_BLOCK_RIDS];
     boost::scoped_array<uint64_t> absRids;
+    // TODO MCOL-641 Do we need uint128_t buffers here?
+    // When would sendValues=true, in which case values[]
+    // is sent to primproc?
     uint64_t values[LOGICAL_BLOCK_RIDS];
     uint16_t ridCount;
     bool needStrValues;
+
+    bool hasWideDecimalType;
 
     std::vector<SCommand> filterSteps;
     std::vector<SCommand> projectSteps;
