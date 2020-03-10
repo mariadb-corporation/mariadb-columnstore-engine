@@ -53,7 +53,15 @@ double Func_rand::getRand()
         fSeed1 += 23;
 
     fSeed2 = (fSeed1 + fSeed2 + 33) % maxValue;
-    fSeeds[fSeedIndex] = std::make_pair(fSeed1, fSeed2);
+    if (fSeeds.size() > fSeedIndex) 
+    {
+        fSeeds[fSeedIndex] = std::make_pair(fSeed1, fSeed2);
+    }
+    else
+    {
+        fSeeds.push_back(std::make_pair(fSeed1, fSeed2));
+    }
+
     return (((double) fSeed1) / (double)maxValue);
 }
 
