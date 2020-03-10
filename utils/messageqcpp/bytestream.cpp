@@ -236,7 +236,7 @@ ByteStream& ByteStream::operator<<(const uint64_t o)
 }
 
 // WIP MCOL-641
-ByteStream& ByteStream::operator<<(const uint128_t o)
+ByteStream& ByteStream::operator<<(const uint128_t& o)
 {
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
