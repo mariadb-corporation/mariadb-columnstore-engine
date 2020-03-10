@@ -148,9 +148,9 @@ public:
     EXPORT ByteStream& operator<<(const uint64_t o);
     // WIP MCOL-641
     /**
-     *	push an unsigned __int128 onto the end of the stream. The byte order is whatever the native byte order is.
+     *	push an uint128_t onto the end of the stream. The byte order is whatever the native byte order is.
      */
-    EXPORT ByteStream& operator<<(const uint128_t o);
+    EXPORT ByteStream& operator<<(const uint128_t& o);
     /**
      *  push a float onto the end of the stream. The byte order is
      *  whatever the native byte order is.
@@ -217,7 +217,7 @@ public:
     EXPORT ByteStream& operator>>(uint64_t& o);
     // WIP MCOL-641
     /**
-     *	extract an unsigned __int128 from the front of the stream. The byte order is whatever the native byte order is.
+     *	extract an uint128_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator>>(uint128_t& o);
     /**
@@ -292,7 +292,7 @@ public:
     EXPORT void peek(uint64_t& o) const;
     // WIP MCOL-641
     /**
-     *	Peek at an unsigned __int128 from the front of the stream. The byte order is whatever the native byte order is.
+     *	Peek at an uint128_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT void peek(uint128_t& o) const;
     /**

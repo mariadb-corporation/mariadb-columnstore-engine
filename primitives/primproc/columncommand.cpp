@@ -71,7 +71,6 @@ ColumnCommand::~ColumnCommand() { }
 
 void ColumnCommand::_execute()
 {
-// 	cout << "CC: executing" << endl;
     if (_isScan)
         makeScanMsg();
     else if (bpp->ridCount == 0)     // this would cause a scan
@@ -93,11 +92,20 @@ void ColumnCommand::_execute()
 void ColumnCommand::execute()
 {
     if (fFilterFeeder == LEFT_FEEDER)
+    {
         values = bpp->fFiltCmdValues[0].get();
+        binaryValues = bpp->fFiltCmdBinaryValues[0].get();
+    }
     else if (fFilterFeeder == RIGHT_FEEDER)
+    {
         values = bpp->fFiltCmdValues[1].get();
+        binaryValues = bpp->fFiltCmdBinaryValues[1].get();
+    }
     else
+    {
         values = bpp->values;
+        binaryValues = bpp->binaryValues;
+    }
 
     _execute();
 }
@@ -258,7 +266,6 @@ void ColumnCommand::issuePrimitive()
 
     loadData();
 
-// 	cout << "issuing primitive for LBID " << primMsg->LBID << endl;
     if (!suppressFilter)
         bpp->pp.setParsedColumnFilter(parsedColumnFilter);
     else
@@ -295,7 +302,6 @@ void ColumnCommand::process_OT_BOTH()
 
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-// 	cout << "rid Count is " << bpp->ridCount << endl;
 
     /* this is verbose and repetative to minimize the work per row */
     switch (colType.colWidth)
@@ -308,24 +314,12 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
-                // WIP
-                // values[i] is 8 Bytes wide so coping the pointer to bpp->outputMsg[pos] and crossing fingers
-                // I dont know the liveness of bpp->outputMsg but also I dont know if there is other memory area I can use
-                values[i] = (int64_t) &bpp->outputMsg[pos];
-             
-//                cout<< "CC:  BIN16 " << i << " " 
-//                        << hex 
-//                        << *((int64_t*)values[i])
-//                        << " "
-//                        << *(((int64_t*)values[i]) +1)
-//                        << endl;
+                binaryValues[i] = *((int128_t*) &bpp->outputMsg[pos]);
                 pos += 16;
             }
 
             break;
-        
-     
-        
+
         case 8:
             for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
             {
@@ -389,28 +383,24 @@ void ColumnCommand::process_OT_RID()
     memcpy(bpp->relRids, outMsg + 1, outMsg->NVALS << 1);
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-// 	cout << "rid Count is " << bpp->ridCount << endl;
 }
 
 void ColumnCommand::process_OT_DATAVALUE()
 {
     bpp->ridCount = outMsg->NVALS;
 
-// 	cout << "rid Count is " << bpp->ridCount << endl;
     switch (colType.colWidth)
     {
          case 16:
-        {
-            memcpy(values, outMsg + 1, outMsg->NVALS << 3);
+         {
+            memcpy(binaryValues, outMsg + 1, outMsg->NVALS << 4);
             cout << "  CC: first value is " << values[0] << endl;
             break;
-        }
+         }
 
-        
         case 8:
         {
             memcpy(values, outMsg + 1, outMsg->NVALS << 3);
-// 			cout << "  CC: first value is " << values[0] << endl;
             break;
         }
 
@@ -488,8 +478,6 @@ void ColumnCommand::processResult()
         for (uint64_t i = 0; i < bpp->ridCount; i++)
             bpp->fFiltCmdRids[1][i] = bpp->relRids[i];
     }
-
-// 	cout << "processed " << outMsg->NVALS << " rows" << endl;
 }
 
 void ColumnCommand::createCommand(ByteStream& bs)
@@ -823,7 +811,7 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
             cout << __FILE__<< ":" <<__LINE__ << " ColumnCommand::projectResultRG " << endl;
             for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
             {
-                r.setBinaryField_offset(msg8, colType.colWidth, offset);
+                r.setBinaryField_offset((int128_t*)msg8, colType.colWidth, offset);
                 r.nextRow(rowSize);
             }
             break;

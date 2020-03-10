@@ -28,6 +28,7 @@
 #include "brm.h"
 #include "brmtypes.h"
 #include "dataconvert.h"
+#include "columnwidth.h"
 
 #define IS_VERBOSE (fDebug >= 4)
 #define IS_DETAIL  (fDebug >= 3)
@@ -808,7 +809,12 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
 
         // Should we also check for empty here?
         // TODO MCOL-641
-        if (isNull(value, ct))	// This will work even if the data column is unsigned.
+        if (utils::isWideDecimalType(ct))
+        {
+            if (isNull(bigValue, ct))
+                continue;
+        }
+        else if (isNull(value, ct)) // This will work even if the data column is unsigned.
         {
             continue;
         }

@@ -147,6 +147,7 @@ private:
     uint16_t filterCount;
     bool makeAbsRids;
     int64_t* values;      // this is usually bpp->values; RTSCommand needs to use a different container
+    int128_t* binaryValues;
 
     uint8_t mask, shift;  // vars for the selective block loader
 

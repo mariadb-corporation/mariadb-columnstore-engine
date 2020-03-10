@@ -190,14 +190,15 @@ enum ISMPACKETCOMMAND
 #undef PRIM_DELIVERBASE
 
 /* Flags for BPP messages */
-const uint8_t NEED_STR_VALUES       = 0x01; //1;
-const uint8_t GOT_ABS_RIDS          = 0x02; //2;
-const uint8_t GOT_VALUES            = 0x04; //4;
-const uint8_t LBID_TRACE            = 0x08; //8;
-const uint8_t HAS_JOINER            = 0x10; //16;
-const uint8_t SEND_RIDS_AT_DELIVERY = 0x20; //32;
-const uint8_t HAS_ROWGROUP          = 0x40; //64;
-const uint8_t JOIN_ROWGROUP_DATA	= 0x80; //128
+const uint16_t NEED_STR_VALUES       = 0x01; //1;
+const uint16_t GOT_ABS_RIDS          = 0x02; //2;
+const uint16_t GOT_VALUES            = 0x04; //4;
+const uint16_t LBID_TRACE            = 0x08; //8;
+const uint16_t HAS_JOINER            = 0x10; //16;
+const uint16_t SEND_RIDS_AT_DELIVERY = 0x20; //32;
+const uint16_t HAS_ROWGROUP          = 0x40; //64;
+const uint16_t JOIN_ROWGROUP_DATA    = 0x80; //128
+const uint16_t HAS_WIDE_DECIMAL      = 0x100; //256;
 
 //TODO: put this in a namespace to stop global ns pollution
 enum PrimFlags
