@@ -204,11 +204,13 @@ private:
     uint64_t baseRid;		// first rid of the logical block
 
     uint16_t relRids[LOGICAL_BLOCK_RIDS];
-    int64_t  values[LOGICAL_BLOCK_RIDS];
+    int64_t values[LOGICAL_BLOCK_RIDS];
+    int128_t binaryValues[LOGICAL_BLOCK_RIDS];
     boost::scoped_array<uint64_t> absRids;
     boost::scoped_array<std::string> strValues;
     uint16_t ridCount;
     bool needStrValues;
+    bool hasWideDecimalType;
 
     /* Common space for primitive data */
     static const uint32_t BUFFER_SIZE = 131072;
@@ -274,6 +276,7 @@ private:
     bool filtOnString;
     boost::scoped_array<uint16_t> fFiltCmdRids[2];
     boost::scoped_array<int64_t> fFiltCmdValues[2];
+    boost::scoped_array<int128_t> fFiltCmdBinaryValues[2];
     boost::scoped_array<std::string> fFiltStrValues[2];
     uint64_t fFiltRidCount[2];
 
