@@ -1452,6 +1452,8 @@ int main(int argc, char* argv[])
         cloud  = oam::UnassignedName;
     }
     
+    // mcol-2022  Going forward, only allow upgrades to use the extra 
+    // AWS functionality
     if (noPrompting && cloud.find("amazon") != string::npos)
         amazonInstall = true;
 
