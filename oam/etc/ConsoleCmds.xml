@@ -274,13 +274,13 @@
 	</Cmd42>
 	<Cmd43>
 		<Name>assignElasticIPAddress</Name>
-		<Desc1>Assign Amazon Elastic IP Address to a module</Desc1>
+		<Desc1>Assign Amazon Elastic IP Address to a module (deprecated)</Desc1>
 		<Arg1>Required: Amazon Elastic IP Address</Arg1>
 		<Arg2>Required: Module Name</Arg2>
 	</Cmd43>
 	<Cmd44>
 		<Name>unassignElasticIPAddress</Name>
-		<Desc1>Unassign Amazon Elastic IP Address</Desc1>
+		<Desc1>Unassign Amazon Elastic IP Address (deprecated)</Desc1>
 		<Arg1>Required: Amazon Elastic IP Address</Arg1>
 	</Cmd44>
 	<Cmd45>
