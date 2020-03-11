@@ -1399,15 +1399,6 @@ int main(int argc, char* argv[])
     {
         cloud  = oam::UnassignedName;
     }
-    
-    #if XXXPAT
-    if (cloud.find("amazon") != string::npos)
-    {
-        cout << "AWS-specific functionality has been deprecated for this version." << endl
-            << "Please re-run postConfigure without the upgrade option." << endl;
-        exit(1);
-    }
-    #endif
 
     if ( cloud == "disable" )
         amazonInstall = false;
