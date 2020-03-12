@@ -42,6 +42,8 @@ using namespace joblist;
 #include "../udfsdk/udfsdk.h"
 #endif
 
+#include "mcs_decimal.h"
+
 namespace funcexp
 {
 
@@ -471,13 +473,22 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
             case CalpontSystemCatalog::UDECIMAL:
             {
                 IDB_Decimal val = expression[i]->getDecimalVal(row, isNull);
-
-                // WIP check for null and overflow here.
-                if (expression[i]->resultType().colWidth == 16)
+                if (expression[i]->resultType().colWidth
+                    == datatypes::MAXDECIMALWIDTH)
                 {
-                    row.setBinaryField_offset(&val.s128Value,
-                        expression[i]->resultType().colWidth,
-                        row.getOffset(expression[i]->outputIndex()));
+                    if (isNull)
+                    {
+                         row.setBinaryField_offset(
+                            const_cast<int128_t*>(&datatypes::Decimal128Null),
+                            expression[i]->resultType().colWidth,
+                            row.getOffset(expression[i]->outputIndex()));
+                    }
+                    else
+                    {
+                        row.setBinaryField_offset(&val.s128Value,
+                            expression[i]->resultType().colWidth,
+                            row.getOffset(expression[i]->outputIndex()));
+                    }
                 }
                 else
                 {
