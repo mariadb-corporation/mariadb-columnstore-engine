@@ -290,31 +290,19 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
         case OP_ADD:
             if (resultCscType.colWidth == 16)
             {
-                result.s128Value = op1.s128Value + op2.s128Value;
-                break;
+                datatypes::Decimal::addition<decltype(result.s128Value),false>(
+                    op1, op2, result);
             }
-
-            if (result.scale == op1.scale && result.scale == op2.scale)
+            else if (resultCscType.colWidth == 8)
             {
-                result.value = op1.value + op2.value;
-                break;
+                datatypes::Decimal::addition<decltype(result.value),false>(
+                    op1, op2, result);
             }
-
-            if (result.scale >= op1.scale)
-                op1.value *= IDB_pow[result.scale - op1.scale];
             else
-                op1.value = (int64_t)(op1.value > 0 ?
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] + 0.5 :
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] - 0.5);
-
-            if (result.scale >= op2.scale)
-                op2.value *= IDB_pow[result.scale - op2.scale];
-            else
-                op2.value = (int64_t)(op2.value > 0 ?
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] + 0.5 :
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] - 0.5);
-
-            result.value = op1.value + op2.value;
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         case OP_SUB:
@@ -352,21 +340,33 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
             break;
 
         case OP_DIV:
-            if (op2.value == 0)
+            if (resultCscType.colWidth == 16)
             {
-                isNull = true;
-                break;
+                if (op2.s128Value == 0)
+                {
+                    isNull = true;
+                    break;
+                }
+
+                datatypes::Decimal::division<decltype(result.s128Value),false>(
+                op1, op2, result);
             }
+            else if (resultCscType.colWidth == 8)
+            {
+                if (op2.value == 0)
+                {
+                    isNull = true;
+                    break;
+                }
 
-            if (result.scale >= op1.scale - op2.scale)
-                result.value = (int64_t)(( (op1.value > 0 && op2.value > 0) || (op1.value < 0 && op2.value < 0) ?
-                                           (long double)op1.value / op2.value * IDB_pow[result.scale - (op1.scale - op2.scale)] + 0.5 :
-                                           (long double)op1.value / op2.value * IDB_pow[result.scale - (op1.scale - op2.scale)] - 0.5));
+                datatypes::Decimal::division<decltype(result.value),false>(
+                    op1, op2, result);
+            }
             else
-                result.value = (int64_t)(( (op1.value > 0 && op2.value > 0) || (op1.value < 0 && op2.value < 0) ?
-                                           (long double)op1.value / op2.value / IDB_pow[op1.scale - op2.scale - result.scale] + 0.5 :
-                                           (long double)op1.value / op2.value / IDB_pow[op1.scale - op2.scale - result.scale] - 0.5));
-
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         default:
