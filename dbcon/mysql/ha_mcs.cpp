@@ -146,7 +146,7 @@ static int columnstore_init_func(void* p)
 #ifndef _MSC_VER
     (void) pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
 #endif
-    (void) my_hash_init(&mcs_open_tables, system_charset_info, 32, 0, 0,
+    (void) my_hash_init(PSI_NOT_INSTRUMENTED, &mcs_open_tables, system_charset_info, 32, 0, 0,
                         (my_hash_get_key) mcs_get_key, 0, 0);
 
     mcs_hton->create =  mcs_create_handler;
@@ -909,7 +909,7 @@ int ha_mcs::external_lock(THD* thd, int lock_type)
     {
         //@Bug 2526 Only register the transaction when autocommit is off
         if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-            trans_register_ha( thd, true, mcs_hton);
+            trans_register_ha( thd, true, mcs_hton, 0);
 
         rc = ha_mcs_impl_external_lock(thd, table, lock_type);
     }

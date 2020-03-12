@@ -553,7 +553,7 @@ MYSQL_RES* mysql_use_result(MYSQL* mysql)
         DBUG_RETURN(0);
     }
 
-    if (!(result = (MYSQL_RES*) my_malloc(sizeof(*result) +
+    if (!(result = (MYSQL_RES*) my_malloc(PSI_NOT_INSTRUMENTED, sizeof(*result) +
                                           sizeof(ulong) * mysql->field_count,
                                           MYF(MY_WME | MY_ZEROFILL))))
         DBUG_RETURN(0);
@@ -562,7 +562,7 @@ MYSQL_RES* mysql_use_result(MYSQL* mysql)
     result->methods = mysql->methods;
 
     if (!(result->row = (MYSQL_ROW)
-                        my_malloc(sizeof(result->row[0]) * (mysql->field_count + 1), MYF(MY_WME))))
+                        my_malloc(PSI_NOT_INSTRUMENTED, sizeof(result->row[0]) * (mysql->field_count + 1), MYF(MY_WME))))
     {
         /* Ptrs: to one row */
         my_free(result);
