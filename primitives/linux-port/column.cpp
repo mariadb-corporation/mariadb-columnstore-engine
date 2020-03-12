@@ -33,6 +33,7 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using namespace boost;
 
+#include "branchpred.h"
 #include "primitiveprocessor.h"
 #include "messagelog.h"
 #include "messageobj.h"
@@ -91,24 +92,24 @@ inline uint64_t order_swap(uint64_t x)
 }
 
 // char(8) values lose their null terminator
-template <int W>
+template <int COL_WIDTH>
 inline string fixChar(int64_t intval)
 {
-    char chval[W + 1];
-    memcpy(chval, &intval, W);
-    chval[W] = '\0';
+    char chval[COL_WIDTH + 1];
+    memcpy(chval, &intval, COL_WIDTH);
+    chval[COL_WIDTH] = '\0';
 
     return string(chval);
 }
 
 //FIXME: what are we trying to accomplish here? It looks like we just want to count
 // the chars in a string arg?
-inline p_DataValue convertToPDataValue(const void* val, int W)
+inline p_DataValue convertToPDataValue(const void* val, int COL_WIDTH)
 {
     p_DataValue dv;
     string str;
 
-    if (8 == W)
+    if (8 == COL_WIDTH)
         str = fixChar<8>(*reinterpret_cast<const int64_t*>(val));
     else
         str = reinterpret_cast<const char*>(val);
@@ -124,7 +125,7 @@ inline p_DataValue convertToPDataValue(const void* val, int W)
  *****************************************************************************/
 
 // Bit pattern representing EMPTY value for given column type/width
-template<int W>
+template<int COL_WIDTH>
 uint64_t getEmptyValue(uint8_t type);
 
 template<>
@@ -231,7 +232,7 @@ uint64_t getEmptyValue<1>(uint8_t type)
 
 
 // Bit pattern representing NULL value for given column type/width
-template<int W>
+template<int COL_WIDTH>
 uint64_t getNullValue(uint8_t type);
 
 template<>
@@ -346,9 +347,9 @@ inline bool isNullValue(int64_t val, T NULL_VALUE)
     //TODO: what's up with the alternative NULL here?
     uint64_t ALT_NULL_VALUE = 0xFFFFFFFFFFFFFFFELL;
 
-    constexpr int W = sizeof(T);
+    constexpr int COL_WIDTH = sizeof(T);
     return (static_cast<T>(val) == NULL_VALUE) ||
-           ((KIND_TEXT == KIND)  &&  (W == 8)  &&  (val == ALT_NULL_VALUE));
+           ((KIND_TEXT == KIND)  &&  (COL_WIDTH == 8)  &&  (val == ALT_NULL_VALUE));
 }
 
 
@@ -479,7 +480,7 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
 
 // Compare two column values using given comparison operation,
 // taking into account all rules about NULL values, string trimming and so on
-template<ENUM_KIND KIND, int W, bool isNull = false>
+template<ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL = false>
 inline bool colCompare(
     int64_t val1,
     int64_t val2,
@@ -492,10 +493,10 @@ inline bool colCompare(
 
     if (COMPARE_NIL == COP) return false;
 
-    //@bug 425 added isNull condition
-    else if (KIND_FLOAT == KIND  &&  !isNull)
+    //@bug 425 added IS_NULL condition
+    else if (KIND_FLOAT == KIND  &&  !IS_NULL)
     {
-        if (W == 4)
+        if (COL_WIDTH == 4)
         {
             float dVal1 = *((float*) &val1);
             float dVal2 = *((float*) &val2);
@@ -509,7 +510,7 @@ inline bool colCompare(
         }
     }
 
-    else if (KIND_TEXT == KIND  &&  !isNull)
+    else if (KIND_TEXT == KIND  &&  !IS_NULL)
     {
         if (!regex.used && !rf)
         {
@@ -524,7 +525,7 @@ inline bool colCompare(
 
     else
     {
-        if (isNull == isVal2Null || (isVal2Null && COP == COMPARE_NE))
+        if (IS_NULL == isVal2Null || (isVal2Null && COP == COMPARE_NE))
         {
             if (KIND_UNSIGNED == KIND)
             {
@@ -545,10 +546,10 @@ inline bool colCompare(
  *****************************************************************************/
 
 // Return true if curValue matches the filter represented by all those arrays
-template<ENUM_KIND KIND, int W, bool isNull = false, typename T>
+template<ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL = false, typename T>
 inline bool matchingColValue(
     // Value description
-    int64_t curValue,               // The value (isNull - is the value null?)
+    int64_t curValue,               // The value (IS_NULL - is the value null?)
     // Filter description
     ColumnFilterMode columnFilterMode,
     prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
@@ -574,9 +575,9 @@ inline bool matchingColValue(
         case SINGLE_COMPARISON:
         {
             auto filterValue = filterValues[0];
-            bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[0],
-                                           filterRFs[0], filterRegexes[0],
-                                           isNullValue<KIND,T>(filterValue, NULL_VALUE));
+            bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0],
+                                                            filterRFs[0], filterRegexes[0],
+                                                            isNullValue<KIND,T>(filterValue, NULL_VALUE));
             return cmp;
         }
 
@@ -587,9 +588,9 @@ inline bool matchingColValue(
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
-                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
-                                               filterRFs[argIndex], filterRegexes[argIndex],
-                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+                bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
+                                                                filterRFs[argIndex], filterRegexes[argIndex],
+                                                                isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
                 // Short-circuit the filter evaluation - true || ... == true
                 if (cmp == true)
@@ -607,9 +608,9 @@ inline bool matchingColValue(
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
-                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
-                                               filterRFs[argIndex], filterRegexes[argIndex],
-                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+                bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
+                                                                filterRFs[argIndex], filterRegexes[argIndex],
+                                                                isNullValue<KIND,T>(filterValue, NULL_VALUE));
 
                 // Short-circuit the filter evaluation - false && ... = false
                 if (cmp == false)
@@ -629,9 +630,9 @@ inline bool matchingColValue(
             for (int argIndex = 0; argIndex < filterCount; argIndex++)
             {
                 auto filterValue = filterValues[argIndex];
-                bool cmp = colCompare<KIND, W, isNull>(curValue, filterValue, filterCOPs[argIndex],
-                                               filterRFs[argIndex], filterRegexes[argIndex],
-                                               isNullValue<KIND,T>(filterValue, NULL_VALUE));
+                bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
+                                                                filterRFs[argIndex], filterRegexes[argIndex],
+                                                                isNullValue<KIND,T>(filterValue, NULL_VALUE));
                 result ^= cmp;
             }
 
@@ -677,7 +678,7 @@ inline bool matchingColValue(
         case NONE_OF_VALUES_IN_SET:
         {
             // bug 1920: ignore NULLs in the set and in the column data
-            if (isNull)
+            if (IS_NULL)
                 return false;
 
             bool found = (filterSet->find(curValue) != filterSet->end());
@@ -744,7 +745,7 @@ bool isMinMaxValid(const NewColRequestHeader* in)
 // Return true on success, false on EOF.
 // Values are read from srcArray either in natural order or in the order defined by ridArray.
 // Empty values are skipped, unless ridArray==0 && !(OutputType & OT_RID).
-template<typename T, int W>
+template<typename T, int COL_WIDTH>
 inline bool nextColValue(
     int64_t* result,            // Place for the value returned
     bool* isEmpty,              // ... and flag whether it's EMPTY
@@ -765,7 +766,7 @@ inline bool nextColValue(
         // Read next non-empty value in the order defined by ridArray
         for( ; ; i++)
         {
-            if (i >= ridSize)
+            if (UNLIKELY(i >= ridSize))
                 return false;
 
             value = srcArray[ridArray[i]];
@@ -782,7 +783,7 @@ inline bool nextColValue(
         // Read next non-empty value in the natural order
         for( ; ; i++)
         {
-            if (i >= srcSize)
+            if (UNLIKELY(i >= srcSize))
                 return false;
 
             value = srcArray[i];
@@ -797,7 +798,7 @@ inline bool nextColValue(
     else
     {
         // Read next value in the natural order
-        if (i >= srcSize)
+        if (UNLIKELY(i >= srcSize))
             return false;
 
         *rid = i;
@@ -891,7 +892,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     uint32_t filterCount,           // Number of filter elements contained in filterString
     uint32_t BOP)                   // Operation (and/or/xor/none) that combines all filter elements
 {
-    const uint32_t colWidth = sizeof(T);  // Sizeof of the column to be filtered
+    const uint32_t COL_WIDTH = sizeof(T);  // Sizeof of the column to be filtered
 
     boost::shared_ptr<ParsedColumnFilter> ret;  // Place for building the value to return
     if (filterCount == 0)
@@ -922,7 +923,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
     {
         // Size of single filter element in filterString BLOB
-        const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + colWidth;
+        const uint32_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + COL_WIDTH;
 
         // Pointer to ColArgs structure representing argIndex'th element in the BLOB
         auto args = reinterpret_cast<const ColArgs*>(filterString + (argIndex * filterSize));
@@ -951,7 +952,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 
         if (useRegex)
         {
-            p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
+            p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], COL_WIDTH);
             if (PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv))
                 throw runtime_error("PrimitiveProcessor::parseColumnFilter_T(): Could not create regular expression for LIKE operator");
         }
@@ -982,7 +983,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 
         // Now we found that conversion is possible. Let's choose between array-based search
         // and set-based search depending on the set size.
-        //TODO: Tailor the threshold based on the actual search algorithms used and colWidth/simdWidth
+        //TODO: Tailor the threshold based on the actual search algorithms used and COL_WIDTH/SIMD_WIDTH
 
         if (filterCount <= 8)
         {
@@ -1035,7 +1036,7 @@ void filterColumnData(
     unsigned srcSize,
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
-    constexpr int W = sizeof(T);
+    constexpr int COL_WIDTH = sizeof(T);
     const T* srcArray = reinterpret_cast<const T*>(srcArray16);
 
     // Cache some structure fields in local vars
@@ -1056,14 +1057,14 @@ void filterColumnData(
     auto filterRegexes = (filterCount==0? NULL : parsedColumnFilter->prestored_regex.get());
 
     // Bit patterns in srcArray[i] representing EMPTY and NULL values
-    T EMPTY_VALUE = static_cast<T>(getEmptyValue<W>(DataType));
-    T NULL_VALUE  = static_cast<T>(getNullValue <W>(DataType));
+    T EMPTY_VALUE = static_cast<T>(getEmptyValue<COL_WIDTH>(DataType));
+    T NULL_VALUE  = static_cast<T>(getNullValue <COL_WIDTH>(DataType));
 
     // Precompute filter results for EMPTY and NULL values
-    bool isEmptyValueMatches = matchingColValue<KIND, W, false>(EMPTY_VALUE, columnFilterMode, filterSet, filterCount,
+    bool isEmptyValueMatches = matchingColValue<KIND, COL_WIDTH, false>(EMPTY_VALUE, columnFilterMode, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
-    bool isNullValueMatches = matchingColValue<KIND, W, true>(NULL_VALUE, columnFilterMode, filterSet, filterCount,
+    bool isNullValueMatches = matchingColValue<KIND, COL_WIDTH, true>(NULL_VALUE, columnFilterMode, filterSet, filterCount,
                                     filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE);
 
     // Boolean indicating whether to capture the min and max values
@@ -1083,10 +1084,10 @@ void filterColumnData(
 
     // Loop over the column values, storing those matching the filter, and updating the min..max range
     for (int i = 0;
-         nextColValue<T,W>(&curValue, &isEmpty,
-                           &i, &rid,
-                           srcArray, srcSize, ridArray, ridSize,
-                           OutputType, EMPTY_VALUE); )
+         nextColValue<T, COL_WIDTH>(&curValue, &isEmpty,
+                                    &i, &rid,
+                                    srcArray, srcSize, ridArray, ridSize,
+                                    OutputType, EMPTY_VALUE); )
     {
         if (isEmpty)
         {
@@ -1103,22 +1104,22 @@ void filterColumnData(
         else
         {
             // If curValue matches the filter, write it to the output buffer
-            if (matchingColValue<KIND, W, false>(curValue, columnFilterMode, filterSet, filterCount,
+            if (matchingColValue<KIND, COL_WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
                                 filterCOPs, filterValues, filterRFs, filterRegexes, NULL_VALUE))
             {
                 writeColValue<T>(OutputType, out, outSize, written, rid, srcArray);
             }
 
-            // Update Min and Max if necessary.  EMPTY/NULL values can't appear here.
+            // Update Min and Max if necessary.  EMPTY/NULL values are processed in other branches.
             if (ValidMinMax)
             {
-                if ((KIND_TEXT == KIND) && (W > 1))
+                if ((KIND_TEXT == KIND) && (COL_WIDTH > 1))
                 {
                     // When computing Min/Max for string fields, we compare them trimWhitespace()'d
-                    if (colCompare<KIND, W>(Min, curValue, COMPARE_GT, false, placeholderRegex))
+                    if (colCompare<KIND, COL_WIDTH>(Min, curValue, COMPARE_GT, false, placeholderRegex))
                         Min = curValue;
 
-                    if (colCompare<KIND, W>(Max, curValue, COMPARE_LT, false, placeholderRegex))
+                    if (colCompare<KIND, COL_WIDTH>(Max, curValue, COMPARE_LT, false, placeholderRegex))
                         Max = curValue;
                 }
                 else
