@@ -102,30 +102,6 @@ const string columnstore_big_precision[20] =
     "99999999999999999999999999999999999999"
 };
 
-const uint64_t columnstore_pow_10[20] =
-{
-    1ULL,
-    10ULL,
-    100ULL,
-    1000ULL,
-    10000ULL,
-    100000ULL,
-    1000000ULL,
-    10000000ULL,
-    100000000ULL,
-    1000000000ULL,
-    10000000000ULL,
-    100000000000ULL,
-    1000000000000ULL,
-    10000000000000ULL,
-    100000000000000ULL,
-    1000000000000000ULL,
-    10000000000000000ULL,
-    100000000000000000ULL,
-    1000000000000000000ULL,
-    10000000000000000000ULL
-};
-
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base & (*f)(std::ios_base&))
 {
@@ -1257,33 +1233,30 @@ size_t DataConvert::writeIntPart(int128_t* dec,
 {
     int128_t intPart = *dec;
     int128_t high = 0, mid = 0, low = 0;
-    uint64_t div = 10000000000000000000ULL;
+    uint64_t maxUint64divisor = 10000000000000000000ULL;
 
     if (scale)
     {
-        const uint8_t maxPowOf10 =
-            (sizeof(columnstore_pow_10) / sizeof(columnstore_pow_10[0])) - 1;
-
         // Assuming scale = [0, 56]
-        switch (scale / maxPowOf10)
+        switch (scale / datatypes::maxPowOf10)
         {
             case 2: // scale = [38, 56]
-                intPart /= columnstore_pow_10[maxPowOf10];
-                intPart /= columnstore_pow_10[maxPowOf10];
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
                 low = intPart;
                 break;
             case 1: // scale = [19, 37]
-                intPart /= columnstore_pow_10[maxPowOf10];
-                intPart /= columnstore_pow_10[scale % maxPowOf10];
-                low = intPart % div;
-                mid = intPart / div;
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                intPart /= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
+                low = intPart % maxUint64divisor;
+                mid = intPart / maxUint64divisor;
                 break;
             case 0: // scale = [0, 18]
-                intPart /= columnstore_pow_10[scale % maxPowOf10];
-                low = intPart % div;
-                intPart /= div;
-                mid = intPart % div;
-                high = intPart / div;
+                intPart /= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
+                low = intPart % maxUint64divisor;
+                intPart /= maxUint64divisor;
+                mid = intPart % maxUint64divisor;
+                high = intPart / maxUint64divisor;
                 break;
             default:
                 throw QueryDataExcept("writeIntPart() bad scale", formatErr);
@@ -1291,10 +1264,10 @@ size_t DataConvert::writeIntPart(int128_t* dec,
     }
     else
     {
-        low = intPart % div;
-        intPart /= div;
-        mid = intPart % div;
-        high = intPart / div;
+        low = intPart % maxUint64divisor;
+        intPart /= maxUint64divisor;
+        mid = intPart % maxUint64divisor;
+        high = intPart / maxUint64divisor;
     }
 
     // pod[0] is low 8 bytes, pod[1] is high 8 bytes
@@ -1337,19 +1310,16 @@ size_t DataConvert::writeFractionalPart(int128_t* dec,
 {
     int128_t scaleDivisor = 1;
 
-    const uint8_t maxPowOf10 =
-        (sizeof(columnstore_pow_10) / sizeof(columnstore_pow_10[0])) - 1;
-
-    switch (scale / maxPowOf10)
+    switch (scale / datatypes::maxPowOf10)
     {
         case 2:
-            scaleDivisor *= columnstore_pow_10[maxPowOf10];
-            scaleDivisor *= columnstore_pow_10[maxPowOf10];
+            scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+            scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
             break;
         case 1:
-            scaleDivisor *= columnstore_pow_10[maxPowOf10];
+            scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
         case 0:
-            scaleDivisor *= columnstore_pow_10[scale % maxPowOf10];
+            scaleDivisor *= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
     }
 
     int128_t fractionalPart = *dec % scaleDivisor;
