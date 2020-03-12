@@ -80,9 +80,7 @@ namespace utils
 
     inline void int128Min(int128_t& val)
     {
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
-        ptr[0] = 0;
-        ptr[1] = 0x8000000000000000;
+        val = int128_t(0x8000000000000000LL) << 64;
     }
 
     inline void uint128Max(uint128_t& val)

@@ -12,6 +12,12 @@ if (WITH_ARITHMETICOPERATOR_UT)
     install(TARGETS rowgroup_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
 endif()
 
+if (WITH_CSDECIMAL_UT)
+    add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
+    target_link_libraries(mcs_decimal_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS}) 
+    install(TARGETS rowgroup_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+endif()
+
 if (WITH_DATACONVERT_UT)
     add_executable(dataconvert_tests dataconvert-tests.cpp)
     target_link_libraries(dataconvert_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS}) 

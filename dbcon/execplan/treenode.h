@@ -36,9 +36,7 @@
 #include "exceptclasses.h"
 #include "dataconvert.h"
 #include "columnwidth.h"
-#include "csdecimal.h"
-
-using int128_t = __int128;
+#include "mcs_decimal.h"
 
 namespace messageqcpp
 {
