@@ -88,7 +88,7 @@ using namespace logging;
 #include "jlf_common.h"
 #include "jlf_subquery.h"
 #include "jlf_tuplejoblist.h"
-#include "columnwidth.h"
+#include "mcs_decimal.h"
 
 namespace
 {
@@ -1884,7 +1884,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             // WIP MCOL-641 width check must be a f() not a literal
             // make a template from convertValueNum to avoid extra if
             // this condition doesn't support UDECIMAL
-            if (utils::isWideDecimalType(ct))
+            if (datatypes::Decimal::isWideDecimalType(ct))
                 convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
             else
                 convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
@@ -1921,7 +1921,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
                 if (sc->isColumnStore())
                 {
-                    if (utils::isWideDecimalType(ct))
+                    if (datatypes::Decimal::isWideDecimalType(ct))
                         pcs->addFilter(cop, value128, rf);
                     else
                         pcs->addFilter(cop, value, rf);
@@ -2996,7 +2996,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     uint8_t rf = 0;
                     bool isNull = ConstantColumn::NULLDATA == cc->type();
 
-                    if (utils::isWideDecimalType(ct))
+                    if (datatypes::Decimal::isWideDecimalType(ct))
                         convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
                     else
                         convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
@@ -3016,7 +3016,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    if (utils::isWideDecimalType(ct))
+                    if (datatypes::Decimal::isWideDecimalType(ct))
                         pcs->addFilter(cop, value128, rf);
                     else
                         pcs->addFilter(cop, value, rf);

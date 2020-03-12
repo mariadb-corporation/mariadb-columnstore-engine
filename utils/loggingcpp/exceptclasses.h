@@ -187,6 +187,16 @@ public:
         std::runtime_error(msg) { }
 };
 
+/** @brief Exception for F&E framework to throw on op overflow
+ *  Invalid Operation Exception
+ */
+class OperationOverflowExcept : public std::runtime_error
+{
+public:
+    /** Takes a character string describing the error.  */
+    OperationOverflowExcept(const std::string& msg) :
+        std::runtime_error(msg) { }
+};
 /** @brief specific error exception class for getSysData in Calpontsystemcatalog.
 *   @bug 2574
 *

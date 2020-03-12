@@ -27,6 +27,7 @@
 #include "dictstep.h"
 #include "filtercommand.h"
 #include "dataconvert.h"
+#include "mcs_decimal.h"
 
 using namespace std;
 using namespace messageqcpp;
@@ -249,7 +250,7 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
     leftColType = left;
     rightColType = right;
 
-    if (utils::isWideDecimalType(left) || utils::isWideDecimalType(right))
+    if (datatypes::Decimal::isWideDecimalType(left) || datatypes::Decimal::isWideDecimalType(right))
         hasWideDecimalType = true;
 }
 
@@ -281,7 +282,7 @@ void FilterCommand::doFilter()
                 bpp->relRids[bpp->ridCount] = bpp->fFiltCmdRids[0][i];
                 // WIP MCOL-641 How is bpp->(binary)values used given that
                 // we are setting the relRids?
-                if (utils::isWideDecimalType(leftColType))
+                if (datatypes::Decimal::isWideDecimalType(leftColType))
                     bpp->binaryValues[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
                 else
                     bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
@@ -343,7 +344,7 @@ bool FilterCommand::binaryCompare(uint64_t i, uint64_t j)
     // not int128_t
     int128_t leftVal, rightVal;
 
-    if (utils::isWideDecimalType(leftColType))
+    if (datatypes::Decimal::isWideDecimalType(leftColType))
     {
         if (execplan::isNull(bpp->fFiltCmdBinaryValues[0][i], leftColType))
             return false;
@@ -356,7 +357,7 @@ bool FilterCommand::binaryCompare(uint64_t i, uint64_t j)
         leftVal = bpp->fFiltCmdValues[0][i];
     }
 
-    if (utils::isWideDecimalType(rightColType))
+    if (datatypes::Decimal::isWideDecimalType(rightColType))
     {
         if (execplan::isNull(bpp->fFiltCmdBinaryValues[1][j], rightColType))
             return false;
