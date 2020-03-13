@@ -1356,18 +1356,69 @@ ioManager::ioManager(FileBufferMgr& fbm,
     }
 
     fThreadCount = thrCount;
+    lastConfigMTime = 0;
+    loadDBRootCache();
     go();
 }
 
-void ioManager::buildOidFileName(const BRM::OID_t oid, const uint16_t dbRoot, const uint16_t partNum, const uint32_t segNum, char* file_name)
+void ioManager::loadDBRootCache()
 {
+    if (fConfig->getLastMTime() == lastConfigMTime)
+        return;
+    
+    char buf[100];
+    dbRootCache.clear();
+    
+    // this will grab all of the dbroots on the cluster, not just the ones on this node
+    // for simplicity.
+    oam::Oam OAM;
+    oam::DBRootConfigList dbRoots;
+    OAM.getSystemDbrootConfig(dbRoots);
+    for (auto _dbroot : dbRoots)
+    {
+        sprintf(buf, "DBRoot%d", _dbroot);
+        string location = fConfig->getConfig("SystemConfig", buf);
+        dbRootCache[_dbroot] = location;
+    }
+}
+
+void ioManager::buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const uint16_t partNum, const uint32_t segNum, char* file_name)
+{
+    // when it's a request for the version buffer, the dbroot comes in as 0 for legacy reasons
+    if (dbRoot == 0 && oid < 1000)
+        dbRoot = fdbrm.getDBRootOfVBOID(oid);
+        
+    boost::unique_lock<boost::mutex> lock(dbRootCacheLock);
+    loadDBRootCache();
+    string dbRootPath;
+    auto it = dbRootCache.find(dbRoot);
+    if (it == dbRootCache.end())
+    {
+        ostringstream oss;
+        oss << "(dbroot " << dbRoot << " offline)";
+        dbRootPath = oss.str();
+    }
+    else 
+        dbRootPath = it->second;
+    lock.unlock();
+    
+    // different filenames for the version buffer files
+    if (oid < 1000)
+        snprintf(file_name, WriteEngine::FILE_NAME_SIZE, "%s/versionbuffer.cdf", dbRootPath.c_str());
+    else
+        snprintf(file_name, WriteEngine::FILE_NAME_SIZE, "%s/%03u.dir/%03u.dir/%03u.dir/%03u.dir/%03u.dir/FILE%03d.cdf",
+            dbRootPath.c_str(), oid >> 24, (oid & 0x00ff0000) >> 16, (oid & 0x0000ff00) >> 8, 
+            oid & 0x000000ff, partNum, segNum);
+    
+    
+    /*  old version
     if (fFileOp.getFileName(oid, file_name, dbRoot, partNum, segNum) != WriteEngine::NO_ERROR)
     {
         file_name[0] = 0;
         throw std::runtime_error("fileOp.getFileName failed");
     }
-
     //cout << "Oid2Filename o: " << oid << " n: " << file_name << endl;
+    */
 }
 
 const int ioManager::localLbidLookup(BRM::LBID_t lbid,

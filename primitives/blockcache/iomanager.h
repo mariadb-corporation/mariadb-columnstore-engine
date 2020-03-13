@@ -83,7 +83,7 @@ public:
                               uint32_t& fileBlockOffset);
 
     void buildOidFileName(const BRM::OID_t oid,
-                          const uint16_t dbRoot,
+                          uint16_t dbRoot,
                           const uint16_t partNum,
                           const uint32_t segNum,
                           char* file_name);
@@ -153,6 +153,11 @@ private:
     uint32_t fDecreaseOpenFilesCount;
     bool fFDCacheTrace;
     std::ofstream fFDTraceFile;
+    
+    std::map<int, std::string> dbRootCache;
+    boost::mutex dbRootCacheLock;
+    void loadDBRootCache();
+    time_t lastConfigMTime;
 
 };
 
