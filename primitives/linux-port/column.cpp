@@ -49,6 +49,8 @@ using namespace execplan;
 
 namespace
 {
+using RID_T = uint16_t;  // Row index type, as used in rid arrays
+
 // Column filtering is dispatched 4-way based on the column type,
 // which defines implementation of comparison operations for the column values
 enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
@@ -89,6 +91,12 @@ inline uint64_t order_swap(uint64_t x)
                    ((x >> 40) & 0x000000000000FF00ULL) |
                    (x << 56);
     return ret;
+}
+
+// Portable way to copy value
+inline void copyValue(void* out, const void *in, size_t size)
+{
+    memcpy(out, in, size);  //// we are relying on little-endiannes here if actual *in has width >size
 }
 
 // char(8) values lose their null terminator
@@ -542,7 +550,7 @@ inline bool colCompare(
 
 
 /*****************************************************************************
- *** FILTER/READ/WRITE A COLUMN VALUE ****************************************
+ *** FILTER A COLUMN VALUE ***************************************************
  *****************************************************************************/
 
 // Return true if curValue matches the filter represented by all those arrays
@@ -741,6 +749,10 @@ bool isMinMaxValid(const NewColRequestHeader* in)
 }
 
 
+/*****************************************************************************
+ *** READ COLUMN VALUES ******************************************************
+ *****************************************************************************/
+
 // Read one ColValue from the input data.
 // Return true on success, false on EOF.
 // Values are read from srcArray either in natural order or in the order defined by ridArray.
@@ -828,6 +840,56 @@ inline bool nextColValue(
 }
 
 
+/* Scan srcArray[srcSize] either in the natural order
+   or in the order provided by ridArray[ridSize] (when RID_ORDER==true),
+   When SKIP_EMPTY_VALUES==true, skip values equal to EMPTY_VALUE.
+   Save non-skipped values to dataArray[] and, when WRITE_RID==true, their indexes to dataRid[].
+   Return number of values written to dataArray[]
+*/
+template <bool WRITE_RID, bool RID_ORDER, bool SKIP_EMPTY_VALUES, typename SRC_T, typename DST_T>
+size_t readArray(
+    const SRC_T* srcArray, size_t srcSize,
+    DST_T* dataArray, RID_T* dataRid = NULL,
+    const RID_T* ridArray = NULL, size_t ridSize = 0,
+    const SRC_T EMPTY_VALUE = 0)
+{
+    // Depending on RID_ORDER, we will scan either ridSize elements of ridArray[] or srcSize elements of srcArray[]
+    size_t inputSize = (RID_ORDER? ridSize : srcSize);
+    auto out = dataArray;
+
+    // Check that all employed arrays are non-NULL.
+    // NOTE: unused arays may still be non-NULL in order to simplify calling code.
+    idbassert(srcArray);
+    idbassert(dataArray);
+    if (RID_ORDER)
+        idbassert(ridArray);
+    if (WRITE_RID)
+        idbassert(dataRid);
+    if (SKIP_EMPTY_VALUES)
+        idbassert(EMPTY_VALUE);
+
+    for(size_t i=0; i < inputSize; i++)
+    {
+        size_t rid = (RID_ORDER? ridArray[i] : i);
+        auto value = srcArray[rid];
+
+        if (SKIP_EMPTY_VALUES? LIKELY(value != EMPTY_VALUE) : true)
+        {
+            *out++ = static_cast<DST_T>(value);
+
+            if (WRITE_RID)
+                *dataRid++ = rid;
+        }
+    }
+
+    return out - dataArray;
+}
+
+
+/*****************************************************************************
+ *** WRITE COLUMN VALUES *****************************************************
+ *****************************************************************************/
+
 // Append value to the output buffer with debug-time check for buffer overflow
 template<typename T>
 inline void checkedWriteValue(
@@ -876,6 +938,38 @@ inline void writeColValue(
     }
 
     out->NVALS++;   //TODO: Can be computed at the end from *written value
+}
+
+
+template <bool WRITE_RID, bool WRITE_DATA, typename FILTER_ARRAY_T, typename RID_T, typename DATA_T>
+void writeArray(
+    size_t dataSize,
+    const DATA_T* dataArray,
+    const RID_T* dataRid,
+    const FILTER_ARRAY_T &filterArray,
+    void** outptr)
+{
+    auto out = static_cast<uint8_t*>(*outptr);
+
+    for (size_t i = 0; i < dataSize; ++i)
+    {
+        if (filterArray[i])
+        {
+            if (WRITE_RID)
+            {
+                copyValue(out, &dataRid[i], sizeof(RID_T));
+                out += sizeof(RID_T);
+            }
+
+            if (WRITE_DATA)
+            {
+                copyValue(out, &dataArray[i], sizeof(DATA_T));
+                out += sizeof(DATA_T);
+            }
+        }
+    }
+
+    *outptr = out;
 }
 
 
@@ -1018,6 +1112,70 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
     }
 
     return ret;
+}
+
+
+template<typename T, ENUM_KIND KIND>
+void processArray(
+    const T* srcArray,
+    size_t srcSize,
+    uint16_t* ridArray,
+    size_t ridSize,                // Number of values in ridArray
+    int filterCount,
+    bool WRITE_RID,
+    bool WRITE_DATA,
+    bool SKIP_EMPTY_VALUES,
+    T EMPTY_VALUE)
+{
+    // Alloc temporary arrays
+    size_t inputSize = (ridArray? ridSize : srcSize);
+
+    // Temporary array with data to filter
+    std::vector<T> dataVec(inputSize);
+    auto dataArray = dataVec.data();
+
+    // Temporary array with RIDs of corresponding dataArray elements
+    std::vector<RID_T> dataRidVec(WRITE_RID? inputSize : 0);
+    auto dataRid = dataRidVec.data();
+
+    // Copy input data into temporary array, opt. storing RIDs, opt. skipping EMPTYs
+    size_t dataSize;  // number of values copied into dataArray
+    if (ridArray != NULL)
+    {
+        dataSize = WRITE_RID? readArray<true, true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
+                            : readArray<false,true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
+    }
+    else if (SKIP_EMPTY_VALUES)
+    {
+        dataSize = WRITE_RID? readArray<true, false,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
+                            : readArray<false,false,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
+    }
+    else
+    {
+        dataSize = WRITE_RID? readArray<true, false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
+                            : readArray<false,false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
+    }
+
+    // Temporary array accumulating results of filtering for each record
+    std::vector<uint8_t> filterVec(dataSize, false);  //// initval depends on bop
+    auto filterArray = filterVec.data();
+
+
+    //prepareArray();
+    for (int i = 0; i < filterCount; ++i)
+    {
+        //applyFilterElement();
+    }
+
+
+    // Copy filtered data and/or their RIDs into output buffer
+    void* out; ////
+    if (WRITE_RID && WRITE_DATA)
+        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, &out);
+    else if (WRITE_RID)
+        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, &out);
+    else
+        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, &out);
 }
 
 
