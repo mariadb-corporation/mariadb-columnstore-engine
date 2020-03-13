@@ -130,9 +130,10 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
 
 /* This looks like an inefficient way to get NULL values. Much easier ways
    to do it. */
-int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone)
+template<typename T>
+void valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone, T& val)
 {
-    int64_t n = 0;
+    T& n = val;
     bool pushWarning = false;
     boost::any anyVal = DataConvert::convertColumnData(ct, "", pushWarning, timeZone, true, false, false);
 
@@ -292,24 +293,22 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& time
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-                n = boost::any_cast<char>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
-                n = boost::any_cast<short>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
-                n = boost::any_cast<int>(anyVal);
+            if (LIKELY(ct.colWidth == datatypes::MAXDECIMALWIDTH))
+                n = boost::any_cast<int128_t>(anyVal);
             else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
                 n = boost::any_cast<long long>(anyVal);
-            else
-                n = 0xfffffffffffffffeLL;
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
+                n = boost::any_cast<int>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
+                n = boost::any_cast<short>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
+                n = boost::any_cast<char>(anyVal);
 
             break;
 
         default:
             break;
     }
-
-    return n;
 }
 
 template <typename T>
@@ -317,7 +316,7 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
 {
     if (str.size() == 0 || isNull )
     {
-        v = valueNullNum(ct, timeZone);
+        valueNullNum(ct, timeZone, v);
         return;
     }
 
@@ -445,10 +444,10 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-                v = boost::any_cast<char>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
-                v = boost::any_cast<int16_t>(anyVal);
+            if (LIKELY(ct.colWidth == datatypes::MAXDECIMALWIDTH))
+                v = boost::any_cast<int128_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
+                v = boost::any_cast<long long>(anyVal);
             else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
 #ifdef _MSC_VER
                 v = boost::any_cast<int>(anyVal);
@@ -456,10 +455,10 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
 #else
                 v = boost::any_cast<int32_t>(anyVal);
 #endif
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
-                v = boost::any_cast<long long>(anyVal);
-            else
-                v = boost::any_cast<int128_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
+                v = boost::any_cast<int16_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
+                v = boost::any_cast<char>(anyVal);
 
             break;
 

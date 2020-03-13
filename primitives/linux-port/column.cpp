@@ -41,6 +41,7 @@ using namespace boost;
 #include "primproc.h"
 #include "dataconvert.h"
 #include "widedecimalutils.h"
+#include "mcs_decimal.h"
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -639,8 +640,6 @@ inline string fixChar(int64_t intval)
 
 inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
 {
-// 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
-
     if (COMPARE_NIL == COP) return false;
 
     //@bug 425 added isNull condition
@@ -687,6 +686,19 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
         else
             return false;
     }
+}
+
+inline bool colCompare(int128_t val1, int128_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, bool isNull = false)
+{
+    if (COMPARE_NIL == COP) return false;
+
+    /* isNullVal should work on the normalized value on little endian machines */
+    bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
+
+    if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
+        return colCompare_(val1, val2, COP, rf);
+    else
+        return false;
 }
 
 inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
@@ -1602,7 +1614,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
     int nextRidIndex = 0, argIndex = 0;
     bool done = false, cmp = false, isNull = false, isEmpty = false;
     uint16_t rid = 0;
-    prestored_set_t::const_iterator it;
+    prestored_set_t_128::const_iterator it;
 
     binWtype* argVals = (binWtype*)alloca(in->NOPS * W);
     uint8_t* std_cops = (uint8_t*)alloca(in->NOPS * sizeof(uint8_t));
@@ -1635,7 +1647,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
     // we have a pre-parsed filter, and it's in the form of op and value arrays
     else if (parsedColumnFilter->columnFilterMode == TWO_ARRAYS)
     {
-        argVals = (binWtype*) parsedColumnFilter->prestored_argVals.get();
+        argVals = (binWtype*) parsedColumnFilter->prestored_argVals128.get();
         cops = parsedColumnFilter->prestored_cops.get();
         rfs = parsedColumnFilter->prestored_rfs.get();
         regex = parsedColumnFilter->prestored_regex.get();
@@ -1646,14 +1658,11 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
     bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                 &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
 
-    uint128_t val;
-    dataconvert::Int128Pod_t *valPod;
-    valPod = reinterpret_cast<dataconvert::Int128Pod_t*>(&val);
+    int128_t val;
 
     while (!done)
     {
-        valPod->lo = *reinterpret_cast<uint64_t*>(*bval);
-        valPod->hi = *(reinterpret_cast<uint64_t*>(*bval) + 1);
+        val = *reinterpret_cast<int128_t*>(bval);
 
         if (cops == NULL)    // implies parsedColumnFilter && columnFilterMode == SET
         {
@@ -1661,13 +1670,13 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             if (!(isNull && in->BOP == BOP_AND))
             {
 
-                it = parsedColumnFilter->prestored_set->find(val);
+                it = parsedColumnFilter->prestored_set_128->find(val);
 
 
                 if (in->BOP == BOP_OR)
                 {
                     // assume COP == COMPARE_EQ
-                    if (it != parsedColumnFilter->prestored_set->end())
+                    if (it != parsedColumnFilter->prestored_set_128->end())
                     {
                         store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
                     }
@@ -1675,7 +1684,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
                 else if (in->BOP == BOP_AND)
                 {
                     // assume COP == COMPARE_NE
-                    if (it == parsedColumnFilter->prestored_set->end())
+                    if (it == parsedColumnFilter->prestored_set_128->end())
                     {
                         store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
                     }
@@ -1686,45 +1695,11 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
         {
             for (argIndex = 0; argIndex < in->NOPS; argIndex++)
             {
-
-//               if((*((uint64_t *) (uval))) != 0) cout << "comparing " << dec << (*((uint64_t *) (uval)))  << " to " << (*((uint64_t *) (argVals[argIndex])))  << endl;
-
                 // WIP MCOL-641
-                uint128_t filterVal;
-                dataconvert::Int128Pod_t *filterValPod;
-                filterValPod = reinterpret_cast<dataconvert::Int128Pod_t*>(&filterVal);
+                int128_t filterVal = *reinterpret_cast<int128_t*>(argVals[argIndex]);
 
-                filterValPod->lo = *reinterpret_cast<uint64_t*>(argVals[argIndex]);
-                filterValPod->hi = *(reinterpret_cast<uint64_t*>(argVals[argIndex]) + 1);
-
-                switch (cops[argIndex]) {
-                    case COMPARE_NIL:
-                        cmp = false;
-                        break;
-                    case COMPARE_LT:
-                        cmp = val < filterVal;
-                        break;
-                    case COMPARE_EQ:
-                        cmp = val == filterVal;
-                        break;
-                    case COMPARE_LE:
-                        cmp = val <= filterVal;
-                        break;
-                    case COMPARE_GT:
-                        cmp = val > filterVal;
-                        break;
-                    case COMPARE_NE:
-                        cmp = val != filterVal;
-                        break;
-                    case COMPARE_GE:
-                        cmp = val >= filterVal;
-                        break;
-                    default:
-                        logIt(34, cops[argIndex], "colCompare");
-                        cmp = false; // throw an exception here?
-                }
-
-//              cout << cmp << endl;
+                cmp = colCompare(val, filterVal, cops[argIndex],
+                                 rfs[argIndex], in->DataType, W, isNull);
 
                 if (in->NOPS == 1)
                 {
@@ -1732,7 +1707,6 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
                     {
                         store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
                     }
-
                     break;
                 }
                 else if (in->BOP == BOP_AND && cmp == false)
@@ -1765,19 +1739,19 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             }
             else if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
             {
-                if (static_cast<unsigned __int128>(out->Min) > val)
-                    out->Min = static_cast<unsigned __int128>(val);
+                if (static_cast<uint128_t>(out->Min) > static_cast<uint128_t>(val))
+                    out->Min = val;
 
-                if (static_cast<unsigned __int128>(out->Max) < val)
-                    out->Max = static_cast<unsigned __int128>(val);;
+                if (static_cast<uint128_t>(out->Max) < static_cast<uint128_t>(val))
+                    out->Max = val;
             }
             else
             {
-                if (out->Min > (__int128) val)
-                    out->Min = (__int128) val;
+                if (out->Min > val)
+                    out->Min = val;
 
-                if (out->Max < (__int128) val)
-                    out->Max = (__int128) val;
+                if (out->Max < val)
+                    out->Max = val;
             }
         }
 
@@ -1897,9 +1871,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     ret.reset(new ParsedColumnFilter());
 
     ret->columnFilterMode = TWO_ARRAYS;
-    // WIP MCOL-641
-    if (colWidth == 16)
-        ret->prestored_argVals.reset(new int64_t[filterCount * 2]);
+    if (colWidth == datatypes::MAXDECIMALWIDTH)
+        ret->prestored_argVals128.reset(new int128_t[filterCount]);
     else
         ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
@@ -1997,9 +1970,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
                     ret->prestored_argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
                     break;
 
-                // WIP MCOL-641
                 case 16:
-                     memcpy(ret->prestored_argVals.get() + (argIndex * 2), args->val, 16);
+                    ret->prestored_argVals128[argIndex] = *reinterpret_cast<const int128_t*>(args->val);
             }
         }
 
@@ -2028,12 +2000,24 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     if (convertToSet)
     {
         ret->columnFilterMode = UNORDERED_SET;
-        ret->prestored_set.reset(new prestored_set_t());
+        if (colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            ret->prestored_set_128.reset(new prestored_set_t_128());
 
-        // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
-        for (argIndex = 0; argIndex < filterCount; argIndex++)
-            if (ret->prestored_rfs[argIndex] == 0)
-                ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+            // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+            for (argIndex = 0; argIndex < filterCount; argIndex++)
+                if (ret->prestored_rfs[argIndex] == 0)
+                    ret->prestored_set_128->insert(ret->prestored_argVals128[argIndex]);
+        }
+        else
+        {
+            ret->prestored_set.reset(new prestored_set_t());
+
+            // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+            for (argIndex = 0; argIndex < filterCount; argIndex++)
+                if (ret->prestored_rfs[argIndex] == 0)
+                    ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+        }
     }
 
     return ret;

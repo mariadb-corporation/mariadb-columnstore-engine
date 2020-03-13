@@ -391,29 +391,21 @@ void number_int_value(const string& data,
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == 1)
+            if (LIKELY(ct.colWidth == 16))
             {
-                if (intVal < MIN_TINYINT)
+                int128_t tmp;
+                utils::int128Min(tmp);
+                if (intVal < tmp + 2) // + 2 for NULL and EMPTY values
                 {
-                    intVal = MIN_TINYINT;
-                    pushwarning = true;
-                }
-                else if (intVal > MAX_TINYINT)
-                {
-                    intVal = MAX_TINYINT;
+                    intVal = tmp + 2;
                     pushwarning = true;
                 }
             }
-            else if (ct.colWidth == 2)
+            else if (ct.colWidth == 8)
             {
-                if (intVal < MIN_SMALLINT)
+                if (intVal < MIN_BIGINT)
                 {
-                    intVal = MIN_SMALLINT;
-                    pushwarning = true;
-                }
-                else if (intVal > MAX_SMALLINT)
-                {
-                    intVal = MAX_SMALLINT;
+                    intVal = MIN_BIGINT;
                     pushwarning = true;
                 }
             }
@@ -430,21 +422,29 @@ void number_int_value(const string& data,
                     pushwarning = true;
                 }
             }
-            else if (ct.colWidth == 8)
+            else if (ct.colWidth == 2)
             {
-                if (intVal < MIN_BIGINT)
+                if (intVal < MIN_SMALLINT)
                 {
-                    intVal = MIN_BIGINT;
+                    intVal = MIN_SMALLINT;
+                    pushwarning = true;
+                }
+                else if (intVal > MAX_SMALLINT)
+                {
+                    intVal = MAX_SMALLINT;
                     pushwarning = true;
                 }
             }
-            else if (ct.colWidth == 16)
+            else if (ct.colWidth == 1)
             {
-                int128_t tmp;
-                utils::int128Min(tmp);
-                if (intVal < tmp + 2) // + 2 for NULL and EMPTY values
+                if (intVal < MIN_TINYINT)
                 {
-                    intVal = tmp + 2;
+                    intVal = MIN_TINYINT;
+                    pushwarning = true;
+                }
+                else if (intVal > MAX_TINYINT)
+                {
+                    intVal = MAX_TINYINT;
                     pushwarning = true;
                 }
             }
@@ -1469,31 +1469,31 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 break;
 
             case CalpontSystemCatalog::DECIMAL:
-                if (colType.colWidth == 1)
+                if (LIKELY(colType.colWidth == 16))
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    value = (char) val64;
-                }
-                else if (colType.colWidth == 2)
-                {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    value = (short) val64;
-                }
-                else if (colType.colWidth == 4)
-                {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    value = (int) val64;
+                    int128_t val128;
+                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+                    value = (int128_t) val128;
                 }
                 else if (colType.colWidth == 8)
                 {
                     number_int_value(data, colType, pushWarning, noRoundup, val64);
                     value = (long long) val64;
                 }
-                else if (colType.colWidth == 16)
+                else if (colType.colWidth == 4)
                 {
-                    int128_t val128;
-                    number_int_value(data, colType, pushWarning, noRoundup, val128);
-                    value = (int128_t) val128;
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (int) val64;
+                }
+                else if (colType.colWidth == 2)
+                {
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (short) val64;
+                }
+                else if (colType.colWidth == 1)
+                {
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    value = (char) val64;
                 }
                 //else if (colType.colWidth == 32)
                 //    value = data;
@@ -1503,29 +1503,29 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             case CalpontSystemCatalog::UDECIMAL:
 
                 // UDECIMAL numbers may not be negative
-                if (colType.colWidth == 1)
+                if (LIKELY(colType.colWidth == 16))
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    char ival = (char) val64;
+                    int128_t val128;
+                    number_int_value(data, colType, pushWarning, noRoundup, val128);
 
-                    if (ival < 0 &&
-                            ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
-                            ival != static_cast<int8_t>(joblist::TINYINTNULL))
+                    if (val128 < 0 &&
+                        !utils::isWideDecimalNullValue(val128) &&
+                        !utils::isWideDecimalEmptyValue(val128))
                     {
-                        ival = 0;
+                        val128 = 0;
                         pushWarning = true;
                     }
 
-                    value = ival;
+                    value = val128;
                 }
-                else if (colType.colWidth == 2)
+                else if (colType.colWidth == 8)
                 {
                     number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    short ival = (short) val64;
+                    long long ival = static_cast<long long>(val64);
 
                     if (ival < 0 &&
-                            ival != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
-                            ival != static_cast<int16_t>(joblist::SMALLINTNULL))
+                            ival != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
+                            ival != static_cast<long long>(joblist::BIGINTNULL))
                     {
                         ival = 0;
                         pushWarning = true;
@@ -1548,14 +1548,14 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                     value = ival;
                 }
-                else if (colType.colWidth == 8)
+                else if (colType.colWidth == 2)
                 {
                     number_int_value(data, colType, pushWarning, noRoundup, val64);
-                    long long ival = static_cast<long long>(val64);
+                    short ival = (short) val64;
 
                     if (ival < 0 &&
-                            ival != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
-                            ival != static_cast<long long>(joblist::BIGINTNULL))
+                            ival != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
+                            ival != static_cast<int16_t>(joblist::SMALLINTNULL))
                     {
                         ival = 0;
                         pushWarning = true;
@@ -1563,20 +1563,20 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                     value = ival;
                 }
-                else if (colType.colWidth == 16)
+                else if (colType.colWidth == 1)
                 {
-                    int128_t val128;
-                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    char ival = (char) val64;
 
-                    if (val128 < 0 &&
-                        !utils::isWideDecimalNullValue(val128) &&
-                        !utils::isWideDecimalEmptyValue(val128))
+                    if (ival < 0 &&
+                            ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
+                            ival != static_cast<int8_t>(joblist::TINYINTNULL))
                     {
-                        val128 = 0;
+                        ival = 0;
                         pushWarning = true;
                     }
 
-                    value = val128;
+                    value = ival;
                 }
 
                 break;
@@ -1865,31 +1865,31 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                if (colType.colWidth == CalpontSystemCatalog::ONE_BYTE)
+                if (LIKELY(colType.colWidth == 16))
                 {
-                    char tinyintvalue = joblist::TINYINTNULL;
-                    value = tinyintvalue;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::TWO_BYTE)
-                {
-                    short smallintvalue = joblist::SMALLINTNULL;
-                    value = smallintvalue;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::FOUR_BYTE)
-                {
-                    int intvalue = joblist::INTNULL;
-                    value = intvalue;
+                    int128_t val;
+                    utils::setWideDecimalNullValue(val);
+                    value = val;
                 }
                 else if (colType.colWidth == CalpontSystemCatalog::EIGHT_BYTE)
                 {
                     long long eightbyte = joblist::BIGINTNULL;
                     value = eightbyte;
                 }
-                else if (colType.colWidth == 16)
+                else if (colType.colWidth == CalpontSystemCatalog::FOUR_BYTE)
                 {
-                    int128_t val;
-                    utils::setWideDecimalNullValue(val);
-                    value = val;
+                    int intvalue = joblist::INTNULL;
+                    value = intvalue;
+                }
+                else if (colType.colWidth == CalpontSystemCatalog::TWO_BYTE)
+                {
+                    short smallintvalue = joblist::SMALLINTNULL;
+                    value = smallintvalue;
+                }
+                else if (colType.colWidth == CalpontSystemCatalog::ONE_BYTE)
+                {
+                    char tinyintvalue = joblist::TINYINTNULL;
+                    value = tinyintvalue;
                 }
                 else
                 {

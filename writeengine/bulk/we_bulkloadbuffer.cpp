@@ -39,6 +39,7 @@
 #include "brmtypes.h"
 #include "dataconvert.h"
 #include "exceptclasses.h"
+#include "mcs_decimal.h"
 
 #include "joblisttypes.h"
 
@@ -986,17 +987,17 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
-                            if (width <= 8)
-                            {
-                                // errno is initialized and set in convertDecimalString
-                                llVal = Convertor::convertDecimalString(
-                                            field, fieldLength, column.scale );
-                            }
-                            else
+                            if (LIKELY(width == datatypes::MAXDECIMALWIDTH))
                             {
                                 bool saturate = false;
                                 bigllVal = dataconvert::string_to_ll<int128_t>(string(field), saturate);
                                 // TODO MCOL-641 check saturate
+                            }
+                            else if (width <= 8)
+                            {
+                                // errno is initialized and set in convertDecimalString
+                                llVal = Convertor::convertDecimalString(
+                                            field, fieldLength, column.scale );
                             }
                         }
                         else
