@@ -24,6 +24,27 @@
 
 namespace datatypes
 {
+
+    struct lldiv_t_128
+    {
+        int128_t quot;
+        int128_t rem;
+        lldiv_t_128() : quot(0), rem(0) {}
+    };
+
+    inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
+    {
+        lldiv_t_128 res;
+
+        if (UNLIKELY(divisor == 0) || UNLIKELY(dividend == 0))
+            return res;
+
+        res.quot = dividend / divisor;
+        res.rem = dividend % divisor;
+
+        return res;
+    }
+
     template<typename BinaryOperation,
         typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
@@ -94,42 +115,42 @@ namespace datatypes
 
     int Decimal::compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r)
     {
-        int128_t divL, divR;
-        getScaleDivisor(divL, l.scale);
-        getScaleDivisor(divR, r.scale);
-        int128_t quotinentL, quotinentR, remainderL, remainderR;
-        quotinentL = l.s128Value/divL;
-        remainderL = l.s128Value%divL;
-        quotinentR = r.s128Value/divR;
-        remainderR = r.s128Value%divR;
+        int128_t divisorL, divisorR;
+        getScaleDivisor(divisorL, l.scale);
+        getScaleDivisor(divisorR, r.scale);
+
+        lldiv_t_128 d1 = lldiv128(l.s128Value, divisorL);
+        lldiv_t_128 d2 = lldiv128(r.s128Value, divisorR);
 
         int ret = 0;
 
-        if (quotinentL > quotinentR)
+        if (d1.quot > d2.quot)
         {
             ret = 1;
         }
-        else if (quotinentL < quotinentR)
+        else if (d1.quot < d2.quot)
         {
             ret = -1;
         }
         else
         {
             // rem carries the value's sign, but needs to be normalized.
-            int32_t s = l.scale - r.scale;
+            int64_t s = l.scale - r.scale;
+            int128_t divisor;
+            getScaleDivisor(divisor, abs(s));
 
             if (s < 0)
             {
-                if ((remainderL * mcs_pow_10[-s]) > remainderR)
+                if ((d1.rem * divisor) > d2.rem)
                     ret = 1;
-                else if ((remainderL * mcs_pow_10[-s]) < remainderR)
+                else if ((d1.rem * divisor) < d2.rem)
                     ret = -1;
             }
             else
             {
-                if (remainderL > (remainderR * mcs_pow_10[s]))
+                if (d1.rem > (d2.rem * divisor))
                     ret = 1;
-                else if (remainderL < (remainderR * mcs_pow_10[s]))
+                else if (d1.rem < (d2.rem * divisor))
                     ret = -1;
             }
         }
