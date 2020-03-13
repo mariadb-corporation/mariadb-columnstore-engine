@@ -729,5 +729,67 @@ TEST(DataConvertTest, DecimalToStringCheckScale38)
     EXPECT_EQ(string(buf), expected);
 }
 
-TEST(DataConvertTest, ConvertColumnData) {
+TEST(DataConvertTest, DecimalToStringCheckScale37)
+{
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    char buf[42];
+    string expected;
+    ct.precision = 38;
+    ct.scale = 37;
+    int128_t res;
+
+    // test simple values
+    res = 0;
+    expected = "0.0000000000000000000000000000000000000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 2;
+    expected = "0.0000000000000000000000000000000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -2;
+    expected = "-0.0000000000000000000000000000000000002";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = 123;
+    expected = "0.0000000000000000000000000000000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -123;
+    expected = "-0.0000000000000000000000000000000000123";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = ((((((int128_t)1234567890 * 10000000000) + 1234567890) * 10000000000) + 1234567890) * 100000000 ) + 12345678;
+    expected = "1.2345678901234567890123456789012345678";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-1.2345678901234567890123456789012345678";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "9.9999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-9.9999999999999999999999999999999999999";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "0.0000000000000000000000000000000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+    res = -res;
+    expected = "-0.0000000000000000000000000000000123000";
+    DataConvert::decimalToString(&res, ct.scale, buf, 42, ct.colDataType);
+    EXPECT_EQ(string(buf), expected);
+}
+
+TEST(DataConvertTest, ConvertColumnData)
+{
 }

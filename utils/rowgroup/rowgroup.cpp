@@ -639,9 +639,9 @@ string Row::toString() const
                     break;
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
-                    if (colWidths[i] == utils::MAXCOLUMNWIDTH)
+                    if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
                     {
-                        unsigned int buflen = precision[i] + 3;
+                        unsigned int buflen = utils::MAXLENGTH16BYTES;
                         char *buf = (char*)alloca(buflen);
                         // empty the buffer
                         dataconvert::DataConvert::decimalToString(getBinaryField<int128_t>(i),

@@ -1235,7 +1235,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
 // WIP MCOL-641
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
-    out.setBinaryField<int128_t>(getBinaryField<int128_t>(srcIndex), 16, destIndex);
+    out.setBinaryField(getBinaryField<int128_t>(srcIndex), 16, destIndex);
 }
 
 inline void Row::setRid(uint64_t rid)

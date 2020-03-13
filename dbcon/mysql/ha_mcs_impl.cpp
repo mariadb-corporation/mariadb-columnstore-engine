@@ -805,7 +805,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                 {
-                    if (colType.colWidth == 16)
+                    if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
                     {
                         // unset null bit first
                         // Might be redundant
