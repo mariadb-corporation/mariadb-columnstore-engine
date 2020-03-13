@@ -70,9 +70,6 @@ namespace WriteEngine
 {
 StopWatch timer;
 
-using dataconvert::int128_t;
-using dataconvert::uint128_t;
-
 /**@brief WriteEngineWrapper Constructor
 */
 WriteEngineWrapper::WriteEngineWrapper() :  m_opType(NOOP)
@@ -803,21 +800,9 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
             cscColType = cscColTypeList[i];
             Convertor::convertColType(&curColStruct);
 
-            /*if (curColStruct.colType == WriteEngine::WR_BINARY)
-            {
-                uint128_t bigEmptyVal;
-                emptyVal = m_colOp[op(curColStruct.fCompressionType)]->
-                           getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth);
-                *(reinterpret_cast<uint64_t*>(&bigEmptyVal)) = emptyVal;
-                *(reinterpret_cast<uint64_t*>(&bigEmptyVal) + 1) = emptyVal;
-                curTuple.data = bigEmptyVal;
-            }
-            else
-            {*/
-                m_colOp[op(curColStruct.fCompressionType)]->
-                    getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth, (uint8_t*)&emptyVal);
-                curTuple.data = emptyVal;
-            //}
+            m_colOp[op(curColStruct.fCompressionType)]->
+                getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth, (uint8_t*)&emptyVal);
+            curTuple.data = emptyVal;
 
             curTupleList.push_back(curTuple);
             colValueList.push_back(curTupleList);
@@ -4371,7 +4356,6 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
     ColumnOp* colOp = NULL;
     bool successFlag = true;
     unsigned width = 0;
-    \
     int curFbo = 0, curBio, lastFbo = -1;
     RID aRid = ridLists[0];
     int rc = 0;
