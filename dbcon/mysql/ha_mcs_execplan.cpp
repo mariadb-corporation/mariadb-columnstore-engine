@@ -4356,8 +4356,15 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         columnstore_decimal_val << str->ptr()[i];
     }
 
-    columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
+    if (idp->decimal_precision() <= 18)
+        columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
+    else
+    {
+        bool dummy = false;
+        columnstore_decimal.s128Value = dataconvert::strtoll128(columnstore_decimal_val.str().c_str(), dummy, 0);
+    }
 
+    // TODO MCOL-641 Add support here
     if (gwi.internalDecimalScale >= 0 && idp->decimals > (uint)gwi.internalDecimalScale)
     {
         columnstore_decimal.scale = gwi.internalDecimalScale;
