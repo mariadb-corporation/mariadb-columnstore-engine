@@ -310,6 +310,12 @@ public:
                                      uint32_t partition,
                                      uint16_t segment ) const;
 
+    /* Added for MCOL-3251 */
+    void                getFileNameForPrimProc(FID fid, char* fileName,
+                                     uint16_t dbRoot,
+                                     uint32_t partition,
+                                     uint16_t segment ) const;
+
     /**
      * @brief Construct directory path for the specified fid (OID), DBRoot, and
      * partition number.  Directory does not have to exist, nor is it created.
