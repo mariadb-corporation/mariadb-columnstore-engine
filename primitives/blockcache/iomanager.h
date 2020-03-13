@@ -153,12 +153,6 @@ private:
     uint32_t fDecreaseOpenFilesCount;
     bool fFDCacheTrace;
     std::ofstream fFDTraceFile;
-    
-    std::map<int, std::string> dbRootCache;
-    boost::mutex dbRootCacheLock;
-    void loadDBRootCache();
-    time_t lastConfigMTime;
-
 };
 
 // @bug2631, for remount filesystem by loadBlock() in primitiveserver
