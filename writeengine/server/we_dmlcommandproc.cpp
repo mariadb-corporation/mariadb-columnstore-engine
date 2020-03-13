@@ -2622,7 +2622,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         uint64_t& blocksChanged)
 {
     uint8_t rc = 0;
-    //cout << " In processUpdate" << endl;
     uint32_t tmp32, sessionID;
     TxnID txnId;
     bs >> PMId;
@@ -2639,7 +2638,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         uint8_t pkgType;
         bs >> pkgType;
         cpackages[txnId].read(bs);
-        //cout << "Processed meta data in update" << endl;
 
         rc = fWEWrapper.startTransaction(txnId);
 
@@ -2811,9 +2809,20 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 rid = relativeRID;
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
-                uint32_t colWidth = ((colTypes[j].colWidth > 8 &&
-                                     !(colTypes[j].colDataType == CalpontSystemCatalog::DECIMAL ||
-                                       colTypes[j].colDataType == CalpontSystemCatalog::UDECIMAL)) ? 8 : colTypes[j].colWidth);
+
+                uint32_t colWidth = colTypes[j].colWidth;
+
+                if (colWidth > 8 &&
+                    !(colTypes[j].colDataType == CalpontSystemCatalog::DECIMAL ||
+                      colTypes[j].colDataType == CalpontSystemCatalog::UDECIMAL))
+                {
+                    colWidth = 8;
+                }
+                else if (colWidth >= datatypes::MAXDECIMALWIDTH)
+                {
+                    colWidth = datatypes::MAXDECIMALWIDTH;
+                }
+
 		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
                 // populate stats.blocksChanged 
 		if (rrid > preBlkNums[j])
@@ -2984,16 +2993,18 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::UDECIMAL:
                         {
                             // WIP MCOL-641
-                            if (fetchColColwidths[fetchColPos] == 16)
+                            if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
                                 int128_t* dec;
                                 char buf[utils::MAXLENGTH16BYTES];
                                 dec = row.getBinaryField<int128_t>(fetchColPos);
+
                                 dataconvert::DataConvert::decimalToString(dec,
                                     (unsigned)fetchColScales[fetchColPos], buf,
                                     sizeof(buf), fetchColTypes[fetchColPos]);
 
                                 value.assign(buf);
+
                                 break;
                             }
 
@@ -3347,17 +3358,19 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::DECIMAL:
                             case CalpontSystemCatalog::UDECIMAL:
                             {
-                                if (fetchColColwidths[fetchColPos] == 16)
+                                if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                                 {
                                     // WIP MCOL-641
                                     int128_t* dec;
                                     char buf[utils::MAXLENGTH16BYTES];
                                     dec = row.getBinaryField<int128_t>(fetchColPos);
+
                                     dataconvert::DataConvert::decimalToString(dec,
                                         (unsigned)fetchColScales[fetchColPos], buf,
                                         sizeof(buf), fetchColTypes[fetchColPos]);
 
                                     value = buf;
+
                                     break;
                                 }
 
@@ -3994,7 +4007,6 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
         uint64_t& blocksChanged)
 {
     uint8_t rc = 0;
-    //cout << " In processDelete" << endl;
     uint32_t tmp32, sessionID;
     TxnID txnId;
     bs >> PMId;
@@ -4069,7 +4081,18 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
     for (uint32_t j = 0; j < row.getColumnCount(); j++)
     {
         preBlkNums[j] = -1;
-        colWidth[j] = (row.getColumnWidth(j) >= 16 ? 16 : row.getColumnWidth(j));
+        colWidth[j] = row.getColumnWidth(j);
+        execplan::CalpontSystemCatalog::ColDataType colDataType = row.getColType(j);
+        if (colWidth[j] >= 8 &&
+            !(colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+              colDataType == execplan::CalpontSystemCatalog::UDECIMAL))
+        {
+            colWidth[j] = 8;
+        }
+        else if (colWidth[j] >= datatypes::MAXDECIMALWIDTH)
+        {
+            colWidth[j] = datatypes::MAXDECIMALWIDTH;
+        }
     }
 
     //Get the file information from rowgroup

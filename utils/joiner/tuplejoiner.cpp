@@ -1147,7 +1147,7 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
-            else if (r.getColumnWidth(colIdx) == utils::MAXCOLUMNWIDTH
+            else if (r.getColumnWidth(colIdx) == datatypes::MAXDECIMALWIDTH
                 && (r.getColType(colIdx) == CalpontSystemCatalog::DECIMAL
                     || r.getColType(colIdx) == CalpontSystemCatalog::UDECIMAL))
             {

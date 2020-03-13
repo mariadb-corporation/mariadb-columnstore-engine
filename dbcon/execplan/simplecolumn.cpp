@@ -637,37 +637,35 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
                 {
                     fResult.decimalVal.s128Value =
                         *row.getBinaryField_offset<decltype(fResult.decimalVal.s128Value)>(fInputOffset);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
                 case 1:
                 {
                     fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 case 2:
                 {
                     fResult.decimalVal.value = row.getIntField<2>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 case 4:
                 {
                     fResult.decimalVal.value = row.getIntField<4>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 default:
                 {
                     fResult.decimalVal.value = (int64_t)row.getUintField<8>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
             }
+
+            fResult.decimalVal.scale = (unsigned)fResultType.scale;
+            fResult.decimalVal.precision = (unsigned)fResultType.precision;
 
             break;
         }
