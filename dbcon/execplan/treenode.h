@@ -67,6 +67,7 @@ struct IDB_Decimal
     {
         s128Value = 0;
     }
+
     IDB_Decimal(int64_t val, int8_t s, uint8_t p) :
         value (val),
         scale(s),
@@ -131,6 +132,7 @@ struct IDB_Decimal
                 return (decimalComp(rhs) == 0);
         }
     }
+
     bool operator>(const IDB_Decimal& rhs) const
     {
         if (utils::widthByPrecision(precision) == 16)
@@ -148,6 +150,7 @@ struct IDB_Decimal
                 return (decimalComp(rhs) > 0);
         }
     }
+
     bool operator<(const IDB_Decimal& rhs) const
     {
         if (utils::widthByPrecision(precision) == 16)
@@ -165,6 +168,7 @@ struct IDB_Decimal
                 return (decimalComp(rhs) < 0);
         }
     }
+
     bool operator>=(const IDB_Decimal& rhs) const
     {
         if (utils::widthByPrecision(precision) == 16)
@@ -182,6 +186,7 @@ struct IDB_Decimal
                 return (decimalComp(rhs) >= 0);
         }
     }
+
     bool operator<=(const IDB_Decimal& rhs) const
     {
         if (utils::widthByPrecision(precision) == 16)
@@ -199,6 +204,7 @@ struct IDB_Decimal
                 return (decimalComp(rhs) <= 0);
         }
     }
+
     bool operator!=(const IDB_Decimal& rhs) const
     {
         if (utils::widthByPrecision(precision) == 16)
