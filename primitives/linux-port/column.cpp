@@ -550,6 +550,70 @@ inline bool colCompare(
 
 
 /*****************************************************************************
+ *** FILTER ENTIRE COLUMN ****************************************************
+ *****************************************************************************/
+
+// Provides 6 comparison operators for any datatype
+template <int COP, typename T>
+struct Comparator;
+
+template <typename T>  struct Comparator<COMPARE_EQ, T>  {static bool compare(T val1, T val2)  {return val1 == val2;}};
+template <typename T>  struct Comparator<COMPARE_NE, T>  {static bool compare(T val1, T val2)  {return val1 != val2;}};
+template <typename T>  struct Comparator<COMPARE_GT, T>  {static bool compare(T val1, T val2)  {return val1 > val2;}};
+template <typename T>  struct Comparator<COMPARE_LT, T>  {static bool compare(T val1, T val2)  {return val1 < val2;}};
+template <typename T>  struct Comparator<COMPARE_GE, T>  {static bool compare(T val1, T val2)  {return val1 >= val2;}};
+template <typename T>  struct Comparator<COMPARE_LE, T>  {static bool compare(T val1, T val2)  {return val1 <= val2;}};
+
+// Provides 3 combining operators for any flag type
+template <int BOP, typename T>
+struct Combiner;
+
+template <typename T>  struct Combiner<BOP_AND, T>  {static void combine(T &flag, bool cmp)  {flag &= cmp;}};
+template <typename T>  struct Combiner<BOP_OR,  T>  {static void combine(T &flag, bool cmp)  {flag |= cmp;}};
+template <typename T>  struct Combiner<BOP_XOR, T>  {static void combine(T &flag, bool cmp)  {flag ^= cmp;}};
+
+
+// Apply to dataArray[dataSize] column values the single filter element,
+// consisting of comparison operator COP with a value to compare cmp_value,
+// and combine the comparison result into the corresponding element of filterArray
+// with combining operator BOP
+template<int BOP, int COP, typename DATA_T, typename FILTER_ARRAY_T>
+void applyFilterElement(
+    size_t dataSize,
+    const DATA_T* dataArray,
+    DATA_T cmp_value,
+    const FILTER_ARRAY_T *filterArray)
+{
+    for (size_t i = 0; i < dataSize; ++i)
+    {
+        bool cmp = Comparator<COP, DATA_T>::compare(dataArray[i], cmp_value);
+        Combiner<BOP,FILTER_ARRAY_T>::combine(filterArray[i], cmp);
+    }
+}
+
+// Dispatch function by COP
+template<int BOP, typename DATA_T, typename FILTER_ARRAY_T>
+void applyFilterElement(
+    int COP,
+    size_t dataSize,
+    const DATA_T* dataArray,
+    DATA_T cmp_value,
+    const FILTER_ARRAY_T &filterArray)
+{
+    switch(COP)
+    {
+        case COMPARE_EQ:  applyFilterElement<BOP, COMPARE_EQ>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_NE:  applyFilterElement<BOP, COMPARE_NE>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_GT:  applyFilterElement<BOP, COMPARE_GT>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_LT:  applyFilterElement<BOP, COMPARE_LT>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_GE:  applyFilterElement<BOP, COMPARE_GE>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_LE:  applyFilterElement<BOP, COMPARE_LE>(dataSize, dataArray, cmp_value, filterArray);  break;
+        default:          idbassert(0);
+    }
+}
+
+
+/*****************************************************************************
  *** FILTER A COLUMN VALUE ***************************************************
  *****************************************************************************/
 
@@ -974,7 +1038,7 @@ void writeArray(
 
 
 /*****************************************************************************
- *** COMPILE A COLUMN FILTER / RUN DATA THROUGH IT ***************************
+ *** COMPILE A COLUMN FILTER *************************************************
  *****************************************************************************/
 
 // Compile column filter from BLOB into structure optimized for fast filtering.
@@ -1115,13 +1179,25 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 }
 
 
+/*****************************************************************************
+ *** RUN DATA THROUGH A COLUMN FILTER ****************************************
+ *****************************************************************************/
+
+/* "Vertical" processing of the column filter:
+   1. load all data into temporary vector
+   2. process one filter element over entire vector before going to a next one
+   3. write records, that succesfully passed through the filter, to outbuf
+*/
 template<typename T, ENUM_KIND KIND>
 void processArray(
     const T* srcArray,
     size_t srcSize,
     uint16_t* ridArray,
-    size_t ridSize,                // Number of values in ridArray
-    int filterCount,
+    size_t ridSize,                 // Number of values in ridArray
+    int BOP,
+    uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
+    uint8_t* filterCOPs,            //   comparison operation
+    int64_t* filterValues,          //   value to compare to
     bool WRITE_RID,
     bool WRITE_DATA,
     bool SKIP_EMPTY_VALUES,
@@ -1160,11 +1236,25 @@ void processArray(
     std::vector<uint8_t> filterVec(dataSize, false);  //// initval depends on bop
     auto filterArray = filterVec.data();
 
+    // Real type of column data, may be floating-point (used only in the filtering)
+    using FLOAT_T = typename std::conditional<sizeof(T) == 8, double, float>::type;
+    using DATA_T  = typename std::conditional<KIND_FLOAT == KIND, FLOAT_T, T>::type;
+    auto realDataArray = reinterpret_cast<DATA_T*>(dataArray);
+
 
     //prepareArray();
     for (int i = 0; i < filterCount; ++i)
     {
-        //applyFilterElement();
+        DATA_T cmp_value;   // value for comparison, may be floating-point
+        copyValue(&cmp_value, &filterValues[i], sizeof(cmp_value));
+
+        switch(BOP)
+        {
+            case BOP_AND:  applyFilterElement<BOP_AND>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+            case BOP_OR:   applyFilterElement<BOP_OR> (filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+            case BOP_XOR:  applyFilterElement<BOP_XOR>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+            default:       idbassert(0);
+        }
     }
 
 
