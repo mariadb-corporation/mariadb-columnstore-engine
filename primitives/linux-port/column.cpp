@@ -1228,6 +1228,7 @@ void processArray(
     std::vector<RID_T> dataRidVec(WRITE_RID? inputSize : 0);
     auto dataRid = dataRidVec.data();
 
+
     // Copy input data into temporary array, opt. storing RIDs, opt. skipping EMPTYs
     size_t dataSize;  // number of values copied into dataArray
     if (ridArray != NULL)
@@ -1246,8 +1247,17 @@ void processArray(
                             : readArray<false,false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
     }
 
+
+    // Choose initial filterArray[i] value depending on the operation
+    bool initValue = false;
+    if (filterCount == 0)  {initValue = true;}
+    else if (BOP_NONE == BOP)  {initValue = false; BOP = BOP_OR;}
+    else if (BOP_OR   == BOP)  {initValue = false;}
+    else if (BOP_XOR  == BOP)  {initValue = false;}
+    else if (BOP_AND  == BOP)  {initValue = true;}
+
     // Temporary array accumulating results of filtering for each record
-    std::vector<uint8_t> filterVec(dataSize, false);  //// initval depends on bop
+    std::vector<uint8_t> filterVec(dataSize, initValue);
     auto filterArray = filterVec.data();
 
     // Real type of column data, may be floating-point (used only in the filtering)
