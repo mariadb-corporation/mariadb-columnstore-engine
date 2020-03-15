@@ -563,6 +563,7 @@ template <typename T>  struct Comparator<COMPARE_GT, T>  {static bool compare(T 
 template <typename T>  struct Comparator<COMPARE_LT, T>  {static bool compare(T val1, T val2)  {return val1 < val2;}};
 template <typename T>  struct Comparator<COMPARE_GE, T>  {static bool compare(T val1, T val2)  {return val1 >= val2;}};
 template <typename T>  struct Comparator<COMPARE_LE, T>  {static bool compare(T val1, T val2)  {return val1 <= val2;}};
+template <typename T>  struct Comparator<COMPARE_NIL, T> {static bool compare(T val1, T val2)  {return false;}};
 
 // Provides 3 combining operators for any flag type
 template <int BOP, typename T>
@@ -608,6 +609,7 @@ void applyFilterElement(
         case COMPARE_LT:  applyFilterElement<BOP, COMPARE_LT>(dataSize, dataArray, cmp_value, filterArray);  break;
         case COMPARE_GE:  applyFilterElement<BOP, COMPARE_GE>(dataSize, dataArray, cmp_value, filterArray);  break;
         case COMPARE_LE:  applyFilterElement<BOP, COMPARE_LE>(dataSize, dataArray, cmp_value, filterArray);  break;
+        case COMPARE_NIL: applyFilterElement<BOP, COMPARE_NIL>(dataSize,dataArray, cmp_value, filterArray);  break;
         default:          idbassert(0);
     }
 }
@@ -1011,9 +1013,11 @@ void writeArray(
     const DATA_T* dataArray,
     const RID_T* dataRid,
     const FILTER_ARRAY_T &filterArray,
-    void** outptr)
+    uint8_t* outbuf,
+    unsigned* written,
+    uint16_t* NVALS)
 {
-    auto out = static_cast<uint8_t*>(*outptr);
+    uint8_t* out = outbuf;
 
     for (size_t i = 0; i < dataSize; ++i)
     {
@@ -1033,7 +1037,10 @@ void writeArray(
         }
     }
 
-    *outptr = out;
+    // Update number of written values and number of written bytes
+    int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(DATA_T) : 0);
+    *NVALS += (out - outbuf) / size1;
+    *written += out - outbuf;
 }
 
 
@@ -1190,14 +1197,21 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
 */
 template<typename T, ENUM_KIND KIND>
 void processArray(
+    // Source data
     const T* srcArray,
     size_t srcSize,
     uint16_t* ridArray,
     size_t ridSize,                 // Number of values in ridArray
+    // Filter description
     int BOP,
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
     uint8_t* filterCOPs,            //   comparison operation
     int64_t* filterValues,          //   value to compare to
+    // Output buffer/stats
+    uint8_t* outbuf,                // Pointer to the place for output data
+    unsigned* written,              // Number of written bytes, that we need to update
+    uint16_t* NVALS,                // Number of written values, that we need to update
+    // Processing parameters
     bool WRITE_RID,
     bool WRITE_DATA,
     bool SKIP_EMPTY_VALUES,
@@ -1259,13 +1273,12 @@ void processArray(
 
 
     // Copy filtered data and/or their RIDs into output buffer
-    void* out; ////
     if (WRITE_RID && WRITE_DATA)
-        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, &out);
+        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
     else if (WRITE_RID)
-        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, &out);
+        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
     else
-        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, &out);
+        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
 }
 
 
