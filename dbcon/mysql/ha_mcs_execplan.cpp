@@ -3729,7 +3729,7 @@ ReturnedColumn* buildFunctionColumn(
                 return NULL;
             }
 
-            if (!selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
+            if (funcName == "between" && !selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
                     (ifp->arguments()[0]->type() == Item::REF_ITEM &&
                      (*(((Item_ref*)ifp->arguments()[0])->ref))->type() == Item::FIELD_ITEM)))
             {
