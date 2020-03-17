@@ -2412,6 +2412,29 @@ int FileOp::oid2FileName( FID fid,
     return NO_ERROR;
 }
 
+void FileOp::getFileNameForPrimProc(FID fid,
+                          char* fullFileName,
+                          uint16_t dbRoot,
+                          uint32_t partition,
+                          uint16_t segment) const
+{        
+    string dbRootPath = Config::getDBRootByNum(dbRoot);
+    if (dbRootPath.empty())
+    {
+        ostringstream oss;
+        oss << "(dbroot " << dbRoot << " offline)";
+        dbRootPath = oss.str();        
+    }
+    
+    // different filenames for the version buffer files
+    if (fid < 1000)
+        snprintf(fullFileName, FILE_NAME_SIZE, "%s/versionbuffer.cdf", dbRootPath.c_str());
+    else
+        snprintf(fullFileName, FILE_NAME_SIZE, "%s/%03u.dir/%03u.dir/%03u.dir/%03u.dir/%03u.dir/FILE%03d.cdf",
+            dbRootPath.c_str(), fid >> 24, (fid & 0x00ff0000) >> 16, (fid & 0x0000ff00) >> 8, 
+            fid & 0x000000ff, partition, segment);
+}                          
+
 /***********************************************************
  * DESCRIPTION:
  *    Search for directory path associated with specified OID.
