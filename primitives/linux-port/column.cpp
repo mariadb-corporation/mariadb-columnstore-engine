@@ -1003,23 +1003,25 @@ inline void writeColValue(
 }
 
 
-template <bool WRITE_RID, bool WRITE_DATA, typename FILTER_ARRAY_T, typename RID_T, typename DATA_T>
+template <bool WRITE_RID, bool WRITE_DATA, typename FILTER_ARRAY_T, typename RID_T, typename T>
 void writeArray(
     size_t dataSize,
-    const DATA_T* dataArray,
+    const T* dataArray,
     const RID_T* dataRid,
-    const FILTER_ARRAY_T &filterArray,
+    const FILTER_ARRAY_T *filterArray,
     uint8_t* outbuf,
     unsigned* written,
     uint16_t* NVALS,
-    uint8_t* RidFlagsPtr)
+    uint8_t* RidFlagsPtr,
+    bool isNullValueMatches,
+    T NULL_VALUE)
 {
     uint8_t* out = outbuf;
     uint8_t RidFlags = *RidFlagsPtr;
 
     for (size_t i = 0; i < dataSize; ++i)
     {
-        if (filterArray[i])
+        if (dataArray[i]==NULL_VALUE? isNullValueMatches : filterArray[i])
         {
             if (WRITE_RID)
             {
@@ -1031,14 +1033,14 @@ void writeArray(
 
             if (WRITE_DATA)
             {
-                copyValue(out, &dataArray[i], sizeof(DATA_T));
-                out += sizeof(DATA_T);
+                copyValue(out, &dataArray[i], sizeof(T));
+                out += sizeof(T);
             }
         }
     }
 
     // Update number of written values and number of written bytes
-    int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(DATA_T) : 0);
+    int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(T) : 0);
     *NVALS += (out - outbuf) / size1;
     *written += out - outbuf;
     *RidFlagsPtr = RidFlags;
@@ -1211,7 +1213,9 @@ void processArray(
     bool WRITE_RID,
     bool WRITE_DATA,
     bool SKIP_EMPTY_VALUES,
-    T EMPTY_VALUE)
+    T EMPTY_VALUE,
+    bool isNullValueMatches,
+    T NULL_VALUE)
 {
     // Alloc temporary arrays
     size_t inputSize = (ridArray? ridSize : srcSize);
@@ -1280,11 +1284,11 @@ void processArray(
 
     // Copy filtered data and/or their RIDs into output buffer
     if (WRITE_RID && WRITE_DATA)
-        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
+        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
     else if (WRITE_RID)
-        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
+        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
     else
-        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
+        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
 }
 
 
@@ -1346,7 +1350,7 @@ void filterColumnData(
     // If possible, use faster "vertical" filtering approach
     if (0  &&  KIND != KIND_TEXT  &&  filterSet == NULL)
     {
-        ////TODO: handling NULLs and MinMax
+        ////TODO: handling MinMax
 
         bool canUseFastFiltering = true;
         for (int i = 0; i < filterCount; ++i)
@@ -1362,7 +1366,9 @@ void filterColumnData(
                          (OutputType & OT_RID) != 0,
                          (OutputType & (OT_TOKEN | OT_DATAVALUE)) != 0,
                          (OutputType & OT_RID) != 0,  //TODO: check correctness of this condition for SKIP_EMPTY_VALUES
-                         EMPTY_VALUE);
+                         EMPTY_VALUE,
+                         isNullValueMatches,
+                         NULL_VALUE);
             return;
         }
     }
