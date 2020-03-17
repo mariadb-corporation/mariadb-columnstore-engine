@@ -1484,8 +1484,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 // Minor optimization:
                 // do not perform updates of the form "update t1 set a = a;"
                 if (!strcmp(item->name.str, setIt->name.str)
-                    && item->table_name && setIt->table_name && !strcmp(item->table_name, setIt->table_name)
-                    && item->db_name && setIt->db_name && !strcmp(item->db_name, setIt->db_name))
+                    && item->table_name.str && setIt->table_name.str && !strcmp(item->table_name.str, setIt->table_name.str)
+                    && item->db_name.str && setIt->db_name.str && !strcmp(item->db_name.str, setIt->db_name.str))
                 {
                     delete columnAssignmentPtr;
                     continue;
