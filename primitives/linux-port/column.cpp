@@ -583,7 +583,7 @@ void applyFilterElement(
     size_t dataSize,
     const DATA_T* dataArray,
     DATA_T cmp_value,
-    const FILTER_ARRAY_T *filterArray)
+    FILTER_ARRAY_T *filterArray)
 {
     for (size_t i = 0; i < dataSize; ++i)
     {
@@ -599,7 +599,7 @@ void applyFilterElement(
     size_t dataSize,
     const DATA_T* dataArray,
     DATA_T cmp_value,
-    const FILTER_ARRAY_T &filterArray)
+    FILTER_ARRAY_T *filterArray)
 {
     switch(COP)
     {
@@ -856,7 +856,7 @@ inline bool nextColValue(
         *rid = ridArray[i];
         *isEmpty = false;
     }
-    else if (OutputType & OT_RID)
+    else if (OutputType & OT_RID)   //TODO: check correctness of this condition for SKIP_EMPTY_VALUES
     {
         // Read next non-empty value in the natural order
         for( ; ; i++)
@@ -884,10 +884,6 @@ inline bool nextColValue(
         *isEmpty = (value == EMPTY_VALUE);
     }
 
-    //// outdated comment
-    // at this point, nextRid is the index to return, and index is...
-    //   if RIDs are not specified, nextRid + 1,
-    //	 if RIDs are specified, it's the next index in the rid array.
     //Bug 838, tinyint null problem
 #if 0
     if (type == CalpontSystemCatalog::FLOAT)
@@ -1015,9 +1011,11 @@ void writeArray(
     const FILTER_ARRAY_T &filterArray,
     uint8_t* outbuf,
     unsigned* written,
-    uint16_t* NVALS)
+    uint16_t* NVALS,
+    uint8_t* RidFlagsPtr)
 {
     uint8_t* out = outbuf;
+    uint8_t RidFlags = *RidFlagsPtr;
 
     for (size_t i = 0; i < dataSize; ++i)
     {
@@ -1027,6 +1025,8 @@ void writeArray(
             {
                 copyValue(out, &dataRid[i], sizeof(RID_T));
                 out += sizeof(RID_T);
+
+                RidFlags |= (1 << (dataRid[i] >> 10)); // set the (row/1024)'th bit
             }
 
             if (WRITE_DATA)
@@ -1041,6 +1041,7 @@ void writeArray(
     int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(DATA_T) : 0);
     *NVALS += (out - outbuf) / size1;
     *written += out - outbuf;
+    *RidFlagsPtr = RidFlags;
 }
 
 
@@ -1171,13 +1172,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
             for (uint32_t argIndex = 0; argIndex < filterCount; argIndex++)
                 if (ret->prestored_rfs[argIndex] == 0)
                     ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
-
-            ret->prestored_argVals.reset();
         }
-
-        ret->prestored_cops.reset();
-        ret->prestored_rfs.reset();
-        ret->prestored_regex.reset();
 
         skipConversion:;
     }
@@ -1211,6 +1206,7 @@ void processArray(
     uint8_t* outbuf,                // Pointer to the place for output data
     unsigned* written,              // Number of written bytes, that we need to update
     uint16_t* NVALS,                // Number of written values, that we need to update
+    uint8_t* RidFlagsPtr,           // Pointer to out->RidFlags
     // Processing parameters
     bool WRITE_RID,
     bool WRITE_DATA,
@@ -1250,8 +1246,8 @@ void processArray(
 
     // Choose initial filterArray[i] value depending on the operation
     bool initValue = false;
-    if (filterCount == 0)  {initValue = true;}
-    else if (BOP_NONE == BOP)  {initValue = false; BOP = BOP_OR;}
+    if      (filterCount == 0) {initValue = true;}
+    else if (BOP_NONE == BOP)  {initValue = false;  BOP = BOP_OR;}
     else if (BOP_OR   == BOP)  {initValue = false;}
     else if (BOP_XOR  == BOP)  {initValue = false;}
     else if (BOP_AND  == BOP)  {initValue = true;}
@@ -1284,11 +1280,11 @@ void processArray(
 
     // Copy filtered data and/or their RIDs into output buffer
     if (WRITE_RID && WRITE_DATA)
-        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
+        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
     else if (WRITE_RID)
-        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
+        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
     else
-        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS);
+        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr);
 }
 
 
@@ -1345,6 +1341,32 @@ void filterColumnData(
     // Local vars to capture the min and max values
     auto Min = static_cast<int64_t>(numeric_limits<VALTYPE>::max());
     auto Max = static_cast<int64_t>(numeric_limits<VALTYPE>::min());
+
+
+    // If possible, use faster "vertical" filtering approach
+    if (0  &&  KIND != KIND_TEXT  &&  filterSet == NULL)
+    {
+        ////TODO: handling NULLs and MinMax
+
+        bool canUseFastFiltering = true;
+        for (int i = 0; i < filterCount; ++i)
+            if (filterRFs[i] != 0)
+                canUseFastFiltering = false;
+
+        if (canUseFastFiltering)
+        {
+            processArray<T, KIND>(srcArray, srcSize, ridArray, ridSize,
+                         in->BOP, filterCount, filterCOPs, filterValues,
+                         reinterpret_cast<uint8_t*>(out) + *written,
+                         written, & out->NVALS, & out->RidFlags,
+                         (OutputType & OT_RID) != 0,
+                         (OutputType & (OT_TOKEN | OT_DATAVALUE)) != 0,
+                         (OutputType & OT_RID) != 0,  //TODO: check correctness of this condition for SKIP_EMPTY_VALUES
+                         EMPTY_VALUE);
+            return;
+        }
+    }
+
 
     // Loop-local variables
     int64_t curValue = 0;
