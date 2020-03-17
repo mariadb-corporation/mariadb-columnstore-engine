@@ -84,8 +84,8 @@ public:
 
     void buildOidFileName(const BRM::OID_t oid,
                           uint16_t dbRoot,
-                          const uint16_t partNum,
-                          const uint32_t segNum,
+                          const uint32_t partNum,
+                          const uint16_t segNum,
                           char* file_name);
 
     const uint32_t getExtentRows()
