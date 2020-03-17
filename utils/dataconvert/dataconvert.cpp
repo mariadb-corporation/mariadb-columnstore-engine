@@ -2655,6 +2655,14 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     else
     {
         y = atoi(year.c_str());
+
+        // special handling for 2-byte year
+        if (year.length() == 2)
+        {
+            y += 2000;
+            if (y > 2069)
+                y -= 100;
+        }
     }
 
     m = atoi(month.c_str());
@@ -2706,10 +2714,10 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
 #if defined(__GNUC__) && __GNUC__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation="
-    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+    snprintf( buf, 15, "%lld", (long long int)data);
 #pragma GCC diagnostic pop
 #else
-    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+    snprintf( buf, 15, "%lld", (long long int)data);
 #endif
 
     //string date = buf;
@@ -2740,8 +2748,8 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
 
         case 7:
             hour = string(bufread, 3);
-            min = string(bufread + 2, 2);
-            sec = string(bufread + 4, 2);
+            min = string(bufread + 3, 2);
+            sec = string(bufread + 5, 2);
             break;
 
         case 6:
@@ -2802,7 +2810,7 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
     atime.msecond = ms;
     atime.is_neg = isNeg;
 
-    return *(reinterpret_cast<uint64_t*>(&atime));
+    return *(reinterpret_cast<int64_t*>(&atime));
 }
 
 int64_t DataConvert::stringToTime(const string& data)
