@@ -1359,7 +1359,7 @@ ioManager::ioManager(FileBufferMgr& fbm,
     go();
 }
 
-void ioManager::buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const uint16_t partNum, const uint32_t segNum, char* file_name)
+void ioManager::buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const uint32_t partNum, const uint16_t segNum, char* file_name)
 {
     // when it's a request for the version buffer, the dbroot comes in as 0 for legacy reasons
     if (dbRoot == 0 && oid < 1000)
