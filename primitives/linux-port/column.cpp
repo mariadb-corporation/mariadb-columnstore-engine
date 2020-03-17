@@ -614,6 +614,20 @@ void applyFilterElement(
     }
 }
 
+template<int BOP, typename DATA_T, typename FILTER_ARRAY_T>
+void applySetFilter(
+    size_t dataSize,
+    const DATA_T* dataArray,
+    prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
+    FILTER_ARRAY_T *filterArray)
+{
+    for (size_t i = 0; i < dataSize; ++i)
+    {
+        bool found = (filterSet->find(dataArray[i]) != filterSet->end());
+        filterArray[i] = (BOP_OR == BOP?  found : !found);
+    }
+}
+
 
 /*****************************************************************************
  *** FILTER A COLUMN VALUE ***************************************************
@@ -1201,6 +1215,7 @@ void processArray(
     size_t ridSize,                 // Number of values in ridArray
     // Filter description
     int BOP,
+    prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
     uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
     uint8_t* filterCOPs,            //   comparison operation
     int64_t* filterValues,          //   value to compare to
@@ -1267,17 +1282,29 @@ void processArray(
 
 
     //prepareArray();
-    for (int i = 0; i < filterCount; ++i)
-    {
-        DATA_T cmp_value;   // value for comparison, may be floating-point
-        copyValue(&cmp_value, &filterValues[i], sizeof(cmp_value));
 
-        switch(BOP)
+    if (filterSet != NULL  &&  BOP == BOP_OR)
+    {
+        applySetFilter<BOP_OR>(dataSize, realDataArray, filterSet, filterArray);
+    }
+    else if (filterSet != NULL  &&  BOP == BOP_AND)
+    {
+        applySetFilter<BOP_AND>(dataSize, realDataArray, filterSet, filterArray);
+    }
+    else
+    {
+        for (int i = 0; i < filterCount; ++i)
         {
-            case BOP_AND:  applyFilterElement<BOP_AND>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-            case BOP_OR:   applyFilterElement<BOP_OR> (filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-            case BOP_XOR:  applyFilterElement<BOP_XOR>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-            default:       idbassert(0);
+            DATA_T cmp_value;   // value for comparison, may be floating-point
+            copyValue(&cmp_value, &filterValues[i], sizeof(cmp_value));
+
+            switch(BOP)
+            {
+                case BOP_AND:  applyFilterElement<BOP_AND>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+                case BOP_OR:   applyFilterElement<BOP_OR> (filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+                case BOP_XOR:  applyFilterElement<BOP_XOR>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
+                default:       idbassert(0);
+            }
         }
     }
 
@@ -1348,7 +1375,7 @@ void filterColumnData(
 
 
     // If possible, use faster "vertical" filtering approach
-    if (0  &&  KIND != KIND_TEXT  &&  filterSet == NULL)
+    if (0  &&  KIND != KIND_TEXT)
     {
         ////TODO: handling MinMax
 
@@ -1360,7 +1387,7 @@ void filterColumnData(
         if (canUseFastFiltering)
         {
             processArray<T, KIND>(srcArray, srcSize, ridArray, ridSize,
-                         in->BOP, filterCount, filterCOPs, filterValues,
+                         in->BOP, filterSet, filterCount, filterCOPs, filterValues,
                          reinterpret_cast<uint8_t*>(out) + *written,
                          written, & out->NVALS, & out->RidFlags,
                          (OutputType & OT_RID) != 0,
