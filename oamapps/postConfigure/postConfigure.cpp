@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 
     for ( int i = 1; i < argc; i++ )
     {
-		if( string("-h") == argv[i] )
+		if( string("-h") == argv[i] || string("--help") == argv[i] )
 		{
             cout << endl;
             cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -317,11 +317,16 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn]" << endl;
+            cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
+            cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
+            cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
             cout << "   -h  Help" << endl;
-            cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
-            cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
-            cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
+            cout << "   -c  Config File to use to extract configuration data, default is " << endl;
+            cout << "       Columnstore.xml.rpmsave" << endl;
+            cout << "   -u  Upgrade, Install using the Config File from -c, default is " << endl;
+            cout << "       Columnstore.xml.rpmsave.  If ssh-keys aren't setup, you should provide " << endl;
+            cout << "       passwords as command line arguments" << endl;
             cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -qs Quick Install - Single Server" << endl;
 			cout << "   -qm Quick Install - Multi Server" << endl;
@@ -330,14 +335,17 @@ int main(int argc, char* argv[])
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
-            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in combination with -x" << endl;
+            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in " << endl;
+            cout << "       combination with -x" << endl;
             cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
-            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
-            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
-            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
+            cout << "       (percentages of the total memory need to be stated without suffix," << endl;
+            cout << "       explicit values with suffixes M or G)" << endl;
+            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate" << endl;
+            cout << "       results and set operations on the UM.  (percentages of the total memory" << endl;
+            cout << "       need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
             cout << endl;
             cout << "    S3-compat storage quick-configure options:" << endl;
-            cout << "    (See /etc/columnstore/storagemanager.cnf.example for more information on these)" << endl;
+            cout << "    (See /etc/columnstore/storagemanager.cnf.example for more information)" << endl;
             cout << "       -sm-bucket bucket  The bucket to use." << endl;
             cout << "       -sm-region region  The region to use." << endl;
             cout << "       -sm-id id          The ID to use; equivalent to AWS_ACCESS_KEY_ID in AWS" << endl;
@@ -579,7 +587,10 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+            cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn]" << endl;
+            cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
+            cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
+            cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
 			exit (1);
 		}
 	}
