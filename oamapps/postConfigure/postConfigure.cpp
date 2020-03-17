@@ -242,12 +242,8 @@ void modifySMConfigFile()
         tmp = s3Location + "/storagemanager/path";
         smConfig.put<string>("LocalStorage.path", tmp.normalize().string());
         tmp = s3Location + "/storagemanager/cache";
-        smConfig.put<string>("Cache.path", s3Location + tmp.normalize().string());
+        smConfig.put<string>("Cache.path", tmp.normalize().string());
     }
-    
-    // save a copy of the original to preserve the in-line documentation
-    if (!boost::filesystem::exists(smConfigFile + ".original"))
-        boost::filesystem::copy_file(smConfigFile, smConfigFile + ".original");
     boost::property_tree::ini_parser::write_ini(smConfigFile, smConfig);
 }
 
@@ -341,7 +337,7 @@ int main(int argc, char* argv[])
             cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
             cout << endl;
             cout << "    S3-compat storage quick-configure options:" << endl;
-            cout << "    (See /etc/columnstore/storagemanager.cnf for more information on these)" << endl;
+            cout << "    (See /etc/columnstore/storagemanager.cnf.example for more information on these)" << endl;
             cout << "       -sm-bucket bucket  The bucket to use." << endl;
             cout << "       -sm-region region  The region to use." << endl;
             cout << "       -sm-id id          The ID to use; equivalent to AWS_ACCESS_KEY_ID in AWS" << endl;
@@ -355,7 +351,7 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 bucket not provided" << endl;
+                cout << "   ERROR: StorageManager bucket not provided" << endl;
                 exit(1);
             }
             s3Bucket = argv[i];
@@ -365,7 +361,7 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 region not provided" << endl;
+                cout << "   ERROR: StorageManager region not provided" << endl;
                 exit(1);
             }
             s3Region = argv[i];
@@ -375,7 +371,7 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 ID not provided" << endl;
+                cout << "   ERROR: StorageManager ID not provided" << endl;
                 exit(1);
             }
             s3Key = argv[i];
@@ -385,7 +381,7 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 secret not provided" << endl;
+                cout << "   ERROR: StorageManager secret not provided" << endl;
                 exit(1);
             }
             s3Secret = argv[i];
@@ -395,7 +391,7 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 endpoint not provided" << endl;
+                cout << "   ERROR: StorageManager endpoint not provided" << endl;
                 exit(1);
             }
             s3Endpoint = argv[i];
@@ -405,17 +401,17 @@ int main(int argc, char* argv[])
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 cache size not provided" << endl;
+                cout << "   ERROR: StorageManager cache size not provided" << endl;
                 exit(1);
             }
             s3CacheSize = argv[i];
             configureS3 = true;
         }
-        else if (strcmp("-sm-location", argv[i]) == 0)
+        else if (strcmp("-sm-prefix", argv[i]) == 0)
         {
             if (++i == argc)
             {
-                cout << "   ERROR: S3 location not provided" << endl;
+                cout << "   ERROR: StorageManager prefix not provided" << endl;
                 exit(1);
             }
             s3Location = argv[i];
@@ -5013,8 +5009,19 @@ bool storageSetup(bool amazonInstall)
     storageManagerInstalled = boost::filesystem::exists(storageManagerLocation);
 
     if (configureS3)
-        modifySMConfigFile();
-
+    {
+        try
+        {
+            modifySMConfigFile();
+        }
+        catch (exception &e)
+        {
+            cerr << "There was an error processing the StorageManager command-line options." << endl;
+            cerr << "Got: " << e.what() << endl;
+            exit(1);
+        }
+    }
+        
     //
     // get Backend Data storage type
     //
