@@ -781,6 +781,10 @@ inline bool matchingColValue(
 }
 
 
+/*****************************************************************************
+ *** FIND COLUMN MIN/MAX *****************************************************
+ *****************************************************************************/
+
 // Set the minimum and maximum in the return header if we will be doing a block scan and
 // we are dealing with a type that is comparable as a 64 bit integer.  Subsequent calls can then
 // skip this block if the value being searched is outside of the Min/Max range.
@@ -826,6 +830,42 @@ bool isMinMaxValid(const NewColRequestHeader* in)
                 return false;
         }
     }
+}
+
+
+// Find minimum and maximum among non-empty/null values in the array
+template<typename T, typename VALTYPE>
+void findMinMaxArray(
+    size_t dataSize,
+    const T* dataArray,
+    VALTYPE* MinPtr,        // Place to store minimum column value
+    VALTYPE* MaxPtr,        // Place to store maximum column value
+    T EMPTY_VALUE,
+    T NULL_VALUE)
+{
+    // Local vars to capture the min and max values
+    VALTYPE Min = numeric_limits<VALTYPE>::max();
+    VALTYPE Max = numeric_limits<VALTYPE>::min();
+
+    for (size_t i = 0; i < dataSize; ++i)
+    {
+        auto curValue = dataArray[i];
+
+        //TODO: optimize handling of NULL values by avoiding non-predictable jumps
+        if (curValue != EMPTY_VALUE  &&  curValue != NULL_VALUE)
+        {
+            VALTYPE value = static_cast<VALTYPE>(curValue);  // promote to int64 / uint64
+
+            if (Min > value)
+                Min = value;
+
+            if (Max < value)
+                Max = value;
+        }
+    }
+
+    *MinPtr = Min;
+    *MaxPtr = Max;
 }
 
 
@@ -1035,6 +1075,7 @@ void writeArray(
 
     for (size_t i = 0; i < dataSize; ++i)
     {
+        //TODO: optimize handling of NULL values and flags by avoiding non-predictable jumps
         if (dataArray[i]==NULL_VALUE? isNullValueMatches : filterArray[i])
         {
             if (WRITE_RID)
@@ -1053,7 +1094,7 @@ void writeArray(
         }
     }
 
-    // Update number of written values and number of written bytes
+    // Update number of written values, number of written bytes and out->RidFlags
     int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(T) : 0);
     *NVALS += (out - outbuf) / size1;
     *written += out - outbuf;
@@ -1206,7 +1247,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter_T(
    2. process one filter element over entire vector before going to a next one
    3. write records, that succesfully passed through the filter, to outbuf
 */
-template<typename T, ENUM_KIND KIND>
+template<typename T, ENUM_KIND KIND, typename VALTYPE>
 void processArray(
     // Source data
     const T* srcArray,
@@ -1230,7 +1271,11 @@ void processArray(
     bool SKIP_EMPTY_VALUES,
     T EMPTY_VALUE,
     bool isNullValueMatches,
-    T NULL_VALUE)
+    T NULL_VALUE,
+    // Min/Max search
+    bool ValidMinMax,
+    VALTYPE* MinPtr,
+    VALTYPE* MaxPtr)
 {
     // Alloc temporary arrays
     size_t inputSize = (ridArray? ridSize : srcSize);
@@ -1262,6 +1307,12 @@ void processArray(
                             : readArray<false,false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
     }
 
+    // If required, find Min/Max values of the data
+    if (ValidMinMax)
+    {
+        findMinMaxArray(dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE);
+    }
+
 
     // Choose initial filterArray[i] value depending on the operation
     bool initValue = false;
@@ -1275,21 +1326,20 @@ void processArray(
     std::vector<uint8_t> filterVec(dataSize, initValue);
     auto filterArray = filterVec.data();
 
-    // Real type of column data, may be floating-point (used only in the filtering)
+    // Real type of column data, may be floating-point (used only for comparisons in the filtering)
     using FLOAT_T = typename std::conditional<sizeof(T) == 8, double, float>::type;
     using DATA_T  = typename std::conditional<KIND_FLOAT == KIND, FLOAT_T, T>::type;
     auto realDataArray = reinterpret_cast<DATA_T*>(dataArray);
 
 
-    //prepareArray();
-
+    // Evaluate column filter on elements of dataArray and store results into filterArray
     if (filterSet != NULL  &&  BOP == BOP_OR)
     {
-        applySetFilter<BOP_OR>(dataSize, realDataArray, filterSet, filterArray);
+        applySetFilter<BOP_OR>(dataSize, dataArray, filterSet, filterArray);
     }
     else if (filterSet != NULL  &&  BOP == BOP_AND)
     {
-        applySetFilter<BOP_AND>(dataSize, realDataArray, filterSet, filterArray);
+        applySetFilter<BOP_AND>(dataSize, dataArray, filterSet, filterArray);
     }
     else
     {
@@ -1370,15 +1420,13 @@ void filterColumnData(
     // Real type of values captured in Min/Max
     using VALTYPE = typename std::conditional<KIND_UNSIGNED == KIND, uint64_t, int64_t>::type;
     // Local vars to capture the min and max values
-    auto Min = static_cast<int64_t>(numeric_limits<VALTYPE>::max());
-    auto Max = static_cast<int64_t>(numeric_limits<VALTYPE>::min());
+    VALTYPE Min = numeric_limits<VALTYPE>::max();
+    VALTYPE Max = numeric_limits<VALTYPE>::min();
 
 
     // If possible, use faster "vertical" filtering approach
-    if (0  &&  KIND != KIND_TEXT)
+    if (KIND != KIND_TEXT)
     {
-        ////TODO: handling MinMax
-
         bool canUseFastFiltering = true;
         for (int i = 0; i < filterCount; ++i)
             if (filterRFs[i] != 0)
@@ -1386,7 +1434,7 @@ void filterColumnData(
 
         if (canUseFastFiltering)
         {
-            processArray<T, KIND>(srcArray, srcSize, ridArray, ridSize,
+            processArray<T, KIND, VALTYPE>(srcArray, srcSize, ridArray, ridSize,
                          in->BOP, filterSet, filterCount, filterCOPs, filterValues,
                          reinterpret_cast<uint8_t*>(out) + *written,
                          written, & out->NVALS, & out->RidFlags,
@@ -1394,8 +1442,8 @@ void filterColumnData(
                          (OutputType & (OT_TOKEN | OT_DATAVALUE)) != 0,
                          (OutputType & OT_RID) != 0,  //TODO: check correctness of this condition for SKIP_EMPTY_VALUES
                          EMPTY_VALUE,
-                         isNullValueMatches,
-                         NULL_VALUE);
+                         isNullValueMatches, NULL_VALUE,
+                         ValidMinMax, &Min, &Max);
             return;
         }
     }
@@ -1450,11 +1498,13 @@ void filterColumnData(
                 }
                 else
                 {
-                    if (static_cast<VALTYPE>(Min) > static_cast<VALTYPE>(curValue))
-                        Min = curValue;
+                    VALTYPE value = static_cast<VALTYPE>(curValue);
 
-                    if (static_cast<VALTYPE>(Max) < static_cast<VALTYPE>(curValue))
-                        Max = curValue;
+                    if (Min > value)
+                        Min = value;
+
+                    if (Max < value)
+                        Min = value;
                 }
             }
         }
