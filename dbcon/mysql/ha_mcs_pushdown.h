@@ -80,9 +80,9 @@ class ha_mcs_group_by_handler: public group_by_handler
 public:
     ha_mcs_group_by_handler(THD* thd_arg, Query* query);
     ~ha_mcs_group_by_handler();
-    int init_scan();
-    int next_row();
-    int end_scan();
+    int init_scan() override;
+    int next_row() override;
+    int end_scan() override;
 
     List<Item>* select;
     TABLE_LIST* table_list;
@@ -114,9 +114,9 @@ private:
 public:
   ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST *tbl);
   ~ha_columnstore_derived_handler();
-  int init_scan();
-  int next_row();
-  int end_scan();
+  int init_scan() override;
+  int next_row() override;
+  int end_scan() override;
   void print_error(int, unsigned long);
 };
 
@@ -139,12 +139,13 @@ private:
   COLUMNSTORE_SHARE *share;
 
 public:
+  bool rewrite_error;
+  std::string err_msg;
   ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel);
   ~ha_columnstore_select_handler();
-  int init_scan();
-  int next_row();
-  int end_scan();
-  void print_error(int, unsigned long);
+  int init_scan() override;
+  int next_row() override;
+  int end_scan() override;
 };
 
 #endif
