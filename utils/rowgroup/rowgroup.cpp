@@ -1040,6 +1040,15 @@ RowGroup::RowGroup(uint32_t colCount,
 
     useStringTable = (stringTable && hasLongStringField);
     offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
+    
+    for (i = 0; i < columnCount; i++)
+    {
+        if (types[i] == CalpontSystemCatalog::BIGINT && colWidths[i] != 8)
+        {
+            cout << "WTF?" << endl;
+        }
+        
+    }
 }
 
 RowGroup::RowGroup(const RowGroup& r) :
