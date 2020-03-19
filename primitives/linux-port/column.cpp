@@ -834,7 +834,7 @@ bool isMinMaxValid(const NewColRequestHeader* in)
 
 
 // Find minimum and maximum among non-empty/null values in the array
-template<typename T, typename VALTYPE>
+template<bool SKIP_EMPTY_VALUES, typename T, typename VALTYPE>
 void findMinMaxArray(
     size_t dataSize,
     const T* dataArray,
@@ -852,7 +852,8 @@ void findMinMaxArray(
         auto curValue = dataArray[i];
 
         //TODO: optimize handling of NULL values by avoiding non-predictable jumps
-        if (curValue != EMPTY_VALUE  &&  curValue != NULL_VALUE)
+        // If SKIP_EMPTY_VALUES==true, then empty cvalues were already dropped by readArray(), so we can skip this check
+        if ((SKIP_EMPTY_VALUES || curValue != EMPTY_VALUE)  &&  curValue != NULL_VALUE)
         {
             VALTYPE value = static_cast<VALTYPE>(curValue);  // promote to int64 / uint64
 
@@ -1057,7 +1058,7 @@ inline void writeColValue(
 }
 
 
-template <bool WRITE_RID, bool WRITE_DATA, typename FILTER_ARRAY_T, typename RID_T, typename T>
+template <bool WRITE_RID, bool WRITE_DATA, bool IS_NULL_VALUE_MATCHES, typename FILTER_ARRAY_T, typename RID_T, typename T>
 void writeArray(
     size_t dataSize,
     const T* dataArray,
@@ -1067,7 +1068,6 @@ void writeArray(
     unsigned* written,
     uint16_t* NVALS,
     uint8_t* RidFlagsPtr,
-    bool isNullValueMatches,
     T NULL_VALUE)
 {
     uint8_t* out = outbuf;
@@ -1076,7 +1076,7 @@ void writeArray(
     for (size_t i = 0; i < dataSize; ++i)
     {
         //TODO: optimize handling of NULL values and flags by avoiding non-predictable jumps
-        if (dataArray[i]==NULL_VALUE? isNullValueMatches : filterArray[i])
+        if (dataArray[i]==NULL_VALUE? IS_NULL_VALUE_MATCHES : filterArray[i])
         {
             if (WRITE_RID)
             {
@@ -1270,7 +1270,7 @@ void processArray(
     bool WRITE_DATA,
     bool SKIP_EMPTY_VALUES,
     T EMPTY_VALUE,
-    bool isNullValueMatches,
+    bool IS_NULL_VALUE_MATCHES,
     T NULL_VALUE,
     // Min/Max search
     bool ValidMinMax,
@@ -1293,6 +1293,8 @@ void processArray(
     size_t dataSize;  // number of values copied into dataArray
     if (ridArray != NULL)
     {
+        SKIP_EMPTY_VALUES = true;  // let findMinMaxArray() know that empty values will be skipped
+
         dataSize = WRITE_RID? readArray<true, true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
                             : readArray<false,true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
     }
@@ -1310,7 +1312,8 @@ void processArray(
     // If required, find Min/Max values of the data
     if (ValidMinMax)
     {
-        findMinMaxArray(dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE);
+        SKIP_EMPTY_VALUES? findMinMaxArray<true> (dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE)
+                         : findMinMaxArray<false>(dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE);
     }
 
 
@@ -1361,11 +1364,20 @@ void processArray(
 
     // Copy filtered data and/or their RIDs into output buffer
     if (WRITE_RID && WRITE_DATA)
-        writeArray<true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
+    {
+        IS_NULL_VALUE_MATCHES? writeArray<true,true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
+                             : writeArray<true,true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
+    }
     else if (WRITE_RID)
-        writeArray<true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
+    {
+        IS_NULL_VALUE_MATCHES? writeArray<true,false,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
+                             : writeArray<true,false,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
+    }
     else
-        writeArray<false,true>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, isNullValueMatches, NULL_VALUE);
+    {
+        IS_NULL_VALUE_MATCHES? writeArray<false,true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
+                             : writeArray<false,true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
+    }
 }
 
 
