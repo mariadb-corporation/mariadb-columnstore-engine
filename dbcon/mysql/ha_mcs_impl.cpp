@@ -1196,7 +1196,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
 
 uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -2009,7 +2009,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 else
                 {
                     delete ci->dmlProc;
-                    ci->dmlProc = NULL;
+                    ci->dmlProc = nullptr;
                     ci->dmlProc = new MessageQueueClient("DMLProc");
                 }
 
@@ -2069,7 +2069,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 //cout << "line 1442. received 0 byte from DMLProc and retry = "<< retry << endl;
                 // Seems dmlProc isn't playing. Reset it and try again.
                 delete ci->dmlProc;
-                ci->dmlProc = NULL;
+                ci->dmlProc = nullptr;
                 isTimeOut = true; //@Bug 4742
             }
         }
@@ -2117,7 +2117,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
         cout << ex.what() << endl;
         b = 1;
         delete ci->dmlProc;
-        ci->dmlProc = NULL;
+        ci->dmlProc = nullptr;
         errorMsg = ex.what();
     }
     catch ( ... )
@@ -2125,7 +2125,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
         //cout << "... exception while writing to DMLProc" << endl;
         b = 1;
         delete ci->dmlProc;
-        ci->dmlProc = NULL;
+        ci->dmlProc = nullptr;
         errorMsg =  "Unknown error caught";
     }
 
@@ -2189,7 +2189,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
                 errorMsg = "Lost connection to DMLProc";
                 b = 1;
                 delete ci->dmlProc;
-                ci->dmlProc = NULL;
+                ci->dmlProc = nullptr;
             }
             catch (...)
             {
@@ -2247,7 +2247,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
     }
 
     delete ci->dmlProc;
-    ci->dmlProc = NULL;
+    ci->dmlProc = nullptr;
     return rc;
 }
 
@@ -2375,7 +2375,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(CalpontSystemCatalog::FE);
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     idbassert(ci != 0);
@@ -2581,7 +2581,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
     ti = ci->tableMap[table];
     ti.msTablePtr = table;
 
-    if (ti.tpl_ctx == 0)
+    if (ti.tpl_ctx == nullptr)
     {
         ti.tpl_ctx = new sm::cpsm_tplh_t();
         ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
@@ -2589,7 +2589,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
 
     // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
     // call rnd_init for a table more than once.
-    ti.tpl_scan_ctx->rowGroup = NULL;
+    ti.tpl_scan_ctx->rowGroup = nullptr;
 
     try
     {
@@ -2707,7 +2707,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
     //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
     //        return HA_ERR_END_OF_FILE;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     // @bug 3078
@@ -2772,7 +2772,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 {
     int rc = 0;
     THD* thd = current_thd;
-    cal_connection_info* ci = NULL;
+    cal_connection_info* ci = nullptr;
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -2911,7 +2911,7 @@ int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* creat
 {
     THD* thd = current_thd;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -2940,7 +2940,7 @@ int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* creat
 int ha_mcs_impl_delete_table(const char* name)
 {
     THD* thd = current_thd;
-    char* dbName = NULL;
+    char* dbName = nullptr;
 
     if (!name)
     {
@@ -2951,7 +2951,7 @@ int ha_mcs_impl_delete_table(const char* name)
     //if this is an InfiniDB tmp table ('#sql*.frm') just leave...
     if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length)) return 0;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3010,7 +3010,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
         }
     }
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3057,7 +3057,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
 
 int ha_mcs_impl_update_row()
 {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3071,7 +3071,7 @@ int ha_mcs_impl_update_row()
 
 int ha_mcs_impl_delete_row()
 {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3087,7 +3087,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3300,7 +3300,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             SECURITY_ATTRIBUTES saAttr;
             saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
             saAttr.bInheritHandle = TRUE;
-            saAttr.lpSecurityDescriptor = NULL;
+            saAttr.lpSecurityDescriptor = nullptr;
             HANDLE handleList[2];
             const char* pSectionMsg;
             bSuccess = true;
@@ -3320,7 +3320,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             }
 
             // Launch cpimport
-            LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
+            LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = nullptr;
             SIZE_T attrSize = 0;
             STARTUPINFOEX siStartInfo;
 
@@ -3338,7 +3338,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 pSectionMsg = "HeapAlloc for AttrList";
                 lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>
                                   (HeapAlloc(GetProcessHeap(), 0, attrSize));
-                bSuccess = lpAttributeList != NULL;
+                bSuccess = lpAttributeList != nullptr;
             }
 
             if (bSuccess)
@@ -3373,8 +3373,8 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
                 memset(&siStartInfo, 0, sizeof(STARTUPINFOEX));
                 siStartInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
                 siStartInfo.lpAttributeList = lpAttributeList;
-                siStartInfo.StartupInfo.hStdError = NULL;
-                siStartInfo.StartupInfo.hStdOutput = NULL;
+                siStartInfo.StartupInfo.hStdError = nullptr;
+                siStartInfo.StartupInfo.hStdOutput = nullptr;
                 siStartInfo.StartupInfo.hStdInput = ci->cpimport_stdin_Rd;
                 siStartInfo.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
                 // Create the child process.
@@ -3603,7 +3603,7 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
     std::string aTmpDir(startup::StartUp::tmpDir());
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3831,7 +3831,7 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
 int ha_mcs_impl_commit (handlerton* hton, THD* thd, bool all)
 {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3863,7 +3863,7 @@ int ha_mcs_impl_commit (handlerton* hton, THD* thd, bool all)
 
 int ha_mcs_impl_rollback (handlerton* hton, THD* thd, bool all)
 {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3897,7 +3897,7 @@ int ha_mcs_impl_close_connection (handlerton* hton, THD* thd)
     // from vtable(lock_type = 2)
     // An ugly way. I will use ha_data w/o external_lock.
     // This in MCOL-2178
-    cal_connection_info* ci = NULL;
+    cal_connection_info* ci = nullptr;
     if(thd_get_ha_data(thd, hton) != (void*)0x42) // 0x42 is the magic CS sets when setup hton
     {
         ci = reinterpret_cast<cal_connection_info*>(thd_get_ha_data(thd, hton));
@@ -3911,7 +3911,7 @@ int ha_mcs_impl_close_connection (handlerton* hton, THD* thd)
     {
         rc = ha_mcs_impl_close_connection_(hton, thd, *ci);
         delete ci->dmlProc;
-        ci->dmlProc = NULL;
+        ci->dmlProc = nullptr;
     }
 
     if (ci->cal_conn_hndl)
@@ -3920,7 +3920,7 @@ int ha_mcs_impl_close_connection (handlerton* hton, THD* thd)
         ci->cal_conn_hndl = 0;
     }
 
-    thd_set_ha_data(thd, hton, NULL);
+    thd_set_ha_data(thd, hton, nullptr);
 
     return rc;
 }
@@ -3929,7 +3929,7 @@ int ha_mcs_impl_rename_table(const char* from, const char* to)
 {
     IDEBUG( cout << "ha_mcs_impl_rename_table: " << from << " => " << to << endl );
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3972,7 +3972,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
     alias.assign(table->alias.ptr(), table->alias.length());
     IDEBUG( cout << "ha_mcs_impl_cond_push: " << alias << endl );
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4011,7 +4011,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
             if (ti.condInfo)
             {
                 delete ti.condInfo;
-                ti.condInfo = 0;
+                ti.condInfo = nullptr;
                 ci->tableMap[table] = ti;
             }
 
@@ -4024,7 +4024,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
         }
         else
         {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -4047,7 +4047,7 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
     alias.assign(table->alias.ptr(), table->alias.length());
     IDEBUG( cout << "external_lock for " << alias << endl );
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4064,7 +4064,9 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
     CalTableMap::iterator mapiter = ci->tableMap.find(table);
     // make sure this is a release lock (2nd) call called in
     // the table mode.
-    if (mapiter != ci->tableMap.end() && mapiter->second.csep && lock_type == 2)
+    if (mapiter != ci->tableMap.end()
+        && (mapiter->second.condInfo || mapiter->second.csep)
+        && lock_type == 2)
     {
         // CS ends up processing query with handlers
         // table mode
@@ -4077,13 +4079,13 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
             ci->extendedStats = mapiter->second.conn_hndl->extendedStats;
             ci->miniStats = mapiter->second.conn_hndl->miniStats;
             sm::sm_cleanup(mapiter->second.conn_hndl);
-            mapiter->second.conn_hndl = 0;
+            mapiter->second.conn_hndl = nullptr;
         }
 
         if (mapiter->second.condInfo)
         {
             delete mapiter->second.condInfo;
-            mapiter->second.condInfo = 0;
+            mapiter->second.condInfo = nullptr;
         }
 
         // MCOL-2178 Check for tableMap size to set this only once.
@@ -4134,7 +4136,7 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
                     if (tme.second.condInfo)
                     {
                         delete tme.second.condInfo;
-                        tme.second.condInfo= 0;
+                        tme.second.condInfo= nullptr;
                     }
                 }
                 ci->tableMap.clear();
@@ -4202,7 +4204,7 @@ int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(CalpontSystemCatalog::FE);
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4521,7 +4523,7 @@ int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
 
         // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
         // call rnd_init for a table more than once.
-        ti.tpl_scan_ctx->rowGroup = NULL;
+        ti.tpl_scan_ctx->rowGroup = nullptr;
 
         try
         {
@@ -4623,7 +4625,7 @@ int ha_mcs_impl_group_by_next(TABLE* table)
     //  if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
     //    return HA_ERR_END_OF_FILE;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4702,7 +4704,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
 {
     int rc = 0;
     THD* thd = current_thd;
-    cal_connection_info* ci = NULL;
+    cal_connection_info* ci = nullptr;
 
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -4964,8 +4966,8 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
     // Declare handlers ptrs in this scope for future use.
-    select_handler* sh = NULL;
-    derived_handler* dh = NULL;
+    select_handler* sh = nullptr;
+    derived_handler* dh = nullptr;
 
     // update traceFlags according to the autoswitch state.
     ci->traceFlags = (ci->traceFlags | CalpontSelectExecutionPlan::TRACE_TUPLE_OFF)^
@@ -5239,7 +5241,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 
         // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
         // call rnd_init for a table more than once.
-        ti.tpl_scan_ctx->rowGroup = NULL;
+        ti.tpl_scan_ctx->rowGroup = nullptr;
 
         try
         {
@@ -5317,7 +5319,7 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
     int rc = HA_ERR_END_OF_FILE;
     THD* thd = current_thd;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -5368,7 +5370,7 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
 
         // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
         // call rnd_init for a table more than once.
-        ti.tpl_scan_ctx->rowGroup = NULL;
+        ti.tpl_scan_ctx->rowGroup = nullptr;
 
         try
         {
