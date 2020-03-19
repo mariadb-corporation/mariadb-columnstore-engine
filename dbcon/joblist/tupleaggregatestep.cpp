@@ -1946,7 +1946,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     keysAgg.push_back(aggKey);
                     scaleAgg.push_back(0);
                     precisionAgg.push_back(-16);  // for connector to skip null check
-                    typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                    //typeAgg.push_back(CalpontSystemCatalog::BIGINT);
 
                     if (isUnsigned(typeProj[colProj]))
                     {
