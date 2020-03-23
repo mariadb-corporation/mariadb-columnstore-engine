@@ -330,11 +330,6 @@ int main(int argc, char* argv[])
 			multi_server_quick_install = true;
 			noPrompting = true;
 		}
-		else if( string("-qa") == argv[i] )
-		{
-			amazon_quick_install = true;
-			noPrompting = true;
-		}
         else if ( string("-f") == argv[i] )
             nodeps = "--nodeps";
         else if ( string("-o") == argv[i] )
@@ -474,7 +469,7 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
 			exit (1);
 		}
 	}
@@ -1367,6 +1362,7 @@ int main(int argc, char* argv[])
     bool amazonInstall = false;
     string cloud = oam::UnassignedName;
 
+    #if 0
 	if (!multi_server_quick_install)
 	{
 		string amazonLog = tmpDir + "/amazon.log";
@@ -1406,6 +1402,7 @@ int main(int argc, char* argv[])
 				amazonInstall = true;
 		}
 	}
+    #endif
 
     try
     {
