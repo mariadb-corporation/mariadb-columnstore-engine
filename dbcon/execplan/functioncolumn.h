@@ -246,15 +246,34 @@ public:
     {
         IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
 
-        if (fResultType.scale == decimal.scale)
+        if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH
+                && fResultType.scale == decimal.scale))
             return decimal;
 
-        if (fResultType.scale > decimal.scale)
-            decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
-        else
-            decimal.value = (int64_t)(decimal.value > 0 ?
-                                      (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5 :
-                                      (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        if (LIKELY(fResultType.colWidth == datatypes::MAXDECIMALWIDTH))
+        {
+            decimal.s128Value =
+                (datatypes::Decimal::isWideDecimalType(decimal.precision)) ?
+                    decimal.s128Value : decimal.value;
+
+            int128_t scaleMultiplier, result;
+            int32_t scaleDiff = fResultType.scale - decimal.scale;
+            datatypes::getScaleDivisor(scaleMultiplier, abs(scaleDiff));
+            // WIP MCOL-641 Unconditionall overflow check
+            datatypes::MultiplicationOverflowCheck mul;
+            decimal.s128Value = (scaleDiff > 0
+                && mul(decimal.s128Value, scaleMultiplier, result))
+                ? result : decimal.s128Value / scaleMultiplier;
+        }
+        else if (fResultType.colWidth == utils::MAXLEGACYWIDTH)
+        {
+            if (fResultType.scale > decimal.scale)
+                decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
+            else
+                decimal.value = (int64_t)(decimal.value > 0 ?
+                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5 :
+                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        }
 
         decimal.scale = fResultType.scale;
         decimal.precision = fResultType.precision;
