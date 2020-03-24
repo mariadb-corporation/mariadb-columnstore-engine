@@ -185,12 +185,24 @@ struct DivisionOverflowCheck {
 struct MultiplicationOverflowCheck {
     void operator()(const int128_t& x, const int128_t& y)
     {
-        if (x * y / x != y)
+        if (x * y / y != x)
         {
             throw logging::OperationOverflowExcept(
-                "Decimal::multiplication<int128_t> or scale multiplicationproduces an overflow.");
+                "Decimal::multiplication<int128_t> or scale multiplication \
+ produces an overflow.");
         }
     }
+    bool operator()(const int128_t& x, const int128_t& y, int128_t& r)
+    {
+        if ((r = x * y) / y != x)
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::multiplication<int128_t> or scale multiplication \
+ produces an overflow.");
+        }
+        return true;
+    }
+
 };
 
 /**

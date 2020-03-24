@@ -153,8 +153,9 @@ void ColumnCommand::loadData()
     bool lastBlockReached = false;
     oidLastLbid = getLastLbid();
     uint32_t blocksToLoad = 0;
-    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(8 * sizeof(BRM::LBID_t));
-    uint8_t** blockPtrs = (uint8_t**) alloca(8 * sizeof(uint8_t*));
+    // WIP MCOL-641
+    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(16 * sizeof(BRM::LBID_t));
+    uint8_t** blockPtrs = (uint8_t**) alloca(16 * sizeof(uint8_t*));
     int i;
 
 
