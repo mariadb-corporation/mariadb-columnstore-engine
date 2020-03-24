@@ -111,6 +111,7 @@ public:
     void setOpType(Type& l, Type& r);
 
 private:
+    inline bool numericCompare(IDB_Decimal& op1, IDB_Decimal& op2);
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strCompare(const std::string& op1, const std::string& op2);
@@ -500,7 +501,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
         }
 
-        //FIXME: ???
+        // MCOL-641 WIP This is an incorrect assumption.
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
             return false;
@@ -515,6 +516,37 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
     }
 
     return false;
+}
+
+inline bool PredicateOperator::numericCompare(IDB_Decimal& op1, IDB_Decimal& op2)
+{
+    switch (fOp)
+    {
+        case OP_EQ:
+            return op1 == op2;
+
+        case OP_NE:
+            return op1 != op2;
+
+        case OP_GT:
+            return op1 > op2;
+
+        case OP_GE:
+            return op1 >= op2;
+
+        case OP_LT:
+            return op1 < op2;
+
+        case OP_LE:
+            return op1 <= op2;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "invalid predicate operation: " << fOp;
+            throw logging::InvalidOperationExcept(oss.str());
+        }
+    }
 }
 
 

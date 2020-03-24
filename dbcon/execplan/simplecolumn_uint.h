@@ -32,6 +32,7 @@
 #include "objectreader.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
+#include "mcs_decimal.h"
 
 /**
  * Namespace
@@ -218,7 +219,8 @@ inline IDB_Decimal SimpleColumn_UINT<len>::getDecimalVal(rowgroup::Row& row, boo
         isNull = true;
 
     fResult.decimalVal.value = (uint64_t)row.getUintField<len>(fInputIndex);
-    fResult.decimalVal.precision = 65;
+    // WIP MCOL-641
+    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION+1;
     fResult.decimalVal.scale = 0;
     return fResult.decimalVal;
 }

@@ -32,6 +32,7 @@
 #include "objectreader.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
+#include "mcs_decimal.h"
 
 /**
  * Namespace
@@ -217,7 +218,7 @@ inline IDB_Decimal SimpleColumn_INT<len>::getDecimalVal(rowgroup::Row& row, bool
         isNull = true;
 
     fResult.decimalVal.value = (int64_t)row.getIntField<len>(fInputIndex);
-    fResult.decimalVal.precision = 65;
+    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION;
     fResult.decimalVal.scale = 0;
     return fResult.decimalVal;
 }
@@ -242,8 +243,6 @@ void SimpleColumn_INT<len>::serialize(messageqcpp::ByteStream& b) const
         case 8:
             b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT8;
             break;
-        case 16:
-            std::cout << __FILE__<< ":" << __LINE__ << " Fix for 16 Bytes ?" << std::endl;
     }
 
     SimpleColumn::serialize(b);
@@ -269,8 +268,6 @@ void SimpleColumn_INT<len>::unserialize(messageqcpp::ByteStream& b)
         case 8:
             ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT8);
             break;
-        case 16:
-            std::cout << __FILE__<< ":" << __LINE__ << " Fix for 16 Bytes ?" << std::endl;
     }
 
     SimpleColumn::unserialize(b);

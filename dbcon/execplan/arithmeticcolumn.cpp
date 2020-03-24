@@ -62,7 +62,7 @@ namespace execplan
  */
 ArithmeticColumn::ArithmeticColumn():
     ReturnedColumn(),
-    fExpression (0)
+    fExpression(0)
 {}
 
 ArithmeticColumn::ArithmeticColumn(const string& sql, const uint32_t sessionID):
@@ -314,8 +314,7 @@ const string ArithmeticColumn::toString() const
 
     oss << "expressionId=" << fExpressionId << endl;
     oss << "joinInfo=" << fJoinInfo << " returnAll=" << fReturnAll << " sequence#=" << fSequence << endl;
-    oss << "resultType=" << colDataTypeToString(fResultType.colDataType) << "|" << fResultType.colWidth <<
-        endl;
+    oss << "resultType=" << colDataTypeToString(fResultType.colDataType) << "|" << fResultType.colWidth << endl;
     return oss.str();
 }
 

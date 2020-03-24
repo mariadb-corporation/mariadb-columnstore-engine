@@ -729,3 +729,15 @@ TEST(Decimal, additionWithOverflowCheck)
     EXPECT_EQ(38, result.precision);
     EXPECT_EQ(l.s128Value, result.s128Value);
 }
+
+TEST(Decimal, multiplicationWithOverflowCheck)
+{
+    datatypes::MultiplicationOverflowCheck mul;
+    int128_t x = 42, y = 42, r = 0;
+    execplan::IDB_Decimal d;
+    EXPECT_NO_THROW(mul(x, y, r));
+    EXPECT_EQ(x*y, r);
+
+    x = datatypes::Decimal::maxInt128, y = 42, r = 0;
+    EXPECT_THROW(mul(x, y, r), logging::OperationOverflowExcept);
+}
