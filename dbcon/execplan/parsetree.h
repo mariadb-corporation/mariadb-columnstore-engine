@@ -30,6 +30,7 @@
 #include <fstream>
 #include "treenode.h"
 #include "operator.h"
+#include "mcs_decimal.h"
 
 namespace rowgroup
 {
