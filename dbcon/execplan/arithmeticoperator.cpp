@@ -34,17 +34,20 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-ArithmeticOperator::ArithmeticOperator() : Operator()
+ArithmeticOperator::ArithmeticOperator() : Operator(), 
+    fDecimalOverflowCheck(true)
 {
 }
 
-ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName)
+ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName),
+    fDecimalOverflowCheck(true)
 {
 }
 
 ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
     Operator(rhs),
-    fTimeZone(rhs.timeZone())
+    fTimeZone(rhs.timeZone()),
+    fDecimalOverflowCheck(true)
 {
 }
 
@@ -63,6 +66,7 @@ ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
 {
     output << rhs.toString();
     output << "opType=" << rhs.operationType().colDataType << endl;
+    output << "decimalOverflowCheck=" << rhs.getOverflowCheck() << endl;
     return output;
 }
 
@@ -73,6 +77,8 @@ void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 {
     b << (ObjectReader::id_t) ObjectReader::ARITHMETICOPERATOR;
     b << fTimeZone;
+    const messageqcpp::ByteStream::byte tmp = fDecimalOverflowCheck;
+    b << tmp;
     Operator::serialize(b);
 }
 
@@ -80,6 +86,9 @@ void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 {
     ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
     b >> fTimeZone;
+    messageqcpp::ByteStream::byte tmp;
+    b >> tmp;
+    fDecimalOverflowCheck = tmp;
     Operator::unserialize(b);
 }
 
