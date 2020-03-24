@@ -92,7 +92,6 @@ namespace datatypes
         {
             int128_t scaleMultiplier;
             getScaleDivisor(scaleMultiplier, r.scale - result.scale);
-            mulOverflowCheck(rValue, scaleMultiplier);
             rValue /= scaleMultiplier;
         }
 
@@ -103,7 +102,6 @@ namespace datatypes
         result.s128Value = op(lValue, rValue);
     }
 
-    // This is wide Decimal version only ATM
     std::string Decimal::toString(execplan::IDB_Decimal& value)
     {
         char buf[utils::MAXLENGTH16BYTES];

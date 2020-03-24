@@ -3106,14 +3106,16 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
         {
             Item_decimal* idp = (Item_decimal*)item;
             ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            // MCOL-641 WIP Make this dynamic
-            ct.colWidth = (idp->max_length >= 18) ? 16 : 8;
+            ct.colWidth = (idp->max_length >= datatypes::INT64MAXPRECISION)
+                ? datatypes::MAXDECIMALWIDTH : utils::MAXLEGACYWIDTH;
             ct.scale = idp->decimals;
-
+            // WIP MCOL-641
             if (ct.scale == 0)
-                ct.precision = (idp->max_length > 38) ? 38 : idp->max_length - 1;
+                ct.precision = (idp->max_length > datatypes::INT128MAXPRECISION)
+                    ? datatypes::INT128MAXPRECISION : idp->max_length - 1;
             else
-                ct.precision = (idp->max_length > 38) ? 38 : idp->max_length - idp->decimals;
+                ct.precision = (idp->max_length > datatypes::INT128MAXPRECISION )
+                    ? datatypes::INT128MAXPRECISION : idp->max_length - idp->decimals;
 
             break;
         }
@@ -4365,12 +4367,13 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         columnstore_decimal_val << str->ptr()[i];
     }
 
-    if (idp->decimal_precision() <= 18)
+    if (idp->decimal_precision() <= datatypes::INT64MAXPRECISION)
         columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
-    else
+    else if (idp->decimal_precision() <= datatypes::INT128MAXPRECISION)
     {
         bool dummy = false;
-        columnstore_decimal.s128Value = dataconvert::strtoll128(columnstore_decimal_val.str().c_str(), dummy, 0);
+        columnstore_decimal.s128Value =
+            dataconvert::strtoll128(columnstore_decimal_val.str().c_str(), dummy, 0);
     }
 
     // TODO MCOL-641 Add support here

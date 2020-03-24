@@ -196,6 +196,14 @@ public:
         return TreeNode::getBoolVal();
     }
     void adjustResultType(const CalpontSystemCatalog::ColType& m);
+    constexpr inline bool getOverflowCheck()
+    {
+        return fDecimalOverflowCheck;
+    }
+    inline void setOverflowCheck(bool check)
+    {
+        fDecimalOverflowCheck = check;
+    }
 
 private:
     template <typename result_t>
@@ -203,6 +211,7 @@ private:
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull, cscType& resultCscType);
     std::string fTimeZone;
+    bool fDecimalOverflowCheck;
 };
 
 #include "parsetree.h"
@@ -288,12 +297,12 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
     switch (fOp)
     {
         case OP_ADD:
-            if (resultCscType.colWidth == 16)
+            if (resultCscType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                datatypes::Decimal::addition<decltype(result.s128Value),false>(
+                datatypes::Decimal::addition<decltype(result.s128Value),true>(
                     op1, op2, result);
             }
-            else if (resultCscType.colWidth == 8)
+            else if (resultCscType.colWidth == utils::MAXLEGACYWIDTH)
             {
                 datatypes::Decimal::addition<decltype(result.value),false>(
                     op1, op2, result);
