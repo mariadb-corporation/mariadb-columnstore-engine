@@ -4944,7 +4944,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         {
             for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
             {
-                if (*ac == gwi.returnedCols[i].get())
+                if (*ac == gwi.returnedCols[i].get() 
+                        && ac->alias() == gwi.returnedCols[i].get()->alias())
                     ac->expressionId(gwi.returnedCols[i]->expressionId());
             }
         }
