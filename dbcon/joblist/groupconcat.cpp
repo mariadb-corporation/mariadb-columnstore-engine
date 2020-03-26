@@ -638,7 +638,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::UFLOAT:
             case CalpontSystemCatalog::LONGDOUBLE:
             {
-                fieldLen += 1; // minimum length
+                fieldLen = 1; // minimum length
                 break;
             }
 
