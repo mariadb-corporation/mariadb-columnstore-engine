@@ -364,12 +364,18 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
     // For some reason the rowgroup mapping fcns don't work right in this class.
     for (uint64_t i = 0; i < fRow.getColumnCount(); i++)
     {
-        if (fRow.getColumnWidth(i) > 8 &&
-                (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::CHAR ||
-                 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
-                 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
+        if (fRow.getColumnWidth(i) > 8)
         {
-            fRow.setStringField(row.getStringPointer(mapping[i]), row.getStringLength(mapping[i]), i);
+            if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::CHAR ||
+                fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
+                fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT)
+            {
+                fRow.setStringField(row.getStringPointer(mapping[i]), row.getStringLength(mapping[i]), i);
+            }
+            else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            {
+                fRow.setLongDoubleField(row.getLongDoubleField(mapping[i]), i);
+            }
         }
         else
         {
@@ -632,7 +638,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::UFLOAT:
             case CalpontSystemCatalog::LONGDOUBLE:
             {
-                fieldLen = 1; // minimum length
+                fieldLen += 1; // minimum length
                 break;
             }
 
