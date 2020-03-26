@@ -778,12 +778,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
-    // Select_handler use the short-cut that effectively disables
-    // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
+    // Select_handler couldn't properly process UPSERT..SELECT
     if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE
-        || (thd->lex)->exchange)
-        
+            && thd->lex->duplicates == DUP_UPDATE)
     {
         return handler;
     }
