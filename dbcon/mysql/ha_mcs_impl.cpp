@@ -1780,7 +1780,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
         gwi.clauseType = WHERE;
 
-        if (getSelectPlan(gwi, select_lex, updateCP, false, true) != 0) //@Bug 3030 Modify the error message for unsupported functions
+        if (getSelectPlan(gwi, select_lex, updateCP, false) != 0) //@Bug 3030 Modify the error message for unsupported functions
         {
             if (gwi.cs_vtable_is_update_with_derive)
             {
