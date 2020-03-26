@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 MariaDB Corporation
+/* Copyright (C) 2019-20 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -14,6 +14,9 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
+
+#include <typeinfo>
+
 #include "ha_mcs_opt_rewrites.h"
 
 // Search simplify_joins() function in the server's code for detail
@@ -242,4 +245,88 @@ simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool to
     }
   }
   DBUG_RETURN(conds);
+}
+
+/*@brief  in_subselect_rewrite_walk - Rewrites Item_in_subselect*/
+/************************************************************
+* DESCRIPTION:
+* It traverses filter predicates searching for
+* Item_in_subselect and rewrites it adding equi-join predicate
+* to finalise IN_2_EXISTS rewrite.
+* PARAMETERS:
+*    item_arg - Item to check.
+*    arg - bool to early return if predicate injection fails.
+* RETURN:
+***********************************************************/
+void in_subselect_rewrite_walk(const Item* item_arg, void* arg)
+{
+    bool* result= reinterpret_cast<bool*>(arg);
+    if (*result) return;
+
+    Item* item= const_cast<Item*>(item_arg);
+
+    JOIN* join= nullptr;
+    if (typeid(*item) == typeid(Item_in_subselect))
+    {
+        Item_in_subselect* sub= reinterpret_cast<Item_in_subselect*>(item);
+        // MCS 1.4.3 doesn't support IN + subquery with UNION so
+        // we safe to take this JOIN.
+        join= sub->unit->first_select()->join;
+        // Inject equi-JOIN predicates if needed.
+        *result= sub->create_in_to_exists_cond(join);
+        *result= (*result) ? *result :
+            sub->inject_in_to_exists_cond(join);
+    }
+    else if (typeid(*item) == typeid(Item_singlerow_subselect))
+    {
+        Item_singlerow_subselect* sub=
+            reinterpret_cast<Item_singlerow_subselect*>(item);
+        // MCS 1.4.3 doesn't support IN + subquery with UNION so
+        // we safe to take this JOIN.
+        join= sub->unit->first_select()->join;
+    }
+    else
+    {
+        // Exit for any but dedicated Items.
+        return;
+    }
+
+    // Walk recursively to process nested IN ops.
+    if (join->conds)
+    {
+        join->conds->traverse_cond(in_subselect_rewrite_walk,
+            arg, Item::POSTFIX);
+    }
+}
+
+/*@brief  in_subselect_rewrite - Rewrites Item_in_subselect*/
+/************************************************************
+* DESCRIPTION:
+* It traverses TABLE_LISTs running in_subselect_rewrite_walk
+* PARAMETERS:
+*   select_lex
+* RETURN:
+*   bool to to indicate predicate injection failures.
+***********************************************************/
+bool in_subselect_rewrite(SELECT_LEX *select_lex)
+{
+    bool result = false;
+    TABLE_LIST *tbl;
+    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
+    while (!result && (tbl= li++))
+    {
+        if (tbl->is_view_or_derived())
+        {
+            SELECT_LEX *dsl = tbl->derived->first_select();
+            result = in_subselect_rewrite(dsl);
+        }
+    }
+
+    if (select_lex->join && select_lex->join->conds)
+    {
+        select_lex->join->conds->traverse_cond(in_subselect_rewrite_walk, &result,
+            Item::POSTFIX);
+    }
+
+    return result;
 }

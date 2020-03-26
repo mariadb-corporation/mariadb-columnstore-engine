@@ -21,6 +21,7 @@
 #include "idb_mysql.h"
 
 COND *simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top, bool in_sj);
+bool in_subselect_rewrite(SELECT_LEX *select_lex);
 
 #endif
 

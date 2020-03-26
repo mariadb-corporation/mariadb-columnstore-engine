@@ -42,26 +42,6 @@ void disable_indices_for_CEJ(THD *thd_)
     }
 }
 
-bool optimize_unflattened_subqueries_mcs(SELECT_LEX *select_lex)
-{
-    bool result = false;
-    TABLE_LIST *tbl;
-    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
-    while (!result && (tbl= li++))
-    {
-        if (tbl->is_view_or_derived())
-        {
-            SELECT_LEX *dsl = tbl->derived->first_select();
-            result = optimize_unflattened_subqueries_mcs(dsl);
-        }
-    }
-
-    result = (!result) ?
-        select_lex->optimize_unflattened_subqueries(false) : true;
-
-    return result;
-}
-
 void mutate_optimizer_flags(THD *thd_)
 {
     // MCOL-2178 Disable all optimizer flags as it was in the fork.
@@ -271,7 +251,6 @@ void save_join_predicates(const Item* item, void* arg)
         }
     }
 }
-
 
 /*@brief  check_walk - It traverses filter conditions      */
 /************************************************************
@@ -863,17 +842,8 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         COND *conds = nullptr;
         if (!unsupported_feature)
         {
-            conds = simplify_joins_mcs(join, select_lex->join_list,
+            conds= simplify_joins_mcs(join, select_lex->join_list,
                 join->conds, TRUE, FALSE);
-        }
-        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
-        // an equi-JOIN condition.
-        if (!unsupported_feature
-            && optimize_unflattened_subqueries_mcs(select_lex))
-        {
-            unsupported_feature = true;
-            handler->err_msg.assign("create_columnstore_select_handler(): \
-                Internal error occured in optimize_unflattened_subqueries_mcs()");
         }
 
         if (!unsupported_feature && conds)
@@ -883,9 +853,19 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 #endif
             join->conds = conds;
         }
+
+        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
+        // an equi-JOIN condition.
+        if (!unsupported_feature && in_subselect_rewrite(select_lex))
+        {
+            unsupported_feature = true;
+            handler->err_msg.assign("create_columnstore_select_handler(): \
+                Internal error occured in in_subselect_rewrite()");
+        }
+
     }
 
-    // We can't raise error now so set an error to raise it later in init_SH.
+    // We shouldn't raise error now so set an error to raise it later in init_SH.
     handler->rewrite_error= unsupported_feature;
 
     // Return SH even if init fails b/c CS changed SELECT_LEX structures
