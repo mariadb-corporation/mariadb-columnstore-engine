@@ -148,7 +148,7 @@ execplan::ParseTree* InSub::transform()
     gwi.tbList.insert(gwi.tbList.begin(), fGwip.tbList.begin(), fGwip.tbList.end());
     gwi.derivedTbList.insert(gwi.derivedTbList.begin(), fGwip.derivedTbList.begin(), fGwip.derivedTbList.end());
 
-    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false, true) != 0)
+    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false) != 0)
     {
         fGwip.fatalParseError = true;
 

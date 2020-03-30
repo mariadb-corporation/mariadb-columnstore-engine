@@ -253,7 +253,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
     gwi.tbList.insert(gwi.tbList.begin(), fGwip.tbList.begin(), fGwip.tbList.end());
     gwi.derivedTbList.insert(gwi.derivedTbList.begin(), fGwip.derivedTbList.begin(), fGwip.derivedTbList.end());
 
-    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false, true) != 0)
+    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false) != 0)
     {
         //@todo more in error handling
         if (!gwi.fatalParseError)
