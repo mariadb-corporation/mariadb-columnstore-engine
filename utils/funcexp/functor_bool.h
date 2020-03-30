@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -238,6 +239,88 @@ public:
 
 private:
     bool fIsNotNull;
+};
+
+
+/** @brief Func_Truth class
+  */
+class Func_Truth : public Func_Bool
+{
+public:
+    Func_Truth(const std::string& funcName, bool a_value, bool a_affirmative) :
+        Func_Bool(funcName), value(a_value), affirmative(a_affirmative) {}
+
+    virtual ~Func_Truth() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
+    {
+        assert (fp.size() == 1);
+        return fp[0]->data()->resultType();
+    }
+
+    bool getBoolVal(rowgroup::Row& row,
+                    FunctionParm& fp,
+                    bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        bool val = fp[0]->data()->getBoolVal(row, isNull);
+
+        /*
+          NULL val IS {TRUE, FALSE} --> FALSE
+          NULL val IS NOT {TRUE, FALSE} --> TRUE
+          {TRUE, FALSE} val IS {TRUE, FALSE} value --> val == value
+          {TRUE, FALSE} val IS NOT {TRUE, FALSE} value --> val != value
+          These cases can be reduced to the following bitwise operation.
+        */
+        bool ret = (isNull & (!affirmative)) | ((!isNull) & (affirmative ^ (value ^ val)));
+
+        isNull = false;
+
+        return ret;
+    }
+
+private:
+    const bool value, affirmative;
+};
+
+
+/** @brief Func_IsTrue class
+  */
+class Func_IsTrue : public Func_Truth
+{
+public:
+    Func_IsTrue() : Func_Truth("istrue", true, true) {}
+    ~Func_IsTrue() {}
+};
+
+
+/** @brief Func_IsNotTrue class
+  */
+class Func_IsNotTrue : public Func_Truth
+{
+public:
+    Func_IsNotTrue() : Func_Truth("isnottrue", true, false) {}
+    ~Func_IsNotTrue() {}
+};
+
+
+/** @brief Func_IsFalse class
+  */
+class Func_IsFalse : public Func_Truth
+{
+public:
+    Func_IsFalse() : Func_Truth("isfalse", false, true) {}
+    ~Func_IsFalse() {}
+};
+
+
+/** @brief Func_IsNotFalse class
+  */
+class Func_IsNotFalse : public Func_Truth
+{
+public:
+    Func_IsNotFalse() : Func_Truth("isnotfalse", false, false) {}
+    ~Func_IsNotFalse() {}
 };
 
 

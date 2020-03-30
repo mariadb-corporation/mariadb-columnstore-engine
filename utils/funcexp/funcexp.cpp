@@ -141,6 +141,10 @@ FuncExp::FuncExp()
     fFuncMap["instr"] = new Func_instr();
     fFuncMap["isnull"] = new Func_isnull(false);
     fFuncMap["isnotnull"] = new Func_isnull(true);
+    fFuncMap["istrue"] = new Func_IsTrue();
+    fFuncMap["isnottrue"] = new Func_IsNotTrue();
+    fFuncMap["isfalse"] = new Func_IsFalse();
+    fFuncMap["isnotfalse"] = new Func_IsNotFalse();
     fFuncMap["last_day"] = new Func_last_day();
     fFuncMap["lcase"] = new Func_lcase();	//dlh
     fFuncMap["least"] = new Func_least();	//dlh
