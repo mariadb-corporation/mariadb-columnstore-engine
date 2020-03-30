@@ -787,21 +787,9 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
-    // Remove this in 1.4.3
-    // Save the original group_list as it can be mutated by the
-    // optimizer which calls the remove_const() function
-    Group_list_ptrs *group_list_ptrs = NULL;
-    if (save_group_list(thd, select_lex, &group_list_ptrs))
-    {
-        return handler;
-    }
-
-    // Select_handler use the short-cut that effectively disables
-    // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
+    // Select_handler couldn't properly process UPSERT..SELECT
     if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE
-        || (thd->lex)->exchange)
-        
+            && thd->lex->duplicates == DUP_UPDATE)
     {
         return handler;
     }

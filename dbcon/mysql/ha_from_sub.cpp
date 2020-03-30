@@ -323,8 +323,7 @@ FromSubQuery::FromSubQuery(gp_walk_info& gwip) : SubQuery(gwip)
 {}
 
 FromSubQuery::FromSubQuery(gp_walk_info& gwip, 
-    SELECT_LEX* sub, 
-    bool isPushdownHandler) :
+    SELECT_LEX* sub) :
         SubQuery(gwip),
         fFromSub(sub)
 {}
@@ -348,7 +347,7 @@ SCSEP FromSubQuery::transform()
     csep->derivedTbAlias(fAlias); // always lower case
     csep->derivedTbView(fGwip.viewName.alias);
 
-    if (getSelectPlan(gwi, *fFromSub, csep, false, true) != 0)
+    if (getSelectPlan(gwi, *fFromSub, csep, false) != 0)
     {
         fGwip.fatalParseError = true;
 
