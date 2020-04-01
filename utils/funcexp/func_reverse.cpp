@@ -40,13 +40,13 @@ using namespace joblist;
 namespace
 {
 
-void reverse( wchar_t* start, wchar_t* end )
+void reverse(const wchar_t* sStart, const wchar_t* sEnd ,wchar_t* dStart, wchar_t* dEnd)
 {
-    while ( start < end )
+    while ( sStart <= sEnd && dStart <= dEnd)
     {
-        wchar_t c = *start;
-        *start++ = *end;
-        *end-- = c;
+        *dStart = *sEnd;
+        dStart++;
+        sEnd--;
     }
 }
 
@@ -77,10 +77,9 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
     wstring wstr = utf8::utf8_to_wstring(str);
     int wlen = wstr.length();
     wchar_t* pbuf = new wchar_t[wlen + 1];
-    wcsncpy(pbuf, wstr.c_str(), wlen);
     pbuf[wlen] = 0;
     wchar_t* end = pbuf + wlen - 1;
-    reverse(pbuf, end);
+    reverse(wstr.c_str(), wstr.c_str() + wlen - 1, pbuf, end);
     wstring wrstr = pbuf;
     string rstr = utf8::wstring_to_utf8(wrstr);
     delete [] pbuf;
