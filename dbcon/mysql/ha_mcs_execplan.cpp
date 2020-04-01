@@ -5653,7 +5653,7 @@ void gp_walk(const Item* item, void* arg)
 
             if (col->type() != Item::COND_ITEM)
             {
-                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError, false);
+                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError, true);
 
                 if ( col->type() == Item::FIELD_ITEM )
                     gwip->fatalParseError = false;
@@ -6921,7 +6921,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 ReturnedColumn* rc;
                 if (funcName == "in" || funcName == " IN " || funcName == "between")
                 {
-                    rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, false);
+                    rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, true);
                 }
                 else
                 {
