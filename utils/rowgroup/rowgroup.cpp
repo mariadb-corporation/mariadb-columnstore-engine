@@ -1002,7 +1002,7 @@ RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
 }
 
 RowGroup::RowGroup(uint32_t colCount,
-                   const vector<uint32_t>& positions,
+                   const vector<uint64_t>& positions,
                    const vector<uint32_t>& roids,
                    const vector<uint32_t>& tkeys,
                    const vector<CalpontSystemCatalog::ColDataType>& colTypes,
@@ -1114,8 +1114,8 @@ void RowGroup::resetRowGroup(uint64_t rid)
 void RowGroup::serialize(ByteStream& bs) const
 {
     bs << columnCount;
-    serializeInlineVector<uint32_t>(bs, oldOffsets);
-    serializeInlineVector<uint32_t>(bs, stOffsets);
+    serializeInlineVector<uint64_t>(bs, oldOffsets);
+    serializeInlineVector<uint64_t>(bs, stOffsets);
     serializeInlineVector<uint32_t>(bs, colWidths);
     serializeInlineVector<uint32_t>(bs, oids);
     serializeInlineVector<uint32_t>(bs, keys);
@@ -1133,8 +1133,8 @@ void RowGroup::deserialize(ByteStream& bs)
     uint8_t tmp8;
 
     bs >> columnCount;
-    deserializeInlineVector<uint32_t>(bs, oldOffsets);
-    deserializeInlineVector<uint32_t>(bs, stOffsets);
+    deserializeInlineVector<uint64_t>(bs, oldOffsets);
+    deserializeInlineVector<uint64_t>(bs, stOffsets);
     deserializeInlineVector<uint32_t>(bs, colWidths);
     deserializeInlineVector<uint32_t>(bs, oids);
     deserializeInlineVector<uint32_t>(bs, keys);
@@ -1172,27 +1172,27 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 //	}
 }
 
-uint32_t RowGroup::getDataSize() const
+uint64_t RowGroup::getDataSize() const
 {
     return headerSize + (getRowCount() * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getDataSize(uint64_t n) const
+uint64_t RowGroup::getDataSize(uint64_t n) const
 {
     return headerSize + (n * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getMaxDataSize() const
+uint64_t RowGroup::getMaxDataSize() const
 {
     return headerSize + (8192 * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getMaxDataSizeWithStrings() const
+uint64_t RowGroup::getMaxDataSizeWithStrings() const
 {
     return headerSize + (8192 * oldOffsets[columnCount]);
 }
 
-uint32_t RowGroup::getEmptySize() const
+uint64_t RowGroup::getEmptySize() const
 {
     return headerSize;
 }

@@ -224,7 +224,7 @@ public:
     // the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
     // inline data with a length field.  Once that's converted to string table format, that
     // option can go away.
-    void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false); // returns the # of bytes read
+    void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false);
 
     inline uint64_t getStringTableMemUsage();
     void clear();
@@ -310,10 +310,10 @@ public:
     inline void nextRow();
     inline uint32_t getColumnWidth(uint32_t colIndex) const;
     inline uint32_t getColumnCount() const;
-    inline uint32_t getSize() const;		// this is only accurate if there is no string table
+    inline uint64_t getSize() const;		// this is only accurate if there is no string table
     // if a string table is being used, getRealSize() takes into account variable-length strings
-    inline uint32_t getRealSize() const;
-    inline uint32_t getOffset(uint32_t colIndex) const;
+    inline uint64_t getRealSize() const;
+    inline uint64_t getOffset(uint32_t colIndex) const;
     inline uint32_t getScale(uint32_t colIndex) const;
     inline uint32_t getPrecision(uint32_t colIndex) const;
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
@@ -358,7 +358,7 @@ public:
     TODO: apply them everywhere else possible, and write equivalents
     for the other types as well as the getters.
     */
-    template<int len> void setUintField_offset(uint64_t val, uint32_t offset);
+    template<int len> void setUintField_offset(uint64_t val, uint64_t offset);
     inline void nextRow(uint32_t size);
     inline void prevRow(uint32_t size, uint64_t number);
 
@@ -456,9 +456,9 @@ private:
     uint64_t baseRid;
 
     // the next 6 point to memory owned by RowGroup
-    uint32_t* oldOffsets;
-    uint32_t* stOffsets;
-    uint32_t* offsets;
+    uint64_t* oldOffsets;
+    uint64_t* stOffsets;
+    uint64_t* offsets;
     uint32_t* colWidths;
     execplan::CalpontSystemCatalog::ColDataType* types;
     uint8_t* data;
@@ -521,17 +521,17 @@ inline uint32_t Row::getColumnWidth(uint32_t col) const
     return colWidths[col];
 }
 
-inline uint32_t Row::getSize() const
+inline uint64_t Row::getSize() const
 {
     return offsets[columnCount];
 }
 
-inline uint32_t Row::getRealSize() const
+inline uint64_t Row::getRealSize() const
 {
     if (!useStringTable)
         return getSize();
 
-    uint32_t ret = 2;
+    uint64_t ret = 2;
 
     for (uint32_t i = 0; i < columnCount; i++)
     {
@@ -870,13 +870,13 @@ inline bool Row::isMarked()
 }
 
 /* Begin speculative code! */
-inline uint32_t Row::getOffset(uint32_t colIndex) const
+inline uint64_t Row::getOffset(uint32_t colIndex) const
 {
     return offsets[colIndex];
 }
 
 template<int len>
-inline void Row::setUintField_offset(uint64_t val, uint32_t offset)
+inline void Row::setUintField_offset(uint64_t val, uint64_t offset)
 {
     switch (len)
     {
@@ -1273,7 +1273,7 @@ public:
     */
 
     RowGroup(uint32_t colCount,
-             const std::vector<uint32_t>& positions,
+             const std::vector<uint64_t>& positions,
              const std::vector<uint32_t>& cOids,
              const std::vector<uint32_t>& tkeys,
              const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
@@ -1297,8 +1297,8 @@ public:
     inline void incRowCount();
     inline void setRowCount(uint32_t num);
     inline void getRow(uint32_t rowNum, Row*) const;
-    inline uint32_t getRowSize() const;
-    inline uint32_t getRowSizeWithStrings() const;
+    inline uint64_t getRowSize() const;
+    inline uint64_t getRowSizeWithStrings() const;
     inline uint64_t getBaseRid() const;
     void setData(RGData* rgd);
     inline void setData(uint8_t* d);
@@ -1311,11 +1311,11 @@ public:
     uint32_t getDBRoot() const;
     void setDBRoot(uint32_t);
 
-    uint32_t getDataSize() const;
-    uint32_t getDataSize(uint64_t n) const;
-    uint32_t getMaxDataSize() const;
-    uint32_t getMaxDataSizeWithStrings() const;
-    uint32_t getEmptySize() const;
+    uint64_t getDataSize() const;
+    uint64_t getDataSize(uint64_t n) const;
+    uint64_t getMaxDataSize() const;
+    uint64_t getMaxDataSizeWithStrings() const;
+    uint64_t getEmptySize() const;
 
     // this returns the size of the row data with the string table
     inline uint64_t getSizeWithStrings() const;
@@ -1331,7 +1331,7 @@ public:
 
     uint32_t getColumnWidth(uint32_t col) const;
     uint32_t getColumnCount() const;
-    inline const std::vector<uint32_t>& getOffsets() const;
+    inline const std::vector<uint64_t>& getOffsets() const;
     inline const std::vector<uint32_t>& getOIDs() const;
     inline const std::vector<uint32_t>& getKeys() const;
     inline const std::vector<uint32_t>& getColWidths() const;
@@ -1402,9 +1402,9 @@ private:
     uint32_t columnCount;
     uint8_t* data;
 
-    std::vector<uint32_t> oldOffsets; //inline data offsets
-    std::vector<uint32_t> stOffsets;  //string table offsets
-    uint32_t* offsets;   //offsets either points to oldOffsets or stOffsets
+    std::vector<uint64_t> oldOffsets; //inline data offsets
+    std::vector<uint64_t> stOffsets;  //string table offsets
+    uint64_t* offsets;   //offsets either points to oldOffsets or stOffsets
     std::vector<uint32_t> colWidths;
     // oids: the real oid of the column, may have duplicates with alias.
     // This oid is necessary for front-end to decide the real column width.
@@ -1554,15 +1554,15 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     if (forceInlineData)
     {
         r->useStringTable = false;
-        r->oldOffsets = (uint32_t*) & (oldOffsets[0]);
-        r->stOffsets = (uint32_t*) & (stOffsets[0]);
-        r->offsets = (uint32_t*) & (oldOffsets[0]);
+        r->oldOffsets = (uint64_t*) & (oldOffsets[0]);
+        r->stOffsets = (uint64_t*) & (stOffsets[0]);
+        r->offsets = (uint64_t*) & (oldOffsets[0]);
     }
     else
     {
         r->useStringTable = useStringTable;
-        r->oldOffsets = (uint32_t*) & (oldOffsets[0]);
-        r->stOffsets = (uint32_t*) & (stOffsets[0]);
+        r->oldOffsets = (uint64_t*) & (oldOffsets[0]);
+        r->stOffsets = (uint64_t*) & (stOffsets[0]);
         r->offsets = offsets;
     }
 
@@ -1571,12 +1571,12 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     r->forceInline = forceInline;
 }
 
-inline uint32_t RowGroup::getRowSize() const
+inline uint64_t RowGroup::getRowSize() const
 {
     return offsets[columnCount];
 }
 
-inline uint32_t RowGroup::getRowSizeWithStrings() const
+inline uint64_t RowGroup::getRowSizeWithStrings() const
 {
     return oldOffsets[columnCount];
 }
@@ -1619,7 +1619,7 @@ inline bool RowGroup::usesStringTable() const
     return useStringTable;
 }
 
-inline const std::vector<uint32_t>& RowGroup::getOffsets() const
+inline const std::vector<uint64_t>& RowGroup::getOffsets() const
 {
     return oldOffsets;
 }
