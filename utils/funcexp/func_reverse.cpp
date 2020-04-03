@@ -26,6 +26,7 @@ using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
+#include "utils_utf8.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -39,13 +40,13 @@ using namespace joblist;
 namespace
 {
 
-void reverse( char* start, char* end )
+void reverse(const wchar_t* sStart, const wchar_t* sEnd ,wchar_t* dStart, wchar_t* dEnd)
 {
-    while ( start < end )
+    while ( sStart <= sEnd && dStart <= dEnd)
     {
-        char c = *start;
-        *start++ = *end;
-        *end-- = c;
+        *dStart = *sEnd;
+        dStart++;
+        sEnd--;
     }
 }
 
@@ -73,13 +74,14 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
     // string assignment and implement a ref-count. Reversing in the
     // string buffer has the affect of reversing all strings from
     // which this one derived.
-    int len = str.length();
-    char* pbuf = new char[len + 1];
-    strncpy(pbuf, str.c_str(), len);
-    pbuf[len] = 0;
-    char* end = pbuf + len - 1;
-    reverse(pbuf, end);
-    string rstr = pbuf;
+    wstring wstr = utf8::utf8_to_wstring(str);
+    int wlen = wstr.length();
+    wchar_t* pbuf = new wchar_t[wlen + 1];
+    pbuf[wlen] = 0;
+    wchar_t* end = pbuf + wlen - 1;
+    reverse(wstr.c_str(), wstr.c_str() + wlen - 1, pbuf, end);
+    wstring wrstr = pbuf;
+    string rstr = utf8::wstring_to_utf8(wrstr);
     delete [] pbuf;
     return rstr;
 }
