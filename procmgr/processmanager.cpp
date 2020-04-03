@@ -3732,9 +3732,6 @@ int ProcessManager::disableModule(string target, bool manualFlag)
         return API_FAILURE;
     }
 
-	//check for SIMPLEX Processes on mate might need to be started
-	processManager.checkSimplexModule(target);
-
     //distribute config file
     distributeConfigFile("system");
 
