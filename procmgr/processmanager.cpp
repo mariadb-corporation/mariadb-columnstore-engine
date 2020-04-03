@@ -53,6 +53,7 @@ pthread_mutex_t THREAD_LOCK;
 extern string cloud;
 extern bool amazon;
 extern bool runStandby;
+extern bool MsgThreadActive;
 extern string iface_name;
 extern string PMInstanceType;
 extern string UMInstanceType;
@@ -9187,6 +9188,14 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
     //clear run standby flag;
     runStandby = false;
+    int retryCount = 0;
+    //sleep, give time for message thread to startup
+    while (!MsgThreadActive && retryCount < 5)
+    {
+       log.writeLog(__LINE__, "Waiting for Message Thread...", LOG_TYPE_DEBUG);
+       sleep(5);
+       ++retryCount;
+    }
 
     int moduleID = atoi(newActiveModuleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
 
@@ -9922,9 +9931,14 @@ int ProcessManager::OAMParentModuleChange()
 
         //clear run standby flag;
         runStandby = false;
-
+        int retryCount = 0;
         //sleep, give time for message thread to startup
-        sleep(5);
+        while (!MsgThreadActive && retryCount < 5)
+        {
+           log.writeLog(__LINE__, "Waiting for Message Thread...", LOG_TYPE_DEBUG);
+           sleep(5);
+           ++retryCount;
+        }
 
         try
         {

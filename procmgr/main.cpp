@@ -47,6 +47,7 @@ using namespace threadpool;
 using namespace config;
 
 bool runStandby = false;
+bool MsgThreadActive = false;
 bool runCold = false;
 string systemName = "system";
 string iface_name;
@@ -412,6 +413,8 @@ int main(int argc, char** argv)
             log.writeLog(__LINE__, "ERROR: makeConfig failed", LOG_TYPE_ERROR);
         }
 
+
+        // This will never work.....
         try
         {
             oam.distributeConfigFile();
@@ -474,8 +477,6 @@ static void messageThread(Configuration config)
         sleep (1);
     }
 
-    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
-
     //read and cleanup port before trying to use
     try
     {
@@ -489,6 +490,8 @@ static void messageThread(Configuration config)
     {
     }
 
+    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
+
     //
     //waiting for request
     //
@@ -499,7 +502,7 @@ static void messageThread(Configuration config)
         try
         {
             MessageQueueServer procmgr("ProcMgr");
-
+            MsgThreadActive = true;
             for (;;)
             {
                 try
