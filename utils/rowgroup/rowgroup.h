@@ -226,7 +226,10 @@ public:
     // option can go away.
     void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false);
 
-    inline uint64_t getStringTableMemUsage();
+    inline uint64_t getStringTableMemUsage()
+    {
+        return strings->getSize();
+    }
     
     // MCOL-3879.  Needed to add a way to clear only the stringstore for efficiency.
     // Only use if you know no string pointers in the rowgroup will ever be used again.
@@ -1988,10 +1991,22 @@ inline bool StringStore::isEmpty() const
 
 inline uint64_t StringStore::getSize() const
 {
-    uint32_t i;
+    //uint32_t i;
     uint64_t ret = 0;
     MemChunk* mc;
 
+    for (auto &chunk : mem)
+    {
+        mc = (MemChunk *) chunk.get();
+        ret += mc->capacity;
+    }
+    
+    for (auto &chunk : longStrings)
+    {
+        mc = (MemChunk *) chunk.get();
+        ret += mc->capacity;
+    }
+/*
     for (i = 0; i < mem.size(); i++)
     {
         mc = (MemChunk*) mem[i].get();
@@ -2003,7 +2018,7 @@ inline uint64_t StringStore::getSize() const
         mc = (MemChunk*) longStrings[i].get();
         ret += mc->capacity;
     }
-
+*/
     return ret;
 }
 

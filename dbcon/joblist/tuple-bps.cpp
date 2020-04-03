@@ -1968,6 +1968,14 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             //joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
             //joinedBaseRow.setData(joinedBaseRowData.get());
             //joinedBaseRow.initToNull();
+            
+            // use linear row memory when the it would be < 10MB (arbitrary threshold)
+            // string tables otherwise
+            if (joinedBaseRowGroup.getRowSizeWithStrings() > 10 * (1 << 20))
+                cout << "Will use string tables, row size = " << joinedBaseRowGroup.getRowSizeWithStrings() << endl;
+            else 
+                cout << "Won't use string tables, row size = " << joinedBaseRowGroup.getRowSizeWithStrings() << endl;
+            joinedBaseRowGroup.setUseStringTable(joinedBaseRowGroup.getRowSizeWithStrings() > 10 * (1 << 20));
             joinedBaseRowGroup.initRow(&joinedBaseRow);
             joinedBaseRowData.reset(new RGData(joinedBaseRowGroup, 1));
             joinedBaseRowGroup.setData(joinedBaseRowData.get());
@@ -2306,8 +2314,12 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                                 // Unfortunately values don't get replaced in StringTables, they accumulate.  
                                 // So here, we need to check whether we've accumulated 'too much' memory and 
                                 // if so, reinit the string storage.
-                                if (joinedBaseRow.usesStringTable() && joinedBaseRowGroup.getSizeWithStrings() > 50000000)
+                                if (joinedBaseRow.usesStringTable() && joinedBaseRowData->getStringTableMemUsage() > 50000000) {
+                                    cout << "clearing StringStore size = " << joinedBaseRowData->getStringTableMemUsage() << endl;
+                                    cout << "RGdata.getDataSize = " << joinedBaseRowGroup.getDataSize() << endl;
                                     joinedBaseRowData->clearStringStore();
+                                }
+                                cout << "space used = " << joinedBaseRowGroup.getSizeWithStrings() << endl;
                                 
                                 /* Bug 3510: Don't let the join results buffer get out of control.  Need
                                 to refactor this.  All post-join processing needs to go here AND below
