@@ -35,19 +35,19 @@ namespace execplan
  * Constructors/Destructors
  */
 ArithmeticOperator::ArithmeticOperator() : Operator(), 
-    fDecimalOverflowCheck(true)
+    fDecimalOverflowCheck(false)
 {
 }
 
 ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName),
-    fDecimalOverflowCheck(true)
+    fDecimalOverflowCheck(false)
 {
 }
 
 ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
     Operator(rhs),
     fTimeZone(rhs.timeZone()),
-    fDecimalOverflowCheck(true)
+    fDecimalOverflowCheck(false)
 {
 }
 
