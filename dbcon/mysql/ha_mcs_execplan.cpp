@@ -3096,17 +3096,13 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
         case DECIMAL_RESULT:
         {
             Item_decimal* idp = (Item_decimal*)item;
+
             ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            ct.colWidth = (idp->max_length >= datatypes::INT64MAXPRECISION)
-                ? datatypes::MAXDECIMALWIDTH : utils::MAXLEGACYWIDTH;
-            ct.scale = idp->decimals;
-            // WIP MCOL-641
-            if (ct.scale == 0)
-                ct.precision = (idp->max_length > datatypes::INT128MAXPRECISION)
-                    ? datatypes::INT128MAXPRECISION : idp->max_length - 1;
-            else
-                ct.precision = (idp->max_length > datatypes::INT128MAXPRECISION )
-                    ? datatypes::INT128MAXPRECISION : idp->max_length - idp->decimals;
+
+            unsigned int precision = idp->decimal_precision();
+            unsigned int scale = idp->decimal_scale();
+
+            datatypes::Decimal::setDecimalScalePrecision(ct, precision, scale);
 
             break;
         }
@@ -3132,7 +3128,7 @@ ReturnedColumn* buildReturnedColumn(
 {
     ReturnedColumn* rc = NULL;
 
-    if ( gwi.thd)
+    if (gwi.thd)
     {
         //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
         {
@@ -3435,6 +3431,7 @@ ArithmeticColumn* buildArithmeticColumn(
     Item** sfitempp = item->arguments();
     ArithmeticOperator* aop = new ArithmeticOperator(item->func_name());
     aop->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    aop->setOverflowCheck(get_decimal_overflow_check(gwi.thd));
     ParseTree* pt = new ParseTree(aop);
     //ReturnedColumn *lhs = 0, *rhs = 0;
     ParseTree* lhs = 0, *rhs = 0;
@@ -3596,6 +3593,60 @@ ArithmeticColumn* buildArithmeticColumn(
     // @bug5715. Use InfiniDB adjusted coltype for result type.
     // decimal arithmetic operation gives double result when the session variable is set.
     CalpontSystemCatalog::ColType mysql_type = colType_MysqlToIDB(item);
+
+    if (mysql_type.colDataType == CalpontSystemCatalog::DECIMAL ||
+        mysql_type.colDataType == CalpontSystemCatalog::UDECIMAL)
+    {
+        int32_t leftColWidth = pt->left()->data()->resultType().colWidth;
+        int32_t rightColWidth = pt->right()->data()->resultType().colWidth;
+
+        // Revert back to legacy values of scale and precision
+        // if the 2 columns involved in the expression are not wide
+        if (leftColWidth <= utils::MAXLEGACYWIDTH &&
+            rightColWidth <= utils::MAXLEGACYWIDTH)
+        {
+            Item_decimal* idp = (Item_decimal*)item;
+
+            mysql_type.colWidth = 8;
+
+            unsigned int precision = idp->max_length;
+            unsigned int scale = idp->decimals;
+
+            datatypes::Decimal::setDecimalScalePrecisionLegacy(mysql_type, precision, scale);
+        }
+        else
+        {
+
+            if (leftColWidth == datatypes::MAXDECIMALWIDTH ||
+                rightColWidth == datatypes::MAXDECIMALWIDTH)
+                mysql_type.colWidth = datatypes::MAXDECIMALWIDTH;
+
+            if (mysql_type.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                string funcName = item->func_name();
+
+                int32_t scale1 = pt->left()->data()->resultType().scale;
+                int32_t scale2 = pt->right()->data()->resultType().scale;
+
+                if (funcName == "/" &&
+                    (mysql_type.scale - (scale1 - scale2)) > datatypes::INT128MAXPRECISION)
+                {
+                    Item_decimal* idp = (Item_decimal*)item;
+
+                    unsigned int precision = idp->decimal_precision();
+                    unsigned int scale = idp->decimal_scale();
+
+                    datatypes::Decimal::setDecimalScalePrecisionHeuristic(mysql_type, precision, scale);
+
+                    if (mysql_type.scale < scale1)
+                        mysql_type.scale = scale1;
+
+                    if (mysql_type.precision < mysql_type.scale)
+                        mysql_type.precision = mysql_type.scale;
+                }
+            }
+        }
+    }
 
     if (get_double_for_decimal_math(current_thd) == true)
         aop->adjustResultType(mysql_type);
