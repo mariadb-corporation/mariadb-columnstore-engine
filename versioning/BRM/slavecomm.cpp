@@ -2256,7 +2256,7 @@ int SlaveComm::replayJournal(string prefix)
         fName = prefix + "_journal";
     }
 
-    const char* filename = journalName.c_str();
+    const char* filename = fName.c_str();
 
     if (IDBPolicy::useHdfs())
     {
