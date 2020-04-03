@@ -921,8 +921,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                                 status = processManager.disableModule(moduleName, true);
                                 log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
 
-								processManager.recycleProcess(moduleName);
-
                                 //check for SIMPLEX Processes on mate might need to be started
                                 processManager.checkSimplexModule(moduleName);
 
@@ -3739,12 +3737,6 @@ int ProcessManager::disableModule(string target, bool manualFlag)
         bool degraded;
         oam.getModuleStatus(target, opState, degraded);
 
-        if (opState == newState || opState == oam::MAN_DISABLED)
-        {
-            pthread_mutex_unlock(&THREAD_LOCK);
-            return API_SUCCESS;
-        }
-
         // if current state is AUTO_DISABLED and new state is MAN_DISABLED
         // update state to MAN_DISABLED
 
@@ -3822,7 +3814,6 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     {
         return API_FAILURE;
     }
-	processManager.recycleProcess(target);
 
 	//check for SIMPLEX Processes on mate might need to be started
 	processManager.checkSimplexModule(target);
@@ -3830,9 +3821,29 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     //distribute config file
     distributeConfigFile("system");
 
+    processManager.reinitProcesses();
+
     log.writeLog(__LINE__, "disableModule successfully complete for " + target, LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
+}
+
+void ProcessManager::reinitProcesses()
+{
+    log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
+
+    restartProcessType("DBRMControllerNode");
+    reinitProcessType("ExeMgr");
+    reinitProcessType("DBRMWorkerNode");
+    restartProcessType("WriteEngineServer");
+    sleep(1);
+    startProcessType("DDLProc");
+    sleep(1);
+    startProcessType("DMLProc");
+    reinitProcessType("DDLProc");
+    reinitProcessType("DMLProc");
+
+    log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
 }
 
 /******************************************************************************************
@@ -10040,8 +10051,12 @@ int ProcessManager::OAMParentModuleChange()
 
     for ( ; pt1 != downModuleList.end() ; pt1++)
     {
-        disableModule(*pt1, false);
-        processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
+        // Don't do this again for downOAMParentName we just did it 3 lines ago
+        if (*pt1 != downOAMParentName)
+        {
+            disableModule(*pt1, false);
+            processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
+        }
     }
 
     //distribute config file
@@ -10089,9 +10104,6 @@ int ProcessManager::OAMParentModuleChange()
         // wait some more
         sleep(2);
     }
-
-    //set recycle process
-    processManager.recycleProcess(downOAMParentName);
 
     //restart/reinit processes to force their release of the controller node port
     if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
@@ -10188,9 +10200,6 @@ int ProcessManager::OAMParentModuleChange()
         oam::DeviceNetworkList devicenetworklist;
         processManager.setMySQLReplication(devicenetworklist, config.moduleName());
     }
-
-    //set query system state not ready
-    processManager.setQuerySystemState(true);
 
     // clear alarm
     aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
@@ -10363,8 +10372,6 @@ std::string ProcessManager::getStandbyModule()
     //not gluster, check by status
     try
     {
-        oam.getProcessStatus(systemprocessstatus);
-
         for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
         {
             if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
