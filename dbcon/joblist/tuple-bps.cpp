@@ -1915,7 +1915,9 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     vector<vector<Row::Pointer> > joinerOutput;   // clean usage
     Row largeSideRow, joinedBaseRow, largeNull, joinFERow;  // LSR clean
     scoped_array<Row> smallSideRows, smallNulls;
-    scoped_array<uint8_t> joinedBaseRowData;
+    //scoped_array<uint8_t> joinedBaseRowData;
+    RowGroup joinedBaseRowGroup(outputRowGroup);
+    scoped_ptr<RGData> joinedBaseRowData;
     scoped_array<uint8_t> joinFERowData;
     shared_array<int> largeMapping;
     vector<shared_array<int> > smallMappings;
@@ -1962,10 +1964,16 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             fergMappings.resize(smallSideCount + 1);
             smallNullMemory.reset(new shared_array<uint8_t>[smallSideCount]);
             local_primRG.initRow(&largeSideRow);
-            local_outputRG.initRow(&joinedBaseRow, true);
-            joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
-            joinedBaseRow.setData(joinedBaseRowData.get());
+            //local_outputRG.initRow(&joinedBaseRow, true);
+            //joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
+            //joinedBaseRow.setData(joinedBaseRowData.get());
+            //joinedBaseRow.initToNull();
+            joinedBaseRowGroup.initRow(&joinedBaseRow);
+            joinedBaseRowData.reset(new RGData(joinedBaseRowGroup, 1));
+            joinedBaseRowGroup.setData(joinedBaseRowData.get());
+            joinedBaseRowGroup.getRow(0, &joinedBaseRow);
             joinedBaseRow.initToNull();
+            
             largeMapping = makeMapping(local_primRG, local_outputRG);
 
             bool hasJoinFE = false;
@@ -2291,11 +2299,20 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                                 joinedBaseRow.setRid(largeSideRow.getRelRid());
                                 generateJoinResultSet(joinerOutput, joinedBaseRow, smallMappings,
                                                       0, local_outputRG, joinedData, &rgDatav, smallSideRows, postJoinRow);
-
+                                
+                                // MCOL-3879.  JoinedBaseRow was originally an in-line row because of the
+                                // way its used here, as scratch space.  Values are constantly replaced.  
+                                // That was fine when columns were limited to 8KB.  Now they can be 2GB.  :D  
+                                // Unfortunately values don't get replaced in StringTables, they accumulate.  
+                                // So here, we need to check whether we've accumulated 'too much' memory and 
+                                // if so, reinit the string storage.
+                                if (joinedBaseRow.usesStringTable() && joinedBaseRowGroup.getSizeWithStrings() > 50000000)
+                                    joinedBaseRowData->clearStringStore();
+                                
                                 /* Bug 3510: Don't let the join results buffer get out of control.  Need
                                 to refactor this.  All post-join processing needs to go here AND below
                                 for now. */
-                                if (rgDatav.size() * local_outputRG.getMaxDataSize() > 50000000)
+                                if (rgDatav.size() * local_outputRG.getMaxDataSizeWithStrings() > 50000000)
                                 {
                                     RowGroup out(local_outputRG);
 

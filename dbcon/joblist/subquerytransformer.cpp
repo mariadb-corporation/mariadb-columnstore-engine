@@ -192,7 +192,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
     fSubQueryStep.reset(sqs);
 
     // Update the v-table columns and rowgroup
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;

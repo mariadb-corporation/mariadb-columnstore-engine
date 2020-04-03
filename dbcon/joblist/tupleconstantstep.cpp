@@ -108,7 +108,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
     vector<uint32_t> scale, scaleIn = fRowGroupIn.getScale();
     vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
     vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     pos.push_back(2);
 
     if (rgIn)
@@ -644,7 +644,7 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     pos.push_back(2);
 
     deliverStringTableRowGroup(false);

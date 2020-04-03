@@ -205,7 +205,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
     for (vector<SP_GroupConcat>::iterator k = fGroupConcat.begin(); k != fGroupConcat.end(); k++)
     {
-        vector<uint32_t> pos;
+        vector<uint64_t> pos;
         vector<uint32_t> oids;
         vector<uint32_t> keys;
         vector<uint32_t> scale;

@@ -227,6 +227,11 @@ public:
     void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false);
 
     inline uint64_t getStringTableMemUsage();
+    
+    // MCOL-3879.  Needed to add a way to clear only the stringstore for efficiency.
+    // Only use if you know no string pointers in the rowgroup will ever be used again.
+    void clearStringStore();
+    
     void clear();
     void reinit(const RowGroup& rg);
     void reinit(const RowGroup& rg, uint32_t rowCount);

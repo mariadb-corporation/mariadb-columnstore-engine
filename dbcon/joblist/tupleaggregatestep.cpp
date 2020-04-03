@@ -755,13 +755,13 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
     if (jobInfo.havingStep)
         retColCount = jobInfo.returnedColVec.size();
 
-    vector<uint32_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
+    vector<uint64_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
     vector<CalpontSystemCatalog::ColDataType>::const_iterator types0 =
         fRowGroupOut.getColTypes().begin();
 
     vector<uint32_t>::const_iterator precision0 = fRowGroupOut.getPrecision().begin();
     fRowGroupDelivered = RowGroup(retColCount,
-                                  vector<uint32_t>(offsets0, offsets0 + retColCount + 1),
+                                  vector<uint64_t>(offsets0, offsets0 + retColCount + 1),
                                   vector<uint32_t>(oids.begin(), oids.begin() + retColCount),
                                   vector<uint32_t>(keys.begin(), keys.begin() + retColCount),
                                   vector<CalpontSystemCatalog::ColDataType>(types0, types0 + retColCount),
@@ -1038,7 +1038,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
     const vector<uint32_t>& precisionProj = projRG.getPrecision();
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
 
-    vector<uint32_t> posAgg;
+    vector<uint64_t> posAgg;
     vector<uint32_t> oidsAgg;
     vector<uint32_t> keysAgg;
     vector<uint32_t> scaleAgg;
@@ -1589,7 +1589,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
     const vector<uint32_t>& precisionProj = projRG.getPrecision();
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
 
-    vector<uint32_t> posAgg, posAggDist;
+    vector<uint64_t> posAgg, posAggDist;
     vector<uint32_t> oidsAgg, oidsAggDist;
     vector<uint32_t> keysAgg, keysAggDist;
     vector<uint32_t> scaleAgg, scaleAggDist;
@@ -2603,7 +2603,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         rowAggDist->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
         // construct and add sub-aggregators to rowAggDist
-        vector<uint32_t> posAggGb, posAggSub;
+        vector<uint64_t> posAggGb, posAggSub;
         vector<uint32_t> oidsAggGb, oidsAggSub;
         vector<uint32_t> keysAggGb, keysAggSub;
         vector<uint32_t> scaleAggGb, scaleAggSub;
@@ -2874,7 +2874,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
     const vector<uint32_t>& precisionProj = projRG.getPrecision();
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
 
-    vector<uint32_t> posAggPm, posAggUm;
+    vector<uint64_t> posAggPm, posAggUm;
     vector<uint32_t> oidsAggPm, oidsAggUm;
     vector<uint32_t> keysAggPm, keysAggUm;
     vector<uint32_t> scaleAggPm, scaleAggUm;
@@ -3718,7 +3718,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     const vector<uint32_t>& precisionProj = projRG.getPrecision();
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
 
-    vector<uint32_t> posAggPm, posAggUm, posAggDist;
+    vector<uint64_t> posAggPm, posAggUm, posAggDist;
     vector<uint32_t> oidsAggPm, oidsAggUm, oidsAggDist;
     vector<uint32_t> keysAggPm, keysAggUm, keysAggDist;
     vector<uint32_t> scaleAggPm, scaleAggUm, scaleAggDist;
@@ -4689,7 +4689,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         rowAggDist.reset(multiDistinctAggregator);
 
         // construct and add sub-aggregators to rowAggDist
-        vector<uint32_t> posAggGb, posAggSub;
+        vector<uint64_t> posAggGb, posAggSub;
         vector<uint32_t> oidsAggGb, oidsAggSub;
         vector<uint32_t> keysAggGb, keysAggSub;
         vector<uint32_t> scaleAggGb, scaleAggSub;

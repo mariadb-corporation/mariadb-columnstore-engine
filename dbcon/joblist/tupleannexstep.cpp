@@ -201,7 +201,7 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
         vector<uint32_t> scale, scaleIn = rgIn.getScale();
         vector<uint32_t> precision, precisionIn = rgIn.getPrecision();
         vector<CalpontSystemCatalog::ColDataType> types, typesIn = rgIn.getColTypes();
-        vector<uint32_t> pos, posIn = rgIn.getOffsets();
+        vector<uint64_t> pos, posIn = rgIn.getOffsets();
         size_t n = jobInfo.nonConstDelCols.size();
 
         // Add all columns into output RG as keys. Can we put only keys?

@@ -489,6 +489,11 @@ void RGData::clear()
     strings.reset();
 }
 
+void RGData::clearStringStore()
+{
+    strings->clear();
+}
+
 // UserDataStore is only used for UDAF.
 // Just in time construction because most of the time we don't need one.
 UserDataStore* RGData::getUserDataStore()
