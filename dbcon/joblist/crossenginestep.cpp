@@ -428,6 +428,30 @@ void CrossEngineStep::execute()
     sts.query_uuid = fQueryUuid;
     sts.step_uuid = fStepUuid;
 
+    bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters.size() > 0));
+    bool doFE3 =  (fFeSelects.size() > 0);
+    RowGroup fe1RowGroup, fe3RowGroup;
+    boost::scoped_ptr<RGData> fe1RGData, fe3RGData;
+    Row rowFe1, rowFe3;
+    if (doFE1)
+    {
+        fe1RowGroup = fRowGroupFe1;
+        fe1RowGroup.setUseStringTable(fe1RowGroup.getRowSizeWithStrings() > 10 * (1 << 20));
+        fe1RGData.reset(new RGData(fe1RowGroup, 1));
+        fe1RowGroup.setData(fe1RGData.get());
+        fe1RowGroup.initRow(&rowFe1);
+        fe1RowGroup.getRow(0, &rowFe1);
+    }
+    if (doFE3)
+    {
+        fe3RowGroup = fRowGroupFe3;
+        fe3RowGroup.setUseStringTable(fe3RowGroup.getRowSizeWithStrings() > 10 * (1 << 20));
+        fe3RGData.reset(new RGData(fe3RowGroup, 1));
+        fe3RowGroup.setData(fe3RGData.get());
+        fe3RowGroup.initRow(&rowFe3);
+        fe3RowGroup.getRow(0, &rowFe3);
+    }
+    
     try
     {
         sts.msg_type = StepTeleStats::ST_START;
@@ -467,8 +491,6 @@ void CrossEngineStep::execute()
 
         // Any functions to evaluate
         makeMappings();
-        bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters.size() > 0));
-        bool doFE3 =  (fFeSelects.size() > 0);
 
         if (!doFE1 && !doFE3)
         {
@@ -483,11 +505,13 @@ void CrossEngineStep::execute()
 
         else if (doFE1 && !doFE3)  // FE in WHERE clause only
         {
+            /*
             shared_array<uint8_t> rgDataFe1;  // functions in where clause
             Row rowFe1;                       // row for fe evaluation
             fRowGroupFe1.initRow(&rowFe1, true);
             rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
             rowFe1.setData(rgDataFe1.get());
+            */
 
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
@@ -520,7 +544,7 @@ void CrossEngineStep::execute()
 
                 // Pass throug the parsed columns, and parse the remaining columns.
                 applyMapping(fFeMapping1, rowFe1, &fRowDelivered);
-
+                
                 for (int i = 0; i < num_fields; i++)
                 {
                     if (fFe1Column[i] == -1)
@@ -528,16 +552,24 @@ void CrossEngineStep::execute()
                 }
 
                 addRow(rgDataDelivered);
+                
+                if (fe1RowGroup.usesStringTable() && fe1RGData->getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    cout << "CES: clearing FE1 string data" << endl;
+                    fe1RGData->clearStringStore();
+                }
             }
         }
 
         else if (!doFE1 && doFE3)  // FE in SELECT clause only
         {
+            /*
             shared_array<uint8_t> rgDataFe3;  // functions in select clause
             Row rowFe3;                       // row for fe evaluation
             fRowGroupOut.initRow(&rowFe3, true);
             rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
             rowFe3.setData(rgDataFe3.get());
+            */
 
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
@@ -548,13 +580,19 @@ void CrossEngineStep::execute()
                 fFeInstance->evaluate(rowFe3, fFeSelects);
 
                 applyMapping(fFeMapping3, rowFe3, &fRowDelivered);
-
                 addRow(rgDataDelivered);
+                
+                if (fe3RowGroup.usesStringTable() && fe3RGData->getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    cout << "CES: clearing FE3 string data" << endl;
+                    fe3RGData->clearStringStore();
+                }
             }
         }
 
         else  // FE in SELECT clause, FE join and WHERE clause
         {
+            /*
             shared_array<uint8_t> rgDataFe1;  // functions in where clause
             Row rowFe1;                       // row for fe1 evaluation
             fRowGroupFe1.initRow(&rowFe1, true);
@@ -566,6 +604,7 @@ void CrossEngineStep::execute()
             fRowGroupOut.initRow(&rowFe3, true);
             rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
             rowFe3.setData(rgDataFe3.get());
+            */
 
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
@@ -607,8 +646,18 @@ void CrossEngineStep::execute()
 
                 fFeInstance->evaluate(rowFe3, fFeSelects);
                 applyMapping(fFeMapping3, rowFe3, &fRowDelivered);
-
                 addRow(rgDataDelivered);
+                
+                if (fe1RowGroup.usesStringTable() && fe1RGData->getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    cout << "CES: clearing FE1 string data" << endl;
+                    fe1RGData->clearStringStore();
+                }                
+                if (fe3RowGroup.usesStringTable() && fe3RGData->getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    cout << "CES: clearing FE3 string data" << endl;
+                    fe3RGData->clearStringStore();
+                }
             }
         }
 
