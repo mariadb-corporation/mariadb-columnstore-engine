@@ -10599,6 +10599,26 @@ std::string ProcessManager::getStandbyModule()
     //check if gluster, if so then find PMs that have copies of DBROOT #1
     string pmList = "";
 
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
+                    systemprocessstatus.processstatus[i].ProcessOpState == oam::STANDBY )
+                //already have a hot-standby
+                return "";
+        }
+    }
+    catch (exception& ex)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + string(ex.what()), LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
+
     if (DataRedundancyConfig == "y")
     {
 
