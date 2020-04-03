@@ -35,6 +35,7 @@ namespace datatypes
 constexpr uint32_t MAXDECIMALWIDTH = 16U;
 constexpr uint8_t INT64MAXPRECISION = 18U;
 constexpr uint8_t INT128MAXPRECISION = 38U;
+constexpr uint8_t MAXLEGACYWIDTH = 8U;
 
 const uint64_t mcs_pow_10[20] =
 {
@@ -127,6 +128,15 @@ class Decimal
             execplan::IDB_Decimal& result);
 
         /**
+            @brief Subtraction template that supports overflow check and
+            two internal representations of decimal.
+        */
+        template<typename T, bool overflow>
+        static void subtraction(const execplan::IDB_Decimal& l,
+            const execplan::IDB_Decimal& r,
+            execplan::IDB_Decimal& result);
+
+        /**
             @brief Division template that supports overflow check and
             two internal representations of decimal.
         */
@@ -136,7 +146,16 @@ class Decimal
             execplan::IDB_Decimal& result);
 
         /**
-            @brief Convinience method to put decimal into a std:;string.
+            @brief Multiplication template that supports overflow check and
+            two internal representations of decimal.
+        */
+        template<typename T, bool overflow>
+        static void multiplication(const execplan::IDB_Decimal& l,
+            const execplan::IDB_Decimal& r,
+            execplan::IDB_Decimal& result);
+
+        /**
+            @brief Convenience method to put decimal into a std::string.
         */
         static std::string toString(execplan::IDB_Decimal& value);
 
@@ -161,6 +180,66 @@ class Decimal
                 && precision <= INT128MAXPRECISION;
         }
 
+        /**
+            @brief The method sets the legacy scale and precision of a wide decimal
+            column which is the result of an arithmetic operation.
+        */
+        static inline void setDecimalScalePrecisionLegacy(execplan::CalpontSystemCatalog::ColType& ct,
+            unsigned int precision, unsigned int scale)
+        {
+            ct.scale = scale;
+
+            if (ct.scale == 0)
+                ct.precision = precision - 1;
+            else
+                ct.precision = precision - scale;
+        }
+
+        /**
+            @brief The method sets the scale and precision of a wide decimal
+            column which is the result of an arithmetic operation.
+        */
+        static inline void setDecimalScalePrecision(execplan::CalpontSystemCatalog::ColType& ct,
+            unsigned int precision, unsigned int scale)
+        {
+            ct.colWidth = (precision > INT64MAXPRECISION)
+                ? MAXDECIMALWIDTH : MAXLEGACYWIDTH;
+
+            ct.precision = (precision > INT128MAXPRECISION)
+                ? INT128MAXPRECISION : precision;
+
+            ct.scale = scale;
+        }
+
+        /**
+            @brief The method sets the scale and precision of a wide decimal
+            column which is the result of an arithmetic operation, based on a heuristic.
+        */
+        static inline void setDecimalScalePrecisionHeuristic(execplan::CalpontSystemCatalog::ColType& ct,
+            unsigned int precision, unsigned int scale)
+        {
+            unsigned int diff = 0;
+
+            if (precision > INT128MAXPRECISION)
+            {
+                ct.precision = INT128MAXPRECISION;
+                diff = precision - INT128MAXPRECISION;
+            }
+            else
+            {
+                ct.precision = precision;
+            }
+
+            ct.scale = scale;
+
+            if (diff != 0)
+            {
+                ct.scale = scale - (int)(diff * (38.0/65.0));
+
+                if (ct.scale < 0)
+                    ct.scale = 0;
+            }
+        }
 };
 
 /**
@@ -170,17 +249,25 @@ class Decimal
 struct DivisionOverflowCheck {
     void operator()(const int128_t& x, const int128_t& y)
     {
-        if (x == Decimal::maxInt128 && y == -1)
+        if (x == Decimal::minInt128 && y == -1)
         {
             throw logging::OperationOverflowExcept(
                 "Decimal::division<int128_t> produces an overflow.");
+        }
+    }
+    void operator()(const int64_t x, const int64_t y)
+    {
+        if (x == std::numeric_limits<int64_t>::min() && y == -1)
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::division<int64_t> produces an overflow.");
         }
     }
 };
 
 /**
     @brief The structure contains an overflow check for int128
-    addition.
+    and int64_t multiplication.
 */
 struct MultiplicationOverflowCheck {
     void operator()(const int128_t& x, const int128_t& y)
@@ -189,7 +276,7 @@ struct MultiplicationOverflowCheck {
         {
             throw logging::OperationOverflowExcept(
                 "Decimal::multiplication<int128_t> or scale multiplication \
- produces an overflow.");
+produces an overflow.");
         }
     }
     bool operator()(const int128_t& x, const int128_t& y, int128_t& r)
@@ -198,16 +285,45 @@ struct MultiplicationOverflowCheck {
         {
             throw logging::OperationOverflowExcept(
                 "Decimal::multiplication<int128_t> or scale multiplication \
- produces an overflow.");
+produces an overflow.");
         }
         return true;
     }
+    void operator()(const int64_t x, const int64_t y)
+    {
+        if (x * y / y != x)
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::multiplication<int64_t> or scale multiplication \
+produces an overflow.");
+        }
+    }
+    bool operator()(const int64_t x, const int64_t y, int64_t& r)
+    {
+        if ((r = x * y) / y != x)
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::multiplication<int64_t> or scale multiplication \
+produces an overflow.");
+        }
+        return true;
+    }
+};
 
+/**
+    @brief The strucuture runs an empty overflow check for int128
+    multiplication operation.
+*/
+struct MultiplicationNoOverflowCheck {
+    void operator()(const int128_t& x, const int128_t& y, int128_t& r)
+    {
+        r = x * y;
+    }
 };
 
 /**
     @brief The structure contains an overflow check for int128
-    addition.
+    and int64 addition.
 */
 struct AdditionOverflowCheck {
     void operator()(const int128_t& x, const int128_t& y)
@@ -217,6 +333,40 @@ struct AdditionOverflowCheck {
         {
             throw logging::OperationOverflowExcept(
                 "Decimal::addition<int128_t> produces an overflow.");
+        }
+    }
+    void operator()(const int64_t x, const int64_t y)
+    {
+        if ((y > 0 && x > std::numeric_limits<int64_t>::max() - y)
+            || (y < 0 && x < std::numeric_limits<int64_t>::min() - y))
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::addition<int64_t> produces an overflow.");
+        }
+    }
+};
+
+/**
+    @brief The structure contains an overflow check for int128
+    subtraction.
+*/
+struct SubtractionOverflowCheck {
+    void operator()(const int128_t& x, const int128_t& y)
+    {
+        if ((y > 0 && x < Decimal::minInt128 + y)
+            || (y < 0 && x > Decimal::maxInt128 + y))
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::subtraction<int128_t> produces an overflow.");
+        }
+    }
+    void operator()(const int64_t x, const int64_t y)
+    {
+        if ((y > 0 && x < std::numeric_limits<int64_t>::min() + y)
+            || (y < 0 && x > std::numeric_limits<int64_t>::max() + y))
+        {
+            throw logging::OperationOverflowExcept(
+                "Decimal::subtraction<int64_t> produces an overflow.");
         }
     }
 };
