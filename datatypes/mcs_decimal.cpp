@@ -48,7 +48,7 @@ namespace datatypes
     template<typename BinaryOperation,
         typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void execute(const execplan::IDB_Decimal& l,
+    void addSubtractExecute(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r,
         execplan::IDB_Decimal& result,
         BinaryOperation op,
@@ -57,7 +57,7 @@ namespace datatypes
     {
         int128_t lValue = Decimal::isWideDecimalType(l.precision)
             ? l.s128Value : l.value;
-        int128_t rValue = Decimal::isWideDecimalType(l.precision)
+        int128_t rValue = Decimal::isWideDecimalType(r.precision)
             ? r.s128Value : r.value;
 
         if (result.scale == l.scale && result.scale == r.scale)
@@ -78,7 +78,9 @@ namespace datatypes
         {
             int128_t scaleMultiplier;
             getScaleDivisor(scaleMultiplier, l.scale - result.scale);
-            lValue /= scaleMultiplier;
+            lValue = (int128_t) (lValue > 0 ?
+                                 (__float128)lValue / scaleMultiplier + 0.5 :
+                                 (__float128)lValue / scaleMultiplier - 0.5);
         }
 
         if (result.scale > r.scale)
@@ -92,7 +94,9 @@ namespace datatypes
         {
             int128_t scaleMultiplier;
             getScaleDivisor(scaleMultiplier, r.scale - result.scale);
-            rValue /= scaleMultiplier;
+            rValue = (int128_t) (rValue > 0 ?
+                                 (__float128)rValue / scaleMultiplier + 0.5 :
+                                 (__float128)rValue / scaleMultiplier - 0.5);
         }
 
         // We assume there is no way that lValue or rValue calculations
@@ -100,6 +104,94 @@ namespace datatypes
         opOverflowCheck(lValue, rValue);
 
         result.s128Value = op(lValue, rValue);
+    }
+
+    template<typename OpOverflowCheck,
+        typename MultiplicationOverflowCheck>
+    void divisionExecute(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r,
+        execplan::IDB_Decimal& result,
+        OpOverflowCheck opOverflowCheck,
+        MultiplicationOverflowCheck mulOverflowCheck)
+    {
+        int128_t lValue = Decimal::isWideDecimalType(l.precision)
+            ? l.s128Value : l.value;
+        int128_t rValue = Decimal::isWideDecimalType(r.precision)
+            ? r.s128Value : r.value;
+
+        opOverflowCheck(lValue, rValue);
+
+        if (result.scale >= l.scale - r.scale)
+        {
+            int128_t scaleMultiplier;
+
+            getScaleDivisor(scaleMultiplier, result.scale - (l.scale - r.scale));
+
+            // TODO How do we check overflow of (int128_t)((__float128)lValue / rValue * scaleMultiplier) ?
+
+            result.s128Value = (int128_t)(( (lValue > 0 && rValue > 0) || (lValue < 0 && rValue < 0) ?
+                                             (__float128)lValue / rValue * scaleMultiplier + 0.5 :
+                                             (__float128)lValue / rValue * scaleMultiplier - 0.5));
+        }
+        else
+        {
+            int128_t scaleMultiplier;
+
+            getScaleDivisor(scaleMultiplier, (l.scale - r.scale) - result.scale);
+
+            result.s128Value = (int128_t)(( (lValue > 0 && rValue > 0) || (lValue < 0 && rValue < 0) ?
+                                             (__float128)lValue / rValue / scaleMultiplier + 0.5 :
+                                             (__float128)lValue / rValue / scaleMultiplier - 0.5));
+        }
+    }
+
+    template<typename OpOverflowCheck,
+        typename MultiplicationOverflowCheck>
+    void multiplicationExecute(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r,
+        execplan::IDB_Decimal& result,
+        OpOverflowCheck opOverflowCheck,
+        MultiplicationOverflowCheck mulOverflowCheck)
+    {
+        int128_t lValue = Decimal::isWideDecimalType(l.precision)
+            ? l.s128Value : l.value;
+        int128_t rValue = Decimal::isWideDecimalType(r.precision)
+            ? r.s128Value : r.value;
+
+        if (lValue == 0 || rValue == 0)
+        {
+            result.s128Value = 0;
+            return;
+        }
+
+        if (result.scale >= l.scale + r.scale)
+        {
+            int128_t scaleMultiplier;
+
+            getScaleDivisor(scaleMultiplier, result.scale - (l.scale + r.scale));
+
+            opOverflowCheck(lValue, rValue, result.s128Value);
+            opOverflowCheck(result.s128Value, scaleMultiplier, result.s128Value);
+        }
+        else
+        {
+            unsigned int diff = l.scale + r.scale - result.scale;
+
+            int128_t scaleMultiplierL, scaleMultiplierR;
+
+            getScaleDivisor(scaleMultiplierL, diff / 2);
+            getScaleDivisor(scaleMultiplierR, diff - (diff / 2));
+
+            lValue = (int128_t)(( (lValue > 0) ?
+                                   (__float128)lValue / scaleMultiplierL + 0.5 :
+                                   (__float128)lValue / scaleMultiplierL - 0.5));
+
+            rValue = (int128_t)(( (rValue > 0) ?
+                                   (__float128)rValue / scaleMultiplierR + 0.5 :
+                                   (__float128)rValue / scaleMultiplierR - 0.5));
+
+            opOverflowCheck(lValue, rValue, result.s128Value);;
+        }
     }
 
     std::string Decimal::toString(execplan::IDB_Decimal& value)
@@ -163,12 +255,8 @@ namespace datatypes
     {
         std::plus<int128_t> add;
         NoOverflowCheck noOverflowCheck;
-        execute(l, r, result, add, noOverflowCheck, noOverflowCheck);
+        addSubtractExecute(l, r, result, add, noOverflowCheck, noOverflowCheck);
     }
-
-    template
-    void Decimal::addition<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result);
 
     // with overflow check
     template<>
@@ -178,13 +266,10 @@ namespace datatypes
         std::plus<int128_t> add;
         AdditionOverflowCheck overflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
-        execute(l, r, result, add, overflowCheck, mulOverflowCheck);
+        addSubtractExecute(l, r, result, add, overflowCheck, mulOverflowCheck);
     }
 
-    template
-    void Decimal::addition<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result);
-
+    // no overflow check
     template<>
     void Decimal::addition<int64_t, false>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
@@ -195,86 +280,252 @@ namespace datatypes
             return;
         }
 
-        int64_t lValue = 0, rValue = 0;
+        int64_t lValue = l.value, rValue = r.value;
 
-        if (result.scale >= l.scale)
-            lValue = l.value * mcs_pow_10[result.scale - l.scale];
-        else
-            lValue = (int64_t)(l.value > 0 ?
-                                  (double)l.value / mcs_pow_10[l.scale - result.scale] + 0.5 :
-                                  (double)l.value / mcs_pow_10[l.scale - result.scale] - 0.5);
+        if (result.scale > l.scale)
+            lValue *= mcs_pow_10[result.scale - l.scale];
+        else if (result.scale < l.scale)
+            lValue = (int64_t)(lValue > 0 ?
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] + 0.5 :
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] - 0.5);
 
-        if (result.scale >= r.scale)
-            rValue = r.value * mcs_pow_10[result.scale - r.scale];
-        else
-            rValue = (int64_t)(r.value > 0 ?
-                                  (double)r.value / mcs_pow_10[r.scale - result.scale] + 0.5 :
-                                  (double)r.value / mcs_pow_10[r.scale - result.scale] - 0.5);
+        if (result.scale > r.scale)
+            rValue *= mcs_pow_10[result.scale - r.scale];
+        else if (result.scale < r.scale)
+            rValue = (int64_t)(rValue > 0 ?
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] + 0.5 :
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] - 0.5);
 
         result.value = lValue + rValue;
     }
-    template
-    void Decimal::addition<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result);
 
+    // with overflow check
     template<>
     void Decimal::addition<int64_t, true>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
     {
-        throw logging::NotImplementedExcept("Decimal::addition<int64>");
+        AdditionOverflowCheck additionOverflowCheck;
+        MultiplicationOverflowCheck mulOverflowCheck;
+
+        if (result.scale == l.scale && result.scale == r.scale)
+        {
+            additionOverflowCheck(l.value, r.value);
+            result.value = l.value + r.value;
+            return;
+        }
+
+        int64_t lValue = l.value, rValue = r.value;
+
+        if (result.scale > l.scale)
+            mulOverflowCheck(lValue, mcs_pow_10[result.scale - l.scale], lValue);
+        else if (result.scale < l.scale)
+            lValue = (int64_t)(lValue > 0 ?
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] + 0.5 :
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] - 0.5);
+
+        if (result.scale > r.scale)
+            mulOverflowCheck(rValue, mcs_pow_10[result.scale - r.scale], rValue);
+        else if (result.scale < r.scale)
+            rValue = (int64_t)(rValue > 0 ?
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] + 0.5 :
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] - 0.5);
+
+        additionOverflowCheck(lValue, rValue);
+        result.value = lValue + rValue;
     }
 
+    // no overflow check
+    template<>
+    void Decimal::subtraction<int128_t, false>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        std::minus<int128_t> subtract;
+        NoOverflowCheck noOverflowCheck;
+        addSubtractExecute(l, r, result, subtract, noOverflowCheck, noOverflowCheck);
+    }
+
+    // with overflow check
+    template<>
+    void Decimal::subtraction<int128_t, true>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        std::minus<int128_t> subtract;
+        SubtractionOverflowCheck overflowCheck;
+        MultiplicationOverflowCheck mulOverflowCheck;
+        addSubtractExecute(l, r, result, subtract, overflowCheck, mulOverflowCheck);
+    }
+
+    // no overflow check
+    template<>
+    void Decimal::subtraction<int64_t, false>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        if (result.scale == l.scale && result.scale == r.scale)
+        {
+            result.value = l.value - r.value;
+            return;
+        }
+
+        int64_t lValue = l.value, rValue = r.value;
+
+        if (result.scale > l.scale)
+            lValue *= mcs_pow_10[result.scale - l.scale];
+        else if (result.scale < l.scale)
+            lValue = (int64_t)(lValue > 0 ?
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] + 0.5 :
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] - 0.5);
+
+        if (result.scale > r.scale)
+            rValue *= mcs_pow_10[result.scale - r.scale];
+        else if (result.scale < r.scale)
+            rValue = (int64_t)(rValue > 0 ?
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] + 0.5 :
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] - 0.5);
+
+        result.value = lValue - rValue;
+    }
+
+    // with overflow check
+    template<>
+    void Decimal::subtraction<int64_t, true>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        SubtractionOverflowCheck subtractionOverflowCheck;
+        MultiplicationOverflowCheck mulOverflowCheck;
+
+        if (result.scale == l.scale && result.scale == r.scale)
+        {
+            subtractionOverflowCheck(l.value, r.value);
+            result.value = l.value - r.value;
+            return;
+        }
+
+        int64_t lValue = l.value, rValue = r.value;
+
+        if (result.scale > l.scale)
+            mulOverflowCheck(lValue, mcs_pow_10[result.scale - l.scale], lValue);
+        else if (result.scale < l.scale)
+            lValue = (int64_t)(lValue > 0 ?
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] + 0.5 :
+                               (double)lValue / mcs_pow_10[l.scale - result.scale] - 0.5);
+
+        if (result.scale > r.scale)
+            mulOverflowCheck(rValue, mcs_pow_10[result.scale - r.scale], rValue);
+        else if (result.scale < r.scale)
+            rValue = (int64_t)(rValue > 0 ?
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] + 0.5 :
+                               (double)rValue / mcs_pow_10[r.scale - result.scale] - 0.5);
+
+        subtractionOverflowCheck(lValue, rValue);
+        result.value = lValue - rValue;
+    }
+
+    // no overflow check
     template<>
     void Decimal::division<int128_t, false>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
     {
-        std::divides<int128_t> division;
         NoOverflowCheck noOverflowCheck;
-        execute(l, r, result, division, noOverflowCheck, noOverflowCheck);
+        divisionExecute(l, r, result, noOverflowCheck, noOverflowCheck);
     }
-
-    template
-    void Decimal::division<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result);
 
     // With overflow check
     template<>
     void Decimal::division<int128_t, true>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
     {
-        std::divides<int128_t> division;
         DivisionOverflowCheck overflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
-        execute(l, r, result, division, overflowCheck, mulOverflowCheck);
+        divisionExecute(l, r, result, overflowCheck, mulOverflowCheck);
     }
 
+    // no overflow check
     // We rely on the zero check from ArithmeticOperator::execute
     template<>
     void Decimal::division<int64_t, false>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
     {
         if (result.scale >= l.scale - r.scale)
-            result.value = (int64_t)(( (l.value > 0 && r.value > 0) 
-                || (l.value < 0 && r.value < 0) ?
-                    (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] + 0.5 :
-                    (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] - 0.5));
-            else
-                result.value = (int64_t)(( (l.value > 0 && r.value > 0)
-                    || (l.value < 0 && r.value < 0) ?
-                        (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] + 0.5 :
-                        (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] - 0.5));
-
+            result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
+                                       (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] + 0.5 :
+                                       (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] - 0.5));
+        else
+            result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
+                                       (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] + 0.5 :
+                                       (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] - 0.5));
     }
 
-    template
-    void Decimal::division<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result);
-
+    // With overflow check
     template<>
     void Decimal::division<int64_t, true>(const execplan::IDB_Decimal& l,
         const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
     {
-        throw logging::NotImplementedExcept("Decimal::division<int64>");
+        DivisionOverflowCheck divisionOverflowCheck;
+
+        divisionOverflowCheck(l.value, r.value);
+
+        if (result.scale >= l.scale - r.scale)
+            // TODO How do we check overflow of (int64_t)((long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)]) ?
+            result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
+                                       (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] + 0.5 :
+                                       (long double)l.value / r.value * mcs_pow_10[result.scale - (l.scale - r.scale)] - 0.5));
+        else
+            result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
+                                       (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] + 0.5 :
+                                       (long double)l.value / r.value / mcs_pow_10[l.scale - r.scale - result.scale] - 0.5));
+    }
+
+    // no overflow check
+    template<>
+    void Decimal::multiplication<int128_t, false>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        MultiplicationNoOverflowCheck noOverflowCheck;
+        multiplicationExecute(l, r, result, noOverflowCheck, noOverflowCheck);
+    }
+
+    // With overflow check
+    template<>
+    void Decimal::multiplication<int128_t, true>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        MultiplicationOverflowCheck mulOverflowCheck;
+        multiplicationExecute(l, r, result, mulOverflowCheck, mulOverflowCheck);
+    }
+
+    // no overflow check
+    template<>
+    void Decimal::multiplication<int64_t, false>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        if (result.scale >= l.scale + r.scale)
+            result.value = l.value * r.value * mcs_pow_10[result.scale - (l.scale + r.scale)];
+        else
+            result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
+                                       (double)l.value * r.value / mcs_pow_10[l.scale + r.scale - result.scale] + 0.5 :
+                                       (double)l.value * r.value / mcs_pow_10[l.scale + r.scale - result.scale] - 0.5));
+    }
+
+    // With overflow check
+    template<>
+    void Decimal::multiplication<int64_t, true>(const execplan::IDB_Decimal& l,
+        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    {
+        MultiplicationOverflowCheck mulOverflowCheck;
+
+        if (result.scale >= l.scale + r.scale)
+        {
+            mulOverflowCheck(l.value, r.value, result.value);
+            mulOverflowCheck(result.value, mcs_pow_10[result.scale - (l.scale + r.scale)], result.value);
+        }
+        else
+        {
+            mulOverflowCheck(l.value, r.value, result.value);
+
+            result.value = (int64_t)(( (result.value > 0) ?
+                                       (double)result.value / mcs_pow_10[l.scale + r.scale - result.scale] + 0.5 :
+                                       (double)result.value / mcs_pow_10[l.scale + r.scale - result.scale] - 0.5));
+        }
     }
 
 } // end of namespace
