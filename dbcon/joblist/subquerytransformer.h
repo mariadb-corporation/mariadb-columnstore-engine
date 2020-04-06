@@ -226,7 +226,8 @@ protected:
     int                          fDlIterator;
     rowgroup::RowGroup           fRowGroup;
     rowgroup::Row                fRow;
-    boost::scoped_array<uint8_t> fRowData;
+    rowgroup::RowGroup           fResultRG;
+    boost::scoped_array<rowgroup::RGData> fRowData;
     bool                         fEmptyResultSet;
     bool                         fExistFilter;
 

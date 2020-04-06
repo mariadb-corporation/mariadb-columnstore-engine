@@ -1984,8 +1984,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                 cout << "Will use string tables, row size = " << joinedBaseRowGroup.getRowSizeWithStrings() << endl;
             else 
                 cout << "Won't use string tables, row size = " << joinedBaseRowGroup.getRowSizeWithStrings() << endl;
-            joinedBaseRowGroup.setUseStringTable(joinedBaseRowGroup.getRowSizeWithStrings() > 10 * (1 << 20));
             */
+            joinedBaseRowGroup.setUseStringTable(joinedBaseRowGroup.getRowSizeWithStrings() > 10 * (1 << 20));
             joinedBaseRowGroup.initRow(&joinedBaseRow);
             joinedBaseRowData.reset(new RGData(joinedBaseRowGroup, 1));
             joinedBaseRowGroup.setData(joinedBaseRowData.get());

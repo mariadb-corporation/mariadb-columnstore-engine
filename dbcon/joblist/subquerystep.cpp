@@ -373,7 +373,7 @@ void SubAdapterStep::execute()
     if (fRowGroupFe.getColumnCount() > 0)
     {
         usesFE = true;
-        fRowGroupFe.initRow(&rowFe, true);
+        fRowGroupFe.initRow(&rowFe);
         rowFeData = RGData(fRowGroupFe, 1);
         fRowGroupFe.setData(&rowFeData);
         fRowGroupFe.getRow(0, &rowFe);
@@ -427,6 +427,9 @@ void SubAdapterStep::execute()
                     {
                         outputRow(rowFe, rowOut);
                     }
+                    // MCOL-3879
+                    if (rowFe.usesStringTable() && rowFeData.getStringTableMemUsage() > 50 * (1 << 20))
+                        rowFeData.clearStringStore();
                 }
 
                 rowIn.nextRow();

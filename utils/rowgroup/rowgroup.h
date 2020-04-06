@@ -228,7 +228,7 @@ public:
 
     inline uint64_t getStringTableMemUsage()
     {
-        return strings->getSize();
+        return (strings ? strings->getSize(): 0);
     }
     
     // MCOL-3879.  Needed to add a way to clear only the stringstore for efficiency.
