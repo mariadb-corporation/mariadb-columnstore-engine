@@ -5996,12 +5996,12 @@ bool Oam::autoMovePmDbroot(std::string residePM)
 
                     if ( ret != 0 )
                     {
-                        writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                        writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) +" ret: " + itoa(ret), LOG_TYPE_ERROR );
                     }
                 }
                 catch (...)
                 {
-                    writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                    writeLog("EXCEPTION FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 }
 
                 // check if a copy is available when residePM returns
@@ -7448,15 +7448,15 @@ void Oam::removeDbroot(DBRootConfigList& dbrootlist)
             catch (exception& e)
             {
                 cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
-                cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
-					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) << endl;
+                writeLog("FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 exceptionControl("removeDbroot", API_FAILURE);
             }
             catch (...)
             {
                 cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
-                cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
-					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) << endl;
+                writeLog("FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 exceptionControl("removeDbroot", API_FAILURE);
             }
         }
@@ -9151,7 +9151,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     string dbr = sysConfig->getConfig("SystemModuleConfig", ModuleDBRootID);
                     string command = "" + DataRedundancyConfigs[pm].pmIpAddr +
                                      ":/dbroot" + dbr + " /var/lib/columnstore/data" + dbr +
-                                     " glusterfs defaults,direct-io-mode=enable 00";
+                                     " glusterfs defaults,direct-io-mode=enable 0 0";
                     string toPM = "pm" + itoa(pm + 1);
                     distributeFstabUpdates(command, toPM);
                 }

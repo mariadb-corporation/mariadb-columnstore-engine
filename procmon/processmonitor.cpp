@@ -4117,8 +4117,6 @@ int ProcessMonitor::createDataDirs(std::string cloud)
     MonitorLog log;
     Oam oam;
 
-    log.writeLog(__LINE__, "createDataDirs called", LOG_TYPE_DEBUG);
-
     if ( config.moduleType() == "um" &&
             ( cloud == "amazon-ec2" || cloud == "amazon-vpc") )
     {
@@ -4277,8 +4275,6 @@ int ProcessMonitor::getDBRMdata(string *path)
 
     Oam oam;
     ByteStream msg;
-
-    log.writeLog(__LINE__, "getDBRMdata called", LOG_TYPE_DEBUG);
 
     int returnStatus = API_FAILURE;
 
@@ -4964,8 +4960,6 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runMasterRep function called", LOG_TYPE_DEBUG);
-
     SystemModuleTypeConfig systemModuleTypeConfig;
 
     try
@@ -5140,8 +5134,6 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runSlaveRep function called", LOG_TYPE_DEBUG);
-
     // get master replicaion module IP Address
     string PrimaryUMModuleName;
     oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
@@ -5224,8 +5216,6 @@ int ProcessMonitor::runDisableRep()
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runDisableRep function called", LOG_TYPE_DEBUG);
-
     // mysql port number
     string MySQLPort;
 
@@ -5278,8 +5268,6 @@ int ProcessMonitor::runDisableRep()
 int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModule)
 {
     Oam oam;
-
-    log.writeLog(__LINE__, "runMasterDist function called", LOG_TYPE_DEBUG);
 
     SystemModuleTypeConfig systemModuleTypeConfig;
 
@@ -5404,8 +5392,6 @@ bool ProcessMonitor::amazonIPCheck()
 {
     MonitorLog log;
     Oam oam;
-
-    log.writeLog(__LINE__, "amazonIPCheck function called", LOG_TYPE_DEBUG);
 
     // delete description file so it will create a new one
     string tmpLog = tmpLogDir + "/describeInstance.log";
@@ -5700,8 +5686,6 @@ void ProcessMonitor::unmountExtraDBroots()
     ModuleConfig moduleconfig;
     Oam oam;
 
-    log.writeLog(__LINE__, "unmountExtraDBroots called ", LOG_TYPE_DEBUG);
-
     string DBRootStorageType = "internal";
 
     try
@@ -5796,8 +5780,6 @@ int ProcessMonitor::checkDataMount()
     Oam oam;
 
     //check/update the pmMount files
-
-    log.writeLog(__LINE__, "checkDataMount called ", LOG_TYPE_DEBUG);
 
     string DBRootStorageType = "internal";
     vector <string> dbrootList;
@@ -6030,8 +6012,6 @@ void ProcessMonitor::calTotalUmMemory()
     struct sysinfo myinfo;
 
     //check/update the pmMount files
-
-    log.writeLog(__LINE__, "calTotalUmMemory called ", LOG_TYPE_DEBUG);
 
     try
     {

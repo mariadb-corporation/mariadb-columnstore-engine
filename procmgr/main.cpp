@@ -47,6 +47,7 @@ using namespace threadpool;
 using namespace config;
 
 bool runStandby = false;
+bool MsgThreadActive = false;
 bool runCold = false;
 string systemName = "system";
 string iface_name;
@@ -412,6 +413,9 @@ int main(int argc, char** argv)
             log.writeLog(__LINE__, "ERROR: makeConfig failed", LOG_TYPE_ERROR);
         }
 
+
+        // TODO: This is called before MessageThread is created.
+        // Doesn't break anything but can be removed as it's done after MessageThread creation.
         try
         {
             oam.distributeConfigFile();
@@ -474,8 +478,6 @@ static void messageThread(Configuration config)
         sleep (1);
     }
 
-    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
-
     //read and cleanup port before trying to use
     try
     {
@@ -489,6 +491,8 @@ static void messageThread(Configuration config)
     {
     }
 
+    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
+
     //
     //waiting for request
     //
@@ -499,7 +503,7 @@ static void messageThread(Configuration config)
         try
         {
             MessageQueueServer procmgr("ProcMgr");
-
+            MsgThreadActive = true;
             for (;;)
             {
                 try
@@ -2092,11 +2096,6 @@ void pingDeviceThread()
                                     oam.dbrmctl("halt");
                                     log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
 
-                                    processManager.setSystemState(oam::BUSY_INIT);
-
-                                    //string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
-                                    //system(cmd.c_str());
-
                                     //send notification
                                     oam.sendDeviceNotification(moduleName, MODULE_DOWN);
 
@@ -2109,9 +2108,7 @@ void pingDeviceThread()
                                     //set module to disable state
                                     processManager.disableModule(moduleName, false);
 
-                                    //call dbrm control
-                                    oam.dbrmctl("reload");
-                                    log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+
 
                                     // if pm, move dbroots to other pms
                                     if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
@@ -2142,6 +2139,9 @@ void pingDeviceThread()
                                         {
                                             processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
 
+                                            //call dbrm control
+                                            oam.dbrmctl("reload");
+                                            log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                             // resume the dbrm
                                             oam.dbrmctl("resume");
                                             log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
@@ -2160,6 +2160,9 @@ void pingDeviceThread()
                                 {
                                     if ( moduleName.find("um") == 0 )
                                     {
+                                        //call dbrm control
+                                        oam.dbrmctl("reload");
+                                        log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                         // resume the dbrm
                                         oam.dbrmctl("resume");
                                         log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
@@ -2350,8 +2353,8 @@ void pingDeviceThread()
                                                 }
                                             }
 
-                                            //set recycle process
-                                            processManager.recycleProcess(moduleName);
+                                            //set reinit process
+                                            processManager.reinitProcesses();
 
                                             //set query system state ready
                                             processManager.setQuerySystemState(true);
@@ -2365,6 +2368,9 @@ void pingDeviceThread()
                                             ( opState != oam::AUTO_DISABLED ) )
 
                                     {
+                                        //call dbrm control
+                                        oam.dbrmctl("reload");
+                                        log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                         // resume the dbrm
                                         oam.dbrmctl("resume");
                                         log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
@@ -2375,14 +2381,21 @@ void pingDeviceThread()
                                 }
                                 else
                                 {
+                                    processManager.distributeConfigFile("system");
+
+                                    processManager.reinitProcesses();
+
                                     // non-amazon
+                                    //call dbrm control
+                                    oam.dbrmctl("reload");
+                                    log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                     // resume the dbrm
                                     oam.dbrmctl("resume");
                                     log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
                                     //set recycle process
-                                    processManager.recycleProcess(moduleName);
-
+                                    //processManager.recycleProcess(moduleName);
+                                    //processManager.reinitProcesses();
                                     //set query system state ready
                                     processManager.setQuerySystemState(true);
                                 }
