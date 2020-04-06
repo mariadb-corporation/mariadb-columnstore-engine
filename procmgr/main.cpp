@@ -414,7 +414,8 @@ int main(int argc, char** argv)
         }
 
 
-        // This will never work.....
+        // TODO: This is called before MessageThread is created.
+        // Doesn't break anything but can be removed as it's done after MessageThread creation.
         try
         {
             oam.distributeConfigFile();
