@@ -3650,6 +3650,12 @@ int ProcessManager::disableModule(string target, bool manualFlag)
         bool degraded;
         oam.getModuleStatus(target, opState, degraded);
 
+        if (opState == newState || opState == oam::MAN_DISABLED)
+        {
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_SUCCESS;
+        }
+
         // if current state is AUTO_DISABLED and new state is MAN_DISABLED
         // update state to MAN_DISABLED
 
@@ -3735,27 +3741,26 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     //distribute config file
     distributeConfigFile("system");
 
-    processManager.reinitProcesses();
+	processManager.reinitProcesses();
 
     log.writeLog(__LINE__, "disableModule successfully complete for " + target, LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
 }
 
+
 void ProcessManager::reinitProcesses()
 {
     log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
 
-    restartProcessType("DBRMControllerNode");
     reinitProcessType("ExeMgr");
     reinitProcessType("DBRMWorkerNode");
-    restartProcessType("WriteEngineServer");
+    reinitProcessType("WriteEngineServer");
     sleep(1);
-    startProcessType("DDLProc");
-    sleep(1);
-    startProcessType("DMLProc");
     reinitProcessType("DDLProc");
+    sleep(1);
     reinitProcessType("DMLProc");
+
 
     log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
 }
@@ -3817,7 +3822,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 
 	startProcessType("mysqld");
 
-    return;
+	return;
 }
 
 /******************************************************************************************
@@ -7098,8 +7103,6 @@ void ProcessManager::setQuerySystemState(bool set)
     Oam oam;
     BRM::DBRM dbrm;
 
-	log.writeLog(__LINE__, "setQuerySystemState called = " + oam.itoa(set), LOG_TYPE_DEBUG);
-
     try
     {
         dbrm.setSystemQueryReady(set);
@@ -8530,8 +8533,6 @@ int ProcessManager::updatePMSconfig( bool check )
             sysConfig1->write();
             pthread_mutex_unlock(&THREAD_LOCK);
 
-            log.writeLog(__LINE__, "updatePMSconfig completed", LOG_TYPE_DEBUG);
-
             return API_SUCCESS;
         }
         catch (...)
@@ -8874,8 +8875,6 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
     ProcessManager processManager(config, log);
     Oam oam;
     ModuleConfig moduleconfig;
-
-    log.writeLog(__LINE__, "setPMProcIPs called for " + moduleName, LOG_TYPE_DEBUG);
 
     pthread_mutex_lock(&THREAD_LOCK);
 
@@ -10231,7 +10230,7 @@ int ProcessManager::OAMParentModuleChange()
         runStandby = false;
         int retryCount = 0;
         //sleep, give time for message thread to startup
-        while (!MsgThreadActive && retryCount < 5)
+        while (!MsgThreadActive && retryCount < 10)
         {
            log.writeLog(__LINE__, "Waiting for Message Thread...", LOG_TYPE_DEBUG);
            sleep(5);
@@ -10333,7 +10332,7 @@ int ProcessManager::OAMParentModuleChange()
     //do it here to get current processes active faster to process queries faster
     processManager.setProcessStates(downOAMParentName, oam::AUTO_OFFLINE);
 
-    //set other down modules to disable state
+    //set OTHER down modules to disable state
     vector<string>::iterator pt1 = downModuleList.begin();
 
     for ( ; pt1 != downModuleList.end() ; pt1++)
@@ -10349,7 +10348,7 @@ int ProcessManager::OAMParentModuleChange()
     //distribute config file
     distributeConfigFile("system");
 
-    //restart local module
+    //restart local module WHY??
     processManager.stopModule(config.moduleName(), oam::FORCEFUL, true);
 
     string localModule = config.moduleName();
@@ -10392,11 +10391,12 @@ int ProcessManager::OAMParentModuleChange()
         sleep(2);
     }
 
+
     //restart/reinit processes to force their release of the controller node port
     if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
             ( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
     {
-		status = 0;
+		int status = 0;
     }
     else
     {
@@ -10632,8 +10632,6 @@ std::string ProcessManager::getStandbyModule()
         {
             string errmsg;
             oam.glusterctl(oam::GLUSTER_WHOHAS, "1", pmList, errmsg);
-
-            log.writeLog(__LINE__, "GLUSTER_WHOHAS called:" + pmList, LOG_TYPE_DEBUG);
 
             boost::char_separator<char> sep(" ");
             boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
