@@ -1300,7 +1300,7 @@ public:
 
     ~RowGroup();
 
-    inline void initRow(Row*, bool forceInlineData = false) const;
+    inline void initRow(Row*) const; // , bool forceInlineData = false) const;
     inline uint32_t getRowCount() const;
     inline void incRowCount();
     inline void setRowCount(uint32_t num);
@@ -1547,8 +1547,9 @@ inline bool RowGroup::operator<(const RowGroup& rhs) const
     return (getBaseRid() < rhs.getBaseRid());
 }
 
-void RowGroup::initRow(Row* r, bool forceInlineData) const
+void RowGroup::initRow(Row* r) const //, bool forceInlineData) const
 {
+    bool forceInlineData = false;
     r->columnCount = columnCount;
 
     if (LIKELY(!types.empty()))

@@ -374,26 +374,37 @@ void DiskJoinStep::joinFcn()
     boost::shared_array<Row> smallRowTemplates(new Row[1]);
     vector<boost::shared_ptr<TupleJoiner> > joiners;
     boost::shared_array<boost::shared_array<int> > colMappings, fergMappings;
-    boost::scoped_array<boost::scoped_array<uint8_t > > smallNullMem;
-    boost::scoped_array<uint8_t> joinFEMem;
+    //boost::scoped_array<boost::scoped_array<uint8_t > > smallNullMem;
+    boost::scoped_ptr<RGData> joinFEMem, baseRowMem;
+	boost::scoped_array<boost::scoped_array<RGData> > smallNullMem;
+	RowGroup l_joinFERG(joinFERG), baseRowRG(outputRG), smallNullRG(smallRG);
+	//boost::scoped_array<uint8_t> joinFEMem;
     Row smallNullRow;
 
-    boost::scoped_array<uint8_t> baseRowMem;
+    //boost::scoped_array<uint8_t> baseRowMem;
 
     if (joiner->hasFEFilter())
     {
-        joinFERG.initRow(&l_joinFERow, true);
-        joinFEMem.reset(new uint8_t[l_joinFERow.getSize()]);
-        l_joinFERow.setData(joinFEMem.get());
-    }
+        //joinFERG.initRow(&l_joinFERow, true);
+        //joinFEMem.reset(new uint8_t[l_joinFERow.getSize()]);
+        //l_joinFERow.setData(joinFEMem.get());
+    	l_joinFERG.initRow(&l_joinFERow);
+		joinFEMem.reset(new RGData(l_joinFERG, 1));
+		l_joinFERG.setData(joinFEMem.get());
+		l_joinFERG.getRow(0, &l_joinFERow);
+	}
 
-    outputRG.initRow(&l_outputRow);
-    outputRG.initRow(&baseRow, true);
+    l_outputRG.initRow(&l_outputRow);
+    //outputRG.initRow(&baseRow, true);
+	baseRowRG.initRow(&baseRow);
+	baseRowMem.reset(new RGData(baseRowRG, 1));
+	baseRowRG.setData(baseRowMem.get());
+	baseRowRG.getRow(0, &baseRow);
 
     largeRG.initRow(&l_largeRow);
 
-    baseRowMem.reset(new uint8_t[baseRow.getSize()]);
-    baseRow.setData(baseRowMem.get());
+    //baseRowMem.reset(new uint8_t[baseRow.getSize()]);
+    //baseRow.setData(baseRowMem.get());
     joinMatches.push_back(vector<Row::Pointer>());
     smallRG.initRow(&smallRowTemplates[0]);
     joiners.resize(1);
@@ -409,10 +420,17 @@ void DiskJoinStep::joinFcn()
         fergMappings[1] = LjoinFEMapping;
     }
 
+	/*
     l_smallRG.initRow(&smallNullRow, true);
     smallNullMem.reset(new boost::scoped_array<uint8_t>[1]);
     smallNullMem[0].reset(new uint8_t[smallNullRow.getSize()]);
     smallNullRow.setData(smallNullMem[0].get());
+	*/
+	smallNullRG.initRow(&smallNullRow);
+	smallNullMem.reset(new boost::scoped_array<RGData>[1]);
+	smallNullMem[0].reset(new RGData(smallNullRG, 1));
+	smallNullRG.setData(smallNullMem[0].get());
+	smallNullRG.getRow(0, &smallNullRow);
     smallNullRow.initToNull();
 
     try
@@ -442,7 +460,13 @@ void DiskJoinStep::joinFcn()
                     outputDL->insert(joinResults[j]);
                 }
 
+				// MCOL-3879.  Clear the string store if it's accumulated > 50MB of mem
+				if (l_joinFERow.usesStringTable() && joinFEMem->getStringTableMemUsage() > 50 * (1 << 20))
+					joinFEMem->clearStringStore();
+				if (baseRow.usesStringTable() && baseRowMem->getStringTableMemUsage() > 50 * (1 << 20))
+					baseRowMem->clearStringStore();
                 joinResults.clear();
+				
                 largeData = in->jp->getNextLargeRGData();
             }
 
@@ -465,6 +489,7 @@ void DiskJoinStep::joinFcn()
                     //cout << "finishing small-outer output" << endl;
                     vector<Row::Pointer> unmatched;
                     RGData rgData(l_outputRG);
+					RowGroup largeNullRG(l_largeRG);
                     Row outputRow;
 
                     l_outputRG.setData(&rgData);
@@ -472,10 +497,16 @@ void DiskJoinStep::joinFcn()
                     l_outputRG.initRow(&outputRow);
                     l_outputRG.getRow(0, &outputRow);
 
+					/*
                     l_largeRG.initRow(&l_largeRow, true);
                     boost::scoped_array<uint8_t> largeNullMem(new uint8_t[l_largeRow.getSize()]);
                     l_largeRow.setData(largeNullMem.get());
-                    l_largeRow.initToNull();
+                    */
+					boost::scoped_ptr<RGData> largeNullMem(new RGData(largeNullRG, 1));
+					largeNullRG.setData(largeNullMem.get());
+					largeNullRG.initRow(&l_largeRow);
+					largeNullRG.getRow(0, &l_largeRow);
+					l_largeRow.initToNull();
 
                     in->tupleJoiner->getUnmarkedRows(&unmatched);
 

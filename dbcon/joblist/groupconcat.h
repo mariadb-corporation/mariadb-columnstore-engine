@@ -99,8 +99,10 @@ protected:
     void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
 
     boost::scoped_ptr<GroupConcator>      fConcator;
-    boost::scoped_array<uint8_t>          fData;
+    //boost::scoped_array<uint8_t>          fData;
+    boost::scoped_ptr<rowgroup::RGData>   fData;
     rowgroup::Row                         fRow;
+    rowgroup::RowGroup                    fRowRG;
     bool                                  fNoOrder;
 };
 

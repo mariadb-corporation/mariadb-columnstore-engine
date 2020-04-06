@@ -1715,7 +1715,7 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
                                   vector<boost::shared_ptr<joiner::TupleJoiner> >* tjoiners,
                                   boost::shared_array<boost::shared_array<int> >* rgMappings,
                                   boost::shared_array<boost::shared_array<int> >* feMappings,
-                                  boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem
+                                  boost::scoped_array<boost::scoped_array<RGData> >* smallNullMem
                                  )
 {
 

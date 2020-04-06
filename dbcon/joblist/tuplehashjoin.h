@@ -534,7 +534,7 @@ private:
                    std::vector<boost::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
                    boost::shared_array<boost::shared_array<int> >* rgMappings = NULL,
                    boost::shared_array<boost::shared_array<int> >* feMappings = NULL,
-                   boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem = NULL
+                   boost::scoped_array<boost::scoped_array<rowgroup::RGData> >* smallNullMem = NULL
                   );
     void finishSmallOuterJoin();
     void makeDupList(const rowgroup::RowGroup& rg);

@@ -327,9 +327,16 @@ void GroupConcatAgUM::initialize()
 
     fConcator->initialize(fGroupConcat);
 
+    /*
     fGroupConcat->fRowGroup.initRow(&fRow, true);
     fData.reset(new uint8_t[fRow.getSize()]);
     fRow.setData(fData.get());
+    */
+    fRowRG = fGroupConcat->fRowGroup;
+    fData.reset(new RGData(fRowRG, 1));
+    fRowRG.setData(fData.get());
+    fRowRG.initRow(&fRow);
+    fRowRG.getRow(0, &fRow);
 }
 
 
@@ -337,6 +344,8 @@ void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
 {
     applyMapping(fGroupConcat->fMapping, inRow);
     fConcator->processRow(fRow);
+    if (fRow.usesStringTable() && fData->getStringTableMemUsage() > 50 * (1 << 20))
+        fData->clearStringStore();
 }
 
 
