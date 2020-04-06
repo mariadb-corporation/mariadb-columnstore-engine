@@ -2380,17 +2380,21 @@ void pingDeviceThread()
                                 }
                                 else
                                 {
+                                    processManager.distributeConfigFile("system");
+
+                                    processManager.reinitProcesses();
+
+                                    // non-amazon
                                     //call dbrm control
                                     oam.dbrmctl("reload");
                                     log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-                                    // non-amazon
                                     // resume the dbrm
                                     oam.dbrmctl("resume");
                                     log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-                                    //set reinit process
-                                    processManager.reinitProcesses();
-
+                                    //set recycle process
+                                    //processManager.recycleProcess(moduleName);
+                                    //processManager.reinitProcesses();
                                     //set query system state ready
                                     processManager.setQuerySystemState(true);
                                 }
