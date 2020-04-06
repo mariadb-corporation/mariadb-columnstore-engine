@@ -163,6 +163,11 @@ void MessageQueueClient::setup(bool syncProto)
     otherEndIPStr = fConfig->getConfig(fOtherEnd, "IPAddr");
     otherEndPortStr = fConfig->getConfig(fOtherEnd, "Port");
 
+    if (otherEndIPStr == "unassigned") 
+    {
+        otherEndIPStr = "0.0.0.0";
+    }
+
     if (otherEndIPStr.length() == 0) otherEndIPStr = "127.0.0.1";
 
     if (otherEndPortStr.length() == 0 || static_cast<uint16_t>(strtol(otherEndPortStr.c_str(), 0, 0)) == 0)
