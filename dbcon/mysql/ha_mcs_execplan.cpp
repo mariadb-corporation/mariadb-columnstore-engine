@@ -6617,7 +6617,6 @@ int processLimitAndOffset(
         if (select_lex.join)
         {
             JOIN* join = select_lex.join;
-#if MYSQL_VERSION_ID >= 50172
 
             // @bug5729. After upgrade, join->unit sometimes is uninitialized pointer
             // (not null though) and will cause seg fault. Prefer checking
@@ -6633,14 +6632,9 @@ int processLimitAndOffset(
             }
             else if (join->unit)
             {
-                limitOffset = join->unit->offset_limit_cnt;
-                limitNum = join->unit->select_limit_cnt - limitOffset;
+                limitOffset = join->unit->lim.get_offset_limit();
+                limitNum = join->unit->lim.get_select_limit() - limitOffset;
             }
-
-#else
-            limitOffset = (join->unit)->offset_limit_cnt;
-            limitNum = (join->unit)->select_limit_cnt - (join->unit)->offset_limit_cnt;
-#endif
         }
         else
         {
@@ -6673,23 +6667,6 @@ int processLimitAndOffset(
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
         setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
         return ER_CHECK_NOT_IMPLEMENTED;
-    }
-
-    // MDB applies OFFSET on its own for SH processing.
-    // See related MDEV-16327 for details.
-    if (isSelectHandlerTop && csep->limitStart())
-    {
-        if (std::numeric_limits<uint64_t>::max()-csep->limitStart()
-            < csep->limitNum())
-        {
-            csep->limitNum(std::numeric_limits<uint64_t>::max());
-            csep->limitStart(0);
-        }
-        else
-        {
-            csep->limitNum(csep->limitNum()+csep->limitStart());
-            csep->limitStart(0);
-        }
     }
 
     return 0;
