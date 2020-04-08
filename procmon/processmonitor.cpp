@@ -4437,9 +4437,9 @@ int ProcessMonitor::getDBRMdata(string *path)
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string journalFilename = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_journal";
-                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(journalFilename.c_str(),
-                            IDBPolicy::WRITEENG), journalFilename.c_str(), "w", 0);
+                        bf::path pJournalFilename(pTmp / "BRM_saves_journal");
+                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(pJournalFilename.string().c_str(),
+                            IDBPolicy::WRITEENG), pJournalFilename.string().c_str(), "w", 0);
                         delete idbJournalFile;
                         //string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
                         //system(cmd.c_str());
@@ -6138,7 +6138,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 
     if ( WEXITSTATUS(ret) != 0 )
     {
-		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+		//log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
         ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
@@ -6183,7 +6183,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
     if ( WEXITSTATUS(ret) != 0 )
     {
-		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+		//log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
         ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
