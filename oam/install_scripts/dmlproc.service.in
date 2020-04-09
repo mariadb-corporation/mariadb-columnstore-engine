@@ -1,0 +1,13 @@
+[Unit]
+Description=DMLProc
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStartPre=@ENGINE_BINDIR@/bash -c "touch /var/log/mariadb/columnstore/dmlproc.log && chmod 666 /var/log/mariadb/columnstore/dmlproc.log"
+ExecStart=@ENGINE_BINDIR@/DMLProc &> /var/log/mariadb/columnstore/dmlproc.log
+
+[Install]
+WantedBy=columnstore.service

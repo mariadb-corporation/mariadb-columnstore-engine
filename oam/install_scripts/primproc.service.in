@@ -1,0 +1,13 @@
+[Unit]
+Description=PrimProc
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStartPre=@ENGINE_BINDIR@/bash -c "touch /var/log/mariadb/columnstore/primproc.log && chmod 666 /var/log/mariadb/columnstore/primproc.log"
+ExecStart=@ENGINE_BINDIR@/PrimProc &> /var/log/mariadb/columnstore/primproc.log
+
+[Install]
+WantedBy=columnstore.service

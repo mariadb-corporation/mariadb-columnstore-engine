@@ -1,0 +1,14 @@
+[Unit]
+Description=workernode
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStartPre=@ENGINE_BINDIR@/bash -c "touch /var/log/mariadb/columnstore/workernode.log && chmod 666 /var/log/mariadb/columnstore/workernode.log"
+ExecStartPre=@ENGINE_BINDIR@/bash -c "clearShm > /dev/null 2>&1"
+ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1 &> /var/log/mariadb/columnstore/workernode.log
+
+[Install]
+WantedBy=columnstore.service

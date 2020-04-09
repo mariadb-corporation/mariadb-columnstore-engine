@@ -12,6 +12,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/disable-rep-columnstore.sh.in" "${CM
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/workernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/workernode.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/controllernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/controllernode.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/primproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/primproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/exemgr.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/exemgr.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/writeengine.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/writeengine.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dmlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/dmlproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ddlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/ddlproc.service" @ONLY)
 
 install(PROGRAMS columnstore-post-install 
                 columnstore-pre-uninstall 
@@ -44,6 +51,13 @@ install(FILES columnstore.service
               columnstoreLogRotate
               myCnf-include-args.text
               myCnf-exclude-args.text
+              workernode.service
+              controllernode.service
+              primproc.service
+              exemgr.service
+              writeengine.service
+              dmlproc.service
+              ddlproc.service
               DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
 
 install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-platform)
