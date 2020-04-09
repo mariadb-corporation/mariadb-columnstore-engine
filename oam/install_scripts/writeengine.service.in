@@ -1,0 +1,13 @@
+[Unit]
+Description=WriteEngineServer
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStartPre=/usr/bin/bash -c "touch /var/log/mariadb/columnstore/writeengineserver.log && chmod 666 /var/log/mariadb/columnstore/writeengineserver.log"
+ExecStart=/usr/bin/WriteEngineServer &> /var/log/mariadb/columnstore/writeengineserver.log
+
+[Install]
+WantedBy=columnstore.service

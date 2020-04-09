@@ -1,0 +1,14 @@
+[Unit]
+Description=ExeMgr
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStartPre=@ENGINE_BINDIR@/bash -c "touch /var/log/mariadb/columnstore/exemgr.log && chmod 666 /var/log/mariadb/columnstore/exemgr.log"
+ExecStart=@ENGINE_BINDIR@/ExeMgr &> /var/log/mariadb/columnstore/exemgr.log
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service
