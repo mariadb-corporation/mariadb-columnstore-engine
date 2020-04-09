@@ -21,6 +21,7 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
+#include "configcpp.h"
 
 extern handlerton* mcs_hton;
 
@@ -49,6 +50,7 @@ public:
     ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
     ~ha_mcs()
     {
+        config::Config::deleteInstanceMap();
     }
 
     /** @brief
