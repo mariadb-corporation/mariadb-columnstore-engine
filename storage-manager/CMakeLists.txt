@@ -134,8 +134,14 @@ install(TARGETS StorageManager smcat smput smls smrm
     COMPONENT columnstore-platform
 )
 
-
 install(FILES storagemanager.cnf 
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT columnstore-platform)
+    COMPONENT columnstore-platform
+)
+
+install(FILES storagemanager.cnf 
+    RENAME storagemanager.cnf.example
+    DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
+    COMPONENT columnstore-platform
+)
 
