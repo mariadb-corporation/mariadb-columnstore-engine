@@ -697,135 +697,20 @@ int main(int argc, char* argv[])
     
     string idbstartcmd = "columnstore start";
 
-    {
-        //
-        // perform single-server install from auto-installer
-        //
-        if ( calpont_rpm1 != "dummy.rpm" )
-        {
+    //
+    // perform single-server install from postConfigure
+    //
 
-            //run the mysql / mysqld setup scripts
-            cout << endl << "Running the MariaDB ColumnStore setup scripts" << endl << endl;
+    //run the mysql / mysqld setup scripts
+    cout << endl << "Running the MariaDB ColumnStore setup scripts" << endl << endl;
 
-            // call the mysql setup scripts
-            mysqlSetup();
-            sleep(5);
-
-            if (getenv("SKIP_OAM_INIT"))
-            {
-                cout << "(2) SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
-                sysConfig->setConfig("Installation", "MySQLRep", "n");
-                sysConfig->write();
-                exit(0);
-            }
-
-            //start on local module
-            int rtnCode = system(idbstartcmd.c_str());
-
-            if (WEXITSTATUS(rtnCode) != 0)
-                cout << "Error starting MariaDB ColumnStore local module" << endl;
-            else
-                cout << "Start MariaDB ColumnStore request successful" << endl;
-        }
-        else
-        {
-            //
-            // perform single-server install from postConfigure
-            //
-
-            //run the mysql / mysqld setup scripts
-            cout << endl << "Running the MariaDB ColumnStore setup scripts" << endl << endl;
-
-            // call the mysql setup scripts
-            mysqlSetup();
-            sleep(5);
-
-            if (getenv("SKIP_OAM_INIT"))
-            {
-                cout << "(3) SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
-                sysConfig->setConfig("Installation", "MySQLRep", "n");
-                sysConfig->write();
-                exit(0);
-            }
-
-            //startup mysqld and infinidb processes
-            cout << endl;
-            cmd = "clearShm > /dev/null 2>&1";
-            system(cmd.c_str());
-            system(idbstartcmd.c_str());
-        }
-    }
-
-    // check for system going ACTIVE
+    // call the mysql setup scripts
+    mysqlSetup();
     sleep(5);
-    cout << endl << "Starting MariaDB ColumnStore Database Platform Starting, please wait .";
-    cout.flush();
-
-    string ProfileFile;
-	try
-	{
-		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
-	}
-	catch (...)
-	{}
-
-    if ( waitForActive() )
-    {
-        cout << " DONE" << endl;
-
-		string logFile = tmpDir + "/dbbuilder.log";
-        cmd = "dbbuilder 7 > " + logFile;
-        system(cmd.c_str());
-
-        if (oam.checkLogStatus(logFile, "System Catalog created") )
-            cout << endl << "System Catalog Successfully Created" << endl;
-        else
-        {
-            if ( oam.checkLogStatus(logFile, "System catalog appears to exist") )
-            {
-				cout.flush();
-            }
-            else
-            {
-                cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in " << logFile << endl;
-                cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
-
-                exit (1);
-            }
-		}
-
-        cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
-
-        cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
-
-		cout << ". " << ProfileFile << endl << endl;
-
-        cout << "Enter 'mariadb' to access the MariaDB ColumnStore SQL console" << endl;
-        cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
-
-        cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias.sh" << endl << endl;
-    }
-    else
-    {
-        cout << " FAILED" << endl;
-
-        cout << " IMPORTANT: There was a system startup failed, once issue has been resolved, rerun postConfigure" << endl << endl;
-
-        cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
-        cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
-
-		cout << ". " << ProfileFile << endl << endl;
-
-        cout << "Enter 'mariadb' to access the MariaDB ColumnStore SQL console" << endl;
-        cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
-
-        cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias" << endl << endl;
-
-        exit (1);
-    }
-
-    exit (0);
+    // cout << "(3) SKIP_OAM_INIT is set, so will not start ColumnStore or init the system catalog" << endl;
+    sysConfig->setConfig("Installation", "MySQLRep", "n");
+    sysConfig->write();
+    exit(0);
 }
 
 

@@ -55,10 +55,9 @@ rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
 #get temp base directory
 tmpDir="/tmp"
 #get columnstore temp file directory name
-TempFileDir=`mcsGetConfig SystemConfig TempFileDir`
-tmpDir=${tmpDir}${TempFileDir}
+tmpDir=/tmp/columnstore_tmp_files
 mkdir $tmpDir >/dev/null 2>&1
-chmod 777 $tmpDir
+chmod 664 $tmpDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
@@ -85,8 +84,8 @@ if [ $user = "root" ]; then
 	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
 
-        cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
@@ -97,12 +96,20 @@ if [ $user = "root" ]; then
 		cp @ENGINE_SUPPORTDIR@/exemgr.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/primproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/workdernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/workernode.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/writeengine.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/writeengine.service /lib/systemd/system/. >/dev/null 2>&1
 
 		systemctl enable columnstore >/dev/null 2>&1
+        systemctl enable controllernode > /dev/null 2>&1
+        systemctl enable ddlproc > /dev/null 2>&1
+        systemctl enable dmlproc > /dev/null 2>&1
+        systemctl enable exemgr > /dev/null 2>&1
+        systemctl enable primproc > /dev/null 2>&1
+        systemctl enable workernode > /dev/null 2>&1
+        systemctl enable writeengine > /dev/null 2>&1
+
 	else
 		chkconfig=`which chkconfig 2>/dev/null`
 		if [ -n "$chkconfig" ]; then
@@ -164,29 +171,7 @@ if [ -z "aws" ]; then
 	MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
-cat <<EOD
-The next step on the node that will become PM1:
-
 postConfigure
-
-
-EOD
-
-#postConfigure scripts
-#post-mysqld-install --tmpDir=$tmpDir > $tmpDir/post-mysqld-install.log 2>&1
-#post-mysql-install --tmpDir=$tmpDir > $tmpDir/post-mysql-install.log 2>&1
-#columnstore restart > /dev/null 2>&1
-#dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
-
-postConfigure -qs
-
-PROGS='workernode controllernode PrimProc ExeMgr DMLProc DDLProc mysqld WriteEngineServer'
-MCS_INSTALL_DIR=/usr
-
-kill $(pidof $PROGS) > /dev/null
-sleep 3
-kill -9 $(pidof $PROGS) > /dev/null
-@ENGINE_BINDIR@/clearShm
 systemctl start columnstore
 
 exit 0
