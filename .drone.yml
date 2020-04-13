@@ -2,6 +2,7 @@ kind: pipeline
 type: docker
 name: centos7
 
+steps:
 - name: clone
   image: alpine/git
   commands:
@@ -18,3 +19,7 @@ name: centos7
   - git config cmake.update-submodules no
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DRPM=centos7 -DMYSQL_MAINTAINER_MODE=OFF -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF -DPLUGIN_S3=YES -DWITH_UNIT_TESTS=OFF -DPLUGIN_CONNECT=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_COLUMNSTORE=YES
   - make -j$(nproc) package VERBOSE=1
+  
+  trigger:
+  branch:
+  - develop*
