@@ -181,7 +181,7 @@ class FromSubQuery : public SubQuery
 {
 public:
     FromSubQuery(gp_walk_info&);
-    FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub, bool isPushdownHand=false);
+    FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub);
     ~FromSubQuery();
     const SELECT_LEX* fromSub() const
     {

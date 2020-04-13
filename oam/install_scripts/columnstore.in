@@ -17,6 +17,14 @@
 # Short-Description: Start/stop MariaDB Columnstore DW DBMS
 ### END INIT INFO
 
+running_systemd() {
+    if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
 USER=`whoami 2>/dev/null`
 
 # Source function library.
@@ -95,7 +103,7 @@ stop() {
 	fuser -k 8604/tcp > /dev/null 2>&1
     # Test we are using systemd
     systemctl cat mariadb.service > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl stop mariadb.service > /dev/null 2>&1
     else
         pkill mysqld

@@ -27,7 +27,7 @@ void disable_indices_for_CEJ(THD *thd_)
     TABLE_LIST* global_list;
     for (global_list = thd_->lex->query_tables; global_list; global_list = global_list->next_global)
     {
-    // MCOL-652 - doing this with derived tables can cause bad things to happen
+        // MCOL-652 - doing this with derived tables can cause bad things to happen
         if (!global_list->derived)
         {
             global_list->index_hints= new (thd_->mem_root) List<Index_hint>();
@@ -40,26 +40,6 @@ void disable_indices_for_CEJ(THD *thd_)
 
         }
     }
-}
-
-bool optimize_unflattened_subqueries_(SELECT_LEX *select_lex)
-{
-    bool result = false;
-    TABLE_LIST *tbl;
-    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
-    while (!result && (tbl= li++))
-    {
-        if (tbl->is_view_or_derived())
-        {
-            SELECT_LEX *dsl = tbl->derived->first_select();
-            result = optimize_unflattened_subqueries_(dsl);
-        }
-    }
-
-    result = (!result) ?
-        select_lex->optimize_unflattened_subqueries(false) : true;
-
-    return result;
 }
 
 void mutate_optimizer_flags(THD *thd_)
@@ -241,7 +221,6 @@ void save_join_predicates(const Item* item, void* arg)
         }
     }
 }
-
 
 /*@brief  check_walk - It traverses filter conditions      */
 /************************************************************
@@ -516,7 +495,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     //To search for CROSS JOIN-s we use tree invariant
     //G(V,E) where [V] = [E]+1
     List<Item> join_preds_list;
-    TABLE_LIST *tl;   
+    TABLE_LIST *tl;
     for (tl = sl->get_table_list(); !unsupported_feature && tl; tl = tl->next_local)
     {
         Item_cond* where_icp= 0;
@@ -766,9 +745,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // Disable SP support in the select_handler for now.
     if ((thd->lex)->sphead)
     {
-        //std::string warnMsg("Select Handler doesn't support SP.");
-        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
@@ -778,27 +754,17 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     if (((thd->lex)->result &&
          !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
     {
-        //std::string warnMsg("Select Handler doesn't assign variables values.");
-        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
-    // Select_handler use the short-cut that effectively disables
-    // INSERT..SELECT, LDI, SELECT..INTO OUTFILE
+    // Select_handler couldn't properly process UPSERT..SELECT
     if ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT
-        || (thd->lex)->sql_command == SQLCOM_CREATE_TABLE
-        || (thd->lex)->exchange)
-        
+            && thd->lex->duplicates == DUP_UPDATE)
     {
-        //std::string warnMsg("Query inserts its result. Select Handler doesn't work.");
-        //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-        //    CS_WARNING_ID, warnMsg.c_str());
         return handler;
     }
 
     bool unsupported_feature = false;
-    logging::Message::Args args;
     // Iterate and traverse through the item list and do not create SH
     // if the unsupported (set/get_user_var) functions are present.
     TABLE_LIST* table_ptr = select_lex->get_table_list();
@@ -811,36 +777,34 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             item_check(item, &unsupported_feature);
             if (unsupported_feature)
             {
-                //std::string warnMsg("Select Handler doesn't work b/c of the unsupported item found in item_check()");
-                //push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
-                //    CS_WARNING_ID, warnMsg.c_str());
                 return handler;
             }
         }
     }
 
-    // We apply dedicated rewrites from MDB here so the data structures
-    // becomes dirty and CS has to raise an error in case of any problem.
+    // We apply dedicated rewrites from MDB here so MDB's data structures
+    // becomes dirty and CS has to raise an error in case of any problem
+    // or unsupported feature.
+    handler= new ha_columnstore_select_handler(thd, select_lex);
     JOIN *join= select_lex->join;
-    // Next block tries to execute the query using SH very early to fallback
-    // if execution fails.
-    if (!unsupported_feature)
     {
         disable_indices_for_CEJ(thd);
 
         if (select_lex->handle_derived(thd->lex, DT_MERGE))
         {
-            // early quit b/c of the error in handle_derived
-            return handler;
+            unsupported_feature = true;
+            handler->err_msg.assign("create_columnstore_select_handler(): \
+                Internal error occured in SL::handle_derived()");
         }
 
-        COND *conds = NULL;
-        conds = simplify_joins_(join, select_lex->join_list, join->conds, TRUE, FALSE);
-        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
-        // an equi-JOIN condition.
-        optimize_unflattened_subqueries_(select_lex);
-    
-        if (conds)
+        COND *conds = nullptr;
+        if (!unsupported_feature)
+        {
+            conds= simplify_joins_mcs(join, select_lex->join_list,
+                join->conds, TRUE, FALSE);
+        }
+
+        if (!unsupported_feature && conds)
         {
 #ifdef DEBUG_WALK_COND
             conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
@@ -848,37 +812,23 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             join->conds = conds;
         }
 
-        // Impossible HAVING or WHERE
-        // TODO replace with function call
-        if (unsupported_feature
-           || select_lex->having_value == Item::COND_FALSE
-            || select_lex->cond_value == Item::COND_FALSE )
+        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
+        // an equi-JOIN condition.
+        if (!unsupported_feature && in_subselect_rewrite(select_lex))
         {
             unsupported_feature = true;
-            restore_optimizer_flags(thd);
-        }
-    }
-
-    if (!unsupported_feature)
-    {
-        handler= new ha_columnstore_select_handler(thd, select_lex);
-        mcs_handler_info mhi= mcs_handler_info(reinterpret_cast<void*>(handler), SELECT);
-        // handler::table is the place for the result set
-        int rc= 0;
-        // Skip execution for EXPLAIN queries
-        if (!thd->lex->describe)
-        {
-            rc= ha_cs_impl_pushdown_init(&mhi, handler->table);
+            handler->err_msg.assign("create_columnstore_select_handler(): \
+                Internal error occured in in_subselect_rewrite()");
         }
 
-        // Return SH even if init fails b/c CS changed SELECT_LEX structures
-        // with simplify_joins_()
-        if (rc)
-            unsupported_feature = true;
-        return handler;
     }
 
-    return NULL;
+    // We shouldn't raise error now so set an error to raise it later in init_SH.
+    handler->rewrite_error= unsupported_feature;
+
+    // Return SH even if init fails b/c CS changed SELECT_LEX structures
+    // with simplify_joins_mcs()
+    return handler;
 }
 
 /***********************************************************
@@ -892,7 +842,8 @@ ha_columnstore_select_handler::ha_columnstore_select_handler(THD *thd,
                                                              SELECT_LEX* select_lex)
   : select_handler(thd, mcs_hton)
 {
-  select = select_lex;
+  select= select_lex;
+  rewrite_error= false;
 }
 
 /***********************************************************
@@ -916,9 +867,25 @@ int ha_columnstore_select_handler::init_scan()
 {
     DBUG_ENTER("ha_columnstore_select_handler::init_scan");
 
-    // Dummy init for SH. Actual init happens in create_SH
-    // to allow fallback to other handlers if SH fails.
     int rc = 0;
+
+    if (!rewrite_error)
+    {
+        // handler::table is the place for the result set
+        // Skip execution for EXPLAIN queries
+        if (!thd->lex->describe)
+        {
+            mcs_handler_info mhi= mcs_handler_info(
+                reinterpret_cast<void*>(this), SELECT);
+            rc= ha_cs_impl_pushdown_init(&mhi, this->table);
+        }
+    }
+    else
+    {
+        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), err_msg.c_str());
+        sql_print_error("%s", err_msg.c_str());
+        rc= ER_INTERNAL_ERROR;
+    }
 
     DBUG_RETURN(rc);
 }
@@ -960,6 +927,3 @@ int ha_columnstore_select_handler::end_scan()
 
     DBUG_RETURN(rc);
 }
-
-void ha_columnstore_select_handler::print_error(int, unsigned long)
-{}

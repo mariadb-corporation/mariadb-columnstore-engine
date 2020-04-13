@@ -331,7 +331,7 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn]" << endl;
             cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
             cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
             cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
@@ -455,11 +455,6 @@ int main(int argc, char* argv[])
 		else if( string("-qm") == argv[i] )
 		{
 			multi_server_quick_install = true;
-			noPrompting = true;
-		}
-		else if( string("-qa") == argv[i] )
-		{
-			amazon_quick_install = true;
 			noPrompting = true;
 		}
         else if ( string("-f") == argv[i] )
@@ -601,7 +596,7 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-            cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn]" << endl;
+            cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn]" << endl;
             cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
             cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
             cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
@@ -1497,6 +1492,7 @@ int main(int argc, char* argv[])
     bool amazonInstall = false;
     string cloud = oam::UnassignedName;
 
+    #if 0
 	if (!multi_server_quick_install)
 	{
 		string amazonLog = tmpDir + "/amazon.log";
@@ -1536,6 +1532,7 @@ int main(int argc, char* argv[])
 				amazonInstall = true;
 		}
 	}
+    #endif
 
     try
     {

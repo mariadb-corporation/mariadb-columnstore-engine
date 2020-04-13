@@ -83,9 +83,9 @@ public:
                               uint32_t& fileBlockOffset);
 
     void buildOidFileName(const BRM::OID_t oid,
-                          const uint16_t dbRoot,
-                          const uint16_t partNum,
-                          const uint32_t segNum,
+                          uint16_t dbRoot,
+                          const uint32_t partNum,
+                          const uint16_t segNum,
                           char* file_name);
 
     const uint32_t getExtentRows()
@@ -153,7 +153,6 @@ private:
     uint32_t fDecreaseOpenFilesCount;
     bool fFDCacheTrace;
     std::ofstream fFDTraceFile;
-
 };
 
 // @bug2631, for remount filesystem by loadBlock() in primitiveserver
