@@ -87,6 +87,8 @@ if [ $user = "root" ]; then
 
         cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
@@ -169,6 +171,23 @@ postConfigure
 
 
 EOD
+
+#postConfigure scripts
+#post-mysqld-install --tmpDir=$tmpDir > $tmpDir/post-mysqld-install.log 2>&1
+#post-mysql-install --tmpDir=$tmpDir > $tmpDir/post-mysql-install.log 2>&1
+#columnstore restart > /dev/null 2>&1
+#dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
+
+postConfigure -qs
+
+PROGS='workernode controllernode PrimProc ExeMgr DMLProc DDLProc mysqld WriteEngineServer'
+MCS_INSTALL_DIR=/usr
+
+kill $(pidof $PROGS) > /dev/null
+sleep 3
+kill -9 $(pidof $PROGS) > /dev/null
+@ENGINE_BINDIR@/clearShm
+systemctl start columnstore
 
 exit 0
 
