@@ -176,7 +176,7 @@ string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
 string systemName;
 
-bool noPrompting = false;
+bool noPrompting = true;
 bool rootUser = true;
 string USER = "root";
 bool hdfs = false;
@@ -218,7 +218,6 @@ int main(int argc, char* argv[])
     DBRootModule dbrootmodule;
     DBRootList dbrootlist;
     PerformanceModuleList performancemodulelist;
-    int DBRMworkernodeID = 0;
     string nodeps = "-h";
     bool startOfflinePrompt = false;
     noPrompting = false;
@@ -261,76 +260,8 @@ int main(int argc, char* argv[])
 
 	tmpDir = startup::StartUp::tmpDir();
 
-    for ( int i = 1; i < argc; i++ )
-    {
-		if( string("-h") == argv[i] )
-		{
-            cout << endl;
-            cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
-            cout << "It will Configure the MariaDB ColumnStore System based on Operator inputs and" << endl;
-            cout << "will perform a Package Installation of all of the Modules within the" << endl;
-            cout << "System that is being configured." << endl;
-            cout << endl;
-			cout << "IMPORTANT: This tool is required to run on a Performance Module #1 (pm1) Server." << endl;
-            cout << endl;
-            cout << "Instructions:" << endl << endl;
-            cout << "	Press 'enter' to accept a value in (), if available or" << endl;
-            cout << "	Enter one of the options within [], if available, or" << endl;
-            cout << "	Enter a new value" << endl << endl;
-            cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
-            cout << "   -h  Help" << endl;
-            cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
-            cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
-            cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
-            cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -qs Quick Install - Single Server" << endl;
-			cout << "   -qm Quick Install - Multi Server" << endl;
-            cout << "   -port MariaDB ColumnStore Port Address" << endl;
-			cout << "   -sn System Name" << endl;
-			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
-			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
-			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
-            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in combination with -x" << endl;
-            cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
-            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
-            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
-            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
-            exit (0);
-        }
-		else if( string("-qs") == argv[i] )
-		{
-			single_server_quick_install = true;
-			noPrompting = true;
-		}
-        else
-        {
-            cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
-			exit (1);
-		}
-	}
-
     if ( oldFileName == oam::UnassignedName )
         oldFileName = std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml.rpmsave";
-
-    cout << endl;
-    cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
-    cout << "It will Configure the MariaDB ColumnStore System and will perform a Package" << endl;
-    cout << "Installation of all of the Servers within the System that is being configured." << endl;
-    cout << endl;
-
-	cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
-    cout << endl;
-
-    // MCOL-3675
-    struct stat dir_info;
-    if (stat(tmpDir.c_str(), &dir_info) != 0)
-    {
-        cerr<<endl<<tmpDir<<" directory not found."<<endl;
-        cerr<<"Make sure columnstore-post-install is run before you run this tool. Exiting."<<endl<<endl;
-        exit(1);
-    }
 
     string ProfileFile;
     try
@@ -340,15 +271,17 @@ int main(int argc, char* argv[])
     catch (...)
     {}
 
-    // MCOL-3676
-    if (ProfileFile.empty())
-    {
-        cerr<<endl<<"ProfileFile variable not set in the Config file."<<endl;
-        cerr<<"Make sure columnstore-post-install is run before you run this tool. Exiting."<<endl<<endl;
-        exit(1);
-    }
+	//get current time and date
+	time_t now;
+	now = time(NULL);
+	struct tm tm;
+	localtime_r(&now, &tm);
+	char timestamp[200];
+	strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
+	string currentDate = timestamp;
 
-    //check if MariaDB ColumnStore is up and running
+	string postConfigureLog = "/var/log/columnstore-postconfigure-" + currentDate;
+
     if (oam.checkSystemRunning())
     {
         cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
@@ -420,112 +353,6 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    //check for local ip address as pm1
-    ModuleConfig moduleconfig;
-
-    try
-    {
-        oam.getSystemConfig("pm1", moduleconfig);
-
-        if (moduleconfig.hostConfigList.size() > 0 )
-        {
-            HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-
-            // MCOL-1607.  The 'am I pm1?' check below requires an ipaddr.
-            string PM1ipAdd = oam.getIPAddress((*pt1).IPAddr.c_str());
-            if (PM1ipAdd.empty())
-                PM1ipAdd = (*pt1).IPAddr;    // this is what it was doing before
-
-            //cout << PM1ipAdd << endl;
-
-            if ( PM1ipAdd != "127.0.0.1" )
-            {
-                if ( PM1ipAdd != "0.0.0.0")
-                {
-                    struct ifaddrs* ifap, *ifa;
-                    struct sockaddr_in* sa;
-                    char* addr;
-                    bool found = false;
-
-                    if (getifaddrs (&ifap) == 0 )
-                    {
-                        for (ifa = ifap; ifa; ifa = ifa->ifa_next)
-                        {
-                            if (ifa->ifa_addr == NULL )
-                            {
-                                found = true;
-                                break;
-                            }
-
-                            if (ifa->ifa_addr->sa_family == AF_INET)
-                            {
-                                sa = (struct sockaddr_in*) ifa->ifa_addr;
-                                addr = inet_ntoa(sa->sin_addr);
-                                //printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
-
-                                if ( PM1ipAdd == addr )
-                                {
-                                    //match
-                                    found = true;
-                                }
-                            }
-
-                            if (found)
-                                break;
-                        }
-
-                        freeifaddrs(ifap);
-
-                        if (!found)
-                        {
-
-                            string answer = "y";
-
-                            while (true)
-                            {
-                                cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does not match any of the" << endl;
-                                cout <<         "Server Ethernet IP addresses there were detected, do you want to continue?" << endl;
-                                cout <<         "This is to make sure that you arent running postConfigure from a non-PM1 node." << endl;
-                                prompt = "Enter 'y' to continue using Configured IP address [y,n] (y) > ";
-
-                                pcommand = callReadline(prompt.c_str());
-
-                                if (pcommand)
-                                {
-                                    if (strlen(pcommand) > 0) answer = pcommand;
-
-                                    callFree(pcommand);
-                                }
-
-                                if ( answer == "y" || answer == "n" )
-                                {
-                                    cout << endl;
-                                    break;
-                                }
-                                else
-                                    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-
-                                if ( noPrompting )
-                                    exit(1);
-                            }
-
-                            if ( answer == "n" )
-                            {
-                                cout << endl;
-                                cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
-                                cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
-                                cout << "IP Address. exiting..." << endl;
-                                exit(1);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    catch (...)
-    {}
-
     //check mysql port changes
     string MySQLPort;
 
@@ -563,111 +390,90 @@ int main(int argc, char* argv[])
         {}
     }
 
-    cout << endl;
-
-	if (single_server_quick_install)
-	{
-		cout << "===== Quick Install Single-Server Configuration =====" << endl << endl;
-
-		cout << "Single-Server install is used when there will only be 1 server configured" << endl;
-		cout << "on the system. It can also be used for production systems, if the plan is" << endl;
-		cout << "to stay single-server." << endl;
-
-		singleServerInstall = "1";
-	}
-
 	// perform single server install
-	if (singleServerInstall == "1")
+	cout << endl << "Performing the Single Server Install." << endl << endl;
+
+	//setup to Columnstore.xml file for single server
+	singleServerConfigSetup(sysConfig);
+
+	//module ProcessConfig.xml to setup all apps on the pm
+	if ( !updateProcessConfig() )
+		cout << "Update ProcessConfig.xml error" << endl;
+
+	try
 	{
-		cout << endl << "Performing the Single Server Install." << endl << endl;
-
-		if ( reuseConfig == "n" )
-		{
-			//setup to Columnstore.xml file for single server
-			singleServerConfigSetup(sysConfig);
-		}
-
-		//module ProcessConfig.xml to setup all apps on the pm
-		if ( !updateProcessConfig() )
-			cout << "Update ProcessConfig.xml error" << endl;
-
-		try
-		{
-			sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
-			sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
-		}
-		catch (...)
-		{
-			cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		}
-
-		if ( !writeConfig(sysConfig) )
-		{
-			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		}
-
-		setSystemName();
-		cout << endl;
-
-		system(cmd.c_str());
-
-		// setup storage
-		if (!storageSetup(false))
-		{
-			cout << "ERROR: Problem setting up storage" << endl;
-			exit(1);
-		}
-
-		if (hdfs || !rootUser)
-			if ( !updateBash() )
-				cout << "updateBash error" << endl;
-
-		// setup storage
-		if (!singleServerDBrootSetup())
-		{
-			cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-			exit(1);
-		}
-
-		//set system DBRoot count and check 'files per parition' with number of dbroots
-		try
-		{
-			sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-		}
-		catch (...)
-		{
-			cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		}
-
-		//check if dbrm data resides in older directory path and inform user if it does
-		dbrmDirCheck();
-
-		if (startOfflinePrompt)
-			offLineAppCheck();
-
-		checkMysqlPort(mysqlPort, sysConfig);
-		if ( !writeConfig(sysConfig) )
-		{
-			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		}
-
-		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
-
-        if (numBlocksPctParam.empty()) {
-            numBlocksPctParam = "-";
-        }
-        if (totalUmMemoryParam.empty()) {
-            totalUmMemoryParam = "-";
-        }
-
-		cmd = "columnstore_installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + numBlocksPctParam + " " + totalUmMemoryParam;
-		system(cmd.c_str());
-		exit(0);
+		sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
+		sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
 	}
+	catch (...)
+	{
+		cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
+	}
+
+	if ( !writeConfig(sysConfig) )
+	{
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
+	}
+
+	setSystemName();
+	cout << endl;
+
+	system(cmd.c_str());
+
+	// setup storage
+	if (!storageSetup(false))
+	{
+		cout << "ERROR: Problem setting up storage" << endl;
+		exit(1);
+	}
+
+	if (hdfs || !rootUser)
+		if ( !updateBash() )
+			cout << "updateBash error" << endl;
+
+	// setup storage
+	if (!singleServerDBrootSetup())
+	{
+		cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+		exit(1);
+	}
+
+	//set system DBRoot count and check 'files per parition' with number of dbroots
+	try
+	{
+		sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+	}
+	catch (...)
+	{
+		cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
+	}
+
+	//check if dbrm data resides in older directory path and inform user if it does
+	dbrmDirCheck();
+
+	if (startOfflinePrompt)
+		offLineAppCheck();
+
+	checkMysqlPort(mysqlPort, sysConfig);
+	if ( !writeConfig(sysConfig) )
+	{
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
+	}
+
+    if (numBlocksPctParam.empty()) {
+        numBlocksPctParam = "-";
+    }
+    if (totalUmMemoryParam.empty()) {
+        totalUmMemoryParam = "-";
+    }
+
+	cmd = "columnstore_installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + numBlocksPctParam + " " + totalUmMemoryParam;
+	system(cmd.c_str());
+	exit(0);
 }
 
 /*
@@ -738,69 +544,6 @@ bool checkSaveConfigFile()
         singleServerInstall = "1";
     else
         singleServerInstall = "2";
-
-    if ( !noPrompting )
-    {
-        cout << endl << "A copy of the MariaDB ColumnStore Configuration file has been saved during Package install." << endl;
-
-        if ( singleServerInstall == "1")
-            cout << "It's Configured for a Single Server Install." << endl;
-        else
-            cout << "It's Configured for a Multi-Server Install." << endl;
-
-        cout << "You have an option of utilizing the configuration data from that file or starting" << endl;
-        cout << "with the MariaDB ColumnStore Configuration File that comes with the MariaDB ColumnStore Package." << endl;
-        cout << "You will only want to utilize the old configuration data when performing the same" << endl;
-        cout << "type of install, i.e. Single or Multi-Server" << endl;
-    }
-    else
-    {
-        cout << "The MariaDB ColumnStore Configuration Data is taken from " << oldFileName << endl;
-    }
-
-    cout << endl;
-
-    while (true)
-    {
-        pcommand = callReadline("Do you want to utilize the configuration data from the saved copy? [y,n]  > ");
-
-        if (pcommand)
-        {
-            if (strlen(pcommand) > 0)
-            {
-                reuseConfig = pcommand;
-            }
-            else
-            {
-                if ( noPrompting )
-                    reuseConfig = "y";
-                else
-                {
-                    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-
-                    if ( noPrompting )
-                        exit(1);
-
-                    continue;
-                }
-            }
-
-            callFree(pcommand);
-        }
-
-        string cmd;
-
-        if ( reuseConfig == "y" )
-            break;
-
-        if ( reuseConfig == "n" )
-        {
-            extentMapCheckOnly = "-e";
-            break;
-        }
-        else
-            cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-    }
 
     // clear this entry out to validate updates being made
     Config* sysConfig = Config::makeConfig();
@@ -1334,248 +1077,16 @@ bool storageSetup(bool amazonInstall)
         return true;
     }
 
-    cout << "===== Setup Storage Configuration =====" << endl << endl;
-
     string storageType;
 
-    if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM && amazonInstall )
+    try
     {
-        //
-        // get Frontend Data storage type
-        //
-
-        cout << "----- Setup User Module MariaDB ColumnStore Data Storage Mount Configuration -----" << endl << endl;
-
-        cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
-        cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
-        cout << "  'external' -    This is specified when the MariaDB ColumnStore Data directory is externally mounted." << endl << endl;
-
-        try
-        {
-            UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem getting UM DB Storage Data from the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
-
-        while (true)
-        {
-            storageType = "1";
-
-            if ( UMStorageType == "external" )
-                storageType = "2";
-
-            prompt = "Select the type of Data Storage [1=internal, 2=external] (" + storageType + ") > ";
-            pcommand = callReadline(prompt.c_str());
-
-            if (pcommand)
-            {
-                if (strlen(pcommand) > 0) storageType = pcommand;
-
-                callFree(pcommand);
-            }
-
-            if ( storageType == "1" || storageType == "2")
-                break;
-
-            cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-            if ( noPrompting )
-                exit(1);
-        }
-
-        if ( storageType == "1" )
-            UMStorageType = "internal";
-        else
-        {
-
-            cout << endl << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
-            cout << "      Provisioned IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold" << endl;
-            cout << "      HDD, or standard for Magnetic volumes." << endl;
-
-            UMStorageType = "external";
-
-            cout << endl;
-
-            try
-            {
-                oam.getSystemConfig("UMVolumeType", UMVolumeType);
-            }
-            catch (...)
-            {}
-
-            if ( UMVolumeType.empty() || UMVolumeType == "" || UMVolumeType == oam::UnassignedName)
-                UMVolumeType = "gp2";
-
-            while (true)
-            {
-                string prompt = "Enter EBS Volume Type (gp2, io1, sc1, st1, standard) : (" + UMVolumeType + ") > ";
-                pcommand = callReadline(prompt);
-
-                if (pcommand)
-                {
-                    if (strlen(pcommand) > 0) UMVolumeType = pcommand;
-
-                    callFree(pcommand);
-                }
-
-                if ( UMVolumeType == "standard" || UMVolumeType == "gp2" || UMVolumeType == "io1" || UMVolumeType == "sc1" || UMVolumeType == "st1")
-                    break;
-                else
-                {
-                    cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-                    if ( noPrompting )
-                        exit(1);
-                }
-            }
-
-            //set UMVolumeType
-            try
-            {
-                sysConfig->setConfig(InstallSection, "UMVolumeType", UMVolumeType);
-            }
-            catch (...)
-            {
-                cout << "ERROR: Problem setting UMVolumeType in the MariaDB ColumnStore System Configuration file" << endl;
-                return false;
-            }
-
-            string minSize = "1";
-            string maxSize = "16384";
-
-            if (UMVolumeType == "io1")
-                minSize = "4";
-
-            if (UMVolumeType == "sc1" || UMVolumeType == "st1")
-                minSize = "500";
-
-            if (UMVolumeType == "standard")
-                maxSize = "1024";
-
-            cout << endl;
-
-            try
-            {
-                oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
-            }
-            catch (...)
-            {}
-
-            if ( UMVolumeSize.empty() || UMVolumeSize == "" || UMVolumeSize == oam::UnassignedName)
-                UMVolumeSize = minSize;
-
-            while (true)
-            {
-                string prompt = "Enter EBS Volume storage size in GB: [" + minSize + "," + maxSize + "] (" + UMVolumeSize + ") > ";
-                pcommand = callReadline(prompt);
-
-                if (pcommand)
-                {
-                    if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
-
-                    callFree(pcommand);
-                }
-
-                if ( atoi(UMVolumeSize.c_str()) < atoi(minSize.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxSize.c_str()) )
-                {
-                    cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-                    if ( noPrompting )
-                        exit(1);
-                }
-                else
-                    break;
-            }
-
-            //set UMVolumeSize
-            try
-            {
-                sysConfig->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
-            }
-            catch (...)
-            {
-                cout << "ERROR: Problem setting UMVolumeSize in the MariaDB ColumnStore System Configuration file" << endl;
-                return false;
-            }
-
-
-            if ( UMVolumeType == "io1" )
-            {
-                string minIOPS = UMVolumeSize;
-                string maxIOPS = oam.itoa(atoi(UMVolumeSize.c_str()) * 30);
-
-                cout << endl;
-
-                try
-                {
-                    oam.getSystemConfig("UMVolumeIOPS", UMVolumeIOPS);
-                }
-                catch (...)
-                {}
-
-                if ( UMVolumeIOPS.empty() || UMVolumeIOPS == "" || UMVolumeIOPS == oam::UnassignedName)
-                    UMVolumeIOPS = maxIOPS;
-
-                while (true)
-                {
-                    string prompt = "Enter EBS Volume IOPS: [" + minIOPS + "," + maxIOPS + "] (" + UMVolumeIOPS + ") > ";
-                    pcommand = callReadline(prompt);
-
-                    if (pcommand)
-                    {
-                        if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
-
-                        callFree(pcommand);
-                    }
-
-                    if ( atoi(UMVolumeSize.c_str()) < atoi(minIOPS.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxIOPS.c_str()) )
-                    {
-                        cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-                        if ( noPrompting )
-                            exit(1);
-                    }
-                    else
-                        break;
-                }
-
-                //set UMVolumeIOPS
-                try
-                {
-                    sysConfig->setConfig(InstallSection, "UMVolumeIOPS", UMVolumeIOPS);
-                }
-                catch (...)
-                {
-                    cout << "ERROR: Problem setting UMVolumeIOPS in the MariaDB ColumnStore System Configuration file" << endl;
-                    return false;
-                }
-            }
-        }
-
-        try
-        {
-            sysConfig->setConfig(InstallSection, "UMStorageType", UMStorageType);
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting UMStorageType in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
+        sysConfig->setConfig(InstallSection, "UMStorageType", "internal");
     }
-    else
+    catch (...)
     {
-        try
-        {
-            sysConfig->setConfig(InstallSection, "UMStorageType", "internal");
-        }
-        catch (...)
-        {
-            cout << "ERROR: Problem setting UMStorageType in the MariaDB ColumnStore System Configuration file" << endl;
-            return false;
-        }
+        cout << "ERROR: Problem setting UMStorageType in the MariaDB ColumnStore System Configuration file" << endl;
+        return false;
     }
 
     //check if gluster is installed
@@ -1641,152 +1152,6 @@ bool storageSetup(bool amazonInstall)
 
     if (DBRootStorageType == "storagemanager")
         storageType = "4";
-
-    cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
-
-    cout << "Columnstore supports the following storage options..." << endl;
-    cout << "  1 - internal.  This uses the linux VFS to access files and does" << endl <<
-            "      not manage the filesystem." << endl;
-    cout << "  2 - external *.  If you have other mountable filesystems you would" << endl <<
-            "      like ColumnStore to use & manage, select this option." << endl;
-    cout << "  3 - GlusterFS *  Note: glusterd service must be running and enabled on" << endl <<
-            "      all PMs." << endl;
-    cout << "  4 - S3-compatible cloud storage *.  Note: that should be configured" << endl <<
-            "      before running postConfigure (see storagemanager.cnf)" << endl;
-    cout << "  * - This option enables data replication and server failover in a" << endl <<
-            "      multi-node configuration." << endl;
-
-    cout << endl << "These options are available on this system: [1, 2";
-    if (glusterInstalled == "y" && singleServerInstall != "1")
-        cout << ", 3";
-    if (storageManagerInstalled)
-        cout << ", 4";
-    cout << "]" << endl;
-
-    prompt = "Select the type of data storage (" + storageType + ") > ";
-
-    #if 0
-    // pre-storagemanager version
-    if (( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
-    {
-        cout << "There are 2 options when configuring the storage: internal or external" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external] (" + storageType + ") > ";
-    }
-
-    if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "n" )
-    {
-        cout << "There are 3 options when configuring the storage: internal, external, or DataRedundancy" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy] (" + storageType + ") > ";
-    }
-
-    if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "y" )
-    {
-        cout << "There are 3 options when configuring the storage: internal, external, or hdfs" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 4=hdfs] (" + storageType + ") > ";
-    }
-
-    if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
-    {
-        cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
-    }
-
-    cout << "  'internal' -    This is specified when a local disk is used for the DBRoot storage." << endl;
-    cout << "                  High Availability Server Failover is not Supported in this mode" << endl << endl;
-    cout << "  'external' -    This is specified when the DBRoot directories are mounted." << endl;
-    cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
-
-    if ( glusterInstalled == "y" && singleServerInstall != "1")
-    {
-        cout << "  'DataRedundancy' - This is specified when gluster is installed and you want" << endl;
-        cout << "                  the DBRoot directories to be controlled by ColumnStore Data Redundancy." << endl;
-        cout << "                  High Availability Server Failover is Supported in this mode." << endl;
-        cout << "                  NOTE: glusterd service must be running and enabled on all PMs." << endl << endl;
-
-    }
-
-    if ( hadoopInstalled == "y" )
-    {
-        cout << "  'hdfs' -        This is specified when hadoop is installed and you want the DBRoot" << endl;
-        cout << "                  directories to be controlled by the Hadoop Distributed File System (HDFS)." << endl;
-        cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
-    }
-    #endif
-
-    while (true)
-    {
-        pcommand = callReadline(prompt.c_str());
-
-        if (pcommand)
-        {
-            if (strlen(pcommand) > 0) storageType = pcommand;
-
-            callFree(pcommand);
-        }
-
-        if ((storageType == "1" || storageType == "2")   // these are always valid options
-          || (glusterInstalled == "y" && singleServerInstall != "1" && storageType == "3")    // allow gluster if installed
-          || (storageManagerInstalled && storageType == "4")   // allow storagemanager if installed
-          )
-            break;
-
-        // if it gets here the selection was invalid
-        if (noPrompting)
-        {
-            cout << endl << "Invalid selection" << endl << endl;
-            exit(1);
-        }
-        cout << endl << "Invalid selection, please re-enter" << endl << endl;
-
-        #if 0
-        old version
-        if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
-        {
-            if ( storageType == "1" || storageType == "2")
-                break;
-
-            cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-            if ( noPrompting )
-                exit(1);
-        }
-
-        if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "n" )
-        {
-            if ( storageType == "1" || storageType == "2" || storageType == "3")
-                break;
-
-            cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-            if ( noPrompting )
-                exit(1);
-        }
-
-        if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "y" )
-        {
-            if ( storageType == "1" || storageType == "2" || storageType == "4")
-            {
-                break;
-            }
-
-            cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-            if ( noPrompting )
-                exit(1);
-        }
-
-        if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
-        {
-            if ( storageType == "1" || storageType == "2" || storageType == "3" || storageType == "4")
-                break;
-
-            cout << endl << "Invalid Entry, please re-enter" << endl << endl;
-
-            if ( noPrompting )
-                exit(1);
-        }
-        #endif
-    }
 
     if (storageType != "3" && DataRedundancy)
     {
@@ -2125,19 +1490,6 @@ void setSystemName()
     if ( systemName.empty() )
 		systemName = "columnstore-1";
 
-	if (!single_server_quick_install || !multi_server_quick_install)
-	{
-		prompt = "Enter System Name (" + systemName + ") > ";
-		pcommand = callReadline(prompt.c_str());
-
-		if (pcommand)
-		{
-			if (strlen(pcommand) > 0) systemName = pcommand;
-
-			callFree(pcommand);
-		}
-	}
-
     try
     {
         sysConfig->setConfig(SystemSection, "SystemName", systemName);
@@ -2394,20 +1746,7 @@ bool singleServerDBrootSetup()
     while (true)
     {
         dbroots.clear();
-
-        prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of DBRoot IDs assigned to module 'pm1' (" + dbrootList + ") > ";
-        pcommand = callReadline(prompt.c_str());
-
-        if (pcommand)
-        {
-            if (strlen(pcommand) > 0)
-            {
-                tempdbrootList = pcommand;
-                callFree(pcommand);
-            }
-            else
-                tempdbrootList = dbrootList;
-        }
+        tempdbrootList = dbrootList;
 
         if ( tempdbrootList.empty())
             continue;

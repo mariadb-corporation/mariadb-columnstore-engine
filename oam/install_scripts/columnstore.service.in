@@ -3,10 +3,14 @@ Description=MariaDB Columnstore
 
 [Service]
 Type=oneshot
-ExecStart=@ENGINE_BINDIR@/columnstore-post-install
+
+# Execute a dummy program
+ExecStart=/bin/true
 
 # This service shall be considered active after start
 RemainAfterExit=yes
+Restart=on-abort
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
