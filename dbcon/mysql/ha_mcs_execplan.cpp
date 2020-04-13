@@ -6883,7 +6883,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                             return -1;
                         }
                     }
-                    else
+                    else if ( !gwi.fatalParseError )
                     {
                         Message::Args args;
                         args.add(ifp->func_name());
@@ -7478,14 +7478,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
         if (nonSupportItem)
         {
-            Message::Args args;
-
-            if (nonSupportItem->name.length)
-                args.add("'" + string(nonSupportItem->name.str) + "'");
-            else
-                args.add("");
-
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
+            if (gwi.parseErrorText.length() == 0)
+            {
+                Message::Args args;
+                if (nonSupportItem->name.length)
+                    args.add("'" + string(nonSupportItem->name.str) + "'");
+                else
+                    args.add("");
+                gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
+            }
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }

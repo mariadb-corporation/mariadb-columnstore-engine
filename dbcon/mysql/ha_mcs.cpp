@@ -167,6 +167,7 @@ static int columnstore_done_func(void* p)
 {
     DBUG_ENTER("columnstore_done_func");
 
+    config::Config::deleteInstanceMap();
     my_hash_free(&mcs_open_tables);
 #ifndef _MSC_VER
     pthread_mutex_destroy(&mcs_mutex);

@@ -272,8 +272,19 @@ void ConstantFilter::setDerivedTable()
         fDerivedTable = "";
         return;
     }
+    for (unsigned i = 0; i < fFilterList.size(); i++)
+    {
+        fFilterList[i]->setDerivedTable();
+    }
 
-    fDerivedTable = fCol->derivedTable();
+    if (!fFilterList.empty())
+    {
+        fDerivedTable = fFilterList[0]->derivedTable();
+    }
+    else
+    {
+        fDerivedTable = "";
+    }
 }
 
 void ConstantFilter::replaceRealCol(std::vector<SRCP>& derivedColList)

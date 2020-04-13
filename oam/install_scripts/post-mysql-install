@@ -4,6 +4,15 @@
 #
 # Post-install steps for calpont-mysql install
 
+# check if running systemd
+running_systemd() {
+   if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+       echo 0
+   else
+       echo 1
+   fi
+}
+
 # check log for error
 checkForError() {
 	# check for password error
@@ -13,7 +22,7 @@ checkForError() {
 		  rm -f ${tmpdir}/error.check
           # Test we are using systemd
           systemctl cat mariadb.service > /dev/null 2>&1
-          if [ $? -eq 0 ]; then
+          if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
               systemctl stop mariadb.service > /dev/null 2>&1
           else
               pkill mysqld
@@ -62,7 +71,7 @@ done
 # Restart in the same way that mysqld will be started normally.
 # Test we are using systemd
 systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb.service > /dev/null 2>&1
 else
     pkill mysqld
@@ -71,7 +80,7 @@ sleep 2
 export MYSQL_OPTS="--skip-grant-tables"
 # Test we are using systemd
 systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl start mariadb.service
 else
     /usr/bin/mysqld_safe --skip-grant-tables &
@@ -87,7 +96,7 @@ if [ $? -ne 0 ]; then
     echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
     # Test we are using systemd
     systemctl cat mariadb.service > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl stop mariadb.service > /dev/null 2>&1
     else
         pkill mysqld
@@ -98,7 +107,7 @@ fi
 
 # Test we are using systemd
 systemctl cat mariadb.service > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb.service > /dev/null 2>&1
 else
     pkill mysqld
