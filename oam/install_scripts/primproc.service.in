@@ -4,7 +4,7 @@ PartOf=columnstore.service
 After=columnstore.service
 
 [Service]
-ExecStart=@ENGINE_BINDIR@/PrimProc &> /var/log/mariadb/columnstore/primproc.log
+ExecStart=@ENGINE_BINDIR@/PrimProc
 Restart=on-failure
 
 [Install]

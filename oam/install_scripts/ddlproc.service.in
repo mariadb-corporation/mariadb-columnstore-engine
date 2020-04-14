@@ -4,7 +4,7 @@ PartOf=columnstore.service
 After=columnstore.service
 
 [Service]
-ExecStart=@ENGINE_BINDIR@/DDLProc &> /var/log/mariadb/columnstore/ddlproc.log
+ExecStart=@ENGINE_BINDIR@/DDLProc
 Restart=on-failure
 
 
