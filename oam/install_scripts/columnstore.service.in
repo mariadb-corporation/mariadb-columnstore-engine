@@ -9,8 +9,6 @@ ExecStart=/bin/true
 
 # This service shall be considered active after start
 RemainAfterExit=yes
-Restart=on-abort
-RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
