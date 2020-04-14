@@ -155,6 +155,7 @@ void OamCache::checkReload()
                     }
 
                     sleep(1);
+                    ++retry;
                     //cout << "pm " << *it << " -> connection " << (i-1) << endl;
                 }
 
