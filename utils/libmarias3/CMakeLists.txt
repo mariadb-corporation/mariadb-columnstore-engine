@@ -23,6 +23,7 @@ ExternalProject_Add(ms3
     BUILD_COMMAND make
     BUILD_IN_SOURCE 0
     EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
 )
 
 set(S3API_DEPS marias3 curl xml2 CACHE INTERNAL "S3API_DEPS")
