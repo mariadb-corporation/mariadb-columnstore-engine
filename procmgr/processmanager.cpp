@@ -7450,6 +7450,7 @@ void startModuleThread(string module)
             int opState = oam::ACTIVE;
             bool degraded;
             oam.getModuleStatus(moduleName, opState, degraded);
+            log.writeLog(__LINE__, "startModuleThread on " + moduleName + " opstate = " + oam.itoa(opState), LOG_TYPE_DEBUG);
 
             if ( opState == oam::AUTO_OFFLINE || opState == oam::AUTO_INIT)
                 startType = oam::AUTO_OFFLINE;
@@ -9886,9 +9887,6 @@ int ProcessManager::OAMParentModuleChange()
     log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "*** OAMParentModule outage, OAM Parent Module change-over started ***", LOG_TYPE_DEBUG);
 
-    //run save.brm script
-    processManager.saveBRM(true, false);
-
     gdownActiveOAMModule = downOAMParentName;
 
     // update Columnstore.xml entries
@@ -9953,6 +9951,10 @@ int ProcessManager::OAMParentModuleChange()
         {
             log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
         }
+
+        //run save.brm script
+        //MCOL-3945 move saveBRM after autoMovePmDbroot as this will potentially mount the dbrm directory from dbroot1
+        processManager.saveBRM(true, false);
 
         //distribute config file
         distributeConfigFile("system");
