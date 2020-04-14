@@ -7450,7 +7450,6 @@ void startModuleThread(string module)
             int opState = oam::ACTIVE;
             bool degraded;
             oam.getModuleStatus(moduleName, opState, degraded);
-            log.writeLog(__LINE__, "startModuleThread on " + moduleName + " opstate = " + oam.itoa(opState), LOG_TYPE_DEBUG);
 
             if ( opState == oam::AUTO_OFFLINE || opState == oam::AUTO_INIT)
                 startType = oam::AUTO_OFFLINE;
