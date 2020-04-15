@@ -1,0 +1,11 @@
+[Unit]
+Description=ExeMgr
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+ExecStart=@ENGINE_BINDIR@/ExeMgr
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service

@@ -1,0 +1,11 @@
+[Unit]
+Description=DMLProc
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+ExecStart=@ENGINE_BINDIR@/DMLProc
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service

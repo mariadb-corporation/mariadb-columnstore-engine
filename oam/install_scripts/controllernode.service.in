@@ -1,0 +1,11 @@
+[Unit]
+Description=controllernode
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+ExecStart=@ENGINE_BINDIR@/controllernode
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service

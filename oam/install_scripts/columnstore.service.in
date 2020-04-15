@@ -1,13 +1,14 @@
 [Unit]
 Description=MariaDB Columnstore
-After=network.target
+
 [Service]
-Type=forking
-#Restart=on-abnormal
-GuessMainPID=yes
-ExecStart=@ENGINE_BINDIR@/columnstore start
-ExecStopPost=@ENGINE_BINDIR@/columnstore stop
-TimeoutStopSec=5
-LimitNOFILE=65535
+Type=oneshot
+
+# Execute a dummy program
+ExecStart=/bin/true
+
+# This service shall be considered active after start
+RemainAfterExit=yes
+
 [Install]
 WantedBy=multi-user.target

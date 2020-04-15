@@ -1,0 +1,11 @@
+[Unit]
+Description=PrimProc
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+ExecStart=@ENGINE_BINDIR@/PrimProc
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service

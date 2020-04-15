@@ -1,0 +1,11 @@
+[Unit]
+Description=WriteEngineServer
+PartOf=columnstore.service
+After=columnstore.service
+
+[Service]
+ExecStart=/usr/bin/WriteEngineServer
+Restart=on-failure
+
+[Install]
+WantedBy=columnstore.service
