@@ -1,15 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: Columnstore.xml 3713 2013-08-16 20:04:47Z wweeks $ -->
+<Columnstore Version="V1.0.0">
 <!--
 	WARNING: Do not make changes to this file unless directed to do so by
 	MariaDB service engineers. Incorrect settings can render your system
 	unusable and will require a service call to correct.
 -->
-<Columnstore Version="V1.0.0">
 	<ExeMgr1>
 		<IPAddr>127.0.0.1</IPAddr>
 		<Port>8601</Port>
-		<Module>pm1</Module>
+		<Module>unassigned</Module>
 	</ExeMgr1>
 	<JobProc>
 		<IPAddr>0.0.0.0</IPAddr>
@@ -83,7 +81,7 @@
 	</BatchInsert>
 	<PrimitiveServers>
 		<Count>1</Count>
-		<ConnectionsPerPrimProc>8</ConnectionsPerPrimProc>
+		<ConnectionsPerPrimProc>2</ConnectionsPerPrimProc>
 		<ProcessorThreshold>128</ProcessorThreshold>
 		<ProcessorQueueSize>10K</ProcessorQueueSize> <!-- minimum of extent size 8192 -->
 		<DebugLevel>0</DebugLevel>
@@ -269,7 +267,6 @@
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
  		<TempFileDir>/columnstore_tmp_files</TempFileDir>
  		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
-		<DataFilePlugin/>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -429,7 +426,7 @@
 		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
         <!-- Alternatively, this can be specified in absolute terms using
              the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
-		<!-- <NumBlocksPct>70</NumBlocksPct> -->
+		<!-- <NumBlocksPct>95</NumBlocksPct> -->
 		<!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
 		<IOMTracing>0</IOMTracing>
@@ -490,8 +487,8 @@
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
 		<FifoSizeLargeSide>64</FifoSizeLargeSide>
 		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
-		<TotalUmMemory>25%</TotalUmMemory>
-		<TotalPmUmMemory>10%</TotalPmUmMemory>
+		<TotalUmMemory>100%</TotalUmMemory>
+		<TotalPmUmMemory>100%</TotalPmUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
@@ -554,4 +551,7 @@
         <MaxSockets>30</MaxSockets>
         <Enabled>N</Enabled>
     </StorageManager>
+    <DataRedundancyConfig>
+        <DBRoot1PMs/>
+    </DataRedundancyConfig>
 </Columnstore>

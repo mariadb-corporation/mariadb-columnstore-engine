@@ -40,7 +40,7 @@ extern void mysqlSetup();
 extern int sendMsgProcMon( std::string module, messageqcpp::ByteStream msg, int requestID, int timeout );
 extern int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pmwithum);
 extern void checkFilesPerPartion(int DBRootCount, Config* sysConfig);
-extern void checkMysqlPort( string& mysqlPort, Config* sysConfig);
+extern void checkMysqlPort(string& mysqlPort);
 extern bool writeConfig(Config* sysConfig);
 extern void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string USER, std::string password, ChildModuleList childmodulelist, int IserverTypeInstall, bool pmwithum);
 extern const char* callReadline(string prompt);
