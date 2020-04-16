@@ -3836,13 +3836,13 @@ void ProcessManager::reinitProcesses()
 {
     log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
 
-    reinitProcessType("ExeMgr");
     reinitProcessType("DBRMWorkerNode");
     reinitProcessType("WriteEngineServer");
+    restartProcessType("ExeMgr");
     sleep(1);
-    reinitProcessType("DDLProc");
+    restartProcessType("DDLProc");
     sleep(1);
-    reinitProcessType("DMLProc");
+    restartProcessType("DMLProc");
 
 
     log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
@@ -10196,6 +10196,8 @@ int ProcessManager::OAMParentModuleChange()
         oam::DeviceNetworkList devicenetworklist;
         processManager.setMySQLReplication(devicenetworklist, config.moduleName());
     }
+
+    processManager.reinitProcesses();
 
     // clear alarm
     aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
