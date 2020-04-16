@@ -4,8 +4,11 @@ PartOf=columnstore.service
 After=columnstore.service
 
 [Service]
+Type=simple
+Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/DMLProc
 Restart=on-failure
+ExecStop=/usr/bin/bash -c "/bin/kill -9 $(pidof DMLProc)"
 
 [Install]
 WantedBy=columnstore.service
