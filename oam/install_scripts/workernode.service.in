@@ -4,9 +4,12 @@ PartOf=columnstore.service
 After=columnstore.service
 
 [Service]
+Type=forking
 ExecStartPre=@ENGINE_BINDIR@/bash -c "clearShm > /dev/null 2>&1"
+ExecStartPre=/usr/bin/bash -c "/usr/bin/load_brm /var/lib/columnstore/data1/systemFiles/dbrm/$(cat /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current)"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1
 Restart=on-failure
+ExecStop=/bin/save_brm ; /usr/bin/bash -c "/bin/kill -9 $MAINPID"
 
 [Install]
 WantedBy=columnstore.service
