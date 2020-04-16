@@ -4,6 +4,8 @@
 	MariaDB service engineers. Incorrect settings can render your system
 	unusable and will require a service call to correct.
 -->
+    <ClusterManager>0.0.0.0</ClusterManager>
+    <ConfigRevision>1</ConfigRevision>
 	<ExeMgr1>
 		<IPAddr>127.0.0.1</IPAddr>
 		<Port>8601</Port>
@@ -96,6 +98,9 @@
 		<!-- <MediumPriorityPercentage>30</MediumPriorityPercentage> -->
 		<!-- <LowPriorityPercentage>10</LowPriorityPercentage> -->
 		<DirectIO>y</DirectIO>
+        <HighPriorityPercentage/>
+        <MediumPriorityPercentage/>
+        <LowPriorityPercentage/>
 	</PrimitiveServers>
 	<PMS1>
 		<IPAddr>127.0.0.1</IPAddr>
@@ -472,6 +477,7 @@
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 		<ProfileFile>/etc/profile.d/columnstoreAlias.sh</ProfileFile>
+        <DataRedundancyNetworkType/>
 	</Installation>
 	<ExtentMap>
 		<!--
