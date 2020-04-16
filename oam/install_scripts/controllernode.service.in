@@ -4,8 +4,11 @@ PartOf=columnstore.service
 After=columnstore.service
 
 [Service]
+Type=forking
+Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/controllernode
 Restart=on-failure
+ExecStop=/bin/kill -9 $MAINPID
 
 [Install]
 WantedBy=columnstore.service
