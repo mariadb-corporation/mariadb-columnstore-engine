@@ -83,34 +83,34 @@ if [ $user = "root" ]; then
 
 	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
-		cp @ENGINE_SUPPORTDIR@/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/exemgr.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/primproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/workernode.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/writeengine.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/writeengine.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
 
-		systemctl enable columnstore >/dev/null 2>&1
-		systemctl enable controllernode > /dev/null 2>&1
-		systemctl enable ddlproc > /dev/null 2>&1
-		systemctl enable dmlproc > /dev/null 2>&1
-		systemctl enable exemgr > /dev/null 2>&1
-		systemctl enable primproc > /dev/null 2>&1
-		systemctl enable workernode > /dev/null 2>&1
-		systemctl enable writeengine > /dev/null 2>&1
-		systemctl enable loadbrm > /dev/null 2>&1
+		systemctl enable mariadb-columnstore >/dev/null 2>&1
+		systemctl enable mcs-controllernode > /dev/null 2>&1
+		systemctl enable mcs-ddlproc > /dev/null 2>&1
+		systemctl enable mcs-dmlproc > /dev/null 2>&1
+		systemctl enable mcs-exemgr > /dev/null 2>&1
+		systemctl enable mcs-primproc > /dev/null 2>&1
+		systemctl enable mcs-workernode > /dev/null 2>&1
+		systemctl enable mcs-writeengineserver > /dev/null 2>&1
+		systemctl enable mcs-loadbrm > /dev/null 2>&1
 	else
 		chkconfig=`which chkconfig 2>/dev/null`
 		if [ -n "$chkconfig" ]; then
@@ -173,7 +173,7 @@ if [ -z "aws" ]; then
 fi
 
 postConfigure
-systemctl start columnstore
+systemctl start mariadb-columnstore
 
 exit 0
 

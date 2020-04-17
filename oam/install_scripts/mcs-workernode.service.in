@@ -1,0 +1,15 @@
+[Unit]
+Description=mcs-workernode
+PartOf=mariadb-columnstore.service
+After=mcs-loadbrm.service
+
+[Service]
+Type=forking
+Environment="SKIP_OAM_INIT=1"
+ExecStartPre=/usr/bin/bash -c "clearShm > /dev/null 2>&1"
+ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1
+Restart=on-failure
+ExecStop=@ENGINE_BINDIR@/save_brm ; /usr/bin/bash -c "/bin/kill -9 $MAINPID"
+
+[Install]
+WantedBy=mariadb-columnstore.service

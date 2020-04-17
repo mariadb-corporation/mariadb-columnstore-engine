@@ -1,7 +1,7 @@
 [Unit]
 Description=WriteEngineServer
-PartOf=columnstore.service
-After=columnstore.service
+PartOf=mariadb-columnstore.service
+After=mariadb-columnstore.service
 
 [Service]
 Type=simple
@@ -11,4 +11,4 @@ Restart=on-failure
 ExecStop=/usr/bin/bash -c "/bin/kill -9 $(pidof WriteEngineServer)"
 
 [Install]
-WantedBy=columnstore.service
+WantedBy=mariadb-columnstore.service
