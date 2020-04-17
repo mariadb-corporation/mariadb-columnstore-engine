@@ -3169,8 +3169,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
                 case STRING_RESULT:
                 {
                     // Special handling for 0xHHHH literals
-                    const Type_handler *tph = item->type_handler();
-                    if (typeid(*tph) == typeid(Type_handler_hex_hybrid))
+                    if (item->type_handler() == &type_handler_hex_hybrid)
                     {
                         Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
                         rc = new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM);
@@ -5239,8 +5238,7 @@ void gp_walk(const Item* item, void* arg)
                 case STRING_RESULT:
                 {
                     // Special handling for 0xHHHH literals
-                    const Type_handler *tph = item->type_handler();
-                    if (typeid(*tph) == typeid(Type_handler_hex_hybrid))
+                    if (item->type_handler() == &type_handler_hex_hybrid)
                     {
                         Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
                         gwip->rcWorkStack.push(new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM));
