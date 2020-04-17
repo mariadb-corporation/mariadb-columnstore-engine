@@ -19,6 +19,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/exemgr.service.in" "${CMAKE_CURRENT_
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/writeengine.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/writeengine.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dmlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/dmlproc.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ddlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/ddlproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/loadbrm.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/loadbrm.service" @ONLY)
 
 install(PROGRAMS columnstore-post-install 
                 columnstore-pre-uninstall 
@@ -58,6 +59,7 @@ install(FILES columnstore.service
               writeengine.service
               dmlproc.service
               ddlproc.service
+              loadbrm.service
               DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
 
 install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-platform)

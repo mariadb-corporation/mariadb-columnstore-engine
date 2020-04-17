@@ -83,33 +83,34 @@ if [ $user = "root" ]; then
 
 	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
-
-        cp @ENGINE_SUPPORTDIR@/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/controllernode.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/exemgr.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/primproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/workernode.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/writeengine.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/writeengine.service /usr/lib/systemd/system/. >/dev/null 2>&1
 		cp @ENGINE_SUPPORTDIR@/writeengine.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
 
 		systemctl enable columnstore >/dev/null 2>&1
-        systemctl enable controllernode > /dev/null 2>&1
-        systemctl enable ddlproc > /dev/null 2>&1
-        systemctl enable dmlproc > /dev/null 2>&1
-        systemctl enable exemgr > /dev/null 2>&1
-        systemctl enable primproc > /dev/null 2>&1
-        systemctl enable workernode > /dev/null 2>&1
-        systemctl enable writeengine > /dev/null 2>&1
-
+		systemctl enable controllernode > /dev/null 2>&1
+		systemctl enable ddlproc > /dev/null 2>&1
+		systemctl enable dmlproc > /dev/null 2>&1
+		systemctl enable exemgr > /dev/null 2>&1
+		systemctl enable primproc > /dev/null 2>&1
+		systemctl enable workernode > /dev/null 2>&1
+		systemctl enable writeengine > /dev/null 2>&1
+		systemctl enable loadbrm > /dev/null 2>&1
 	else
 		chkconfig=`which chkconfig 2>/dev/null`
 		if [ -n "$chkconfig" ]; then
