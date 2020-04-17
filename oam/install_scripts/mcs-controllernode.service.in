@@ -1,7 +1,7 @@
 [Unit]
-Description=controllernode
-PartOf=columnstore.service
-After=columnstore.service
+Description=mcs-controllernode
+PartOf=mariadb-columnstore.service
+After=mariadb-columnstore.service
 
 [Service]
 Type=forking
@@ -11,4 +11,4 @@ Restart=on-failure
 ExecStop=/bin/kill -9 $MAINPID
 
 [Install]
-WantedBy=columnstore.service
+WantedBy=mariadb-columnstore.service

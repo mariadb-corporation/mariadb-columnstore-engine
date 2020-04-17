@@ -1,7 +1,7 @@
 [Unit]
-Description=DMLProc
-PartOf=columnstore.service
-After=columnstore.service
+Description=mcs-dmlproc
+PartOf=mariadb-columnstore.service
+After=mariadb-columnstore.service
 
 [Service]
 Type=simple
@@ -11,4 +11,4 @@ Restart=on-failure
 ExecStop=/usr/bin/bash -c "/bin/kill -9 $(pidof DMLProc)"
 
 [Install]
-WantedBy=columnstore.service
+WantedBy=mariadb-columnstore.service

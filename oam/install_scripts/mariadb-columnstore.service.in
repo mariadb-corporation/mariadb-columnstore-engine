@@ -1,5 +1,5 @@
 [Unit]
-Description=MariaDB Columnstore
+Description=mariadb-columnstore
 
 [Service]
 Type=oneshot
