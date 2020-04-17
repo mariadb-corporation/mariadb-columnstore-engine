@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-controllernode
 PartOf=mariadb-columnstore.service
-After=mariadb-columnstore.service
+After=mcs-workernode.service
 
 [Service]
 Type=forking

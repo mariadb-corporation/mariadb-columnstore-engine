@@ -175,5 +175,11 @@ fi
 postConfigure
 systemctl start mariadb-columnstore
 
+while  [ -z  $(pgrep -x workernode) ];
+do
+    sleep 5
+done
+ 
+dbbuilder 7 > $tmpDir/dbbuilder.log
 exit 0
 

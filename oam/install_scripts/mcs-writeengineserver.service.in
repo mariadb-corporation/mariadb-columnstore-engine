@@ -1,7 +1,7 @@
 [Unit]
 Description=WriteEngineServer
 PartOf=mariadb-columnstore.service
-After=mariadb-columnstore.service
+After=mcs-exemgr.service
 
 [Service]
 Type=simple

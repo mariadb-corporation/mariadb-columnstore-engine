@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-dmlproc
 PartOf=mariadb-columnstore.service
-After=mariadb-columnstore.service
+After=mcs-writeengineserver.service
 
 [Service]
 Type=simple
