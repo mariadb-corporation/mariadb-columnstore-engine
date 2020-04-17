@@ -3836,6 +3836,7 @@ void ProcessManager::reinitProcesses()
 {
     log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
 
+    restartProcessType("DBRMControllerNode");
     reinitProcessType("DBRMWorkerNode");
     reinitProcessType("WriteEngineServer");
     restartProcessType("ExeMgr");
