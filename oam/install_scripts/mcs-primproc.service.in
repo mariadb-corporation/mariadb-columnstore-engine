@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-primproc
 PartOf=mariadb-columnstore.service
-After=mariadb-columnstore.service
+After=mcs-controllernode.service
 
 [Service]
 Type=simple
