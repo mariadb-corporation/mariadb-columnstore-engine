@@ -3834,9 +3834,10 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 
 void ProcessManager::reinitProcesses()
 {
+    Oam oam;
+
     log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
 
-    restartProcessType("DBRMControllerNode");
     reinitProcessType("DBRMWorkerNode");
     reinitProcessType("WriteEngineServer");
     restartProcessType("ExeMgr");
@@ -3844,7 +3845,30 @@ void ProcessManager::reinitProcesses()
     restartProcessType("DDLProc");
     sleep(1);
     restartProcessType("DMLProc");
+    sleep(1);
 
+    // waiting until dml are ACTIVE
+    while (true)
+    {
+        ProcessStatus DMLprocessstatus;
+
+        try
+        {
+            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+        }
+        catch (exception& ex)
+        {}
+        catch (...)
+        {}
+
+        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+        else
+            break;
+
+        // wait some more
+        sleep(2);
+    }
 
     log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
 }
@@ -10197,6 +10221,8 @@ int ProcessManager::OAMParentModuleChange()
         oam::DeviceNetworkList devicenetworklist;
         processManager.setMySQLReplication(devicenetworklist, config.moduleName());
     }
+
+    processManager.restartProcessType("DBRMControllerNode");
 
     processManager.reinitProcesses();
 
