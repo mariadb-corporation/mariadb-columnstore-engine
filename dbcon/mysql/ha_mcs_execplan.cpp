@@ -6667,7 +6667,8 @@ int processLimitAndOffset(
     }
 
     // We don't currently support limit with correlated subquery
-    if (gwi.subQuery && !gwi.correlatedTbNameVec.empty() && csep->hasOrderBy())
+    if (csep->limitNum() != (uint64_t) - 1 &&
+            gwi.subQuery && !gwi.correlatedTbNameVec.empty())
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
