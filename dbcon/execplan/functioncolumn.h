@@ -256,14 +256,24 @@ public:
                 (datatypes::Decimal::isWideDecimalType(decimal.precision)) ?
                     decimal.s128Value : decimal.value;
 
-            int128_t scaleMultiplier, result;
+            int128_t scaleMultiplier;
             int32_t scaleDiff = fResultType.scale - decimal.scale;
             datatypes::getScaleDivisor(scaleMultiplier, abs(scaleDiff));
-            // WIP MCOL-641 Unconditionall overflow check
-            datatypes::MultiplicationOverflowCheck mul;
-            decimal.s128Value = (scaleDiff > 0
-                && mul(decimal.s128Value, scaleMultiplier, result))
-                ? result : decimal.s128Value / scaleMultiplier;
+            if (scaleMultiplier > 1)
+            {
+                if (scaleDiff > 0)
+                {
+                    // WIP MCOL-641 Unconditionall overflow check
+                    datatypes::MultiplicationNoOverflowCheck mul;
+                    mul(decimal.s128Value, scaleMultiplier, decimal.s128Value);
+                }
+                else
+                {
+                    decimal.s128Value = (int128_t)(decimal.s128Value > 0 ?
+                                                   (__float128)decimal.s128Value / scaleMultiplier + 0.5 :
+                                                   (__float128)decimal.s128Value / scaleMultiplier - 0.5);
+                }
+            }
         }
         else if (fResultType.colWidth == utils::MAXLEGACYWIDTH)
         {
