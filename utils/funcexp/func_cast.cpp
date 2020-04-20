@@ -22,6 +22,8 @@
 #include <string>
 using namespace std;
 
+#include <quadmath.h>
+
 #include "functor_dtm.h"
 #include "functor_int.h"
 #include "functor_real.h"
@@ -183,17 +185,40 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            int64_t value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( value >= 0 && lefto > 4 )
-                value++;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( value < 0 && lefto < -4 )
-                value--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
 
-            return value;
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                int64_t value = d.value / pow(10.0, dscale);
+                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( value >= 0 && lefto > 4 )
+                    value++;
+
+                if ( value < 0 && lefto < -4 )
+                    value--;
+
+                return value;
+            }
         }
         break;
 
@@ -341,20 +366,48 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
 
-            if (d.value < 0)
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                return 0;
-            }
+                if (d.s128Value < 0)
+                {
+                    return 0;
+                }
 
-            uint64_t value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+                int128_t scaleDivisor, scaleDivisor2;
+
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                uint128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval > static_cast<int128_t>(UINT64_MAX))
+                    tmpval = UINT64_MAX;
+
+                return static_cast<uint64_t>(tmpval);
+            }
+            else
+            {
+                if (d.value < 0)
+                {
+                    return 0;
+                }
+
+                double dscale = d.scale;
+
+                uint64_t value = d.value / pow(10.0, dscale);
+                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( utils::is_nonnegative(value) && lefto > 4 )
                 value++;
 
-            return value;
+                return value;
+            }
         }
         break;
 
@@ -491,7 +544,10 @@ string Func_cast_char::getStrVal(Row& row,
 
             char buf[80];
 
-            dataconvert::DataConvert::decimalToString( d.value, d.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+                dataconvert::DataConvert::decimalToString( &d.s128Value, d.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+            else
+                dataconvert::DataConvert::decimalToString( d.value, d.scale, buf, 80, parm[0]->data()->resultType().colDataType);
 
             string sbuf = buf;
             return sbuf.substr(0, length);
@@ -583,10 +639,16 @@ IDB_Decimal Func_cast_date::getDecimalVal(Row& row,
 {
     IDB_Decimal decimal;
 
-    decimal.value = Func_cast_date::getDatetimeIntVal(row,
-                    parm,
-                    isNull,
-                    operationColType);
+    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        decimal.s128Value = Func_cast_date::getDatetimeIntVal(row,
+                            parm,
+                            isNull,
+                            operationColType);
+    else
+        decimal.value = Func_cast_date::getDatetimeIntVal(row,
+                        parm,
+                        isNull,
+                        operationColType);
 
     return decimal;
 }
@@ -886,10 +948,16 @@ IDB_Decimal Func_cast_datetime::getDecimalVal(Row& row,
 {
     IDB_Decimal decimal;
 
-    decimal.value = Func_cast_datetime::getDatetimeIntVal(row,
-                    parm,
-                    isNull,
-                    operationColType);
+    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        decimal.s128Value = Func_cast_datetime::getDatetimeIntVal(row,
+                            parm,
+                            isNull,
+                            operationColType);
+    else
+        decimal.value = Func_cast_datetime::getDatetimeIntVal(row,
+                        parm,
+                        isNull,
+                        operationColType);
 
     return decimal;
 }
@@ -1139,6 +1207,17 @@ int64_t Func_cast_decimal::getIntVal(Row& row,
                           isNull,
                           operationColType);
 
+    if (decimal.precision > datatypes::INT64MAXPRECISION)
+    {
+        int128_t scaleDivisor;
+
+        datatypes::getScaleDivisor(scaleDivisor, decimal.scale);
+
+        int128_t tmpval = decimal.s128Value / scaleDivisor;
+
+        return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+    }
+
     return (int64_t) decimal.value / helpers::powerOf10_c[decimal.scale];
 }
 
@@ -1155,7 +1234,10 @@ string Func_cast_decimal::getStrVal(Row& row,
 
     char buf[80];
 
-    dataconvert::DataConvert::decimalToString( decimal.value, decimal.scale, buf, 80, operationColType.colDataType);
+    if (decimal.precision > datatypes::INT64MAXPRECISION)
+        dataconvert::DataConvert::decimalToString( &decimal.s128Value, decimal.scale, buf, 80, operationColType.colDataType);
+    else
+        dataconvert::DataConvert::decimalToString( decimal.value, decimal.scale, buf, 80, operationColType.colDataType);
 
     string value = buf;
     return value;
@@ -1173,12 +1255,10 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
     int32_t	decimals = parm[1]->data()->getIntVal(row, isNull);
     int64_t max_length = parm[2]->data()->getIntVal(row, isNull);
 
-    // As of 2.0, max length columnStore can support is 18
-    // decimal(0,0) is valid, and no limit on integer number
-    if (max_length > 18 || max_length <= 0)
-        max_length = 18;
+    if (max_length > datatypes::INT128MAXPRECISION || max_length <= 0)
+        max_length = datatypes::INT128MAXPRECISION;
 
-    int64_t max_number_decimal = helpers::maxNumber_c[max_length];
+    decimal.precision = max_length;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -1188,19 +1268,45 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
         {
-            decimal.value = parm[0]->data()->getIntVal(row, isNull);
-            decimal.scale = 0;
-            int64_t value = decimal.value * helpers::powerOf10_c[decimals];
+            if (max_length > datatypes::INT64MAXPRECISION)
+            {
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+                decimal.s128Value = parm[0]->data()->getIntVal(row, isNull);
+                decimal.scale = 0;
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, decimals);
+                int128_t value = decimal.s128Value * scaleDivisor;
 
-            if ( value > max_number_decimal )
-            {
-                decimal.value = max_number_decimal;
-                decimal.scale = decimals;
+                if ( value > max_number_decimal )
+                {
+                    decimal.s128Value = max_number_decimal;
+                    decimal.scale = decimals;
+                }
+                else if ( value < -max_number_decimal )
+                {
+                    decimal.s128Value = -max_number_decimal;
+                    decimal.scale = decimals;
+                }
             }
-            else if ( value < -max_number_decimal )
+            else
             {
-                decimal.value = -max_number_decimal;
-                decimal.scale = decimals;
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
+                decimal.value = parm[0]->data()->getIntVal(row, isNull);
+                decimal.scale = 0;
+                int64_t value = decimal.value * helpers::powerOf10_c[decimals];
+
+                if ( value > max_number_decimal )
+                {
+                    decimal.value = max_number_decimal;
+                    decimal.scale = decimals;
+                }
+                else if ( value < -max_number_decimal )
+                {
+                    decimal.value = -max_number_decimal;
+                    decimal.scale = decimals;
+                }
             }
         }
         break;
@@ -1211,21 +1317,51 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::UTINYINT:
         case execplan::CalpontSystemCatalog::USMALLINT:
         {
-            uint64_t uval = parm[0]->data()->getUintVal(row, isNull);
-
-            if (uval > (uint64_t)numeric_limits<int64_t>::max())
+            if (max_length > datatypes::INT64MAXPRECISION)
             {
-                uval = numeric_limits<int64_t>::max();
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+
+                uint128_t uval = parm[0]->data()->getUintVal(row, isNull);
+
+                if (uval > (uint128_t)datatypes::Decimal::maxInt128)
+                {
+                    uval = datatypes::Decimal::maxInt128;
+                }
+
+                decimal.s128Value = uval;
+                decimal.scale = 0;
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, decimals);
+                int128_t value = decimal.s128Value * scaleDivisor;
+
+                if ( value > max_number_decimal )
+                {
+                    decimal.s128Value = max_number_decimal;
+                    decimal.scale = decimals;
+                }
             }
-
-            decimal.value = uval;
-            decimal.scale = 0;
-            int64_t value = decimal.value * helpers::powerOf10_c[decimals];
-
-            if ( value > max_number_decimal )
+            else
             {
-                decimal.value = max_number_decimal;
-                decimal.scale = decimals;
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
+
+                uint64_t uval = parm[0]->data()->getUintVal(row, isNull);
+
+                if (uval > (uint64_t)numeric_limits<int64_t>::max())
+                {
+                    uval = numeric_limits<int64_t>::max();
+                }
+
+                decimal.value = uval;
+                decimal.scale = 0;
+                int64_t value = decimal.value * helpers::powerOf10_c[decimals];
+
+                if ( value > max_number_decimal )
+                {
+                    decimal.value = max_number_decimal;
+                    decimal.scale = decimals;
+                }
             }
         }
         break;
@@ -1235,67 +1371,172 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
+            if (max_length > datatypes::INT64MAXPRECISION)
+            {
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-            if (value > 0)
-                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
-            else if (value < 0)
-                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] - 0.5);
+                __float128 value = parm[0]->data()->getDoubleVal(row, isNull);
+
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, decimals);
+
+                if (value > 0)
+                    decimal.s128Value = (int128_t) (value * scaleDivisor + 0.5);
+                else if (value < 0)
+                    decimal.s128Value = (int128_t) (value * scaleDivisor - 0.5);
+                else
+                    decimal.s128Value = 0;
+
+                decimal.scale = decimals;
+
+                if ( value > max_number_decimal )
+                    decimal.s128Value = max_number_decimal;
+                else if ( value < -max_number_decimal )
+                    decimal.s128Value = -max_number_decimal;
+            }
             else
-                decimal.value = 0;
+            {
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
 
-            decimal.scale = decimals;
+                double value = parm[0]->data()->getDoubleVal(row, isNull);
 
-            if ( value > max_number_decimal )
-                decimal.value = max_number_decimal;
-            else if ( value < -max_number_decimal )
-                decimal.value = -max_number_decimal;
+                if (value > 0)
+                    decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
+                else if (value < 0)
+                    decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] - 0.5);
+                else
+                    decimal.value = 0;
+
+                decimal.scale = decimals;
+
+                if ( value > max_number_decimal )
+                    decimal.value = max_number_decimal;
+                else if ( value < -max_number_decimal )
+                    decimal.value = -max_number_decimal;
+            }
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
+            if (max_length > datatypes::INT64MAXPRECISION)
+            {
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-            if (value > 0)
-                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
-            else if (value < 0)
-                decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] - 0.5);
+                __float128 value = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, decimals);
+
+                if (value > 0)
+                    decimal.s128Value = (int128_t) (value * scaleDivisor + 0.5);
+                else if (value < 0)
+                    decimal.s128Value = (int128_t) (value * scaleDivisor - 0.5);
+                else
+                    decimal.s128Value = 0;
+
+                decimal.scale = decimals;
+
+                if ( value > max_number_decimal )
+                    decimal.s128Value = max_number_decimal;
+                else if ( value < -max_number_decimal )
+                    decimal.s128Value = -max_number_decimal;
+            }
             else
-                decimal.value = 0;
+            {
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
 
-            decimal.scale = decimals;
+                long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-            if ( value > max_number_decimal )
-                decimal.value = max_number_decimal;
-            else if ( value < -max_number_decimal )
-                decimal.value = -max_number_decimal;
+                if (value > 0)
+                    decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] + 0.5);
+                else if (value < 0)
+                    decimal.value = (int64_t) (value * helpers::powerOf10_c[decimals] - 0.5);
+                else
+                    decimal.value = 0;
+
+                decimal.scale = decimals;
+
+                if ( value > max_number_decimal )
+                    decimal.value = max_number_decimal;
+                else if ( value < -max_number_decimal )
+                    decimal.value = -max_number_decimal;
+            }
         }
         break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            decimal = parm[0]->data()->getDecimalVal(row, isNull);
+            if (max_length > datatypes::INT64MAXPRECISION)
+            {
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
+                decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-            if (decimals > decimal.scale)
-                decimal.value *= helpers::powerOf10_c[decimals - decimal.scale];
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, abs(decimals - decimal.scale));
+
+                if (decimal.precision <= datatypes::INT64MAXPRECISION)
+                    decimal.s128Value = decimal.value;
+
+                decimal.precision = max_length;
+
+                if (scaleDivisor > 1)
+                {
+                    if (decimals > decimal.scale)
+                        decimal.s128Value *= scaleDivisor;
+                    else
+                        decimal.s128Value = (int128_t)(decimal.s128Value > 0 ?
+                                                       (__float128)decimal.s128Value / scaleDivisor + 0.5 :
+                                                       (__float128)decimal.s128Value / scaleDivisor - 0.5);
+                }
+
+                decimal.scale = decimals;
+
+                if ( decimal.s128Value > max_number_decimal )
+                    decimal.s128Value = max_number_decimal;
+                else if ( decimal.s128Value < -max_number_decimal )
+                    decimal.s128Value = -max_number_decimal;
+            }
             else
-                decimal.value = (int64_t)(decimal.value > 0 ?
-                                          (double)decimal.value / helpers::powerOf10_c[decimal.scale - decimals] + 0.5 :
-                                          (double)decimal.value / helpers::powerOf10_c[decimal.scale - decimals] - 0.5);
+            {
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
 
-            decimal.scale = decimals;
+                decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
+                if (decimal.precision > datatypes::INT64MAXPRECISION)
+                {
+                    if ( decimal.s128Value > (int128_t) max_number_decimal )
+                        decimal.value = max_number_decimal;
+                    else if ( decimal.s128Value < (int128_t) -max_number_decimal )
+                        decimal.value = -max_number_decimal;
+                    else
+                        decimal.value = decimal.s128Value;
+                }
 
+                decimal.precision = max_length;
 
-            //int64_t value = decimal.value;
+                if (decimals > decimal.scale)
+                    decimal.value *= helpers::powerOf10_c[decimals - decimal.scale];
+                else
+                    decimal.value = (int64_t)(decimal.value > 0 ?
+                                              (double)decimal.value / helpers::powerOf10_c[decimal.scale - decimals] + 0.5 :
+                                              (double)decimal.value / helpers::powerOf10_c[decimal.scale - decimals] - 0.5);
 
-            if ( decimal.value > max_number_decimal )
-                decimal.value = max_number_decimal;
-            else if ( decimal.value < -max_number_decimal )
-                decimal.value = -max_number_decimal;
+                decimal.scale = decimals;
+
+                if ( decimal.value > max_number_decimal )
+                    decimal.value = max_number_decimal;
+                else if ( decimal.value < -max_number_decimal )
+                    decimal.value = -max_number_decimal;
+            }
         }
         break;
 
@@ -1313,9 +1554,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
             int         negate = 1;
             bool        bFoundSign = false;
             bool        bRound = false;
-            double      floatValue;
-            int64_t     value = 0;
-            int64_t     frac = 0;
 
             if (strValue.empty())
             {
@@ -1331,27 +1569,63 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
             {
                 if (*s == 'e' || *s == 'E')
                 {
-                    floatValue = strtod(str, 0);
+                    if (max_length > datatypes::INT64MAXPRECISION)
+                    {
+                        bool dummy = false;
+                        char *ep = NULL;
+                        int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-                    // If the float value is too large, the saturated result may end up with
-                    // the wrong sign, so we just check first.
-                    if ((int64_t)floatValue > max_number_decimal)
-                        decimal.value = max_number_decimal;
-                    else if ((int64_t)floatValue < -max_number_decimal)
-                        decimal.value = -max_number_decimal;
-                    else if (floatValue > 0)
-                        decimal.value = (int64_t) (floatValue * helpers::powerOf10_c[decimals] + 0.5);
-                    else if (floatValue < 0)
-                        decimal.value = (int64_t) (floatValue * helpers::powerOf10_c[decimals] - 0.5);
+                        int128_t scaleDivisor;
+                        datatypes::getScaleDivisor(scaleDivisor, decimals);
+
+                        __float128 floatValue = strtoflt128 (str, 0);
+
+                        // If the float value is too large, the saturated result may end up with
+                        // the wrong sign, so we just check first.
+                        if ((int128_t)floatValue > max_number_decimal)
+                            decimal.s128Value = max_number_decimal;
+                        else if ((int128_t)floatValue < -max_number_decimal)
+                            decimal.s128Value = -max_number_decimal;
+                        else if (floatValue > 0)
+                            decimal.s128Value = (int128_t) (floatValue * scaleDivisor + 0.5);
+                        else if (floatValue < 0)
+                            decimal.s128Value = (int128_t) (floatValue * scaleDivisor - 0.5);
+                        else
+                            decimal.s128Value = 0;
+
+                        if (decimal.s128Value > max_number_decimal)
+                            decimal.s128Value = max_number_decimal;
+                        else if (decimal.s128Value < -max_number_decimal)
+                            decimal.s128Value = -max_number_decimal;
+
+                        return decimal;
+                    }
                     else
-                        decimal.value = 0;
+                    {
+                        int64_t max_number_decimal = helpers::maxNumber_c[max_length];
 
-                    if (decimal.value > max_number_decimal)
-                        decimal.value = max_number_decimal;
-                    else if (decimal.value < -max_number_decimal)
-                        decimal.value = -max_number_decimal;
+                        double floatValue = strtod(str, 0);
 
-                    return decimal;
+                        // If the float value is too large, the saturated result may end up with
+                        // the wrong sign, so we just check first.
+                        if ((int64_t)floatValue > max_number_decimal)
+                            decimal.value = max_number_decimal;
+                        else if ((int64_t)floatValue < -max_number_decimal)
+                            decimal.value = -max_number_decimal;
+                        else if (floatValue > 0)
+                            decimal.value = (int64_t) (floatValue * helpers::powerOf10_c[decimals] + 0.5);
+                        else if (floatValue < 0)
+                            decimal.value = (int64_t) (floatValue * helpers::powerOf10_c[decimals] - 0.5);
+                        else
+                            decimal.value = 0;
+
+                        if (decimal.value > max_number_decimal)
+                            decimal.value = max_number_decimal;
+                        else if (decimal.value < -max_number_decimal)
+                            decimal.value = -max_number_decimal;
+
+                        return decimal;
+                    }
                 }
             }
 
@@ -1392,54 +1666,119 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 }
             }
 
-            errno = 0;
-
-            if (firstInt)   // Checking to see if we have a decimal point, but no previous digits.
+            if (max_length > datatypes::INT64MAXPRECISION)
             {
-                value = strtoll(firstInt, &endptr, 10);
-            }
+                bool dummy = false;
+                char *ep = NULL;
+                int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-            if (!errno && endptr)
-            {
-                // Scale the integer portion according to the DECIMAL description
-                value *= helpers::powerOf10_c[decimals];
+                int128_t value = 0, frac = 0;
 
-                // Get the fractional part.
-                if (endptr && (*endptr == *convData->decimal_point || *endptr == '.'))
+                if (firstInt)   // Checking to see if we have a decimal point, but no previous digits.
                 {
-                    s = endptr + 1;
-
-                    // Get the digits to the right of the decimal
-                    // Only retrieve those that matter based on scale.
-                    for (fracChars = 0;
-                            *s && isdigit(*s) && fracChars < decimals;
-                            ++fracChars, ++s)
-                    {
-                        // Save the frac characters to a side buffer. This way we can limit
-                        // ourselves to the scale without modifying the original string.
-                        fracBuf[fracChars] = *s;
-                    }
-
-                    fracBuf[fracChars] = 0;
-
-                    // Check to see if we need to round
-                    if (isdigit(*s) && *s > '4')
-                    {
-                        bRound = true;
-                    }
+                    value = dataconvert::strtoll128(firstInt, dummy, &endptr);
                 }
 
-                frac = strtoll(fracBuf, &endptr, 10);
-                value += frac + (bRound ? 1 : 0);
-                value *= negate;
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, decimals);
+
+                if (!dummy && endptr)
+                {
+                    // Scale the integer portion according to the DECIMAL description
+                    value *= scaleDivisor;
+
+                    // Get the fractional part.
+                    if (endptr && (*endptr == *convData->decimal_point || *endptr == '.'))
+                    {
+                        s = endptr + 1;
+
+                        // Get the digits to the right of the decimal
+                        // Only retrieve those that matter based on scale.
+                        for (fracChars = 0;
+                                *s && isdigit(*s) && fracChars < decimals;
+                                ++fracChars, ++s)
+                        {
+                            // Save the frac characters to a side buffer. This way we can limit
+                            // ourselves to the scale without modifying the original string.
+                            fracBuf[fracChars] = *s;
+                        }
+
+                        fracBuf[fracChars] = 0;
+
+                        // Check to see if we need to round
+                        if (isdigit(*s) && *s > '4')
+                        {
+                            bRound = true;
+                        }
+                    }
+
+                    frac = dataconvert::strtoll128(fracBuf, dummy, &ep);
+                    value += frac + (bRound ? 1 : 0);
+                    value *= negate;
+                }
+
+                decimal.s128Value = value;
+
+                if (decimal.s128Value > max_number_decimal)
+                    decimal.s128Value = max_number_decimal;
+                else if (decimal.s128Value < -max_number_decimal)
+                    decimal.s128Value = -max_number_decimal;
             }
+            else
+            {
+                int64_t max_number_decimal = helpers::maxNumber_c[max_length];
 
-            decimal.value = value;
+                int64_t value = 0, frac = 0;
 
-            if (decimal.value > max_number_decimal)
-                decimal.value = max_number_decimal;
-            else if (decimal.value < -max_number_decimal)
-                decimal.value = -max_number_decimal;
+                errno = 0;
+
+                if (firstInt)   // Checking to see if we have a decimal point, but no previous digits.
+                {
+                    value = strtoll(firstInt, &endptr, 10);
+                }
+
+                if (!errno && endptr)
+                {
+                    // Scale the integer portion according to the DECIMAL description
+                    value *= helpers::powerOf10_c[decimals];
+
+                    // Get the fractional part.
+                    if (endptr && (*endptr == *convData->decimal_point || *endptr == '.'))
+                    {
+                        s = endptr + 1;
+
+                        // Get the digits to the right of the decimal
+                        // Only retrieve those that matter based on scale.
+                        for (fracChars = 0;
+                                *s && isdigit(*s) && fracChars < decimals;
+                                ++fracChars, ++s)
+                        {
+                            // Save the frac characters to a side buffer. This way we can limit
+                            // ourselves to the scale without modifying the original string.
+                            fracBuf[fracChars] = *s;
+                        }
+
+                        fracBuf[fracChars] = 0;
+
+                        // Check to see if we need to round
+                        if (isdigit(*s) && *s > '4')
+                        {
+                            bRound = true;
+                        }
+                    }
+
+                    frac = strtoll(fracBuf, &endptr, 10);
+                    value += frac + (bRound ? 1 : 0);
+                    value *= negate;
+                }
+
+                decimal.value = value;
+
+                if (decimal.value > max_number_decimal)
+                    decimal.value = max_number_decimal;
+                else if (decimal.value < -max_number_decimal)
+                    decimal.value = -max_number_decimal;
+            }
         }
         break;
 
@@ -1452,7 +1791,11 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                decimal.value = x;
+                if (max_length > datatypes::INT64MAXPRECISION)
+                    decimal.s128Value = x;
+                else
+                    decimal.value = x;
+
                 decimal.scale = s;
             }
         }
@@ -1471,7 +1814,11 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                decimal.value = x;
+                if (max_length > datatypes::INT64MAXPRECISION)
+                    decimal.s128Value = x;
+                else
+                    decimal.value = x;
+
                 decimal.scale = s;
             }
         }
@@ -1490,7 +1837,11 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                decimal.value = x;
+                if (max_length > datatypes::INT64MAXPRECISION)
+                    decimal.s128Value = x;
+                else
+                    decimal.value = x;
+
                 decimal.scale = s;
             }
         }
@@ -1509,7 +1860,11 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                decimal.value = x;
+                if (max_length > datatypes::INT64MAXPRECISION)
+                    decimal.s128Value = x;
+                else
+                    decimal.value = x;
+
                 decimal.scale = s;
             }
         }
@@ -1535,6 +1890,11 @@ double Func_cast_decimal::getDoubleVal(Row& row,
                           parm,
                           isNull,
                           operationColType);
+
+    if (decimal.precision > datatypes::INT64MAXPRECISION)
+    {
+        return datatypes::Decimal::getDoubleFromWideDecimal(decimal.s128Value, decimal.scale);
+    }
 
     return (double) decimal.value / helpers::powerOf10_c[decimal.scale];
 }
@@ -1642,7 +2002,14 @@ double Func_cast_double::getDoubleVal(Row& row,
         {
             IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-            dblval = (double)(decimal.value / pow((double)10, decimal.scale));
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                dblval = datatypes::Decimal::getDoubleFromWideDecimal(decimal.s128Value, decimal.scale);
+            }
+            else
+            {
+                dblval = (double)(decimal.value / pow((double)10, decimal.scale));
+            }
         }
         break;
 

@@ -470,7 +470,8 @@ inline int power ( int16_t a )
     return b;
 }
 
-inline void decimalPlaceDec(int64_t& d, int64_t& p, int8_t& s)
+template <typename T>
+inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s)
 {
     // find new scale if D < s
     if (d < s)
