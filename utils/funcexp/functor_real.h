@@ -281,6 +281,11 @@ public:
                           FunctionParm& fp,
                           bool& isNull,
                           execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                        FunctionParm& fp,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -318,6 +323,11 @@ public:
                           FunctionParm& fp,
                           bool& isNull,
                           execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                        FunctionParm& fp,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 

@@ -19,6 +19,7 @@
 #define H_DECIMALDATATYPE
 
 #include <cstdint>
+#include <cfloat>
 
 #include "calpontsystemcatalog.h"
 
@@ -239,6 +240,102 @@ class Decimal
                 if (ct.scale < 0)
                     ct.scale = 0;
             }
+        }
+
+        /**
+            @brief The method converts a __float128 value to an int64_t.
+        */
+        static inline int64_t getInt64FromFloat128(const __float128& value)
+        {
+            if (value > static_cast<__float128>(INT64_MAX))
+                return INT64_MAX;
+            else if (value < static_cast<__float128>(INT64_MIN))
+                return INT64_MIN;
+
+            return static_cast<int64_t>(value);
+        }
+
+        /**
+            @brief The method converts a __float128 value to an uint64_t.
+        */
+        static inline uint64_t getUInt64FromFloat128(const __float128& value)
+        {
+            if (value > static_cast<__float128>(UINT64_MAX))
+                return UINT64_MAX;
+            else if (value < 0)
+                return 0;
+
+            return static_cast<uint64_t>(value);
+        }
+
+        /**
+            @brief The method converts a __float128 value to a double.
+        */
+        static inline double getDoubleFromFloat128(const __float128& value)
+        {
+            if (value > static_cast<__float128>(DBL_MAX))
+                return DBL_MAX;
+            else if (value < -static_cast<__float128>(DBL_MAX))
+                return -DBL_MAX;
+
+            return static_cast<double>(value);
+        }
+
+        /**
+            @brief The method converts a wide decimal value to a double.
+        */
+        static inline double getDoubleFromWideDecimal(const int128_t& value, int8_t scale)
+        {
+            int128_t scaleDivisor;
+
+            getScaleDivisor(scaleDivisor, scale);
+
+            __float128 tmpval = (__float128) value / scaleDivisor;
+
+            return getDoubleFromFloat128(tmpval);
+        }
+
+        /**
+            @brief The method converts a wide decimal value to a double.
+        */
+        static inline double getDoubleFromWideDecimal(const int128_t& value)
+        {
+            return getDoubleFromFloat128(static_cast<__float128>(value));
+        }
+
+        /**
+            @brief The method converts a __float128 value to a long double.
+        */
+        static inline long double getLongDoubleFromFloat128(const __float128& value)
+        {
+            if (value > static_cast<__float128>(LDBL_MAX))
+                return LDBL_MAX;
+            else if (value < -static_cast<__float128>(LDBL_MAX))
+                return -LDBL_MAX;
+
+            return static_cast<long double>(value);
+        }
+
+        /**
+            @brief The method converts a wide decimal value to a long double.
+        */
+        static inline long double getLongDoubleFromWideDecimal(const int128_t& value)
+        {
+            return getLongDoubleFromFloat128(static_cast<__float128>(value));
+        }
+
+        /**
+            @brief The method converts a wide decimal value to an int64_t,
+            saturating the value if necessary.
+        */
+        static inline int64_t getInt64FromWideDecimal(const int128_t& value)
+        {
+            if (value > static_cast<int128_t>(INT64_MAX))
+                return INT64_MAX;
+            else if (value < static_cast<int128_t>(INT64_MIN))
+                return INT64_MIN;
+
+            return static_cast<int64_t>(value);
         }
 };
 
