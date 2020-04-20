@@ -110,7 +110,7 @@ set(funcexp_LIB_SRCS
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES})
+target_link_libraries(funcexp ${NETSNMP_LIBRARIES} quadmath)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 

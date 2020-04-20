@@ -102,22 +102,56 @@ bool getUIntValFromParm(
         {
             IDB_Decimal d = parm->data()->getDecimalVal(row, isNull);
 
-            if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
-                    d.value < 0)
+            if (parm->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                d.value = 0;
+                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
+                        d.value < 0)
+                {
+                    value = 0;
+                    break;
+                }
+
+                int128_t scaleDivisor, scaleDivisor2;
+
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                if (tmpval > static_cast<int128_t>(INT64_MAX))
+                    tmpval = INT64_MAX;
+                else if (tmpval < static_cast<int128_t>(INT64_MIN))
+                    tmpval = INT64_MIN;
+
+                value = tmpval;
             }
-            double dscale = d.scale;
-            int64_t tmpval = d.value / pow(10.0, dscale);
-            int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+            else
+            {
+                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
+                        d.value < 0)
+                {
+                    d.value = 0;
+                }
+                double dscale = d.scale;
+                int64_t tmpval = d.value / pow(10.0, dscale);
+                int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( tmpval >= 0 && lefto > 4 )
-                tmpval++;
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
 
-            if ( tmpval < 0 && lefto < -4 )
-                tmpval--;
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
 
-            value = tmpval;
+                value = tmpval;
+            }
         }
         break;
 

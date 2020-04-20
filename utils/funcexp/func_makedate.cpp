@@ -68,15 +68,38 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            year = d.value / pow(10.0, dscale);
-            int lefto = (d.value - year * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( year >= 0 && lefto > 4 )
-                year++;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( year < 0 && lefto < -4 )
-                year--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                year = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                year = d.value / pow(10.0, dscale);
+                int lefto = (d.value - year * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( year >= 0 && lefto > 4 )
+                    year++;
+
+                if ( year < 0 && lefto < -4 )
+                    year--;
+            }
 
             break;
         }
@@ -128,23 +151,53 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            int64_t tmp = d.value / pow(10.0, dscale);
-            int lefto = (d.value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( tmp >= 0 && lefto > 4 )
-                tmp++;
-
-            if ( tmp < 0 && lefto < -4 )
-                tmp--;
-
-            if (tmp < 1)
+            if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                isNull = true;
-                return 0;
-            }
+                int128_t scaleDivisor, scaleDivisor2;
 
-            dayofyear = helpers::intToString(tmp);
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                if (tmpval < 1)
+                {
+                    isNull = true;
+                    return 0;
+                }
+
+                int64_t tmpval64 = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                dayofyear = helpers::intToString(tmpval64);
+            }
+            else
+            {
+                double dscale = d.scale;
+                int64_t tmp = d.value / pow(10.0, dscale);
+                int lefto = (d.value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if (tmp >= 0 && lefto > 4)
+                    tmp++;
+
+                if (tmp < 0 && lefto < -4)
+                    tmp--;
+
+                if (tmp < 1)
+                {
+                    isNull = true;
+                    return 0;
+                }
+
+                dayofyear = helpers::intToString(tmp);
+            }
             break;
         }
 
