@@ -63,17 +63,16 @@ typedef execplan::CalpontSystemCatalog::ColType Type;
  */
 struct IDB_Decimal
 {
-    IDB_Decimal(): value(0), scale(0), precision(0)
+    IDB_Decimal(): s128Value(0), value(0), scale(0), precision(0)
     {
-        s128Value = 0;
     }
 
-    IDB_Decimal(int64_t val, int8_t s, uint8_t p) :
-        value (val),
+    IDB_Decimal(int64_t val, int8_t s, uint8_t p, int128_t val128 = 0) :
+        s128Value(val128),
+        value(val),
         scale(s),
         precision(p)
     {
-        s128Value = 0;
     }
 
     int decimalComp(const IDB_Decimal& d) const
@@ -117,12 +116,31 @@ struct IDB_Decimal
 
     bool operator==(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value == rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) == 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            const_cast<IDB_Decimal&>(rhs).s128Value = rhs.value;
+
+            if (scale == rhs.scale)
+                return s128Value == rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) == 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value == rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) == 0);
         }
         else
         {
@@ -135,12 +153,31 @@ struct IDB_Decimal
 
     bool operator>(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value > rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) > 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            IDB_Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value > rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) > 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value > rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) > 0);
         }
         else
         {
@@ -153,12 +190,31 @@ struct IDB_Decimal
 
     bool operator<(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value < rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) < 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            IDB_Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value < rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) < 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value < rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) < 0);
         }
         else
         {
@@ -171,12 +227,31 @@ struct IDB_Decimal
 
     bool operator>=(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value >= rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) >= 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            IDB_Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value >= rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) >= 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value >= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) >= 0);
         }
         else
         {
@@ -189,12 +264,31 @@ struct IDB_Decimal
 
     bool operator<=(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value <= rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) <= 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            IDB_Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value <= rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) <= 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value <= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) <= 0);
         }
         else
         {
@@ -207,12 +301,31 @@ struct IDB_Decimal
 
     bool operator!=(const IDB_Decimal& rhs) const
     {
-        if (utils::widthByPrecision(precision) == 16)
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
         {
             if (scale == rhs.scale)
                 return s128Value != rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) != 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            IDB_Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value != rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) != 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value != rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(IDB_Decimal(0, scale, precision, (int128_t) value), rhs) != 0);
         }
         else
         {
@@ -308,7 +421,7 @@ struct Result
 {
     Result(): intVal(0), uintVal(0), origIntVal(0), dummy(0),
         doubleVal(0), longDoubleVal(0), floatVal(0), boolVal(false),
-        strVal(""), decimalVal(IDB_Decimal(0, 0, 0)),
+        strVal(""), decimalVal(IDB_Decimal()),
         valueConverted(false) {}
     int64_t intVal;
     uint64_t uintVal;
@@ -783,7 +896,10 @@ inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            dataconvert::DataConvert::decimalToString(fResult.decimalVal.value, fResult.decimalVal.scale, tmp, 22, fResultType.colDataType);
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+                dataconvert::DataConvert::decimalToString(&fResult.decimalVal.s128Value, fResult.decimalVal.scale, tmp, utils::MAXLENGTH16BYTES, fResultType.colDataType);
+            else
+                dataconvert::DataConvert::decimalToString(fResult.decimalVal.value, fResult.decimalVal.scale, tmp, 22, fResultType.colDataType);
             fResult.strVal = std::string(tmp);
             break;
         }
@@ -880,7 +996,20 @@ inline int64_t TreeNode::getIntVal()
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            return (int64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor;
+
+                datatypes::getScaleDivisor(scaleDivisor, fResult.decimalVal.scale);
+
+                int128_t tmpval = fResult.decimalVal.s128Value / scaleDivisor;
+
+                return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                return (int64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            }
         }
 
         case CalpontSystemCatalog::DATE:
@@ -1062,8 +1191,15 @@ inline double TreeNode::getDoubleVal()
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            // this may not be accurate. if this is problematic, change to pre-calculated power array.
-            return (double)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                return datatypes::Decimal::getDoubleFromWideDecimal(fResult.decimalVal.s128Value, fResult.decimalVal.scale);
+            }
+            else
+            {
+                // this may not be accurate. if this is problematic, change to pre-calculated power array.
+                return (double)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            }
         }
 
         case CalpontSystemCatalog::DATE:
