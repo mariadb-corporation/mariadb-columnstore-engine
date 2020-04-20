@@ -86,7 +86,24 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            period1 = d.value / pow(10.0, d.scale);
+
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                int128_t tmpval = d.s128Value / scaleDivisor;
+
+                if (tmpval > static_cast<int128_t>(INT64_MAX))
+                    tmpval = INT64_MAX;
+                else if (tmpval < static_cast<int128_t>(INT64_MIN))
+                    tmpval = INT64_MIN;
+
+                period1 = tmpval;
+            }
+            else
+            {
+                period1 = d.value / pow(10.0, d.scale);
+            }
             break;
         }
 
@@ -135,7 +152,24 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-            period2 = d.value / pow(10.0, d.scale);
+
+            if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                int128_t tmpval = d.s128Value / scaleDivisor;
+
+                if (tmpval > static_cast<int128_t>(INT64_MAX))
+                    tmpval = INT64_MAX;
+                else if (tmpval < static_cast<int128_t>(INT64_MIN))
+                    tmpval = INT64_MIN;
+
+                period2 = tmpval;
+            }
+            else
+            {
+                period2 = d.value / pow(10.0, d.scale);
+            }
             break;
         }
 

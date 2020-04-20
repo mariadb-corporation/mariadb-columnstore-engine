@@ -132,15 +132,50 @@ string Func_char::getStrVal(Row& row,
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                IDB_Decimal d = rc->getDecimalVal(row, isNull);
-                double dscale = d.scale;
-                // get decimal and round up
-                value = d.value / pow(10.0, dscale);
-                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+                IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
-                if ( lefto > 4 )
-                    value++;
-                
+                if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    if (d.s128Value < 0)
+                        return "";
+
+                    int128_t scaleDivisor, scaleDivisor2;
+
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                    scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                    int128_t tmpval = d.s128Value / scaleDivisor;
+                    int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                    if (lefto > 4)
+                        tmpval++;
+
+                    if (tmpval > static_cast<int128_t>(INT64_MAX))
+                        tmpval = INT64_MAX;
+
+                    if ( !getChar((int64_t)tmpval, buf) )
+                    {
+                        isNull = true;
+                        return "";
+                    }
+                }
+                else
+                {
+                    double dscale = d.scale;
+                    // get decimal and round up
+                    int value = d.value / pow(10.0, dscale);
+                    int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                    if ( lefto > 4 )
+                        value++;
+
+                    if ( !getChar((int64_t)value, buf) )
+                    {
+                        isNull = true;
+                        return "";
+                    }
+                }
             }
             break;
 
