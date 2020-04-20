@@ -71,15 +71,38 @@ string Func_elt::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            number = d.value / pow(10.0, dscale);
-            int lefto = (d.value - number * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( number >= 0 && lefto > 4 )
-                number++;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( number < 0 && lefto < -4 )
-                number--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                number = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                number = d.value / pow(10.0, dscale);
+                int lefto = (d.value - number * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if (number >= 0 && lefto > 4)
+                    number++;
+
+                if (number < 0 && lefto < -4)
+                    number--;
+            }
 
             break;
         }
@@ -102,7 +125,7 @@ string Func_elt::getStrVal(rowgroup::Row& row,
     }
 
     std::string ret;
-	stringValue(parm[number], row, isNull, ret);
+    stringValue(parm[number], row, isNull, ret);
     return ret;
 
 }

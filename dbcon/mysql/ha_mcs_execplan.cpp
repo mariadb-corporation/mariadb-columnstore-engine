@@ -4094,6 +4094,20 @@ ReturnedColumn* buildFunctionColumn(
         fc->functionParms(funcParms);
         fc->resultType(colType_MysqlToIDB(ifp));
 
+        // if the result type is DECIMAL and any function parameter is a wide decimal
+        // column, set the result colwidth to wide
+        if (fc->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        {
+            for (size_t i = 0; i < funcParms.size(); i++)
+            {
+                if (datatypes::Decimal::isWideDecimalType(funcParms[i]->data()->resultType()))
+                {
+                    fc->resultType().colWidth = datatypes::MAXDECIMALWIDTH;
+                    break;
+                }
+            }
+        }
+
         // MySQL give string result type for date function, but has the flag set.
         // we should set the result type to be datetime for comparision.
         if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
@@ -4409,6 +4423,14 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         i = 1;
     }
 
+    bool specialPrecision = false;
+
+    // handle the case when the constant value is 0.12345678901234567890123456789012345678
+    // In this case idp->decimal_precision() = 39, but we can 
+    if (((i + 1) < str->length()) &&
+        str->ptr()[i] == '0' && str->ptr()[i + 1] == '.')
+        specialPrecision = true;
+
     for (; i < str->length(); i++)
     {
         if (str->ptr()[i] == '.')
@@ -4419,7 +4441,9 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
 
     if (idp->decimal_precision() <= datatypes::INT64MAXPRECISION)
         columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
-    else if (idp->decimal_precision() <= datatypes::INT128MAXPRECISION)
+    else if (idp->decimal_precision() <= datatypes::INT128MAXPRECISION ||
+             (idp->decimal_precision() <= datatypes::INT128MAXPRECISION + 1 &&
+              specialPrecision))
     {
         bool dummy = false;
         columnstore_decimal.s128Value =
@@ -4434,9 +4458,10 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         columnstore_decimal.value = (int64_t)(val > 0 ? val + 0.5 : val - 0.5);
     }
     else
-        columnstore_decimal.scale = idp->decimals;
+        columnstore_decimal.scale = idp->decimal_scale();
 
-    columnstore_decimal.precision = idp->max_length - idp->decimals;
+    columnstore_decimal.precision = (idp->decimal_precision() > datatypes::INT128MAXPRECISION) ?
+                                     datatypes::INT128MAXPRECISION : idp->decimal_precision();
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     cc->charsetNumber(idp->collation.collation->number);
