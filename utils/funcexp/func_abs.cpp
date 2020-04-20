@@ -66,7 +66,11 @@ IDB_Decimal Func_abs::getDecimalVal(Row& row,
                                     CalpontSystemCatalog::ColType&)
 {
     IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-    d.value = llabs(d.value);
+
+    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        d.s128Value = (d.s128Value < 0) ? -d.s128Value : d.s128Value;
+    else
+        d.value = llabs(d.value);
     return d;
 }
 

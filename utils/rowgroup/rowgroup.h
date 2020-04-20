@@ -1914,6 +1914,10 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
             out->setUintField(in.getUintField(i), i);
         else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
             out->setLongDoubleField(in.getLongDoubleField(i), i);
+        else if (UNLIKELY((in.getColType(i) == execplan::CalpontSystemCatalog::DECIMAL ||
+                           in.getColType(i) == execplan::CalpontSystemCatalog::UDECIMAL) &&
+                           in.getColumnWidth(i) == datatypes::MAXDECIMALWIDTH))
+            in.copyBinaryField(*out, i, i);
         else
             out->setIntField(in.getIntField(i), i);
     }
