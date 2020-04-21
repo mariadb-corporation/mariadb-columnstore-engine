@@ -17,7 +17,7 @@
 # Non support errors 1000 ~ 2000. 
 # The query will go through the optimizer again with some optimization turned off
 1000	ERR_MISS_JOIN	%1% not joined.
-1001	ERR_NON_SUPPORTED_FUNCTION	Function '%1%' can only be used in the outermost select or order by clause and cannot be used in conjunction with an aggregate function.
+1001	ERR_NON_SUPPORTED_FUNCTION	Function '%1%' isn't supported.
 1002	ERR_INCOMPATIBLE_JOIN	%1% incompatible column type specified for join condition.
 1003	ERR_CIRCULAR_JOIN	Circular joins are not supported.
 1004	ERR_MIX_JOIN	Mixed %1% JOIN is not supported.
