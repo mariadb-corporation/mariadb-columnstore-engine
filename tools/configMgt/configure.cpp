@@ -47,7 +47,7 @@
 #include <netdb.h>
 
 #include <readline.h>
-#include <history.h>
+#include <readline/history.h>
 
 #include "liboamcpp.h"
 #include "configcpp.h"
