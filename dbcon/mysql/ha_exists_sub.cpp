@@ -112,7 +112,7 @@ execplan::ParseTree* ExistsSub::transform()
         return NULL;
     }
 
-    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false, true) != 0)
+    if (getSelectPlan(gwi, *(fSub->get_select_lex()), csep, false) != 0)
     {
         fGwip.fatalParseError = true;
 
