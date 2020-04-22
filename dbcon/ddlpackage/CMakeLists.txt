@@ -11,6 +11,7 @@ set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-comp
 
 ########### next target ###############
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR}) # to pick up flex/bison output
 ADD_LIBRARY(ddlpackage SHARED
     serialize.cpp
     ddl-scan.cpp
