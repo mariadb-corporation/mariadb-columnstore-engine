@@ -7853,8 +7853,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
         }
 
         // We don't currently support limit with correlated subquery
-        if (csep->limitNum() != (uint64_t) - 1 &&
-                gwi.subQuery && !gwi.correlatedTbNameVec.empty())
+        if ((rc = processLimitAndOffset(select_lex, gwi, csep, unionSel, isUnion, isSelectHandlerTop)))
         {
             return rc;
         }
