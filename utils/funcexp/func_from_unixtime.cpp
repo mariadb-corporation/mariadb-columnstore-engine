@@ -45,7 +45,8 @@ DateTime getDateTime(rowgroup::Row& row,
                      FunctionParm& parm,
                      bool& isNull)
 {
-    int64_t val;
+    int64_t val = 0;
+    uint32_t msec = 0;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -54,13 +55,10 @@ DateTime getDateTime(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DECIMAL:
         {
             double value = parm[0]->data()->getDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            val = (int64_t)value;
+            double fracpart, intpart;
+            fracpart = modf(value, &intpart);
+            val = (int64_t)intpart;
+            msec = (uint32_t)(fracpart * IDB_pow[parm[0]->data()->resultType().scale]);
             break;
         }
 
@@ -84,7 +82,7 @@ DateTime getDateTime(rowgroup::Row& row,
     dt.hour = (int64_t) tmp_tm.tm_hour;
     dt.minute = (int64_t) tmp_tm.tm_min;
     dt.second = (int64_t) tmp_tm.tm_sec;
-    dt.msecond = 0;
+    dt.msecond = msec;
     return dt;
 }
 }
