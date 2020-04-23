@@ -1,6 +1,6 @@
 [Unit]
 Description=mcs-controllernode
-PartOf=mariadb-columnstore.service
+PartOf=mcs-workernode.service
 After=mcs-workernode.service
 
 [Service]
