@@ -3832,7 +3832,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 }
 
 
-void ProcessManager::reinitProcesses()
+void ProcessManager::reinitProcesses(std::string skipModule)
 {
     Oam oam;
 
@@ -3840,35 +3840,12 @@ void ProcessManager::reinitProcesses()
 
     reinitProcessType("DBRMWorkerNode");
     reinitProcessType("WriteEngineServer");
-    restartProcessType("ExeMgr");
+    restartProcessType("ExeMgr",skipModule);
     sleep(1);
-    restartProcessType("DDLProc");
+    restartProcessType("DDLProc",skipModule);
     sleep(1);
-    restartProcessType("DMLProc");
-    sleep(1);
-
-    // waiting until dml are ACTIVE
-    while (true)
-    {
-        ProcessStatus DMLprocessstatus;
-
-        try
-        {
-            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
-        }
-        catch (exception& ex)
-        {}
-        catch (...)
-        {}
-
-        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
-            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
-        else
-            break;
-
-        // wait some more
-        sleep(2);
-    }
+    restartProcessType("DMLProc",skipModule);
+    sleep(3);
 
     log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
 }
@@ -4921,6 +4898,7 @@ int ProcessManager::reinitProcessType( std::string processName )
                 if ( systemprocessstatus.processstatus[i].ProcessName == "ServerMonitor" )
                 {
                     // found one, request reinit of it
+                    log.writeLog(__LINE__, "reinitProcessType: cpimport" + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
                     retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module,
                                 "cpimport");
                     log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
@@ -9967,6 +9945,10 @@ int ProcessManager::OAMParentModuleChange()
            ++retryCount;
         }
 
+        //run save.brm script
+        //Nope turns out this has to be done first...
+
+        processManager.saveBRM(false);
         try
         {
             oam.autoMovePmDbroot(downOAMParentName);
@@ -9975,10 +9957,6 @@ int ProcessManager::OAMParentModuleChange()
         {
             log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
         }
-
-        //run save.brm script
-        //MCOL-3945 move saveBRM after autoMovePmDbroot as this will potentially mount the dbrm directory from dbroot1
-        processManager.saveBRM(true, false);
 
         //distribute config file
         distributeConfigFile("system");
@@ -10098,8 +10076,11 @@ int ProcessManager::OAMParentModuleChange()
         status = startsystemthreadStatus;
     }
 
+    reinitProcessType("cpimport");
+
     // waiting until dml are ACTIVE
-    while (true)
+    int retry = 0;
+    while (retry < 30)
     {
         ProcessStatus DMLprocessstatus;
 
@@ -10123,6 +10104,7 @@ int ProcessManager::OAMParentModuleChange()
 
         // wait some more
         sleep(2);
+        ++retry;
     }
 
 
@@ -10225,6 +10207,35 @@ int ProcessManager::OAMParentModuleChange()
     processManager.restartProcessType("DBRMControllerNode");
 
     processManager.reinitProcesses();
+
+    // waiting until dml are ACTIVE
+    retry = 0;
+    while (retry < 30)
+    {
+        ProcessStatus DMLprocessstatus;
+
+        try
+        {
+            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+        }
+        catch (exception& ex)
+        {}
+        catch (...)
+        {}
+
+        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+            break;
+
+        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+            break;
+
+        // wait some more
+        sleep(2);
+        ++retry;
+    }
 
     // clear alarm
     aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
@@ -11151,7 +11162,15 @@ int ProcessManager::glusterAssign(std::string moduleName, std::string dbroot)
     msg << dbroot;
 
     int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
-
+    int retry = 0;
+    // Try this for a minute because in failover the node returning to service may not be listening yet
+    while(returnStatus != API_SUCCESS && retry < 60)
+    {
+        log.writeLog(__LINE__, "glusterAssign retrying...", LOG_TYPE_DEBUG);
+        returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+        sleep(1);
+        ++retry;
+    }
     if ( returnStatus == API_SUCCESS)
     {
         //log the success event
@@ -11181,7 +11200,15 @@ int ProcessManager::glusterUnassign(std::string moduleName, std::string dbroot)
     msg << dbroot;
 
     int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
-
+    int retry = 0;
+    // Try this for a minute because in failover the node returning to service may not be listening yet
+    while(returnStatus != API_SUCCESS && retry < 60)
+    {
+        log.writeLog(__LINE__, "glusterUnassign retrying...", LOG_TYPE_DEBUG);
+        returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+        sleep(1);
+        ++retry;
+    }
     if ( returnStatus == API_SUCCESS)
     {
         //log the success event
