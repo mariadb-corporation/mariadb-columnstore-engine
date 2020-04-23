@@ -31,6 +31,6 @@ local Pipeline(mde_branch, image) = {
 };
 
 [
-  Pipeline("go-1-11", "golang:1.11"),
-  Pipeline("go-1-12", "golang:1.12"),
+  Pipeline("develop-1.4", "golang:1.11"),
+  Pipeline("develop-1.4", "golang:1.12"),
 ]
