@@ -2156,7 +2156,8 @@ void pingDeviceThread()
 
                                     processManager.setSystemState(oam::BUSY_INIT);
 
-                                    //call dbrm control
+                                    // call for a reload in case cpimport was running and
+                                    // some cleanup is needed on dbrmcontroller thats active before continuing
                                     oam.dbrmctl("reload");
                                     log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
 
