@@ -460,6 +460,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 {
     Oam oam;
     ByteStream	ackMsg;
+    MonitorConfig currentConfig;
 
     ByteStream::byte messageType;
     ByteStream::byte requestID;
@@ -809,6 +810,24 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     if ( processName == "cpimport" )
                     {
                         system("pkill -sighup cpimport");
+                        for (int i=0; i < 10; i++)
+                        {
+                            //get pid
+                            char buf[512];
+                            FILE *cmd_pipe = popen("pidof -s cpimport", "r");
+
+                            fgets(buf, 512, cmd_pipe);
+                            pid_t pid = strtoul(buf, NULL, 10);
+
+                            pclose( cmd_pipe );
+
+                            if (pid)
+                                sleep(2);
+                            else
+                                break;
+                        }
+                        // kill other processes
+                        system("pkill -9 cpimport.bin");
                     }
                     else
                     {
@@ -2217,6 +2236,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     char* argList[MAXARGUMENTS];
     unsigned int i = 0;
     MonitorLog log;
+    MonitorConfig currentConfig;
     unsigned int numAugs = 0;
     Oam oam;
     SystemProcessStatus systemprocessstatus;
@@ -3736,7 +3756,7 @@ int ProcessMonitor::updateConfig()
 {
     //ProcMon log file
     MonitorLog log;
-//	MonitorConfig config;
+    MonitorConfig currentConfig;
 //	ProcessMonitor aMonitor(config, log);
     Oam oam;
 
@@ -3758,7 +3778,7 @@ int ProcessMonitor::updateConfig()
     }
 
     //Update a map for application launch ID for this Process-Monitor
-    string OAMParentModuleType = config.OAMParentName().substr(0, MAX_MODULE_TYPE_SIZE);
+    string OAMParentModuleType = currentConfig.OAMParentName().substr(0, MAX_MODULE_TYPE_SIZE);
     string systemModuleType = config.moduleName().substr(0, MAX_MODULE_TYPE_SIZE);
 
     for ( unsigned int i = 0 ; i < systemprocessconfig.processconfig.size(); i++)
@@ -5476,9 +5496,11 @@ bool ProcessMonitor::amazonIPCheck()
 
             // get all ips if parent oam
             // get just parent and local if not parent oam
-            if ( config.moduleName() == config.OAMParentName() ||
+            MonitorConfig currentConfig;
+
+            if ( config.moduleName() == currentConfig.OAMParentName() ||
                     moduleName == config.moduleName() ||
-                    moduleName == config.OAMParentName() )
+                    moduleName == currentConfig.OAMParentName() )
             {
                 HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
