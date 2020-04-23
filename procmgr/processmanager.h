@@ -302,7 +302,7 @@ public:
     /**
     *@brief reinit Processes trying to replace recycleProcess
     */
-    void reinitProcesses();
+    void reinitProcesses(std::string skipModule = "none");
     /**
     *@brief recycle Processes
     */
