@@ -52,13 +52,19 @@ DateTime getDateTime(rowgroup::Row& row,
     {
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::DECIMAL:
         {
             double value = parm[0]->data()->getDoubleVal(row, isNull);
             double fracpart, intpart;
             fracpart = modf(value, &intpart);
             val = (int64_t)intpart;
             msec = (uint32_t)(fracpart * IDB_pow[parm[0]->data()->resultType().scale]);
+            break;
+        }
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        {
+            IDB_Decimal dec = parm[0]->data()->getDecimalVal(row, isNull);
+            val = dec.value / IDB_pow[dec.scale];
+            msec = dec.value % IDB_pow[dec.scale];
             break;
         }
 
