@@ -2494,8 +2494,37 @@ void pingDeviceThread()
                                     log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
                                     //set recycle process
-                                    //processManager.recycleProcess(moduleName);
-                                    //processManager.reinitProcesses();
+                                    // waiting until dml are ACTIVE
+                                    // disableModule is going to trigger DMLProc to restart wait for it
+                                    int retry = 0;
+                                    while (retry < 30)
+                                    {
+                                        ProcessStatus DMLprocessstatus;
+
+                                        try
+                                        {
+                                            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+                                        }
+                                        catch (exception& ex)
+                                        {}
+                                        catch (...)
+                                        {}
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+                                            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+                                            break;
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+                                            break;
+
+                                        // wait some more
+                                        sleep(2);
+                                        ++retry;
+                                    }
+                                    // restart DMLProc again to retrigger rollback with all dbroots connected
+                                    processManager.restartProcessType("DMLProc");
                                     //set query system state ready
                                     processManager.setQuerySystemState(true);
                                 }
