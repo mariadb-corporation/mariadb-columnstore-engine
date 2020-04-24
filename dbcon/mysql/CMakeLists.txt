@@ -35,7 +35,7 @@ set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-t
 
 if (COMMAND mysql_add_plugin)
     mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY DEFAULT
-        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
+        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool ${SERVER_BUILD_DIR}/storage/maria/libaria.a ${SERVER_BUILD_DIR}/storage/myisam/libmyisam.a ${SERVER_BUILD_DIR}/storage/perfschema/libperfschema.a
         COMPONENT columnstore-engine)
 else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
@@ -45,6 +45,7 @@ else ()
 
     install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 endif ()
+
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 
