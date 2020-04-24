@@ -1,6 +1,6 @@
 [Unit]
 Description=WriteEngineServer
-PartOf=mariadb-columnstore.service
+PartOf=mcs-exemgr.service
 After=mcs-exemgr.service
 
 [Service]
