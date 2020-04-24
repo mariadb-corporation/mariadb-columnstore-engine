@@ -1,6 +1,6 @@
 [Unit]
 Description=mcs-primproc
-PartOf=mariadb-columnstore.service
+PartOf=mcs-workernode.service
 After=mcs-controllernode.service
 
 [Service]

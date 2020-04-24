@@ -11,3 +11,4 @@ ExecStart=/usr/bin/bash -c "/usr/bin/load_brm /var/lib/columnstore/data1/systemF
 
 [Install]
 WantedBy=mariadb-columnstore.service
+WantedBy=mcs-workernode.service
