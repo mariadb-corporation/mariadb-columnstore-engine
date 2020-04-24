@@ -110,7 +110,7 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
             e = c;
 
         // for count(*), the column is optimized out, index[1] does not exist.
-        uint64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
+        int64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
 
         for (int64_t i = b; i <= e; i++)
         {
@@ -125,7 +125,7 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
 
             fRow.setData(getPointer(fRowData->at(i)));
 
-            if (fRow.isNullValue(colIn) == true)
+            if (colIn == -1 || fRow.isNullValue(colIn) == true)
                 continue;
 
             if (fFunctionId != WF__COUNT_DISTINCT)
