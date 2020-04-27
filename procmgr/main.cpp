@@ -47,6 +47,7 @@ using namespace threadpool;
 using namespace config;
 
 bool runStandby = false;
+bool MsgThreadActive = false;
 bool runCold = false;
 string systemName = "system";
 string iface_name;
@@ -412,6 +413,9 @@ int main(int argc, char** argv)
             log.writeLog(__LINE__, "ERROR: makeConfig failed", LOG_TYPE_ERROR);
         }
 
+
+        // TODO: This is called before MessageThread is created.
+        // Doesn't break anything but can be removed as it's done after MessageThread creation.
         try
         {
             oam.distributeConfigFile();
@@ -474,8 +478,6 @@ static void messageThread(Configuration config)
         sleep (1);
     }
 
-    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
-
     //read and cleanup port before trying to use
     try
     {
@@ -489,6 +491,8 @@ static void messageThread(Configuration config)
     {
     }
 
+    log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
+
     //
     //waiting for request
     //
@@ -499,7 +503,7 @@ static void messageThread(Configuration config)
         try
         {
             MessageQueueServer procmgr("ProcMgr");
-
+            MsgThreadActive = true;
             for (;;)
             {
                 try
@@ -1645,16 +1649,16 @@ void pingDeviceThread()
                                 if (busy)
                                     break;
 
-                                //set query system state not ready
-                                processManager.setQuerySystemState(false);
-
-                                processManager.setSystemState(oam::BUSY_INIT);
-
                                 processManager.reinitProcessType("cpimport");
 
                                 // halt the dbrm
                                 oam.dbrmctl("halt");
                                 log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+
+                                //set query system state not ready
+                                processManager.setQuerySystemState(false);
+
+                                processManager.setSystemState(oam::BUSY_INIT);
 
                                 aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, CLEAR);
 
@@ -1719,6 +1723,36 @@ void pingDeviceThread()
 
                                                     //set query system state ready
                                                     processManager.setQuerySystemState(true);
+
+                                                    // waiting until dml are ACTIVE
+                                                    // disableModule is going to trigger DMLProc to restart wait for it
+                                                    int retry = 0;
+                                                    while (retry < 30)
+                                                    {
+                                                        ProcessStatus DMLprocessstatus;
+
+                                                        try
+                                                        {
+                                                            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+                                                        }
+                                                        catch (exception& ex)
+                                                        {}
+                                                        catch (...)
+                                                        {}
+
+                                                        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+                                                            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+                                                        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+                                                            break;
+
+                                                        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+                                                            break;
+
+                                                        // wait some more
+                                                        sleep(2);
+                                                        ++retry;
+                                                    }
 
 													goto break_case;
                                                 }
@@ -2012,6 +2046,7 @@ void pingDeviceThread()
 
                                     log.writeLog(__LINE__, "Module failed to auto start: " + moduleName, LOG_TYPE_CRITICAL);
 
+
                                     if ( amazon )
                                         processManager.setSystemState(oam::FAILED);
                                     else
@@ -2020,6 +2055,35 @@ void pingDeviceThread()
                                     //set query system state ready
                                     processManager.setQuerySystemState(true);
 
+                                    // waiting until dml are ACTIVE
+                                    // disableModule is going to trigger DMLProc to restart wait for it
+                                    int retry = 0;
+                                    while (retry < 30)
+                                    {
+                                        ProcessStatus DMLprocessstatus;
+
+                                        try
+                                        {
+                                            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+                                        }
+                                        catch (exception& ex)
+                                        {}
+                                        catch (...)
+                                        {}
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+                                            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+                                            break;
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+                                            break;
+
+                                        // wait some more
+                                        sleep(2);
+                                        ++retry;
+                                    }
                                     //clear count
                                     moduleInfoList[moduleName] = 0;
                                 }
@@ -2081,21 +2145,22 @@ void pingDeviceThread()
                                     Configuration config;
 									log.writeLog(__LINE__, "*** module is down: " + moduleName, LOG_TYPE_CRITICAL);
 
-                                    //set query system state not ready
-                                    processManager.setQuerySystemState(false);
-
-                                    processManager.setSystemState(oam::BUSY_INIT);
-
                                     processManager.reinitProcessType("cpimport");
 
                                     // halt the dbrm
                                     oam.dbrmctl("halt");
                                     log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
 
+                                    //set query system state not ready
+                                    processManager.setQuerySystemState(false);
+
                                     processManager.setSystemState(oam::BUSY_INIT);
 
-                                    //string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
-                                    //system(cmd.c_str());
+                                    // call for a reload in case cpimport was running and
+                                    // some cleanup is needed on dbrmcontroller thats active before continuing
+                                    oam.dbrmctl("reload");
+                                    log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+
 
                                     //send notification
                                     oam.sendDeviceNotification(moduleName, MODULE_DOWN);
@@ -2109,9 +2174,7 @@ void pingDeviceThread()
                                     //set module to disable state
                                     processManager.disableModule(moduleName, false);
 
-                                    //call dbrm control
-                                    oam.dbrmctl("reload");
-                                    log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+
 
                                     // if pm, move dbroots to other pms
                                     if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
@@ -2142,12 +2205,45 @@ void pingDeviceThread()
                                         {
                                             processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
 
+                                            //call dbrm control
+                                            oam.dbrmctl("reload");
+                                            log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                             // resume the dbrm
                                             oam.dbrmctl("resume");
                                             log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
                                             //set query system state ready
                                             processManager.setQuerySystemState(true);
+
+                                            // waiting until dml are ACTIVE
+                                            // disableModule is going to trigger DMLProc to restart wait for it
+                                            int retry = 0;
+                                            while (retry < 30)
+                                            {
+                                                ProcessStatus DMLprocessstatus;
+
+                                                try
+                                                {
+                                                    oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+                                                }
+                                                catch (exception& ex)
+                                                {}
+                                                catch (...)
+                                                {}
+
+                                                if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+                                                    log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+                                                if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+                                                    break;
+
+                                                if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+                                                    break;
+
+                                                // wait some more
+                                                sleep(2);
+                                                ++retry;
+                                            }
 
                                             break;
                                         }
@@ -2160,6 +2256,9 @@ void pingDeviceThread()
                                 {
                                     if ( moduleName.find("um") == 0 )
                                     {
+                                        //call dbrm control
+                                        oam.dbrmctl("reload");
+                                        log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                         // resume the dbrm
                                         oam.dbrmctl("resume");
                                         log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
@@ -2350,8 +2449,8 @@ void pingDeviceThread()
                                                 }
                                             }
 
-                                            //set recycle process
-                                            processManager.recycleProcess(moduleName);
+                                            //set reinit process
+                                            processManager.reinitProcesses();
 
                                             //set query system state ready
                                             processManager.setQuerySystemState(true);
@@ -2365,6 +2464,9 @@ void pingDeviceThread()
                                             ( opState != oam::AUTO_DISABLED ) )
 
                                     {
+                                        //call dbrm control
+                                        oam.dbrmctl("reload");
+                                        log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                         // resume the dbrm
                                         oam.dbrmctl("resume");
                                         log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
@@ -2376,13 +2478,45 @@ void pingDeviceThread()
                                 else
                                 {
                                     // non-amazon
+                                    //call dbrm control
+                                    oam.dbrmctl("reload");
+                                    log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
                                     // resume the dbrm
                                     oam.dbrmctl("resume");
                                     log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
                                     //set recycle process
-                                    processManager.recycleProcess(moduleName);
+                                    // waiting until dml are ACTIVE
+                                    // disableModule is going to trigger DMLProc to restart wait for it
+                                    int retry = 0;
+                                    while (retry < 30)
+                                    {
+                                        ProcessStatus DMLprocessstatus;
 
+                                        try
+                                        {
+                                            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+                                        }
+                                        catch (exception& ex)
+                                        {}
+                                        catch (...)
+                                        {}
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+                                            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+                                            break;
+
+                                        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+                                            break;
+
+                                        // wait some more
+                                        sleep(2);
+                                        ++retry;
+                                    }
+                                    // restart DMLProc again to retrigger rollback with all dbroots connected
+                                    processManager.restartProcessType("DMLProc");
                                     //set query system state ready
                                     processManager.setQuerySystemState(true);
                                 }
