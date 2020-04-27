@@ -120,11 +120,12 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (cc)
             {
                 bool isNull = false;
-                int val = cc->getIntVal(fRow, isNull);
+                cc->getIntVal(fRow, isNull);
 
                 if (!isNull)
                 {
-                    fCount = val;
+                    // constant, set fCount to row count
+                    fCount = e - b + 1;
                 } 
             }
         }
