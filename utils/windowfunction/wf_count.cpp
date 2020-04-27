@@ -110,39 +110,58 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
             e = c;
 
         // for count(*), the column is optimized out, index[1] does not exist.
-        uint64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
+        int64_t colIn = (fFunctionId == WF__COUNT_ASTERISK) ? 0 : fFieldIndex[1];
 
-        for (int64_t i = b; i <= e; i++)
+        // constant param will have fFieldIndex[1] of -1. Get value of constant param
+        if (colIn == -1)
         {
-            if (i % 1000 == 0 && fStep->cancelled())
-                break;
+            ConstantColumn* cc = static_cast<ConstantColumn*>(fConstantParms[0].get());
 
-            if (fFunctionId == WF__COUNT_ASTERISK)
+            if (cc)
             {
-                fCount++;
-                continue;
+                bool isNull = false;
+                cc->getIntVal(fRow, isNull);
+
+                if (!isNull)
+                {
+                    // constant, set fCount to row count
+                    fCount += e - b + 1;
+                } 
             }
-
-            fRow.setData(getPointer(fRowData->at(i)));
-
-            if (fRow.isNullValue(colIn) == true)
-                continue;
-
-            if (fFunctionId != WF__COUNT_DISTINCT)
+        }
+        else if (fFunctionId == WF__COUNT_ASTERISK)
+        {
+            // count(*), set fCount to row count
+            fCount += e - b + 1;
+        }
+        else
+        {
+            for (int64_t i = b; i <= e; i++)
             {
-                fCount++;
-            }
-            else
-            {
-                T valIn;
-                getValue(colIn, valIn);
+                if (i % 1000 == 0 && fStep->cancelled())
+                    break;
 
-                if (fSet.find(valIn) == fSet.end())
+                fRow.setData(getPointer(fRowData->at(i)));
+
+                if (fRow.isNullValue(colIn) == true)
+                    continue;
+
+                if (fFunctionId != WF__COUNT_DISTINCT)
                 {
                     fCount++;
+                }
+                else
+                {
+                    T valIn;
+                    getValue(colIn, valIn);
 
-                    if (fFunctionId == WF__COUNT_DISTINCT)
-                        fSet.insert(valIn);
+                    if (fSet.find(valIn) == fSet.end())
+                    {
+                        fCount++;
+
+                        if (fFunctionId == WF__COUNT_DISTINCT)
+                            fSet.insert(valIn);
+                    }
                 }
             }
         }
