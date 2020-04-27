@@ -2291,6 +2291,21 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
     cal_impl_if::gp_walk_info gwi;
     gwi.thd = thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd) && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+    {
+        if (affected_rows)
+            *affected_rows = 0;
+        return 0;
+    }
+
     if (execute)
     {
         rc = doUpdateDelete(thd, gwi);
@@ -4920,6 +4935,17 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     {
         return 0;
     }
+
+    if (thd->slave_thread && !get_replication_slave(thd) && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+        return 0;
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
