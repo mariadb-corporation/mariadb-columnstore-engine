@@ -125,23 +125,21 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
                 if (!isNull)
                 {
                     // constant, set fCount to row count
-                    fCount = e - b + 1;
+                    fCount += e - b + 1;
                 } 
             }
         }
+        else if (fFunctionId == WF__COUNT_ASTERISK)
+        {
+            // count(*), set fCount to row count
+            fCount += e - b + 1;
+        }
         else
         {
-
             for (int64_t i = b; i <= e; i++)
             {
                 if (i % 1000 == 0 && fStep->cancelled())
                     break;
-
-                if (fFunctionId == WF__COUNT_ASTERISK)
-                {
-                    fCount++;
-                    continue;
-                }
 
                 fRow.setData(getPointer(fRowData->at(i)));
 
