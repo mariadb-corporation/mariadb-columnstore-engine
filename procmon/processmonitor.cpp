@@ -460,6 +460,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 {
     Oam oam;
     ByteStream	ackMsg;
+    MonitorConfig currentConfig;
 
     ByteStream::byte messageType;
     ByteStream::byte requestID;
@@ -809,6 +810,24 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     if ( processName == "cpimport" )
                     {
                         system("pkill -sighup cpimport");
+                        for (int i=0; i < 10; i++)
+                        {
+                            //get pid
+                            char buf[512];
+                            FILE *cmd_pipe = popen("pidof -s cpimport", "r");
+
+                            fgets(buf, 512, cmd_pipe);
+                            pid_t pid = strtoul(buf, NULL, 10);
+
+                            pclose( cmd_pipe );
+
+                            if (pid)
+                                sleep(2);
+                            else
+                                break;
+                        }
+                        // kill other processes
+                        system("pkill -9 cpimport.bin");
                     }
                     else
                     {
@@ -2217,6 +2236,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
     char* argList[MAXARGUMENTS];
     unsigned int i = 0;
     MonitorLog log;
+    MonitorConfig currentConfig;
     unsigned int numAugs = 0;
     Oam oam;
     SystemProcessStatus systemprocessstatus;
@@ -3736,7 +3756,7 @@ int ProcessMonitor::updateConfig()
 {
     //ProcMon log file
     MonitorLog log;
-//	MonitorConfig config;
+    MonitorConfig currentConfig;
 //	ProcessMonitor aMonitor(config, log);
     Oam oam;
 
@@ -3758,7 +3778,7 @@ int ProcessMonitor::updateConfig()
     }
 
     //Update a map for application launch ID for this Process-Monitor
-    string OAMParentModuleType = config.OAMParentName().substr(0, MAX_MODULE_TYPE_SIZE);
+    string OAMParentModuleType = currentConfig.OAMParentName().substr(0, MAX_MODULE_TYPE_SIZE);
     string systemModuleType = config.moduleName().substr(0, MAX_MODULE_TYPE_SIZE);
 
     for ( unsigned int i = 0 ; i < systemprocessconfig.processconfig.size(); i++)
@@ -4117,8 +4137,6 @@ int ProcessMonitor::createDataDirs(std::string cloud)
     MonitorLog log;
     Oam oam;
 
-    log.writeLog(__LINE__, "createDataDirs called", LOG_TYPE_DEBUG);
-
     if ( config.moduleType() == "um" &&
             ( cloud == "amazon-ec2" || cloud == "amazon-vpc") )
     {
@@ -4277,8 +4295,6 @@ int ProcessMonitor::getDBRMdata(string *path)
 
     Oam oam;
     ByteStream msg;
-
-    log.writeLog(__LINE__, "getDBRMdata called", LOG_TYPE_DEBUG);
 
     int returnStatus = API_FAILURE;
 
@@ -4441,9 +4457,9 @@ int ProcessMonitor::getDBRMdata(string *path)
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string journalFilename = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_journal";
-                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(journalFilename.c_str(),
-                            IDBPolicy::WRITEENG), journalFilename.c_str(), "w", 0);
+                        bf::path pJournalFilename(pTmp / "BRM_saves_journal");
+                        IDBDataFile *idbJournalFile = IDBDataFile::open(IDBPolicy::getType(pJournalFilename.string().c_str(),
+                            IDBPolicy::WRITEENG), pJournalFilename.string().c_str(), "w", 0);
                         delete idbJournalFile;
                         //string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
                         //system(cmd.c_str());
@@ -4964,8 +4980,6 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runMasterRep function called", LOG_TYPE_DEBUG);
-
     SystemModuleTypeConfig systemModuleTypeConfig;
 
     try
@@ -5140,8 +5154,6 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runSlaveRep function called", LOG_TYPE_DEBUG);
-
     // get master replicaion module IP Address
     string PrimaryUMModuleName;
     oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
@@ -5224,8 +5236,6 @@ int ProcessMonitor::runDisableRep()
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "runDisableRep function called", LOG_TYPE_DEBUG);
-
     // mysql port number
     string MySQLPort;
 
@@ -5278,8 +5288,6 @@ int ProcessMonitor::runDisableRep()
 int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModule)
 {
     Oam oam;
-
-    log.writeLog(__LINE__, "runMasterDist function called", LOG_TYPE_DEBUG);
 
     SystemModuleTypeConfig systemModuleTypeConfig;
 
@@ -5405,8 +5413,6 @@ bool ProcessMonitor::amazonIPCheck()
     MonitorLog log;
     Oam oam;
 
-    log.writeLog(__LINE__, "amazonIPCheck function called", LOG_TYPE_DEBUG);
-
     // delete description file so it will create a new one
     string tmpLog = tmpLogDir + "/describeInstance.log";
     unlink(tmpLog.c_str());
@@ -5490,9 +5496,11 @@ bool ProcessMonitor::amazonIPCheck()
 
             // get all ips if parent oam
             // get just parent and local if not parent oam
-            if ( config.moduleName() == config.OAMParentName() ||
+            MonitorConfig currentConfig;
+
+            if ( config.moduleName() == currentConfig.OAMParentName() ||
                     moduleName == config.moduleName() ||
-                    moduleName == config.OAMParentName() )
+                    moduleName == currentConfig.OAMParentName() )
             {
                 HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
@@ -5700,8 +5708,6 @@ void ProcessMonitor::unmountExtraDBroots()
     ModuleConfig moduleconfig;
     Oam oam;
 
-    log.writeLog(__LINE__, "unmountExtraDBroots called ", LOG_TYPE_DEBUG);
-
     string DBRootStorageType = "internal";
 
     try
@@ -5796,8 +5802,6 @@ int ProcessMonitor::checkDataMount()
     Oam oam;
 
     //check/update the pmMount files
-
-    log.writeLog(__LINE__, "checkDataMount called ", LOG_TYPE_DEBUG);
 
     string DBRootStorageType = "internal";
     vector <string> dbrootList;
@@ -6031,8 +6035,6 @@ void ProcessMonitor::calTotalUmMemory()
 
     //check/update the pmMount files
 
-    log.writeLog(__LINE__, "calTotalUmMemory called ", LOG_TYPE_DEBUG);
-
     try
     {
         sysinfo(&myinfo);
@@ -6158,7 +6160,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 
     if ( WEXITSTATUS(ret) != 0 )
     {
-		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+		//log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
         ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
@@ -6203,7 +6205,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
     if ( WEXITSTATUS(ret) != 0 )
     {
-		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+		//log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
         ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
