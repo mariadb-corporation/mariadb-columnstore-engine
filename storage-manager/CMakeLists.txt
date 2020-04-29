@@ -75,6 +75,11 @@ target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(unit_tests storagemanager)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 
+add_executable(testS3Connection src/testS3Connection.cpp)
+target_compile_definitions(testS3Connection PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
+target_link_libraries(testS3Connection storagemanager)
+set_property(TARGET testS3Connection PROPERTY CXX_STANDARD 11)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
 add_custom_command(
@@ -129,7 +134,7 @@ install(TARGETS storagemanager
     COMPONENT columnstore-platform
 )
 
-install(TARGETS StorageManager smcat smput smls smrm
+install(TARGETS StorageManager smcat smput smls smrm testS3Connection
     RUNTIME DESTINATION ${ENGINE_BINDIR}
     COMPONENT columnstore-platform
 )
