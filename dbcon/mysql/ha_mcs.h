@@ -54,7 +54,7 @@ class ha_mcs: public handler
 
 public:
     ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
-    ~ha_mcs()
+    virtual ~ha_mcs()
     {
     }
 
@@ -237,7 +237,6 @@ public:
 
     int repair(THD* thd, HA_CHECK_OPT* check_opt);
     bool is_crashed() const;
-    friend class ha_mcs_cache;
 };
 
 

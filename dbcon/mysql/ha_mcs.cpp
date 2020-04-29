@@ -1229,8 +1229,9 @@ my_bool get_status_and_flush_cache(void *param,
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   int error;
   enum_sql_command sql_command= cache->table->in_use->lex->sql_command;
-  cache->insert_command= (sql_command != SQLCOM_INSERT &&
-                          sql_command != SQLCOM_LOAD);
+  cache->insert_command= (sql_command == SQLCOM_INSERT ||
+                          sql_command == SQLCOM_INSERT_SELECT ||
+                          sql_command == SQLCOM_LOAD);
   /*
     Call first the original Aria get_status function
     All Aria get_status functions takes Maria handler as the parameter
@@ -1251,6 +1252,8 @@ my_bool get_status_and_flush_cache(void *param,
         return(1);
       }
     }
+    else if (!cache->insert_command)
+      cache->free_locks();
   }
   else if (!cache->insert_command)
     cache->free_locks();
@@ -1761,7 +1764,9 @@ void ha_mcs_cache::free_locks()
 {
   /* We don't need to lock cache_handler anymore as it's already flushed */
 
+  mysql_mutex_unlock(&cache_handler->file->lock.lock->mutex);
   thr_unlock(&cache_handler->file->lock, 0);
+  mysql_mutex_lock(&cache_handler->file->lock.lock->mutex);
 
   /* Restart transaction for columnstore table */
   if (original_lock_type != F_WRLCK)
@@ -1782,15 +1787,14 @@ int ha_mcs_cache::flush_insert_cache()
 {
   int error, error2;
   ha_maria *from= cache_handler;
-  parent    *to= this;
-  uchar *record= to->table->record[0];
+  uchar *record= table->record[0];
   DBUG_ENTER("flush_insert_cache");
 
-  to->start_bulk_insert(from->file->state->records, 0);
+  parent::start_bulk_insert(from->file->state->records, 0);
   from->rnd_init(1);
   while (!(error= from->rnd_next(record)))
   {
-    if ((error= to->write_row(record)))
+    if ((error= parent::write_row(record)))
       goto end;
   }
   if (error == HA_ERR_END_OF_FILE)
@@ -1798,19 +1802,19 @@ int ha_mcs_cache::flush_insert_cache()
 
 end:
   from->rnd_end();
-  if ((error2= to->end_bulk_insert()) && !error)
+  if ((error2= parent::end_bulk_insert()) && !error)
     error= error2;
 
   if (!error)
   {
-    if (to->ht->commit)
-      error= to->ht->commit(to->ht, table->in_use, 1);
+    if (parent::ht->commit)
+      error= parent::ht->commit(parent::ht, table->in_use, 1);
   }
   else
   {
     /* We can ignore the rollback error as we already have some other errors */
-    if (to->ht->rollback)
-      to->ht->rollback(to->ht, table->in_use, 1);
+    if (parent::ht->rollback)
+      parent::ht->rollback(parent::ht, table->in_use, 1);
   }
 
   if (!error)
