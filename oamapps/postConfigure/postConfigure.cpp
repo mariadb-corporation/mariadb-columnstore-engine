@@ -5442,6 +5442,12 @@ bool storageSetup(bool amazonInstall)
         hdfs = false;
         sysConfig->setConfig("StorageManager", "Enabled", "Y");
         sysConfig->setConfig("SystemConfig", "DataFilePlugin", "libcloudio.so");
+        // Verify S3 Configuration settings
+        if (system("testS3Connection"))
+        {
+            cout << "ERROR: S3Storage Configuration check failed. Verify storagemanager.cnf settings and rerun postConfigure." << endl;
+            return false;
+        }
     }
     else
     {
