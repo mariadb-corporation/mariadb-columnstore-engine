@@ -4475,7 +4475,7 @@ int ProcessMonitor::getDBRMdata(string *path)
                     //create journal file if none come across
                     if ( !journalFile)
                     {
-                        string cmd = "touch " + startup::StartUp::installDir() + "/data1/systemFiles/dbrm/BRM_saves_journal";
+                        string cmd = "touch " + *path + "/BRM_saves_journal";
                         system(cmd.c_str());
                     }
 
