@@ -96,6 +96,8 @@ net-snmp/net-snmp-5.7.3/include/net-snmp/agent/mib_module_config.h
 *MYMETA.json
 utils/loggingcpp/errorids.h
 utils/loggingcpp/messageids.h
+utils/loggingcpp/errorids-temp.h
+utils/loggingcpp/messageids-temp.h
 CPackConfig.cmake
 CPackSourceConfig.cmake
 build/columnstore.community.spec
