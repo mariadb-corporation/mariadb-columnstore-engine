@@ -24,7 +24,6 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
-config.h
 config.status
 stamp-h1
 export/
