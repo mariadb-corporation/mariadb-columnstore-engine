@@ -311,11 +311,6 @@ SET (ENGINE_COMMON_INCLUDES  ${ENGINE_DEFAULT_INCLUDES} ${Boost_INCLUDE_DIR} ${L
 
 ADD_SUBDIRECTORY(utils)
 
-add_library(marias3 SHARED IMPORTED)
-set_target_properties(marias3 PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2)
-add_dependencies(marias3 ms3)
-
-
 ADD_SUBDIRECTORY(oam/oamcpp)
 ADD_SUBDIRECTORY(dbcon/execplan)
 ADD_SUBDIRECTORY(dbcon/joblist)
