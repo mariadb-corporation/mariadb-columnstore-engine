@@ -55,7 +55,10 @@ journal_path = /var/lib/columnstore/storagemanager/journal
 
 # max_concurrent_downloads is what is sounds like, per node.
 # This is not a global setting.
-max_concurrent_downloads = 20
+# 
+# The default was changed from 20 to 21 as a temporary workaround 
+# for a bug.  It can be anything but 20.
+max_concurrent_downloads = 21
  
 # max_concurrent_uploads is what is sounds like, per node.
 # This is not a global setting.  Currently, a file is locked while 
@@ -63,7 +66,10 @@ max_concurrent_downloads = 20
 # has low upstream bandwidth, consider lowering this value to the minimum
 # necessary to saturate your network.  This will reduce the latency of certain 
 # operations and improve your experience. 
-max_concurrent_uploads = 20
+#
+# The default was changed from 20 to 21 as a temporary workaround 
+# for a bug.  It can be anything but 20.
+max_concurrent_uploads = 21
 
 # common_prefix_depth is the depth of the common prefix that all files 
 # managed by SM have.  Ex: /var/lib/columnstore/data1, and 
