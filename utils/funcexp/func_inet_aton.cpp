@@ -154,21 +154,34 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row,
         bool& isNull,
         execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_aton::getDecimalVal" << std::endl;
-
-    execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
+    execplan::CalpontSystemCatalog::ColType colType = fp[0]->data()->resultType();
 
     const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-    if (!isNull)
+    if (colType.precision <= datatypes::INT64MAXPRECISION)
     {
-        int64_t iValue = convertAton( sValue, isNull );
-
         if (!isNull)
-            return execplan::IDB_Decimal( iValue, 0, 0 );
-    }
+        {
+            int64_t iValue = convertAton( sValue, isNull );
 
-    return dValue;
+            if (!isNull)
+                return execplan::IDB_Decimal( iValue, colType.scale, colType.precision );
+        }
+
+        return execplan::IDB_Decimal( joblist::NULL_INT64, colType.scale, colType.precision );
+    }
+    else
+    {
+        if (!isNull)
+        {
+            int64_t iValue = convertAton( sValue, isNull );
+
+            if (!isNull)
+                return execplan::IDB_Decimal( 0, colType.scale, colType.precision, (int128_t) iValue );
+        }
+
+        return execplan::IDB_Decimal( 0, colType.scale, colType.precision, datatypes::Decimal128Null );
+    }
 }
 
 //------------------------------------------------------------------------------

@@ -211,8 +211,6 @@ execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row,
         bool& isNull,
         execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getDecimalVal" << std::endl;
-
 //	IDB_Decimal dValue = fp[0]->data()->getDecimalVal(row, isNull);
     execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
     isNull = true;

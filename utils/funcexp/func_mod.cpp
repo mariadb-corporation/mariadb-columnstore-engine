@@ -25,6 +25,8 @@
 #include <string>
 using namespace std;
 
+#include <quadmath.h>
+
 #include "functor_real.h"
 #include "funchelpers.h"
 #include "functioncolumn.h"
@@ -54,7 +56,6 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
                                     bool& isNull,
                                     CalpontSystemCatalog::ColType& operationColType)
 {
-
     IDB_Decimal retValue;
     retValue.value = 0;
     retValue.scale = 0;
@@ -65,22 +66,85 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
         return retValue;
     }
 
-    int64_t div = parm[1]->data()->getIntVal(row, isNull);
-
-    if ( div == 0 )
+    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH ||
+        parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
     {
-        isNull = true;
-        return retValue;
+        IDB_Decimal div = parm[1]->data()->getDecimalVal(row, isNull);
+
+        int128_t divInt, dividendInt;
+
+        if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            divInt = div.s128Value;
+        else
+            divInt = div.value;
+
+        if (divInt == 0)
+        {
+            isNull = true;
+            return retValue;
+        }
+
+        IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+
+        if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            dividendInt = d.s128Value;
+        else
+            dividendInt = d.value;
+
+        // integer division
+        if (d.scale == 0 && div.scale == 0)
+        {
+            retValue.s128Value = dividendInt % divInt;
+        }
+        // special case integer division
+        else if (div.scale == 0)
+        {
+            int128_t scaleDivisor;
+            datatypes::getScaleDivisor(scaleDivisor, d.scale);
+            int128_t value = dividendInt / scaleDivisor;
+            int128_t lefto = dividendInt % scaleDivisor;
+            int128_t mod = (value % divInt) * scaleDivisor + lefto;
+            retValue.s128Value = mod;
+        }
+        // float division
+        else
+        {
+            __float128 divF, dividendF;
+
+            int128_t scaleDivisor;
+
+            datatypes::getScaleDivisor(scaleDivisor, div.scale);
+            divF = (__float128) divInt / scaleDivisor;
+
+            datatypes::getScaleDivisor(scaleDivisor, d.scale);
+            dividendF = (__float128) dividendInt / scaleDivisor;
+
+            __float128 mod = fmodq(dividendF, divF) * scaleDivisor;
+
+            retValue.s128Value = (int128_t) mod;
+        }
+        retValue.scale = d.scale;
+        retValue.precision = datatypes::INT128MAXPRECISION;
     }
+    else
+    {
+        int64_t div = parm[1]->data()->getIntVal(row, isNull);
 
-    IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-    int64_t value = d.value / pow(10.0, d.scale);
-    int lefto = d.value % (int)pow(10.0, d.scale);
+        if ( div == 0 )
+        {
+            isNull = true;
+            return retValue;
+        }
 
-    int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
+        IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+        int64_t value = d.value / pow(10.0, d.scale);
+        int lefto = d.value % (int)pow(10.0, d.scale);
 
-    retValue.value = mod;
-    retValue.scale = d.scale;
+        int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
+
+        retValue.value = mod;
+        retValue.scale = d.scale;
+    }
 
     return retValue;
 }
@@ -164,9 +228,28 @@ double Func_mod::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / pow(10.0, d.scale);
 
-            mod = value % div;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                if (d.scale == 0)
+                {
+                    mod = d.s128Value % div;
+                }
+                else
+                {
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    int128_t value = d.s128Value / scaleDivisor;
+                    int128_t lefto = d.s128Value % scaleDivisor;
+                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
+                    mod = datatypes::Decimal::getDoubleFromFloat128(tmp);
+                }
+            }
+            else
+            {
+                int64_t value = d.value / pow(10.0, d.scale);
+                mod = value % div;
+            }
         }
         break;
 
@@ -268,9 +351,28 @@ long double Func_mod::getLongDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / pow(10.0, d.scale);
 
-            mod = value % div;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                if (d.scale == 0)
+                {
+                    mod = d.s128Value % div;
+                }
+                else
+                {
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    int128_t value = d.s128Value / scaleDivisor;
+                    int128_t lefto = d.s128Value % scaleDivisor;
+                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
+                    mod = datatypes::Decimal::getLongDoubleFromFloat128(tmp);
+                }
+            }
+            else
+            {
+                int64_t value = d.value / pow(10.0, d.scale);
+                mod = value % div;
+            }
         }
         break;
 
@@ -375,9 +477,28 @@ int64_t Func_mod::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / pow(10.0, d.scale);
 
-            mod = value % div;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                if (d.scale == 0)
+                {
+                    mod = d.s128Value % div;
+                }
+                else
+                {
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    int128_t value = d.s128Value / scaleDivisor;
+                    int128_t lefto = d.s128Value % scaleDivisor;
+                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
+                    mod = datatypes::Decimal::getInt64FromFloat128(tmp);
+                }
+            }
+            else
+            {
+                int64_t value = d.value / pow(10.0, d.scale);
+                mod = value % div;
+            }
         }
         break;
 
@@ -473,9 +594,28 @@ uint64_t Func_mod::getUIntVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            int64_t value = d.value / pow(10.0, d.scale);
 
-            mod = value % div;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                if (d.scale == 0)
+                {
+                    mod = d.s128Value % div;
+                }
+                else
+                {
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    int128_t value = d.s128Value / scaleDivisor;
+                    int128_t lefto = d.s128Value % scaleDivisor;
+                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
+                    mod = datatypes::Decimal::getUInt64FromFloat128(tmp);
+                }
+            }
+            else
+            {
+                int64_t value = d.value / pow(10.0, d.scale);
+                mod = value % div;
+            }
         }
         break;
 
