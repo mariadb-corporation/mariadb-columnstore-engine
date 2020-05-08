@@ -343,6 +343,41 @@ string keyName(uint64_t i, uint32_t key, const joblist::JobInfo& jobInfo)
 namespace joblist
 {
 
+void wideDecimalOrLongDouble(const uint64_t colProj,
+    const CalpontSystemCatalog::ColDataType type,
+    const vector<uint32_t>& precisionProj,
+    const vector<uint32_t>& oidsProj,
+    const uint32_t aggKey,
+    const vector<uint32_t>& scaleProj,
+    const vector<uint32_t>& width,
+    vector<uint32_t>& oidsAgg,
+    vector<uint32_t>& keysAgg,
+    vector<CalpontSystemCatalog::ColDataType>& typeAgg,
+    vector<uint32_t>& scaleAgg,
+    vector<uint32_t>& precisionAgg,
+    vector<uint32_t>& widthAgg)
+{
+    if ((type == CalpontSystemCatalog::DECIMAL
+        || type == CalpontSystemCatalog::UDECIMAL)
+        && datatypes::Decimal::isWideDecimalType(precisionProj[colProj]))
+    {
+        oidsAgg.push_back(oidsProj[colProj]);
+        keysAgg.push_back(aggKey);
+        typeAgg.push_back(type);
+        scaleAgg.push_back(scaleProj[colProj]);
+        precisionAgg.push_back(precisionProj[colProj]);
+        widthAgg.push_back(width[colProj]);
+    }
+    else
+    {
+        oidsAgg.push_back(oidsProj[colProj]);
+        keysAgg.push_back(aggKey);
+        typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
+        scaleAgg.push_back(0);
+        precisionAgg.push_back(-1);
+        widthAgg.push_back(sizeof(long double));
+    }
+}
 
 TupleAggregateStep::TupleAggregateStep(
     const SP_ROWAGG_UM_t& agg,
@@ -717,25 +752,47 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
 
     // correct the scale
     vector<uint32_t> scale = fRowGroupOut.getScale();
+    vector<uint32_t> precision = fRowGroupOut.getPrecision();
 
-//    for (uint64_t i = 0; i < scale.size(); i++)
-//    {
-        // to support CNX_DECIMAL_SCALE the avg column's scale is coded with two scales:
-        // fe's avg column scale << 8 + original column scale
-        //if ((scale[i] & 0x0000FF00) > 0)
-//        scale[i] = scale[i] &  0x000000FF;
-//    }
-
-    size_t retColCount = jobInfo.nonConstDelCols.size();
+    size_t retColCount = 0;
+    auto scaleIter = scale.begin();
+    auto precisionIter = precision.begin();
 
     if (jobInfo.havingStep)
+    {
         retColCount = jobInfo.returnedColVec.size();
+        idbassert(jobInfo.returnedColVec.size() == jobInfo.nonConstCols.size());
+        for (auto& rc : jobInfo.nonConstCols)
+        {
+            auto& colType = rc->resultType();
+            if (datatypes::Decimal::isWideDecimalType(colType))
+            {
+                *scaleIter = colType.scale;
+                *precisionIter = colType.precision;
+            }
+            scaleIter++; precisionIter++;
+        }
+    }
+    else
+    {
+        retColCount = jobInfo.nonConstDelCols.size();
+        for (auto& rc : jobInfo.nonConstDelCols)
+        {
+            auto& colType = rc->resultType();
+            if (datatypes::Decimal::isWideDecimalType(colType))
+            {
+                *scaleIter = colType.scale;
+                *precisionIter = colType.precision;
+            }
+            scaleIter++; precisionIter++;
+        }
+    }
 
     vector<uint32_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
     vector<CalpontSystemCatalog::ColDataType>::const_iterator types0 =
         fRowGroupOut.getColTypes().begin();
     vector<uint32_t> csNums = fRowGroupOut.getCharsetNumbers();
-    vector<uint32_t>::const_iterator precision0 = fRowGroupOut.getPrecision().begin();
+    vector<uint32_t>::const_iterator precision0 = precision.begin();
     fRowGroupDelivered = RowGroup(retColCount,
                                   vector<uint32_t>(offsets0, offsets0 + retColCount + 1),
                                   vector<uint32_t>(oids.begin(), oids.begin() + retColCount),
@@ -896,7 +953,6 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
     // preprocess the columns used by group_concat
     jobInfo.groupConcatInfo.prepGroupConcat(jobInfo);
     bool doUMOnly = jobInfo.groupConcatInfo.columns().size() > 0
-//                 || jobInfo.windowSet.size() > 0
                  || sas
                  || ces;
 
@@ -1303,14 +1359,11 @@ void TupleAggregateStep::prep1PhaseAggregate(
                     cerr << "prep1PhaseAggregate: " << emsg << endl;
                     throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                 }
-
-                oidsAgg.push_back(oidsProj[colProj]);
-                keysAgg.push_back(key);
-                typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                wideDecimalOrLongDouble(colProj, typeProj[colProj],
+                    precisionProj, oidsProj, key, scaleProj, width,
+                    oidsAgg, keysAgg, typeAgg, scaleAgg,
+                    precisionAgg, widthAgg);
                 csNumAgg.push_back(csNumProj[colProj]);
-                precisionAgg.push_back(-1);
-                widthAgg.push_back(sizeof(long double));
-                scaleAgg.push_back(0);
             }
             break;
 
@@ -1754,11 +1807,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 cerr << endl;
                 throw logic_error(emsg.str());
             }
-
-            // skip sum / count(column) if avg is also selected
-//            if ((aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME) &&
-//                    (avgSet.find(aggKey) != avgSet.end()))
-//                continue;
 
             if (aggOp == ROWAGG_DISTINCT_SUM ||
                     aggOp == ROWAGG_DISTINCT_AVG ||
@@ -3128,31 +3176,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         cerr << "prep2PhasesAggregate: " << emsg << endl;
                         throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                     }
-
-                    // WIP MCOL-641 Replace condition with a
-                    // dynamic one
-                    if (typeProj[colProj] == CalpontSystemCatalog::DECIMAL
-                        && width[colProj] == 16)
-                    { 
-                        oidsAggPm.push_back(oidsProj[colProj]);
-                        keysAggPm.push_back(aggKey);
-                        typeAggPm.push_back(CalpontSystemCatalog::DECIMAL);
-                        scaleAggPm.push_back(0);
-                        // WIP makes this dynamic
-                        precisionAggPm.push_back(38);
-                        widthAggPm.push_back(width[colProj]);
-                        csNumAggPm.push_back(8);
-                    }
-                    else
-                    {
-                        oidsAggPm.push_back(oidsProj[colProj]);
-                        keysAggPm.push_back(aggKey);
-                        typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
-                        scaleAggPm.push_back(0);
-                        csNumAggPm.push_back(8);
-                        precisionAggPm.push_back(-1);
-                        widthAggPm.push_back(sizeof(long double));
-                    }
+                    wideDecimalOrLongDouble(colProj, typeProj[colProj],
+                        precisionProj, oidsProj, aggKey, scaleProj, width,
+                        oidsAggPm, keysAggPm, typeAggPm, scaleAggPm,
+                        precisionAggPm, widthAggPm);
+                    scaleAggPm.push_back(0);
                     colAggPm++;
                 }
 
@@ -3435,13 +3463,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                         if (aggOp == ROWAGG_SUM)
                         {
-                            oidsAggUm.push_back(oidsAggPm[colPm]);
-                            keysAggUm.push_back(retKey);
-                            scaleAggUm.push_back(0);
-                            typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
+                            wideDecimalOrLongDouble(colPm, typeProj[colPm],
+                                precisionProj, oidsProj, retKey, scaleProj, widthAggPm,
+                                oidsAggUm, keysAggUm, typeAggUm, scaleAggUm,
+                                precisionAggUm, widthAggUm);
                             csNumAggUm.push_back(8);
-                            precisionAggUm.push_back(-1);
-                            widthAggUm.push_back(sizeof(long double));
                         }
                         else
                         {

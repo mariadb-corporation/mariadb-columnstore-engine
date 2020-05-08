@@ -1100,7 +1100,7 @@ extern "C"
 
                     mapit = partMap.find(logicalPartNum);
 
-                    int state;
+                    int state = CP_INVALID;
 
                     if (ct.colWidth <= 8)
                         state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
