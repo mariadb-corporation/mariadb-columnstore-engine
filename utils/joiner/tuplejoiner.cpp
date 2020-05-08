@@ -1127,7 +1127,7 @@ void TupleJoiner::updateCPData(const Row& r)
         }
         else
         {
-            int64_t val;
+            int64_t val = 0;
             if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
             {
                 double dval = (double)roundl(r.getLongDoubleField(colIdx));
