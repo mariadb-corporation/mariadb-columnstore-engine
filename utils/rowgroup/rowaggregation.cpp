@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019 MariaDB Corporation
+   Copyright (c) 2019-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -56,6 +56,8 @@
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
+#include "funcexp/utils_utf8.h"
+#include "mcs_decimal.h"
 
 using namespace std;
 using namespace boost;
@@ -69,12 +71,16 @@ namespace
 const int64_t AGG_ROWGROUP_SIZE = 256;
 
 template <typename T>
-bool minMax(T d1, T d2, int type)
+inline bool minMax(T d1, T d2, int type)
 {
     if (type == rowgroup::ROWAGG_MIN) return d1 < d2;
     else                              return d1 > d2;
 }
 
+inline bool minMax(int128_t* d1, int128_t* d2, int type)
+{
+    return (type == rowgroup::ROWAGG_MIN) ? *d1 < *d2 : *d1 > *d2;
+}
 
 inline int64_t getIntNullValue(int colType)
 {
@@ -332,6 +338,16 @@ inline bool ExternalKeyEq::operator()(const RowPosition& pos1, const RowPosition
 
 
 static const string overflowMsg("Aggregation overflow.");
+
+inline void RowAggregation::updateIntMinMax(int128_t* val1, int128_t* val2, int64_t col, int func)
+{
+    int32_t colOutOffset = fRow.getOffset(col);
+    if (isNull(fRowGroupOut, fRow, col))
+        fRow.setBinaryField_offset(val1, sizeof(int128_t), colOutOffset);
+    else if (minMax(val1, val2, func))
+        fRow.setBinaryField_offset(val1, sizeof(int128_t), colOutOffset);
+}
+
 
 inline void RowAggregation::updateIntMinMax(int64_t val1, int64_t val2, int64_t col, int func)
 {
@@ -1009,12 +1025,30 @@ void RowAggregation::initMapData(const Row& rowIn)
             case execplan::CalpontSystemCatalog::MEDINT:
             case execplan::CalpontSystemCatalog::INT:
             case execplan::CalpontSystemCatalog::BIGINT:
-            case execplan::CalpontSystemCatalog::DECIMAL:
-            case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 fRow.setIntField(rowIn.getIntField(colIn), colOut);
                 break;
             }
+
+            case execplan::CalpontSystemCatalog::DECIMAL:
+            case execplan::CalpontSystemCatalog::UDECIMAL:
+            {
+                if (LIKELY(fRow.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+                {
+                    uint32_t colOutOffset = fRow.getOffset(colOut);
+                    fRow.setBinaryField_offset(
+                        rowIn.getBinaryField<int128_t>(colIn),
+                        sizeof(int128_t),
+                        colOutOffset);
+                }
+                else
+                {
+                    fRow.setIntField(rowIn.getIntField(colIn), colOut);
+                }
+
+                break;
+            }
+
 
             case execplan::CalpontSystemCatalog::UTINYINT:
             case execplan::CalpontSystemCatalog::USMALLINT:
@@ -1112,8 +1146,6 @@ void RowAggregation::makeAggFieldsNull(Row& row)
                 fFunctionCols[i]->fAggFunction == ROWAGG_GROUP_CONCAT ||
                 fFunctionCols[i]->fAggFunction == ROWAGG_STATS)
         {
-//			done by memset
-//			row.setIntField(0, colOut);
             continue;
         }
 
@@ -1159,17 +1191,17 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 int colWidth = fRowGroupOut->getColumnWidth(colOut);
-                if (colWidth <= 8)
+                if (LIKELY(colWidth == datatypes::MAXDECIMALWIDTH))
+                {
+                    uint32_t offset = row.getOffset(colOut);
+                    row.setBinaryField_offset(
+                        const_cast<int128_t*>(&datatypes::Decimal128Null),
+                        colWidth,
+                        offset);
+                }
+                else if (colWidth == datatypes::MAXLEGACYWIDTH)
                 {
                     row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
-                }
-                else
-                {
-                    int128_t nullValue = 0;
-                    utils::setWideDecimalNullValue(nullValue);
-                    uint32_t offset = row.getOffset(colOut);
-                    row.setBinaryField_offset(&nullValue, sizeof(nullValue),
-                        offset);
                 }
                 break;
             }
@@ -1182,7 +1214,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             {
                 int colWidth = fRowGroupOut->getColumnWidth(colOut);
 
-                if (colWidth <= 8)
+                if (colWidth <= datatypes::MAXLEGACYWIDTH)
                 {
                     row.setUintField(getUintNullValue(colDataType, colWidth), colOut);
                 }
@@ -1255,12 +1287,28 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             int64_t valIn = rowIn.getIntField(colIn);
             int64_t valOut = fRow.getIntField(colOut);
             updateIntMinMax(valIn, valOut, colOut, funcType);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            if (LIKELY(fRow.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+            {
+                updateIntMinMax(rowIn.getBinaryField<int128_t>(colIn),
+                    fRow.getBinaryField<int128_t>(colOut),
+                    colOut, funcType);
+            }
+            else
+            {
+                int64_t valIn = rowIn.getIntField(colIn);
+                int64_t valOut = fRow.getIntField(colOut);
+                updateIntMinMax(valIn, valOut, colOut, funcType);
+            }
             break;
         }
 
@@ -1339,17 +1387,12 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 // Note: NULL value check must be done on UM & PM
 //       UM may receive NULL values, too.
 //------------------------------------------------------------------------------
-// WIP MCOL-641. This and other methods must be type based to avoid needless mem
-// allocation for wide DTs
 void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int funcType)
 {
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
     bool isWideDataType = false;
-    void *wideValInPtr = NULL;
-    // WIP MCOL-641 Probably the width must be taken
-    // from colOut
-    uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+    void *wideValInPtr = nullptr;
 
     if (isNull(&fRowGroupIn, rowIn, colIn) == true)
         return;
@@ -1379,28 +1422,20 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            // WIP MCOL-641 make the size dynamic and use branch prediction cond
-            isWideDataType = (width) > 8 ? true : false;
-            if (!isWideDataType)
+            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
+            {
+                int128_t *dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
+            }
+            else
             {
                 valIn = rowIn.getIntField(colIn);
                 double scale = (double)(fRowGroupIn.getScale())[colIn];
                 if (valIn != 0 && scale > 0)
                 {
                     valIn /= pow(10.0, scale);
-                }
-            }
-            else
-            {
-                if (colDataType == execplan::CalpontSystemCatalog::DECIMAL)
-                {
-                    int128_t *dec = rowIn.getBinaryField<int128_t>(colIn);
-                    wideValInPtr = reinterpret_cast<void*>(dec);
-                }
-                else
-                {
-                    uint128_t *dec = rowIn.getBinaryField<uint128_t>(colIn);
-                    wideValInPtr = reinterpret_cast<void*>(dec);
                 }
             }
     
@@ -1454,49 +1489,31 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             break;
         }
     }
-    // WIP MCOL-641
-    if (!isWideDataType)
+    if (LIKELY(!isWideDataType))
     {
-        if (isNull(fRowGroupOut, fRow, colOut))
-        {
-            fRow.setLongDoubleField(valIn, colOut);
-        }
-        else
+        if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
         {
             long double valOut = fRow.getLongDoubleField(colOut);
             fRow.setLongDoubleField(valIn+valOut, colOut);
+        }
+        else
+        {
+            fRow.setLongDoubleField(valIn, colOut);
         }
     }
     else
     {
         uint32_t offset = fRow.getOffset(colOut);
-        if (colDataType == execplan::CalpontSystemCatalog::DECIMAL)
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
         {
-            int128_t *dec = reinterpret_cast<int128_t*>(wideValInPtr);
-            if (isNull(fRowGroupOut, fRow, colOut))
-            {
-                fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
-            }
-            else
-            {
-                int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
-                int128_t sum = *valOutPtr + *dec; 
-                fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
-            }
+            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
         }
         else
         {
-            uint128_t *dec = reinterpret_cast<uint128_t*>(wideValInPtr);
-            if (isNull(fRowGroupOut, fRow, colOut))
-            {
-                fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
-            }
-            else
-            {
-                uint128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
-                uint128_t sum = *valOutPtr + *dec; 
-                fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
-            }
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
         }
     } // end-of isWideDataType block
 }
@@ -1790,7 +1807,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
 
             case ROWAGG_AVG:
                 // count(column) for average is inserted after the sum,
-                // colOut+1 is the position of the count column.
+                // colOut+1 is the position of the aux count column.
                 doAvg(rowIn, colIn, colOut, colOut + 1);
                 break;
 
@@ -1850,6 +1867,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = nullptr;
 
     switch (colDataType)
     {
@@ -1860,7 +1879,6 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         case execplan::CalpontSystemCatalog::BIGINT:
         {
             valIn = rowIn.getIntField(colIn);
-            break;
             break;
         }
 
@@ -1877,11 +1895,21 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
             {
-                valIn /= pow(10.0, scale);
+                int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
+            }
+            else
+            {
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
             }
             break;
         }
@@ -1916,16 +1944,32 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         }
     }
 
-    if (fRow.getUintField(colAux) == 0)
+    // min(count) = 0
+    uint64_t count = fRow.getUintField(colAux) + 1;
+    fRow.setUintField<8>(count, colAux);
+    bool notFirstValue = count > 1;
+
+    if (LIKELY(!isWideDataType))
     {
-        // This is the first value
-        fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(1, colAux);
+        if (LIKELY(notFirstValue))
+            fRow.setLongDoubleField(valIn + valOut, colOut);
+        else // This is the first value
+            fRow.setLongDoubleField(valIn, colOut);
     }
     else
     {
-        fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(fRow.getUintField(colAux) + 1, colAux);
+        uint32_t offset = fRow.getOffset(colOut);
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(notFirstValue))
+        {
+            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
+        }
+        else
+        {
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
+        }
     }
 }
 
@@ -2630,11 +2674,6 @@ void RowAggregationUM::calculateAvgColumns()
             int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
             int64_t colAux = fFunctionCols[i]->fAuxColumnIndex;
 
-//            int scale = fRowGroupOut->getScale()[colOut];
-//            int scale1 = scale >> 8;
-//            int scale2 = scale & 0x000000FF;
-//            long double factor = pow(10.0, scale2 - scale1);
-
             for (uint64_t j = 0; j < fRowGroupOut->getRowCount(); j++)
             {
                 fRowGroupOut->getRow(j, &fRow);
@@ -2643,14 +2682,38 @@ void RowAggregationUM::calculateAvgColumns()
                 if (cnt == 0) // empty set, value is initialized to null.
                     continue;
 
-                long double sum = 0.0;
-                long double avg = 0.0;
+                uint32_t precision = fRow.getPrecision(colOut);
+                bool isWideDecimal =
+                    datatypes::Decimal::isWideDecimalType(precision);
 
-                // MCOL-1822 Always long double
-                sum = fRow.getLongDoubleField(colOut);
-                avg = sum / cnt;
-//                avg *= factor;
-                fRow.setLongDoubleField(avg, colOut);
+                if (LIKELY(!isWideDecimal))
+                {
+                    long double sum = 0.0;
+                    long double avg = 0.0;
+                    sum = fRow.getLongDoubleField(colOut);
+                    avg = sum / cnt;
+                    fRow.setLongDoubleField(avg, colOut);
+                }
+                else
+                {
+                    uint32_t offset = fRow.getOffset(colOut);
+                    uint32_t scale = fRow.getScale(colOut);
+                    // Get multiplied to deliver AVG with the scale closest
+                    // to the expected original scale + 4. 
+                    // There is a counterpart in buildAggregateColumn.
+                    datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+                    int128_t* sumPnt = fRow.getBinaryField_offset<int128_t>(offset);
+                    uint32_t scaleDiff = scale - fRow.getScale(colOut);
+                    // multiplication overflow check
+                    datatypes::MultiplicationOverflowCheck multOp;
+                    int128_t sum = 0;
+                    if (scaleDiff > 0)
+                        multOp(*sumPnt, datatypes::mcs_pow_10[scaleDiff], sum);
+                    else
+                        sum = *sumPnt;
+                    int128_t avg = sum / cnt;
+                    fRow.setBinaryField_offset(&avg, sizeof(avg), offset);
+                }
             }
         }
     }
@@ -4172,6 +4235,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = nullptr;
 
     switch (colDataType)
     {
@@ -4198,12 +4263,21 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            break;
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
             {
-                valIn /= pow(10.0, scale);
+                int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
+            }
+            else
+            {
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
             }
             break;
         }
@@ -4238,16 +4312,36 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         }
     }
 
-    int64_t cnt = fRow.getUintField(colAux);
-    if (cnt == 0)
+    uint64_t cnt = fRow.getUintField(colAux);
+    if (LIKELY(!isWideDataType))
     {
-        fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        if (LIKELY(cnt > 0))
+        {
+            fRow.setLongDoubleField(valIn + valOut, colOut);
+            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        }
+        else
+        {
+            fRow.setLongDoubleField(valIn, colOut);
+            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        }
     }
     else
     {
-        fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        uint32_t offset = fRow.getOffset(colOut);
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(cnt > 0))
+        {
+            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
+            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        }
+        else
+        {
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
+            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        }
     }
 }
 
