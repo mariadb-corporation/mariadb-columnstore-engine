@@ -7840,8 +7840,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                string cmd = "/usr/bin/mysqld_safe &";
-                system(cmd.c_str());
+                system("/usr/bin/mysqld_safe &");
             }
             command = "start";
             break;
@@ -7851,8 +7850,28 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                string cmd = "pkill mysqld";
-                system(cmd.c_str());
+                kill(pidStatus,SIGTERM);
+                // Loop check because we mysqld may not stop immediately
+                for (int i=0; i < 10; i++)
+                {
+                    if (kill(pidStatus,0) == -1)
+                    {
+                        if (errno == ESRCH)
+                        {
+                            writeLog("***mysqld shutdown complete", LOG_TYPE_DEBUG);
+                            break;
+                        }
+                        else
+                        {
+                            writeLog("***mysqld errno = " + string(strerror(errno)), LOG_TYPE_DEBUG);
+                        }
+                    }
+                    else
+                    {
+                        writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
+                        sleep(2);
+                    }
+                }
             }
             command = "stop";
 
@@ -7903,8 +7922,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                string cmd = "pkill -HUP mysqld";
-                system(cmd.c_str());
+                system("pkill -HUP mysqld");
             }
             command = "reload";
             break;
@@ -7914,8 +7932,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                string cmd = "pkill -HUP mysqld";
-                system(cmd.c_str());
+                system("pkill -HUP mysqld");
             }
             command = "force-reload";
             break;
