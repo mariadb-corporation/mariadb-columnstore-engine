@@ -7798,6 +7798,10 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     int no_systemd = -1;
 
+    ProcessStatus procstat;
+    getProcessStatus("mysqld", moduleName, procstat);
+    int state = procstat.ProcessOpState;
+    pid_t pidStatus = procstat.ProcessID;
     // This is here because calling system() is problematic with ProcMon
     //  which has its own signalHandler for SIGCHLD. Therefore since this
     //  is only needed when doing non MYSQL_STATUS commands, only check
@@ -7836,7 +7840,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("/usr/bin/mysqld_safe &");
+                string cmd = "/usr/bin/mysqld_safe &";
+                system(cmd.c_str());
             }
             command = "start";
             break;
@@ -7846,7 +7851,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill mysqld");
+                string cmd = "pkill mysqld";
+                system(cmd.c_str());
             }
             command = "stop";
 
@@ -7865,7 +7871,28 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill mysqld");
+                kill(pidStatus,SIGTERM);
+                // Loop check because we mysqld may not stop immediately
+                for (int i=0; i < 10; i++)
+                {
+                    if (kill(pidStatus,0) == -1)
+                    {
+                        if (errno == ESRCH)
+                        {
+                            writeLog("***mysqld shutdown complete", LOG_TYPE_DEBUG);
+                            break;
+                        }
+                        else
+                        {
+                            writeLog("***mysqld errno = " + string(strerror(errno)), LOG_TYPE_DEBUG);
+                        }
+                    }
+                    else
+                    {
+                        writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
+                        sleep(2);
+                    }
+                }
                 system("/usr/bin/mysqld_safe &");
             }
             command = "restart";
@@ -7876,7 +7903,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill -HUP mysqld");
+                string cmd = "pkill -HUP mysqld";
+                system(cmd.c_str());
             }
             command = "reload";
             break;
@@ -7886,7 +7914,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill -HUP mysqld");
+                string cmd = "pkill -HUP mysqld";
+                system(cmd.c_str());
             }
             command = "force-reload";
             break;
@@ -7955,10 +7984,6 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     if (action == MYSQL_STATUS )
     {
-        ProcessStatus procstat;
-        getProcessStatus("mysqld", moduleName, procstat);
-        int state = procstat.ProcessOpState;
-        pid_t pidStatus = procstat.ProcessID;
         pid_t pid = 0;
         if ( state != ACTIVE )
         {
