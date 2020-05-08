@@ -1297,7 +1297,7 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            if (LIKELY(fRow.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+            if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
             {
                 updateIntMinMax(rowIn.getBinaryField<int128_t>(colIn),
                     fRow.getBinaryField<int128_t>(colOut),
