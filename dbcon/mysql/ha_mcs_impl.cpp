@@ -820,7 +820,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         dataconvert::DataConvert::decimalToString(dec,
                             (unsigned)colType.scale, buf,
                             sizeof(buf), colType.colDataType);
-                        std::cout << buf << std::endl;
 
                         Field_new_decimal* f2 = (Field_new_decimal*)*f;
                         f2->store(buf, strlen(buf), f2->charset());
