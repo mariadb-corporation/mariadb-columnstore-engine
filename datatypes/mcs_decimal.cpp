@@ -203,6 +203,11 @@ namespace datatypes
         return std::string(buf);
     }
 
+    std::string Decimal::toString(const execplan::IDB_Decimal& value)
+    {
+        return toString(const_cast<execplan::IDB_Decimal&>(value));
+    }
+
     int Decimal::compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r)
     {
         int128_t divisorL, divisorR;
