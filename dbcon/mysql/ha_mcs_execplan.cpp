@@ -3620,7 +3620,8 @@ ArithmeticColumn* buildArithmeticColumn(
             unsigned int precision = idp->max_length;
             unsigned int scale = idp->decimals;
 
-            datatypes::Decimal::setDecimalScalePrecisionLegacy(mysql_type, precision, scale);
+            datatypes::Decimal::setDecimalScalePrecisionLegacy(mysql_type,
+                precision, scale);
         }
         else
         {
@@ -3637,7 +3638,8 @@ ArithmeticColumn* buildArithmeticColumn(
                 int32_t scale2 = pt->right()->data()->resultType().scale;
 
                 if (funcName == "/" &&
-                    (mysql_type.scale - (scale1 - scale2)) > datatypes::INT128MAXPRECISION)
+                    (mysql_type.scale - (scale1 - scale2)) >
+                        datatypes::INT128MAXPRECISION)
                 {
                     Item_decimal* idp = (Item_decimal*)item;
 
@@ -4979,15 +4981,33 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             // use the first parm for result type.
             parm = ac->aggParms()[0];
 
-            // WIP why do we use LONGDOUBLE for AVG?
-            if (isp->sum_func() == Item_sum::AVG_FUNC ||
-                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
+            bool isAvg = (isp->sum_func() == Item_sum::AVG_FUNC ||
+                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC);
+            if (isAvg || isp->sum_func() == Item_sum::SUM_FUNC ||
+                     isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
-                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = sizeof(long double);
-                ct.scale += 4;
-                ct.precision = -1;
+                if (datatypes::Decimal::isWideDecimalType(ct))
+                {
+                    uint32_t precision = ct.precision;
+                    uint32_t scale = ct.scale;
+                    if (isAvg)
+                    {
+                        datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+                    }
+                    ct.precision = precision;
+                    ct.scale = scale;
+                }
+                else
+                {
+                    ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                    ct.colWidth = sizeof(long double);
+                    if (isAvg)
+                    {
+                        ct.scale += datatypes::MAXSCALEINC4AVG;
+                    }
+                    ct.precision = datatypes::IGNOREPRECISION;
+                }
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
@@ -4997,25 +5017,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 ct.colDataType = CalpontSystemCatalog::BIGINT;
                 ct.colWidth = 8;
                 ct.scale = parm->resultType().scale;
-                ac->resultType(ct);
-            }
-            else if (isp->sum_func() == Item_sum::SUM_FUNC ||
-                     isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
-            {
-                // WIP MCOL-641 This fast hack breaks aggregates for
-                // all float DT's
-                // UPD it doesn't break b/c actual DT for result type
-                // is set during JobList creation.
-                /*CalpontSystemCatalog::ColType ct = parm->resultType();
-                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = sizeof(long double);
-                ct.precision = -1;*/
-                CalpontSystemCatalog::ColType ct = parm->resultType();
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-                ct.colWidth = 16;
-                ct.precision = 38;
-                // WIP set the scale if argument is a float-based DT
-                ct.scale = 0;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||
@@ -5057,7 +5058,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         }
 
         // adjust decimal result type according to internalDecimalScale
-        if (gwi.internalDecimalScale >= 0 && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        bool isWideDecimal =
+            datatypes::Decimal::isWideDecimalType(ac->resultType());
+        // This must be also valid for UDECIMAL
+        if (!isWideDecimal && gwi.internalDecimalScale >= 0
+            && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
         {
             CalpontSystemCatalog::ColType ct = ac->resultType();
             ct.scale = gwi.internalDecimalScale;
