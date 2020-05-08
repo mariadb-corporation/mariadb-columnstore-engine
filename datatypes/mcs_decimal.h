@@ -25,6 +25,7 @@
 
 using int128_t = __int128;
 using ColTypeAlias = execplan::CalpontSystemCatalog::ColType;
+using ColDataTypeAlias = execplan::CalpontSystemCatalog::ColDataType;
 
 namespace execplan
 {
@@ -166,7 +167,7 @@ class Decimal
 
         /**
             @brief The method detects whether decimal type is wide
-            using csc data type.
+            using csc colType.
         */
         static constexpr inline bool isWideDecimalType(const ColTypeAlias& ct)
         {
@@ -183,6 +184,18 @@ class Decimal
         {
             return precision > INT64MAXPRECISION
                 && precision <= INT128MAXPRECISION;
+        }
+
+        /**
+            @brief The method detects whether decimal type is wide
+            using datatype and width.
+        */
+        static constexpr inline bool isWideDecimalType(const ColDataTypeAlias dt,
+            const int32_t width)
+        {
+            return (width == MAXDECIMALWIDTH &&
+                (dt == execplan::CalpontSystemCatalog::DECIMAL ||
+                 dt == execplan::CalpontSystemCatalog::UDECIMAL));
         }
 
         /**
