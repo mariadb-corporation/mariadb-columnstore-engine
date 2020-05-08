@@ -7869,8 +7869,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                     else
                     {
                         writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
-                        sleep(2);
                     }
+                    sleep(2);
                 }
             }
             command = "stop";
@@ -7909,8 +7909,8 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                     else
                     {
                         writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
-                        sleep(2);
                     }
+                    sleep(2);
                 }
                 system("/usr/bin/mysqld_safe &");
             }
