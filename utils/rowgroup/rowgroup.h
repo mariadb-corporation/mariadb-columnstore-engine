@@ -774,25 +774,16 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
     return strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
 }
 
-// WIP Remove this
-// Check whether memcpy affects perf here
-/*inline void Row::setBinaryField(const uint8_t* strdata, uint32_t length, uint32_t offset)
-{
-    memcpy(&data[offset], strdata, length);
-}*/
-
-// MCOL-641. This method can be applied to uint8_t* buffers.
 template<typename T>
 inline void Row::setBinaryField(T* value, uint32_t width, uint32_t colIndex)
 {
     memcpy(&data[offsets[colIndex]], value, width);
 }
 
-// MCOL-641. This method !cannot! be applied to uint8_t* buffers.
+// This method !cannot! be applied to uint8_t* buffers.
 template<typename T>
 inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
 {
-    // WIP Compare performance.
     *reinterpret_cast<T*>(&data[offset]) = *value;
 }
 
@@ -835,23 +826,15 @@ inline std::string Row::getStringField(uint32_t colIndex) const
                        strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex)));
 }
 
-/*inline std::string Row::getBinaryField(uint32_t colIndex) const
-{
-    return std::string((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
-}*/
-
-// WIP MCOL-641
 template <typename T>
 inline T* Row::getBinaryField(uint32_t colIndex) const
 {
-    //return reinterpret_cast<T*>(&data[offsets[colIndex]]);
     return getBinaryField_offset<T>(offsets[colIndex]);
 }
 
 template <typename T>
 inline T* Row::getBinaryField(T* argtype, uint32_t colIndex) const
 {
-    //return reinterpret_cast<T*>(&data[offsets[colIndex]]);
     return getBinaryField_offset<T>(offsets[colIndex]);
 }
 
