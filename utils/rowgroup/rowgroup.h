@@ -1167,19 +1167,32 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
                  types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                  types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
+    {
         out.setVarBinaryField(getVarBinaryStringField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(isLongString(srcIndex)))
+    {
         out.setStringField(getStringPointer(srcIndex), getStringLength(srcIndex), destIndex);
-    //out.setStringField(getStringField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(isShortString(srcIndex)))
+    {
         out.setUintField(getUintField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+    {
         out.setLongDoubleField(getLongDoubleField(srcIndex), destIndex);
+    }
+    else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
+        types[srcIndex], colWidths[srcIndex])))
+    {
+        copyBinaryField(out, destIndex, srcIndex);
+    }
     else
+    {
         out.setIntField(getIntField(srcIndex), destIndex);
+    }
 }
 
-// WIP MCOL-641
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
     out.setBinaryField(getBinaryField<int128_t>(srcIndex), 16, destIndex);
@@ -1889,20 +1902,30 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
+        {
             out->setVarBinaryField(in.getVarBinaryStringField(i), i);
+        }
         else if (UNLIKELY(in.isLongString(i)))
-            //out->setStringField(in.getStringField(i), i);
+        {
             out->setStringField(in.getStringPointer(i), in.getStringLength(i), i);
+        }
         else if (UNLIKELY(in.isShortString(i)))
+        {
             out->setUintField(in.getUintField(i), i);
+        }
         else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+        {
             out->setLongDoubleField(in.getLongDoubleField(i), i);
-        else if (UNLIKELY((in.getColType(i) == execplan::CalpontSystemCatalog::DECIMAL ||
-                           in.getColType(i) == execplan::CalpontSystemCatalog::UDECIMAL) &&
-                           in.getColumnWidth(i) == datatypes::MAXDECIMALWIDTH))
+        }
+        else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
+            in.getColType(i), in.getColumnWidth(i))))
+        {
             in.copyBinaryField(*out, i, i);
+        }
         else
+        {
             out->setIntField(in.getIntField(i), i);
+        }
     }
 }
 

@@ -523,31 +523,18 @@ void TupleConstantStep::fillInConstants(const rowgroup::Row& rowIn, rowgroup::Ro
     if (fIndexConst.size() > 1 || fIndexConst[0] != 0)
     {
         copyRow(fRowConst, &rowOut);
-        //memcpy(rowOut.getData(), fRowConst.getData(), fRowConst.getSize());
         rowOut.setRid(rowIn.getRelRid());
 
         for (uint64_t j = 0; j < fIndexMapping.size(); ++j)
             rowIn.copyField(rowOut, fIndexMapping[j], j);
-
-        //rowIn.copyField(rowOut.getData() + rowOut.getOffset(fIndexMapping[j]), j);
     }
     else // only first column is constant
     {
-        //size_t n = rowOut.getOffset(rowOut.getColumnCount()) - rowOut.getOffset(1);
         rowOut.setRid(rowIn.getRelRid());
         fRowConst.copyField(rowOut, 0, 0);
 
-        //fRowConst.copyField(rowOut.getData()+2, 0); // hardcoded 2 for rid length
         for (uint32_t i = 1; i < rowOut.getColumnCount(); i++)
-            // WIP MCOL-641 implement copyBinaryField inside copyField
-            if (UNLIKELY(utils::isWide(rowIn.getColumnWidth(i - 1)) &&
-                         (rowIn.getColType(i - 1) == CalpontSystemCatalog::DECIMAL ||
-                          rowIn.getColType(i - 1) == CalpontSystemCatalog::UDECIMAL)))
-                rowIn.copyBinaryField(rowOut, i, i - 1);
-            else
-                rowIn.copyField(rowOut, i, i - 1);
-
-        //memcpy(rowOut.getData()+rowOut.getOffset(1), rowIn.getData()+2, n);
+            rowIn.copyField(rowOut, i, i - 1);
     }
 }
 
