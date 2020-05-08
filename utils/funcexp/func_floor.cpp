@@ -151,6 +151,24 @@ int64_t Func_floor::getIntVal(Row& row,
         }
         break;
 
+        // floor(decimal(X,Y)) leads to this path if X, Y allows to
+        // downcast to INT otherwise Func_floor::getDecimalVal() is called
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
+
+            if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                ret = datatypes::Decimal::getInt64FromWideDecimal(tmp.s128Value);
+            }
+            else
+            {
+                ret = tmp.value;
+            }
+            break;
+        }
+
         default:
         {
             std::ostringstream oss;
