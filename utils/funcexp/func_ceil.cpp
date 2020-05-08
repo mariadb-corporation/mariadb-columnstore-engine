@@ -70,8 +70,8 @@ int64_t Func_ceil::getIntVal(Row& row,
         }
         break;
 
-        // ceil(decimal(38,38)) leads to this path
-        // otherwise Func_ceil::getDecimalVal() is called
+        // ceil(decimal(X,Y)) leads to this path if X, Y allows to
+        // downcast to INT otherwise Func_ceil::getDecimalVal() is called
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
