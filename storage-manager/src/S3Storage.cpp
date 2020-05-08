@@ -234,6 +234,7 @@ int S3Storage::getObject(const string &_sourceKey, boost::shared_array<uint8_t> 
                     s3err_msgs[err], bucket.c_str(), sourceKey.c_str());
             if (skipRetryableErrors)
             {
+                errno = EAGAIN;
                 return -1;
             }
             sleep(5);
@@ -328,6 +329,7 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
                     "  Retrying...", s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
             if (skipRetryableErrors)
             {
+                errno = EAGAIN;
                 return -1;
             }
             sleep(5);
@@ -366,6 +368,7 @@ int S3Storage::deleteObject(const string &_key)
                     s3err_msgs[s3err], bucket.c_str(), key.c_str());
             if (skipRetryableErrors)
             {
+                errno = EAGAIN;
                 return -1;
             }
             sleep(5);
@@ -405,6 +408,7 @@ int S3Storage::copyObject(const string &_sourceKey, const string &_destKey)
                     " destkey = %s.  Retrying...", s3err_msgs[s3err], bucket.c_str(), sourceKey.c_str(), destKey.c_str());
             if (skipRetryableErrors)
             {
+                errno = EAGAIN;
                 return -1;
             }
             sleep(5);
@@ -458,6 +462,7 @@ int S3Storage::exists(const string &_key, bool *out)
                     s3err_msgs[s3err], bucket.c_str(), key.c_str());
             if (skipRetryableErrors)
             {
+                errno = EAGAIN;
                 return -1;
             }
             sleep(5);
