@@ -66,15 +66,15 @@ int InsertDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << (uint8_t)fLogging;
     bytestream << (uint8_t)fLogending;
 
-    if (fTable != 0)
-    {
-        retval = fTable->write(bytestream);
-    }
-
     bytestream << fTableOid;
     bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsInsertSelect);
     bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsBatchInsert);
     bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsAutocommitOn);
+
+    if (fTable != 0)
+    {
+        retval = fTable->write(bytestream);
+    }
 
     return retval;
 }
@@ -100,13 +100,48 @@ int InsertDMLPackage::read(messageqcpp::ByteStream& bytestream)
     bytestream >> logending;
     fLogending = (logending != 0);
 
+    bytestream >> fTableOid;
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsInsertSelect);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsBatchInsert);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
+
     fTable = new DMLTable();
     retval = fTable->read(bytestream);
-    bytestream >> fTableOid;
-    bytestream >> reinterpret_cast< messageqcpp::ByteStream::byte&>(fIsInsertSelect);
-    bytestream >> reinterpret_cast< messageqcpp::ByteStream::byte&>(fIsBatchInsert);
-    bytestream >> reinterpret_cast< messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
     return retval;
+}
+
+void InsertDMLPackage::readMetaData(messageqcpp::ByteStream& bytestream)
+{
+    messageqcpp::ByteStream::quadbyte session_id;
+    bytestream >> session_id;
+    fSessionID = session_id;
+    bytestream >> fUuid;
+
+    std::string dmlStatement;
+    bytestream >> fDMLStatement;
+    bytestream >> fSQLStatement;
+    bytestream >> fSchemaName;
+    bytestream >> fTimeZone;
+    uint8_t logging;
+    bytestream >> logging;
+    fLogging = (logging != 0);
+    uint8_t logending;
+    bytestream >> logending;
+    fLogending = (logending != 0);
+
+    bytestream >> fTableOid;
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsInsertSelect);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsBatchInsert);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
+
+    fTable = new DMLTable();
+    fTable->readMetaData(bytestream);
+}
+
+// Has to be called after InsertDMLPackage::readMetaData()
+void InsertDMLPackage::readRowData(messageqcpp::ByteStream& bytestream)
+{
+    fTable->readRowData(bytestream);
 }
 
 int InsertDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows)

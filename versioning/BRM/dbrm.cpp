@@ -2226,6 +2226,42 @@ int DBRM::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID,
     return err;
 }
 
+int DBRM::bulkWriteVBEntry(VER_t transID,
+                           const std::vector<BRM::LBID_t>& lbids,
+                           OID_t vbOID,
+                           const std::vector<uint32_t>& vbFBOs) DBRM_THROW
+{
+
+#ifdef BRM_INFO
+
+    if (fDebug)
+    {
+        TRACER_WRITELATER("bulkWriteVBEntry");
+        TRACER_WRITE;
+    }
+
+#endif
+
+    ByteStream command, response;
+    uint8_t err;
+
+    command << BULK_WRITE_VB_ENTRY << (uint32_t) transID;
+    serializeInlineVector(command, lbids);
+    command << (uint32_t) vbOID;
+    serializeInlineVector(command, vbFBOs);
+    err = send_recv(command, response);
+
+    if (err != ERR_OK)
+        return err;
+
+    if (response.length() != 1)
+        return ERR_NETWORK;
+
+    response >> err;
+    CHECK_EMPTY(response);
+    return err;
+}
+
 struct _entry
 {
     _entry(LBID_t l) : lbid(l) { };

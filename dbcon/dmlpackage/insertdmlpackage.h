@@ -73,6 +73,18 @@ public:
       */
     EXPORT int read(messageqcpp::ByteStream& bytestream);
 
+    /** @brief read InsertDMLPackage metadata from bytestream
+      *
+      * @param bytestream the ByteStream to read from
+      */
+    EXPORT void readMetaData(messageqcpp::ByteStream& bytestream);
+
+    /** @brief read InsertDMLPackage row data from bytestream
+      *
+      * @param bytestream the ByteStream to read from
+      */
+    EXPORT void readRowData(messageqcpp::ByteStream& bytestream);
+
     /** @brief build a InsertDMLPackage from a string buffer
       *
       * @param buffer

@@ -72,6 +72,28 @@ int DMLTable::read(messageqcpp::ByteStream& bytestream)
     return retval;
 }
 
+void DMLTable::readMetaData(messageqcpp::ByteStream& bytestream)
+{
+    // read the table name
+    bytestream >> fName;
+
+    // read the schema name
+    bytestream >> fSchema;
+}
+
+void DMLTable::readRowData(messageqcpp::ByteStream& bytestream)
+{
+    messageqcpp::ByteStream::quadbyte rowNum;
+    bytestream >> rowNum;
+
+    for (unsigned int i = 0; i < rowNum; i++)
+    {
+        Row* aRow = new Row();
+        aRow->read(bytestream);
+        fRows.push_back(aRow);
+    }
+}
+
 int DMLTable::write(messageqcpp::ByteStream& bytestream)
 {
     int retval = 1;

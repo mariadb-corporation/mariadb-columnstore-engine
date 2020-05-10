@@ -364,6 +364,20 @@ public:
     EXPORT int writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID,
                             uint32_t vbFBO) throw();
 
+    /** @brief Bulk registers a version buffer entry.
+     *
+     * Similar to writeVBEntry, but registers the version buffer
+     * entries in bulk for a list of lbids and vbFBOs, for a given
+     * transID and vbOID.
+     * @note The version buffer locations must hold the 'copy' lock
+     * first.
+     * @return 0 on success, -1 on error
+     */
+    EXPORT int bulkWriteVBEntry(VER_t transID,
+                                const std::vector<BRM::LBID_t>& lbids,
+                                OID_t vbOID,
+                                const std::vector<uint32_t>& vbFBOs) throw();
+
     /** @brief Atomically prepare to copy data to the version buffer
      *
      * Atomically sets the copy flag on the specified LBID ranges

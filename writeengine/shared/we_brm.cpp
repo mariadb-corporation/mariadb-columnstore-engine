@@ -1737,38 +1737,44 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
             if (rc != NO_ERROR)
                 goto cleanup;
 
-            for (; processedBlocks < (k + rangeListCount); processedBlocks++)
+            std::vector<BRM::LBID_t> lbids(k);
+            std::vector<uint32_t> vbFBOs(k);
+            size_t idx = 0;
+
+            for (; processedBlocks < (k + rangeListCount); processedBlocks++, idx++)
             {
-                rc = blockRsltnMgrPtr->writeVBEntry(transID, rangeList[processedBlocks].start,
-                                                    freeList[i].vbOID, freeList[i].vbFBO + (processedBlocks - rangeListCount));
+                lbids[idx] = rangeList[processedBlocks].start;
+                vbFBOs[idx] = freeList[i].vbFBO + (processedBlocks - rangeListCount);
+            }
 
-                //cout << (uint64_t)rangeList[processedBlocks].start << endl;
-                if (rc != NO_ERROR)
+            rc = blockRsltnMgrPtr->bulkWriteVBEntry(transID, lbids, freeList[i].vbOID,
+                                                    vbFBOs);
+
+            if (rc != NO_ERROR)
+            {
+                switch (rc)
                 {
-                    switch (rc)
-                    {
-                        case ERR_DEADLOCK:
-                            rc = ERR_BRM_DEAD_LOCK;
-			    break;
+                    case ERR_DEADLOCK:
+                        rc = ERR_BRM_DEAD_LOCK;
+                        break;
 
-                        case ERR_VBBM_OVERFLOW:
-                            rc = ERR_BRM_VB_OVERFLOW;
-			    break;
+                    case ERR_VBBM_OVERFLOW:
+                        rc = ERR_BRM_VB_OVERFLOW;
+                        break;
 
-                        case ERR_NETWORK:
-                            rc = ERR_BRM_NETWORK;
-			    break;
+                    case ERR_NETWORK:
+                        rc = ERR_BRM_NETWORK;
+                        break;
 
-                        case ERR_READONLY:
-                            rc = ERR_BRM_READONLY;
-			    break;
+                    case ERR_READONLY:
+                        rc = ERR_BRM_READONLY;
+                        break;
 
-                        default:
-                            rc = ERR_BRM_WR_VB_ENTRY;
-                    }
-
-                    goto cleanup;
+                    default:
+                        rc = ERR_BRM_WR_VB_ENTRY;
                 }
+
+                goto cleanup;
             }
         }
     }

@@ -375,6 +375,10 @@ void SlaveComm::processCommand(ByteStream& msg)
             do_writeVBEntry(msg);
             break;
 
+        case BULK_WRITE_VB_ENTRY:
+            do_bulkWriteVBEntry(msg);
+            break;
+
         case BEGIN_VB_COPY:
             do_beginVBCopy(msg);
             break;
@@ -1750,6 +1754,49 @@ void SlaveComm::do_writeVBEntry(ByteStream& msg)
     reply << (uint8_t) err;
 #ifdef BRM_VERBOSE
     cerr << "WorkerComm: do_writeVBEntry() err code is " << err << endl;
+#endif
+
+    if (!standalone)
+        master.write(reply);
+
+    doSaveDelta = true;
+}
+
+void SlaveComm::do_bulkWriteVBEntry(ByteStream& msg)
+{
+    VER_t transID;
+    std::vector<BRM::LBID_t> lbids;
+    OID_t vbOID;
+    std::vector<uint32_t> vbFBOs;
+    uint32_t tmp;
+    int err;
+    ByteStream reply;
+
+#ifdef BRM_VERBOSE
+    cerr << "WorkerComm: do_bulkWriteVBEntry()" << endl;
+#endif
+
+    msg >> tmp;
+    transID = tmp;
+    deserializeInlineVector(msg, lbids);
+    msg >> tmp;
+    vbOID = tmp;
+    deserializeInlineVector(msg, vbFBOs);
+
+    if (printOnly)
+    {
+        cout << "bulkWriteVBEntry: transID=" << transID << endl;
+
+        for (size_t i = 0; i < lbids.size(); i++)
+            cout << "bulkWriteVBEntry arg " << i + 1 << ": lbid=" << lbids[i] << " vbOID=" <<
+                 vbOID << " vbFBO=" << vbFBOs[i] << endl;
+        return;
+    }
+
+    err = slave->bulkWriteVBEntry(transID, lbids, vbOID, vbFBOs);
+    reply << (uint8_t) err;
+#ifdef BRM_VERBOSE
+    cerr << "WorkerComm: do_bulkWriteVBEntry() err code is " << err << endl;
 #endif
 
     if (!standalone)

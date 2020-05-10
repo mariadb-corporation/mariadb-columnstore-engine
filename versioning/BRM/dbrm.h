@@ -608,6 +608,20 @@ public:
     EXPORT int writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID,
                             uint32_t vbFBO) DBRM_THROW;
 
+    /** @brief Bulk registers a version buffer entry.
+     *
+     * Similar to writeVBEntry, but registers the version buffer
+     * entries in bulk for a list of lbids and vbFBOs, for a given
+     * transID and vbOID.
+     * @note The version buffer locations must hold the 'copy' lock
+     * first.
+     * @return 0 on success, non-0 on error (see brmtypes.h)
+     */
+    EXPORT int bulkWriteVBEntry(VER_t transID,
+                                const std::vector<BRM::LBID_t>& lbids,
+                                OID_t vbOID,
+                                const std::vector<uint32_t>& vbFBOs) DBRM_THROW;
+
     /** @brief Retrieves a list of uncommitted LBIDs.
      *
      * Retrieves a list of uncommitted LBIDs for the given transaction ID.
