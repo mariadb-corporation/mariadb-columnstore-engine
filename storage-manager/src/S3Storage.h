@@ -30,7 +30,8 @@ namespace storagemanager
 class S3Storage : public CloudStorage
 {
     public:
-        S3Storage();
+        S3Storage(bool skipRetry = false);
+
         virtual ~S3Storage();
 
         int getObject(const std::string &sourceKey, const std::string &destFile, size_t *size = NULL);
@@ -46,6 +47,8 @@ class S3Storage : public CloudStorage
         ms3_st *getConnection();
         void returnConnection(ms3_st *);
     
+        bool skipRetryableErrors;
+
         std::string bucket;   // might store this as a char *, since it's only used that way
         std::string prefix;
         std::string region;

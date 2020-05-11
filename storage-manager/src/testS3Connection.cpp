@@ -35,7 +35,7 @@ int s3TestConnection()
     int ret = 0;
     try
     {
-        S3Storage* s3 = new S3Storage();
+        S3Storage* s3 = new S3Storage(true);
         cout << "S3 Storage Manager Configuration OK" << endl;
         delete s3;
     }
