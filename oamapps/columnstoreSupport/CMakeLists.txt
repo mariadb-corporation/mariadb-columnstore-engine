@@ -12,9 +12,9 @@ target_compile_options(columnstoreSupport PRIVATE -Wno-unused-result)
 
 target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIBRARY} ncurses  ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
 install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh
     hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
-    DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+    DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
               

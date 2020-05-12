@@ -8,7 +8,7 @@ SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
 
 SET(CPACK_RPM_COMPONENT_INSTALL ON)
 
-SET(CPACK_COMPONENTS_ALL columnstore-platform columnstore-libs columnstore-engine)
+SET(CPACK_COMPONENTS_ALL columnstore-engine)
 
 SET(CPACK_PACKAGE_NAME "MariaDB")
 SET(ENGINE_ARCH "x86_64")
@@ -50,13 +50,6 @@ MariaDB bug reports should be submitted through https://jira.mariadb.org
 
 ")
 
-SET(CPACK_RPM_columnstore-platform_PACKAGE_DESCRIPTION "MariaDB-Columnstore binary files")
-SET(CPACK_RPM_columnstore-platform_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
-SET(CPACK_RPM_columnstore-platform_PACKAGE_GROUP "Applications")
-
-SET(CPACK_RPM_columnstore-libs_PACKAGE_DESCRIPTION "MariaDB-Columnstore libraries")
-SET(CPACK_RPM_columnstore-libs_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
-
 SET(CPACK_RPM_columnstore-engine_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
 SET(CPACK_RPM_columnstore-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_RPM_columnstore-engine_PACKAGE_GROUP "Applications")
@@ -68,10 +61,7 @@ MACRO(SETA var)
   ENDFOREACH()
 ENDMACRO(SETA)
 
-SETA(CPACK_RPM_columnstore-libs_PACKAGE_PROVIDES "MariaDB-columnstore-libs")
-SETA(CPACK_RPM_columnstore-platform_PACKAGE_PROVIDES "MariaDB-columnstore-platform")
 SETA(CPACK_RPM_columnstore--engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
-
 
 #boost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
@@ -87,24 +77,17 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "MariaDB-columnstore-libs" "MariaDB-columnstore-shared" "snappy" "net-tools")
+    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "MariaDB-columnstore-shared" "snappy" "net-tools")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "MariaDB-columnstore-libs" "libsnappy1" "jemalloc" "net-tools")
+    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "libsnappy1" "jemalloc" "net-tools")
 else ()
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools")
+    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "snappy" "jemalloc" "net-tools")
 endif()
 
-SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "MariaDB-columnstore-libs")
-
-SET(CPACK_RPM_columnstore-platform_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_platform.sh)
-SET(CPACK_RPM_columnstore-platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
-SET(CPACK_RPM_columnstore-libs_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_libs.sh)
+SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storeage_engine.sh)
 SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
-
-SET(CPACK_RPM_columnstore-platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_platform.sh)
-SET(CPACK_RPM_columnstore-libs_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_libs.sh)
 SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_storage_engine.sh)
 
 SET(CPACK_RPM_SPEC_MORE_DEFINE "${CPACK_RPM_SPEC_MORE_DEFINE}
@@ -127,10 +110,6 @@ SET(ignored
 #SET(CPACK_RPM_SPEC_MORE_DEFINE "
 #%define _prefix ${CMAKE_INSTALL_PREFIX}
 #")
-
-SET(CPACK_RPM_columnstore-platform_USER_FILELIST ${ignored})
-
-SET(CPACK_RPM_columnstore-libs_USER_FILELIST ${ignored})
 
 SET(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored})
 

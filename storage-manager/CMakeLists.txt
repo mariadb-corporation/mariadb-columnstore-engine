@@ -126,16 +126,16 @@ target_link_libraries(smrm storagemanager cloudio
 
 install(TARGETS storagemanager
     LIBRARY DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-platform
+    COMPONENT columnstore-engine
 )
 
 install(TARGETS StorageManager smcat smput smls smrm
     RUNTIME DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-platform
+    COMPONENT columnstore-engine
 )
 
 
 install(FILES storagemanager.cnf 
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT columnstore-platform)
+    COMPONENT columnstore-engine)
 

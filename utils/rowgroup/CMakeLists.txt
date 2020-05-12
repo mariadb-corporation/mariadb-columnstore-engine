@@ -12,5 +12,5 @@ add_library(rowgroup SHARED ${rowgroup_LIB_SRCS})
 
 target_link_libraries(rowgroup ${NETSNMP_LIBRARIES} funcexp)
 
-install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

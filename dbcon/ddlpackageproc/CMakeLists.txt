@@ -16,5 +16,5 @@ add_library(ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
 
 target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
 
-install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

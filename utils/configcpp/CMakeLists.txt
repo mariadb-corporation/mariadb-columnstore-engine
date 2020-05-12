@@ -9,5 +9,5 @@ add_library(configcpp SHARED ${configcpp_LIB_SRCS})
 
 target_compile_definitions(configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
-install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

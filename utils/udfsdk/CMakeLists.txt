@@ -10,7 +10,7 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
 
-install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 
 

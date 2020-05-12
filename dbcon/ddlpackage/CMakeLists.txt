@@ -35,5 +35,5 @@ ADD_LIBRARY(ddlpackage SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
     )
 
-INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

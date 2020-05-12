@@ -32,5 +32,5 @@ install(PROGRAMS
     ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
     ${CMAKE_BINARY_DIR}/lib/libmarias3.so
     DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-platform
+    COMPONENT columnstore-engine
 )

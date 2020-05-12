@@ -41,4 +41,4 @@ add_library(writeengine SHARED ${writeengine_LIB_SRCS})
 
 target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
 
-install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

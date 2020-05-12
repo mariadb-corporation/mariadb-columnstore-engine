@@ -15,5 +15,5 @@ add_library(common SHARED ${common_LIB_SRCS})
 
 add_dependencies(common loggingcpp)
 
-install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
