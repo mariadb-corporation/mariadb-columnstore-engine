@@ -361,12 +361,12 @@ ENDIF ()
 
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these
@@ -396,6 +396,16 @@ IF (INSTALL_LAYOUT)
             string(REGEX MATCH "VERSION = ([0-9]+)" SUSE "${SUSE_VERSION}")
             set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
         ENDIF ()
+        if (${SUSE_VERSION_NUMBER} EQUAL 12)
+            SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
+        else ()
+            SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
+        endif()
+
+        SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preInstall_storage_engine.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/postInstall_storage_engine.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preUn_storage_engine.sh PARENT_SCOPE)
+
     ENDIF ()
 ELSE ()
     # MariaDB has its own packaging routines
