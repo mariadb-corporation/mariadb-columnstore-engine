@@ -1,5 +1,4 @@
 
-mcsadmin shutdown y
 rpmmode=upgrade
 if  [ "$1" -eq "$1" 2> /dev/null ]; then
 	if [ $1 -ne 1 ]; then
