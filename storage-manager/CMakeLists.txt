@@ -147,5 +147,5 @@ install(FILES storagemanager.cnf
 install(FILES storagemanager.cnf 
     RENAME storagemanager.cnf.example
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT columnstore-engine)
+    COMPONENT columnstore-engine
 )
