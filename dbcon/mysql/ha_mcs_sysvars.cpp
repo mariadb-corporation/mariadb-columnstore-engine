@@ -270,13 +270,28 @@ static MYSQL_THDVAR_ULONG(
     1 // block size
 );
 
-static MYSQL_THDVAR_BOOL(
+const char* mcs_use_import_for_batchinsert_values[] = {
+    "OFF",
+    "ON",
+    "ALWAYS",
+    NullS
+};
+
+static TYPELIB mcs_use_import_for_batchinsert_values_lib = {
+    array_elements(mcs_use_import_for_batchinsert_values) - 1,
+    "mcs_use_import_for_batchinsert_values",
+    mcs_use_import_for_batchinsert_values,
+    NULL
+};
+
+static MYSQL_THDVAR_ENUM(
     use_import_for_batchinsert,
-    PLUGIN_VAR_NOCMDARG,
+    PLUGIN_VAR_RQCMDARG,
     "LOAD DATA INFILE and INSERT..SELECT will use cpimport internally",
     NULL, // check
     NULL, // update
-    1 // default
+    1, // default
+    &mcs_use_import_for_batchinsert_values_lib // values lib
 );
 
 static MYSQL_THDVAR_BOOL(
@@ -508,11 +523,12 @@ void set_local_query(THD* thd, ulong value)
     THDVAR(thd, local_query) = value;
 }
 
-bool get_use_import_for_batchinsert(THD* thd)
+mcs_use_import_for_batchinsert_t get_use_import_for_batchinsert(THD* thd)
 {
-    return ( thd == NULL ) ? false : THDVAR(thd, use_import_for_batchinsert);
+    return ( thd == NULL ) ? mcs_use_import_for_batchinsert_t::ON :
+           (mcs_use_import_for_batchinsert_t) THDVAR(thd, use_import_for_batchinsert);
 }
-void set_use_import_for_batchinsert(THD* thd, bool value)
+void set_use_import_for_batchinsert(THD* thd, ulong value)
 {
     THDVAR(thd, use_import_for_batchinsert) = value;
 }
