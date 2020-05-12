@@ -16,5 +16,5 @@ add_definitions(-DTHRIFT_SQUELCH_CONSOLE_OUTPUT)
 
 add_library(thrift SHARED ${thrift_LIB_SRCS})
 
-install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

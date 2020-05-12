@@ -42,7 +42,7 @@ install(PROGRAMS columnstore-post-install
                 disable-rep-columnstore.sh  
                 mariadb-command-line.sh 
                 mcs_module_installer.sh
-                DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+                DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
 install(FILES mariadb-columnstore.service
               columnstoreAlias
@@ -60,7 +60,7 @@ install(FILES mariadb-columnstore.service
               mcs-dmlproc.service
               mcs-ddlproc.service
               mcs-loadbrm.service
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
-install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-platform)
+install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-engine)
 

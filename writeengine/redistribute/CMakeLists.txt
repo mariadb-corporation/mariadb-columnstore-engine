@@ -16,5 +16,5 @@ target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
 target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
 
-install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

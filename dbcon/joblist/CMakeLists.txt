@@ -59,11 +59,11 @@ set(joblist_LIB_SRCS
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 
-install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 if (WITH_ORDERBY_UT)
     add_executable(job_orderby_tests orderby-tests.cpp)
     target_link_libraries(job_orderby_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    install(TARGETS job_orderby_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+    install(TARGETS job_orderby_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 endif()
 

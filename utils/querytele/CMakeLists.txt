@@ -14,5 +14,5 @@ set(querytele_LIB_SRCS
 
 add_library(querytele SHARED ${querytele_LIB_SRCS})
 
-install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

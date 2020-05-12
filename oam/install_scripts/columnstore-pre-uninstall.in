@@ -36,9 +36,18 @@ done
 columnstore stop > /dev/null 2>&1
 
 # Test we are using systemd
-systemctl cat mariadb.service > /dev/null 2>&1
+systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    systemctl stop mariadb.service > /dev/null 2>&1
+    systemctl stop mariadb-columnstore.service > /dev/null 2>&1
+    systemctl stop mariadb-columnstore >/dev/null 2>&1
+    systemctl stop mcs-controllernode > /dev/null 2>&1
+    systemctl stop mcs-ddlproc > /dev/null 2>&1
+    systemctl stop mcs-dmlproc > /dev/null 2>&1
+    systemctl stop mcs-exemgr > /dev/null 2>&1
+    systemctl stop mcs-primproc > /dev/null 2>&1
+    systemctl stop mcs-workernode > /dev/null 2>&1
+    systemctl stop mcs-writeengineserver > /dev/null 2>&1
+    systemctl stop mcs-loadbrm > /dev/null 2>&1
 else
     pkill mysqld
 fi
@@ -68,6 +77,9 @@ rm -f /var/lib/columnstore/local/*.columnstore
 rm -rf /var/lib/columnstore/local/etc/
 rm -f /var/lib/columnstore/data/bulk/tmp/job/* >/dev/null 2>&1
 rm -f /var/lib/columnstore/local/moveDbrootTransactionLog
+rm -rf /var/log/mariadb/columnstore/
+rm -rf /tmp/columnstore_tmp_files
+rm -rf /usr/share/columnstore
 
 lockdir=`mcsGetConfig Installation LockFileDirectory`
 rm -f $lockdir/columnstore
@@ -82,9 +94,35 @@ columnstoreSyslogSetup.sh uninstall >/dev/null 2>&1
 systemctl=`which systemctl 2>/dev/null`
 if [ -n "$systemctl" ]; then
 
-	systemctl disable columnstore >/dev/null 2>&1
-	rm -f /usr/lib/systemd/system/columnstore.service
-	rm -f /lib/systemd/system/columnstore.service
+        systemctl disable mariadb-columnstore >/dev/null 2>&1
+        systemctl disable mcs-controllernode > /dev/null 2>&1
+        systemctl disable mcs-ddlproc > /dev/null 2>&1
+        systemctl disable mcs-dmlproc > /dev/null 2>&1
+        systemctl disable mcs-exemgr > /dev/null 2>&1
+        systemctl disable mcs-primproc > /dev/null 2>&1
+        systemctl disable mcs-workernode > /dev/null 2>&1
+        systemctl disable mcs-writeengineserver > /dev/null 2>&1
+        systemctl disable mcs-loadbrm > /dev/null 2>&1
+
+	rm -f /usr/lib/systemd/system/mariadb-columnstore.service
+	rm -f /lib/systemd/system/mariadb-columnstore.service
+        rm -f /usr/lib/systemd/system/mcs-controllernode.service
+	rm -f /lib/systemd/system/mcs-controllernode.service
+        rm -f /usr/lib/systemd/system/mcs-ddlproc.service
+	rm -f /lib/systemd/system/mcs-ddlproc.service
+        rm -f /usr/lib/systemd/system/mcs-dmlproc.service
+ 	rm -f /lib/systemd/system/mcs-dmlproc.service
+        rm -f /usr/lib/systemd/system/mcs-exemgr.service
+	rm -f /lib/systemd/system/mcs-exemgr.service
+        rm -f /usr/lib/systemd/system/mcs-primproc.service
+	rm -f /lib/systemd/system/mcs-primproc.service
+        rm -f /usr/lib/systemd/system/mcs-workernode.service
+	rm -f /lib/systemd/system/mcs-workernode.service
+        rm -f /usr/lib/systemd/system/mcs-writeengineserver.service
+	rm -f /lib/systemd/system/mcs-writeengineserver.service
+        rm -f /usr/lib/systemd/system/mcs-loadbrm.service
+	rm -f /lib/systemd/system/mcs-loadbrm.service
+
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then

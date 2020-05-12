@@ -10,7 +10,7 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(regr SHARED ${regr_LIB_SRCS} )
 
-install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 
 

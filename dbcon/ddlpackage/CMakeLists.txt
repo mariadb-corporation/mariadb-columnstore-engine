@@ -36,5 +36,5 @@ ADD_LIBRARY(ddlpackage SHARED
     ${FLEX_ddl_scan_OUTPUTS}
 )
 
-INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
