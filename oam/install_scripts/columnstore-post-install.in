@@ -20,12 +20,10 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
+
 profileFile="/etc/profile.d/columnstoreAlias.sh"
 /bin/cp -f @ENGINE_SUPPORTDIR@/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
 chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
-
-# set Profile File in config file
-mcsSetConfig -d Installation ProfileFile $profileFile
 
 test -d /var/log/mariadb/columnstore || mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
@@ -52,8 +50,6 @@ mkdir -p /var/lib/columnstore/data/bulk/rollback >/dev/null 2>&1
 mkdir -p /var/lib/columnstore/data/bulk/tmpjob >/dev/null 2>&1
 rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
 
-#get temp base directory
-tmpDir="/tmp"
 #get columnstore temp file directory name
 tmpDir=/tmp/columnstore_tmp_files
 mkdir $tmpDir >/dev/null 2>&1
@@ -61,20 +57,6 @@ chmod 664 $tmpDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-
-#check and create rc.local file if missing
-if [ -f /etc/rc.d ]; then
-    RCFILE=/etc/rc.d/rc.local
-else
-    RCFILE=/etc/rc.local
-fi
-
-if [ $user = "root" ]; then
-    touch $RCFILE    
-    chmod +x $RCFILE
-else
-    printf '%s\n' '#!/bin/bash' "#" | tee -a $RCFILE > /dev/null 2>&1
-fi
 
 if [ $user = "root" ]; then
 	#setup the columnstore service script
