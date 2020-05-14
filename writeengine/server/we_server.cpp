@@ -101,14 +101,11 @@ int setupResources()
 
 int main(int argc, char** argv)
 {
-    // get and set locale language
-    string systemLang = "C";
-    systemLang = funcexp::utf8::idb_setlocale();
+    // Set locale language
+    utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("WriteEngineServ");
-
-    printf ("Locale is : %s\n", systemLang.c_str() );
 
     int gDebug = 0;
     int c;

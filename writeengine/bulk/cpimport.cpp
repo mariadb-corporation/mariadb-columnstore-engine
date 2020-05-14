@@ -1091,9 +1091,8 @@ int main(int argc, char** argv)
 #endif
     setupSignalHandlers();
 
-    // Set up LOCALE - BUG 5362
-    std::string systemLang("C");
-    systemLang = funcexp::utf8::idb_setlocale();
+    // Set locale language
+    utf8::idb_setlocale();
 
     // Initialize singleton instance of syslogging
     if (argc > 0)
@@ -1377,7 +1376,7 @@ int main(int argc, char** argv)
         //--------------------------------------------------------------------------
         task = TASK_LOAD_JOBFILE;
         rc = curJob.loadJobInfo( sFileName.string(), bUseTempJobFile,
-                                 systemLang, argc, argv, bLogInfo2ToConsole, bValidateColumnList );
+                                 argc, argv, bLogInfo2ToConsole, bValidateColumnList );
 
         if ( rc != NO_ERROR )
         {

@@ -231,7 +231,6 @@ int BulkLoad::setAlternateImportDir(const std::string& loadDir,
 // PARAMETERS:
 //    fullName - full filename for job description file
 //    bUseTempJobFile - are we using a temporary job XML file
-//    systemLang-SystemLang setting used to set locale.
 //    argc     - command line arg count
 //    argv     - command line arguments
 //    bLogInfo2ToConsole - Log info2 msgs to the console
@@ -244,7 +243,6 @@ int BulkLoad::setAlternateImportDir(const std::string& loadDir,
 int BulkLoad::loadJobInfo(
     const string& fullName,
     bool          bUseTempJobFile,
-    const string& systemLang,
     int argc,
     char** argv,
     bool  bLogInfo2ToConsole,
@@ -285,13 +283,8 @@ int BulkLoad::loadJobInfo(
     else
         fLog.setLogFileName(logFile.c_str(), errlogFile.c_str(), (int)bLogInfo2ToConsole);
 
-    std::ostringstream ossLocale;
-    ossLocale << "Locale is : " << systemLang;
-
     if (!(disableConsoleOutput()))
     {
-        fLog.logMsg( ossLocale.str(), MSGLVL_INFO2 );
-
         if (!BulkLoad::disableConsoleOutput())
             cout << "Log file for this job: " << logFile << std::endl;
 

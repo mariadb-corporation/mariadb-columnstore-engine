@@ -1433,9 +1433,8 @@ void cleanTempDir()
 
 int main(int argc, char* argv[])
 {
-    // get and set locale language
-    std::string systemLang = "C";
-    systemLang = funcexp::utf8::idb_setlocale();
+    // Set locale language
+    utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("ExeMgr");

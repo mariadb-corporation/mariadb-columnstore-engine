@@ -44,7 +44,6 @@ namespace primitiveprocessor
 {
 
 extern uint32_t dictBufferSize;
-extern bool utf8;
 
 DictStep::DictStep() : Command(DICT_STEP), strValues(NULL), filterCount(0),
     bufferSize(0)
@@ -174,7 +173,8 @@ void DictStep::issuePrimitive(bool isFilter)
     }
 
     bpp->pp.setLikeFilter(likeFilter);
-    bpp->pp.p_Dictionary(primMsg, &result, utf8, isFilter, eqFilter, eqOp);
+    // MCOL-3536 We shouldn't need to pass in utf8 -- maybe??
+    bpp->pp.p_Dictionary(primMsg, &result, true, isFilter, eqFilter, eqOp);
 }
 
 void DictStep::copyResultToTmpSpace(OrderedToken* ot)

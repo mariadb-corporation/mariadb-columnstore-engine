@@ -938,6 +938,8 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     if (item->full_name())
         ac->alias(item->full_name());
 
+    ac->charsetNumber(item->collation.collation->number);
+
     // put ac on windowFuncList
     gwi.windowFuncList.push_back(ac);
     return ac;

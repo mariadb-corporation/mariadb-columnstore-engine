@@ -466,6 +466,7 @@ const ByteStream formatDictionaryScanMsg(const uint64_t lbid,
     hdr.COP2              = oidOp.COP2();
     hdr.NVALS             = oidOp.FilterCount();
     hdr.Count             = count;
+    hdr.charsetNumber     = oidOp.ColumnType().charsetNumber;
     idbassert(hdr.Count > 0);
 
     primMsg.load((const uint8_t*) &hdr.ism, sizeof(ISMPacketHeader));

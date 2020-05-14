@@ -89,18 +89,15 @@ extern uint32_t lowPriorityThreads;
 extern int  directIOFlag;
 extern int  noVB;
 
-
 DebugLevel gDebugLevel;
 Logger* mlp;
-string systemLang;
-bool utf8 = false;
 
 bool isDebug( const DebugLevel level )
 {
     return level <= gDebugLevel;
 }
 
-}
+} //namespace primitiveprocessor
 
 namespace
 {
@@ -316,13 +313,6 @@ void* waitForSIGUSR1(void* p)
 
 int main(int argc, char* argv[])
 {
-    // get and set locale language
-    systemLang = funcexp::utf8::idb_setlocale();
-
-    if ( systemLang != "en_US.UTF-8" &&
-            systemLang.find("UTF") != string::npos )
-        utf8 = true;
-
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("PrimProc");
 

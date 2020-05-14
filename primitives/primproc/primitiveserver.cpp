@@ -160,8 +160,6 @@ std::map<uint64_t, shared_mutex *> djLock;  // djLock synchronizes destroy and j
 volatile int32_t asyncCounter;
 const int asyncMax = 20;	// current number of asynchronous loads
 
-extern bool utf8;
-
 struct preFetchCond
 {
     //uint64_t lbid;
@@ -1156,6 +1154,7 @@ int DictScanJob::operator()()
     PrimitiveProcessor pproc(gDebugLevel);
     TokenByScanResultHeader* output;
     QueryContext verInfo;
+    bool bUtf8;
 
     try
     {
@@ -1167,6 +1166,25 @@ int DictScanJob::operator()()
         *fByteStream >> verInfo;
         cmd = (TokenByScanRequestHeader*) fByteStream->buf();
 
+        // If charset is one of those that can be representedby standard ascii,
+        // we can get a performance improvement by using strcmp rather than
+        // the full charset compare system.
+        switch (cmd->charsetNumber) 
+        {
+            case 8:  // latin1_swedish_ci
+            case 9:  // latin2_general_ci
+            case 11: // ascii_general_ci
+            case 47: // latin1_bin
+            case 48: // latin1_general_ci
+            case 49: // latin1_general_cs
+            case 65: // ascii_bin
+            case 77: // latin2_bin
+                bUtf8 = false;
+                break;
+            default:
+                bUtf8 = true;
+        }
+        
         session = cmd->Hdr.SessionID;
         uniqueId = cmd->Hdr.UniqueID;
         runCount = cmd->Count;
@@ -1211,7 +1229,8 @@ int DictScanJob::operator()()
                       fLBIDTraceOn,
                       session);
             pproc.setBlockPtr((int*) data);
-            pproc.p_TokenByScan(cmd, output, output_buf_size, utf8, eqFilter);
+            // MCOL-3536 We shouldn't need to pass in utf8 -- maybe??
+            pproc.p_TokenByScan(cmd, output, output_buf_size, bUtf8, eqFilter);
 
             if (wasBlockInCache)
                 output->CacheIO++;

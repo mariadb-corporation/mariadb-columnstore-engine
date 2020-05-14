@@ -506,6 +506,7 @@ void pDictionaryScan::sendAPrimitiveMessage(
     hdr.NVALS             = fFilterCount;
     hdr.Count             = msgLbidCount;
     hdr.CompType          = colType.ddn.compressionType;
+    hdr.charsetNumber     = colType.charsetNumber;
     idbassert(hdr.Count > 0);
 
     if (isEquality)
@@ -628,7 +629,8 @@ void pDictionaryScan::receivePrimitiveMessages()
             if (fOid >= 3000 && traceOn() && dlTimes.FirstReadTime().tv_sec == 0)
                 dlTimes.setFirstReadTime();
 
-            if (fOid >= 3000 && traceOn()) dlTimes.setLastReadTime();
+            if (fOid >= 3000 && traceOn()) 
+                dlTimes.setLastReadTime();
 
             if (bs->length() == 0)
             {

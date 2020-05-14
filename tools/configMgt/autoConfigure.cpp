@@ -372,23 +372,6 @@ int main(int argc, char* argv[])
     catch (...)
     { }
                           
-                          	//setup System Language
-    string systemLang = "C";
-
-    try
-    {
-        systemLang = sysConfigOld->getConfig(SystemSection, "SystemLang");
-    }
-    catch (...)
-    { }
-
-    try
-    {
-        sysConfigNew->setConfig(SystemSection, "SystemLang", systemLang);
-    }
-    catch (...)
-    {}
-
     //setup HA IP Address
     string HA_IPadd;
 

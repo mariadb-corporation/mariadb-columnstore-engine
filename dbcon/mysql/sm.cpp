@@ -20,7 +20,8 @@
  *
  ***********************************************************************/
 
-#include <my_global.h>
+
+#include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
 #include <errmsg.h>

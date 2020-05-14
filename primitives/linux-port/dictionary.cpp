@@ -19,6 +19,11 @@
  * $Id: dictionary.cpp 2122 2013-07-08 16:33:50Z bpaul $
  */
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+#include <m_ctype.h>
+
 #include <iostream>
 #include <boost/scoped_array.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -34,7 +39,6 @@ using namespace std;
 #include "dataconvert.h"
 #include <sstream>
 
-using namespace funcexp;
 using namespace logging;
 
 const char* nullString = " ";  // this is not NULL to preempt segfaults.
@@ -144,6 +148,8 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     niceBlock = reinterpret_cast<const uint8_t*>(block);
     offsets = reinterpret_cast<const uint16_t*>(&niceBlock[10]);
     niceInput = reinterpret_cast<const uint8_t*>(h);
+    
+    const CHARSET_INFO* cs = get_charset(h->charsetNumber, MYF(MY_WME));
 
     // if LIKE is an operator, compile regexp's in advance.
     if ((h->NVALS > 0 && h->COP1 & COMPARE_LIKE) ||
@@ -182,9 +188,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
         argIndex = 0;
         args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
 
-        string sig_utf8;
-        string arg_utf8;
-
         if (eqFilter)
         {
             // MCOL-1246 Trim whitespace before match
@@ -199,41 +202,34 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
             goto no_store;
         }
 
-        // BUG 5110: If it is utf, we need to create utf strings to compare
-        if (utf8)
+        if (h->COP1 & COMPARE_LIKE)
         {
-            sig_utf8 = string(sig, siglen);
-            arg_utf8 = string(args->data, args->len);
+            p_DataValue dv;
+
+            dv.len = siglen;
+            dv.data = (uint8_t*) sig;
+            cmpResult = isLike(&dv, &regex[argIndex]);
+
+            if (h->COP1 & COMPARE_NOT)
+                cmpResult = !cmpResult;
+        }
+        else
+        {
+            if (utf8)
+            {
+                tmp = cs->strnncoll(sig, siglen, args->data, args->len);
+            }
+            else
+            {
+                tmp = strncmp(sig, args->data, std::min(siglen, args->len));
+            }
+            cmpResult = compare(tmp, h->COP1, siglen, args->len);
         }
 
         switch (h->NVALS)
         {
             case 1:
             {
-                if (h->COP1 & COMPARE_LIKE)
-                {
-                    p_DataValue dv;
-
-                    dv.len = siglen;
-                    dv.data = (uint8_t*) sig;
-                    cmpResult = isLike(&dv, &regex[argIndex]);
-
-                    if (h->COP1 & COMPARE_NOT)
-                        cmpResult = !cmpResult;
-                }
-                else
-                {
-                    if (utf8)
-                    {
-                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
-                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
-                    }
-                    else
-                    {
-                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
-                    }
-                }
 
                 if (cmpResult)
                     goto store;
@@ -243,32 +239,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
             case 2:
             {
-                if (h->COP1 & COMPARE_LIKE)
-                {
-                    p_DataValue dv;
-
-                    dv.len = siglen;
-                    dv.data = (uint8_t*) sig;
-                    cmpResult = isLike(&dv, &regex[argIndex]);
-
-                    if (h->COP1 & COMPARE_NOT)
-                        cmpResult = !cmpResult;
-                }
-
-                else
-                {
-                    if (utf8)
-                    {
-                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
-                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
-                    }
-                    else
-                    {
-                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
-                    }
-                }
-
                 if (!cmpResult && h->BOP == BOP_AND)
                     goto no_store;
 
@@ -295,15 +265,13 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
                 {
                     if (utf8)
                     {
-                        arg_utf8 = string(args->data, args->len);
-                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
-                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                        tmp = cs->strnncoll(sig, siglen, args->data, args->len);
                     }
                     else
                     {
                         tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
                     }
+                    cmpResult = compare(tmp, h->COP2, siglen, args->len);
                 }
 
                 if (cmpResult)
@@ -332,14 +300,13 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
                     {
                         if (utf8)
                         {
-                            tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
-                            cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                            tmp = cs->strnncoll(sig, siglen, args->data, args->len);
                         }
                         else
                         {
                             tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                            cmpResult = compare(tmp, h->COP1, siglen, args->len);
                         }
+                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
                     }
 
                     if (!cmpResult && h->BOP == BOP_AND)
@@ -351,11 +318,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
                     argsOffset += sizeof(uint16_t) + args->len;
                     argIndex++;
                     args = (DataValue*) &niceInput[argsOffset];
-
-                    if ( utf8)
-                    {
-                        arg_utf8 = string(args->data, args->len);
-                    }
                 }
 
                 if (i == h->NVALS && cmpResult)
@@ -566,112 +528,6 @@ again:
 
     dict_OffsetIndex++;
 }
-
-void PrimitiveProcessor::p_AggregateSignature(const AggregateSignatureRequestHeader* in,
-        AggregateSignatureResultHeader* out, unsigned outSize, unsigned* written, bool utf8)
-{
-
-    uint8_t* niceOutput;		// h cast to a byte-indexed type
-    int cmp;
-    char cMin[BLOCK_SIZE], cMax[BLOCK_SIZE];
-    int cMinLen, cMaxLen;
-    p_DataValue sigptr;
-
-    DataValue* min;
-    DataValue* max;
-
-    {
-        void *outp = static_cast<void*>(out);
-        memcpy(outp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-    }
-    out->ism.Command = DICT_AGGREGATE_RESULTS;
-    niceOutput = reinterpret_cast<uint8_t*>(out);
-
-    // The first sig is the min and the max.
-    out->Count = 0;
-    dict_OffsetIndex = 0;
-    nextSig(in->NVALS, in->tokens, &sigptr);
-
-    if (sigptr.len == -1)
-        return;
-
-    out->Count++;
-    memcpy(cMin, sigptr.data, sigptr.len);
-    memcpy(cMax, sigptr.data, sigptr.len);
-    cMinLen = cMaxLen = sigptr.len;
-
-    for (nextSig(in->NVALS, in->tokens, &sigptr); sigptr.len != -1;
-            nextSig(in->NVALS, in->tokens, &sigptr), out->Count++)
-    {
-        string sig_utf8;
-
-        if (utf8)
-        {
-            string cMin_utf8(cMin, cMinLen);
-            string tmpString((char*)sigptr.data, sigptr.len);
-            sig_utf8 = tmpString;
-            cmp = utf8::idb_strcoll(cMin_utf8.c_str(), sig_utf8.c_str());
-        }
-        else
-        {
-            cmp = strncmp(cMin, (char*)sigptr.data, std::min(cMinLen, sigptr.len));
-        }
-
-        if (cmp > 0)
-        {
-            memcpy(cMin, sigptr.data, sigptr.len);
-            cMinLen = sigptr.len;
-        }
-
-        if (utf8)
-        {
-            string cMax_utf8(cMax, cMaxLen);
-            cmp = utf8::idb_strcoll(cMax_utf8.c_str(), sig_utf8.c_str());
-        }
-        else
-        {
-            cmp = strncmp(cMax, (char*)sigptr.data, std::min(cMaxLen, sigptr.len));
-        }
-
-        if (cmp < 0)
-        {
-            memcpy(cMax, sigptr.data, sigptr.len);
-            cMaxLen = sigptr.len;
-        }
-    }
-
-    //we now have the results, stuff them into the output buffer
-#ifdef PRIM_DEBUG
-    unsigned size = sizeof(AggregateSignatureResultHeader) + cMaxLen + cMinLen
-                    + sizeof(uint16_t) * 2;
-
-    if (outSize < size)
-    {
-        MessageLog logger(LoggingID(28));
-        logging::Message::Args marker;
-        Message msg(35);
-
-        marker.add(11);
-        msg.format(marker);
-        logger.logErrorMessage(msg);
-
-        throw length_error("PrimitiveProcessor::p_AggregateSignature(): output buffer is too small");
-    }
-
-#endif
-
-    min = reinterpret_cast<DataValue*>
-          (&niceOutput[sizeof(AggregateSignatureResultHeader)]);
-    max = reinterpret_cast<DataValue*>
-          (&niceOutput[sizeof(AggregateSignatureResultHeader) + cMinLen + sizeof(uint16_t)]);
-    min->len = cMinLen;
-    max->len = cMaxLen;
-    memcpy(min->data, cMin, cMinLen);
-    memcpy(max->data, cMax, cMaxLen);
-    *written = sizeof(AggregateSignatureResultHeader) + cMaxLen + cMinLen
-               + sizeof(uint16_t) * 2;
-}
-
 const char backslash = '\\';
 
 inline bool PrimitiveProcessor::isEscapedChar(char c)

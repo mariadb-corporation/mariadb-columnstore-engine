@@ -49,17 +49,14 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-//#include "utils_utf8.h"
+#include "utils_utf8.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
-#include "funcexp/utils_utf8.h"
-
 
 using namespace std;
 using namespace boost;
 using namespace dataconvert;
-
 
 // inlines of RowAggregation that used only in this file
 namespace
@@ -401,7 +398,7 @@ void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, i
 #ifdef STRCOLL_ENH__
     else
     {
-        int tmp = funcexp::utf8::idb_strcoll(val1.c_str(), val2.c_str());
+        int tmp = utf8::idb_strcoll(val1.c_str(), val2.c_str());
 
         if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
                 (tmp > 0 && func == rowgroup::ROWAGG_MAX))

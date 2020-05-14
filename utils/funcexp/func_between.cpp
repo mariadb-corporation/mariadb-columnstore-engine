@@ -39,10 +39,6 @@ using namespace execplan;
 #include "errorids.h"
 using namespace logging;
 
-#include "utils_utf8.h"
-using namespace funcexp;
-
-
 namespace
 {
 template<typename result_t>

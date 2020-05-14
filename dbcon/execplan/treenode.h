@@ -451,6 +451,15 @@ public:
         return fRegex;
     }
 
+    uint32_t charsetNumber() const
+    {
+        return fResultType.charsetNumber;
+    }
+    void charsetNumber(uint32_t cnum)
+    {
+        fResultType.charsetNumber = cnum;
+    }
+
 protected:
     Result fResult;
     execplan::CalpontSystemCatalog::ColType fResultType; // mapped from mysql data type

@@ -101,10 +101,32 @@ int main(int argc, char** argv)
 #ifndef _MSC_VER
     setuid(0); // set effective ID to root; ignore return status
 #endif
-    // get and set locale language
-    string systemLang = "C";
-
-    setlocale(LC_ALL, systemLang.c_str());
+    // Set locale language
+    const char* pLoc = utf8::idb_setlocale();
+    try
+    {
+        logging::LoggingID lid(17);  // ProcessManager
+        logging::MessageLog ml(lid);
+        logging::Message msg(1);
+        logging::Message::Args args;
+        if (pLoc)
+        {
+            // Log one line
+            args.add("Set locale to ");
+            args.add(pLoc);
+            msg.format( args );
+        }
+        else
+        {
+            args.add("Failed to set locale ");
+            msg.format( args );
+        }
+        ml.logErrorMessage(msg);
+    }
+    catch (...)
+    {
+        // Ignoring for time being.
+    }
 
     idbdatafile::IDBPolicy::configIDBPolicy();
     

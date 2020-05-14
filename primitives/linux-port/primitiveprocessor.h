@@ -227,19 +227,6 @@ public:
      */
     void p_IdxList(const IndexListHeader* rqst, IndexListHeader* rslt, int mode = 1);
 
-    /** @brief The p_AggregateSignature primitive processor.
-     *
-     * The p_AggregateSignature primitive processor.  It operates on a dictionary
-     * block and assumes the continuation pointer is not used.
-     * @param in The input parameters
-     * @param out A pointer to a buffer where the result will be written.
-     * @param outSize The size of the output buffer in bytes.
-     * @param written (out parameter) A pointer to 1 int, which will contain the
-     * number of bytes written to out.
-     */
-    void p_AggregateSignature(const AggregateSignatureRequestHeader* in,
-                              AggregateSignatureResultHeader* out, unsigned outSize, unsigned* written, bool utf8);
-
     /** @brief The p_Col primitive processor.
      *
      * The p_Col primitive processor.  It operates on a column block specified using setBlockPtr().

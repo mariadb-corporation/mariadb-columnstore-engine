@@ -862,7 +862,7 @@ int Dctnry::insertDctnry(const char* buf,
         // @Bug 2565: Truncate any strings longer than schema's column width
         if (curSig.size > m_colWidth)
         {
-            uint8_t truncate_point = funcexp::utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
+            uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
             curSig.size = m_colWidth - truncate_point;
             ++truncCount;
         }

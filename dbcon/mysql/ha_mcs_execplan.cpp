@@ -18,6 +18,11 @@
 
 //#define DEBUG_WALK_COND
 #include <my_config.h>
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+#include <strings.h>
+
 #include <string>
 #include <iostream>
 #include <stack>
@@ -3406,6 +3411,8 @@ ReturnedColumn* buildReturnedColumn(
     if (rc && item->name.length)
         rc->alias(item->name.str);
 
+    rc->charsetNumber(item->collation.collation->number);
+    
     return rc;
 }
 
@@ -4080,6 +4087,7 @@ ReturnedColumn* buildFunctionColumn(
 
         fc->operationType(functor->operationType(funcParms, fc->resultType()));
         fc->expressionId(ci->expressionId++);
+        fc->charsetNumber(ifp->collation.collation->number);
     }
     else if (ifp->type() == Item::COND_ITEM ||
              ifp->functype() == Item_func::EQ_FUNC ||
@@ -4348,6 +4356,7 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
     columnstore_decimal.precision = idp->max_length - idp->decimals;
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    cc->charsetNumber(idp->collation.collation->number);
     return cc;
 }
 
@@ -4467,8 +4476,8 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         default:
             sc = new SimpleColumn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
     }
-
     sc->resultType(ct);
+    sc->charsetNumber(ifp->collation.collation->number);
     string tbname(ifp->table_name.str);
 
     if (isInformationSchema)
@@ -5079,6 +5088,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         return NULL;
     }
 
+    ac->charsetNumber(item->collation.collation->number);
     return ac;
 }
 

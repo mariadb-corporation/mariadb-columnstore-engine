@@ -21,6 +21,10 @@
  *
  *
  ***********************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <unistd.h>
 #include <stdexcept>
 #include <string>
@@ -6083,6 +6087,41 @@ void CalpontSystemCatalog::checkSysCatVer()
         flushCache();
     }
 }
+
+CalpontSystemCatalog::ColType::ColType() : 
+    colWidth(0), 
+    constraintType(NO_CONSTRAINT), 
+    colDataType(MEDINT), 
+    defaultValue(""), 
+    colPosition(-1), 
+    scale(0), 
+    precision(-1), 
+    compressionType(NO_COMPRESSION), 
+    columnOID(0),
+    autoincrement(0), 
+    nextvalue(0)
+{
+    charsetNumber = default_charset_info->number;
+}
+
+CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
+{
+    colWidth = rhs.colWidth;
+    constraintType = rhs.constraintType;
+    colDataType = rhs.colDataType;
+    ddn = rhs.ddn;
+    defaultValue = rhs.defaultValue;
+    colPosition = rhs.colPosition;
+    scale = rhs.scale;
+    precision = rhs.precision;
+    compressionType = rhs.compressionType;
+    columnOID = rhs.columnOID;
+    autoincrement = rhs.autoincrement;
+    nextvalue = rhs.nextvalue;
+    charsetNumber = default_charset_info->number;
+    charsetNumber = default_charset_info->number;
+}
+
 
 const string CalpontSystemCatalog::ColType::toString() const
 {
