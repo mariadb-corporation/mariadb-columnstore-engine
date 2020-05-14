@@ -63,7 +63,6 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#include <readline.h>
 #include <readline/history.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -140,7 +139,6 @@ int main(int argc, char* argv[])
 
 	//check if dbrm data resides in older directory path and inform user if it does
 	dbrmDirCheck();
-	checkMysqlPort(mysqlPort);
 
     if (numBlocksPctParam.empty()) {
         numBlocksPctParam = "-";

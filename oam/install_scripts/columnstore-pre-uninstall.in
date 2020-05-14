@@ -13,8 +13,6 @@ running_systemd() {
 
 }
 
-quiet=0
-
 # Test we are using systemd
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
@@ -59,7 +57,7 @@ columnstoreSyslogSetup.sh uninstall >/dev/null 2>&1
 
 #remove the start service command
 systemctl=`which systemctl 2>/dev/null`
-if [ -n "$systemctl" && [ $(running_systemd) -eq 0 ]; then
+if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
 
     systemctl disable mariadb-columnstore >/dev/null 2>&1
     systemctl disable mcs-controllernode > /dev/null 2>&1
@@ -89,7 +87,7 @@ if [ -n "$systemctl" && [ $(running_systemd) -eq 0 ]; then
 	rm -f /lib/systemd/system/mcs-writeengineserver.service
         rm -f /usr/lib/systemd/system/mcs-loadbrm.service
 	rm -f /lib/systemd/system/mcs-loadbrm.service
-
+    systemctl daemon-reload
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
@@ -105,14 +103,12 @@ else
 	fi
 fi
 
-if [ $quiet != 1 ]; then
-	#make copy of Columnstore.xml
-	/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave > /dev/null 2>&1
-	/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave > /dev/null 2>&1
-	/bin/cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave > /dev/null 2>&1
-	cp @ENGINE_SUPPORTDIR@/myCnf-include-args.text @ENGINE_SUPPORTDIR@/myCnf-include-args.text.rpmsave >& /dev/null
-	rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
-fi
+#make copy of Columnstore.xml
+/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave > /dev/null 2>&1
+/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave > /dev/null 2>&1
+/bin/cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave > /dev/null 2>&1
+cp @ENGINE_SUPPORTDIR@/myCnf-include-args.text @ENGINE_SUPPORTDIR@/myCnf-include-args.text.rpmsave >& /dev/null
+rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
 
 #remove OAMdbrootCheck file
 rm -f /var/lib/columnstore/data*/OAMdbrootCheck > /dev/null 2>&1

@@ -39,7 +39,6 @@
 #include <ctype.h>
 #include <sys/signal.h>
 #include <sys/types.h>
-#include <readline.h>
 #include <readline/history.h>
 #include <time.h>
 #include <pthread.h>
