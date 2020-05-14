@@ -3839,7 +3839,7 @@ void ProcessManager::reinitProcesses(std::string skipModule)
     log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
 
     reinitProcessType("DBRMWorkerNode");
-    reinitProcessType("WriteEngineServer");
+    restartProcessType("WriteEngineServer");
     restartProcessType("ExeMgr",skipModule);
     sleep(1);
     restartProcessType("DDLProc",skipModule);
