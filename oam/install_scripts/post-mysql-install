@@ -62,6 +62,21 @@ done
 
 # Install various Calpont stuff...
 install_mcs_mysql.sh  --tmpdir=$tmpdir
+
+# Restart MariDB, otherwise engine does not show up.
+# Test we are using systemd
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    systemctl restart mariadb.service > /dev/null 2>&1
+else
+    pkill mysqld
+    sleep 2
+    export MYSQL_OPTS="--skip-grant-tables"
+    /usr/bin/mysqld_safe --skip-grant-tables &
+    unset MYSQL_OPTS
+fi
+sleep 5
+
 checkForError
 if [ $? -ne 0 ]; then
     echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
