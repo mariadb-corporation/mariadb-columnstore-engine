@@ -3832,14 +3832,15 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
         }
     }
 
-    if (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-    {
-        ci->singleInsert = true; // reset the flag
-        ci->isLoaddataInfile = false;
-        ci->tableOid = 0;
-        ci->rowsHaveInserted = 0;
-        ci->useCpimport = 1;
-    }
+    // MCOL-4002 We earlier had these re-initializations set only for
+    // non-transactions, i.e.:
+    // !(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))
+    // However, we should be resetting these members anyways.
+    ci->singleInsert = true; // reset the flag
+    ci->isLoaddataInfile = false;
+    ci->tableOid = 0;
+    ci->rowsHaveInserted = 0;
+    ci->useCpimport = 1;
 
     return rc;
 }
