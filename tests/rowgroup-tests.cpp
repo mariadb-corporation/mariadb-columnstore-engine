@@ -291,8 +291,8 @@ TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
         col2Out = rOut.getBinaryField<uint128_t>(1);
         EXPECT_NE(*col1In, *col1Out);
         EXPECT_NE(*col2In, *col2Out);
-        r.copyBinaryField(rOut, 0, 0);
-        r.copyBinaryField(rOut, 1, 1);
+        r.copyBinaryField<int128_t>(rOut, 0, 0);
+        r.copyBinaryField<int128_t>(rOut, 1, 1);
         col1Out = rOut.getBinaryField<int128_t>(0);
         col2Out = rOut.getBinaryField<uint128_t>(1);
         EXPECT_EQ(*col1In, *col1Out);
