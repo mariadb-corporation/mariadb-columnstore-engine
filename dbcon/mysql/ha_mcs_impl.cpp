@@ -3043,9 +3043,15 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
     ha_rows rowsInserted = 0;
     int rc = 0;
 
-    if ( (ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) && (!ci->singleInsert) && ((ci->isLoaddataInfile) ||
-            ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
-            ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT)) )
+    // ci->useCpimport = 2 means ALWAYS use cpimport, whether it's in a
+    // transaction or not. User should use this option very carefully since
+    // cpimport currently does not support rollbacks
+    if (((ci->useCpimport == 2) ||
+         ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
+        (!ci->singleInsert) &&
+        ((ci->isLoaddataInfile) ||
+         ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
+         ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT)) )
     {
         rc = ha_mcs_impl_write_batch_row_(buf, table, *ci);
     }
@@ -3173,7 +3179,11 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table)
         if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
             ci->useCpimport = 0;
 
-        if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))) //If autocommit on batch insert will use cpimport to load data
+        // ci->useCpimport = 2 means ALWAYS use cpimport, whether it's in a
+        // transaction or not. User should use this option very carefully since
+        // cpimport currently does not support rollbacks
+        if ((ci->useCpimport == 2) ||
+            ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) //If autocommit on batch insert will use cpimport to load data
         {
             //store table info to connection info
             CalpontSystemCatalog::TableName tableName;
@@ -3635,9 +3645,12 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
     // @bug 2515. Check command intead of vtable state
     if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) && !ci->singleInsert )
     {
-        if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) && (!ci->singleInsert) && ((ci->isLoaddataInfile) ||
-                ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
-                ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT)) )
+        if (((ci->useCpimport == 2) ||
+             ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
+            (!ci->singleInsert) &&
+            ((ci->isLoaddataInfile) ||
+             ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
+             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT)) )
         {
 #ifdef _MSC_VER
 
