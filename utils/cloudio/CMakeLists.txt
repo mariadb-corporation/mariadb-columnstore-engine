@@ -9,7 +9,7 @@ add_library(cloudio SHARED ${cloudio_LIB_SRCS})
 # we should be able to reverse the dependency like so:
 target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp)
 
-install(TARGETS cloudio DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS cloudio DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 add_executable(cloudio_component_test component_test.cpp)
 

@@ -10,5 +10,5 @@ add_executable(cplogger ${cplogger_SRCS})
 
 target_link_libraries(cplogger ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS cplogger DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+install(TARGETS cplogger DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 

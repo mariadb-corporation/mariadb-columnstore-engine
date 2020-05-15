@@ -123,7 +123,7 @@ ENDIF ()
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time chrono)
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time chrono atomic)
 FIND_PACKAGE(BISON REQUIRED)
 
 check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
@@ -356,12 +356,12 @@ ENDIF ()
 
 # releasenum is used by external scripts for various tasks. Leave it alone.
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these
@@ -369,8 +369,6 @@ IF (INSTALL_LAYOUT)
     ADD_DEPENDENCIES(funcexp GenError)
     ADD_DEPENDENCIES(oamcpp GenError)
     ADD_DEPENDENCIES(regr_mysql GenError)
-    # Component columnstore-engine automatically added by mysql_add_plugin()
-    SET(CPACK_COMPONENTS_ALL ${CPACK_COMPONENTS_ALL} columnstore-platform columnstore-libs)
     # Don't know why, but this doesn't work if you make the above line PARENT_SCOPE
     SET(CPACK_COMPONENTS_ALL ${CPACK_COMPONENTS_ALL} PARENT_SCOPE)
     IF (RPM)
@@ -385,8 +383,6 @@ IF (INSTALL_LAYOUT)
         "%ignore /var/lib"
         "%ignore /var"
         )
-        SET(CPACK_RPM_columnstore-platform_USER_FILELIST ${ignored} PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-libs_USER_FILELIST ${ignored} PARENT_SCOPE)
         SET(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored} "%config(noreplace) ${INSTALL_SYSCONF2DIR}/*" PARENT_SCOPE)
 
         SET(SUSE_VERSION_NUMBER OFF)
@@ -395,16 +391,15 @@ IF (INSTALL_LAYOUT)
             string(REGEX MATCH "VERSION = ([0-9]+)" SUSE "${SUSE_VERSION}")
             set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
         ENDIF ()
-
         if (${SUSE_VERSION_NUMBER} EQUAL 12)
-            SETA(CPACK_RPM_columnstore-platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
+            SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
         else ()
-            SETA(CPACK_RPM_columnstore-platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "MariaDB-columnstore-libs" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
+            SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "snappy" "jemalloc" "net-tools" PARENT_SCOPE)
         endif()
 
-        SET(CPACK_RPM_columnstore-platform_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preInstall_platform.sh PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/postInstall_platform.sh PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preUn_platform.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preInstall_storage_engine.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/postInstall_storage_engine.sh PARENT_SCOPE)
+        SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preUn_storage_engine.sh PARENT_SCOPE)
 
     ENDIF ()
 ELSE ()

@@ -35,5 +35,5 @@ set(S3API_DEPS marias3 curl CACHE INTERNAL "S3API_DEPS")
 
 install(TARGETS marias3
     DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-platform
+    COMPONENT columnstore-engine
 )

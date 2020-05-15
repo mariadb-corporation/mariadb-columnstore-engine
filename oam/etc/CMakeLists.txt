@@ -4,4 +4,4 @@ install(FILES  AlarmConfig.xml
                Columnstore.xml 
                ProcessConfig.xml 
                ConsoleCmds.xml 
-               DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-platform)
+               DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-engine)

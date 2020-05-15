@@ -38,5 +38,5 @@ ADD_LIBRARY(dmlpackage SHARED
 )
 
 
-INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

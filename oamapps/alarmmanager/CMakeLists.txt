@@ -10,6 +10,6 @@ add_library(alarmmanager SHARED ${alarmmanager_LIB_SRCS})
 
 target_compile_options(alarmmanager PRIVATE -Wno-unused-result)
 
-install(TARGETS alarmmanager DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS alarmmanager DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=mariadb-columnstore
+
+[Service]
+Type=oneshot
+
+# Execute a dummy program
+ExecStart=/bin/true
+
+# This service shall be considered active after start
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

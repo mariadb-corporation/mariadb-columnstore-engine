@@ -10,5 +10,5 @@ add_executable(DDLProc ${DDLProc_SRCS})
 
 target_link_libraries(DDLProc ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool)
 
-install(TARGETS DDLProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+install(TARGETS DDLProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
