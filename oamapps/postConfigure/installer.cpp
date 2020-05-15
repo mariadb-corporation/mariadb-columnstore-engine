@@ -407,8 +407,6 @@ int main(int argc, char* argv[])
         system(cmd.c_str());
     }
     
-    string idbstartcmd = "columnstore start";
-
     //
     // perform single-server install from postConfigure
     //

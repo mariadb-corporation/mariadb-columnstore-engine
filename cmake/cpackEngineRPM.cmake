@@ -23,10 +23,10 @@ ENDIF()
 SET(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
 SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_RPM_PACKAGE_VERSION}-${CPACK_RPM_PACKAGE_RELEASE}-${ENGINE_ARCH}-${RPM}")
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB ColumnStore: a scale out columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_URL "http://mariadb.org")
 
-SET(CPACK_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_PACKAGE_SUMMARY "MariaDB ColumnStore: a scale out columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_VENDOR "MariaDB Corporation Ab")
 SET(CPACK_PACKAGE_LICENSE "Copyright (c) 2016 MariaDB Corporation Ab., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.")
 
@@ -51,7 +51,7 @@ MariaDB bug reports should be submitted through https://jira.mariadb.org
 ")
 
 SET(CPACK_RPM_columnstore-engine_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
-SET(CPACK_RPM_columnstore-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
+SET(CPACK_RPM_columnstore-engine_PACKAGE_SUMMARY "MariaDB ColumnStore: a scale out columnar storage engine for MariaDB")
 SET(CPACK_RPM_columnstore-engine_PACKAGE_GROUP "Applications")
 
 # "set/append array" - append a set of strings, separated by a space
