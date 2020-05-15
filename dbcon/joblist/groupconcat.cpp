@@ -56,6 +56,7 @@ using namespace ordering;
 #include "jobstep.h"
 #include "jlf_common.h"
 #include "limitedorderby.h"
+#include "mcs_decimal.h"
 
 namespace joblist
 {
@@ -368,7 +369,7 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
     // For some reason the rowgroup mapping fcns don't work right in this class.
     for (uint64_t i = 0; i < fRow.getColumnCount(); i++)
     {
-        if (fRow.getColumnWidth(i) > 8)
+        if (fRow.getColumnWidth(i) > datatypes::MAXLEGACYWIDTH)
         {
             if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::CHAR ||
                 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
@@ -379,6 +380,10 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
             else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
             {
                 fRow.setLongDoubleField(row.getLongDoubleField(mapping[i]), i);
+            }
+            else if (datatypes::Decimal::isWideDecimalType(fRow.getColType(i), fRow.getColumnWidth(i)))
+            {
+                row.copyBinaryField<int128_t>(fRow, i, mapping[i]);
             }
         }
         else
@@ -440,24 +445,33 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UDECIMAL:
             {
                 int64_t intVal = row.getIntField(*i);
-                int scale = (int) row.getScale(*i);
 
-                if (scale == 0)
-                {
-                    oss << intVal;
-                }
-                else
-                {
-                    long double dblVal = intVal / pow(10.0, (double)scale);
-                    oss << fixed << setprecision(scale) << dblVal;
-                }
+                oss << intVal;
 
                 break;
             }
+
+            case CalpontSystemCatalog::DECIMAL:
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                int scale = (int) row.getScale(*i);
+                //{
+                //    long double dblVal = intVal / pow(10.0, (double)scale);
+                //    oss << fixed << setprecision(scale) << dblVal;
+                //}
+                char buf[utils::MAXLENGTH16BYTES];
+ 
+                int128_t* dec = row.getBinaryField<int128_t>(*i);
+                dataconvert::DataConvert::decimalToString(dec,
+                    static_cast<uint32_t>(scale), buf,
+                    sizeof(buf), types[*i]);
+                oss << fixed << buf;
+
+                break;
+            }
+
 
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
@@ -609,27 +623,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                int64_t v = row.getIntField(*i);
-                double scale = row.getScale(*i);
-
-                if (scale > 0)
-                {
-                    v /= (int64_t) pow(10.0, scale);
-
-                    if (v < 0) fieldLen++;
-
-                    while ((v /= 10) != 0) fieldLen++;
-
-                    fieldLen += (int64_t) scale + 2;;
-                }
-                else
-                {
-                    if (v < 0) fieldLen++;
-
-                    while ((v /= 10) != 0) fieldLen++;
-
-                    fieldLen += 1;;
-                }
+                fieldLen += row.getPrecision(*i)/2;
 
                 break;
             }
@@ -1092,8 +1086,10 @@ void GroupConcatNoOrder::getResult(uint8_t* buff, const string& sep)
     }
 
     size_t resultSize = oss.str().size();
+    resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
     fOutputString.reset(new uint8_t[resultSize + 2]);
-    memset(fOutputString.get(), 0, resultSize + 2);
+    fOutputString[resultSize] = '\0';
+    fOutputString[resultSize + 1] = '\0';
 
     strncpy((char*)fOutputString.get(),
         oss.str().c_str(), resultSize);

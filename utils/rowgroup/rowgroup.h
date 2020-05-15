@@ -393,6 +393,8 @@ public:
     template<typename T>
     inline void setBinaryField(T* strdata, uint32_t width, uint32_t colIndex);
     template<typename T>
+    inline void setBinaryField(T* strdata, uint32_t colIndex);
+    template<typename T>
     inline void setBinaryField_offset(T* strdata, uint32_t width, uint32_t colIndex);
     // support VARBINARY
     // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
@@ -439,7 +441,7 @@ public:
     // that's not string-table safe, this one is
     inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
-    // WIP MCOL-641
+    template<typename T>
     inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
     std::string toString() const;
@@ -778,6 +780,12 @@ template<typename T>
 inline void Row::setBinaryField(T* value, uint32_t width, uint32_t colIndex)
 {
     memcpy(&data[offsets[colIndex]], value, width);
+}
+
+template<typename T>
+inline void Row::setBinaryField(T* value, uint32_t colIndex)
+{
+    *reinterpret_cast<T*>(&data[offsets[colIndex]]) = *value;
 }
 
 // This method !cannot! be applied to uint8_t* buffers.
@@ -1185,7 +1193,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
         types[srcIndex], colWidths[srcIndex])))
     {
-        copyBinaryField(out, destIndex, srcIndex);
+        copyBinaryField<int128_t>(out, destIndex, srcIndex);
     }
     else
     {
@@ -1193,9 +1201,10 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     }
 }
 
+template<typename T>
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
-    out.setBinaryField(getBinaryField<int128_t>(srcIndex), 16, destIndex);
+    out.setBinaryField(getBinaryField<T>(srcIndex), destIndex);
 }
 
 inline void Row::setRid(uint64_t rid)
@@ -1920,7 +1929,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
         else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
             in.getColType(i), in.getColumnWidth(i))))
         {
-            in.copyBinaryField(*out, i, i);
+            in.copyBinaryField<int128_t>(*out, i, i);
         }
         else
         {

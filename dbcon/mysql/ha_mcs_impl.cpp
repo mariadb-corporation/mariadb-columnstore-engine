@@ -264,12 +264,6 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
         {
             Field_new_decimal* f2 = (Field_new_decimal*)*f;
 
-            // @bug4388 stick to InfiniDB's scale in case mysql gives wrong scale due
-            // to create vtable limitation.
-            //if (f2->dec < ct.scale)
-            //    f2->dec = ct.scale;
-
-            // WIP MCOL-641
             // This is too much
             char buf[256];
             dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, buf, 256, ct.colDataType);
