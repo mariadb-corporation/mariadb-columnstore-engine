@@ -1362,13 +1362,16 @@ int main(int argc, char* argv[])
             mysqlRep = true;
 
         string answer = "y";
+        // MCOL-3888: default 'y', if its something other than 'n' leave it 'y'
+        if ( MySQLRep == "n" )
+            answer = "n";
 
         while (true)
         {
             if ( mysqlRep )
                 prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
             else
-                prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
+                prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (" + MySQLRep + ") > ";
 
             pcommand = callReadline(prompt.c_str());
 
