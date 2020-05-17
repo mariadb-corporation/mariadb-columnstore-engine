@@ -1,13 +1,10 @@
 local codebase_map = {
   "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
   "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server ."
-  #"develop" : "git clone --recurse-submodules --branch mariadb-10.5.2 --depth 1 https://github.com/MariaDB/server ."
-  #"develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server ."
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
-#local cmakeflags = "-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES";
-local cmakeflags = "-DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DWITH_WSREP=OFF";
+local cmakeflags = "-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DWITH_WSREP=OFF";
 
 local rpm_build_deps = "git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel";
 
@@ -86,7 +83,6 @@ local Pipeline(branch, platform) = {
       },
       "commands": [
         "cd /mdb/" + builddir,
-        "cp storage/columnstore/debian/* debian/",
         "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
         "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
         "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
@@ -94,8 +90,8 @@ local Pipeline(branch, platform) = {
         "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
         "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
         "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
         "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
         "sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
         "sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
         platformMap(branch, platform),
