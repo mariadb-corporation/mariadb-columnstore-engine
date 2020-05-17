@@ -98,7 +98,7 @@ local Pipeline(branch, platform) = {
         platformMap(branch, platform),
         "mkdir /drone/src/result",
         "cp *.rpm /drone/src/result/ 2>/dev/null || true",
-        "cp ../*.deb /drone/src/result/ 2>/dev/null || true"
+        "cp ../*.deb /drone/src/result/ 2>/dev/null || true",
         "cp *.deb /drone/src/result/ 2>/dev/null || true"
       ]
     },
