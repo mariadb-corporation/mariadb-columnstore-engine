@@ -5,7 +5,6 @@ local codebase_map = {
   #"develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server ."
 };
 
-
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 #local cmakeflags = "-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES";
 local cmakeflags = "-DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DWITH_WSREP=OFF";
@@ -32,7 +31,6 @@ local platformMap(branch, platform) =
   };
 
   platform_map[platform];
-
 
 local Pipeline(branch, platform) = {
   "kind": "pipeline",
