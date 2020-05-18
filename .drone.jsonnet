@@ -97,7 +97,19 @@ local Pipeline(branch, platform) = {
         "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
         "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
         "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
-        platformMap(branch, platform),
+        platformMap(branch, platform)
+      ]
+    },
+    {
+      "name": "get pkgs",
+      "image": alpine,
+      "volumes": [
+        {
+          "name": "mdb",
+          "path": "/mdb"
+        }
+      ],
+      "commands": [
         "mkdir /drone/src/result",
         "cp *.rpm /drone/src/result/ 2>/dev/null || true",
         "cp ../*.deb /drone/src/result/ 2>/dev/null || true"
