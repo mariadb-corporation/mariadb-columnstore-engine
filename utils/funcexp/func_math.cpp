@@ -1911,7 +1911,8 @@ string Func_format::getStrVal(Row& row,
 
             char buf[80];
 
-            dataconvert::DataConvert::decimalToString( decimal.value, decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+            dataconvert::DataConvert::decimalToString( decimal.value,
+                decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
 
             value = buf;
         }

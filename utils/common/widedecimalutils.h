@@ -30,6 +30,7 @@ namespace utils
     const uint64_t BINARYEMPTYVALUELOW = 1ULL;
     const uint64_t BINARYEMPTYVALUEHIGH = 0x8000000000000000ULL;
     const uint8_t MAXLENGTH16BYTES = 42;
+    const uint8_t MAXLENGTH8BYTES = 23;
 
     inline bool isWideDecimalNullValue(const int128_t& val)
     {
