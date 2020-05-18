@@ -102,7 +102,7 @@ local Pipeline(branch, platform) = {
     },
     {
       "name": "get pkgs",
-      "image": alpine,
+      "image": "alpine",
       "volumes": [
         {
           "name": "mdb",
