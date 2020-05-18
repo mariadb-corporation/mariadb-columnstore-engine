@@ -9,28 +9,6 @@ user=`whoami 2>/dev/null`
 
 quiet=0
 
-for arg in "$@"; do
-	if [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
-		rpmmode="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
-		user="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
-		quiet=1
-	elif [ `expr -- "$arg" : '--plugin='` -eq 9 ]; then
-		plugin="`echo $arg | awk -F= '{print $2}'`"
-	else
-		echo "post-install: invalid unknown argument: $arg" 1>&2
-		echo "exiting..."
-		exit 1
-	fi
-done
- 
-
-if [ ! -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml ]; then
-	echo "@ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml not found, exiting"
-	exit 1
-fi
-
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.new
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf
@@ -42,12 +20,10 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
+
 profileFile="/etc/profile.d/columnstoreAlias.sh"
 /bin/cp -f @ENGINE_SUPPORTDIR@/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
 chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
-
-# set Profile File in config file
-mcsSetConfig -d Installation ProfileFile $profileFile
 
 test -d /var/log/mariadb/columnstore || mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
@@ -74,41 +50,13 @@ mkdir -p /var/lib/columnstore/data/bulk/rollback >/dev/null 2>&1
 mkdir -p /var/lib/columnstore/data/bulk/tmpjob >/dev/null 2>&1
 rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
 
-#get temp base directory
-tmpDir="/tmp"
-if [ $user != "root" ]; then
-	tmpDir=$HOME"/.tmp"
-	mkdir $tmpDir >/dev/null 2>&1
-else
-	#get columnstore temp file directory name
-	TempFileDir=`mcsGetConfig SystemConfig TempFileDir`
-	tmpDir=${tmpDir}${TempFileDir}
-	mkdir $tmpDir >/dev/null 2>&1
-	chmod 777 $tmpDir
-fi
-
-#set base columnstore temp file directory
-mcsSetConfig -d SystemConfig SystemTempFileDir $tmpDir
+#get columnstore temp file directory name
+tmpDir=/tmp/columnstore_tmp_files
+mkdir $tmpDir >/dev/null 2>&1
+chmod 664 $tmpDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-
-# delete Columnstore shared memory segments
-clearShm  > /dev/null 2>&1
-
-#check and create rc.local file if missing
-if [ -f /etc/rc.d ]; then
-    RCFILE=/etc/rc.d/rc.local
-else
-    RCFILE=/etc/rc.local
-fi
-
-if [ $user = "root" ]; then
-    touch $RCFILE    
-    chmod +x $RCFILE
-else
-    printf '%s\n' '#!/bin/bash' "#" | tee -a $RCFILE > /dev/null 2>&1
-fi
 
 if [ $user = "root" ]; then
 	#setup the columnstore service script
@@ -117,10 +65,34 @@ if [ $user = "root" ]; then
 
 	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
+		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
 
-		cp @ENGINE_SUPPORTDIR@/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-		systemctl enable columnstore >/dev/null 2>&1
+		systemctl enable mariadb-columnstore >/dev/null 2>&1
+		systemctl enable mcs-controllernode > /dev/null 2>&1
+		systemctl enable mcs-ddlproc > /dev/null 2>&1
+		systemctl enable mcs-dmlproc > /dev/null 2>&1
+		systemctl enable mcs-exemgr > /dev/null 2>&1
+		systemctl enable mcs-primproc > /dev/null 2>&1
+		systemctl enable mcs-workernode > /dev/null 2>&1
+		systemctl enable mcs-writeengineserver > /dev/null 2>&1
+		systemctl enable mcs-loadbrm > /dev/null 2>&1
 	else
 		chkconfig=`which chkconfig 2>/dev/null`
 		if [ -n "$chkconfig" ]; then
@@ -176,22 +148,20 @@ mkdir $lockdir >/dev/null 2>&1
 
 rm -f $lockdir/columnstore
 
-#backup copy of Alarm Config File
-/bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave > /dev/null 2>&1
-
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`
 if [ -z "aws" ]; then
 	MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
-cat <<EOD
-The next step on the node that will become PM1:
-
 postConfigure
+systemctl start mariadb-columnstore
 
-
-EOD
-
+while  [ -z  $(pgrep -x controllernode) ];
+do
+    sleep 2
+done
+ 
+dbbuilder 7 > $tmpDir/dbbuilder.log
 exit 0
 

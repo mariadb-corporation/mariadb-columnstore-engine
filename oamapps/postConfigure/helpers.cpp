@@ -48,7 +48,7 @@ string prompt;
 
 const char* pcommand = 0;
 
-extern bool noPrompting;
+bool noPrompting = false;
 
 namespace installer
 {
@@ -644,10 +644,8 @@ void checkFilesPerPartion(int DBRootCount, Config* sysConfig)
     return;
 }
 
-void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
+void checkMysqlPort(std::string& mysqlPort)
 {
-    Oam oam;
-
 	string tmpDir = startup::StartUp::tmpDir();
 
     while (true)
@@ -663,70 +661,19 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
             oldFile.seekg(0, std::ios::end);
             int size = oldFile.tellg();
 
-            if ( size != 0 )
+            if (size != 0)
             {
-                if ( noPrompting )
-                {
-                    cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
-                    cout << "Either use the command line argument of 'port' to enter a different number" << endl;
-                    cout << "or stop the process that is using port '" + mysqlPort + "'" << endl;
-                    cout << "For No-prompt install, exiting" << endl;
-                    exit(1);
-                }
-
-                cout << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on local server" << endl;
-                cout << "Either enter a different port to use" << endl;
-                cout << "or stop the process that is using port '" + mysqlPort + "' and enter '" + mysqlPort + "' to continue" << endl;
-
-                while (true)
-                {
-                    prompt = "Enter port number > ";
-                    pcommand = callReadline(prompt.c_str());
-
-                    if (pcommand)
-                    {
-                        if (strlen(pcommand) > 0) mysqlPort = pcommand;
-
-                        callFree(pcommand);
-                        pcommand = 0;
-                    }
-
-                    if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
-                    {
-                        cout << "   ERROR: Invalid MariaDB ColumnStore Port ID supplied, must be between 1000-9999" << endl;
-                    }
-                    else
-                        break;
-                }
+                cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
+                cout << "Please stop the process that is using port '" + mysqlPort + "'" << endl;
+                exit(1);
             }
             else
-            {
-                cout << endl;
-
-                try
-                {
-                    sysConfig->setConfig("Installation", "MySQLPort", mysqlPort);
-                }
-                catch (const std::exception& exc)
-                {
-                    std::cerr << exc.what() << std::endl;
-                }
-
-                if ( !writeConfig(sysConfig) )
-                {
-                    cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
-                    exit(1);
-                }
-
                 break;
-            }
         }
         else
             break;
     }
 
-    // set mysql password
-    oam.changeMyCnf( "port", mysqlPort );
 }
 
 void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string USER, std::string password, ChildModuleList childmodulelist, int IserverTypeInstall, bool pmwithum)

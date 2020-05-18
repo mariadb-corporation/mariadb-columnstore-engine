@@ -298,10 +298,10 @@ uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
                 logging::Message::Args args;
                 logging::Message message(5);
                 args.add("invoke: Blocked waiting for thread. Count ");
-                args.add(fThreadCount);
+                args.add(static_cast<uint64_t>(fThreadCount));
                 args.add("max ");
-                args.add(fMaxThreads);
-                message.format( args );
+                args.add(static_cast<uint64_t>(fMaxThreads));
+                message.format(args);
                 logging::LoggingID lid(22);
                 logging::MessageLog ml(lid);
                 ml.logWarningMessage( message );

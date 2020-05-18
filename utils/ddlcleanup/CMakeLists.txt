@@ -10,5 +10,5 @@ add_library(ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
 
 target_link_libraries(ddlcleanuputil ${NETSNMP_LIBRARIES})
 
-install(TARGETS ddlcleanuputil DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS ddlcleanuputil DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=WriteEngineServer
+PartOf=mcs-exemgr.service
+After=mcs-exemgr.service
+
+[Service]
+Type=simple
+Environment="SKIP_OAM_INIT=1"
+ExecStart=@ENGINE_BINDIR@/WriteEngineServer
+Restart=on-failure
+ExecStop=/usr/bin/env bash -c "/bin/kill -15 $(pidof WriteEngineServer) && sleep 2 && /bin/kill -9 $(pidof WriteEngineServer) || /bin/true"
+
+[Install]
+WantedBy=mariadb-columnstore.service

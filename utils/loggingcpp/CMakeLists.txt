@@ -29,7 +29,7 @@ add_library(loggingcpp SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
 )
 
-install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
+install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
-install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-platform)
+install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-engine)
 

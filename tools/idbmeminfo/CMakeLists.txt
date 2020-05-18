@@ -10,5 +10,5 @@ add_executable(idbmeminfo ${idbmeminfo_SRCS})
 
 target_link_libraries(idbmeminfo ${ENGINE_LDFLAGS})
 
-install(TARGETS idbmeminfo DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+install(TARGETS idbmeminfo DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 

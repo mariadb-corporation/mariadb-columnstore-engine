@@ -5,13 +5,21 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-pre-uninstall.in" "${CMA
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreLogRotate.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreLogRotate" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/postInstall.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/postInstall.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/startupTests.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/startupTests.sh" @ONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mariadb-columnstore.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mariadb-columnstore.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore_module_installer.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore_module_installer.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/master-rep-columnstore.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/master-rep-columnstore.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/disable-rep-columnstore.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/disable-rep-columnstore.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-controllernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-controllernode.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-primproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-primproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-exemgr.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-exemgr.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-writeengineserver.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-writeengineserver.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-dmlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-dmlproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service" @ONLY)
 
 install(PROGRAMS columnstore-post-install 
                 columnstore-pre-uninstall 
@@ -34,9 +42,9 @@ install(PROGRAMS columnstore-post-install
                 disable-rep-columnstore.sh  
                 mariadb-command-line.sh 
                 mcs_module_installer.sh
-                DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-platform)
+                DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
-install(FILES columnstore.service
+install(FILES mariadb-columnstore.service
               columnstoreAlias
               columnstoreSyslog
               columnstoreSyslog7
@@ -44,7 +52,15 @@ install(FILES columnstore.service
               columnstoreLogRotate
               myCnf-include-args.text
               myCnf-exclude-args.text
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-platform)
+              mcs-workernode.service
+              mcs-controllernode.service
+              mcs-primproc.service
+              mcs-exemgr.service
+              mcs-writeengineserver.service
+              mcs-dmlproc.service
+              mcs-ddlproc.service
+              mcs-loadbrm.service
+              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
-install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-platform)
+install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-engine)
 
