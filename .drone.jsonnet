@@ -1,10 +1,12 @@
 local codebase_map = {
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server ."
+#  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
+#  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server ."
+  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
+  "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server ."
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
-local cmakeflags = "-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DWITH_WSREP=OFF";
+local cmakeflags = "-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO";
 
 local rpm_build_deps = "yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel";
 
@@ -15,7 +17,7 @@ local deb_build_deps = "apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     "develop-1.4": " -DBUILD_CONFIG=enterprise",
-    "develop": " -DBUILD_CONFIG=mysql_release"
+    "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF"
   };
 
   local platform_map = {
@@ -151,7 +153,7 @@ local Pipeline(branch, platform) = {
   Pipeline("develop-1.4", "centos:8"),
   Pipeline("develop-1.4", "debian:9"),
   Pipeline("develop-1.4", "debian:10"),
-  Pipeline("develop-1.4", "ubuntu:16.04"),
+#  Pipeline("develop-1.4", "ubuntu:16.04"),
   Pipeline("develop-1.4", "ubuntu:18.04"),
   Pipeline("develop-1.4", "ubuntu:20.04"),
 
@@ -160,7 +162,7 @@ local Pipeline(branch, platform) = {
   Pipeline("develop", "centos:8"),
   Pipeline("develop", "debian:9"),
   Pipeline("develop", "debian:10"),
-  Pipeline("develop", "ubuntu:16.04"),
+#  Pipeline("develop", "ubuntu:16.04"),
   Pipeline("develop", "ubuntu:18.04"),
   Pipeline("develop", "ubuntu:20.04")
 ]
