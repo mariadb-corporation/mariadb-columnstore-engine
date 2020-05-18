@@ -70,13 +70,6 @@ protected:
             cscale.push_back(0);
         }
 
-        /*offsets.push_back(INITIAL_ROW_OFFSET);
-        offsets.push_back(16+INITIAL_ROW_OFFSET);
-        offsets.push_back(16*2+INITIAL_ROW_OFFSET);
-        roids.push_back(oid); roids.push_back(oid+1);
-        tkeys.push_back(1); tkeys.push_back(1);
-        cscale.push_back(0); cscale.push_back(0);*/
-    
         rowgroup::RowGroup inRG(roids.size(), // column count
             offsets, // oldOffset
             roids, // column oids
@@ -159,7 +152,7 @@ protected:
 
 // void TearDown() override {}
 
-  rowgroup::Row r, rOut;
+  rowgroup::Row r, rOut, sameRow, nonequiRow;
   rowgroup::Row rOutMappingCheck;
   rowgroup::RowGroup rg, rgOut;
   rowgroup::RGData rgD, rgDOut;
@@ -208,8 +201,6 @@ TEST_F(RowDecimalTest, GetBinaryFieldCheck)
     rg.getRow(0, &r);
     uint128_t* u128Value;
     int128_t* s128Value;
-//    std::remove_reference<decltype(*u128Value)>::type uType;
-//    std::remove_reference<decltype(*s128Value)>::type sType;
 
     for (size_t i = 0; i < sValueVector.size(); i++)
     {
@@ -302,7 +293,24 @@ TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
     }
 }
 
-// WIP
 TEST_F(RowDecimalTest, RowEqualsCheck)
 {
+    rg.getRow(0, &r);
+    rg.getRow(0, &sameRow);
+    rg.getRow(1, &nonequiRow);
+
+    for (size_t i = 0; i < sValueVector.size(); i++)
+    {
+        EXPECT_TRUE(r.equals(sameRow));
+        if (i < sValueVector.size()-1)
+        {
+            EXPECT_FALSE(r.equals(nonequiRow));
+        }
+        r.nextRow(rowSize);
+        sameRow.nextRow(rowSize);
+        if (i < sValueVector.size()-1)
+        {
+            nonequiRow.nextRow(rowSize);
+        }
+    }
 }
