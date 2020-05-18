@@ -1323,7 +1323,7 @@ inline bool Row::equals(const Row& r2, uint32_t lastCol) const
             }
             else if (UNLIKELY(execplan::isDecimal(columnType)))
             {
-                if (getBinaryField<int128_t>(i) != r2.getBinaryField<int128_t>(i))
+                if (*getBinaryField<int128_t>(i) != *r2.getBinaryField<int128_t>(i))
                     return false;
             }
 
