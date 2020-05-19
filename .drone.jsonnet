@@ -179,7 +179,7 @@ local Pipeline(branch, platform) = {
 //   Pipeline("develop-1.4", "ubuntu:20.04"),
 
 // #  Pipeline("develop", "opensuse/leap:15"),
-//   Pipeline("develop", "centos:7"),
+  Pipeline("develop", "centos:7"),
 //   Pipeline("develop", "centos:8"),
 //   Pipeline("develop", "debian:9"),
 //   Pipeline("develop", "debian:10"),
