@@ -120,6 +120,7 @@ local Pipeline(branch, platform) = {
         "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
         "ls -la /data/testData/",
         "cd /mdb/" + builddir,
+        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
         "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 mariadb-columnstore-regression-test https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
       ]
     },
