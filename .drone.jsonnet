@@ -115,6 +115,11 @@ local Pipeline(branch, platform) = {
           "path": "/mdb"
         }
       ],
+      "environment": {
+        "GITHUB_TOKEN": {
+          "from_secret": "github_token"
+        }
+      },
       "commands": [
         "apk add --no-cache lz4 wget git",
         "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
