@@ -83,7 +83,7 @@ local Pipeline(branch, platform) = {
       ],
       "commands": [
         "apk add --no-cache lz4 wget",
-        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./data",
+        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
         "ls -la /data/testData/"
       ]
     },
