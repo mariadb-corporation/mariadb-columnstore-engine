@@ -73,7 +73,7 @@ local Pipeline(branch, platform) = {
     //   ]
     // },
     {
-      "name": "test",
+      "name": "dowload test data",
       "image": "alpine",
       "volumes": [
         {
