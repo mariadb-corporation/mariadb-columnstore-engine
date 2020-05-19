@@ -54,7 +54,6 @@ string Func_concat_ws::getStrVal(Row& row,
     if (isNull)
         return "";
 
-#ifdef STRCOLL_ENH__
     wstring wstr;
     size_t strwclen = utf8::idb_mbstowcs(0, delim.c_str(), 0) + 1;
     wchar_t* wcbuf = new wchar_t[strwclen];
@@ -96,7 +95,7 @@ string Func_concat_ws::getStrVal(Row& row,
     delete [] wcbuf;
     return ret;
 
-#else
+#if 0
     string str;
     string tmp;
     for ( uint32_t i = 1 ; i < parm.size() ; i++)

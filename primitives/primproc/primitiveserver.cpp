@@ -1154,7 +1154,6 @@ int DictScanJob::operator()()
     PrimitiveProcessor pproc(gDebugLevel);
     TokenByScanResultHeader* output;
     QueryContext verInfo;
-    bool bUtf8;
 
     try
     {
@@ -1166,25 +1165,6 @@ int DictScanJob::operator()()
         *fByteStream >> verInfo;
         cmd = (TokenByScanRequestHeader*) fByteStream->buf();
 
-        // If charset is one of those that can be representedby standard ascii,
-        // we can get a performance improvement by using strcmp rather than
-        // the full charset compare system.
-        switch (cmd->charsetNumber) 
-        {
-            case 8:  // latin1_swedish_ci
-            case 9:  // latin2_general_ci
-            case 11: // ascii_general_ci
-            case 47: // latin1_bin
-            case 48: // latin1_general_ci
-            case 49: // latin1_general_cs
-            case 65: // ascii_bin
-            case 77: // latin2_bin
-                bUtf8 = false;
-                break;
-            default:
-                bUtf8 = true;
-        }
-        
         session = cmd->Hdr.SessionID;
         uniqueId = cmd->Hdr.UniqueID;
         runCount = cmd->Count;
@@ -1229,8 +1209,7 @@ int DictScanJob::operator()()
                       fLBIDTraceOn,
                       session);
             pproc.setBlockPtr((int*) data);
-            // MCOL-3536 We shouldn't need to pass in utf8 -- maybe??
-            pproc.p_TokenByScan(cmd, output, output_buf_size, bUtf8, eqFilter);
+            pproc.p_TokenByScan(cmd, output, output_buf_size, eqFilter);
 
             if (wasBlockInCache)
                 output->CacheIO++;

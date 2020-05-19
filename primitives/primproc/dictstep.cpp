@@ -98,7 +98,8 @@ void DictStep::createCommand(ByteStream& bs)
     }
     else
         bs >> filterString;
-
+    
+    bs >> charsetNumber;
 #if 0
     cout << "see " << filterCount << " filters\n";
     DictFilterElement* filters = (DictFilterElement*) filterString.buf();
@@ -173,8 +174,7 @@ void DictStep::issuePrimitive(bool isFilter)
     }
 
     bpp->pp.setLikeFilter(likeFilter);
-    // MCOL-3536 We shouldn't need to pass in utf8 -- maybe??
-    bpp->pp.p_Dictionary(primMsg, &result, true, isFilter, eqFilter, eqOp);
+    bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp);
 }
 
 void DictStep::copyResultToTmpSpace(OrderedToken* ot)

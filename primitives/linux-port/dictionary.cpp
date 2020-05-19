@@ -103,7 +103,7 @@ Notes:
 */
 
 void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
-                                       TokenByScanResultHeader* ret, unsigned outSize, bool utf8,
+                                       TokenByScanResultHeader* ret, unsigned outSize,
                                        boost::shared_ptr<DictEqualityFilter> eqFilter)
 {
     const DataValue* args;
@@ -113,7 +113,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     int offsetIndex, argIndex, argsOffset;
     bool cmpResult = false;
     int tmp, i, err;
-
     const char* sig;
     uint16_t siglen;
 
@@ -191,6 +190,8 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
         if (eqFilter)
         {
             // MCOL-1246 Trim whitespace before match
+            // TODO MCOL-3536 use CHARSET_INFO* cs for collation
+            // cs->hash_sort(hash_sort(const uchar *key, size_t len, ulong *nr1, ulong *nr2)) 
             string strData(sig, siglen);
             boost::trim_right_if(strData, boost::is_any_of(" "));
             bool gotIt = eqFilter->find(strData) != eqFilter->end();
@@ -215,14 +216,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
         }
         else
         {
-            if (utf8)
-            {
-                tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-            }
-            else
-            {
-                tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-            }
+            tmp = cs->strnncoll(sig, siglen, args->data, args->len);
             cmpResult = compare(tmp, h->COP1, siglen, args->len);
         }
 
@@ -263,14 +257,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                 else
                 {
-                    if (utf8)
-                    {
-                        tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-                    }
-                    else
-                    {
-                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                    }
+                    tmp = cs->strnncoll(sig, siglen, args->data, args->len);
                     cmpResult = compare(tmp, h->COP2, siglen, args->len);
                 }
 
@@ -298,14 +285,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                     else
                     {
-                        if (utf8)
-                        {
-                            tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-                        }
-                        else
-                        {
-                            tmp = strncmp(sig, args->data, std::min(siglen, args->len));
-                        }
+                        tmp = cs->strnncoll(sig, siglen, args->data, args->len);
                         cmpResult = compare(tmp, h->COP2, siglen, args->len);
                     }
 
@@ -667,8 +647,12 @@ PrimitiveProcessor::makeLikeFilter (const DictFilterElement* filterString, uint3
     return ret;
 }
 
-void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out, bool utf8,
-                                      bool skipNulls, boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp)
+void PrimitiveProcessor::p_Dictionary(const DictInput* in, 
+                                      vector<uint8_t>* out,
+                                      bool skipNulls, 
+                                      uint32_t charsetNumber,
+                                      boost::shared_ptr<DictEqualityFilter> eqFilter, 
+                                      uint8_t eqOp)
 {
     PrimToken* outToken;
     const DictFilterElement* filter = 0;
@@ -679,6 +663,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
     uint16_t aggCount;
     bool cmpResult;
     DictOutput header;
+    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
 
     // default size of the ouput to something sufficiently large to prevent
     // excessive reallocation and copy when resizing
@@ -714,30 +699,13 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
             nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType,
                     (in->InputFlags ? true : false), skipNulls))
     {
-
-        string sig_utf8;
-
-        if (utf8)
-        {
-            string tmpString((char*)sigptr.data, sigptr.len);
-            sig_utf8 = tmpString;
-        }
-
         // do aggregate processing
         if (in->OutputType & OT_AGGREGATE)
         {
             // len == 0 indicates this is the first pass
             if (max.len != 0)
             {
-                if (utf8 )
-                {
-                    string max_utf8((char*)max.data, max.len);
-                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), max_utf8.c_str());
-                }
-                else
-                {
-                    tmp = strncmp((char*)sigptr.data, (char*)max.data, std::min(sigptr.len, max.len));
-                }
+                tmp = cs->strnncoll(sigptr.data, sigptr.len, max.data, max.len);
 
                 if (tmp > 0)
                     max = sigptr;
@@ -747,15 +715,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
             if (min.len != 0)
             {
-                if (utf8)
-                {
-                    string min_utf8((char*)min.data, min.len);
-                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), min_utf8.c_str());
-                }
-                else
-                {
-                    tmp = strncmp((char*)sigptr.data, (char*)min.data, std::min(sigptr.len, min.len));
-                }
+                tmp = cs->strnncoll(sigptr.data, sigptr.len, min.data, min.len);
 
                 if (tmp < 0)
                     min = sigptr;
@@ -788,15 +748,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
         for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
         {
             filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
-            string filt_utf8;
-            size_t filt_utf8_len = 0;
-
-            if (utf8)
-            {
-                string tmpString((const char*)filter->data, filter->len);
-                filt_utf8 = tmpString;
-                filt_utf8_len = filt_utf8.length();
-            }
 
             if (filter->COP & COMPARE_LIKE)
             {
@@ -807,18 +758,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
             }
             else
             {
-                if (utf8)
-                {
-                    size_t sig_utf8_len = sig_utf8.length();
-                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), filt_utf8.c_str());
-                    cmpResult = compare(tmp, filter->COP, sig_utf8_len, filt_utf8_len);
-                }
-                else
-                {
-                    tmp = strncmp((const char*) sigptr.data, (const char*)filter->data,
-                                  std::min(sigptr.len, static_cast<int>(filter->len)));
-                }
-
+                tmp = cs->strnncoll(sigptr.data, sigptr.len, filter->data, filter->len);
                 cmpResult = compare(tmp, filter->COP, sigptr.len, filter->len);
             }
 

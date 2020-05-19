@@ -21,6 +21,10 @@
 *
 ****************************************************************************/
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -78,15 +82,12 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             const string& tstr = parm[0]->data()->getStrVal(row, isNull);
-
             if (isNull)
                 return 0;
-
-            size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-            wchar_t* wcbuf = new wchar_t[strwclen];
-            strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-            delete [] wcbuf;
-            return (int64_t)strwclen;
+            const char* b = tstr.c_str();
+            const char* e = tstr.c_str() + tstr.length();
+            const CHARSET_INFO* cs = get_charset(parm[0]->data()->resultType().charsetNumber, MYF(MY_WME));
+            return (int64_t)cs->numchars(b, e);
         }
 
         case execplan::CalpontSystemCatalog::DATE:
