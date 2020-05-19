@@ -78,13 +78,13 @@ local Pipeline(branch, platform) = {
       "volumes": [
         {
           "name": "test-data",
-          "path": "/testData"
+          "path": "/data"
         }
       ],
       "commands": [
         "apk add --no-cache lz4 wget",
-        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./",
-        "ls -la /testData"
+        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./data",
+        "ls -la /data/testData/"
       ]
     },
 
@@ -163,6 +163,7 @@ local Pipeline(branch, platform) = {
   ],
   "trigger": {
     "branch": [
+      "drone-test",
       branch
     ]
   }
