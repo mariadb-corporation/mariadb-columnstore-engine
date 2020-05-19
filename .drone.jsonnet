@@ -41,37 +41,67 @@ local Pipeline(branch, platform) = {
     "depth": 10
   },
   "steps": [
-    // {
-    //   "name": "submodules",
-    //   "image": "alpine/git",
-    //   "commands": [
-    //     "git submodule update --recursive --remote",
-    //     "git config cmake.update-submodules no"
-    //   ]
-    // },
-    // {
-    //   "name": "clone-mdb",
-    //   "image": "alpine/git",
-    //   "volumes": [
-    //     {
-    //       "name": "mdb",
-    //       "path": "/mdb"
-    //     }
-    //   ],
-    //   "environment": {
-    //     "GITHUB_TOKEN": {
-    //       "from_secret": "github_token"
-    //     }
-    //   },
-    //   "commands": [
-    //     "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
-    //     "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
-    //     codebase_map[branch],
-    //     "git config cmake.update-submodules no",
-    //     "rm -rf storage/columnstore",
-    //     "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore"
-    //   ]
-    // },
+    {
+      "name": "submodules",
+      "image": "alpine/git",
+      "commands": [
+        "git submodule update --recursive --remote",
+        "git config cmake.update-submodules no"
+      ]
+    },
+    {
+      "name": "clone-mdb",
+      "image": "alpine/git",
+      "volumes": [
+        {
+          "name": "mdb",
+          "path": "/mdb"
+        }
+      ],
+      "environment": {
+        "GITHUB_TOKEN": {
+          "from_secret": "github_token"
+        }
+      },
+      "commands": [
+        "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
+        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
+        codebase_map[branch],
+        "git config cmake.update-submodules no",
+        "rm -rf storage/columnstore",
+        "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore"
+      ]
+    },
+    {
+      "name": "build",
+      "image": platform,
+      "volumes": [
+        {
+          "name": "mdb",
+          "path": "/mdb"
+        }
+      ],
+      "environment": {
+        "DEBIAN_FRONTEND": "noninteractive",
+        "TRAVIS": "true"
+      },
+      "commands": [
+        "cd /mdb/" + builddir,
+        "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
+        "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
+        "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
+        "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
+        "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
+        "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
+        "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
+        "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
+        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
+        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
+        "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
+        platformMap(branch, platform)
+      ]
+    },
     {
       "name": "dowload test data",
       "image": "alpine",
@@ -93,38 +123,6 @@ local Pipeline(branch, platform) = {
         "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 mariadb-columnstore-regression-test https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
       ]
     },
-
-    // {
-    //   "name": "build",
-    //   "image": platform,
-    //   "volumes": [
-    //     {
-    //       "name": "mdb",
-    //       "path": "/mdb"
-    //     }
-    //   ],
-    //   "environment": {
-    //     "DEBIAN_FRONTEND": "noninteractive",
-    //     "TRAVIS": "true"
-    //   },
-    //   "commands": [
-    //     "cd /mdb/" + builddir,
-    //     "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
-    //     "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
-    //     "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
-    //     "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
-    //     "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
-    //     "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-    //     "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-    //     "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-    //     "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-    //     "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
-    //     "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
-    //     "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
-    //     platformMap(branch, platform)
-    //   ]
-    // },
-
     {
       "name": "get pkgs",
       "image": "alpine",
