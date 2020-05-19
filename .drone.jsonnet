@@ -79,12 +79,18 @@ local Pipeline(branch, platform) = {
         {
           "name": "test-data",
           "path": "/data"
+        },
+        {
+          "name": "mdb",
+          "path": "/mdb"
         }
       ],
       "commands": [
         "apk add --no-cache lz4 wget",
         "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
-        "ls -la /data/testData/"
+        "ls -la /data/testData/",
+        "cd /mdb/" + builddir,
+        "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 mariadb-columnstore-regression-test https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
       ]
     },
 
