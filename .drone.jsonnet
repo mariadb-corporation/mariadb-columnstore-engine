@@ -96,9 +96,6 @@ local Pipeline(branch, platform) = {
         "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
         "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
         "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
-        "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
         platformMap(branch, platform)
       ]
     },
@@ -159,7 +156,7 @@ local Pipeline(branch, platform) = {
 
 #  Pipeline("develop", "opensuse/leap:15"),
   Pipeline("develop", "centos:7"),
-  Pipeline("develop", "centos:8"),
+ Pipeline("develop", "centos:8"),
   Pipeline("develop", "debian:9"),
   Pipeline("develop", "debian:10"),
 #  Pipeline("develop", "ubuntu:16.04"),
