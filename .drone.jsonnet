@@ -87,19 +87,19 @@ local Pipeline(branch, platform) = {
       },
       "commands": [
         "cd /mdb/" + builddir,
-        "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
-        "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
-        "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-        "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
-        "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
-        platformMap(branch, platform)
+        // "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
+        // "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
+        // "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
+        // "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
+        // "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
+        // "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
+        // "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
+        // "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+        // "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
+        // "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
+        // "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
+        // "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
+        // platformMap(branch, platform)
       ]
     },
     {
