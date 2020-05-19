@@ -41,67 +41,84 @@ local Pipeline(branch, platform) = {
     "depth": 10
   },
   "steps": [
+    // {
+    //   "name": "submodules",
+    //   "image": "alpine/git",
+    //   "commands": [
+    //     "git submodule update --recursive --remote",
+    //     "git config cmake.update-submodules no"
+    //   ]
+    // },
+    // {
+    //   "name": "clone-mdb",
+    //   "image": "alpine/git",
+    //   "volumes": [
+    //     {
+    //       "name": "mdb",
+    //       "path": "/mdb"
+    //     }
+    //   ],
+    //   "environment": {
+    //     "GITHUB_TOKEN": {
+    //       "from_secret": "github_token"
+    //     }
+    //   },
+    //   "commands": [
+    //     "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
+    //     "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
+    //     codebase_map[branch],
+    //     "git config cmake.update-submodules no",
+    //     "rm -rf storage/columnstore",
+    //     "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore"
+    //   ]
+    // },
     {
-      "name": "submodules",
-      "image": "alpine/git",
-      "commands": [
-        "git submodule update --recursive --remote",
-        "git config cmake.update-submodules no"
-      ]
-    },
-    {
-      "name": "clone-mdb",
-      "image": "alpine/git",
+      "name": "test",
+      "image": "alpine",
       "volumes": [
         {
-          "name": "mdb",
-          "path": "/mdb"
+          "name": "test-data",
+          "path": "/testData"
         }
       ],
-      "environment": {
-        "GITHUB_TOKEN": {
-          "from_secret": "github_token"
-        }
-      },
       "commands": [
-        "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
-        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
-        codebase_map[branch],
-        "git config cmake.update-submodules no",
-        "rm -rf storage/columnstore",
-        "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore"
+        "apk add --no-cache lz7 wget",
+        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./",
+        "ls -la /testData"
       ]
     },
-    {
-      "name": "build",
-      "image": platform,
-      "volumes": [
-        {
-          "name": "mdb",
-          "path": "/mdb"
-        }
-      ],
-      "environment": {
-        "DEBIAN_FRONTEND": "noninteractive",
-        "TRAVIS": "true"
-      },
-      "commands": [
-        "cd /mdb/" + builddir,
-        "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
-        "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
-        "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-        "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
-        "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
-        "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
-        platformMap(branch, platform)
-      ]
-    },
+
+    // {
+    //   "name": "build",
+    //   "image": platform,
+    //   "volumes": [
+    //     {
+    //       "name": "mdb",
+    //       "path": "/mdb"
+    //     }
+    //   ],
+    //   "environment": {
+    //     "DEBIAN_FRONTEND": "noninteractive",
+    //     "TRAVIS": "true"
+    //   },
+    //   "commands": [
+    //     "cd /mdb/" + builddir,
+    //     "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
+    //     "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
+    //     "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
+    //     "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
+    //     "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
+    //     "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
+    //     "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
+    //     "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+    //     "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
+    //     "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
+    //     "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
+    //     "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
+    //     platformMap(branch, platform)
+    //   ]
+    // },
+
     {
       "name": "get pkgs",
       "image": "alpine",
@@ -138,7 +155,11 @@ local Pipeline(branch, platform) = {
     {
       "name": "mdb",
       "temp": {}
-    }
+    },
+    {
+      "name": "test-data",
+      "temp": {}
+    },
   ],
   "trigger": {
     "branch": [
@@ -150,19 +171,19 @@ local Pipeline(branch, platform) = {
 [
 #  Pipeline("develop-1.4", "opensuse/leap:15"),
   Pipeline("develop-1.4", "centos:7"),
-  Pipeline("develop-1.4", "centos:8"),
-  Pipeline("develop-1.4", "debian:9"),
-  Pipeline("develop-1.4", "debian:10"),
-#  Pipeline("develop-1.4", "ubuntu:16.04"),
-  Pipeline("develop-1.4", "ubuntu:18.04"),
-  Pipeline("develop-1.4", "ubuntu:20.04"),
+//   Pipeline("develop-1.4", "centos:8"),
+//   Pipeline("develop-1.4", "debian:9"),
+//   Pipeline("develop-1.4", "debian:10"),
+// #  Pipeline("develop-1.4", "ubuntu:16.04"),
+//   Pipeline("develop-1.4", "ubuntu:18.04"),
+//   Pipeline("develop-1.4", "ubuntu:20.04"),
 
-#  Pipeline("develop", "opensuse/leap:15"),
-  Pipeline("develop", "centos:7"),
-  Pipeline("develop", "centos:8"),
-  Pipeline("develop", "debian:9"),
-  Pipeline("develop", "debian:10"),
-#  Pipeline("develop", "ubuntu:16.04"),
-  Pipeline("develop", "ubuntu:18.04"),
-  Pipeline("develop", "ubuntu:20.04")
+// #  Pipeline("develop", "opensuse/leap:15"),
+//   Pipeline("develop", "centos:7"),
+//   Pipeline("develop", "centos:8"),
+//   Pipeline("develop", "debian:9"),
+//   Pipeline("develop", "debian:10"),
+// #  Pipeline("develop", "ubuntu:16.04"),
+//   Pipeline("develop", "ubuntu:18.04"),
+//   Pipeline("develop", "ubuntu:20.04")
 ]
