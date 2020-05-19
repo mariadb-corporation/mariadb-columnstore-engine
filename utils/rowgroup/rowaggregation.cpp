@@ -1042,9 +1042,14 @@ void RowAggregation::initMapData(const Row& rowIn)
                         sizeof(int128_t),
                         colOutOffset);
                 }
-                else
+                else if (fRow.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
                 {
                     fRow.setIntField(rowIn.getIntField(colIn), colOut);
+                }
+                else
+                {
+                    idbassert(0);
+                    throw std::logic_error("RowAggregation::initMapData(): DECIMAL bad length.");
                 }
 
                 break;
@@ -1200,9 +1205,14 @@ void RowAggregation::makeAggFieldsNull(Row& row)
                         colWidth,
                         offset);
                 }
-                else if (colWidth == datatypes::MAXLEGACYWIDTH)
+                else if (colWidth <= datatypes::MAXLEGACYWIDTH)
                 {
                     row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
+                }
+                else
+                {
+                    idbassert(0);
+                    throw std::logic_error("RowAggregation::makeAggFieldsNull(): DECIMAL bad length.");
                 }
                 break;
             }
@@ -1304,12 +1314,18 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
                     fRow.getBinaryField<int128_t>(colOut),
                     colOut, funcType);
             }
-            else
+            else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
             {
                 int64_t valIn = rowIn.getIntField(colIn);
                 int64_t valOut = fRow.getIntField(colOut);
                 updateIntMinMax(valIn, valOut, colOut, funcType);
             }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doMinMax(): DECIMAL bad length.");
+            }
+
             break;
         }
 
@@ -1423,14 +1439,14 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
             isWideDataType = width == datatypes::MAXDECIMALWIDTH;
             if(LIKELY(isWideDataType))
             {
                 int128_t *dec = rowIn.getBinaryField<int128_t>(colIn);
                 wideValInPtr = reinterpret_cast<void*>(dec);
             }
-            else
+            else if (width <= datatypes::MAXLEGACYWIDTH)
             {
                 valIn = rowIn.getIntField(colIn);
                 double scale = (double)(fRowGroupIn.getScale())[colIn];
@@ -1438,6 +1454,11 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
                 {
                     valIn /= pow(10.0, scale);
                 }
+            }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doSum(): DECIMAL bad length.");
             }
     
             break;
@@ -1896,14 +1917,14 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
             isWideDataType = width == datatypes::MAXDECIMALWIDTH;
             if(LIKELY(isWideDataType))
             {
                 int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
                 wideValInPtr = reinterpret_cast<void*>(dec);
             }
-            else
+            else if (width <= datatypes::MAXLEGACYWIDTH)
             {
                 valIn = rowIn.getIntField(colIn);
                 double scale = (double)(fRowGroupIn.getScale())[colIn];
@@ -1912,6 +1933,12 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
                     valIn /= pow(10.0, scale);
                 }
             }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doAvg(): DECIMAL bad length.");
+            }
+
             break;
         }
 
@@ -4265,14 +4292,14 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
             isWideDataType = width == datatypes::MAXDECIMALWIDTH;
             if(LIKELY(isWideDataType))
             {
                 int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
                 wideValInPtr = reinterpret_cast<void*>(dec);
             }
-            else
+            else if (width <= datatypes::MAXLEGACYWIDTH)
             {
                 valIn = rowIn.getIntField(colIn);
                 double scale = (double)(fRowGroupIn.getScale())[colIn];
@@ -4281,6 +4308,12 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
                     valIn /= pow(10.0, scale);
                 }
             }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregationUMP2::doAvg(): DECIMAL bad length.");
+            }
+
             break;
         }
 
