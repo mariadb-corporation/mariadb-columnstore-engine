@@ -100,8 +100,8 @@ local Pipeline(branch, platform) = {
       ]
     },
     {
-      "name": "get pkgs",
-      "image": "alpine",
+      "name": "get pkgs list",
+      "image": "centos:7",
       "volumes": [
         {
           "name": "mdb",
@@ -109,9 +109,11 @@ local Pipeline(branch, platform) = {
         }
       ],
       "commands": [
+        "cd /mdb/" + builddir,
         "mkdir /drone/src/result",
-        "cp *.rpm /drone/src/result/ 2>/dev/null || true",
-        "cp ../*.deb /drone/src/result/ 2>/dev/null || true"
+        "cp *.rpm /drone/src/result 2>/dev/null || true",
+        "cp ../*.deb /drone/src/result 2>/dev/null || true",
+        '! test -n "$(find /drone/src/result -prune -empty)" && ls tt/'
       ]
     },
     {
