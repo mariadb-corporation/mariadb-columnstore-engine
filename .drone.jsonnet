@@ -110,8 +110,18 @@ local Pipeline(branch, platform) = {
         "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
         "ls -la /data/testData/",
         "cd /mdb/" + builddir,
-        "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
-      ]
+        "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test",
+        "mkdir /drone/src/result",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-client.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-common.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-gssapi-server.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-columnstore-libs.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-columnstore-platform.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-server.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-shared.rpm -P /columnstore",
+        "wget https://cspkg.s3.amazonaws.com/develop/centos7/MariaDB-10.5.2-centos7-x86_64-columnstore-engine.rpm -P /columnstore",
+        "rpm -i /columnstore/*.rpm"
+      ],
     },
     {
       "name": "get pkgs list",
