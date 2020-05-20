@@ -77,6 +77,11 @@ class PrefixCache : public boost::noncopyable
         size_t getMaxCacheSize() const;
         void shutdown();
 
+        // clears out cache structures and reloads them from cache/journal dir contents
+        // needed to potentially repair the cache's accounting error after detecting
+        // an error.
+        void repopulate();
+
         // test helpers
         const boost::filesystem::path &getCachePath();
         const boost::filesystem::path &getJournalPath();
@@ -97,7 +102,9 @@ class PrefixCache : public boost::noncopyable
         SMLogging *logger;
         Downloader *downloader;
         
-        void populate();
+        // useSync makes populate() tell Synchronizer about what it finds.
+        // set it to false when the system is already fully up.
+        void populate(bool useSync = true);
         void _makeSpace(size_t size);
 
         /* The main PrefixCache structures */

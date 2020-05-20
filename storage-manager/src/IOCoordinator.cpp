@@ -505,6 +505,8 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             dataRemaining -= err;
             count += err;
             iocBytesWritten += err;
+            // get a new name for the object
+            newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + objectOffset);
             metadata.updateEntryLength(newObject.offset, (err + objectOffset));
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
@@ -634,14 +636,17 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         count += err;
         dataRemaining -= err;
         iocBytesWritten += err;
+        if (err < (int64_t) writeLength)
+        {
+            newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + newObject.offset);
+            metadata.updateEntry(newObject.offset, newObject.key, err + newObject.offset);
+        }
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
 
         if (err < (int64_t) writeLength)
         {
             //logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
-            // make the object reflect length actually written
-            metadata.updateEntryLength(newObject.offset, err);
             goto out;
         }
     }
@@ -1137,7 +1142,10 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     objFD = ::open(object, O_RDONLY);
     if (objFD < 0)
+    {
+        *_bytesReadOut = 0;
         return ret;
+    }
     ScopedCloser s1(objFD);
     
     ret.reset(new uint8_t[len]);
@@ -1150,11 +1158,12 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         int err = ::read(objFD, &ret[count], len - count);
         if (err < 0)
         {
-            char buf[80];
-            logger->log(LOG_CRIT, "IOC::mergeJournal(): failed to read %s, got '%s'", object, strerror_r(errno, buf, 80));
             int l_errno = errno;
+            char buf[80];
+            logger->log(LOG_CRIT, "IOC::mergeJournal(): failed to read %s, got '%s'", object, strerror_r(l_errno, buf, 80));
             ret.reset();
             errno = l_errno;
+            *_bytesReadOut = count;
             return ret;
         }
         else if (err == 0) 
@@ -1173,17 +1182,18 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         size_t mjimBytesRead = 0;
         int mjimerr = mergeJournalInMem(ret, len, journal, &mjimBytesRead);
         if (mjimerr)
-        {
             ret.reset();
-            return ret;
-        }
         l_bytesRead += mjimBytesRead;
+        *_bytesReadOut = l_bytesRead;
         return ret;
     }
     
     journalFD = ::open(journal, O_RDONLY);
     if (journalFD < 0)
+    {
+        *_bytesReadOut = l_bytesRead;
         return ret;
+    }
     ScopedCloser s2(journalFD);
     
     boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
@@ -1221,17 +1231,21 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
                 err = ::read(journalFD, &ret[startReadingAt - offset + count], lengthOfRead - count);
                 if (err < 0)
                 {
+                    int l_errno = errno;
                     char buf[80];
-                    logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(errno, buf, 80));
+                    logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(l_errno, buf, 80));
                     ret.reset();
-                    return ret;
+                    errno = l_errno;
+                    l_bytesRead += count;
+                    goto out;
                 }
                 else if (err == 0)
                 {
                     logger->log(LOG_ERR, "mergeJournal: got early EOF. offset=%ld, len=%ld, jOffset=%ld, jLen=%ld,"
                         " startReadingAt=%ld, lengthOfRead=%ld", offset, len, offlen[0], offlen[1], startReadingAt, lengthOfRead);
                     ret.reset();
-                    return ret;
+                    l_bytesRead += count;
+                    goto out;
                 }
                 count += err;
             }
@@ -1245,6 +1259,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
             // skip over this journal entry
             ::lseek(journalFD, offlen[1], SEEK_CUR);
     }
+out:
     *_bytesReadOut = l_bytesRead;
     return ret;
 }

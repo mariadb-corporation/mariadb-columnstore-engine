@@ -127,12 +127,20 @@ PrefixCache::~PrefixCache()
     */
 }
 
-void PrefixCache::populate()
+void PrefixCache::repopulate()
+{
+    lru_mutex.lock();
+    populate(false);
+}
+
+void PrefixCache::populate(bool useSync)
 {
     Synchronizer *sync = Synchronizer::get();
     bf::directory_iterator dir(cachePrefix);
     bf::directory_iterator dend;
     vector<string> newObjects;
+    lru.clear();
+    m_lru.clear();
     while (dir != dend)
     {
         // put everything in lru & m_lru
@@ -143,13 +151,15 @@ void PrefixCache::populate()
             auto last = lru.end();
             m_lru.insert(--last);
             currentCacheSize += bf::file_size(*dir);
-            newObjects.push_back(p.filename().string());
+            if (useSync)
+                newObjects.push_back(p.filename().string());
         }
         else if (p != cachePrefix/downloader->getTmpPath())
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
         ++dir;
     }
-    sync->newObjects(firstDir, newObjects);
+    if (useSync)
+        sync->newObjects(firstDir, newObjects);
     newObjects.clear();
     
     // account for what's in the journal dir
@@ -164,7 +174,8 @@ void PrefixCache::populate()
             {
                 size_t s = bf::file_size(*dir);
                 currentCacheSize += s;
-                newJournals.push_back(pair<string, size_t>(p.stem().string(), s));
+                if (useSync)
+                    newJournals.push_back(pair<string, size_t>(p.stem().string(), s));
             }
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
@@ -174,7 +185,8 @@ void PrefixCache::populate()
         ++dir;
     }
     lru_mutex.unlock();
-    sync->newJournalEntries(firstDir, newJournals);
+    if (useSync)
+        sync->newJournalEntries(firstDir, newJournals);
 }
 
 // be careful using this!  SM should be idle.  No ongoing reads or writes.
@@ -380,14 +392,25 @@ void PrefixCache::newJournalEntry(size_t size)
 void PrefixCache::deletedJournal(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    assert(currentCacheSize >= size);
-    currentCacheSize -= size;
+    
+    //assert(currentCacheSize >= size);
+    if (currentCacheSize >= size)
+        currentCacheSize -= size;
+    else
+    {
+        ostringstream oss;
+        oss << "PrefixCache::deletedJournal(): Detected an accounting error." <<
+        "  Reloading cache metadata, this will pause IO activity briefly.";
+        logger->log(LOG_WARNING, oss.str().c_str());
+        populate(false);
+    }
 }
 
 void PrefixCache::deletedObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    assert(currentCacheSize >= size);
+    
+    //assert(currentCacheSize >= size);
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());
     
@@ -397,7 +420,16 @@ void PrefixCache::deletedObject(const string &key, size_t size)
         doNotEvict.erase(mit->lit);
         lru.erase(mit->lit);
         m_lru.erase(mit);
-        currentCacheSize -= size;
+        if (currentCacheSize >= size)
+            currentCacheSize -= size;
+        else
+        {
+            ostringstream oss;
+            oss << "PrefixCache::deletedObject(): Detected an accounting error." <<
+            "  Reloading cache metadata, this will pause IO activity briefly.";
+            logger->log(LOG_WARNING, oss.str().c_str());
+            populate(false);
+        }
     }
 }
 
