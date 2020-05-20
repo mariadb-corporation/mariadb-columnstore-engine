@@ -121,7 +121,7 @@ local Pipeline(branch, platform) = {
           "from_secret": "aws_secret_access_key"
         },
         "source": "result/*",
-        "target": branch + "/" + std.strReplace(platform, ":", "") + "/${DRONE_BUILD_NUMBER}",
+        "target": branch + "/${DRONE_BUILD_NUMBER}/" + std.strReplace(platform, ":", ""),
         "strip_prefix": "result/"
       }
     }
