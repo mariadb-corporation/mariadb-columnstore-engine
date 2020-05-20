@@ -92,6 +92,11 @@ class Cache : public boost::noncopyable , public ConfigListener
         void shutdown();
         void printKPIs() const;
         
+        // Used to update accounting variables in the PrefixCaches when a potential error
+        // is detected.
+        void repopulate();
+        void repopulate(const boost::filesystem::path &prefix);
+        
         // test helpers
         const boost::filesystem::path &getCachePath() const;
         const boost::filesystem::path &getJournalPath() const;

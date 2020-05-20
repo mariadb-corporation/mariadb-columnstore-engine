@@ -128,7 +128,7 @@ int Replicator::newObject(const boost::filesystem::path &filename, const uint8_t
     OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
     size_t count = 0;
     while (count < length) {
-        err = ::pwrite(fd, &data[count], length - count, offset);
+        err = ::pwrite(fd, &data[count], length - count, offset + count);
         if (err <= 0)
         {
             if (count > 0)   // return what was successfully written
