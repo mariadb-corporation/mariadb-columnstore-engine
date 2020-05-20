@@ -1,8 +1,7 @@
 local codebase_map = {
-#  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-#  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server ."
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-  "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server ."
+#  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
+  "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .",
+  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise ."
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
@@ -16,8 +15,8 @@ local deb_build_deps = "apt update && apt install --yes --no-install-recommends 
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    "develop-1.4": " -DBUILD_CONFIG=enterprise",
-    "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF"
+    "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF",
+    "develop-1.4": " -DBUILD_CONFIG=enterprise"
   };
 
   local platform_map = {
@@ -58,14 +57,8 @@ local Pipeline(branch, platform) = {
           "path": "/mdb"
         }
       ],
-      "environment": {
-        "GITHUB_TOKEN": {
-          "from_secret": "github_token"
-        }
-      },
       "commands": [
         "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
-        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
         codebase_map[branch],
         "git config cmake.update-submodules no",
         "rm -rf storage/columnstore",
