@@ -126,7 +126,7 @@ local Pipeline(branch, platform) = {
         "ls -la /data/testData/",
         "cd /mdb/" + builddir,
         "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
-        "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
+        "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
       ]
     },
     {
