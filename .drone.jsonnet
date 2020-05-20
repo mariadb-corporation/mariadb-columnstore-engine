@@ -1,8 +1,7 @@
 local codebase_map = {
-#  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-#  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server ."
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-  "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server ."
+#  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
+  "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .",
+  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise ."
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
@@ -16,8 +15,8 @@ local deb_build_deps = "apt update && apt install --yes --no-install-recommends 
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    "develop-1.4": " -DBUILD_CONFIG=enterprise",
-    "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF"
+    "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF",
+    "develop-1.4": " -DBUILD_CONFIG=enterprise"
   };
 
   local platform_map = {
@@ -58,14 +57,8 @@ local Pipeline(branch, platform) = {
           "path": "/mdb"
         }
       ],
-      "environment": {
-        "GITHUB_TOKEN": {
-          "from_secret": "github_token"
-        }
-      },
       "commands": [
         "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
-        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
         codebase_map[branch],
         "git config cmake.update-submodules no",
         "rm -rf storage/columnstore",
@@ -96,9 +89,6 @@ local Pipeline(branch, platform) = {
         // "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
         // "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
         // "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-        // "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/libmarias/d' debian/mariadb-columnstore-platform.install",
-        // "test -f debian/mariadb-columnstore-platform.install && sed -i -e '/quick_installer_amazon/d' debian/mariadb-columnstore-platform.install",
-        // "cd scripts && ln -s wsrep_sst_rsync.sh wsrep_sst_rsync && cd ..",
         // platformMap(branch, platform)
       ]
     },
@@ -115,23 +105,17 @@ local Pipeline(branch, platform) = {
           "path": "/mdb"
         }
       ],
-      "environment": {
-        "GITHUB_TOKEN": {
-          "from_secret": "github_token"
-        }
-      },
       "commands": [
         "apk add --no-cache lz4 wget git",
         "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
         "ls -la /data/testData/",
         "cd /mdb/" + builddir,
-        "echo \"machine github.com login $GITHUB_TOKEN password x-oauth-basic\" > $HOME/.netrc",
         "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
       ]
     },
     {
-      "name": "get pkgs",
-      "image": "alpine",
+      "name": "get pkgs list",
+      "image": "centos:7",
       "volumes": [
         {
           "name": "mdb",
@@ -139,9 +123,11 @@ local Pipeline(branch, platform) = {
         }
       ],
       "commands": [
+        "cd /mdb/" + builddir,
         "mkdir /drone/src/result",
-        "cp *.rpm /drone/src/result/ 2>/dev/null || true",
-        "cp ../*.deb /drone/src/result/ 2>/dev/null || true"
+        "cp *.rpm /drone/src/result 2>/dev/null || true",
+        "cp ../*.deb /drone/src/result 2>/dev/null || true",
+        '! test -n "$(find /drone/src/result -prune -empty)" && ls /drone/src/result'
       ]
     },
     {
@@ -156,7 +142,7 @@ local Pipeline(branch, platform) = {
           "from_secret": "aws_secret_access_key"
         },
         "source": "result/*",
-        "target": branch + "/" + std.strReplace(platform, ":", ""),
+        "target": branch + "/${DRONE_BUILD_NUMBER}/" + std.strReplace(platform, ":", ""),
         "strip_prefix": "result/"
       }
     }
@@ -191,7 +177,7 @@ local Pipeline(branch, platform) = {
 
 // #  Pipeline("develop", "opensuse/leap:15"),
   Pipeline("develop", "centos:7"),
-//   Pipeline("develop", "centos:8"),
+//  Pipeline("develop", "centos:8"),
 //   Pipeline("develop", "debian:9"),
 //   Pipeline("develop", "debian:10"),
 // #  Pipeline("develop", "ubuntu:16.04"),
