@@ -355,6 +355,20 @@ void Cache::configListener()
         logger->log(LOG_CRIT, "Cache/cache_size is not a number. Using current value = %zi",maxCacheSize);
     }
 }
+
+void Cache::repopulate()
+{
+    boost::unique_lock<boost::mutex> sl(lru_mutex);
+    
+    for (auto &pcache : prefixCaches)
+        pcache.second->repopulate();
+}
+
+void Cache::repopulate(const boost::filesystem::path &p)
+{
+    getPCache(p).repopulate();
+}
+
 }
 
 

@@ -683,7 +683,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         
         while (count < size)
         {
-            err = ::write(newFD, data.get(), size - count);
+            err = ::write(newFD, &data[count], size - count);
             if (err < 0)
             {
                 ::unlink(newCachePath.string().c_str());
@@ -693,8 +693,19 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             count += err;
         }
         numBytesWritten += size;
-        assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
+        
+        //assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
         cache->rename(prefix, cloudKey, newCloudKey, size - MetadataFile::getLengthFromKey(cloudKey));
+        if (bf::file_size(oldCachePath) != MetadataFile::getLengthFromKey(cloudKey))
+        {
+            ostringstream oss;
+            oss << "Synchronizer::synchronizeWithJournal(): detected a mismatch between file size and " <<
+                "length stored in the object name. object name = " << cloudKey << " length-in-name = " <<
+                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << bf::file_size(oldCachePath)
+                << ".  Reloading cache metadata, this will pause IO activity briefly.";
+            logger->log(LOG_WARNING, oss.str().c_str());
+            cache->repopulate(prefix);
+        }
         replicator->remove(oldCachePath);
     }
     
