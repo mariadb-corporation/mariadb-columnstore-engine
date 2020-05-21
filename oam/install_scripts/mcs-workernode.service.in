@@ -9,8 +9,8 @@ Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1
 Restart=on-failure
 ExecStop=-@ENGINE_BINDIR@/save_brm
-ExecStop=/usr/bin/env bash -c "/bin/kill -15 $MAINPID && sleep 2 && /bin/kill -9 $(pidof workernode) || /bin/true"
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
+TimeoutStopSec=2
 
 [Install]
 WantedBy=mariadb-columnstore.service

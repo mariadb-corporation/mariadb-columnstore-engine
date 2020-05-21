@@ -8,7 +8,8 @@ Type=forking
 Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/controllernode
 Restart=on-failure
-ExecStop=/usr/bin/env bash -c "/bin/kill -15 $MAINPID && sleep 2 && /bin/kill -9 $(pidof controllernode) || /bin/true"
+ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh
+TimeoutStopSec=$(mcsGetConfig SystemConfig DBRMTimeout)
 
 [Install]
 WantedBy=mariadb-columnstore.service
