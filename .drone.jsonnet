@@ -18,7 +18,7 @@ local deb_build_deps = "apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     "develop": " -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF",
-    "develop-1.4": " -DBUILD_CONFIG=enterprise"
+    "develop-1.4": " -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF"
   };
 
   local platform_map = {
