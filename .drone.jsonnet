@@ -98,8 +98,8 @@ local Pipeline(branch, platform) = {
       "commands": [
         "yum install -y lz4 wget git",
         rpm_run_deps,
-        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /data",
-        "ls -la /data/testData/",
+        "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C /",
+        "ls -la /testData/",
         "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test /regression-test",
         "mkdir /drone/src/result",
         "wget https://cspkg.s3.amazonaws.com/develop-1.4/61/centos7/MariaDB-10.4.12-6-centos7-x86_64-client.rpm -P /drone/src/result",
