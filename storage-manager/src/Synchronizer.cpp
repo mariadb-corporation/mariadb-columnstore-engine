@@ -694,9 +694,14 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         }
         numBytesWritten += size;
         
-        //assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
-        cache->rename(prefix, cloudKey, newCloudKey, size - MetadataFile::getLengthFromKey(cloudKey));
-        if (bf::file_size(oldCachePath) != MetadataFile::getLengthFromKey(cloudKey))
+        size_t oldSize = bf::file_size(oldCachePath);
+        
+        cache->rename(prefix, cloudKey, newCloudKey, size - oldSize);
+        replicator->remove(oldCachePath);
+        
+        // This condition is probably irrelevant for correct functioning now, 
+        // but it should be very rare so what the hell.
+        if (oldSize != MetadataFile::getLengthFromKey(cloudKey))
         {
             ostringstream oss;
             oss << "Synchronizer::synchronizeWithJournal(): detected a mismatch between file size and " <<
@@ -706,7 +711,6 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             logger->log(LOG_WARNING, oss.str().c_str());
             cache->repopulate(prefix);
         }
-        replicator->remove(oldCachePath);
     }
     
     mergeDiff += size - originalSize;
