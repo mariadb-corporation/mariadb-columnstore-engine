@@ -158,21 +158,21 @@ local Pipeline(branch, platform) = {
 };
 
 [
-#  Pipeline("develop-1.4", "opensuse/leap:15"),
-     Pipeline("develop-1.4", "centos:7"),
-//   Pipeline("develop-1.4", "centos:8"),
-//   Pipeline("develop-1.4", "debian:9"),
-//   Pipeline("develop-1.4", "debian:10"),
-// #  Pipeline("develop-1.4", "ubuntu:16.04"),
-//   Pipeline("develop-1.4", "ubuntu:18.04"),
-//   Pipeline("develop-1.4", "ubuntu:20.04"),
+#   Pipeline("develop-1.4", "opensuse/leap:15"),
+   Pipeline("develop-1.4", "centos:7")
+#   Pipeline("develop-1.4", "centos:8"),
+#   Pipeline("develop-1.4", "debian:9"),
+#   Pipeline("develop-1.4", "debian:10"),
+#   Pipeline("develop-1.4", "ubuntu:16.04"),
+#   Pipeline("develop-1.4", "ubuntu:18.04"),
+#   Pipeline("develop-1.4", "ubuntu:20.04"),
 
-// #  Pipeline("develop", "opensuse/leap:15"),
-  // Pipeline("develop", "centos:7"),
-//  Pipeline("develop", "centos:8"),
-//   Pipeline("develop", "debian:9"),
-//   Pipeline("develop", "debian:10"),
-// #  Pipeline("develop", "ubuntu:16.04"),
-//   Pipeline("develop", "ubuntu:18.04"),
-//   Pipeline("develop", "ubuntu:20.04")
+#   Pipeline("develop", "opensuse/leap:15"),
+#   Pipeline("develop", "centos:7"),
+#   Pipeline("develop", "centos:8"),
+#   Pipeline("develop", "debian:9"),
+#   Pipeline("develop", "debian:10"),
+#   Pipeline("develop", "ubuntu:16.04"),
+#   Pipeline("develop", "ubuntu:18.04"),
+#   Pipeline("develop", "ubuntu:20.04")
 ]
