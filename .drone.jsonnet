@@ -2,7 +2,7 @@ local codebase_map = {
 #  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
   "develop" : "git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .",
 #  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise ."
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12.6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise ."
+  "develop-1.4" : "git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise ."
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
@@ -138,7 +138,7 @@ local Pipeline(branch, platform) = {
         "ls -la /testData/",
         "git clone --recurse-submodules --branch "+ branch +" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test regression-test",
         "cd regression-test/mysql/queries/nightly/alltest",
-        "./go.sh --sm_unit_test_dir=/drone/src/columnstore/storage-manager --tests=test000.sh"
+        "./go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh"
       ],
     }
   ],
