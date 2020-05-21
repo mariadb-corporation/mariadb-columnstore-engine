@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-primproc
-PartOf=mcs-exemgr.service
-After=mcs-exemgr.service
+PartOf=mcs-workernode.service
+After=mcs-workernode.service
 
 [Service]
 Type=simple

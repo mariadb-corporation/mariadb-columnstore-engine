@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-exemgr
-PartOf=mcs-controllernode.service
-After=mcs-controllernode.service
+PartOf=mcs-writeengineserver.service
+After=mcs-writeengineserver.service
 
 [Service]
 Type=simple

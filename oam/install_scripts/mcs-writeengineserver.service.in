@@ -1,7 +1,7 @@
 [Unit]
 Description=WriteEngineServer
-PartOf=mcs-exemgr.service
-After=mcs-exemgr.service
+PartOf=mcs-primproc.service
+After=mcs-primproc.service
 
 [Service]
 Type=simple
