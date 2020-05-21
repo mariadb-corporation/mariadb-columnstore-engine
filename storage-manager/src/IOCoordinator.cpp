@@ -506,8 +506,13 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             count += err;
             iocBytesWritten += err;
             // get a new name for the object
+            
+            bf::path oldPath = firstDir/newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + objectOffset);
-            metadata.updateEntryLength(newObject.offset, (err + objectOffset));
+            ::rename(oldPath.string().c_str(), (firstDir/newObject.key).string().c_str());
+            
+            // rename and resize the object in metadata
+            metadata.updateEntry(newObject.offset, newObject.key, (err + objectOffset));
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
             goto out;
@@ -638,7 +643,9 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         iocBytesWritten += err;
         if (err < (int64_t) writeLength)
         {
+            bf::path oldPath = firstDir/newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + newObject.offset);
+            ::rename(oldPath.string().c_str(), (firstDir/newObject.key).string().c_str());
             metadata.updateEntry(newObject.offset, newObject.key, err + newObject.offset);
         }
         cache->newObject(firstDir, newObject.key,err);
