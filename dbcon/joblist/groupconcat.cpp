@@ -638,7 +638,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                fieldLen += row.getPrecision(*i)/2;
+                fieldLen += 1;
 
                 break;
             }
