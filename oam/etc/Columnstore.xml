@@ -247,7 +247,7 @@
         <DBRoot1>/var/lib/columnstore/data1</DBRoot1>
         <DBRMRoot>/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
         <TableLockSaveFile>/var/lib/columnstore/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
-		<DBRMTimeOut>20</DBRMTimeOut> <!-- in seconds -->
+		<DBRMTimeOut>15</DBRMTimeOut> <!-- in seconds -->
 		<DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>

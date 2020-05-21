@@ -8,7 +8,7 @@ Type=simple
 Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/DDLProc
 Restart=on-failure
-ExecStop=/usr/bin/env bash -c "/bin/kill -15 $(pidof DDLProc) && sleep 2 && /bin/kill -9 $(pidof DDLProc) || /bin/true"
+TimeoutStopSec=2
 
 [Install]
 WantedBy=mariadb-columnstore.service

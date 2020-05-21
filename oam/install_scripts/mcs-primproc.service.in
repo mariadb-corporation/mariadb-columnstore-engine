@@ -1,14 +1,14 @@
 [Unit]
 Description=mcs-primproc
 PartOf=mcs-workernode.service
-After=mcs-workernode.service
+After=mcs-controllernode.service
 
 [Service]
 Type=simple
 Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/PrimProc
 Restart=on-failure
-ExecStop=/usr/bin/env bash -c "/bin/kill -15 $(pidof PrimProc) && sleep 2 && /bin/kill -9 $(pidof PrimProc) || /bin/true"
+TimeoutStopSec=2
 
 [Install]
 WantedBy=mariadb-columnstore.service
