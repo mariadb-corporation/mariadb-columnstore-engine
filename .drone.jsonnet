@@ -95,16 +95,6 @@ local Pipeline(branch, platform) = {
     {
       "name": "dowload test data",
       "image": "centos:7",
-      "volumes": [
-        {
-          "name": "test-data",
-          "path": "/data"
-        },
-        {
-          "name": "mdb",
-          "path": "/mdb"
-        }
-      ],
       "commands": [
         "yum install -y lz4 wget git",
         rpm_run_deps,
@@ -121,7 +111,7 @@ local Pipeline(branch, platform) = {
         "wget https://cspkg.s3.amazonaws.com/develop-1.4/61/centos7/MariaDB-10.4.12-6-centos7-x86_64-shared.rpm -P /drone/src/result",
         "wget https://cspkg.s3.amazonaws.com/develop-1.4/61/centos7/MariaDB-10.4.12-6-centos7-x86_64-columnstore-engine.rpm -P /drone/src/result",
         "rpm -i /drone/src/result/*.rpm || true",
-        "bash -o pipefail ./storage/columnstore/build/columnstore_startup.sh",
+        "bash -o pipefail ./build/columnstore_startup.sh",
       ],
     },
     {
