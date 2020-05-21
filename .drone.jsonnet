@@ -147,11 +147,7 @@ local Pipeline(branch, platform) = {
     {
       "name": "mdb",
       "temp": {}
-    },
-    {
-      "name": "test-data",
-      "temp": {}
-    },
+    }
   ],
   "trigger": {
     "branch": [
