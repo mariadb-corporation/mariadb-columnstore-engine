@@ -157,7 +157,7 @@ local Pipeline(branch, platform) = {
   ],
   trigger: {
     event: [
-      cron,
+      'cron',
     ],
     branch: [
       branch,
