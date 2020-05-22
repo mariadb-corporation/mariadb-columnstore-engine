@@ -891,7 +891,11 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                         if (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH)
                         {
                             // Pad to the full length of the field
-                            escape.assign((char*)buf, ci.columnTypes[colpos].colWidth);
+                            if (ci.utf8)
+                                escape.assign((char*)buf, ci.columnTypes[colpos].colWidth * 3);
+                            else
+                                escape.assign((char*)buf, ci.columnTypes[colpos].colWidth);
+
                             boost::replace_all(escape, "\\", "\\\\");
 
                             fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(),
@@ -904,8 +908,10 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                             bitmap_set_bit(table->read_set, field->field_index);
                             String attribute;
                             field->val_str(&attribute);
+
                             escape.assign((char*)buf, attribute.length());
                             boost::replace_all(escape, "\\", "\\\\");
+
                             fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(),
                                     escape.c_str(), ci.enclosed_by, ci.delimiter);
                         }
@@ -1777,32 +1783,35 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                 case CalpontSystemCatalog::BLOB:
                 case CalpontSystemCatalog::TEXT:
                 {
+                    // MCOL-4005 Note that we don't handle nulls as a special
+                    // case here as we do for other datatypes, the below works
+                    // as expected for nulls.
                     uint32_t dataLength = 0;
                     uintptr_t* dataptr;
                     uchar* ucharptr;
+                    uint colWidthInBytes = (ci.utf8 ?
+                        ci.columnTypes[colpos].colWidth * 3: ci.columnTypes[colpos].colWidth);
 
-                    if (ci.columnTypes[colpos].colWidth < 256)
+                    if (colWidthInBytes < 256)
                     {
                         dataLength = *(uint8_t*) buf;
                         buf++;
                     }
-                    else if (ci.columnTypes[colpos].colWidth < 65536)
+                    else if (colWidthInBytes < 65536)
                     {
                         dataLength = *(uint16_t*) buf;
-                        buf = buf + 2 ;
+                        buf += 2;
                     }
-                    else if (ci.columnTypes[colpos].colWidth < 16777216)
+                    else if (colWidthInBytes < 16777216)
                     {
-                    dataLength = *(uint16_t*) buf;
-                    buf = buf + 2 ;
-					if (*(uint8_t*)buf) 
-						dataLength += 256*256*(*(uint8_t*)buf) ;
-					buf++;
+                        dataLength = *(uint16_t*) buf;
+                        dataLength |= ((int) buf[2]) << 16;
+                        buf += 3;
                     }
                     else
                     {
                         dataLength = *(uint32_t*) buf;
-                        buf = buf + 4 ;
+                        buf += 4;
                     }
 
                     // buf contains pointer to blob, for example:
@@ -1826,7 +1835,9 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                     else
                     {
                         // TEXT Column
-                        fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, dataLength, ucharptr, ci.enclosed_by, ci.delimiter);
+                        escape.assign((char*)ucharptr, dataLength);
+                        boost::replace_all(escape, "\\", "\\\\");
+                        fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter);
                     }
 
                     break;
