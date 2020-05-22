@@ -2,7 +2,7 @@ local codebase_map = {
   //  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
   develop: 'git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .',
   // 'develop-1.4': 'git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
+  'develop-1.4': 'git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
   //"develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
 };
 
@@ -17,7 +17,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    'develop': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -118,8 +118,8 @@ local Pipeline(branch, platform) = {
       commands: [
         'yum install -y lz4 wget git',
         rpm_run_deps,
-        'sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf',
-        'rsyslogd'
+        "sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf",
+        'rsyslogd',
         'rpm -i result/*.rpm || true',
         'bash -o pipefail ./build/columnstore_startup.sh',
         'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
