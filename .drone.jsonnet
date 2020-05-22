@@ -1,9 +1,9 @@
 local codebase_map = {
-  //  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
+  //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
   develop: 'git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .',
   // 'develop-1.4': 'git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
-  //"develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
+  // "develop-1.4": "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -48,7 +48,6 @@ local Pipeline(branch, platform) = {
       commands: [
         'git submodule update --recursive --remote',
         'git config cmake.update-submodules no',
-        'echo $DRONE_BUILD_ACTION',
         'echo $DRONE_BUILD_EVENT',
       ],
     },
@@ -128,12 +127,16 @@ local Pipeline(branch, platform) = {
         'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/',
         'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
         './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh',
-        'mv testErrorLogs.tgz result/',
+        'cat go.log',
+        'mv testErrorLogs.tgz result/ || true',
       ],
     },
     {
       name: 'publish',
       image: 'plugins/s3',
+      when: {
+        status: ['success', 'failure'],
+      },
       settings: {
         bucket: 'cspkg',
         access_key: {
