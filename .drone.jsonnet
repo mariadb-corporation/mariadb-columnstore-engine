@@ -48,6 +48,8 @@ local Pipeline(branch, platform) = {
       commands: [
         'git submodule update --recursive --remote',
         'git config cmake.update-submodules no',
+        'echo $DRONE_BUILD_ACTION',
+        'echo $DRONE_BUILD_EVENT',
       ],
     },
     {
@@ -154,6 +156,9 @@ local Pipeline(branch, platform) = {
     },
   ],
   trigger: {
+    event: [
+      cron,
+    ],
     branch: [
       branch,
     ],
