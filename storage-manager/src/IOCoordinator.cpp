@@ -1061,6 +1061,10 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         for (const auto &object : objects)
         {
             bf::path journalFile = journalPath/firstDir1/(object.key + ".journal");
+            // XXXPAT: There is a risk from using the length in the key here.  If SM got killed
+            // in the middle of a write, it will have the _intended_ length of the object, not the 
+            // actual length.
+            // see MCOL-3459
             metadataObject newObj = meta2.addMetadataObject(filename2, MetadataFile::getLengthFromKey(object.key));
             assert(newObj.offset == object.offset);
             err = cs->copyObject(object.key, newObj.key);
@@ -1081,6 +1085,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
                         ostringstream oss;
                         oss << "CopyFile: found a size mismatch in " << cachedObjPath <<
                             " real size = " << bf::file_size(cachedObjPath);
+                        // XXXPAT: get a new key here
                         logger->log(LOG_ERR, oss.str().c_str());
                     }
                     
