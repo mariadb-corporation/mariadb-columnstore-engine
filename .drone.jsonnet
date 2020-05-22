@@ -141,7 +141,7 @@ local Pipeline(branch, platform) = {
         'cd regression-test/mysql/queries/nightly/alltest',
         'mkdir -p /var/log/mariadb/columnstore/',
         'touch /var/log/mariadb/columnstore/crit.log /var/log/mariadb/columnstore/warning.log /var/log/mariadb/columnstore/debug.log',
-        './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh',
+        './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh || cat ../test000.log',
       ],
     },
   ],
