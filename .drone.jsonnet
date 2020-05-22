@@ -158,6 +158,7 @@ local Pipeline(branch, platform) = {
   trigger: {
     event: [
       'cron',
+      'pull_request',
     ],
     branch: [
       branch,
