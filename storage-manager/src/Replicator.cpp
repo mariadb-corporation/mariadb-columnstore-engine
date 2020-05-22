@@ -170,7 +170,7 @@ ssize_t Replicator::_pwrite(int fd, const void *data, size_t length, off_t offse
             else 
                 return err;
         }
-        err += count;
+        count += err;
     } while (count < length);
     
     return count;
@@ -192,7 +192,7 @@ ssize_t Replicator::_write(int fd, const void *data, size_t length)
             else 
                 return err;
         }
-        err += count;
+        count += err;
     } while (count < length);
     
     return count;
