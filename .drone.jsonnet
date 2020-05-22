@@ -136,7 +136,6 @@ local Pipeline(branch, platform) = {
         rpm_run_deps,
         'rpm -i result/*.rpm || true',
         'bash -o pipefail ./build/columnstore_startup.sh',
-        'ls -la /testData/',
         'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test regression-test',
         'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./',
         'cd regression-test/mysql/queries/nightly/alltest',
