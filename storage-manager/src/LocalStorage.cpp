@@ -101,8 +101,11 @@ int LocalStorage::copy(const bf::path &source, const bf::path &dest)
     if (err)
     {
         errno = err.value();
+        ::unlink(dest.string().c_str());
         return -1;
     }
+    if (bf::file_size(source) != bf::file_size(dest))
+        logger->log(LOG_ERR, "LocalStorage::copy: partially copied a file somehow");
     return 0;
 }
 
@@ -216,6 +219,7 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
             l_errno = errno;
             //logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
             close(fd);
+            ::unlink(c_dest);
             errno = l_errno;
             bytesWritten += count;
             return err;
@@ -240,6 +244,8 @@ int LocalStorage::copyObject(const string &source, const string &dest)
         size_t _size = bf::file_size(prefix/source);
         bytesRead += _size;
         bytesWritten += _size;
+        if (bf::file_size(prefix/source) != bf::file_size(prefix/dest))
+            logger->log(LOG_ERR, "LocalStorage::copyObject(): partially copied a file somehow");
     }
     return ret;
 }
