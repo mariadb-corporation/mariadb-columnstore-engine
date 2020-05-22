@@ -488,6 +488,8 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             //log error and abort
             l_errno = errno;
             logger->log(LOG_ERR,"IOCoordinator::write(): Failed newObject.");
+            metadata.removeEntry(newObject.offset);
+            replicator->remove(firstDir/newObject.key);
             errno = l_errno;
             if (count == 0)   // if no data has been written yet, it's safe to return -1 here.
                 return -1;
@@ -509,14 +511,17 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             // get a new name for the object
             string oldKey = newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + objectOffset);
-            int renameErr = ::rename((firstDir/oldKey).string().c_str(), (firstDir/newObject.key).string().c_str());
+            ostringstream os;
+            os << "IOCoordinator::write(): renaming " << oldKey << " to " << newObject.key;
+            logger->log(LOG_DEBUG, os.str().c_str());
+            int renameErr = ::rename((cachePath/firstDir/oldKey).string().c_str(), (cachePath/firstDir/newObject.key).string().c_str());
             int renameErrno = errno;
             if (renameErr < 0)
             {
                 ostringstream oss;
                 char buf[80];
-                oss << "IOCoordinator::write(): Failed to rename " << (firstDir/oldKey).string() << " to " << 
-                    (firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                oss << "IOCoordinator::write(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
+                    (cachePath/firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
                 logger->log(LOG_ERR, oss.str().c_str());
                 newObject.key = oldKey;
             }
@@ -526,6 +531,14 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
             goto out;
+        }
+        
+        if (bf::file_size(cachePath/firstDir/newObject.key) != MetadataFile::getLengthFromKey(newObject.key))
+        {
+            ostringstream oss;
+            oss << "IOCoordinator::write(): detected bad length field in " << newObject.key
+                << " real size = " << bf::file_size(cachePath/firstDir/newObject.key);
+            logger->log(LOG_ERR, oss.str().c_str());
         }
 
         cache->newObject(firstDir, newObject.key,writeLength + objectOffset);
@@ -635,6 +648,8 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             l_errno = errno;
             //log error and abort
             logger->log(LOG_ERR,"IOCoordinator::append(): Failed newObject.");
+            metadata.removeEntry(newObject.offset);
+            replicator->remove(firstDir/newObject.key);
             errno = l_errno;
             // if no data was written successfully yet, it's safe to return -1 here.
             if (count == 0)
@@ -655,20 +670,32 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         {
             string oldKey = newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + newObject.offset);
-            int renameErr = ::rename((firstDir/oldKey).string().c_str(), (firstDir/newObject.key).string().c_str());
+            ostringstream os;
+            os << "IOCoordinator::append(): renaming " << oldKey << " to " << newObject.key;
+            logger->log(LOG_DEBUG, os.str().c_str());
+            int renameErr = ::rename((cachePath/firstDir/oldKey).string().c_str(), (cachePath/firstDir/newObject.key).string().c_str());
             int renameErrno = errno;
             if (renameErr < 0)
             {
                 ostringstream oss;
                 char buf[80];
-                oss << "IOCoordinator::write(): Failed to rename " << (firstDir/oldKey).string() << " to " << 
-                    (firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                oss << "IOCoordinator::write(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
+                    (cachePath/firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
                 logger->log(LOG_ERR, oss.str().c_str());
                 newObject.key = oldKey;
             }
         
             metadata.updateEntry(newObject.offset, newObject.key, err);
         }
+        
+        if (bf::file_size(cachePath/firstDir/newObject.key) != MetadataFile::getLengthFromKey(newObject.key))
+        {
+            ostringstream oss;
+            oss << "IOCoordinator::write(): detected bad length field in " << newObject.key
+                << " real size = " << bf::file_size(cachePath/firstDir/newObject.key);
+            logger->log(LOG_ERR, oss.str().c_str());
+        }  
+
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
 
@@ -1034,9 +1061,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         for (const auto &object : objects)
         {
             bf::path journalFile = journalPath/firstDir1/(object.key + ".journal");
-            // XXXPAT: Need to follow up on this.  this is the wrong length to use here, but changing it
-            // to use the right length is causing an error somewhere else.  Not sure why yet.
-            metadataObject newObj = meta2.addMetadataObject(filename2, object.length);
+            metadataObject newObj = meta2.addMetadataObject(filename2, MetadataFile::getLengthFromKey(object.key));
             assert(newObj.offset == object.offset);
             err = cs->copyObject(object.key, newObj.key);
             if (err)
@@ -1050,6 +1075,22 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
                         throw CFException(ENOENT, string("IOCoordinator::copyFile(): source = ") + filename1 + 
                             ", dest = " + filename2 + ".  Object " + object.key + " does not exist in either "
                             "cloud storage or the cache!");
+
+                    if (bf::file_size(cachedObjPath) != MetadataFile::getLengthFromKey(object.key))
+                    {
+                        ostringstream oss;
+                        oss << "CopyFile: found a size mismatch in " << cachedObjPath <<
+                            " real size = " << bf::file_size(cachedObjPath);
+                        logger->log(LOG_ERR, oss.str().c_str());
+                    }
+                    
+                    if (MetadataFile::getLengthFromKey(object.key) != MetadataFile::getLengthFromKey(newObj.key))
+                    {
+                        ostringstream oss;
+                        oss << "CopyFile: found a size mismatch in src and dest keys  src = " << object.key <<
+                            " dest = " << newObj.key;
+                        logger->log(LOG_ERR, oss.str().c_str());
+                    }
 
                     // put the copy in cloudstorage
                     err = cs->putObject(cachedObjPath.string(), newObj.key);
