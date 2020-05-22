@@ -437,7 +437,7 @@ void Synchronizer::process(list<string>::iterator name)
         catch(exception &e) {
             // these are often self-resolving, so we will suppress logging it for 10 iterations, then escalate
             // to error, then to crit
-            if (++retryCount >= 10)
+            //if (++retryCount >= 10)
                 logger->log((retryCount < 20 ? LOG_ERR : LOG_CRIT), "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
                     pending->opFlags, e.what());
             success = false;
@@ -467,7 +467,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
 {
     ScopedReadLock s(ioc, sourceFile);
     
-    string &key = *it;
+    string key = *it;
     size_t pos = key.find_first_of('/');
     bf::path prefix = key.substr(0, pos);
     string cloudKey = key.substr(pos + 1);
@@ -499,7 +499,6 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     if (exists)
         return;
 
-    // TODO: should be safe to check with Cache instead of a file existence check
     exists = cache->exists(prefix, cloudKey);
     if (!exists)
     {
@@ -507,9 +506,17 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
     }
 
+    if (bf::file_size(cachePath/key) != MetadataFile::getLengthFromKey(cloudKey))
+    {
+        ostringstream oss;
+        oss << "Synchronizer::synchronize(): found a size mismatch in key = " << cloudKey <<
+            " real size = " << bf::file_size(cachePath/key);
+        logger->log(LOG_ERR, oss.str().c_str());
+    }
     err = cs->putObject((cachePath / key).string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
+
     numBytesRead += mdEntry.length;
     bytesReadBySync += mdEntry.length;
     numBytesUploaded += mdEntry.length;
@@ -658,6 +665,20 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     // get a new key for the resolved version & upload it
     string newCloudKey = MetadataFile::getNewKeyFromOldKey(cloudKey, size);
     string newKey = (prefix/newCloudKey).string();
+
+try {    
+    if (size != MetadataFile::getLengthFromKey(newCloudKey))
+    {
+        ostringstream oss;
+        oss << "SyncWithJournal: detected the file size mismatch on the merged object somehow. " <<
+            "key = " << newCloudKey << "real size = " << bf::file_size(prefix/newCloudKey);
+        logger->log(LOG_ERR, oss.str().c_str());
+    }
+} catch(exception &e)
+{
+    logger->log(LOG_ERR, "DEB4");
+}    
+
     err = cs->putObject(data, size, newCloudKey);
     if (err)
     {
