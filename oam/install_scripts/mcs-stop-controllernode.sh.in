@@ -1,3 +1,2 @@
 #!/bin/bash
-kill -15 $(pidof workernode)
-kill -15 $(pidof controllernode)
+systemctl stop mcs-workernode --ignore-dependencies
