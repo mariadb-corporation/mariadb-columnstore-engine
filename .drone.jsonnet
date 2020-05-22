@@ -54,7 +54,7 @@ local Pipeline(branch, platform) = {
       image: "plugins/slack",
       settings: {
         webhook: "https://hooks.slack.com/services/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",
-        channel: "@roman.navrotskii",
+        channel: "drone_test",
         template: "{{#success build.status}}\n  build {{build.number}} succeeded. Good job.\n{{else}}\n  build {{build.number}} failed. \n{{/success}}\n<https://cspkg.s3.amazonaws.com/index.html?prefix="+branch+"/$DRONE_BUILD_NUMBER/tests_results|Check test results>"
       }
     }
@@ -85,11 +85,11 @@ local Pipeline(branch, platform) = {
   //  Pipeline("develop-1.4", "ubuntu:20.04"),
 
   //  Pipeline("develop", "opensuse/leap:15"),
-  Pipeline('develop', 'centos:7'),
-  Pipeline('develop', 'centos:8'),
-  Pipeline('develop', 'debian:9'),
-  Pipeline('develop', 'debian:10'),
-  //  Pipeline("develop", "ubuntu:16.04"),
-  Pipeline('develop', 'ubuntu:18.04'),
-  Pipeline('develop', 'ubuntu:20.04'),
+  // Pipeline('develop', 'centos:7'),
+  // Pipeline('develop', 'centos:8'),
+  // Pipeline('develop', 'debian:9'),
+  // Pipeline('develop', 'debian:10'),
+  // //  Pipeline("develop", "ubuntu:16.04"),
+  // Pipeline('develop', 'ubuntu:18.04'),
+  // Pipeline('develop', 'ubuntu:20.04'),
 ]
