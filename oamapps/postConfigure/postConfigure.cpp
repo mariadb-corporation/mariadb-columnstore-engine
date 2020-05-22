@@ -89,13 +89,8 @@ int main(int argc, char* argv[])
     string cmd;
     string numBlocksPctParam = "";
     string totalUmMemoryParam = "";
-    string reuseConfig = "n";
-    string mysqlPort = "";
     string homeDir = "/root";
     bool rootUser = true;
-    Config* sysConfig = Config::makeConfig();
-
-    mysqlPort = sysConfig->getConfig("Installation", "MySQLPort");
 
     //check if root-user
     int user;
@@ -122,14 +117,10 @@ int main(int argc, char* argv[])
 	char timestamp[200];
 	strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
 	string currentDate = timestamp;
-
 	string postConfigureLog = "/var/log/columnstore-postconfigure-" + currentDate;
 
 	// perform single server install
 	cout << endl << "Performing the Single Server Install." << endl << endl;
-
-	//setup to Columnstore.xml file for single server
-    //singleServerConfigSetup(sysConfig);
 
 	if (!rootUser)
     {
@@ -147,7 +138,7 @@ int main(int argc, char* argv[])
         totalUmMemoryParam = "-";
     }
 
-	cmd = "columnstore_installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + numBlocksPctParam + " " + totalUmMemoryParam;
+	cmd = "columnstore_installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy n --nodeps ' ' 1 " + numBlocksPctParam + " " + totalUmMemoryParam;
 	system(cmd.c_str());
 	exit(0);
 }

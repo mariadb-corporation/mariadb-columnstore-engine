@@ -4,10 +4,32 @@
 #
 # Post-install steps for columnstore install
 
+running_systemd() {
+   if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+       echo 0
+   else
+       echo 1
+   fi
+}
+
 rpmmode=install
 user=`whoami 2>/dev/null`
 
 quiet=0
+
+stop_mysqld=0
+if [ -z "$(pgrep -x mysqld)" ];then
+
+    # Startup mysqld 
+    systemctl cat mariadb.service > /dev/null 2>&1
+    if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+        systemctl start mariadb.service
+    else
+        /usr/bin/mysqld_safe &
+    fi
+    stop_mysqld=1
+fi
+sleep 2
 
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.new
@@ -60,70 +82,70 @@ mkdir /mnt/tmp > /dev/null 2>&1
 
 if [ $user = "root" ]; then
 	#setup the columnstore service script
-	rm -f /etc/init.d/columnstore >/dev/null 2>&1
-	rm -f /etc/default/columnstore
+    rm -f /etc/init.d/columnstore >/dev/null 2>&1
+    rm -f /etc/default/columnstore
 
-	systemctl=`which systemctl 2>/dev/null`
-	if [ -n "$systemctl" ]; then
-		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
-		cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
+    systemctl=`which systemctl 2>/dev/null`
+    if [ -n "$systemctl" ]; then
+        cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-controllernode.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-ddlproc.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
 
-		systemctl enable mariadb-columnstore >/dev/null 2>&1
-		systemctl enable mcs-controllernode > /dev/null 2>&1
-		systemctl enable mcs-ddlproc > /dev/null 2>&1
-		systemctl enable mcs-dmlproc > /dev/null 2>&1
-		systemctl enable mcs-exemgr > /dev/null 2>&1
-		systemctl enable mcs-primproc > /dev/null 2>&1
-		systemctl enable mcs-workernode > /dev/null 2>&1
-		systemctl enable mcs-writeengineserver > /dev/null 2>&1
-		systemctl enable mcs-loadbrm > /dev/null 2>&1
-	else
-		chkconfig=`which chkconfig 2>/dev/null`
-		if [ -n "$chkconfig" ]; then
+        systemctl enable mariadb-columnstore >/dev/null 2>&1
+        systemctl enable mcs-controllernode > /dev/null 2>&1
+        systemctl enable mcs-ddlproc > /dev/null 2>&1
+        systemctl enable mcs-dmlproc > /dev/null 2>&1
+        systemctl enable mcs-exemgr > /dev/null 2>&1
+        systemctl enable mcs-primproc > /dev/null 2>&1
+        systemctl enable mcs-workernode > /dev/null 2>&1
+        systemctl enable mcs-writeengineserver > /dev/null 2>&1
+        systemctl enable mcs-loadbrm > /dev/null 2>&1
+    else
+        chkconfig=`which chkconfig 2>/dev/null`
+        if [ -n "$chkconfig" ]; then
 
-			cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
-			chkconfig --add columnstore > /dev/null 2>&1
-			chkconfig columnstore on > /dev/null 2>&1
-		else
-			cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
-			updaterc=`which update-rc.d 2>/dev/null`
-			if [ -n "$updaterc" ]; then
+            cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
+            chkconfig --add columnstore > /dev/null 2>&1
+            chkconfig columnstore on > /dev/null 2>&1
+        else
+            cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
+            updaterc=`which update-rc.d 2>/dev/null`
+            if [ -n "$updaterc" ]; then
 
-				update-rc.d columnstore defaults 99 > /dev/null 2>&1
-			else
-				echo ""
-				echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
-			fi
-		fi
-	fi
+                update-rc.d columnstore defaults 99 > /dev/null 2>&1
+            else
+                echo ""
+                echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+            fi
+        fi
+    fi
 fi
 
 if [ $user = "root" ]; then
-	columnstoreSyslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
+    columnstoreSyslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
 
-	#check if MariaDB Columnstore system logging was setup
-	cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-	    cat $tmpDir/syslog_install.log
-	fi
+    #check if MariaDB Columnstore system logging was setup
+    cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        cat $tmpDir/syslog_install.log
+    fi
 else
-	chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
+    chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 	
 cat <<EOD
 
@@ -151,17 +173,28 @@ rm -f $lockdir/columnstore
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`
 if [ -z "aws" ]; then
-	MCSgetCredentials.sh >/dev/null 2>&1
+    MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
 postConfigure
 systemctl start mariadb-columnstore
 
-while  [ -z  $(pgrep -x controllernode) ];
+while  [ -z  "$(pgrep -x controllernode)" ];
 do
-    sleep 2
+    sleep 1
 done
  
 dbbuilder 7 > $tmpDir/dbbuilder.log
-exit 0
 
+if [ $stop_mysqld -eq 1 ];then
+    # Make sure we stop mariadb since it wasn't running prior to columnstore installation
+    systemctl cat mariadb.service > /dev/null 2>&1
+    if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+        systemctl stop mariadb.service > /dev/null 2>&1
+    else
+        pkill mysqld
+    fi
+
+fi
+sleep 2
+exit 0
