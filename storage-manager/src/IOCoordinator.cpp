@@ -505,11 +505,21 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             dataRemaining -= err;
             count += err;
             iocBytesWritten += err;
-            // get a new name for the object
             
-            bf::path oldPath = firstDir/newObject.key;
+            // get a new name for the object
+            string oldKey = newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + objectOffset);
-            ::rename(oldPath.string().c_str(), (firstDir/newObject.key).string().c_str());
+            int renameErr = ::rename((firstDir/oldKey).string().c_str(), (firstDir/newObject.key).string().c_str());
+            int renameErrno = errno;
+            if (renameErr < 0)
+            {
+                ostringstream oss;
+                char buf[80];
+                oss << "IOCoordinator::write(): Failed to rename " << (firstDir/oldKey).string() << " to " << 
+                    (firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                logger->log(LOG_ERR, oss.str().c_str());
+                newObject.key = oldKey;
+            }
             
             // rename and resize the object in metadata
             metadata.updateEntry(newObject.offset, newObject.key, (err + objectOffset));
@@ -643,9 +653,20 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         iocBytesWritten += err;
         if (err < (int64_t) writeLength)
         {
-            bf::path oldPath = firstDir/newObject.key;
+            string oldKey = newObject.key;
             newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + newObject.offset);
-            ::rename(oldPath.string().c_str(), (firstDir/newObject.key).string().c_str());
+            int renameErr = ::rename((firstDir/oldKey).string().c_str(), (firstDir/newObject.key).string().c_str());
+            int renameErrno = errno;
+            if (renameErr < 0)
+            {
+                ostringstream oss;
+                char buf[80];
+                oss << "IOCoordinator::write(): Failed to rename " << (firstDir/oldKey).string() << " to " << 
+                    (firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                logger->log(LOG_ERR, oss.str().c_str());
+                newObject.key = oldKey;
+            }
+        
             metadata.updateEntry(newObject.offset, newObject.key, err + newObject.offset);
         }
         cache->newObject(firstDir, newObject.key,err);
