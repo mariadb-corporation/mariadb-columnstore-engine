@@ -46,104 +46,18 @@ local Pipeline(branch, platform) = {
       name: 'submodules',
       image: 'alpine/git',
       commands: [
-        'git submodule update --recursive --remote',
-        'git config cmake.update-submodules no',
+        'false',
       ],
     },
     {
-      name: 'clone-mdb',
-      image: 'alpine/git',
-      volumes: [
-        {
-          name: 'mdb',
-          path: '/mdb',
-        },
-      ],
-      commands: [
-        'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
-        codebase_map[branch],
-        'git config cmake.update-submodules no',
-        'rm -rf storage/columnstore',
-        'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore',
-      ],
-    },
-    {
-      name: 'build',
-      image: platform,
-      volumes: [
-        {
-          name: 'mdb',
-          path: '/mdb',
-        },
-      ],
-      environment: {
-        DEBIAN_FRONTEND: 'noninteractive',
-        TRAVIS: 'true',
-      },
-      commands: [
-        'cd /mdb/' + builddir,
-        "sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules",
-        "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control",
-        "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-        "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-        "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-        "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-        "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
-        platformMap(branch, platform),
-      ],
-    },
-    {
-      name: 'get pkgs list',
-      image: 'centos:7',
-      volumes: [
-        {
-          name: 'mdb',
-          path: '/mdb',
-        },
-      ],
-      commands: [
-        'cd /mdb/' + builddir,
-        'mkdir /drone/src/result',
-        'cp *.rpm /drone/src/result 2>/dev/null || true',
-        'cp ../*.deb /drone/src/result 2>/dev/null || true',
-        '! test -n "$(find /drone/src/result -prune -empty)" && ls /drone/src/result',
-      ],
-    },
-    {
-      name: 'publish',
-      image: 'plugins/s3',
+      name: "slack",
+      image: "plugins/slack",
       settings: {
-        bucket: 'cspkg',
-        access_key: {
-          from_secret: 'aws_access_key_id',
-        },
-        secret_key: {
-          from_secret: 'aws_secret_access_key',
-        },
-        source: 'result/*',
-        target: branch + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(platform, ':', ''),
-        strip_prefix: 'result/',
-      },
-    },
-    {
-      name: 'tests',
-      image: 'centos:7',
-      commands: [
-        'yum install -y lz4 wget git',
-        rpm_run_deps,
-        'rpm -i result/*.rpm || true',
-        'bash -o pipefail ./build/columnstore_startup.sh',
-        'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test regression-test',
-        'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./',
-        'cd regression-test/mysql/queries/nightly/alltest',
-        'mkdir -p /var/log/mariadb/columnstore/',
-        'touch /var/log/mariadb/columnstore/crit.log /var/log/mariadb/columnstore/warning.log /var/log/mariadb/columnstore/debug.log',
-        './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh || cat ../test000.log',
-      ],
-    },
+        webhook: "https://hooks.slack.com/services/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",
+        channel: "@roman.navrotskii",
+        template: "{{#success build.status}}\n  build {{build.number}} succeeded. Good job.\n{{else}}\n  build {{build.number}} failed. \n{{/success}}\n<https://cspkg.s3.amazonaws.com/index.html?prefix="+branch+"/$DRONE_BUILD_NUMBER/tests_results|Check test results>"
+      }
+    }
   ],
 
   volumes: [
@@ -155,6 +69,7 @@ local Pipeline(branch, platform) = {
   trigger: {
     branch: [
       branch,
+      "slack-test"
     ],
   },
 };
