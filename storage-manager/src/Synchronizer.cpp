@@ -409,6 +409,7 @@ void Synchronizer::process(list<string>::iterator name)
     s.unlock();
     
     bool success = false;
+    int retryCount = 0;
     while (!success)
     {
         assert(!s.owns_lock());
@@ -434,8 +435,11 @@ void Synchronizer::process(list<string>::iterator name)
             success = true;
         }
         catch(exception &e) {
-            logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
-                pending->opFlags, e.what());
+            // these are often self-resolving, so we will suppress logging it for 10 iterations, then escalate
+            // to error, then to crit
+            if (++retryCount >= 10)
+                logger->log((retryCount < 20 ? LOG_ERR : LOG_CRIT), "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
+                    pending->opFlags, e.what());
             success = false;
             sleep(1);
             continue;
@@ -706,7 +710,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             ostringstream oss;
             oss << "Synchronizer::synchronizeWithJournal(): detected a mismatch between file size and " <<
                 "length stored in the object name. object name = " << cloudKey << " length-in-name = " <<
-                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << bf::file_size(oldCachePath);
+                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << oldSize;
             logger->log(LOG_WARNING, oss.str().c_str());
         }
     }
