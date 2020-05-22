@@ -706,10 +706,8 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             ostringstream oss;
             oss << "Synchronizer::synchronizeWithJournal(): detected a mismatch between file size and " <<
                 "length stored in the object name. object name = " << cloudKey << " length-in-name = " <<
-                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << bf::file_size(oldCachePath)
-                << ".  Reloading cache metadata, this will pause IO activity briefly.";
+                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << bf::file_size(oldCachePath);
             logger->log(LOG_WARNING, oss.str().c_str());
-            cache->repopulate(prefix);
         }
     }
     

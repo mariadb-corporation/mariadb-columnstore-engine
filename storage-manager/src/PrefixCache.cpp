@@ -127,13 +127,7 @@ PrefixCache::~PrefixCache()
     */
 }
 
-void PrefixCache::repopulate()
-{
-    lru_mutex.lock();
-    populate(false);
-}
-
-void PrefixCache::populate(bool useSync)
+void PrefixCache::populate()
 {
     Synchronizer *sync = Synchronizer::get();
     bf::directory_iterator dir(cachePrefix);
@@ -151,15 +145,13 @@ void PrefixCache::populate(bool useSync)
             auto last = lru.end();
             m_lru.insert(--last);
             currentCacheSize += bf::file_size(*dir);
-            if (useSync)
-                newObjects.push_back(p.filename().string());
+            newObjects.push_back(p.filename().string());
         }
         else if (p != cachePrefix/downloader->getTmpPath())
             logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'", p.string().c_str());
         ++dir;
     }
-    if (useSync)
-        sync->newObjects(firstDir, newObjects);
+    sync->newObjects(firstDir, newObjects);
     newObjects.clear();
     
     // account for what's in the journal dir
@@ -174,8 +166,7 @@ void PrefixCache::populate(bool useSync)
             {
                 size_t s = bf::file_size(*dir);
                 currentCacheSize += s;
-                if (useSync)
-                    newJournals.push_back(pair<string, size_t>(p.stem().string(), s));
+                newJournals.push_back(pair<string, size_t>(p.stem().string(), s));
             }
             else
                 logger->log(LOG_WARNING, "Cache: found a file in the journal dir that does not belong '%s'", p.string().c_str());
@@ -185,8 +176,7 @@ void PrefixCache::populate(bool useSync)
         ++dir;
     }
     lru_mutex.unlock();
-    if (useSync)
-        sync->newJournalEntries(firstDir, newJournals);
+    sync->newJournalEntries(firstDir, newJournals);
 }
 
 // be careful using this!  SM should be idle.  No ongoing reads or writes.
@@ -399,10 +389,9 @@ void PrefixCache::deletedJournal(size_t size)
     else
     {
         ostringstream oss;
-        oss << "PrefixCache::deletedJournal(): Detected an accounting error." <<
-        "  Reloading cache metadata, this will pause IO activity briefly.";
+        oss << "PrefixCache::deletedJournal(): Detected an accounting error.";
         logger->log(LOG_WARNING, oss.str().c_str());
-        populate(false);
+        currentCacheSize = 0;
     }
 }
 
@@ -425,10 +414,9 @@ void PrefixCache::deletedObject(const string &key, size_t size)
         else
         {
             ostringstream oss;
-            oss << "PrefixCache::deletedObject(): Detected an accounting error." <<
-            "  Reloading cache metadata, this will pause IO activity briefly.";
+            oss << "PrefixCache::deletedObject(): Detected an accounting error.";
             logger->log(LOG_WARNING, oss.str().c_str());
-            populate(false);
+            currentCacheSize = 0;
         }
     }
 }
