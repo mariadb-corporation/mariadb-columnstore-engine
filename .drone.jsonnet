@@ -139,6 +139,8 @@ local Pipeline(branch, platform) = {
         'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test regression-test',
         'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C ./',
         'cd regression-test/mysql/queries/nightly/alltest',
+        'mkdir -p /var/log/mariadb/columnstore/',
+        'touch /var/log/mariadb/columnstore/crit.log /var/log/mariadb/columnstore/warning.log /var/log/mariadb/columnstore/debug.log',
         './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh',
       ],
     },
