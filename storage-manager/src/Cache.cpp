@@ -356,19 +356,6 @@ void Cache::configListener()
     }
 }
 
-void Cache::repopulate()
-{
-    boost::unique_lock<boost::mutex> sl(lru_mutex);
-    
-    for (auto &pcache : prefixCaches)
-        pcache.second->repopulate();
-}
-
-void Cache::repopulate(const boost::filesystem::path &p)
-{
-    getPCache(p).repopulate();
-}
-
 }
 
 
