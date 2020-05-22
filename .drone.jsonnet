@@ -56,9 +56,11 @@ local Pipeline(branch, platform) = {
         status: [ "success", "failure" ]
       },
       settings: {
-        webhook: "https://hooks.slack.com/services/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",
+        webhook: {
+          "from_secret": "slack_webhook"
+        },
         channel: "drone_test",
-        template: "{{#success build.status}}\n  build {{build.number}} succeeded. Good job.\n{{else}}\n  build {{build.number}} failed. \n{{/success}}\n<https://cspkg.s3.amazonaws.com/index.html?prefix="+branch+"/$DRONE_BUILD_NUMBER/tests_results|Check test results>"
+        template: "{{#success build.status}}\n  build {{build.number}} succeeded. Good job.\n{{else}}\n  build {{build.number}} failed. \n{{/success}}\n<https://cspkg.s3.amazonaws.com/index.html?prefix="+branch+"/{{build.number}}/tests_results|Check test results>"
       }
     }
   ],
