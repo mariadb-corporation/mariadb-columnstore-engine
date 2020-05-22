@@ -1,7 +1,7 @@
 [Unit]
 Description=mcs-dmlproc
-PartOf=mcs-writeengineserver.service
-After=mcs-writeengineserver.service
+PartOf=mcs-exemgr.service
+After=mcs-exemgr.service
 
 [Service]
 Type=simple

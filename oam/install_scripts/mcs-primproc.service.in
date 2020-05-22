@@ -1,6 +1,7 @@
 [Unit]
 Description=mcs-primproc
 PartOf=mcs-workernode.service
+PartOf=mcs-controllernode.service
 After=mcs-controllernode.service
 
 [Service]
