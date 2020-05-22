@@ -52,6 +52,9 @@ local Pipeline(branch, platform) = {
     {
       name: "slack",
       image: "plugins/slack",
+      when: {
+        status: [ "success", "failure" ]
+      },
       settings: {
         webhook: "https://hooks.slack.com/services/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",
         channel: "drone_test",
