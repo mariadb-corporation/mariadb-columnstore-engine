@@ -667,7 +667,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
                 newObject.key = oldKey;
             }
         
-            metadata.updateEntry(newObject.offset, newObject.key, err + newObject.offset);
+            metadata.updateEntry(newObject.offset, newObject.key, err);
         }
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
