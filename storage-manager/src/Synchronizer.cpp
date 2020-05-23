@@ -693,8 +693,8 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             count += err;
         }
         numBytesWritten += size;
-        assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
-        cache->rename(prefix, cloudKey, newCloudKey, size - MetadataFile::getLengthFromKey(cloudKey));
+        //assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
+        cache->rename(prefix, cloudKey, newCloudKey, size - bf::file_size(oldCachePath));
         replicator->remove(oldCachePath);
     }
     
