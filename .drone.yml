@@ -1,0 +1,889 @@
+---
+kind: pipeline
+type: docker
+name: develop-1.4 centos:7
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos7 && make -j$(nproc) package
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop-1.4 --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop-1.4/${DRONE_BUILD_NUMBER}/centos7
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop-1.4
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop-1.4 centos:7
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos7 && make -j$(nproc) package
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop-1.4 --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop-1.4/${DRONE_BUILD_NUMBER}/centos7
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop-1.4
+  event:
+  - cron
+
+---
+kind: pipeline
+type: docker
+name: develop centos:7
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos7 && make -j$(nproc) package
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/centos7
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop centos:8
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: centos:8
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos8 && make -j$(nproc) package
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/centos8
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop debian:9
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: debian:9
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - apt update && apt install --yes --no-install-recommends git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=stretch' debian/autobake-deb.sh
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/debian9
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop debian:10
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: debian:10
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - apt update && apt install --yes --no-install-recommends git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=buster' debian/autobake-deb.sh
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/debian10
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop ubuntu:18.04
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: ubuntu:18.04
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - apt update && apt install --yes --no-install-recommends git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=bionic' debian/autobake-deb.sh
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/ubuntu18.04
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: docker
+name: develop ubuntu:20.04
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 10
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+  - git submodule update --recursive --remote
+  - git config cmake.update-submodules no
+
+- name: clone-mdb
+  image: alpine/git
+  commands:
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore
+  - cp -r /drone/src /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: build
+  image: ubuntu:20.04
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - sed -i -e '/-DBUILD_CONFIG=mysql_release/d' debian/rules
+  - "sed -i -e '/Package: libmariadbd19/,/^$/d' debian/control"
+  - "sed -i -e '/Package: libmariadbd-dev/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control"
+  - "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control"
+  - sed -i -e '/wsrep/d' debian/mariadb-server-*.install
+  - "sed -i -e 's/Depends: galera.*/Depends:/' debian/control"
+  - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
+  - apt update && apt install --yes --no-install-recommends git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=focal' debian/autobake-deb.sh
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    TRAVIS: true
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: get pkgs list
+  image: centos:7
+  commands:
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - mkdir /drone/src/result
+  - cp *.rpm /drone/src/result 2>/dev/null || true
+  - cp ../*.deb /drone/src/result 2>/dev/null || true
+  - "! test -n \"$(find /drone/src/result -prune -empty)\" && ls /drone/src/result"
+  volumes:
+  - name: mdb
+    path: /mdb
+
+- name: tests
+  image: centos:7
+  commands:
+  - yum install -y lz4 wget git
+  - yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time
+  - sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf
+  - rm -f /etc/rsyslog.d/listen.conf
+  - rsyslogd
+  - rpm -i result/*.rpm || true
+  - kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done
+  - rsyslogd
+  - bash -o pipefail ./build/columnstore_startup.sh
+  - git clone --recurse-submodules --branch develop --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test
+  - wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/
+  - cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest
+  - "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'"
+  - ./go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE
+  - cat go.log
+  - mv testErrorLogs.tgz result/ || true
+
+- name: publish
+  image: plugins/s3
+  settings:
+    access_key:
+      from_secret: aws_access_key_id
+    bucket: cspkg
+    secret_key:
+      from_secret: aws_secret_access_key
+    source: result/*
+    strip_prefix: result/
+    target: develop/${DRONE_BUILD_NUMBER}/ubuntu20.04
+  when:
+    status:
+    - success
+    - failure
+
+volumes:
+- name: mdb
+  temp: {}
+
+trigger:
+  branch:
+  - develop
+  event:
+  - pull_request
+
+...

@@ -37,7 +37,7 @@ local platformMap(branch, platform) =
 local Pipeline(branch, platform, event='pull_request') = {
   kind: 'pipeline',
   type: 'docker',
-  name: branch + ' ' + platform,
+  name: branch + ' ' + platform + event,
   clone: {
     depth: 10,
   },
