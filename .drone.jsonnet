@@ -96,7 +96,7 @@ local Pipeline(branch, platform, event='pull_request') = {
       ],
     },
     {
-      name: 'get pkgs list',
+      name: 'check pkgs list',
       image: 'centos:7',
       volumes: [
         {
@@ -167,6 +167,7 @@ local Pipeline(branch, platform, event='pull_request') = {
     ],
     branch: [
       branch,
+      'drone-1.4',
     ],
   },
 };
