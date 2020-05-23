@@ -166,6 +166,7 @@ local Pipeline(branch, platform) = {
     ],
     branch: [
       branch,
+      'drone-1.4',
     ],
   },
 };
