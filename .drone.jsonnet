@@ -34,7 +34,7 @@ local platformMap(branch, platform) =
 
   platform_map[platform];
 
-local Pipeline(branch, platform) = {
+local Pipeline(branch, platform, event='pull_request') = {
   kind: 'pipeline',
   type: 'docker',
   name: branch + ' ' + platform,
@@ -122,7 +122,7 @@ local Pipeline(branch, platform) = {
         "rm -f /etc/rsyslog.d/listen.conf",
         'rsyslogd',
         'rpm -i result/*.rpm || true',
-        'kill $(pidof rsyslogd)',
+        'kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done',
         'rsyslogd',
         'bash -o pipefail ./build/columnstore_startup.sh',
         'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
@@ -163,8 +163,7 @@ local Pipeline(branch, platform) = {
   ],
   trigger: {
     event: [
-      'cron',
-      'pull_request',
+      event,
     ],
     branch: [
       branch,
@@ -175,6 +174,7 @@ local Pipeline(branch, platform) = {
 [
   //  Pipeline("develop-1.4", "opensuse/leap:15"),
   Pipeline('develop-1.4', 'centos:7'),
+  Pipeline('develop-1.4', 'centos:7', 'cron'),
   //  Pipeline("develop-1.4", "centos:8"),
   //  Pipeline("develop-1.4", "debian:9"),
   //  Pipeline("develop-1.4", "debian:10"),
