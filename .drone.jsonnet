@@ -169,7 +169,9 @@ local Pipeline(branch, platform, event='pull_request') = {
       branch,
       'drone-1.4',
     ],
-  },
+  } + (if event == 'cron' then {
+    cron: ['nightly-'+ std.strReplace(branch, '.', '-')]
+  } else {})
 };
 
 [
