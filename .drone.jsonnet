@@ -48,7 +48,6 @@ local Pipeline(branch, platform) = {
       commands: [
         'git submodule update --recursive --remote',
         'git config cmake.update-submodules no',
-        'echo $DRONE_BUILD_EVENT',
       ],
     },
     {
@@ -123,11 +122,14 @@ local Pipeline(branch, platform) = {
         "rm -f /etc/rsyslog.d/listen.conf",
         'rsyslogd',
         'rpm -i result/*.rpm || true',
+        'kill $(pidof rsyslogd)',
+        'rsyslogd',
         'bash -o pipefail ./build/columnstore_startup.sh',
         'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
         'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/',
         'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
-        './go.sh --sm_unit_test_dir=/drone/src/storage-manager --tests=test000.sh',
+        "[ $DRONE_BUILD_EVENT = pull_request  ] && export TEST_SUITE='--tests=test000.sh'",
+        './go.sh --sm_unit_test_dir=/drone/src/storage-manager $TEST_SUITE',
         'cat go.log',
         'mv testErrorLogs.tgz result/ || true',
       ],
@@ -166,7 +168,6 @@ local Pipeline(branch, platform) = {
     ],
     branch: [
       branch,
-      'drone-1.4',
     ],
   },
 };
