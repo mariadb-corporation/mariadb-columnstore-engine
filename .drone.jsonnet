@@ -120,6 +120,7 @@ local Pipeline(branch, platform) = {
         'yum install -y lz4 wget git',
         rpm_run_deps,
         "sed -i '/OmitLocalLogging/d' /etc/rsyslog.conf",
+        "rm -f /etc/rsyslog.d/listen.conf",
         'rsyslogd',
         'rpm -i result/*.rpm || true',
         'bash -o pipefail ./build/columnstore_startup.sh',
