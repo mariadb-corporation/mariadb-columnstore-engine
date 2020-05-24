@@ -48,6 +48,7 @@ local Pipeline(branch, platform, event='pull_request') = {
       commands: [
         'git submodule update --recursive --remote',
         'git config cmake.update-submodules no',
+        'ls -la /drone/src/storage-manager',
       ],
     },
     {
