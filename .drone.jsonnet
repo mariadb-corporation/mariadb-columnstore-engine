@@ -46,7 +46,7 @@ local Pipeline(branch, platform) = {
       name: 'submodules',
       image: 'alpine/git',
       commands: [
-        'false',
+        'true',
       ],
     },
     // {
