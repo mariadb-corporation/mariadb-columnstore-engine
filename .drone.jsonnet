@@ -111,8 +111,11 @@ local Pipeline(branch, platform) = {
         },
       },
     ],
-    when: {
-      status: [ "failure", "success" ]
+    trigger: {
+      status: [
+        "success",
+        "failure"
+      ],
     },
     depends_on: ["develop-1.4 centos:7", "develop-1.4 centos:8"],
   },
