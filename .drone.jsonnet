@@ -50,19 +50,29 @@ local Pipeline(branch, platform) = {
       ],
     },
     {
-      name: "slack",
-      image: "plugins/slack",
-      when: {
-        status: [ "success", "failure" ]
-      },
-      settings: {
-        webhook: {
-          "from_secret": "slack_webhook"
+      name: 'submodules',
+      image: 'curlimages/curl',
+      environment: {
+        SLACK_WEBHOOK: {
+          from_secret: "slack_webhook"
         },
-        channel: "drone_test",
-        template: "{{#success build.status}}\n  build {{build.number}} succeeded. Good job.\n{{else}}\n  build {{build.number}} failed. \n{{/success}}\n<https://cspkg.s3.amazonaws.com/index.html?prefix="+branch+"/{{build.number}}/tests_results|Check test results>"
-      }
-    }
+      },
+      commands: [
+        'curl -X POST -H "Content-type: application/json" --data "{
+            \\"attachments\\": [
+              {
+                \\"title\\": \\"build ${DRONE_BUILD_NUMBER} failed\\",
+                \\"title_link\\": \\"https://ci.columnstore.mariadb.net/mariadb-corporation/mariadb-columnstore-engine/${DRONE_BUILD_NUMBER}\\",
+                \\"text\\": \\"${DRONE_BUILD_EVENT} to branch ${DRONE_TARGET_BRANCH} by ${DRONE_COMMIT_AUTHOR} <https://cspkg.s3.amazonaws.com/index.html?prefix='+branch+'"/${DRONE_BUILD_NUMBER}/tests_results|commit>\\",
+                \\"color\\": \\"good\\"
+              }
+            ],
+        }"',
+      ],
+      when: {
+        status: [ "failure" ]
+      },
+    },
   ],
 
   volumes: [
