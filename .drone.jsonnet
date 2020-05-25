@@ -46,7 +46,7 @@ local Pipeline(branch, platform) = {
       name: 'submodules',
       image: 'alpine/git',
       commands: [
-        'true',
+        'false',
       ],
     },
     // {
@@ -111,6 +111,9 @@ local Pipeline(branch, platform) = {
         },
       },
     ],
+    when: {
+      status: [ "failure", "success" ]
+    },
     depends_on: ["develop-1.4 centos:7", "develop-1.4 centos:8"],
   },
   //  Pipeline("develop-1.4", "debian:9"),
