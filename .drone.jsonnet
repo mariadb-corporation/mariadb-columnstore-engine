@@ -82,7 +82,7 @@ local Pipeline(branch, platform) = {
             from_secret: "slack_webhook"
           },
           template: "{{build.event}} <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded.{{else}}failed.{{/success}} <https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}|build artifacts>
-<https://github.com/mariadb-corporation/mariadb-columnstore-engine/commit/{{build.commit}}|{{truncate build.sha 8}}> *{{build.message.title}}* by {{ build.author }}
+<https://github.com/mariadb-corporation/mariadb-columnstore-engine/commit/{{build.commit}}|{{truncate build.commit 8}}> *{{build.message.title}}* by {{ build.author }}
 
 repo.owner:
 {{ repo.owner}}
