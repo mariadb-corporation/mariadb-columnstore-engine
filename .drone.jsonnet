@@ -87,6 +87,7 @@ local Pipeline(branch, platform, event='pull_request') = {
             from_secret: "slack_webhook"
           },
           template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.
+*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/commtreeit/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
 *Author*: _{{ build.author }}_
 *Duration*: {{since build.started}}
