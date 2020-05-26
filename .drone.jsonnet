@@ -81,10 +81,11 @@ local Pipeline(branch, platform) = {
           webhook: {
             from_secret: "slack_webhook"
           },
-          template: "*{{build.event}} build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded.{{else}}failed.{{/success}}*
-<https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> `{{build.message.title}}` by **{{ build.author }}**.
-Build time is {{since build.started}}.
-<https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}|Build artifacts>
+          template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*
+*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> `{{build.message.title}}` by _{{ build.author }}_
+*Duration*: {{since build.started}}
+*Type*: {{build.event}}
+*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}
 
 *repo.owner:*
 `{{ repo.owner }}`
