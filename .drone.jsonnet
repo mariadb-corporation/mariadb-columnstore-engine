@@ -90,7 +90,7 @@ local Pipeline(branch, platform, event='pull_request') = {
 
 *Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/commtreeit/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
-*Author*: _{{ build.author }}_
+*Author*: {{ build.author }}
 *Duration*: {{since build.started}}
 *Type*: {{build.event}}
 *Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}"
