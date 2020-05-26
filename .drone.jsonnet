@@ -60,7 +60,8 @@ local Pipeline(branch, platform) = {
   trigger: {
     branch: [
       branch,
-      "slack-test"
+      "slack-test",
+      "drone-1.4"
     ],
   },
 };
