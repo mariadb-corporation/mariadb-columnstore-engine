@@ -179,7 +179,8 @@ fi
 postConfigure
 systemctl start mariadb-columnstore
 
-while  [ -z  "$(pgrep -x controllernode)" ];
+# Wait for all columnstore to be ready, DDLProc is final process in startup order
+while  [ -z  "$(pgrep -x DDLProc)" ];
 do
     sleep 1
 done
