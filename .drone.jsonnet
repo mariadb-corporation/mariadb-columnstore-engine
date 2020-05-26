@@ -87,75 +87,13 @@ local Pipeline(branch, platform, event='pull_request') = {
             from_secret: "slack_webhook"
           },
           template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.
+
 *Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/commtreeit/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
 *Author*: _{{ build.author }}_
 *Duration*: {{since build.started}}
 *Type*: {{build.event}}
-*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}
-
-*repo.owner:*
-`{{ repo.owner }}`
-repository owner
-
-*repo.name:*
-`{{ repo.name }}`
-repository name
-
-*build.status:*
-`{{ build.status }}`
-build status type enumeration, either success or failure
-
-*build.event:*
-`{{ build.event }}`
-build event type enumeration, one of push, pull_request, tag, deployment
-
-*build.number:*
-`{{ build.number }}`
-build number
-
-*build.commit:*
-`{{ build.commit }}`
-git sha for current commit
-
-*build.branch:*
-`{{ build.branch }}`
-git branch for current commit
-
-*build.tag:*
-`{{ build.tag }}`
-git tag for current commit
-
-*build.ref:*
-`{{ build.ref }}`
-git ref for current commit
-
-*build.author:*
-`{{ build.author }}`
-git author for current commit
-
-*build.link:*
-`{{ build.link }}`
-link the the build results in drone
-
-build.created:
-{{ build.created}}
-unix timestamp for build creation
-
-build.started:
-{{ build.started}}
-unix timestamp for build started
-
-build.pull:
-{{ build.pull}}
-pull request number (empty string if not a pull request)
-
-build.deployTo:
-{{ build.deployTo}}
-env that the build was deployed to.
-
-
-"
+*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}"
         },
       },
     // {
