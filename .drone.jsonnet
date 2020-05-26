@@ -82,7 +82,70 @@ local Pipeline(branch, platform) = {
             from_secret: "slack_webhook"
           },
           template: "{{build.event}} <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded.{{else}}failed.{{/success}} <https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}|build artifacts>
-<https://github.com/mariadb-corporation/mariadb-columnstore-engine/commit/{{build.commit}}|{{build.commit}}> *{{build.message.title}}* by {{ build.author }}"
+<https://github.com/mariadb-corporation/mariadb-columnstore-engine/commit/{{build.commit}}|{{truncate build.sha 8}}> *{{build.message.title}}* by {{ build.author }}
+
+repo.owner:
+{{ repo.owner}}
+repository owner
+
+repo.name:
+{{ repo.name}}
+repository name
+
+build.status:
+{{ build.status}}
+build status type enumeration, either success or failure
+
+build.event:
+{{ build.event}}
+build event type enumeration, one of push, pull_request, tag, deployment
+
+build.number:
+{{ build.number}}
+build number
+
+build.commit:
+{{ build.commit}}
+git sha for current commit
+
+build.branch:
+{{ build.branch}}
+git branch for current commit
+
+build.tag:
+{{ build.tag}}
+git tag for current commit
+
+build.ref:
+{{ build.ref}}
+git ref for current commit
+
+build.author:
+{{ build.author}}
+git author for current commit
+
+build.link:
+{{ build.link}}
+link the the build results in drone
+
+build.created:
+{{ build.created}}
+unix timestamp for build creation
+
+build.started:
+{{ build.started}}
+unix timestamp for build started
+
+build.pull:
+{{ build.pull}}
+pull request number (empty string if not a pull request)
+
+build.deployTo:
+{{ build.deployTo}}
+env that the build was deployed to.
+
+
+"
         },
       },
     // {
