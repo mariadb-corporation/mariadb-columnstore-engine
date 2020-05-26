@@ -88,7 +88,7 @@ local Pipeline(branch, platform, event='pull_request') = {
           },
           template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.
 
-*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/commtreeit/{{build.branch}}|{{build.branch}}>
+*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
 *Author*: {{ build.author }}
 *Duration*: {{since build.started}}
