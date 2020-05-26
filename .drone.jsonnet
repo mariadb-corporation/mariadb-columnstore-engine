@@ -81,6 +81,10 @@ local Pipeline(branch, platform) = {
           webhook: {
             from_secret: "slack_webhook"
           },
+          template: "
+            {{build.message.title}}
+            Build <{{build.link}}|{{build.number}}>{{#success build.status}}succeeded.{{else}}failed.{{/success}}
+          "
         },
       },
     {
