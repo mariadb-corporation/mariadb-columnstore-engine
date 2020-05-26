@@ -1024,9 +1024,13 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         errno = ENOENT;
         return -1;
     }
-    
     if (bf::exists(metaFile2))
+    {
+        cout << "copyFile: deleting previous version of " << metaFile2 << endl;
         deleteMetaFile(metaFile2);
+        ++filesDeleted;
+    }
+    
     // since we don't implement mkdir(), assume the caller did that and
     // create any necessary parent dirs for filename2
     try
@@ -1051,6 +1055,7 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     
     if (meta2.exists()) 
     {
+        cout << "copyFile: this shouldn't happen" << endl;
         meta2.removeAllEntries();
         ++filesDeleted;
     }
@@ -1061,12 +1066,13 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         for (const auto &object : objects)
         {
             bf::path journalFile = journalPath/firstDir1/(object.key + ".journal");
-            // XXXPAT: There is a risk from using the length in the key here.  If SM got killed
-            // in the middle of a write, it will have the _intended_ length of the object, not the 
-            // actual length.
-            // see MCOL-3459
-            metadataObject newObj = meta2.addMetadataObject(filename2, MetadataFile::getLengthFromKey(object.key));
-            assert(newObj.offset == object.offset);
+            
+            // originalLength = the length of the object before journal entries.
+            // the length in the metadata is the length after journal entries
+            size_t originalLength = MetadataFile::getLengthFromKey(object.key);
+            metadataObject newObj = meta2.addMetadataObject(filename2, originalLength);
+            if (originalLength != object.length)
+                meta2.updateEntryLength(newObj.offset, object.length);
             err = cs->copyObject(object.key, newObj.key);
             if (err)
             {
