@@ -84,48 +84,48 @@ local Pipeline(branch, platform) = {
           template: "{{build.event}} <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded.{{else}}failed.{{/success}} <https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}|build artifacts>
 <https://github.com/mariadb-corporation/mariadb-columnstore-engine/commit/{{build.commit}}|{{truncate build.commit 8}}> *{{build.message.title}}* by {{ build.author }}
 
-repo.owner:
-{{ repo.owner}}
+*repo.owner:*
+`{{ repo.owner }}`
 repository owner
 
-repo.name:
-{{ repo.name}}
+*repo.name:*
+`{{ repo.name }}`
 repository name
 
-build.status:
-{{ build.status}}
+*build.status:*
+`{{ build.status }}`
 build status type enumeration, either success or failure
 
-build.event:
-{{ build.event}}
+*build.event:*
+`{{ build.event }}`
 build event type enumeration, one of push, pull_request, tag, deployment
 
-build.number:
-{{ build.number}}
+*build.number:*
+`{{ build.number }}`
 build number
 
-build.commit:
-{{ build.commit}}
+*build.commit:*
+`{{ build.commit }}`
 git sha for current commit
 
-build.branch:
-{{ build.branch}}
+*build.branch:*
+`{{ build.branch }}`
 git branch for current commit
 
-build.tag:
-{{ build.tag}}
+*build.tag:*
+`{{ build.tag }}`
 git tag for current commit
 
-build.ref:
-{{ build.ref}}
+*build.ref:*
+`{{ build.ref }}`
 git ref for current commit
 
-build.author:
-{{ build.author}}
+*build.author:*
+`{{ build.author }}`
 git author for current commit
 
-build.link:
-{{ build.link}}
+*build.link:*
+`{{ build.link }}`
 link the the build results in drone
 
 build.created:
