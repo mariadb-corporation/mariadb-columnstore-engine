@@ -86,13 +86,12 @@ local Pipeline(branch, platform, event='pull_request') = {
           webhook: {
             from_secret: "slack_webhook"
           },
-          template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.
+          template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}* _by {{ build.author }}_
 
 *Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
-*Author*: {{ build.author }}
 *Duration*: {{since build.started}}
-*Type*: {{build.event}}
+*Type*: {{#pull_request build.event}}Pull Request{{/success}}{{#cron build.event}}Cron{{/success}}
 *Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}"
         },
       },
