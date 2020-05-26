@@ -91,7 +91,7 @@ local Pipeline(branch, platform, event='pull_request') = {
 *Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{truncate build.message.title 100 }} (by {{ build.author }})
 *Duration*: {{since build.started}}
-*Type*: {{#pull_request build.event}}<https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.pull}}|Pull Request #{{build.pull}}>{{/pull_request}}{{#cron build.event}}Cron{{/cron}}
+*Type*: {{build.event}} Pull Request {{#pull_request build.event}}<https://github.com/{{repo.owner}}/{{repo.name}}/pull/{{build.pull}}| #{{build.pull}}>{{else}}{{/pull_request}}
 *Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}"
         },
       },
