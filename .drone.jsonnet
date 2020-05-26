@@ -86,7 +86,7 @@ local Pipeline(branch, platform, event='pull_request') = {
           webhook: {
             from_secret: "slack_webhook"
           },
-          template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*
+          template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.
 *Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}}
 *Author*: _{{ build.author }}_
 *Duration*: {{since build.started}}
@@ -188,10 +188,8 @@ env that the build was deployed to.
         "failure"
       ],
     },
-    depends_on: ["develop-1.4 centos:7", "develop-1.4 centos:8"],
+    depends_on: ["develop-1.4 centos:7pull_request", "develop-1.4 centos:8pull_request"],
   },
-   Pipeline("develop-1.4", "debian:7"),
-   Pipeline("develop-1.4", "debian:8"),
   //  Pipeline("develop-1.4", "debian:9"),
   //  Pipeline("develop-1.4", "debian:10"),
   //  Pipeline("develop-1.4", "ubuntu:16.04"),
