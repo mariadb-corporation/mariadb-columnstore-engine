@@ -1,9 +1,9 @@
 local codebase_map = {
-  //  "develop" : "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
+  //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
   develop: 'git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .',
   // 'develop-1.4': 'git clone --recurse-submodules --branch 10.4.12-6 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
-  //  "develop-1.4" : "git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
-  "develop-1.4" : "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
+  'develop-1.4': 'git clone --recurse-submodules --branch 10.4e-update-cs-ref --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
+  // "develop-1.4": "git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .",
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -11,13 +11,13 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN
 
 local rpm_build_deps = 'yum install -y git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel';
 
-local rpm_run_deps = 'yum install -y net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time';
+local rpm_run_deps = 'yum install -y rsyslog net-tools sysvinit-tools perl-DBI libaio snappy expect rsync lsof iproute iproute boost-chrono boost-date boost-filesystem boost-thread boost-regex boost-date-time';
 
 local deb_build_deps = 'apt update && apt install --yes --no-install-recommends git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    'develop': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -34,10 +34,10 @@ local platformMap(branch, platform) =
 
   platform_map[platform];
 
-local Pipeline(branch, platform) = {
+local Pipeline(branch, platform, event='pull_request') = {
   kind: 'pipeline',
   type: 'docker',
-  name: branch + ' ' + platform,
+  name: branch + ' ' + platform + event,
   clone: {
     depth: 10,
   },
@@ -58,16 +58,20 @@ local Pipeline(branch, platform) = {
     },
   ],
   trigger: {
+    event: [
+      event,
+    ],
     branch: [
       branch,
       "slack-test",
       "drone-1.4"
     ],
-  },
+  } + (if event == 'cron' then {
+    cron: ['nightly-'+ std.strReplace(branch, '.', '-')]
+  } else {})
 };
 
 [
-  //  Pipeline("develop-1.4", "opensuse/leap:15"),
   Pipeline('develop-1.4', 'centos:7'),
   Pipeline("develop-1.4", "centos:8"),
   {
@@ -83,7 +87,8 @@ local Pipeline(branch, platform) = {
             from_secret: "slack_webhook"
           },
           template: "*Build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*
-*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> `{{build.message.title}}` by _{{ build.author }}_
+*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{build.message.title}} 
+*Author*: _{{ build.author }}_
 *Duration*: {{since build.started}}
 *Type*: {{build.event}}
 *Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}
@@ -190,6 +195,7 @@ env that the build was deployed to.
   //  Pipeline("develop-1.4", "ubuntu:16.04"),
   //  Pipeline("develop-1.4", "ubuntu:18.04"),
   //  Pipeline("develop-1.4", "ubuntu:20.04"),
+  //  Pipeline("develop-1.4", "opensuse/leap:15"),
 
   //  Pipeline("develop", "opensuse/leap:15"),
   // Pipeline('develop', 'centos:7'),
@@ -199,4 +205,5 @@ env that the build was deployed to.
   // //  Pipeline("develop", "ubuntu:16.04"),
   // Pipeline('develop', 'ubuntu:18.04'),
   // Pipeline('develop', 'ubuntu:20.04'),
+
 ]
