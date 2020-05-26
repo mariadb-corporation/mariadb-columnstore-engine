@@ -87,30 +87,30 @@ local Pipeline(branch, platform) = {
           "
         },
       },
-    {
-      name: 'submodules',
-      image: 'curlimages/curl',
-      environment: {
-        SLACK_WEBHOOK: {
-          from_secret: "slack_webhook"
-        },
-      },
-      commands: [
-        'curl -X POST -H "Content-type: application/json" --data "{
-            \\"attachments\\": [
-              {
-                \\"title\\": \\"build ${DRONE_BUILD_NUMBER} failed\\",
-                \\"title_link\\": \\"https://ci.columnstore.mariadb.net/mariadb-corporation/mariadb-columnstore-engine/${DRONE_BUILD_NUMBER}\\",
-                \\"text\\": \\"${DRONE_BUILD_EVENT} to branch ${DRONE_TARGET_BRANCH} by ${DRONE_COMMIT_AUTHOR} <https://cspkg.s3.amazonaws.com/index.html?prefix=${DRONE_TARGET_BRANCH}"/${DRONE_BUILD_NUMBER}/tests_results|commit>\\",
-                \\"color\\": \\"good\\"
-              }
-            ],
-        }"',
-      ],
-      when: {
-        status: [ "failure" ]
-      },
-    },
+    // {
+    //   name: 'submodules',
+    //   image: 'curlimages/curl',
+    //   environment: {
+    //     SLACK_WEBHOOK: {
+    //       from_secret: "slack_webhook"
+    //     },
+    //   },
+    //   commands: [
+    //     'curl -X POST -H "Content-type: application/json" --data "{
+    //         \\"attachments\\": [
+    //           {
+    //             \\"title\\": \\"build ${DRONE_BUILD_NUMBER} failed\\",
+    //             \\"title_link\\": \\"https://ci.columnstore.mariadb.net/mariadb-corporation/mariadb-columnstore-engine/${DRONE_BUILD_NUMBER}\\",
+    //             \\"text\\": \\"${DRONE_BUILD_EVENT} to branch ${DRONE_TARGET_BRANCH} by ${DRONE_COMMIT_AUTHOR} <https://cspkg.s3.amazonaws.com/index.html?prefix=${DRONE_TARGET_BRANCH}"/${DRONE_BUILD_NUMBER}/tests_results|commit>\\",
+    //             \\"color\\": \\"good\\"
+    //           }
+    //         ],
+    //     }" $SLACK_WEBHOOK',
+    //   ],
+    //   when: {
+    //     status: [ "failure" ]
+    //   },
+    // },
     ],
     trigger: {
       status: [
