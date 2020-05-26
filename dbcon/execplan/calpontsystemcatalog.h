@@ -48,6 +48,11 @@
 #undef min
 #undef max
 
+// Because including my_sys.h in a Columnstore header causes too many conflicts
+struct charset_info_st;
+typedef const struct charset_info_st CHARSET_INFO;
+
+
 #ifdef _MSC_VER
 #define __attribute__(x)
 #endif
@@ -293,9 +298,11 @@ public:
         bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
         uint64_t nextvalue; //next autoincrement value
         uint32_t charsetNumber;
+        const CHARSET_INFO* cs;
 
         ColType(const ColType& rhs);
 
+        CHARSET_INFO* getCharset();
         // for F&E use. only serialize necessary info for now
         void serialize (messageqcpp::ByteStream& b) const
         {

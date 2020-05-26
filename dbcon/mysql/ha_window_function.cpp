@@ -405,6 +405,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
             colType.dataType = resultType.colDataType;
             colType.precision = resultType.precision;
             colType.scale = resultType.scale;
+            colType.charsetNumber = resultType.charsetNumber;
             colTypes[i] = colType;
         }
 

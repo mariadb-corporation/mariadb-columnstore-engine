@@ -397,8 +397,8 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-        if (dynamic_cast<PseudoColumn*>(sc) == NULL)
-            ct = jobInfo.csc->colType(sc->oid());
+//        if (dynamic_cast<PseudoColumn*>(sc) == NULL)
+//            ct = jobInfo.csc->colType(sc->oid());
 
 //X
         if (ct.scale == 0)       // keep passed original ct for decimal type

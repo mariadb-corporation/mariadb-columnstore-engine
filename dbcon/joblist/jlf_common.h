@@ -74,8 +74,8 @@ const int32_t CNX_EXP_TABLE_ID = 999;
 struct TupleInfo
 {
     TupleInfo(uint32_t w = 0, uint32_t o = 0, uint32_t k = -1, uint32_t t = -1, uint32_t s = 0, uint32_t p = 0,
-              execplan::CalpontSystemCatalog::ColDataType dt = execplan::CalpontSystemCatalog::BIT) :
-        width(w), oid(o), key(k), tkey(t), scale(s), precision(p), dtype(dt) { }
+              execplan::CalpontSystemCatalog::ColDataType dt = execplan::CalpontSystemCatalog::BIT, uint32_t csn = 8) :
+        width(w), oid(o), key(k), tkey(t), scale(s), precision(p), dtype(dt), csNum(csn) { }
     ~TupleInfo() { }
 
     uint32_t width;
@@ -85,6 +85,7 @@ struct TupleInfo
     uint32_t scale;
     uint32_t precision;
     execplan::CalpontSystemCatalog::ColDataType dtype;
+    uint32_t csNum; // For collations
 };
 
 // for compound join

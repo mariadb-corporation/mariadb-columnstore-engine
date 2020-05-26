@@ -20,6 +20,10 @@
 *
 *
 ****************************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+#include <m_ctype.h>
 
 #include <string>
 using namespace std;
@@ -55,31 +59,22 @@ CalpontSystemCatalog::ColType Func_ucase::operationType(FunctionParm& fp, Calpon
 std::string Func_ucase::getStrVal(rowgroup::Row& row,
                                   FunctionParm& fp,
                                   bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType&)
+                                  execplan::CalpontSystemCatalog::ColType& colType)
 {
-//	string str = fp[0]->data()->getStrVal(row, isNull);
-
-//	transform (str.begin(), str.end(), str.begin(), to_lower());
-
     const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
     if (isNull)
         return "";
 
-    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-    wchar_t* wcbuf = new wchar_t[strwclen];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-    wstring wstr(wcbuf, strwclen);
+    CHARSET_INFO* cs = colType.getCharset();
+    uint64_t inLen = tstr.length();
+    uint64_t bufLen= inLen * cs->caseup_multiply;
+    char* outBuf = new char[bufLen];
+    
+    uint64_t outLen = cs->caseup(tstr.c_str(), inLen, outBuf, bufLen);
 
-    for (uint32_t i = 0; i < strwclen; i++)
-        wstr[i] = std::towupper(wstr[i]);
-
-    size_t strmblen = utf8::idb_wcstombs(0, wstr.c_str(), 0) + 1;
-    char* outbuf = new char[strmblen];
-    strmblen = utf8::idb_wcstombs(outbuf, wstr.c_str(), strmblen);
-    std::string ret(outbuf, strmblen);
-    delete [] outbuf;
-    delete [] wcbuf;
+    string ret = string(outBuf, outLen);
+    delete [] outBuf;
     return ret;
 }
 

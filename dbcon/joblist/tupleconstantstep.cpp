@@ -108,6 +108,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
     vector<uint32_t> scale, scaleIn = fRowGroupIn.getScale();
     vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
     vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
+    vector<uint32_t> csNums, csNumsIn = fRowGroupIn.getCharsetNumbers();
     vector<uint32_t> pos;
     pos.push_back(2);
 
@@ -120,6 +121,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
         scaleIn = fRowGroupIn.getScale();
         precisionIn = fRowGroupIn.getPrecision();
         typesIn = fRowGroupIn.getColTypes();
+        csNumsIn = fRowGroupIn.getCharsetNumbers();
     }
 
     for (uint64_t i = 0, j = 0; i < jobInfo.deliveredCols.size(); i++)
@@ -145,6 +147,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
             scale.push_back(ct.scale);
             precision.push_back(ct.precision);
             types.push_back(ct.colDataType);
+            csNums.push_back(ct.charsetNumber);
             pos.push_back(pos.back() + ct.colWidth);
 
             fIndexConst.push_back(i);
@@ -164,6 +167,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
             scale.push_back(scaleIn[j]);
             precision.push_back(precisionIn[j]);
             types.push_back(typesIn[j]);
+            csNums.push_back(csNumsIn[j]);
             pos.push_back(pos.back() + fRowGroupIn.getColumnWidth(j));
             j++;
 
@@ -171,7 +175,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
         }
     }
 
-    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, scale, precision,
+    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
                             jobInfo.stringTableThreshold);
     fRowGroupOut.initRow(&fRowOut);
     fRowGroupOut.initRow(&fRowConst, true);
@@ -644,6 +648,7 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> csNums;
     vector<uint32_t> pos;
     pos.push_back(2);
 
@@ -673,12 +678,13 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
         scale.push_back(ct.scale);
         precision.push_back(ct.precision);
         types.push_back(ct.colDataType);
+        csNums.push_back(ct.charsetNumber);
         pos.push_back(pos.back() + ct.colWidth);
 
         fIndexConst.push_back(i);
     }
 
-    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, scale, precision, jobInfo.stringTableThreshold, false);
+    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold, false);
     fRowGroupOut.initRow(&fRowOut);
     fRowGroupOut.initRow(&fRowConst, true);
 

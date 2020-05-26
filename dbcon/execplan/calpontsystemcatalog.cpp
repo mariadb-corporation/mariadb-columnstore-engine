@@ -6099,7 +6099,8 @@ CalpontSystemCatalog::ColType::ColType() :
     compressionType(NO_COMPRESSION), 
     columnOID(0),
     autoincrement(0), 
-    nextvalue(0)
+    nextvalue(0),
+    cs(NULL)
 {
     charsetNumber = default_charset_info->number;
 }
@@ -6118,10 +6119,16 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
     nextvalue = rhs.nextvalue;
-    charsetNumber = default_charset_info->number;
-    charsetNumber = default_charset_info->number;
+    charsetNumber = rhs.charsetNumber;
+    cs = rhs.cs;
 }
 
+CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
+{
+    if (!cs)
+        cs= get_charset(charsetNumber, MYF(MY_WME));
+    return cs;
+}
 
 const string CalpontSystemCatalog::ColType::toString() const
 {

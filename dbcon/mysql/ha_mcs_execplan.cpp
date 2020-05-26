@@ -2955,6 +2955,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     sc->viewName(lower(tan.view));
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
+    sc->charsetNumber(3000);
     return sc;
 }
 
@@ -3118,7 +3119,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
                     << item->result_type() << endl );
             break;
     }
-
+    ct.charsetNumber = item->collation.collation->number;
     return ct;
 }
 
@@ -5013,6 +5014,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     colType.dataType = resultType.colDataType;
                     colType.precision = resultType.precision;
                     colType.scale = resultType.scale;
+                    colType.charsetNumber = resultType.charsetNumber;
                     colTypes[i] = colType;
                 }
 

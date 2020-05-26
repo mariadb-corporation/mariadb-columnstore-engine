@@ -1092,7 +1092,17 @@ int main(int argc, char** argv)
     setupSignalHandlers();
 
     // Set locale language
-    utf8::idb_setlocale();
+    const char* pLoc = setlocale(LC_ALL, "");
+    if (pLoc)
+    {
+        // Log one line
+        cout << "Locale = " << pLoc;
+    }
+    else
+    {
+        cout << "Failed to set locale ";
+    }
+    setlocale(LC_NUMERIC, "C");
 
     // Initialize singleton instance of syslogging
     if (argc > 0)

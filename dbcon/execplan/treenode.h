@@ -336,7 +336,7 @@ public:
         fRefCount = refCount;
     }
 
-    // the inc and dec functions are used by connector single thread.
+    // the inc and dec functions areparm[n]->data() used by connector single thread.
     virtual void decRefCount()
     {
         fRefCount--;
@@ -458,6 +458,7 @@ public:
     void charsetNumber(uint32_t cnum)
     {
         fResultType.charsetNumber = cnum;
+        fOperationType.charsetNumber = cnum;
     }
 
 protected:

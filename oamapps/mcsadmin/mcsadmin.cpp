@@ -185,6 +185,7 @@ int main(int argc, char* argv[])
     setuid(0); // set effective ID to root; ignore return status
 #endif
     setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
 
     Oam oam;
     char* pcommand = 0;

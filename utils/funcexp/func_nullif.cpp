@@ -22,6 +22,11 @@
 *
 ****************************************************************************/
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#undef LONGLONG_MIN
+#include <my_sys.h>
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -363,6 +368,7 @@ string Func_nullif::getStrVal(rowgroup::Row& row,
                               CalpontSystemCatalog::ColType& op_ct)
 {
     string exp1 = parm[0]->data()->getStrVal(row, isNull);
+    CHARSET_INFO* cs = parm[0]->data()->resultType().getCharset();
 
     if (isNull)
     {
@@ -395,7 +401,7 @@ string Func_nullif::getStrVal(rowgroup::Row& row,
         exp2 = exp2 + " 00:00:00";
     }
 
-    if ( utf8::idb_strcoll(exp1.c_str(), exp2.c_str()) == 0 )
+    if (cs->strnncoll(exp1.c_str(), exp1.length(), exp2.c_str(), exp2.length()) == 0)
     {
         isNull = true;
         return "";

@@ -24,6 +24,10 @@
  * is the primary class.
  */
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <unistd.h>
 #include <sstream>
 #include <stdexcept>
@@ -384,36 +388,16 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
         fRow.setFloatField(val1, col);
 }
 
-
-
-#define STRCOLL_ENH__
-
 void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, int func)
 {
-    if (isNull(fRowGroupOut, fRow, col))
+    CHARSET_INFO* cs = fRowGroupIn.getCharset(col);
+    int tmp = cs->strnncoll(val1.c_str(), val1.length(), val2.c_str(), val2.length());
+
+    if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
+            (tmp > 0 && func == rowgroup::ROWAGG_MAX))
     {
         fRow.setStringField(val1, col);
     }
-
-#ifdef STRCOLL_ENH__
-    else
-    {
-        int tmp = utf8::idb_strcoll(val1.c_str(), val2.c_str());
-
-        if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
-                (tmp > 0 && func == rowgroup::ROWAGG_MAX))
-        {
-            fRow.setStringField(val1, col);
-        }
-    }
-
-#else
-    else if (minMax(val1, val2, func))
-    {
-        fRow.setStringField(val1, col);
-    }
-
-#endif
 }
 
 //------------------------------------------------------------------------------

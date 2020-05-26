@@ -50,6 +50,7 @@ int main(int argc, char** argv)
         std::cerr << " colxml: couldn't set uid " << std::endl;
     }
     setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings
 
     //Bug 6137

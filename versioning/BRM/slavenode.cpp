@@ -79,7 +79,8 @@ void reset(int sig)
 int main(int argc, char** argv)
 {
     // Set locale language
-    utf8::idb_setlocale();
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
 
     BRM::logInit ( BRM::SubSystemLogId_workerNode );
 

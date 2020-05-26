@@ -20,13 +20,17 @@
 *
 *
 ***********************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <unistd.h>
 #include <signal.h>
 #include <string>
 #include <set>
 #include <clocale>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+//#include "boost/filesystem/operations.hpp"
+//#include "boost/filesystem/path.hpp"
 #include "boost/progress.hpp"
 using namespace std;
 
@@ -83,8 +87,6 @@ using namespace joblist;
 
 #include "crashtrace.h"
 #include "installdir.h"
-
-namespace fs = boost::filesystem;
 
 threadpool::ThreadPool DMLServer::fDmlPackagepool(10, 0);
 
@@ -514,7 +516,10 @@ int main(int argc, char* argv[])
     BRM::DBRM dbrm;
     Oam oam;
     // Set locale language
-    utf8::idb_setlocale();
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DMLProc");

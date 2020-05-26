@@ -138,7 +138,7 @@ pDictionaryScan::pDictionaryScan(
     sendWaiting(false),
     ridCount(0),
     ridList(0),
-    colType(ct),
+    fColType(ct),
     pThread(0),
     cThread(0),
     fScanLbidReqLimit(jobInfo.rm->getJlScanLbidReqLimit()),
@@ -505,8 +505,8 @@ void pDictionaryScan::sendAPrimitiveMessage(
     hdr.COP2              = fCOP2;
     hdr.NVALS             = fFilterCount;
     hdr.Count             = msgLbidCount;
-    hdr.CompType          = colType.ddn.compressionType;
-    hdr.charsetNumber     = colType.charsetNumber;
+    hdr.CompType          = fColType.ddn.compressionType;
+    hdr.charsetNumber     = fColType.charsetNumber;
     idbassert(hdr.Count > 0);
 
     if (isEquality)

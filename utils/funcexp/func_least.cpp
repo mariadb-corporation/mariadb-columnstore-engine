@@ -22,6 +22,10 @@
 *
 ****************************************************************************/
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -127,17 +131,16 @@ std::string Func_least::getStrVal(rowgroup::Row& row,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     string leastStr = fp[0]->data()->getStrVal(row, isNull);
+    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
     for (uint32_t i = 1; i < fp.size(); i++)
     {
         const string& str1 = fp[i]->data()->getStrVal(row, isNull);
 
-        int tmp = utf8::idb_strcoll(leastStr.c_str(), str1.c_str());
-
-        if ( tmp > 0 )
-
-//		if ( leastStr > str1 )
+        if (cs->strnncoll(leastStr.c_str(), leastStr.length(), str1.c_str(), str1.length()) > 0)
+        {
             leastStr = str1;
+        }
     }
 
     return leastStr;

@@ -960,6 +960,11 @@ public:
     void appendFilter(const messageqcpp::ByteStream& filter, unsigned count);
 
     virtual void abort();
+    
+    const execplan::CalpontSystemCatalog::ColType& colType() const
+    {
+        return fColType;
+    }
 
 protected:
     void sendError(uint16_t error);
@@ -992,7 +997,7 @@ private:
     uint32_t fLogicalBlocksPerScan;
     DataList<ElementType>* ridList;
     messageqcpp::ByteStream fFilterString;
-    execplan::CalpontSystemCatalog::ColType colType;
+    execplan::CalpontSystemCatalog::ColType fColType;
     uint64_t pThread;  //producer thread. thread pool handle
     uint64_t cThread;  //consumer thread. thread pool handle
     DataList_t* requestList;

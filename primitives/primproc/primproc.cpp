@@ -21,7 +21,9 @@
  *
  *
  ***********************************************************************/
-
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
 
 #include <unistd.h>
 #include <string>
@@ -315,6 +317,12 @@ int main(int argc, char* argv[])
 {
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("PrimProc");
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
 
     int gDebug = 0;
     int c;

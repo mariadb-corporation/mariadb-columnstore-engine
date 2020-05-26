@@ -49,7 +49,7 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_char_length::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-    return resultType;
+    return fp[0]->data()->resultType();
 }
 
 int64_t Func_char_length::getIntVal(rowgroup::Row& row,
@@ -86,8 +86,7 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
                 return 0;
             const char* b = tstr.c_str();
             const char* e = tstr.c_str() + tstr.length();
-            const CHARSET_INFO* cs = get_charset(parm[0]->data()->resultType().charsetNumber, MYF(MY_WME));
-            return (int64_t)cs->numchars(b, e);
+            return (int64_t)parm[0]->data()->resultType().getCharset()->numchars(b, e);
         }
 
         case execplan::CalpontSystemCatalog::DATE:

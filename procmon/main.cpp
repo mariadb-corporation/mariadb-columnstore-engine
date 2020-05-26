@@ -178,7 +178,8 @@ int main(int argc, char** argv)
         USER = p;
 
     // Set locale language
-    utf8::idb_setlocale();
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
 
     //get tmp log directory
     tmpLogDir = startup::StartUp::tmpDir();

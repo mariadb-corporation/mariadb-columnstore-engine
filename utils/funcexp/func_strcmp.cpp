@@ -21,6 +21,10 @@
 *
 ****************************************************************************/
 
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -38,6 +42,10 @@ using namespace joblist;
 
 #include "utils_utf8.h"
 using namespace funcexp;
+
+// Because including my_sys.h in a Columnstore header causes too many conflicts
+struct charset_info_st;
+typedef const struct charset_info_st CHARSET_INFO;
 
 class to_lower
 {
@@ -64,10 +72,11 @@ int64_t Func_strcmp::getIntVal(rowgroup::Row& row,
                                bool& isNull,
                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
+    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
     const string& str = fp[0]->data()->getStrVal(row, isNull);
-
     const string& str1 = fp[1]->data()->getStrVal(row, isNull);
-    int ret = utf8::idb_strcoll(str.c_str(), str1.c_str());
+
+    int ret = cs->strnncoll(str.c_str(), str.length(), str1.c_str(), str1.length());
     // mysql's strcmp returns only -1, 0, and 1
     return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
 }

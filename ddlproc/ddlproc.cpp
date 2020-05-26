@@ -18,6 +18,10 @@
 
 /******************************************************************************************
 ******************************************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+
 #include <string>
 #include <unistd.h>
 #include <signal.h>
@@ -39,8 +43,8 @@ using namespace oam;
 #include "distributedenginecomm.h"
 using namespace joblist;
 
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+//#include "boost/filesystem/operations.hpp"
+//#include "boost/filesystem/path.hpp"
 #include "boost/progress.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
@@ -63,9 +67,6 @@ using namespace execplan;
 
 #include "crashtrace.h"
 #include "installdir.h"
-
-
-namespace fs = boost::filesystem;
 
 namespace
 {
@@ -98,8 +99,10 @@ void added_a_pm(int)
 int main(int argc, char* argv[])
 {
     // Set locale language
-    utf8::idb_setlocale();
-
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DDLProc");
 

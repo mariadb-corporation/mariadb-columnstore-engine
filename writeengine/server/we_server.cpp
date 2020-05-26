@@ -19,6 +19,9 @@
 * $Id: we_server.cpp 4700 2013-07-08 16:43:49Z bpaul $
 *
 *******************************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
 
 #include <unistd.h>
 #include <iostream>
@@ -102,7 +105,10 @@ int setupResources()
 int main(int argc, char** argv)
 {
     // Set locale language
-    utf8::idb_setlocale();
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("WriteEngineServ");
@@ -135,8 +141,7 @@ int main(int argc, char** argv)
         {
         }
     }
-    //BUG 2991
-    setlocale(LC_NUMERIC, "C");
+
 #ifndef _MSC_VER
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));

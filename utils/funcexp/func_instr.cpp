@@ -20,6 +20,10 @@
 *
 *
 ****************************************************************************/
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+#include <m_ctype.h>
 
 #include <cstdlib>
 #include <string>
@@ -42,37 +46,50 @@ CalpontSystemCatalog::ColType Func_instr::operationType( FunctionParm& fp, Calpo
     return ct;
 }
 
-size_t Func_instr::in_str(const string& str, const string& substr, size_t start)
-{
-    // convert both inputs to wide character strings
-    std::wstring wcstr = utf8::utf8_to_wstring(str);
-    std::wstring wcsubstr = utf8::utf8_to_wstring(substr);
-
-    if ((str.length() && !wcstr.length()) ||
-            (substr.length() && !wcsubstr.length()))
-        // this means one or both of the strings had conversion errors to wide character
-        return 0;
-
-    size_t pos = wcstr.find(wcsubstr, start - 1);
-    return (pos != string::npos ? pos + 1 : 0);
-}
-
 int64_t Func_instr::getIntVal(rowgroup::Row& row,
                               FunctionParm& parm,
                               bool& isNull,
-                              CalpontSystemCatalog::ColType&)
+                              CalpontSystemCatalog::ColType& colType)
 {
-    uint64_t start = 1;
-
-    if (parm.size() == 3)
-        start = parm[2]->data()->getIntVal(row, isNull);
-
-    if (isNull || start == 0)
+    int64_t start = 0;
+    int64_t start0= 0;
+    my_match_t match;
+    
+    const std::string& str = parm[0]->data()->getStrVal(row, isNull);
+    if (isNull)
+        return 0;
+    const char* s1 = str.c_str();
+    uint32_t l1 = (uint32_t)str.length();
+    
+    const std::string& substr =parm[1]->data()->getStrVal(row, isNull);
+    if (isNull)
         return 0;
 
-    //Bug 5110 : to support utf8 char type, we have to convert and search
-    return in_str(parm[0]->data()->getStrVal(row, isNull), parm[1]->data()->getStrVal(row, isNull), start);
+    const char* s2 = substr.c_str();
+    uint32_t l2 = (uint32_t)substr.length();
+    if (l2 < 1)
+        return start + 1;
 
+    CHARSET_INFO* cs = colType.getCharset();
+    
+    if (parm.size() == 3)
+    {
+        start0 = start = parm[2]->data()->getIntVal(row, isNull) - 1;
+        
+        if ((start < 0) || (start > l1))
+          return 0;
+        
+        start = (int64_t)cs->charpos(s1, s1+l1, start); // adjust start for multi-byte
+
+        if (start + l2 > l1) // Substring is longer than str at pos.
+            return 0;
+    }
+    
+    if (!cs->instr(s1+start, l1-start,
+                   s2, l2,
+                   &match, 1))
+        return 0;
+    return (int64_t)match.mb_len + start0 + 1;
 }
 
 
