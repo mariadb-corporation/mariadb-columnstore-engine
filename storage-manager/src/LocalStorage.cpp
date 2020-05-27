@@ -104,8 +104,6 @@ int LocalStorage::copy(const bf::path &source, const bf::path &dest)
         ::unlink(dest.string().c_str());
         return -1;
     }
-    if (bf::file_size(source) != bf::file_size(dest))
-        logger->log(LOG_ERR, "LocalStorage::copy: partially copied a file somehow");
     return 0;
 }
 
@@ -244,8 +242,6 @@ int LocalStorage::copyObject(const string &source, const string &dest)
         size_t _size = bf::file_size(prefix/source);
         bytesRead += _size;
         bytesWritten += _size;
-        if (bf::file_size(prefix/source) != bf::file_size(prefix/dest))
-            logger->log(LOG_ERR, "LocalStorage::copyObject(): partially copied a file somehow");
     }
     return ret;
 }

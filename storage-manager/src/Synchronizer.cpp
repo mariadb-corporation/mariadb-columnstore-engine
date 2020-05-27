@@ -521,13 +521,6 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
     }
 
-    if (bf::file_size(objectPath) != MetadataFile::getLengthFromKey(cloudKey))
-    {
-        ostringstream oss;
-        oss << "Synchronizer::synchronize(): found a size mismatch in key = " << cloudKey <<
-            " real size = " << bf::file_size(objectPath);
-        logger->log(LOG_ERR, oss.str().c_str());
-    }
     err = cs->putObject(objectPath.string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
@@ -703,20 +696,6 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     // get a new key for the resolved version & upload it
     string newCloudKey = MetadataFile::getNewKeyFromOldKey(cloudKey, size);
     string newKey = (prefix/newCloudKey).string();
-
-try {    
-    if (size != MetadataFile::getLengthFromKey(newCloudKey))
-    {
-        ostringstream oss;
-        oss << "SyncWithJournal: detected the file size mismatch on the merged object somehow. " <<
-            "key = " << newCloudKey << "real size = " << bf::file_size(prefix/newCloudKey);
-        logger->log(LOG_ERR, oss.str().c_str());
-    }
-} catch(exception &e)
-{
-    logger->log(LOG_ERR, "DEB4");
-}    
-
     err = cs->putObject(data, size, newCloudKey);
     if (err)
     {

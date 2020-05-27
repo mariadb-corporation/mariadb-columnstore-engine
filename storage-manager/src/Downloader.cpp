@@ -18,7 +18,6 @@
 #include "Downloader.h"
 #include "Config.h"
 #include "SMLogging.h"
-#include "MetadataFile.h"
 #include <string>
 #include <errno.h>
 #include <iostream>
@@ -166,13 +165,6 @@ void Downloader::Download::operator()()
         dl_errno = errno;
         bf::remove(tmpFile);
         size = 0;
-    }
-    if (size != MetadataFile::getLengthFromKey(key))
-    {
-        ostringstream oss;
-        SMLogging *logr = SMLogging::get();
-        oss << "Downloader: got a file with a bad length field.  key = " << key << " actual size = " << size;
-        logr->log(LOG_ERR, oss.str().c_str());
     }
     
     // move it to its proper place

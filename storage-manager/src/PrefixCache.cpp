@@ -133,8 +133,6 @@ void PrefixCache::populate()
     bf::directory_iterator dir(cachePrefix);
     bf::directory_iterator dend;
     vector<string> newObjects;
-    lru.clear();
-    m_lru.clear();
     while (dir != dend)
     {
         // put everything in lru & m_lru
@@ -382,8 +380,7 @@ void PrefixCache::newJournalEntry(size_t size)
 void PrefixCache::deletedJournal(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    
-    //assert(currentCacheSize >= size);
+
     if (currentCacheSize >= size)
         currentCacheSize -= size;
     else
@@ -398,8 +395,7 @@ void PrefixCache::deletedJournal(size_t size)
 void PrefixCache::deletedObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    
-    //assert(currentCacheSize >= size);
+
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());
     
