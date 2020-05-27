@@ -250,14 +250,12 @@ void mysqlSetup()
 {
     Oam oam;
     string cmd;
-
-	string tmpDir = startup::StartUp::tmpDir();
-
+    string tmpDir = startup::StartUp::tmpDir();
     string mysqlpw = oam.getMySQLPassword();
-
-	string passwordOption = "";
-	if ( mysqlpw != oam::UnassignedName )
-		passwordOption = " --password=" + mysqlpw;
+    string passwordOption = "";
+    
+    if ( mysqlpw != oam::UnassignedName )
+        passwordOption = " --password=" + mysqlpw;
 
     cmd = "post-mysqld-install " + passwordOption + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
     int rtnCode = system(cmd.c_str());

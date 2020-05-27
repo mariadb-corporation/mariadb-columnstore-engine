@@ -17,7 +17,7 @@ for arg in "$@"; do
 done
 
 # DELETE libcalmysql.so entries first as they are in ha_columnstore.so in 1.4.2 onwards
-mysql --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
+su -s /bin/sh -c 'mysql'  mysql 2> ${tmpdir}/mysql_install.log <<EOD
 DELETE FROM mysql.func WHERE dl='libcalmysql.so';
 INSERT INTO mysql.func VALUES ('calgetstats',0,'ha_columnstore.so','function');
 INSERT INTO mysql.func VALUES ('calsettrace',2,'ha_columnstore.so','function');
@@ -110,9 +110,10 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-mysql --user=root  mysql 2>/dev/null <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql
-mysql --user=root  mysql 2>/dev/null <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql
-mysql --user=root  mysql 2>/dev/null <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql
-mysql --user=root  mysql 2>/dev/null <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql
-mysql --user=root  mysql 2>/dev/null <@ENGINE_SUPPORTDIR@/columnstore_info.sql
+su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql' mysql 2>/dev/null
+su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql' mysql 2>/dev/null
+su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql' mysql 2>/dev/null
+su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql' mysql 2>/dev/null
+su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/columnstore_info.sql' mysql 2>/dev/null
+
 
