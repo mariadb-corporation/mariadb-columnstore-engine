@@ -350,6 +350,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 		{
 			mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Truncate to previous EOF failed! (%s)",
 			    strerror_r(errno, errbuf, 80));
+            errno = l_errno;
             if (err < 0)
                 return err;
             else 
