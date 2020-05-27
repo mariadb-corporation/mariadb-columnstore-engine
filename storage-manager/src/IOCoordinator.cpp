@@ -671,7 +671,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             {
                 ostringstream oss;
                 char buf[80];
-                oss << "IOCoordinator::write(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
+                oss << "IOCoordinator::append(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
                     (cachePath/firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
                 logger->log(LOG_ERR, oss.str().c_str());
                 newObject.key = oldKey;
