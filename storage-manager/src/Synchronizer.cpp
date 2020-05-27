@@ -474,11 +474,26 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     char buf[80];
     bool exists = false;
     int err;
+    bf::path objectPath = cachePath/key;
     MetadataFile md(sourceFile, MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
         logger->log(LOG_DEBUG, "synchronize(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
+        try 
+        {
+            if (!bf::exists(objectPath))
+                return;
+            size_t size = bf::file_size(objectPath);
+            replicator->remove(objectPath);
+            cache->deletedObject(prefix, cloudKey, size);
+            cs->deleteObject(cloudKey);
+        }
+        catch (exception &e)
+        {
+            logger->log(LOG_DEBUG, "synchronize(): failed to remove orphaned object '%s' from the cache, got %s", 
+                objectPath.string().c_str(), e.what());
+        }
         return;
     }
     
@@ -506,14 +521,14 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
     }
 
-    if (bf::file_size(cachePath/key) != MetadataFile::getLengthFromKey(cloudKey))
+    if (bf::file_size(objectPath) != MetadataFile::getLengthFromKey(cloudKey))
     {
         ostringstream oss;
         oss << "Synchronizer::synchronize(): found a size mismatch in key = " << cloudKey <<
-            " real size = " << bf::file_size(cachePath/key);
+            " real size = " << bf::file_size(objectPath);
         logger->log(LOG_ERR, oss.str().c_str());
     }
-    err = cs->putObject((cachePath / key).string(), cloudKey);
+    err = cs->putObject(objectPath.string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
 
@@ -521,7 +536,7 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     bytesReadBySync += mdEntry.length;
     numBytesUploaded += mdEntry.length;
     ++objectsSyncedWithNoJournal;
-    replicator->remove((cachePath/key), Replicator::NO_LOCAL);
+    replicator->remove(objectPath, Replicator::NO_LOCAL);
 }
 
 void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::iterator &it)
@@ -546,6 +561,29 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     if (!md.exists())
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
+        try 
+        {
+            bf::path objectPath = cachePath/key;
+            if (bf::exists(objectPath))
+            {
+                size_t objSize = bf::file_size(objectPath);
+                replicator->remove(objectPath);
+                cache->deletedObject(prefix, cloudKey, objSize);
+                cs->deleteObject(cloudKey);
+            }
+            bf::path jPath = journalPath/(key + ".journal");
+            if (bf::exists(jPath))
+            {
+                size_t jSize = bf::file_size(jPath);
+                replicator->remove(jPath);
+                cache->deletedJournal(prefix, jSize);
+            }
+        }
+        catch(exception &e)
+        {
+            logger->log(LOG_DEBUG, "synchronizeWithJournal(): failed to remove orphaned object '%s' from the cache, got %s", 
+                (cachePath/key).string().c_str(), e.what());
+        }
         return;
     }
     
@@ -559,7 +597,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     //assert(key == mdEntry->key);   <--- I suspect this can happen in a truncate + write situation + a deep sync queue
     
     bf::path oldCachePath = cachePath / key;
-    string journalName = (journalPath/ (key + ".journal")).string();
+    string journalName = (journalPath/(key + ".journal")).string();
     
     if (!bf::exists(journalName))
     {

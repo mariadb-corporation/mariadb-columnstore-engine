@@ -355,7 +355,6 @@ void Cache::configListener()
         logger->log(LOG_CRIT, "Cache/cache_size is not a number. Using current value = %zi",maxCacheSize);
     }
 }
-
 }
 
 
