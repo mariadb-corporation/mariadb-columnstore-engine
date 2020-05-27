@@ -174,10 +174,8 @@ void setupSignalHandlers()
 int main(int argc, char* argv[])
 {
 
-    // print a warning if this is a developer build
-    if (getenv("SKIP_OAM_INIT"))
     {
-        cout << "SKIP_OAM_INIT is set" << endl;
+        cout << "SKIP_OAM_INIT is set and legacy OAM is disabled by default" << endl;
         sleep(2);
     }
 

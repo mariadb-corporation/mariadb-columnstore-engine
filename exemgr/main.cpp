@@ -1643,7 +1643,7 @@ int main(int argc, char* argv[])
         {
         }
     }
-    if (getenv("SKIP_OAM_INIT"))
+
     {
         BRM::DBRM *dbrm = new BRM::DBRM();
         dbrm->setSystemQueryReady(true);
