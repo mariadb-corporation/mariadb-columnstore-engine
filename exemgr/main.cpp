@@ -642,7 +642,11 @@ new_plan:
                     std::cout << "### For session id " << csep.sessionID() << ", got a CSEP" << std::endl;
 
                 setRMParms(csep.rmParms());
-
+                // Re-establish lost PP connections.
+                if (UNLIKELY(fEc->getNumConnections() != fEc->connectedPmServers()))
+                {
+                    fEc->Setup();
+                }
                 // @bug 1021. try to get schema cache for a come in query.
                 // skip system catalog queries.
                 if (!csep.isInternal())
