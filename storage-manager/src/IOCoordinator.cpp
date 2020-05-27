@@ -489,7 +489,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             l_errno = errno;
             logger->log(LOG_ERR,"IOCoordinator::write(): Failed newObject.");
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             errno = l_errno;
             if (count == 0)   // if no data has been written yet, it's safe to return -1 here.
                 return -1;
@@ -499,7 +499,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
         {
             // remove the object created above; can't have 0-length objects
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             goto out;
         }
         else if ((uint)err < writeLength)
@@ -531,14 +531,6 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
             goto out;
-        }
-        
-        if (bf::file_size(cachePath/firstDir/newObject.key) != MetadataFile::getLengthFromKey(newObject.key))
-        {
-            ostringstream oss;
-            oss << "IOCoordinator::write(): detected bad length field in " << newObject.key
-                << " real size = " << bf::file_size(cachePath/firstDir/newObject.key);
-            logger->log(LOG_ERR, oss.str().c_str());
         }
 
         cache->newObject(firstDir, newObject.key,writeLength + objectOffset);
@@ -649,7 +641,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             //log error and abort
             logger->log(LOG_ERR,"IOCoordinator::append(): Failed newObject.");
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             errno = l_errno;
             // if no data was written successfully yet, it's safe to return -1 here.
             if (count == 0)
@@ -659,7 +651,7 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         else if (err == 0)
         {
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             goto out;
         }
         
@@ -687,14 +679,6 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         
             metadata.updateEntry(newObject.offset, newObject.key, err);
         }
-        
-        if (bf::file_size(cachePath/firstDir/newObject.key) != MetadataFile::getLengthFromKey(newObject.key))
-        {
-            ostringstream oss;
-            oss << "IOCoordinator::write(): detected bad length field in " << newObject.key
-                << " real size = " << bf::file_size(cachePath/firstDir/newObject.key);
-            logger->log(LOG_ERR, oss.str().c_str());
-        }  
 
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
@@ -1026,7 +1010,6 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     }
     if (bf::exists(metaFile2))
     {
-        cout << "copyFile: deleting previous version of " << metaFile2 << endl;
         deleteMetaFile(metaFile2);
         ++filesDeleted;
     }
@@ -1055,7 +1038,6 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
     
     if (meta2.exists()) 
     {
-        cout << "copyFile: this shouldn't happen" << endl;
         meta2.removeAllEntries();
         ++filesDeleted;
     }
@@ -1085,23 +1067,6 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
                         throw CFException(ENOENT, string("IOCoordinator::copyFile(): source = ") + filename1 + 
                             ", dest = " + filename2 + ".  Object " + object.key + " does not exist in either "
                             "cloud storage or the cache!");
-
-                    if (bf::file_size(cachedObjPath) != MetadataFile::getLengthFromKey(object.key))
-                    {
-                        ostringstream oss;
-                        oss << "CopyFile: found a size mismatch in " << cachedObjPath <<
-                            " real size = " << bf::file_size(cachedObjPath);
-                        // XXXPAT: get a new key here
-                        logger->log(LOG_ERR, oss.str().c_str());
-                    }
-                    
-                    if (MetadataFile::getLengthFromKey(object.key) != MetadataFile::getLengthFromKey(newObj.key))
-                    {
-                        ostringstream oss;
-                        oss << "CopyFile: found a size mismatch in src and dest keys  src = " << object.key <<
-                            " dest = " << newObj.key;
-                        logger->log(LOG_ERR, oss.str().c_str());
-                    }
 
                     // put the copy in cloudstorage
                     err = cs->putObject(cachedObjPath.string(), newObj.key);
