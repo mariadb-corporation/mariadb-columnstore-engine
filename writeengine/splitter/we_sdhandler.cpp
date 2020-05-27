@@ -542,7 +542,7 @@ void WESDHandler::setup()
     }
 
 // getModuleStatus will take too long. Also to test in development
-    if (getenv("SKIP_OAM_INIT") == NULL)
+/*    if (getenv("SKIP_OAM_INIT") == NULL)
     {
         vector<unsigned int>& aVec = fRef.fCmdArgs.getPmVec();
 
@@ -573,6 +573,7 @@ void WESDHandler::setup()
             }
         }
     }
+*/
 
     int rtn = fDbrm.getSystemReady();
 
