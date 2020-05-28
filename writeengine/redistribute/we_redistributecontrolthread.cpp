@@ -617,7 +617,8 @@ int RedistributeControlThread::executeRedistributePlan()
     {
         try
         {
-// skip system status check in case no OAM
+            // skip system status check in case no OAM
+/*
             if (getenv("SKIP_OAM_INIT") == NULL)
             {
                 // make sure system is in active state
@@ -646,6 +647,7 @@ int RedistributeControlThread::executeRedistributePlan()
                         sleep(1);;
                 }
             }
+*/
 
             if (fStopAction)
                 return RED_EC_USER_STOP;

@@ -2371,9 +2371,9 @@ void Oam::setProcessStatus(const std::string process, const std::string module, 
 
 void Oam::processInitComplete(std::string processName, int state)
 {
-//This method takes too long on Windows and doesn't do anything there anyway...
-    if (getenv("SKIP_OAM_INIT") != NULL)
-        return;
+    //This method takes too long on Windows and doesn't do anything there anyway...
+    // Disable legacy OAM
+    return;
     // get current Module name
     string moduleName;
     oamModuleInfo_t st;

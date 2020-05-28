@@ -111,6 +111,8 @@ void OamCache::checkReload()
     // Restore for Windows when we support multiple PMs
     while (it != uniquePids.end())
     {
+        // Disable legacy-OAM.
+/*
         if (getenv("SKIP_OAM_INIT") == NULL)
         {
             try
@@ -182,6 +184,7 @@ void OamCache::checkReload()
             }
         }
         else
+*/
         {
             pmToConnectionMap[*it] = i++;
             moduleIds.push_back(*it);

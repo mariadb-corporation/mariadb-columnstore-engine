@@ -197,6 +197,12 @@ public:
         return pmCount;
     }
 
+    unsigned getNumConnections() const
+    {
+        unsigned cpp = (fIsExeMgr ? fRm->getPsConnectionsPerPrimProc() : 1);
+        return fRm->getPsCount() * cpp;
+    }
+
     messageqcpp::Stats getNetworkStats(uint32_t uniqueID);
 
     friend class ::TestDistributedEngineComm;

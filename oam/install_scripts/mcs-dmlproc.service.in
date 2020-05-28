@@ -1,14 +1,14 @@
 [Unit]
 Description=mcs-dmlproc
-PartOf=mcs-writeengineserver.service
-After=mcs-writeengineserver.service
+PartOf=mcs-exemgr.service
+After=mcs-exemgr.service
 
 [Service]
 Type=simple
 Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/DMLProc
 Restart=on-failure
-ExecStop=/usr/bin/env bash -c "/bin/kill -15 $(pidof DMLProc) && sleep 2 && /bin/kill -9 $(pidof DMLProc) || /bin/true"
+TimeoutStopSec=2
 
 [Install]
 WantedBy=mariadb-columnstore.service

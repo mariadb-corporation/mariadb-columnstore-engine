@@ -20,6 +20,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-writeengineserver.service.in" "$
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-dmlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-dmlproc.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh" @ONLY)
 
 install(PROGRAMS columnstore-post-install 
                 columnstore-pre-uninstall 
@@ -42,6 +43,7 @@ install(PROGRAMS columnstore-post-install
                 disable-rep-columnstore.sh  
                 mariadb-command-line.sh 
                 mcs_module_installer.sh
+                mcs-stop-controllernode.sh
                 DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
 install(FILES mariadb-columnstore.service
