@@ -1061,7 +1061,7 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
         const uint32_t& col = keyCols[i];
 
         if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     getColType(col) == execplan::CalpontSystemCatalog::CHAR ||
+                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
                      getColType(col) == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
@@ -1112,7 +1112,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     for (uint32_t col = 0; col <= lastCol; col++)
     {
         if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     getColType(col) == execplan::CalpontSystemCatalog::CHAR ||
+                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
                      getColType(col) == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
@@ -1210,12 +1210,11 @@ RowGroup::RowGroup(uint32_t colCount,
             stOffsets[i + 1] = stOffsets[i] + colWidths[i];
 
         execplan::CalpontSystemCatalog::ColDataType type = types[i];
-        if (type == execplan::CalpontSystemCatalog::CHAR ||
+        if ((type == execplan::CalpontSystemCatalog::CHAR && (colWidths[i] > 1)) ||
             type == execplan::CalpontSystemCatalog::VARCHAR ||
             type == execplan::CalpontSystemCatalog::TEXT)
         {
             hasStrings = true;
-            break;
         }
     }
 
