@@ -344,7 +344,45 @@ void UserDataStore::deserialize(ByteStream& bs)
     return;
 }
 
-//uint32_t rgDataCount = 0;
+inline bool StringStore::equals(const std::string& str, uint64_t off, CHARSET_INFO* cs) const
+{
+    uint32_t length;
+
+    if (off == std::numeric_limits<uint64_t>::max())
+        return str == joblist::CPNULLSTRMARK;
+
+    MemChunk* mc;
+
+    if (off & 0x8000000000000000)
+    {
+        if (longStrings.size() <= (off & ~0x8000000000000000))
+            return false;
+
+        mc = (MemChunk*) longStrings[off & ~0x8000000000000000].get();
+
+        memcpy(&length, mc->data, 4);
+
+        // Not sure if this check it needed, but adds safety
+        if (length > mc->currentSize)
+            return false;
+
+        return (cs->strnncoll(str.c_str(), str.length(), (const char*)mc->data+4, length) == 0);
+    }
+
+    uint32_t chunk = off / CHUNK_SIZE;
+    uint32_t offset = off % CHUNK_SIZE;
+
+    if (mem.size() <=  chunk)
+        return false;
+
+    mc = (MemChunk*) mem[chunk].get();
+    memcpy(&length, &mc->data[offset], 4);
+
+    if ((offset + length) > mc->currentSize)
+        return false;
+
+    return (cs->strnncoll(str.c_str(), str.length(), (const char*)&mc->data[offset]+4, length) == 0);
+}
 
 RGData::RGData()
 {
@@ -505,9 +543,10 @@ Row::Row() : data(NULL), strings(NULL), userDataStore(NULL) { }
 
 Row::Row(const Row& r) : columnCount(r.columnCount), baseRid(r.baseRid),
     oldOffsets(r.oldOffsets), stOffsets(r.stOffsets),
-    offsets(r.offsets), colWidths(r.colWidths), types(r.types), charsetNumbers(r.charsetNumbers),
+    offsets(r.offsets), colWidths(r.colWidths), types(r.types), 
+    charsetNumbers(r.charsetNumbers), charsets(r.charsets),
     data(r.data), scale(r.scale), precision(r.precision), strings(r.strings),
-    useStringTable(r.useStringTable), hasLongStringField(r.hasLongStringField),
+    useStringTable(r.useStringTable), hasStrings(r.hasStrings), hasLongStringField(r.hasLongStringField),
     sTableThreshold(r.sTableThreshold), forceInline(r.forceInline), userDataStore(NULL)
 { }
 
@@ -523,11 +562,13 @@ Row& Row::operator=(const Row& r)
     colWidths = r.colWidths;
     types = r.types;
     charsetNumbers = r.charsetNumbers;
+    charsets = r.charsets;
     data = r.data;
     scale = r.scale;
     precision = r.precision;
     strings = r.strings;
     useStringTable = r.useStringTable;
+    hasStrings = r.hasStrings;
     hasLongStringField = r.hasLongStringField;
     sTableThreshold = r.sTableThreshold;
     forceInline = r.forceInline;
@@ -990,6 +1031,128 @@ int64_t Row::getSignedNullValue(uint32_t colIndex) const
     return utils::getSignedNullValue(types[colIndex], getColumnWidth(colIndex));
 }
 
+bool Row::equals(const std::string& val, uint32_t col) const
+{
+    const CHARSET_INFO* cs = getCharset(col);
+    if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+    {
+        if (getStringLength(col) != val.length())
+            return false;
+
+        if (memcmp(getStringPointer(col), val.c_str(), val.length()))
+            return false;
+    }
+    else if (inStringTable(col))
+    {
+        uint64_t offset = *((uint64_t*) &data[offsets[col]]);
+        return strings->equals(val, offset, cs);
+    }
+    else
+    {
+        return (cs->strnncollsp(val.c_str(), val.length(), (char*)&data[offsets[col]], getColumnWidth(col)) == 0);
+    }
+    return true;
+}
+
+bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
+{
+    for (uint32_t i = 0; i < keyCols.size(); i++)
+    {
+        const uint32_t& col = keyCols[i];
+
+        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
+                     getColType(col) == execplan::CalpontSystemCatalog::CHAR ||
+                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        {
+            CHARSET_INFO* cs = getCharset(col);
+            if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
+                          r2.getStringPointer(col), r2.getStringLength(col)))
+            {
+                return false;
+            }
+        }
+        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        {
+            if (getStringLength(col) != r2.getStringLength(col))
+                return false;
+
+            if (memcmp(getStringPointer(col), r2.getStringPointer(col), getStringLength(col)))
+                return false;
+        }
+        else
+        {
+            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            {
+                if (getLongDoubleField(col) != r2.getLongDoubleField(col))
+                    return false;
+            }
+            else if (getUintField(col) != r2.getUintField(col))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool Row::equals(const Row& r2, uint32_t lastCol) const
+{
+    // This check fires with empty r2 only.
+    if (lastCol >= columnCount)
+        return true;
+
+    // If there are no strings in the row, then we can just memcmp the whole row.
+    // hasStrings is true if there is any column of type CHAR, VARCHAR or TEXT
+    // useStringTable is true if any field declared > max inline field size, including BLOB
+    // For memcmp to be correct, both must be false.
+    if (!hasStrings && !useStringTable && !r2.hasStrings && !r2.useStringTable)
+        return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
+
+    // There are strings involved, so we need to check each column
+    // because binary equality is not equality for many charsets/collations
+    for (uint32_t col = 0; col <= lastCol; col++)
+    {
+        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
+                     getColType(col) == execplan::CalpontSystemCatalog::CHAR ||
+                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        {
+            CHARSET_INFO* cs = getCharset(col);
+            if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
+                          r2.getStringPointer(col), r2.getStringLength(col)))
+            {
+                return false;
+            }
+        }
+        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        {
+            if (getStringLength(col) != r2.getStringLength(col))
+                return false;
+
+            if (memcmp(getStringPointer(col), r2.getStringPointer(col), getStringLength(col)))
+                return false;
+        }
+        else
+        {
+            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            {
+                if (getLongDoubleField(col) != r2.getLongDoubleField(col))
+                    return false;
+            }
+            else if (getUintField(col) != r2.getUintField(col))
+                return false;
+        }
+    }        
+    return true;
+}
+
+const CHARSET_INFO* Row::getCharset(uint32_t col) const
+{
+    if (charsets[col] == NULL)
+    {
+        const_cast<CHARSET_INFO**>(charsets)[col] = get_charset(charsetNumbers[col], MYF(MY_WME));
+    }
+    return charsets[col];
+}
+
 RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
     useStringTable(true), hasLongStringField(false), sTableThreshold(20)
 {
@@ -1045,6 +1208,15 @@ RowGroup::RowGroup(uint32_t colCount,
         }
         else
             stOffsets[i + 1] = stOffsets[i] + colWidths[i];
+
+        execplan::CalpontSystemCatalog::ColDataType type = types[i];
+        if (type == execplan::CalpontSystemCatalog::CHAR ||
+            type == execplan::CalpontSystemCatalog::VARCHAR ||
+            type == execplan::CalpontSystemCatalog::TEXT)
+        {
+            hasStrings = true;
+            break;
+        }
     }
 
     useStringTable = (stringTable && hasLongStringField);
@@ -1090,6 +1262,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     rgData = r.rgData;
     strings = r.strings;
     useStringTable = r.useStringTable;
+    hasStrings = r.hasStrings;
     hasLongStringField = r.hasLongStringField;
     sTableThreshold = r.sTableThreshold;
     forceInline = r.forceInline;
@@ -1481,7 +1654,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
     }
 }
 
-CHARSET_INFO* RowGroup::getCharset(uint32_t col)
+const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
 {
     if (charsets[col] == NULL)
     {

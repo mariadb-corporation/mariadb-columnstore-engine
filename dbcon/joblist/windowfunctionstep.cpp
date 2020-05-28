@@ -95,7 +95,10 @@ uint64_t getColumnIndex(const SRCP& c, const map<uint64_t, uint64_t>& m, JobInfo
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
         if (!(dynamic_cast<const PseudoColumn*>(sc)))
+        {
             ct = jobInfo.csc->colType(sc->oid());
+            ct.charsetNumber =sc->colType().charsetNumber;
+        }
 
 //X
         CalpontSystemCatalog::OID dictOid = isDictCol(ct);

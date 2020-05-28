@@ -397,9 +397,11 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
 
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
-//        if (dynamic_cast<PseudoColumn*>(sc) == NULL)
-//            ct = jobInfo.csc->colType(sc->oid());
-
+        if (dynamic_cast<PseudoColumn*>(sc) == NULL)
+        {
+            ct = jobInfo.csc->colType(sc->oid());
+            ct.charsetNumber =sc->colType().charsetNumber;
+        }
 //X
         if (ct.scale == 0)       // keep passed original ct for decimal type
             sc->resultType(ct);  // update from mysql type to calpont type
@@ -526,7 +528,10 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
                 if (dynamic_cast<PseudoColumn*>(sc) == NULL)
+                {
                     ct = jobInfo.csc->colType(oid);
+                    ct.charsetNumber =sc->colType().charsetNumber;
+                }
 
 //X
                 dictOid = joblist::isDictCol(ct);

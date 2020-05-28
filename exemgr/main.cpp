@@ -73,7 +73,6 @@
 #include "liboamcpp.h"
 #include "crashtrace.h"
 #include "utils_utf8.h"
-#include "mcsconfig.h"
 
 #include <mutex>
 #include <thread>

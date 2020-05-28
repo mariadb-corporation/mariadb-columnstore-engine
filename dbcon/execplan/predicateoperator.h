@@ -121,8 +121,6 @@ public:
 private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
-    inline bool strCompare(const std::string& op1, const std::string& op2, uint32_t charsetNumber);
-    inline bool strTrimCompare(const std::string& op1, const std::string& op2, uint32_t charsetNumber);
     
     const CHARSET_INFO* cs;
 };
@@ -155,68 +153,6 @@ inline bool PredicateOperator::numericCompare(result_t op1, result_t op2)
         {
             std::ostringstream oss;
             oss << "invalid predicate operation: " << fOp;
-            throw logging::InvalidOperationExcept(oss.str());
-        }
-    }
-}
-
-inline bool PredicateOperator::strCompare(const std::string& op1, const std::string& op2, uint32_t charsetNumber)
-{
-    switch (fOp)
-    {
-        case OP_EQ:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) == 0;
-
-        case OP_NE:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) != 0;
-
-        case OP_GT:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) > 0;
-
-        case OP_GE:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) >= 0;
-
-        case OP_LT:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) < 0;
-
-        case OP_LE:
-            return utf8::mcs_strcoll(op1, op2, charsetNumber) <= 0;
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "Non support predicate operation: " << fOp;
-            throw logging::InvalidOperationExcept(oss.str());
-        }
-    }
-}
-
-inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2, uint32_t charsetNumber)
-{
-    switch (fOp)
-    {
-        case OP_EQ:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) == 0;
-
-        case OP_NE:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) != 0;
-
-        case OP_GT:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) > 0;
-
-        case OP_GE:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) >= 0;
-
-        case OP_LT:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) < 0;
-
-        case OP_LE:
-            return utf8::mcs_strcollsp(op1, op2, charsetNumber) <= 0;
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "Non support predicate operation: " << fOp;
             throw logging::InvalidOperationExcept(oss.str());
         }
     }
