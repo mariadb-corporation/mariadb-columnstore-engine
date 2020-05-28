@@ -478,7 +478,7 @@ private:
 
     StringStore* strings;
     bool useStringTable;
-    bool hasStrings;
+    bool hasCollation;
     bool hasLongStringField;
     uint32_t sTableThreshold;
     boost::shared_array<bool> forceInline;
@@ -1373,7 +1373,7 @@ private:
     RGData* rgData;
     StringStore* strings;   // note, strings and data belong to rgData
     bool useStringTable;
-    bool hasStrings;
+    bool hasCollation;
     bool hasLongStringField;
     uint32_t sTableThreshold;
     boost::shared_array<bool> forceInline;
@@ -1523,7 +1523,7 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     r->hasLongStringField = hasLongStringField;
     r->sTableThreshold = sTableThreshold;
     r->forceInline = forceInline;
-    r->hasStrings = hasStrings;
+    r->hasCollation = hasCollation;
 }
 
 inline uint32_t RowGroup::getRowSize() const

@@ -546,7 +546,7 @@ Row::Row(const Row& r) : columnCount(r.columnCount), baseRid(r.baseRid),
     offsets(r.offsets), colWidths(r.colWidths), types(r.types), 
     charsetNumbers(r.charsetNumbers), charsets(r.charsets),
     data(r.data), scale(r.scale), precision(r.precision), strings(r.strings),
-    useStringTable(r.useStringTable), hasStrings(r.hasStrings), hasLongStringField(r.hasLongStringField),
+    useStringTable(r.useStringTable), hasCollation(r.hasCollation), hasLongStringField(r.hasLongStringField),
     sTableThreshold(r.sTableThreshold), forceInline(r.forceInline), userDataStore(NULL)
 { }
 
@@ -568,7 +568,7 @@ Row& Row::operator=(const Row& r)
     precision = r.precision;
     strings = r.strings;
     useStringTable = r.useStringTable;
-    hasStrings = r.hasStrings;
+    hasCollation = r.hasCollation;
     hasLongStringField = r.hasLongStringField;
     sTableThreshold = r.sTableThreshold;
     forceInline = r.forceInline;
@@ -1101,10 +1101,10 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
         return true;
 
     // If there are no strings in the row, then we can just memcmp the whole row.
-    // hasStrings is true if there is any column of type CHAR, VARCHAR or TEXT
+    // hasCollation is true if there is any column of type CHAR, VARCHAR or TEXT
     // useStringTable is true if any field declared > max inline field size, including BLOB
     // For memcmp to be correct, both must be false.
-    if (!hasStrings && !useStringTable && !r2.hasStrings && !r2.useStringTable)
+    if (!hasCollation && !useStringTable && !r2.hasCollation && !r2.useStringTable)
         return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
 
     // There are strings involved, so we need to check each column
@@ -1214,7 +1214,7 @@ RowGroup::RowGroup(uint32_t colCount,
             type == execplan::CalpontSystemCatalog::VARCHAR ||
             type == execplan::CalpontSystemCatalog::TEXT)
         {
-            hasStrings = true;
+            hasCollation = true;
         }
     }
 
@@ -1261,7 +1261,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     rgData = r.rgData;
     strings = r.strings;
     useStringTable = r.useStringTable;
-    hasStrings = r.hasStrings;
+    hasCollation = r.hasCollation;
     hasLongStringField = r.hasLongStringField;
     sTableThreshold = r.sTableThreshold;
     forceInline = r.forceInline;
