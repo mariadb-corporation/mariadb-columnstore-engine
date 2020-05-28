@@ -1,6 +1,6 @@
 [Unit]
 Description=mcs-ddlproc
-PartOf=mcs-exemgr.service
+PartOf=mcs-writeengineserver.service
 After=mcs-dmlproc.service
 
 [Service]
