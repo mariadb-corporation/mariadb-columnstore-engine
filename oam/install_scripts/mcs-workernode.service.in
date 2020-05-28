@@ -5,7 +5,6 @@ After=mcs-loadbrm.service
 
 [Service]
 Type=forking
-Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1
 Restart=on-failure
 ExecStop=-@ENGINE_BINDIR@/save_brm

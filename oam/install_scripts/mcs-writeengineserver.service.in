@@ -5,7 +5,7 @@ After=mcs-primproc.service
 
 [Service]
 Type=simple
-Environment="SKIP_OAM_INIT=1"
+Environment="LD_PRELOAD=libjemalloc.so.1 libjemalloc.so.2"
 ExecStart=@ENGINE_BINDIR@/WriteEngineServer
 Restart=on-failure
 TimeoutStopSec=2

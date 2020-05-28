@@ -5,7 +5,6 @@ After=mcs-exemgr.service
 
 [Service]
 Type=simple
-Environment="SKIP_OAM_INIT=1"
 ExecStart=@ENGINE_BINDIR@/DMLProc
 Restart=on-failure
 TimeoutStopSec=2
