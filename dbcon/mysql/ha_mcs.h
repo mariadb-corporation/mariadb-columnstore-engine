@@ -22,7 +22,7 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
-#include "../../../maria/ha_maria.h"
+#include "ha_maria.h"
 
 extern handlerton* mcs_hton;
 
@@ -150,6 +150,7 @@ public:
       skip it and and MySQL will treat it as not implemented.
     */
     void start_bulk_insert(ha_rows rows, uint flags = 0) ;
+    void start_bulk_insert_from_cache(ha_rows rows, uint flags = 0) ;
 
     /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
     int end_bulk_insert() ;

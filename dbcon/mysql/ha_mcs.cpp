@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 #include "ha_mcs.h"
-#include "../../../maria/maria_def.h"
+#include "maria_def.h"
 #include <typeinfo>
 #include "columnstoreversion.h"
 
@@ -33,8 +33,6 @@
 
 #define CACHE_PREFIX "#cache#"
 
-static handlerton *derived_hton;
-
 static handler* mcs_create_handler(handlerton* hton,
                                    TABLE_SHARE* table,
                                    MEM_ROOT* mem_root);
@@ -43,7 +41,9 @@ static int mcs_commit(handlerton* hton, THD* thd, bool all);
 
 static int mcs_rollback(handlerton* hton, THD* thd, bool all);
 static int mcs_close_connection(handlerton* hton, THD* thd );
-handlerton* mcs_hton;
+handlerton* mcs_hton = NULL;
+// This is the maria handlerton that we need for the cache
+static handlerton *mcs_maria_hton = NULL;
 char cs_version[25];
 char cs_commit_hash[41]; // a commit hash is 40 characters
 
@@ -374,6 +374,20 @@ void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
     try
     {
         ha_mcs_impl_start_bulk_insert(rows, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    }
+    DBUG_VOID_RETURN;
+}
+
+void ha_mcs::start_bulk_insert_from_cache(ha_rows rows, uint flags)
+{
+    DBUG_ENTER("ha_mcs::start_bulk_insert_from_cache");
+    try
+    {
+        ha_mcs_impl_start_bulk_insert(rows, table, true);
     }
     catch (std::runtime_error& e)
     {
@@ -1299,9 +1313,9 @@ static my_bool cache_check_status(void *param)
 *****************************************************************************/
 
 ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *mem_root)
-  :ha_mcs(derived_hton, table_arg)
+  :ha_mcs(mcs_hton, table_arg)
 {
-  cache_handler= new (mem_root) ha_maria(maria_hton, table_arg);
+  cache_handler= (ha_maria*) mcs_maria_hton->create(mcs_maria_hton, table_arg, mem_root);
   lock_counter= 0;
 }
 
@@ -1584,7 +1598,7 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
     bzero(&cache_handler->copy_info, sizeof(cache_handler->copy_info));
     return cache_handler->start_bulk_insert(rows, flags);
   }
-  return parent::start_bulk_insert(rows, flags);
+  return parent::start_bulk_insert_from_cache(rows, flags);
 }
 
 
@@ -1606,7 +1620,7 @@ static handler *ha_mcs_cache_create_handler(handlerton *hton,
   return new (mem_root) ha_mcs_cache(hton, table, mem_root);
 }
 
-static plugin_ref plugin;
+static plugin_ref plugin_maria;
 
 static int ha_mcs_cache_init(void *p)
 {
@@ -1618,24 +1632,34 @@ static int ha_mcs_cache_init(void *p)
   cache_hton->panic= 0;
   cache_hton->flags= HTON_NO_PARTITION;
 
+  error= mcs_hton == NULL;                   // Engine must exists!
+
+  if (error)
   {
-    LEX_CSTRING name= { STRING_WITH_LEN("Columnstore") };
-    plugin= ha_resolve_by_name(0, &name, 0);
-    derived_hton= plugin_hton(plugin);
-    error= derived_hton == 0;                   // Engine must exists!
+      my_error(HA_ERR_INITIALIZATION, MYF(0),
+               "Could not find storage engine %s", "Columnstore");
+      return error;
+  }
+
+  {
+    LEX_CSTRING name= { STRING_WITH_LEN("Aria") };
+    plugin_maria= ha_resolve_by_name(0, &name, 0);
+    mcs_maria_hton= plugin_hton(plugin_maria);
+    error= mcs_maria_hton == NULL;                   // Engine must exists!
     if (error)
       my_error(HA_ERR_INITIALIZATION, MYF(0),
                "Could not find storage engine %s", name.str);
   }
+
   return error;
 }
 
 static int ha_mcs_cache_deinit(void *p)
 {
-  if (plugin)
+  if (plugin_maria)
   {
-    plugin_unlock(0, plugin);
-    plugin= 0;
+    plugin_unlock(0, plugin_maria);
+    plugin_maria= 0;
   }
   return 0;
 }
@@ -1790,12 +1814,13 @@ int ha_mcs_cache::flush_insert_cache()
   uchar *record= table->record[0];
   DBUG_ENTER("flush_insert_cache");
 
-  parent::start_bulk_insert(from->file->state->records, 0);
+  parent::start_bulk_insert_from_cache(from->file->state->records, 0);
   from->rnd_init(1);
   while (!(error= from->rnd_next(record)))
   {
     if ((error= parent::write_row(record)))
       goto end;
+    rows_changed++;
   }
   if (error == HA_ERR_END_OF_FILE)
     error= 0;

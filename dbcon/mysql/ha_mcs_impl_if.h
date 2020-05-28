@@ -245,7 +245,8 @@ struct cal_connection_info
         isAlter(false),
         bulkInsertRows(0),
         singleInsert(true),
-        isLoaddataInfile( false ),
+        isLoaddataInfile(false),
+        isCacheInsert(false),
         dmlProc(0),
         rowsHaveInserted(0),
         rc(0),
@@ -297,6 +298,7 @@ struct cal_connection_info
     ha_rows  bulkInsertRows;
     bool singleInsert;
     bool isLoaddataInfile;
+    bool isCacheInsert;
     std::string extendedStats;
     std::string miniStats;
     messageqcpp::MessageQueueClient* dmlProc;
