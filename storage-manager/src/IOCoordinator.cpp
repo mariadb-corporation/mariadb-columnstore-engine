@@ -488,6 +488,8 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             //log error and abort
             l_errno = errno;
             logger->log(LOG_ERR,"IOCoordinator::write(): Failed newObject.");
+            metadata.removeEntry(newObject.offset);
+            replicator->remove(cachePath/firstDir/newObject.key);
             errno = l_errno;
             if (count == 0)   // if no data has been written yet, it's safe to return -1 here.
                 return -1;
@@ -497,7 +499,7 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
         {
             // remove the object created above; can't have 0-length objects
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             goto out;
         }
         else if ((uint)err < writeLength)
@@ -505,7 +507,27 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             dataRemaining -= err;
             count += err;
             iocBytesWritten += err;
-            metadata.updateEntryLength(newObject.offset, (err + objectOffset));
+            
+            // get a new name for the object
+            string oldKey = newObject.key;
+            newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + objectOffset);
+            ostringstream os;
+            os << "IOCoordinator::write(): renaming " << oldKey << " to " << newObject.key;
+            logger->log(LOG_DEBUG, os.str().c_str());
+            int renameErr = ::rename((cachePath/firstDir/oldKey).string().c_str(), (cachePath/firstDir/newObject.key).string().c_str());
+            int renameErrno = errno;
+            if (renameErr < 0)
+            {
+                ostringstream oss;
+                char buf[80];
+                oss << "IOCoordinator::write(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
+                    (cachePath/firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                logger->log(LOG_ERR, oss.str().c_str());
+                newObject.key = oldKey;
+            }
+            
+            // rename and resize the object in metadata
+            metadata.updateEntry(newObject.offset, newObject.key, (err + objectOffset));
             cache->newObject(firstDir, newObject.key,err + objectOffset);
             newObjectKeys.push_back(newObject.key);
             goto out;
@@ -618,6 +640,8 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
             l_errno = errno;
             //log error and abort
             logger->log(LOG_ERR,"IOCoordinator::append(): Failed newObject.");
+            metadata.removeEntry(newObject.offset);
+            replicator->remove(cachePath/firstDir/newObject.key);
             errno = l_errno;
             // if no data was written successfully yet, it's safe to return -1 here.
             if (count == 0)
@@ -627,21 +651,41 @@ ssize_t IOCoordinator::append(const char *_filename, const uint8_t *data, size_t
         else if (err == 0)
         {
             metadata.removeEntry(newObject.offset);
-            replicator->remove(firstDir/newObject.key);
+            replicator->remove(cachePath/firstDir/newObject.key);
             goto out;
         }
         
         count += err;
         dataRemaining -= err;
         iocBytesWritten += err;
+        if (err < (int64_t) writeLength)
+        {
+            string oldKey = newObject.key;
+            newObject.key = metadata.getNewKeyFromOldKey(newObject.key, err + newObject.offset);
+            ostringstream os;
+            os << "IOCoordinator::append(): renaming " << oldKey << " to " << newObject.key;
+            logger->log(LOG_DEBUG, os.str().c_str());
+            int renameErr = ::rename((cachePath/firstDir/oldKey).string().c_str(), (cachePath/firstDir/newObject.key).string().c_str());
+            int renameErrno = errno;
+            if (renameErr < 0)
+            {
+                ostringstream oss;
+                char buf[80];
+                oss << "IOCoordinator::append(): Failed to rename " << (cachePath/firstDir/oldKey).string() << " to " << 
+                    (cachePath/firstDir/newObject.key).string() << "!  Got " << strerror_r(renameErrno, buf, 80); 
+                logger->log(LOG_ERR, oss.str().c_str());
+                newObject.key = oldKey;
+            }
+        
+            metadata.updateEntry(newObject.offset, newObject.key, err);
+        }
+
         cache->newObject(firstDir, newObject.key,err);
         newObjectKeys.push_back(newObject.key);
 
         if (err < (int64_t) writeLength)
         {
             //logger->log(LOG_ERR,"IOCoordinator::append(): newObject failed to complete write, %u of %u bytes written.",count,length);
-            // make the object reflect length actually written
-            metadata.updateEntryLength(newObject.offset, err);
             goto out;
         }
     }
@@ -964,9 +1008,12 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         errno = ENOENT;
         return -1;
     }
-    
     if (bf::exists(metaFile2))
+    {
         deleteMetaFile(metaFile2);
+        ++filesDeleted;
+    }
+    
     // since we don't implement mkdir(), assume the caller did that and
     // create any necessary parent dirs for filename2
     try
@@ -1001,10 +1048,13 @@ int IOCoordinator::copyFile(const char *_filename1, const char *_filename2)
         for (const auto &object : objects)
         {
             bf::path journalFile = journalPath/firstDir1/(object.key + ".journal");
-            // XXXPAT: Need to follow up on this.  this is the wrong length to use here, but changing it
-            // to use the right length is causing an error somewhere else.  Not sure why yet.
-            metadataObject newObj = meta2.addMetadataObject(filename2, object.length);
-            assert(newObj.offset == object.offset);
+            
+            // originalLength = the length of the object before journal entries.
+            // the length in the metadata is the length after journal entries
+            size_t originalLength = MetadataFile::getLengthFromKey(object.key);
+            metadataObject newObj = meta2.addMetadataObject(filename2, originalLength);
+            if (originalLength != object.length)
+                meta2.updateEntryLength(newObj.offset, object.length);
             err = cs->copyObject(object.key, newObj.key);
             if (err)
             {
@@ -1137,7 +1187,10 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
     
     objFD = ::open(object, O_RDONLY);
     if (objFD < 0)
+    {
+        *_bytesReadOut = 0;
         return ret;
+    }
     ScopedCloser s1(objFD);
     
     ret.reset(new uint8_t[len]);
@@ -1150,11 +1203,12 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         int err = ::read(objFD, &ret[count], len - count);
         if (err < 0)
         {
-            char buf[80];
-            logger->log(LOG_CRIT, "IOC::mergeJournal(): failed to read %s, got '%s'", object, strerror_r(errno, buf, 80));
             int l_errno = errno;
+            char buf[80];
+            logger->log(LOG_CRIT, "IOC::mergeJournal(): failed to read %s, got '%s'", object, strerror_r(l_errno, buf, 80));
             ret.reset();
             errno = l_errno;
+            *_bytesReadOut = count;
             return ret;
         }
         else if (err == 0) 
@@ -1173,17 +1227,18 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
         size_t mjimBytesRead = 0;
         int mjimerr = mergeJournalInMem(ret, len, journal, &mjimBytesRead);
         if (mjimerr)
-        {
             ret.reset();
-            return ret;
-        }
         l_bytesRead += mjimBytesRead;
+        *_bytesReadOut = l_bytesRead;
         return ret;
     }
     
     journalFD = ::open(journal, O_RDONLY);
     if (journalFD < 0)
+    {
+        *_bytesReadOut = l_bytesRead;
         return ret;
+    }
     ScopedCloser s2(journalFD);
     
     boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
@@ -1221,17 +1276,21 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
                 err = ::read(journalFD, &ret[startReadingAt - offset + count], lengthOfRead - count);
                 if (err < 0)
                 {
+                    int l_errno = errno;
                     char buf[80];
-                    logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(errno, buf, 80));
+                    logger->log(LOG_ERR, "mergeJournal: got %s", strerror_r(l_errno, buf, 80));
                     ret.reset();
-                    return ret;
+                    errno = l_errno;
+                    l_bytesRead += count;
+                    goto out;
                 }
                 else if (err == 0)
                 {
                     logger->log(LOG_ERR, "mergeJournal: got early EOF. offset=%ld, len=%ld, jOffset=%ld, jLen=%ld,"
                         " startReadingAt=%ld, lengthOfRead=%ld", offset, len, offlen[0], offlen[1], startReadingAt, lengthOfRead);
                     ret.reset();
-                    return ret;
+                    l_bytesRead += count;
+                    goto out;
                 }
                 count += err;
             }
@@ -1245,6 +1304,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char *object, con
             // skip over this journal entry
             ::lseek(journalFD, offlen[1], SEEK_CUR);
     }
+out:
     *_bytesReadOut = l_bytesRead;
     return ret;
 }

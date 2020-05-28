@@ -409,6 +409,7 @@ void Synchronizer::process(list<string>::iterator name)
     s.unlock();
     
     bool success = false;
+    int retryCount = 0;
     while (!success)
     {
         assert(!s.owns_lock());
@@ -434,8 +435,11 @@ void Synchronizer::process(list<string>::iterator name)
             success = true;
         }
         catch(exception &e) {
-            logger->log(LOG_CRIT, "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
-                pending->opFlags, e.what());
+            // these are often self-resolving, so we will suppress logging it for 10 iterations, then escalate
+            // to error, then to crit
+            //if (++retryCount >= 10)
+                logger->log((retryCount < 20 ? LOG_ERR : LOG_CRIT), "Synchronizer::process(): error sync'ing %s opFlags=%d, got '%s'.  Retrying...", key.c_str(),
+                    pending->opFlags, e.what());
             success = false;
             sleep(1);
             continue;
@@ -463,18 +467,33 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
 {
     ScopedReadLock s(ioc, sourceFile);
     
-    string &key = *it;
+    string key = *it;
     size_t pos = key.find_first_of('/');
     bf::path prefix = key.substr(0, pos);
     string cloudKey = key.substr(pos + 1);
     char buf[80];
     bool exists = false;
     int err;
+    bf::path objectPath = cachePath/key;
     MetadataFile md(sourceFile, MetadataFile::no_create_t(),true);
     
     if (!md.exists())
     {
         logger->log(LOG_DEBUG, "synchronize(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
+        try 
+        {
+            if (!bf::exists(objectPath))
+                return;
+            size_t size = bf::file_size(objectPath);
+            replicator->remove(objectPath);
+            cache->deletedObject(prefix, cloudKey, size);
+            cs->deleteObject(cloudKey);
+        }
+        catch (exception &e)
+        {
+            logger->log(LOG_DEBUG, "synchronize(): failed to remove orphaned object '%s' from the cache, got %s", 
+                objectPath.string().c_str(), e.what());
+        }
         return;
     }
     
@@ -495,7 +514,6 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
     if (exists)
         return;
 
-    // TODO: should be safe to check with Cache instead of a file existence check
     exists = cache->exists(prefix, cloudKey);
     if (!exists)
     {
@@ -503,14 +521,15 @@ void Synchronizer::synchronize(const string &sourceFile, list<string>::iterator 
         return;
     }
 
-    err = cs->putObject((cachePath / key).string(), cloudKey);
+    err = cs->putObject(objectPath.string(), cloudKey);
     if (err)
         throw runtime_error(string("synchronize(): uploading ") + key + ", got " + strerror_r(errno, buf, 80));
+
     numBytesRead += mdEntry.length;
     bytesReadBySync += mdEntry.length;
     numBytesUploaded += mdEntry.length;
     ++objectsSyncedWithNoJournal;
-    replicator->remove((cachePath/key), Replicator::NO_LOCAL);
+    replicator->remove(objectPath, Replicator::NO_LOCAL);
 }
 
 void Synchronizer::synchronizeDelete(const string &sourceFile, list<string>::iterator &it)
@@ -535,6 +554,29 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     if (!md.exists())
     {
         logger->log(LOG_DEBUG, "synchronizeWithJournal(): no metadata found for %s.  It must have been deleted.", sourceFile.c_str());
+        try 
+        {
+            bf::path objectPath = cachePath/key;
+            if (bf::exists(objectPath))
+            {
+                size_t objSize = bf::file_size(objectPath);
+                replicator->remove(objectPath);
+                cache->deletedObject(prefix, cloudKey, objSize);
+                cs->deleteObject(cloudKey);
+            }
+            bf::path jPath = journalPath/(key + ".journal");
+            if (bf::exists(jPath))
+            {
+                size_t jSize = bf::file_size(jPath);
+                replicator->remove(jPath);
+                cache->deletedJournal(prefix, jSize);
+            }
+        }
+        catch(exception &e)
+        {
+            logger->log(LOG_DEBUG, "synchronizeWithJournal(): failed to remove orphaned object '%s' from the cache, got %s", 
+                (cachePath/key).string().c_str(), e.what());
+        }
         return;
     }
     
@@ -548,7 +590,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
     //assert(key == mdEntry->key);   <--- I suspect this can happen in a truncate + write situation + a deep sync queue
     
     bf::path oldCachePath = cachePath / key;
-    string journalName = (journalPath/ (key + ".journal")).string();
+    string journalName = (journalPath/(key + ".journal")).string();
     
     if (!bf::exists(journalName))
     {
@@ -683,7 +725,7 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
         
         while (count < size)
         {
-            err = ::write(newFD, data.get(), size - count);
+            err = ::write(newFD, &data[count], size - count);
             if (err < 0)
             {
                 ::unlink(newCachePath.string().c_str());
@@ -693,9 +735,22 @@ void Synchronizer::synchronizeWithJournal(const string &sourceFile, list<string>
             count += err;
         }
         numBytesWritten += size;
-        //assert(bf::file_size(oldCachePath) == MetadataFile::getLengthFromKey(cloudKey));
-        cache->rename(prefix, cloudKey, newCloudKey, size - bf::file_size(oldCachePath));
+        
+        size_t oldSize = bf::file_size(oldCachePath);
+        
+        cache->rename(prefix, cloudKey, newCloudKey, size - oldSize);
         replicator->remove(oldCachePath);
+        
+        // This condition is probably irrelevant for correct functioning now, 
+        // but it should be very rare so what the hell.
+        if (oldSize != MetadataFile::getLengthFromKey(cloudKey))
+        {
+            ostringstream oss;
+            oss << "Synchronizer::synchronizeWithJournal(): detected a mismatch between file size and " <<
+                "length stored in the object name. object name = " << cloudKey << " length-in-name = " <<
+                MetadataFile::getLengthFromKey(cloudKey) << " real-length = " << oldSize;
+            logger->log(LOG_WARNING, oss.str().c_str());
+        }
     }
     
     mergeDiff += size - originalSize;
