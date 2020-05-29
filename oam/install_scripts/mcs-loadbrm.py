@@ -2,19 +2,30 @@
 
 import configparser
 import subprocess
+import xml.etree.ElementTree as ET
 
-config = configparser.ConfigParser()
-config.read('/etc/columnstore/storagemanager.cnf')
+sm_config = configparser.ConfigParser()
+sm_config.read('/etc/columnstore/storagemanager.cnf')
+cs_config = ET.parse('/etc/columnstore/Columnstore.xml')
+config_root = cs_config.getroot()
 
-storage = config['ObjectStorage']['service']
-region = config['S3']['region']
-bucket = config['S3']['bucket']
+storage = sm_config['ObjectStorage']['service']
+region = sm_config['S3']['region']
+bucket = sm_config['S3']['bucket']
 loadbrm = '/usr/bin/load_brm /var/lib/columnstore/data1/systemFiles/dbrm/{0}'
 brm_saves_current = ''
 
-if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucket.lower == 'some_bucket':
+if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucket.lower() == 'some_bucket':
     # load s3
     brm = 'data1/systemFiles/dbrm/BRM_saves_current'
+    config_root.find('./Installation/DBRootStorageType').text = "StorageManager"
+    config_root.find('./StorageManager/Enabled').text = "Y"
+
+    if config_root.find('./SystemConfig/DataFilePlugin') is None:
+        config_root.find('./SystemConfig').append(ET.Element("DataFilePlugin"))
+
+    config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
+    cs_config.write('/etc/columnstore/Columnstore.xml')
 
     try:
         brm_saves_current = subprocess.check_output(['smcat', brm])
@@ -22,10 +33,7 @@ if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucke
             # will happen when brm file does not exist
             pass
 else:
-    import xml.etree.ElementTree as ET
-    tree = ET.parse('/etc/columnstore/Columnstore.xml')
-    root = tree.getroot()
-    pmCount = int(root.find("./SystemModuleConfig/ModuleCount3").text)
+    pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
     brm = '/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current'
 
     if pmCount > 1:

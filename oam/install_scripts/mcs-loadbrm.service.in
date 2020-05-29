@@ -1,7 +1,7 @@
 [Unit]
 Description=loadbrm
 PartOf=mcs-workernode.service
-Before=mcs-workernode.service
+After=mcs-storagemanager.service
 
 [Service]
 Type=simple
