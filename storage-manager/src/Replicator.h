@@ -58,6 +58,11 @@ class Replicator
 
     private:
         Replicator();
+        
+        // a couple helpers
+        ssize_t _write(int fd, const void *data, size_t len);
+        ssize_t _pwrite(int fd, const void *data, size_t len, off_t offset);
+        
         Config *mpConfig;
         SMLogging *mpLogger;
         std::string msJournalPath;
