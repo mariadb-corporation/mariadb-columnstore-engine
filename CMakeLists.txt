@@ -1,4 +1,3 @@
-
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 # Avoid warnings in higher versions
