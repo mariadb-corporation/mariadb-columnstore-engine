@@ -17,7 +17,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
-    PROGS='load_brm workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer'
+    PROGS='StorageManager workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer'
     kill $(pidof $PROGS) > /dev/null
     sleep 3
     kill -9 $(pidof $PROGS) > /dev/null
@@ -70,6 +70,7 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     systemctl disable mcs-workernode > /dev/null 2>&1
     systemctl disable mcs-writeengineserver > /dev/null 2>&1
     systemctl disable mcs-loadbrm > /dev/null 2>&1
+    systemctl disable mcs-storagemanager > /dev/null 2>&1
 
     rm -f /usr/lib/systemd/system/mariadb-columnstore.service
     rm -f /lib/systemd/system/mariadb-columnstore.service
@@ -89,6 +90,9 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     rm -f /lib/systemd/system/mcs-writeengineserver.service
     rm -f /usr/lib/systemd/system/mcs-loadbrm.service
     rm -f /lib/systemd/system/mcs-loadbrm.service
+    rm -f /usr/lib/systemd/system/mcs-storagemanager.service
+    rm -f /lib/systemd/system/mcs-storagemanager.service
+
     systemctl daemon-reload
 else
     chkconfig=`which chkconfig 2>/dev/null`
