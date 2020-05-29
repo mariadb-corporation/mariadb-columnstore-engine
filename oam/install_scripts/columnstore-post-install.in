@@ -181,13 +181,17 @@ if [ -z "aws" ]; then
 fi
 
 postConfigure
-systemctl start mariadb-columnstore
 
-# Wait for all columnstore to be ready, DDLProc is final process in startup order
-while  [ -z  "$(pgrep -x DDLProc)" ];
-do
-    sleep 1
-done
+systemctl cat mariadb-columnstore.service > /dev/null 2>&1
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    systemctl start mariadb-columnstore
+     
+    # Wait for all columnstore to be ready, DDLProc is final process in startup order
+    while  [ -z  "$(pgrep -x DDLProc)" ];
+    do
+        sleep 1
+    done
+fi
  
 dbbuilder 7 > $tmpDir/dbbuilder.log
 

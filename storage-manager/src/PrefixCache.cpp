@@ -380,14 +380,22 @@ void PrefixCache::newJournalEntry(size_t size)
 void PrefixCache::deletedJournal(size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    assert(currentCacheSize >= size);
-    currentCacheSize -= size;
+
+    if (currentCacheSize >= size)
+        currentCacheSize -= size;
+    else
+    {
+        ostringstream oss;
+        oss << "PrefixCache::deletedJournal(): Detected an accounting error.";
+        logger->log(LOG_WARNING, oss.str().c_str());
+        currentCacheSize = 0;
+    }
 }
 
 void PrefixCache::deletedObject(const string &key, size_t size)
 {
     boost::unique_lock<boost::mutex> s(lru_mutex);
-    assert(currentCacheSize >= size);
+
     M_LRU_t::iterator mit = m_lru.find(key);
     assert(mit != m_lru.end());
     
@@ -397,7 +405,15 @@ void PrefixCache::deletedObject(const string &key, size_t size)
         doNotEvict.erase(mit->lit);
         lru.erase(mit->lit);
         m_lru.erase(mit);
-        currentCacheSize -= size;
+        if (currentCacheSize >= size)
+            currentCacheSize -= size;
+        else
+        {
+            ostringstream oss;
+            oss << "PrefixCache::deletedObject(): Detected an accounting error.";
+            logger->log(LOG_WARNING, oss.str().c_str());
+            currentCacheSize = 0;
+        }
     }
 }
 
