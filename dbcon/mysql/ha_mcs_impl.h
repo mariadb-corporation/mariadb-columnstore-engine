@@ -42,7 +42,7 @@ extern int ha_mcs_impl_close_connection (handlerton* hton, THD* thd);
 extern COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table);
 extern int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type);
 extern int ha_mcs_impl_update_row();
-extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows);
+extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, TABLE *table);
 extern int ha_mcs_impl_delete_row();
 extern int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos);
 extern int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table);

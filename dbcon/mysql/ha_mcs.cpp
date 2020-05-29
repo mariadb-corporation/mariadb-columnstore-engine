@@ -448,7 +448,7 @@ int ha_mcs::direct_update_rows(ha_rows *update_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, table);
     }
     catch (std::runtime_error& e)
     {
@@ -464,7 +464,7 @@ int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, table);
         *found_rows = *update_rows;
     }
     catch (std::runtime_error& e)
@@ -487,7 +487,7 @@ int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows, table);
     }
     catch (std::runtime_error& e)
     {

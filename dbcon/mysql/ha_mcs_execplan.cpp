@@ -6335,10 +6335,12 @@ int processFrom(bool &isUnion,
 int processWhere(SELECT_LEX &select_lex,
     gp_walk_info &gwi,
     SCSEP &csep,
-    List<Item> &on_expr_list)
+    List<Item> &on_expr_list,
+    TABLE *table)
 {
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
+    bool isUpdateDelete = false;
 
     if (join != 0)
         icp = reinterpret_cast<Item_cond*>(join->conds);
@@ -6357,6 +6359,7 @@ int processWhere(SELECT_LEX &select_lex,
                         ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
     {
         icp = reinterpret_cast<Item_cond*>(select_lex.where);
+        isUpdateDelete = true;
     }
 
     if (icp)
@@ -6376,6 +6379,20 @@ int processWhere(SELECT_LEX &select_lex,
 #endif
 
         icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+        // MCOL-4023 If select_lex.where is empty for an update or a delete,
+        // we use the where conditions pushed down by the server in cond_push()
+        if (isUpdateDelete && gwi.rcWorkStack.empty() && gwi.ptWorkStack.empty() && table)
+        {
+            if (get_fe_conn_info_ptr() == nullptr)
+                set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+            cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+            cal_table_info ti = ci->tableMap[table];
+            gwi.rcWorkStack = ti.condInfo->rcWorkStack;
+            gwi.ptWorkStack = ti.condInfo->ptWorkStack;
+        }
 
         if (gwi.fatalParseError)
         {
@@ -6714,7 +6731,8 @@ int processLimitAndOffset(
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     SCSEP& csep,
     bool isUnion,
-    bool isSelectHandlerTop)
+    bool isSelectHandlerTop,
+    TABLE *table)
 {
 #ifdef DEBUG_WALK_COND
     cerr << "getSelectPlan()" << endl;
@@ -6750,7 +6768,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
     gwi.clauseType = WHERE;
-    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list)))
+    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list, table)))
     {
         return rc;
     }

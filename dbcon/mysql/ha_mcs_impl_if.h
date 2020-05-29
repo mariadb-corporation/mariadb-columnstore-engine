@@ -118,7 +118,6 @@ struct gp_walk_info
     std::set<execplan::CalpontSystemCatalog::TableAliasName> innerTables;
     // the followinig members are used for table mode
     bool condPush;
-    bool dropCond;
     std::string funcName;
     std::vector<execplan::AggregateColumn*> count_asterisk_list;
     std::vector<execplan::FunctionColumn*> no_parm_func_list;
@@ -161,7 +160,6 @@ struct gp_walk_info
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
         condPush(false),
-        dropCond(false),
         internalDecimalScale(4),
         thd(0),
         subSelectType(uint64_t(-1)),
@@ -342,7 +340,7 @@ int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_in
 int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
 int cs_get_derived_plan(derived_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
 int cs_get_select_plan(select_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false, bool isSelectHandlerTop = false);
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false, bool isSelectHandlerTop = false, TABLE *table = 0);
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi, bool isUnion = false);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
