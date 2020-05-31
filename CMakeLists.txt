@@ -1,41 +1,6 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
-# Avoid warnings in higher versions
-if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" GREATER 2.6)
- CMAKE_POLICY(VERSION 2.8)
-endif()
-
-# explicitly set the policy to OLD
-# (cannot use NEW, not everyone is on cmake-2.8.12 yet)
-IF(POLICY CMP0022)
-  CMAKE_POLICY(SET CMP0022 OLD)
-ENDIF()
-
-# We use the LOCATION target property (CMP0026)
-# and get_target_property() for non-existent targets (CMP0045)
-# and INSTALL_NAME_DIR (CMP0042)
-IF(CMAKE_VERSION VERSION_EQUAL "3.0.0" OR
-   CMAKE_VERSION VERSION_GREATER "3.0.0")
- CMAKE_POLICY(SET CMP0026 OLD)
- CMAKE_POLICY(SET CMP0045 OLD)
- CMAKE_POLICY(SET CMP0042 OLD)
-ENDIF()
-
-MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
-
-OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
-if(NOT USE_CCACHE)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
-else()
-  find_program(CCACHE_FOUND ccache)
-  if(CCACHE_FOUND)
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-  endif(CCACHE_FOUND)
-endif()
-
 IF(NOT INSTALL_LAYOUT)
     IF(NOT CMAKE_BUILD_TYPE)
         SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
@@ -123,24 +88,36 @@ ENDIF ()
 SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
+SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+INCLUDE(columnstore_version)
+
+OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
+if(NOT USE_CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
+else()
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
+endif()
+
 FIND_PACKAGE(Boost 1.53.0 COMPONENTS system filesystem thread regex date_time chrono atomic)
 IF (NOT Boost_FOUND)
-    message(WARNING "Required Boost libraries not found!")
+    MESSAGE_ONCE(CS_NO_BOOST "Required Boost libraries not found!")
     return()
 ENDIF()
 
 FIND_PACKAGE(BISON)
 IF (NOT BISON_FOUND)
-    message(WARNING "bison not found!")
+    MESSAGE_ONCE(CS_NO_BISON "bison not found!")
     return()
 ENDIF()
 
 check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
 check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
-
-SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-
-INCLUDE(columnstore_version)
 
 SET (PACKAGE columnstore)
 SET (PACKAGE_NAME columnstore)
@@ -152,13 +129,11 @@ SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
 INCLUDE (configureEngine)
 
-
-
 FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
 if(NOT LEX_EXECUTABLE)
     FIND_PROGRAM(LEX_EXECUTABLE lex DOC "path to the lex executable")
     if(NOT LEX_EXECUTABLE)
-        message(WARNING "flex/lex not found!")
+        MESSAGE_ONCE(CS_NO_LEX "flex/lex not found!")
         return()
     endif()
 endif()
@@ -166,19 +141,19 @@ endif()
 FIND_PACKAGE(LibXml2)
 
 if (NOT LIBXML2_FOUND)
-    MESSAGE(WARNING "Could not find a usable libxml2 development environment!")
+    MESSAGE_ONCE(CS_NO_LIBXML "Could not find a usable libxml2 development environment!")
     return()
 endif()
 
-INCLUDE (FindSnappy)
+find_package(Snappy)
 if (NOT SNAPPY_FOUND)
-    MESSAGE(WARNING "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
+    MESSAGE_ONCE(CS_NO_SNAPPY "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
     return()
 endif()
 
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
-    message(WARNING "awk not found!")
+    MESSAGE_ONCE(CS_NO_AWK "awk not found!")
     return()
 endif()
 
@@ -253,8 +228,8 @@ IF (NOT SERVER_BUILD_DIR)
     SET (SERVER_BUILD_DIR ${SERVER_SOURCE_ROOT_DIR})
 ENDIF()
 
-MESSAGE("SERVER_BUILD_INCLUDE_DIR = ${SERVER_BUILD_INCLUDE_DIR}")
-MESSAGE("SERVER_SOURCE_ROOT_DIR = ${SERVER_SOURCE_ROOT_DIR}")
+MESSAGE_ONCE(SERVER_BUILD_INCLUDE_DIR "SERVER_BUILD_INCLUDE_DIR = ${SERVER_BUILD_INCLUDE_DIR}")
+MESSAGE_ONCE(SERVER_SOURCE_ROOT_DIR "SERVER_SOURCE_ROOT_DIR = ${SERVER_SOURCE_ROOT_DIR}")
 
 IF (INSTALL_LAYOUT)
     SET (MARIADB_CLIENT_LIBS libmariadb)

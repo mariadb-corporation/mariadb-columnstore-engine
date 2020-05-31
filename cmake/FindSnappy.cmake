@@ -17,6 +17,10 @@
 #  SNAPPY_LIBRARIES         The snappy library/libraries
 #  SNAPPY_INCLUDE_DIR       The location of snappy headers
 
+if(DEFINED SNAPPY_ROOT_DIR)
+  set(Snappy_FIND_QUIET)
+endif()
+
 find_path(SNAPPY_ROOT_DIR
     NAMES include/snappy.h
 )
