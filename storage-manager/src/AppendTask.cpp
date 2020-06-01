@@ -74,7 +74,7 @@ bool AppendTask::run()
     
     while (readCount < cmd->count)
     {
-        uint toRead = min(cmd->count - readCount, bufsize);
+        uint toRead = min(static_cast<uint>(cmd->count - readCount), bufsize);
         success = read(&databuf[0], toRead);
         check_error("AppendTask read data", false);
         if (success==0)

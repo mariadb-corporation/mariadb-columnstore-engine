@@ -337,7 +337,7 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
             if (ct.colDataType == CalpontSystemCatalog::DECIMAL)
                 dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, tmp, 25, ct.colDataType);
             else
-                snprintf(tmp, 25, "%ld", value);
+                snprintf(tmp, 25, "%lld", (long long)value);
 
             f2->store(tmp, strlen(tmp), f2->charset());
             break;

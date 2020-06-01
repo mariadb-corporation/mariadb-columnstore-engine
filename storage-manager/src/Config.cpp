@@ -174,7 +174,7 @@ string use_envvar(const boost::smatch &envvar)
 
 string expand_numbers(const boost::smatch &match)
 {
-    long num = stol(match[1].str());
+    long long num = stol(match[1].str());
     char suffix = (char) ::tolower(match[2].str()[0]);
 
     if (suffix == 't')

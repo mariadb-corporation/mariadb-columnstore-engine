@@ -461,8 +461,8 @@ void MetadataFile::printObjects() const
 {
     BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, jsontree->get_child("objects"))
     {
-        printf("Name: %s Length: %lu Offset: %lu\n", v.second.get<string>("key").c_str(),
-            v.second.get<size_t>("length"), v.second.get<off_t>("offset"));
+        printf("Name: %s Length: %zu Offset: %lld\n", v.second.get<string>("key").c_str(),
+            v.second.get<size_t>("length"), (long long)v.second.get<off_t>("offset"));
     }
 }
 

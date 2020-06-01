@@ -122,7 +122,7 @@ protected:
         // [ the default format in treenode.h is fixed-point notation ]
         char buf[20];
         long double floatVal;
-        int64_t exponent;
+        int exponent;
         long double base;
 
         switch (fp->data()->resultType().colDataType)
@@ -157,7 +157,7 @@ protected:
         {
             snprintf(buf, 20, "%.5Lf", base);
             fFloatStr = execplan::removeTrailing0(buf, 20);
-            snprintf(buf, 20, "e%02ld", exponent);
+            snprintf(buf, 20, "e%02d", exponent);
             fFloatStr += buf;
         }
 

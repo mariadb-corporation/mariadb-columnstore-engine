@@ -433,7 +433,7 @@ bool writetask()
 
     WriteTask w(clientSock, hdr->payloadLen);
     ssize_t result = ::write(sessionSock, cmd, hdr->payloadLen);
-    assert(result==(hdr->payloadLen));
+    assert(result == static_cast<ssize_t>(hdr->payloadLen));
 
     w.run();
     
@@ -1065,7 +1065,7 @@ bool copytask(bool connectionTest=false)
         len -= 2;
 
     ssize_t result = ::write(sessionSock, buf, len);
-    assert(result==len);
+    assert(result==static_cast<ssize_t>(len));
 
     int err=0;
 
@@ -1805,7 +1805,7 @@ void shortMsg()
 
     WriteTask w(clientSock, hdrWrite->payloadLen);
     ssize_t result = ::write(sessionSock, cmdWrite, hdrWrite->payloadLen);
-    assert(result==(hdrWrite->payloadLen));
+    assert(result==static_cast<ssize_t>(hdrWrite->payloadLen));
 
     w.run();
     
