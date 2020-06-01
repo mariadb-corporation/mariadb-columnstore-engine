@@ -143,6 +143,15 @@ public:
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
 };
 
+class WideDecimalCompare : public Compare
+{
+    int keyColumnOffset;
+public:
+    WideDecimalCompare(const IdbSortSpec& spec, int offset) : Compare(spec), keyColumnOffset(offset) { }
+
+    int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
+};
+
 // End of comparators for signed types
 // Comparators for unsigned types
 

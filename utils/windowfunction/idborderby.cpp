@@ -47,6 +47,9 @@ using namespace rowgroup;
 #include "idborderby.h"
 
 #include "joblisttypes.h"
+#include "mcs_decimal.h"
+
+using int128_t = __int128;
 
 #include "collation.h"
 
@@ -153,6 +156,35 @@ int BigIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         if (v1 != nullValue && v2 == nullValue)
             ret = fSpec.fNf;
         else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int WideDecimalCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    int128_t v1 = *(l->row1().getBinaryField_offset<int128_t>(keyColumnOffset));
+    int128_t v2 = *(l->row2().getBinaryField_offset<int128_t>(keyColumnOffset));
+    bool v1IsNull = v1 == datatypes::Decimal128Null;
+    bool v2IsNull = v2 == datatypes::Decimal128Null;
+
+    if (v1IsNull || v2IsNull)
+    {
+        if (!v1IsNull && v2IsNull)
+            ret = fSpec.fNf;
+        else if (v1IsNull  && !v2IsNull)
             ret = -fSpec.fNf;
     }
     else
@@ -537,6 +569,7 @@ void CompareRule::revertRules()
 void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgroup::RowGroup& rg)
 {
     const vector<CalpontSystemCatalog::ColDataType>& types = rg.getColTypes();
+    const auto& offsets = rg.getOffsets();
 
     for (vector<IdbSortSpec>::const_iterator i = spec.begin(); i != spec.end(); i++)
     {
@@ -574,14 +607,16 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
                 uint32_t len = rg.getColumnWidth(i->fIndex);
                 switch (len)
                 {
+                    case datatypes::MAXDECIMALWIDTH:
+                        c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
+                    case datatypes::MAXLEGACYWIDTH:
+                        c = new BigIntCompare(*i);
                     case 1 :
                         c = new TinyIntCompare(*i); break;
                     case 2 :
                         c = new SmallIntCompare(*i); break;
                     case 4 :
                         c = new IntCompare(*i); break;
-                    default:
-                        c = new BigIntCompare(*i);
                 }
 
                 fCompares.push_back(c);
