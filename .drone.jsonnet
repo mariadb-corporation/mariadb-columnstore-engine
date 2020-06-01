@@ -46,6 +46,7 @@ local Pipeline(branch, platform, event) = {
   tests:: {
     name: 'tests',
     image: platform,
+    volumes: [pipeline._volumes.mdb],
     commands: [
       (if platform == 'centos:7' then 'yum install -y sysvinit-tools' else '' ),
       (if platform == 'centos:8' then 'yum install -y diffutils' else '' ),
@@ -61,7 +62,7 @@ local Pipeline(branch, platform, event) = {
       'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/',
       'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
-      "./go.sh --sm_unit_test_dir=/drone/src/storage-manager" + (if event == 'pull_request' then ' --tests=test000.sh' else '' ),
+      "./go.sh --sm_unit_test_dir=/mdb/" + builddir + "/storage/columnstore/storage-manager" + (if event == 'pull_request' then ' --tests=test000.sh' else '' ),
       'cat go.log',
       'test -f testErrorLogs.tgz && mv testErrorLogs.tgz /drone/src/result/ || echo no-errors-archive',
     ],
