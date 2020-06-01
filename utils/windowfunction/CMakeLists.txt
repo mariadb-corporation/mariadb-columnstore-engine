@@ -29,9 +29,3 @@ add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 add_dependencies(windowfunction loggingcpp)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
-if (WITH_SORTING_COMPARATORS_UT)
-    add_executable(comparators_tests comparators-tests.cpp)
-    target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    install(TARGETS comparators_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-endif()
