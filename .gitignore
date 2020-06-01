@@ -21,6 +21,7 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 Makefile
+VERSION.dep
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
@@ -133,8 +134,18 @@ oam/install_scripts/columnstore.service
 oam/install_scripts/columnstoreSyslogSetup.sh
 oam/install_scripts/columnstore_module_installer.sh
 oam/install_scripts/disable-rep-columnstore.sh
+oam/install_scripts/mariadb-columnstore.service
 oam/install_scripts/mariadb-command-line.sh
 oam/install_scripts/master-rep-columnstore.sh
+oam/install_scripts/mcs-controllernode.service
+oam/install_scripts/mcs-ddlproc.service
+oam/install_scripts/mcs-dmlproc.service
+oam/install_scripts/mcs-exemgr.service
+oam/install_scripts/mcs-loadbrm.service
+oam/install_scripts/mcs-primproc.service
+oam/install_scripts/mcs-stop-controllernode.sh
+oam/install_scripts/mcs-workernode.service
+oam/install_scripts/mcs-writeengineserver.service
 oam/install_scripts/mcs_module_installer.sh
 oam/install_scripts/slave-rep-columnstore.sh
 oam/install_scripts/startupTests.sh
@@ -147,4 +158,5 @@ bin
 external
 gitversionEngine
 mcsconfig.h
+storage-manager/testS3Connection
 storage-manager/unit_tests

@@ -1,13 +1,11 @@
 [Unit]
 Description=loadbrm
 PartOf=mcs-workernode.service
-Before=mcs-workernode.service
-ConditionPathExists=/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current
+After=mcs-storagemanager.service
 
 [Service]
 Type=simple
-Environment="SKIP_OAM_INIT=1"
-ExecStart=/usr/bin/env bash -c "/usr/bin/load_brm /var/lib/columnstore/data1/systemFiles/dbrm/$(cat /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current)"
+ExecStart=@ENGINE_BINDIR@/mcs-loadbrm.py
 
 [Install]
 WantedBy=mariadb-columnstore.service

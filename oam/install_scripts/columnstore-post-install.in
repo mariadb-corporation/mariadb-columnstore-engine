@@ -105,6 +105,9 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /lib/systemd/system/. >/dev/null 2>&1
+
 
         systemctl enable mariadb-columnstore >/dev/null 2>&1
         systemctl enable mcs-controllernode > /dev/null 2>&1
@@ -115,6 +118,7 @@ if [ $user = "root" ]; then
         systemctl enable mcs-workernode > /dev/null 2>&1
         systemctl enable mcs-writeengineserver > /dev/null 2>&1
         systemctl enable mcs-loadbrm > /dev/null 2>&1
+        systemctl enable mcs-storagemanager > /dev/null 2>&1
     else
         chkconfig=`which chkconfig 2>/dev/null`
         if [ -n "$chkconfig" ]; then
@@ -177,13 +181,17 @@ if [ -z "aws" ]; then
 fi
 
 postConfigure
-systemctl start mariadb-columnstore
 
-# Wait for all columnstore to be ready, DDLProc is final process in startup order
-while  [ -z  "$(pgrep -x DDLProc)" ];
-do
-    sleep 1
-done
+systemctl cat mariadb-columnstore.service > /dev/null 2>&1
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    systemctl start mariadb-columnstore
+     
+    # Wait for all columnstore to be ready, DDLProc is final process in startup order
+    while  [ -z  "$(pgrep -x DDLProc)" ];
+    do
+        sleep 1
+    done
+fi
  
 dbbuilder 7 > $tmpDir/dbbuilder.log
 

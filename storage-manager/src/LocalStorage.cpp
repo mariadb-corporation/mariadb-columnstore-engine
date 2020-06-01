@@ -101,6 +101,7 @@ int LocalStorage::copy(const bf::path &source, const bf::path &dest)
     if (err)
     {
         errno = err.value();
+        ::unlink(dest.string().c_str());
         return -1;
     }
     return 0;
@@ -216,6 +217,7 @@ int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const
             l_errno = errno;
             //logger->log(LOG_CRIT, "LocalStorage::putObject(): Failed to write to %s, got '%s'", c_dest, strerror_r(errno, buf, 80));
             close(fd);
+            ::unlink(c_dest);
             errno = l_errno;
             bytesWritten += count;
             return err;
