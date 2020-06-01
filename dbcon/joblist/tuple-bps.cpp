@@ -2774,10 +2774,6 @@ void TupleBPS::useJoiners(const vector<boost::shared_ptr<joiner::TupleJoiner> >&
         fBPP->useJoiners(tjoiners);
 }
 
-void TupleBPS::useJoiner(boost::shared_ptr<joiner::Joiner> j)
-{
-}
-
 void TupleBPS::newPMOnline(uint32_t connectionNumber)
 {
     ByteStream bs;

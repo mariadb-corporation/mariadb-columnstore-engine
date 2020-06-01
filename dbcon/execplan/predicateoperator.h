@@ -121,6 +121,7 @@ public:
 private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
+    inline bool strTrimCompare(const std::string& op1, const std::string& op2);
     
     const CHARSET_INFO* cs;
 };

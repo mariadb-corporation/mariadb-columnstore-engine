@@ -3412,7 +3412,8 @@ ReturnedColumn* buildReturnedColumn(
     if (rc && item->name.length)
         rc->alias(item->name.str);
 
-    rc->charsetNumber(item->collation.collation->number);
+    if (rc)
+        rc->charsetNumber(item->collation.collation->number);
     
     return rc;
 }

@@ -390,7 +390,12 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
 
 void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, int func)
 {
-    CHARSET_INFO* cs = fRowGroupIn.getCharset(col);
+    if (isNull(fRowGroupOut, fRow, col))
+    {
+        fRow.setStringField(val1, col);
+        return;
+    }
+    CHARSET_INFO* cs = fRow.getCharset(col);
     int tmp = cs->strnncoll(val1.c_str(), val1.length(), val2.c_str(), val2.length());
 
     if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
@@ -1276,19 +1281,9 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            int colWidth = fRowGroupIn.getColumnWidth(colIn);
-            if (colWidth <= 8)
-            {
-                uint64_t valIn = rowIn.getUintField(colIn);
-                uint64_t valOut = fRow.getUintField(colOut);
-                updateCharMinMax(valIn, valOut, colOut, funcType);
-            }
-            else
-            {
-                string valIn = rowIn.getStringField(colIn);
-                string valOut = fRow.getStringField(colOut);
-                updateStringMinMax(valIn, valOut, colOut, funcType);
-            }
+            string valIn = rowIn.getStringField(colIn);
+            string valOut = fRow.getStringField(colOut);
+            updateStringMinMax(valIn, valOut, colOut, funcType);
             break;
         }
 

@@ -1042,14 +1042,10 @@ bool Row::equals(const std::string& val, uint32_t col) const
         if (memcmp(getStringPointer(col), val.c_str(), val.length()))
             return false;
     }
-    else if (inStringTable(col))
-    {
-        uint64_t offset = *((uint64_t*) &data[offsets[col]]);
-        return strings->equals(val, offset, cs);
-    }
     else
     {
-        return (cs->strnncollsp(val.c_str(), val.length(), (char*)&data[offsets[col]], getColumnWidth(col)) == 0);
+        return (cs->strnncollsp((char*)getStringPointer(col), getStringLength(col),
+                                val.c_str(), val.length()) == 0);
     }
     return true;
 }

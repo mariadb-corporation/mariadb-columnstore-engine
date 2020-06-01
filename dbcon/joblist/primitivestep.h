@@ -925,7 +925,7 @@ public:
     {
         return fOutType;
     }
-    void getOutputType(BPSOutputType ot)
+    void setOutputType(BPSOutputType ot)
     {
         fOutType = ot;
     }
@@ -1062,7 +1062,6 @@ public:
     virtual bool wasStepRun() const = 0;
     virtual BPSOutputType getOutputType() const = 0;
     virtual uint64_t getRows() const = 0;
-    virtual void useJoiner(boost::shared_ptr<joiner::Joiner>) = 0;
     virtual void setJobInfo(const JobInfo* jobInfo) = 0;
     virtual void setOutputRowGroup(const rowgroup::RowGroup& rg) = 0;
     virtual const rowgroup::RowGroup& getOutputRowGroup() const = 0;
@@ -1244,7 +1243,6 @@ public:
     {
         return uniqueID;
     }
-    void useJoiner(boost::shared_ptr<joiner::Joiner>);
     void useJoiner(boost::shared_ptr<joiner::TupleJoiner>);
     void useJoiners(const std::vector<boost::shared_ptr<joiner::TupleJoiner> >&);
     bool wasStepRun() const

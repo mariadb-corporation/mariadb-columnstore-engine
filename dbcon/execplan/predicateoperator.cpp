@@ -107,6 +107,7 @@ void PredicateOperator::unserialize(messageqcpp::ByteStream& b)
     ObjectReader::checkType(b, ObjectReader::PREDICATEOPERATOR);
     //b >> fData;
     Operator::unserialize(b);
+    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
 }
 
 bool PredicateOperator::operator==(const PredicateOperator& t) const
@@ -307,6 +308,9 @@ void PredicateOperator::setOpType(Type& l, Type& r)
               r.colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
               r.colDataType == execplan::CalpontSystemCatalog::TEXT))
     {
+#if 0
+        // Currently, STRINT isn't properly implemented everywhere
+        // For short strings, we can get a faster execution for charset that fit in one byte.
         if ( ( (l.colDataType == execplan::CalpontSystemCatalog::CHAR && l.colWidth <= 8) ||
                 (l.colDataType == execplan::CalpontSystemCatalog::VARCHAR && l.colWidth < 8) ) &&
                 ( (r.colDataType == execplan::CalpontSystemCatalog::CHAR && r.colWidth <= 8) ||
@@ -334,6 +338,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
             }
         }
         else
+#endif
         {
             fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
             fOperationType.colWidth = 255;
@@ -345,13 +350,46 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
         fOperationType.colWidth = sizeof(long double);
     }
+/*
     else
     {
         fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
         fOperationType.colWidth = 8;
     }
-    
+*/    
     cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
+}
+
+inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)
+{
+    int r1 =  cs->strnncollsp(op1.c_str(), op1.length(), op2.c_str(), op2.length());
+    switch (fOp)
+    {
+        case OP_EQ:
+            return r1 == 0;
+
+        case OP_NE:
+            return r1 != 0;
+
+        case OP_GT:
+            return r1 > 0;
+
+        case OP_GE:
+            return r1 >= 0;
+
+        case OP_LT:
+            return r1 < 0;
+
+        case OP_LE:
+            return r1 <= 0;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "Unsupported predicate operation: " << fOp;
+            throw logging::InvalidOperationExcept(oss.str());
+        }
+    }
 }
 
 bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
@@ -730,12 +768,8 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
             const std::string& val1 = lop->getStrVal(row, isNull);
             if (isNull)
                 return false;
-            const std::string& val2 = rop->getStrVal(row, isNull);
-    
-            cs->strnncollsp(val1.c_str(), val1.length(), val2.c_str(), val2.length());
-//            return strTrimCompare(val1, rop->getStrVal(row, isNull), fOperationType.charsetNumber) && !isNull;
-//            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
 
+            return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
         }
 
         //FIXME: ???

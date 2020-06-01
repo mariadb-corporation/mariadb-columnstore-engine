@@ -393,15 +393,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 // 				cout << "got the joined Rowgroup: " << joinedRG.toString() << "\n";
             }
         }
-        else
-        {
-            bs >> tmp8;
-            bs >> joinerSize;
-            joiner.reset(new Joiner((bool) tmp8));
-			// going to use just one lock for this old style, probably not used, join
-			addToJoinerLocks.reset(new boost::scoped_array<boost::mutex>[1]);
-            addToJoinerLocks[0].reset(new boost::mutex[1]);
-        }
 
 #ifdef __FreeBSD__
         pthread_mutex_unlock(&objLock);
@@ -786,19 +777,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             */
         }
     }
-    else
-    {
-        joblist::ElementType *et = (joblist::ElementType*) bs.buf();
-
-        boost::mutex::scoped_lock lk(addToJoinerLocks[0][0]);
-        for (i = 0; i < count; i++)
-        {
-// 			cout << "BPP: adding <" << et[i].first << ", " << et[i].second << "> to Joiner\n";
-            joiner->insert(et[i]);
-        }
-
-        bs.advance(count << 4);
-    }
 
     idbassert(bs.length() == 0);
 }
@@ -838,38 +816,35 @@ int BatchPrimitiveProcessor::endOfJoiner()
         return 0;
     }
 
-    if (ot == ROW_GROUP)
-        for (i = 0; i < joinerCount; i++)
+    for (i = 0; i < joinerCount; i++)
+    {
+        if (!typelessJoin[i])
         {
-            if (!typelessJoin[i])
-            {
-                currentSize = 0;
-                for (uint j = 0; j < processorThreads; ++j)
-                    if (!tJoiners[i] || !tJoiners[i][j])
-                        return -1;
-                    else
-                        currentSize += tJoiners[i][j]->size();
-                if (currentSize != tJoinerSizes[i])
+            currentSize = 0;
+            for (uint j = 0; j < processorThreads; ++j)
+                if (!tJoiners[i] || !tJoiners[i][j])
                     return -1;
-                //if ((!tJoiners[i] || tJoiners[i]->size() != tJoinerSizes[i]))
-                //    return -1;
-            }
-            else
-            {
-                currentSize = 0;
-                for (uint j = 0; j < processorThreads; ++j)
-                    if (!tlJoiners[i] || !tlJoiners[i][j])
-                        return -1;
-                    else
-                        currentSize += tlJoiners[i][j]->size();
-                if (currentSize != tJoinerSizes[i])
-                    return -1;
-                //if ((!tJoiners[i] || tlJoiners[i]->size() != tJoinerSizes[i]))
-                //    return -1;
-            }
+                else
+                    currentSize += tJoiners[i][j]->size();
+            if (currentSize != tJoinerSizes[i])
+                return -1;
+            //if ((!tJoiners[i] || tJoiners[i]->size() != tJoinerSizes[i]))
+            //    return -1;
         }
-    else if (joiner.get() == NULL || joiner->size() != joinerSize)
-        return -1;
+        else
+        {
+            currentSize = 0;
+            for (uint j = 0; j < processorThreads; ++j)
+                if (!tlJoiners[i] || !tlJoiners[i][j])
+                    return -1;
+                else
+                    currentSize += tlJoiners[i][j]->size();
+            if (currentSize != tJoinerSizes[i])
+                return -1;
+            //if ((!tJoiners[i] || tlJoiners[i]->size() != tJoinerSizes[i]))
+            //    return -1;
+        }
+    }
 
     endOfJoinerRan = true;
 
@@ -1115,26 +1090,6 @@ void BatchPrimitiveProcessor::initProcessor()
     asyncLoaded.reset(new bool[projectCount + 1]);
 }
 
-void BatchPrimitiveProcessor::executeJoin()
-{
-    uint32_t newRowCount, i;
-
-    preJoinRidCount = ridCount;
-    newRowCount = 0;
-    smallSideMatches.clear();
-
-    for (i = 0; i < ridCount; i++)
-    {
-        if (joiner->getNewMatches(values[i], &smallSideMatches))
-        {
-            values[newRowCount] = values[i];
-            relRids[newRowCount++] = relRids[i];
-        }
-    }
-
-    ridCount = newRowCount;
-}
-
 /* This version does a join on projected rows */
 void BatchPrimitiveProcessor::executeTupleJoin()
 {
@@ -1143,7 +1098,6 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     uint64_t largeKey;
     TypelessData tlLargeKey;
 
-    preJoinRidCount = ridCount;
     outputRG.getRow(0, &oldRow);
     outputRG.getRow(0, &newRow);
 
@@ -1512,17 +1466,6 @@ void BatchPrimitiveProcessor::execute()
         stopwatch->stop("BatchPrimitiveProcessor::execute second part");
         stopwatch->start("BatchPrimitiveProcessor::execute third part");
 #endif
-
-        if (doJoin && ot != ROW_GROUP)
-        {
-#ifdef PRIMPROC_STOPWATCH
-            stopwatch->start("- executeJoin");
-            executeJoin();
-            stopwatch->stop("- executeJoin");
-#else
-            executeJoin();
-#endif
-        }
 
         if (projectCount > 0 || ot == ROW_GROUP)
         {
@@ -2058,17 +2001,6 @@ void BatchPrimitiveProcessor::serializeElementTypes()
     *serialized << ridCount;
     serialized->append((uint8_t*) relRids, ridCount << 1);
     serialized->append((uint8_t*) values, ridCount << 3);
-
-    /* Send the small side matches if there was a join */
-    if (doJoin)
-    {
-        uint32_t ssize = smallSideMatches.size();
-        *serialized << preJoinRidCount;
-        *serialized << (uint32_t) ssize;
-
-        if (ssize > 0)
-            serialized->append((uint8_t*) &smallSideMatches[0], ssize << 4);
-    }
 }
 
 void BatchPrimitiveProcessor::serializeStrings()
@@ -2403,51 +2335,44 @@ SBPP BatchPrimitiveProcessor::duplicate()
     if (doJoin)
     {
         pthread_mutex_lock(&bpp->objLock);
-        bpp->joinerSize = joinerSize;
+        /* There are add'l join vars, but only these are necessary for processing
+             a join */
+        bpp->tJoinerSizes = tJoinerSizes;
+        bpp->joinerCount = joinerCount;
+        bpp->joinTypes = joinTypes;
+        bpp->largeSideKeyColumns = largeSideKeyColumns;
+        bpp->tJoiners = tJoiners;
+        //bpp->_pools = _pools;
+        bpp->typelessJoin = typelessJoin;
+        bpp->tlLargeSideKeyColumns = tlLargeSideKeyColumns;
+        bpp->tlJoiners = tlJoiners;
+        bpp->tlKeyLengths = tlKeyLengths;
+        bpp->storedKeyAllocators = storedKeyAllocators;
+        bpp->joinNullValues = joinNullValues;
+        bpp->doMatchNulls = doMatchNulls;
+        bpp->hasJoinFEFilters = hasJoinFEFilters;
+        bpp->hasSmallOuterJoin = hasSmallOuterJoin;
 
-        if (ot == ROW_GROUP)
+        if (hasJoinFEFilters)
         {
-            /* There are add'l join vars, but only these are necessary for processing
-            	 a join */
-            bpp->tJoinerSizes = tJoinerSizes;
-            bpp->joinerCount = joinerCount;
-            bpp->joinTypes = joinTypes;
-            bpp->largeSideKeyColumns = largeSideKeyColumns;
-            bpp->tJoiners = tJoiners;
-            //bpp->_pools = _pools;
-            bpp->typelessJoin = typelessJoin;
-            bpp->tlLargeSideKeyColumns = tlLargeSideKeyColumns;
-            bpp->tlJoiners = tlJoiners;
-            bpp->tlKeyLengths = tlKeyLengths;
-            bpp->storedKeyAllocators = storedKeyAllocators;
-            bpp->joinNullValues = joinNullValues;
-            bpp->doMatchNulls = doMatchNulls;
-            bpp->hasJoinFEFilters = hasJoinFEFilters;
-            bpp->hasSmallOuterJoin = hasSmallOuterJoin;
+            bpp->joinFERG = joinFERG;
+            bpp->joinFEFilters.reset(new scoped_ptr<FuncExpWrapper>[joinerCount]);
 
-            if (hasJoinFEFilters)
-            {
-                bpp->joinFERG = joinFERG;
-                bpp->joinFEFilters.reset(new scoped_ptr<FuncExpWrapper>[joinerCount]);
-
-                for (i = 0; i < joinerCount; i++)
-                    if (joinFEFilters[i])
-                        bpp->joinFEFilters[i].reset(new FuncExpWrapper(*joinFEFilters[i]));
-            }
-
-            if (getTupleJoinRowGroupData)
-            {
-                bpp->smallSideRGs = smallSideRGs;
-                bpp->largeSideRG = largeSideRG;
-                bpp->smallSideRowLengths = smallSideRowLengths;
-                bpp->smallSideRowData = smallSideRowData;
-                bpp->smallNullRowData = smallNullRowData;
-                bpp->smallNullPointers = smallNullPointers;
-                bpp->joinedRG = joinedRG;
-            }
+            for (i = 0; i < joinerCount; i++)
+                if (joinFEFilters[i])
+                    bpp->joinFEFilters[i].reset(new FuncExpWrapper(*joinFEFilters[i]));
         }
-        else
-            bpp->joiner = joiner;
+
+        if (getTupleJoinRowGroupData)
+        {
+            bpp->smallSideRGs = smallSideRGs;
+            bpp->largeSideRG = largeSideRG;
+            bpp->smallSideRowLengths = smallSideRowLengths;
+            bpp->smallSideRowData = smallSideRowData;
+            bpp->smallNullRowData = smallNullRowData;
+            bpp->smallNullPointers = smallNullPointers;
+            bpp->joinedRG = joinedRG;
+        }
 
 #ifdef __FreeBSD__
         pthread_mutex_unlock(&bpp->objLock);
@@ -2547,10 +2472,6 @@ bool BatchPrimitiveProcessor::operator==(const BatchPrimitiveProcessor& bpp) con
 
     for (i = 0; i < filterCount; i++)
         if (*filterSteps[i] != *bpp.filterSteps[i])
-            return false;
-
-    for (i = 0; i < projectCount; i++)
-        if (*projectSteps[i] != *bpp.projectSteps[i])
             return false;
 
     return true;

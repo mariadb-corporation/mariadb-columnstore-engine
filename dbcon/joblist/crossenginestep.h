@@ -134,7 +134,6 @@ public:
     {
         return fAlias;
     }
-    void useJoiner(boost::shared_ptr<joiner::Joiner>) {}
     void setJobInfo(const JobInfo* jobInfo) {}
     void  setOutputRowGroup(const rowgroup::RowGroup&);
     const rowgroup::RowGroup& getOutputRowGroup() const;
