@@ -132,35 +132,18 @@ namespace helpers
 const char* convNumToStr(int64_t val, char* dst, int radix)
 {
     if (radix == 16 || radix == -16)
-#ifdef _MSC_VER
-        sprintf(dst, "%llX", val);
+        sprintf(dst, "%llX", (long long)val);
 
-#else
-        sprintf(dst, "%lX", val);
-#endif
     else if (radix == 8 || radix == -8)
-#ifdef _MSC_VER
-        sprintf(dst, "%llo", val);
+        sprintf(dst, "%llo", (long long)val);
 
-#else
-        sprintf(dst, "%lo", val);
-#endif
     else if (radix == 10)
     {
-        uint64_t uval = static_cast<uint64_t>(val);
-#ifdef _MSC_VER
-        sprintf(dst, "%llu", uval);
-#else
-        sprintf(dst, "%lu", uval);
-#endif
+        sprintf(dst, "%llu", (unsigned long long)val);
     }
     else if (radix == -10)
-#ifdef _MSC_VER
-        sprintf(dst, "%lld", val);
+        sprintf(dst, "%lld", (long long)val);
 
-#else
-        sprintf(dst, "%ld", val);
-#endif
     else if (radix == 2 || radix == -2)
     {
         char tmp[65];
