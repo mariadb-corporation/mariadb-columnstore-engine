@@ -448,7 +448,7 @@ int ha_mcs::direct_update_rows(ha_rows *update_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
     }
     catch (std::runtime_error& e)
     {
@@ -464,7 +464,7 @@ int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
         *found_rows = *update_rows;
     }
     catch (std::runtime_error& e)
@@ -487,7 +487,7 @@ int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
     int rc;
     try
     {
-        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows);
+        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows, condStack);
     }
     catch (std::runtime_error& e)
     {
@@ -629,7 +629,7 @@ int ha_mcs::rnd_init(bool scan)
     {
         try
         {
-            rc = ha_mcs_impl_rnd_init(table);
+            rc = ha_mcs_impl_rnd_init(table, condStack);
         }
         catch (std::runtime_error& e)
         {
@@ -1110,7 +1110,7 @@ const COND* ha_mcs::cond_push(const COND* cond)
     COND* ret_cond = NULL;
     try
     {
-        ret_cond = ha_mcs_impl_cond_push(const_cast<COND*>(cond), table);
+        ret_cond = ha_mcs_impl_cond_push(const_cast<COND*>(cond), table, condStack);
     }
     catch (std::runtime_error& e)
     {
@@ -1119,6 +1119,23 @@ const COND* ha_mcs::cond_push(const COND* cond)
     DBUG_RETURN(ret_cond);
 }
 
+void ha_mcs::cond_pop()
+{
+    DBUG_ENTER("ha_mcs::cond_pop");
+
+    THD* thd = current_thd;
+
+    if ((((thd->lex)->sql_command == SQLCOM_UPDATE) ||
+         ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
+         ((thd->lex)->sql_command == SQLCOM_DELETE) ||
+         ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI)) &&
+        !condStack.empty())
+    {
+        condStack.pop_back();
+    }
+
+    DBUG_VOID_RETURN;
+}
 
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };

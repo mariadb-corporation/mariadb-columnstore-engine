@@ -1194,7 +1194,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
     return returnVal;
 }
 
-uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
+uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& condStack)
 {
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -1780,7 +1780,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi)
 
         gwi.clauseType = WHERE;
 
-        if (getSelectPlan(gwi, select_lex, updateCP, false) != 0) //@Bug 3030 Modify the error message for unsupported functions
+        if (getSelectPlan(gwi, select_lex, updateCP, false, false, condStack) != 0) //@Bug 3030 Modify the error message for unsupported functions
         {
             if (gwi.cs_vtable_is_update_with_derive)
             {
@@ -2284,7 +2284,7 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
     return 0;
 }
 
-int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
+int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, const std::vector<COND*>& condStack)
 {
     THD* thd = current_thd;
     int rc = 0;
@@ -2308,7 +2308,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
 
     if (execute)
     {
-        rc = doUpdateDelete(thd, gwi);
+        rc = doUpdateDelete(thd, gwi, condStack);
     }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -2320,7 +2320,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows)
     return rc;
 }
 
-int ha_mcs_impl_rnd_init(TABLE* table)
+int ha_mcs_impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 {
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
@@ -2384,7 +2384,7 @@ int ha_mcs_impl_rnd_init(TABLE* table)
 
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd, gwi);
+        return doUpdateDelete(thd, gwi, condStack);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
@@ -3987,7 +3987,7 @@ int ha_mcs_impl_delete_row(const uchar* buf)
     return 0;
 }
 
-COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
+COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condStack)
 {
     THD* thd = current_thd;
 
@@ -3995,7 +3995,10 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table)
             ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI))
-        return cond;
+    {
+        condStack.push_back(cond);
+        return nullptr;
+    }
 
     string alias;
     alias.assign(table->alias.ptr(), table->alias.length());
@@ -4961,9 +4964,10 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
+    // MCOL-4023 We need to test this code path.
     //Update and delete code
     if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd, gwi);
+        return doUpdateDelete(thd, gwi, std::vector<COND*>());
 
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
