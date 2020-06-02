@@ -1,6 +1,23 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
+IF (NOT COMMAND MESSAGE_ONCE)
+    # lifted from the server's definition of message_once
+    IF ("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}" VERSION_LESS "2.8.7")
+        FUNCTION(MESSAGE_ONCE id out)
+            MESSAGE(STATUS "${out}")
+        ENDFUNCTION()
+    ELSE()
+        FUNCTION(MESSAGE_ONCE id out)
+            STRING(MD5 hash "${out}")
+            IF(NOT __msg1_${id} STREQUAL "${hash}")
+                MESSAGE(STATUS "${out}")
+            ENDIF()
+            SET(__msg1_${id} ${hash} CACHE INTERNAL "")
+        ENDFUNCTION()
+    ENDIF()
+ENDIF()
+
 IF(NOT INSTALL_LAYOUT)
     IF(NOT CMAKE_BUILD_TYPE)
         SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING

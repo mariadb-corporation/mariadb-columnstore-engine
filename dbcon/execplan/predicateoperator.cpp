@@ -350,13 +350,12 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colDataType = execplan::CalpontSystemCatalog::LONGDOUBLE;
         fOperationType.colWidth = sizeof(long double);
     }
-/*
     else
     {
         fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
         fOperationType.colWidth = 8;
     }
-*/    
+
     cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
 }
 
