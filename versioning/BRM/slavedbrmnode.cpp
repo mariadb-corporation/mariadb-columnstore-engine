@@ -523,6 +523,70 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID,
     return 0;
 }
 
+int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID,
+                                    const std::vector<BRM::LBID_t>& lbids,
+                                    OID_t vbOID,
+                                    const std::vector<uint32_t>& vbFBOs) throw()
+{
+    VER_t oldVerID;
+
+    /*
+        LBIDRange r;
+        r.start = lbid;
+        r.size = 1;
+        if (!copylocks.isLocked(r))
+            cout << "Copylock error: lbid " << lbid << " isn't locked\n";
+    */
+
+    try
+    {
+        vbbm.lock(VBBM::WRITE);
+        locked[0] = true;
+        vss.lock(VSS::WRITE);
+        locked[1] = true;
+
+        for (size_t i = 0; i < lbids.size(); i++)
+        {
+            // figure out the current version of the block
+            // NOTE!  This will currently error out to preserve the assumption that
+            // larger version numbers imply more recent changes.  If we ever change that
+            // assumption, we'll need to revise the vbRollback() fcns as well.
+            oldVerID = vss.getCurrentVersion(lbids[i], NULL);
+
+            if (oldVerID == transID)
+                continue;
+            else if (oldVerID > transID)
+            {
+                ostringstream str;
+
+                str << "WorkerDBRMNode::bulkWriteVBEntry(): Overlapping transactions detected.  "
+                    "Transaction " << transID << " cannot overwrite blocks written by "
+                    "transaction " << oldVerID;
+                log(str.str());
+                return ERR_OLDTXN_OVERWRITING_NEWTXN;
+            }
+
+            vbbm.insert(lbids[i], oldVerID, vbOID, vbFBOs[i]);
+
+            if (oldVerID > 0)
+                vss.setVBFlag(lbids[i], oldVerID, true);
+            else
+                vss.insert(lbids[i], oldVerID, true, false);
+
+            // XXXPAT:  There's a problem if we use transID as the new version here.
+            // Need to use at least oldVerID + 1.  OldverID can be > TransID
+            vss.insert(lbids[i], transID, false, true);
+        }
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+        return -1;
+    }
+
+    return 0;
+}
+
 int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID,
                                const LBIDRange_v& ranges, VBRange_v& freeList, bool flushPMCache) throw()
 {

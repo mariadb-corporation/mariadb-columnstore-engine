@@ -91,6 +91,7 @@ private:
     void do_bulkSetHWM(messageqcpp::ByteStream& msg);
     void do_bulkSetHWMAndCP(messageqcpp::ByteStream& msg);
     void do_writeVBEntry(messageqcpp::ByteStream& msg);
+    void do_bulkWriteVBEntry(messageqcpp::ByteStream& msg);
     void do_beginVBCopy(messageqcpp::ByteStream& msg);
     void do_endVBCopy(messageqcpp::ByteStream& msg);
     void do_vbRollback1(messageqcpp::ByteStream& msg);
