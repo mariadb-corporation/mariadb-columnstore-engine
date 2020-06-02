@@ -154,6 +154,13 @@ if (NOT SNAPPY_FOUND)
     return()
 endif()
 
+FIND_PACKAGE(CURL)
+if (NOT CURL_FOUND)
+    MESSAGE_ONCE(CS_NO_CURL "libcurl development headers not found")
+    return()
+endif()
+
+
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
     MESSAGE_ONCE(CS_NO_AWK "awk not found!")
