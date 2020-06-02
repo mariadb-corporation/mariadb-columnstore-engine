@@ -77,9 +77,8 @@ local Pipeline(branch, platform, event) = {
       name: 'submodules',
       image: 'alpine/git',
       commands: [
-        'git submodule update --recursive --remote',
+        'git submodule update --init --recursive --remote',
         'git config cmake.update-submodules no',
-        'ls -la /drone/src/storage-manager',
       ],
     },
     {
