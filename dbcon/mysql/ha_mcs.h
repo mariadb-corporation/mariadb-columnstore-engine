@@ -18,6 +18,7 @@
    MA 02110-1301, USA. */
 #ifndef HA_MCS_H__
 #define HA_MCS_H__
+
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
@@ -44,6 +45,11 @@ class ha_mcs: public handler
     THR_LOCK_DATA lock;      ///< MySQL lock
     COLUMNSTORE_SHARE* share;    ///< Shared lock info
     ulonglong int_table_flags;
+    // We are using a vector here to mimick the stack functionality
+    // using push_back() and pop_back()
+    // as apparently there is a linker error on the std::stack<COND*>::pop()
+    // call on Ubuntu18.
+    std::vector<COND*> condStack;
 
 public:
     ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
@@ -222,6 +228,7 @@ public:
     THR_LOCK_DATA** store_lock(THD* thd, THR_LOCK_DATA** to,
                                enum thr_lock_type lock_type);     ///< required
     const COND* cond_push(const COND* cond);
+    void cond_pop() override;
     uint8 table_cache_type()
     {
         return HA_CACHE_TBL_NOCACHE;
