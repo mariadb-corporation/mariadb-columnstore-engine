@@ -5,11 +5,41 @@
 # Post-install steps for columnstore install
 
 running_systemd() {
-   if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+   if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
        echo 0
    else
        echo 1
    fi
+}
+
+checkForError() {
+	# check for password error
+	grep "ERROR 1045" ${tmpDir}/mysql_install.log > ${tmpDir}/error.check
+	if [ `cat ${tmpDir}/error.check | wc -c` -ne 0 ]; then
+		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
+		  rm -f ${tmpDir}/error.check
+		  exit 2;
+	fi
+
+	rm -f ${tmpDir}/error.check
+
+        #---------------------------------------------------------------------------
+        # See if engine columnstore exist
+        #---------------------------------------------------------------------------
+        echo "checking for engine columnstore..."
+        su -s /bin/sh -c 'mysql --execute="show engines"' mysql 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore
+
+        #
+        # Add compressiontype column to SYSCOLUMN if applicable
+        #
+        if [ $? -ne 0 ]; then
+                echo "columnstore doesn't exist"
+                exit 1
+        fi
+
+        echo "columnstore exist"
+
+	return 0;
 }
 
 rpmmode=install
@@ -174,36 +204,48 @@ mkdir $lockdir >/dev/null 2>&1
 
 rm -f $lockdir/columnstore
 
-#check and get amazon env variables
-aws=`which aws 2>/dev/null`
-if [ -z "aws" ]; then
-    MCSgetCredentials.sh >/dev/null 2>&1
+# This was the last place of postConfigure. RIP
+
+/usr/sbin/install_mcs_mysql.sh --tmpdir=$tmpDir
+
+# Restart MDB to enable plugin
+systemctl cat mariadb.service > /dev/null 2>&1
+if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    systemctl restart mariadb.service > /dev/null 2>&1
+else
+    pkill mysqld > /dev/null 2>&1
+    /usr/bin/mysqld_safe &
 fi
 
-postConfigure
+checkForError
+if [ $? -ne 0 ]; then
+    echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    systemctl start mariadb-columnstore
-     
-    # Wait for all columnstore to be ready, DDLProc is final process in startup order
-    while  [ -z  "$(pgrep -x DDLProc)" ];
-    do
-        sleep 1
-    done
+    systemctl start mcs-loadbrm
+    systemctl start mcs-workernode
+    systemctl start mcs-controllernode
+    systemctl start mcs-primproc
+    systemctl start mcs-exemgr
+    systemctl start mcs-storagemanager
+    systemctl start mcs-writeengineserver
+    systemctl start mcs-ddlproc
+    systemctl start mcs-dmlproc
+
+    dbbuilder 7 > $tmpDir/dbbuilder.log
 fi
  
-dbbuilder 7 > $tmpDir/dbbuilder.log
-
 if [ $stop_mysqld -eq 1 ];then
     # Make sure we stop mariadb since it wasn't running prior to columnstore installation
     systemctl cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl stop mariadb.service > /dev/null 2>&1
     else
-        pkill mysqld
+        pkill mysqld > /dev/null 2>&1
     fi
-
 fi
+
 sleep 2
 exit 0

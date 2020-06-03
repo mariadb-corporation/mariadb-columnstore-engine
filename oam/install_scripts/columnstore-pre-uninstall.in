@@ -17,7 +17,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
-    PROGS='StorageManager workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer'
+    PROGS='workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager'
     kill $(pidof $PROGS) > /dev/null
     sleep 3
     kill -9 $(pidof $PROGS) > /dev/null
@@ -117,6 +117,9 @@ rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
 
 #remove OAMdbrootCheck file
 rm -f /var/lib/columnstore/data*/OAMdbrootCheck > /dev/null 2>&1
+
+rm -f /etc/rsyslog.d/49-columnstore.conf > /dev/null 2>&1
+rm -rf /tmp/columnstore_tmp_files > /dev/null 2>&1
 
 #tell user to run post configure script
 echo " "

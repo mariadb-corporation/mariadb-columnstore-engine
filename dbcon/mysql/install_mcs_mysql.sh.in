@@ -1,15 +1,9 @@
 #!/bin/bash
-#
-# $Id$
-#
 
-rpmmode=install
 pwprompt=" "
 
 for arg in "$@"; do
-	if [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
-		rpmmode="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--tmpdir='` -eq 9 ]; then
+	if [ `expr -- "$arg" : '--tmpdir='` -eq 9 ]; then
 		tmpdir="`echo $arg | awk -F= '{print $2}'`"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
