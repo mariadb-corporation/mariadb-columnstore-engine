@@ -63,8 +63,20 @@ local Pipeline(branch, platform, event) = {
       'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/',
       'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
       "./go.sh --sm_unit_test_dir=/mdb/" + builddir + "/storage/columnstore/storage-manager" + (if event == 'pull_request' then ' --tests=test000.sh' else '' ),
-      'cat go.log',
-      'test -f testErrorLogs.tgz && mv testErrorLogs.tgz /drone/src/result/ || echo no-errors-archive',
+    ],
+  },
+  tests_report:: {
+    name: 'tests report',
+    image: platform,
+    when: {
+      status: ['success', 'failure'],
+    },
+    volumes: [pipeline._volumes.mdb],
+    commands: [
+      'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
+      'ls -l',
+      'test -f go.log && cat go.log || echo missing-go-log-file',
+      'test -f testErrorLogs.tgz && mv testErrorLogs.tgz /drone/src/result/ || echo missing-test-result-archive',
     ],
   },
   kind: 'pipeline',
@@ -132,13 +144,13 @@ local Pipeline(branch, platform, event) = {
     },
   ] +
   (if branch=='develop-1.4' && std.split(platform, ":")[0]=="centos" then [pipeline.tests] else []) +
+  (if branch=='develop-1.4' && std.split(platform, ":")[0]=="centos" then [pipeline.tests_report] else []) +
   [
     {
       name: 'publish',
       image: 'plugins/s3',
       when: {
         status: ['success', 'failure'],
-        //  event: ['cron'],
       },
       settings: {
         bucket: 'cspkg',
