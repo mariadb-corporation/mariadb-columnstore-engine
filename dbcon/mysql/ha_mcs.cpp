@@ -1243,8 +1243,8 @@ my_bool get_status_and_flush_cache(void *param,
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   int error;
   enum_sql_command sql_command= cache->table->in_use->lex->sql_command;
+
   cache->insert_command= (sql_command == SQLCOM_INSERT ||
-                          sql_command == SQLCOM_INSERT_SELECT ||
                           sql_command == SQLCOM_LOAD);
   /*
     Call first the original Aria get_status function
@@ -1280,32 +1280,39 @@ my_bool get_status_and_flush_cache(void *param,
 static my_bool cache_start_trans(void* param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  return (*cache->org_lock.start_trans)(cache->cache_handler->file);
+  if (cache->org_lock.start_trans)
+    return (*cache->org_lock.start_trans)(cache->cache_handler->file);
+  return 0;
 }
 
 static void cache_copy_status(void* to, void *from)
 {
   ha_mcs_cache *to_cache= (ha_mcs_cache*) to, *from_cache= (ha_mcs_cache*) from;
-  (*to_cache->org_lock.copy_status)(to_cache->cache_handler->file,
-                                    from_cache->cache_handler->file);
+  if (to_cache->org_lock.copy_status)
+    (*to_cache->org_lock.copy_status)(to_cache->cache_handler->file,
+                                      from_cache->cache_handler->file);
 }
 
 static void cache_update_status(void* param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  (*cache->org_lock.update_status)(cache->cache_handler->file);
+  if (cache->org_lock.update_status)
+    (*cache->org_lock.update_status)(cache->cache_handler->file);
 }
 
 static void cache_restore_status(void *param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  (*cache->org_lock.restore_status)(cache->cache_handler->file);
+  if (cache->org_lock.restore_status)
+    (*cache->org_lock.restore_status)(cache->cache_handler->file);
 }
 
 static my_bool cache_check_status(void *param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  return (*cache->org_lock.check_status)(cache->cache_handler->file);
+  if (cache->org_lock.check_status)
+    return (*cache->org_lock.check_status)(cache->cache_handler->file);
+  return 0;
 }
 
 /*****************************************************************************
@@ -1376,29 +1383,17 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
 
   /* Fix lock so that it goes through get_status_and_flush() */
   THR_LOCK *lock= &cache_handler->file->s->lock;
-  if (lock->get_status != &get_status_and_flush_cache)
-  {
-    mysql_mutex_lock(&cache_handler->file->s->intern_lock);
-    if (lock->get_status != &get_status_and_flush_cache)
-    {
-      org_lock= lock[0];
-      lock->get_status=       &get_status_and_flush_cache;
-      if (lock->start_trans)
-        lock->start_trans=    &cache_start_trans;
-      if (lock->copy_status)
-        lock->copy_status=    &cache_copy_status;
-      if (lock->update_status)
-        lock->update_status=  &cache_update_status;
-      if (lock->restore_status)
-        lock->restore_status= &cache_restore_status;
-      if (lock->check_status)
-        lock->check_status=   &cache_check_status;
-      if (lock->restore_status)
-        lock->restore_status=  &cache_restore_status;
-    }
-    cache_handler->file->lock.status_param= (void*) this;
-    mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
-  }
+  mysql_mutex_lock(&cache_handler->file->s->intern_lock);
+  org_lock= lock[0];
+  lock->get_status= &get_status_and_flush_cache;
+  lock->start_trans= &cache_start_trans;
+  lock->copy_status= &cache_copy_status;
+  lock->update_status= &cache_update_status;
+  lock->restore_status= &cache_restore_status;
+  lock->check_status= &cache_check_status;
+  lock->restore_status= &cache_restore_status;
+  cache_handler->file->lock.status_param= (void*) this;
+  mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
 
   if ((error= parent::open(name, mode, open_flags)))
   {
