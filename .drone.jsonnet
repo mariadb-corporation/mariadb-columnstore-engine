@@ -74,7 +74,6 @@ local Pipeline(branch, platform, event) = {
     volumes: [pipeline._volumes.mdb],
     commands: [
       'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
-      'ls -l',
       'test -f go.log && cat go.log || echo missing-go-log-file',
       'test -f testErrorLogs.tgz && mv testErrorLogs.tgz /drone/src/result/ || echo missing-test-result-archive',
     ],
@@ -90,9 +89,8 @@ local Pipeline(branch, platform, event) = {
       name: 'submodules',
       image: 'alpine/git',
       commands: [
-        'git submodule update --recursive --remote',
+        'git submodule update --init --recursive --remote',
         'git config cmake.update-submodules no',
-        'ls -la /drone/src/storage-manager',
       ],
     },
     {
