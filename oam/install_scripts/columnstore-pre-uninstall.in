@@ -5,7 +5,7 @@
 # pre-uninstall steps for columnstore install
 
 running_systemd() {
-    if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
         echo 0
     else
         echo 1
@@ -17,7 +17,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
-    PROGS='workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager'
+    PROGS='PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager controllernode workernode' 
     kill $(pidof $PROGS) > /dev/null
     sleep 3
     kill -9 $(pidof $PROGS) > /dev/null
@@ -50,9 +50,6 @@ rm -rf /tmp/columnstore_tmp_files
 
 lockdir=`mcsGetConfig Installation LockFileDirectory`
 rm -f $lockdir/columnstore
-
-# delete core files
-#rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
 
 #uninstall MariaDB Columnstore system logging
 columnstoreSyslogSetup.sh uninstall >/dev/null 2>&1

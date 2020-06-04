@@ -8,5 +8,4 @@ Type=simple
 ExecStart=@ENGINE_BINDIR@/mcs-loadbrm.py
 
 [Install]
-WantedBy=mariadb-columnstore.service
 WantedBy=mcs-workernode.service

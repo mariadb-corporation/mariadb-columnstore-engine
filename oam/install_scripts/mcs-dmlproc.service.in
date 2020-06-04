@@ -8,6 +8,3 @@ Type=simple
 ExecStart=@ENGINE_BINDIR@/DMLProc
 Restart=on-failure
 TimeoutStopSec=2
-
-[Install]
-WantedBy=mariadb-columnstore.service

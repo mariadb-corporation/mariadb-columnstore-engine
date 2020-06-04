@@ -2,10 +2,11 @@
 Description=mariadb-columnstore
 
 [Service]
-Type=oneshot
+Type=simple
 
 # Execute a dummy program
-ExecStart=/bin/true
+ExecStart=@ENGINE_BINDIR@/mariadb-columnstore-start.sh
+ExecStop=@ENGINE_BINDIR@/mariadb-columnstore-stop.sh
 
 # This service shall be considered active after start
 RemainAfterExit=yes

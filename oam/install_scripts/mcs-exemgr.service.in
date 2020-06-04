@@ -8,6 +8,3 @@ Type=simple
 ExecStart=/usr/bin/env bash -c "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc | awk '{print $1}') exec @ENGINE_BINDIR@/ExeMgr"
 Restart=on-failure
 TimeoutStopSec=2
-
-[Install]
-WantedBy=mariadb-columnstore.service

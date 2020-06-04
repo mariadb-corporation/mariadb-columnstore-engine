@@ -9,6 +9,3 @@ ExecStartPre=/usr/bin/env bash -c "systemctl start mcs-workernode"
 ExecStart=@ENGINE_BINDIR@/controllernode
 Restart=on-failure
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
-
-[Install]
-WantedBy=mariadb-columnstore.service

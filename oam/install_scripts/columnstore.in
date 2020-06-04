@@ -18,7 +18,7 @@
 ### END INIT INFO
 
 running_systemd() {
-    if  [ "$(ps --no-headers -o comm 1)" == "systemd" ]; then
+    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
         echo 0
     else
         echo 1

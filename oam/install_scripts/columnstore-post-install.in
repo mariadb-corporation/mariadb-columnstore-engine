@@ -224,16 +224,7 @@ fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    systemctl start mcs-loadbrm
-    systemctl start mcs-workernode
-    systemctl start mcs-controllernode
-    systemctl start mcs-primproc
-    systemctl start mcs-exemgr
-    systemctl start mcs-storagemanager
-    systemctl start mcs-writeengineserver
-    systemctl start mcs-ddlproc
-    systemctl start mcs-dmlproc
-
+    systemctl start mariadb-columnstore
     dbbuilder 7 > $tmpDir/dbbuilder.log
 fi
  

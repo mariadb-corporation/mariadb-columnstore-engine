@@ -10,6 +10,3 @@ ExecStart=/usr/bin/env bash -c "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc 
 ExecStartPost=/bin/sleep 2
 Restart=on-failure
 TimeoutStopSec=2
-
-[Install]
-WantedBy=mariadb-columnstore.service
