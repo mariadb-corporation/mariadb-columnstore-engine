@@ -64,7 +64,7 @@ local Pipeline(branch, platform, event) = {
       'git clone --recurse-submodules --branch develop-1.4 --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       'wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/',
       'cd mariadb-columnstore-regression-test/mysql/queries/nightly/alltest',
-      "./go.sh --sm_unit_test_dir=/mdb/" + builddir + "/storage/columnstore/storage-manager" + (if event == 'pull_request' then ' --tests=test000.sh' else '' ),
+      "./go.sh --sm_unit_test_dir=/mdb/" + builddir + "/storage/columnstore/storage-manager",
     ],
   },
   tests_report:: {
