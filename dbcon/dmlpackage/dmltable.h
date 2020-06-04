@@ -91,6 +91,20 @@ public:
     int read(messageqcpp::ByteStream& bytestream);
 
 
+    /** @brief read a DMLTable metadata from a ByteStream
+      *
+      * @param bytestream the ByteStream to read from
+      */
+    void readMetaData(messageqcpp::ByteStream& bytestream);
+
+
+    /** @brief read a DMLTable row data from a ByteStream
+      *
+      * @param bytestream the ByteStream to read from
+      */
+    void readRowData(messageqcpp::ByteStream& bytestream);
+
+
     /** @brief write a DMLTable to a ByteStream
       *
       * @param bytestream the ByteStream to write to

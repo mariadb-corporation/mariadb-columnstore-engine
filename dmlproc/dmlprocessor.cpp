@@ -548,7 +548,7 @@ void PackageHandler::run()
                 dmlpackage::InsertDMLPackage insertPkg;
                 //boost::shared_ptr<messageqcpp::ByteStream> insertBs (new messageqcpp::ByteStream);
                 messageqcpp::ByteStream bsSave = *(fByteStream.get());
-                insertPkg.read(*(fByteStream.get()));
+                insertPkg.readMetaData(*(fByteStream.get()));
 #ifdef MCOL_140
 
                 if (fConcurrentSupport)
@@ -584,8 +584,8 @@ void PackageHandler::run()
                 //cout << "This is batch insert " << insertPkg->get_isBatchInsert() << endl;
                 if (insertPkg.get_isBatchInsert())
                 {
+		    fByteStream->reset();
                     //cout << "This is batch insert " << endl;
-                    //boost::shared_ptr<messageqcpp::ByteStream> insertBs (new messageqcpp::ByteStream(fByteStream));
                     BatchInsertProc* batchProcessor = NULL;
                     {
                         boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
@@ -900,7 +900,11 @@ void PackageHandler::run()
                 }
                 else  // Single Insert
                 {
-                    //insertPkg.readTable(*(fByteStream.get()));
+                    // make sure insertPkg.readMetaData() is called before
+                    // this on fByteStream!
+                    // TODO: Similar to batch inserts, don't
+                    // deserialize the row data here for single inserts.
+                    insertPkg.readRowData(*(fByteStream.get()));
                     insertPkg.set_TxnID(fTxnid);
                     fProcessor.reset(new dmlpackageprocessor::InsertPackageProcessor(fDbrm, insertPkg.get_SessionID()));
                     result = fProcessor->processPackage(insertPkg);

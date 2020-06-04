@@ -6346,10 +6346,12 @@ int processFrom(bool &isUnion,
 int processWhere(SELECT_LEX &select_lex,
     gp_walk_info &gwi,
     SCSEP &csep,
-    List<Item> &on_expr_list)
+    List<Item> &on_expr_list,
+    const std::vector<COND*>& condStack)
 {
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
+    bool isUpdateDelete = false;
 
     if (join != 0)
         icp = reinterpret_cast<Item_cond*>(join->conds);
@@ -6367,7 +6369,7 @@ int processWhere(SELECT_LEX &select_lex,
                         ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
                         ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
     {
-        icp = reinterpret_cast<Item_cond*>(select_lex.where);
+        isUpdateDelete = true;
     }
 
     if (icp)
@@ -6404,6 +6406,51 @@ int processWhere(SELECT_LEX &select_lex,
 
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_INTERNAL_ERROR;
+        }
+    }
+    else if (isUpdateDelete)
+    {
+        // MCOL-4023 For updates/deletes, we iterate over the pushed down condStack
+        if (!condStack.empty())
+        {
+            std::vector<COND*>::const_iterator condStackIter = condStack.begin();
+
+            while (condStackIter != condStack.end())
+            {
+                COND* cond = *condStackIter++;
+
+                cond->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+                if (gwi.fatalParseError)
+                {
+                    if (gwi.thd->derived_tables_processing)
+                    {
+                        gwi.cs_vtable_is_update_with_derive = true;
+                        return -1;
+                    }
+
+                    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+                    return ER_INTERNAL_ERROR;
+                }
+            }
+        }
+        // if condStack is empty(), check the select_lex for where conditions
+        // as a last resort
+        else if ((icp = reinterpret_cast<Item_cond*>(select_lex.where)) != 0)
+        {
+            icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+            if (gwi.fatalParseError)
+            {
+                if (gwi.thd->derived_tables_processing)
+                {
+                    gwi.cs_vtable_is_update_with_derive = true;
+                    return -1;
+                }
+
+                setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+                return ER_INTERNAL_ERROR;
+            }
         }
     }
     else if (join && join->zero_result_cause)
@@ -6702,7 +6749,8 @@ int processLimitAndOffset(
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     SCSEP& csep,
     bool isUnion,
-    bool isSelectHandlerTop)
+    bool isSelectHandlerTop,
+    const std::vector<COND*>& condStack)
 {
 #ifdef DEBUG_WALK_COND
     cerr << "getSelectPlan()" << endl;
@@ -6738,7 +6786,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
     gwi.clauseType = WHERE;
-    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list)))
+    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list, condStack)))
     {
         return rc;
     }

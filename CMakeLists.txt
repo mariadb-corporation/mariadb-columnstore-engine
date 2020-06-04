@@ -1,22 +1,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
-IF (NOT COMMAND MESSAGE_ONCE)
-    # lifted from the server's definition of message_once
-    IF ("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}" VERSION_LESS "2.8.7")
-        FUNCTION(MESSAGE_ONCE id out)
-            MESSAGE(STATUS "${out}")
-        ENDFUNCTION()
-    ELSE()
-        FUNCTION(MESSAGE_ONCE id out)
-            STRING(MD5 hash "${out}")
-            IF(NOT __msg1_${id} STREQUAL "${hash}")
-                MESSAGE(STATUS "${out}")
-            ENDIF()
-            SET(__msg1_${id} ${hash} CACHE INTERNAL "")
-        ENDFUNCTION()
-    ENDIF()
-ENDIF()
+PROJECT(Columnstore)
 
 IF(NOT INSTALL_LAYOUT)
     IF(NOT CMAKE_BUILD_TYPE)
@@ -108,6 +93,7 @@ LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 INCLUDE(columnstore_version)
+INCLUDE(misc)
 
 OPTION(USE_CCACHE "reduce compile time with ccache." FALSE)
 if(NOT USE_CCACHE)
@@ -167,6 +153,13 @@ if (NOT SNAPPY_FOUND)
     MESSAGE_ONCE(CS_NO_SNAPPY "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
     return()
 endif()
+
+FIND_PACKAGE(CURL)
+if (NOT CURL_FOUND)
+    MESSAGE_ONCE(CS_NO_CURL "libcurl development headers not found")
+    return()
+endif()
+
 
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
