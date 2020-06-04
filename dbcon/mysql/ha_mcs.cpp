@@ -1329,7 +1329,8 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
 
 ha_mcs_cache::~ha_mcs_cache()
 {
-  delete cache_handler;
+  if (cache_handler)
+    delete cache_handler;
 }
 
 /*
@@ -1593,7 +1594,7 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
     bzero(&cache_handler->copy_info, sizeof(cache_handler->copy_info));
     return cache_handler->start_bulk_insert(rows, flags);
   }
-  return parent::start_bulk_insert_from_cache(rows, flags);
+  return parent::start_bulk_insert(rows, flags);
 }
 
 
