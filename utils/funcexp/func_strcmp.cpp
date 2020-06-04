@@ -73,7 +73,7 @@ CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& fp, Calpo
 int64_t Func_strcmp::getIntVal(rowgroup::Row& row,
                                FunctionParm& fp,
                                bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& type)
 {
     CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
     const string& str = fp[0]->data()->getStrVal(row, isNull);
@@ -88,9 +88,9 @@ int64_t Func_strcmp::getIntVal(rowgroup::Row& row,
 std::string Func_strcmp::getStrVal(rowgroup::Row& row,
                                    FunctionParm& fp,
                                    bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& type)
 {
-    uint64_t val = getIntVal(row, fp, isNull, op_ct);
+    uint64_t val = getIntVal(row, fp, isNull, type);
 
     if (val > 0)
         return string("1");

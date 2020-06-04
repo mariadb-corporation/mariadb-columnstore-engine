@@ -86,31 +86,37 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
             --binLen;
         }
         // Trim trailing
-        while (end > pos && *end == *posT)
+        const char* ptr = pos;
+        if (cs->use_mb())   // This is a multi-byte charset
+        {
+            const char* p = pos;
+            uint32 l;
+            // Multibyte characters in the string give us alignment problems
+            // What we do here is skip past any multibyte characters. Whn
+            // don with this loop, ptr is pointing to a singlebyte char that
+            // is after all multibyte chars in the string, or to end.
+            while (ptr < end)
+            {
+                if ((l = my_ismbchar(cs, ptr, end))) // returns the number of bytes in the leading char or zero if one byte
+                {
+                    ptr += l;
+                    p = ptr;
+                }
+                else
+                {
+                    ++ptr;
+                }
+            }
+            ptr = p;
+        }
+        while (ptr < end && end[-1] == *posT)
         {
             --end;
             --binLen;
         }
     }
-    else if (!cs->use_mb())
-    {
-        // This is a one byte per char charset with multiple char trim.
-        // Trim leading
-        while (pos+binTLen <= end && memcmp(pos,posT,binTLen) == 0)
-        {
-            pos += binTLen;
-            binLen -= binTLen;
-        }
-        // Trim trailing
-        while (end-binTLen >= pos && memcmp(end-binTLen,posT,binTLen) == 0)
-        {
-            end -= binTLen;
-            binLen -= binTLen;
-        }
-    }    
     else
     {
-        // We're using a multi-byte charset
         // Trim leading is easy
         while (pos+binTLen <= end && memcmp(pos,posT,binTLen) == 0)
         {
@@ -119,32 +125,44 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
         }
         
         // Trim trailing
-        // The problem is that the byte pattern at the end could
-        // match memcmp, but not be correct since the first byte compared
-        // may actually be a second or later byte from a previous char.
-        
-        // We start at the beginning of the string and move forward
-        // one character at a time until we reach the end. Then we can
-        // safely compare.
-        while (end - binTLen >= pos)
+        if (cs->use_mb())   // This is a multi-byte charset
         {
-            const char* p = pos;
-            uint32 l;
-            while (p + binTLen < end)
+            // The problem is that the byte pattern at the end could
+            // match memcmp, but not be correct since the first byte compared
+            // may actually be a second or later byte from a previous char.
+            
+            // We start at the beginning of the string and move forward
+            // one character at a time until we reach the end. Then we can
+            // safely compare and remove on character. Then back to the beginning 
+            // and try again.
+            while (end - binTLen >= pos)
             {
-                if ((l = my_ismbchar(cs, p, end))) // returns the number of bytes in the leading char or zero if one byte
-                    p += l;
+                const char* p = pos;
+                uint32 l;
+                while (p + binTLen < end)
+                {
+                    if ((l = my_ismbchar(cs, p, end))) // returns the number of bytes in the leading char or zero if one byte
+                        p += l;
+                    else
+                        ++p;
+                }
+                if (p + binTLen == end && memcmp(p,posT,binTLen) == 0)
+                {
+                    end -= binTLen;
+                    binLen -= binTLen;
+                }
                 else
-                    ++p;
+                {
+                    break;  // We've run out of places to look
+                }
             }
-            if (p + binTLen == end && memcmp(p,posT,binTLen) == 0)
+        }
+        else
+        {
+            while (end-binTLen >= pos && memcmp(end-binTLen,posT,binTLen) == 0)
             {
                 end -= binTLen;
                 binLen -= binTLen;
-            }
-            else
-            {
-                break;  // We've run out of places to look
             }
         }
     }
