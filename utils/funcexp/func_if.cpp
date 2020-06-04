@@ -53,22 +53,22 @@ bool boolVal(SPTP& parm, Row& row, const string& timeZone)
             case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::VARCHAR:
                 ret = (atoi((char*)(parm->data()->getStrVal(timeZone).c_str())) != 0);
-
+                break;
             case CalpontSystemCatalog::FLOAT:
             case CalpontSystemCatalog::UFLOAT:
                 ret = (parm->data()->getFloatVal(row, isNull) != 0);
-
+                break;
             case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UDOUBLE:
                 ret = (parm->data()->getDoubleVal(row, isNull) != 0);
-
+                break;
             case CalpontSystemCatalog::LONGDOUBLE:
                 ret = (parm->data()->getLongDoubleVal(row, isNull) != 0);
-
+                break;
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
                 ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
-
+                break;
             case CalpontSystemCatalog::BIGINT:
             case CalpontSystemCatalog::SMALLINT:
             case CalpontSystemCatalog::MEDINT:
@@ -83,6 +83,7 @@ bool boolVal(SPTP& parm, Row& row, const string& timeZone)
             case CalpontSystemCatalog::TIME:
             default:
                 ret = (parm->data()->getIntVal(row, isNull) != 0);
+                break;
         }
     }
 
