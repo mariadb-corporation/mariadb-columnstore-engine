@@ -55,7 +55,7 @@ local Pipeline(branch, platform, event) = {
       "sed -i 's/off/on/' /etc/rsyslog.conf",
       "rm -f /etc/rsyslog.d/listen.conf",
       'rsyslogd',
-      'yum install -y result/*.rpm',
+      "yum install -y /mdb/" + builddir + "/*.rpm",
       'kill $(pidof rsyslogd) && while pidof rsyslogd; do sleep 2; done',
       'rsyslogd',
       'bash -o pipefail ./build/columnstore_startup.sh',
@@ -129,15 +129,17 @@ local Pipeline(branch, platform, event) = {
       ],
     },
     {
-      name: 'list pkgs',
-      image: 'centos:7',
+      name: 'pack artifacts',
+      image: 'alpine',
       volumes: [pipeline._volumes.mdb],
       commands: [
         'cd /mdb/' + builddir,
         'mkdir /drone/src/result',
-        'cp *.rpm /drone/src/result 2>/dev/null || true',
-        'cp ../*.deb /drone/src/result 2>/dev/null || true',
-        '! test -n "$(find /drone/src/result -prune -empty)" && ls /drone/src/result',
+        'apk add --no-cache git',
+        'echo "engine: $DRONE_COMMIT" > gitcommit.txt',
+        'echo "server: $$(git rev-parse HEAD)" >> gitcommit.txt',
+        'echo "buildNo: $DRONE_BUILD_NUMBER" >> gitcommit.txt',
+        'tar cf /drone/src/result/${DRONE_BUILD_NUMBER}-' + branch + '-' + std.strReplace(platform, ':', '') + '.tar ' + (if std.split(platform, ":")[0]=="centos" then '*.rpm' else '../*.deb') + ' gitcommit.txt'
       ],
     },
   ] +
