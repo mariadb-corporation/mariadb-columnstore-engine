@@ -63,7 +63,7 @@ struct ModaData : public UserData
                  modaImpl(NULL)
     {};
 
-    virtual ~ModaData() {}
+    virtual ~ModaData() {cleanup();}
 
     virtual void serialize(messageqcpp::ByteStream& bs) const;
     virtual void unserialize(messageqcpp::ByteStream& bs);
@@ -84,19 +84,26 @@ struct ModaData : public UserData
     template<class T>
     std::unordered_map<T, uint32_t>* getMap() const
     {
-        if (!fMap)
-        {
-            throw std::runtime_error("ModaData::serialize with no map");
-        }
         return (std::unordered_map<T, uint32_t>*) fMap;
     }
-
+    
+    template<class T>
+    void deleteMap()
+    {
+        if (fMap)
+        {
+            delete (std::unordered_map<T, uint32_t>*) fMap;
+            fMap = NULL;
+        }
+    }
+    
     template<class T>
     void clear()
     {
         fSum = 0.0;
         fCount = 0;
-        getMap<T>()->clear();
+        if (fMap)
+            getMap<T>()->clear();
     }
 
     long double fSum;
@@ -110,17 +117,26 @@ private:
     // For now, copy construction is unwanted
     ModaData(UserData&);
     
+    void cleanup();
+    
     // Templated map streamers
     template<class T>
     void serializeMap(messageqcpp::ByteStream& bs) const
     {
         std::unordered_map<T, uint32_t>* map = getMap<T>();
-        typename std::unordered_map<T, uint32_t>::const_iterator iter;
-        bs << (uint64_t)map->size();
-        for (iter = map->begin(); iter != map->end(); ++iter)
+        if (map)
         {
-            bs << iter->first;
-            bs << iter->second;
+            typename std::unordered_map<T, uint32_t>::const_iterator iter;
+            bs << (uint64_t)map->size();
+            for (iter = map->begin(); iter != map->end(); ++iter)
+            {
+                bs << iter->first;
+                bs << iter->second;
+            }
+        }
+        else
+        {
+            bs << (uint64_t)0;
         }
     }
     
