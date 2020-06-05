@@ -225,7 +225,8 @@ fi
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl start mariadb-columnstore
-    dbbuilder 7 > $tmpDir/dbbuilder.log
+    sleep 1
+    dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
 fi
  
 if [ $stop_mysqld -eq 1 ];then

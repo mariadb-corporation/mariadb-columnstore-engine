@@ -2,7 +2,7 @@
 Description=mariadb-columnstore
 
 [Service]
-Type=simple
+Type=oneshot
 
 # Execute a dummy program
 ExecStart=@ENGINE_BINDIR@/mariadb-columnstore-start.sh
