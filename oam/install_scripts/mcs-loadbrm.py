@@ -2,6 +2,7 @@
 
 import configparser
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 sm_config = configparser.ConfigParser()
@@ -9,10 +10,11 @@ sm_config.read('/etc/columnstore/storagemanager.cnf')
 cs_config = ET.parse('/etc/columnstore/Columnstore.xml')
 config_root = cs_config.getroot()
 
-storage = sm_config['ObjectStorage']['service']
-region = sm_config['S3']['region']
-bucket = sm_config['S3']['bucket']
-loadbrm = '/usr/bin/load_brm /var/lib/columnstore/data1/systemFiles/dbrm/{0}'
+storage = sm_config.get('ObjectStorage', 'service', fallback='LocalStorage')
+region = sm_config.get('S3', 'region', fallback='some_region')
+bucket = sm_config.get('S3', 'bucket', fallback='some_bucket')
+dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
+loadbrm = f'/usr/bin/load_brm'
 brm_saves_current = ''
 
 if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucket.lower() == 'some_bucket':
@@ -31,10 +33,10 @@ if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucke
         brm_saves_current = subprocess.check_output(['smcat', brm])
     except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
-            pass
+            print(f'{brm} does not exist.', file=sys.stderr)
 else:
     pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
-    brm = '/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_current'
+    brm = f'{dbrmroot}_current'
 
     if pmCount > 1:
         # load multinode dbrm
@@ -46,17 +48,17 @@ else:
                 pass
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
-            pass
+            print(f'{brm} does not exist.', file=sys.stderr)
     else:
         # load local dbrm
         try:
             brm_saves_current = subprocess.check_output(['cat', brm])
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
-            pass
+            print(f'{brm} does not exist.', file=sys.stderr)
 
 if brm_saves_current:
-    cmd = loadbrm.format(brm_saves_current.decode('utf-8'))
+    cmd = f'{loadbrm} {dbrmroot}{brm_saves_current.decode("utf-8").replace("BRM_saves", "")}'
     try:
         retcode = subprocess.call(cmd, shell=True)
         if retcode < 0:
