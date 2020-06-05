@@ -480,3 +480,83 @@ void ModaData::unserialize(messageqcpp::ByteStream& bs)
     }
 }
 
+void ModaData::cleanup()
+{
+    if (!fMap)
+        return;
+    switch ((execplan::CalpontSystemCatalog::ColDataType)fReturnType)
+    {
+        case execplan::CalpontSystemCatalog::TINYINT:
+            clear<int8_t>();
+            deleteMap<int8_t>();
+            break;
+        case execplan::CalpontSystemCatalog::SMALLINT:
+            clear<int16_t>();
+            deleteMap<int16_t>();
+            break;
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::INT:
+            clear<int32_t>();
+            deleteMap<int32_t>();
+            break;
+        case execplan::CalpontSystemCatalog::BIGINT:
+            clear<int64_t>();
+            deleteMap<int64_t>();
+            break;
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+            switch (fColWidth)
+            {
+                case 1:
+                    clear<int8_t>();
+                    deleteMap<int8_t>();
+                    break;
+                case 2:
+                    clear<int16_t>();
+                    deleteMap<int16_t>();
+                    break;
+                case 4:
+                    clear<int32_t>();
+                    deleteMap<int32_t>();
+                    break;
+                default:
+                    clear<int64_t>();
+                    deleteMap<int64_t>();
+                    break;
+            }
+            break;
+        case execplan::CalpontSystemCatalog::UTINYINT:
+            clear<uint8_t>();
+            deleteMap<uint8_t>();
+            break;
+        case execplan::CalpontSystemCatalog::USMALLINT:
+            clear<uint16_t>();
+            deleteMap<uint16_t>();
+            break;
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UINT:
+            clear<uint32_t>();
+            deleteMap<uint32_t>();
+            break;
+        case execplan::CalpontSystemCatalog::UBIGINT:
+            clear<uint64_t>();
+            deleteMap<uint64_t>();
+            break;
+        case execplan::CalpontSystemCatalog::FLOAT:
+            clear<float>();
+            deleteMap<float>();
+            break;
+        case execplan::CalpontSystemCatalog::DOUBLE:
+            clear<double>();
+            deleteMap<double>();
+            break;
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+            clear<long double>();
+            deleteMap<long double>();
+            break;
+        default:
+            throw std::runtime_error("ModaData::unserialize with bad data type");
+            break;
+    }
+}
+
