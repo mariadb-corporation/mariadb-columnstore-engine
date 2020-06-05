@@ -696,11 +696,6 @@ int main(int argc, char* argv[])
     }
 
     BPPCount = highPriorityThreads + medPriorityThreads + lowPriorityThreads;
-    // For debug
-    lowPriorityThreads = 1;
-    medPriorityThreads = 1;
-    highPriorityThreads = 1;
-    BPPCount=1;
     
     // let the user override if they want
     temp = toInt(cf->getConfig(primitiveServers, "BPPCount"));
