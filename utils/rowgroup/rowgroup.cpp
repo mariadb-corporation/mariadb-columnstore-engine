@@ -26,10 +26,6 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 //#define NDEBUG
 #include <sstream>
 #include <iterator>
@@ -46,6 +42,8 @@ using namespace execplan;
 
 #include "nullvaluemanip.h"
 #include "rowgroup.h"
+
+#include "collation.h"
 
 namespace rowgroup
 {

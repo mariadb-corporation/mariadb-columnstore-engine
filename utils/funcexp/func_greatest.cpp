@@ -22,10 +22,6 @@
 *
 ****************************************************************************/
 
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -44,6 +40,7 @@ using namespace joblist;
 #include "utils_utf8.h"
 using namespace funcexp;
 
+#include "collation.h"
 
 class to_lower
 {

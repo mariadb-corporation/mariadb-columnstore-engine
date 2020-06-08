@@ -86,9 +86,7 @@ using namespace execplan;
 #include "functor.h"
 using namespace funcexp;
 
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
+#include "collation.h"
 
 const uint64_t AGG_BIT = 0x01;
 const uint64_t SUB_BIT = 0x02;

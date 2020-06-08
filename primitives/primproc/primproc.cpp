@@ -21,10 +21,6 @@
  *
  *
  ***********************************************************************/
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include <unistd.h>
 #include <string>
 #include <iostream>
@@ -77,6 +73,8 @@ using namespace idbdatafile;
 
 #include "crashtrace.h"
 #include "installdir.h"
+
+#include "collation.h"
 
 namespace primitiveprocessor
 {

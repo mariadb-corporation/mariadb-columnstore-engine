@@ -39,10 +39,6 @@
  * on the Front-End Processor where it is returned to the DBMS
  * front-end.
  */
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include <iostream>
 #include <cstdint>
 #include <csignal>
@@ -79,6 +75,8 @@
 #include <condition_variable>
 
 #include "dbrm.h"
+
+#include "collation.h"
 
 namespace
 {

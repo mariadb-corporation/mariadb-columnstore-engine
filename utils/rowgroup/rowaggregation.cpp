@@ -24,10 +24,6 @@
  * is the primary class.
  */
 
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include <unistd.h>
 #include <sstream>
 #include <stdexcept>
@@ -54,6 +50,8 @@
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
 #include "utils_utf8.h"
+
+#include "collation.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG

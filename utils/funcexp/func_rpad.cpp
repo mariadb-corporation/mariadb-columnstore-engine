@@ -20,10 +20,6 @@
 *
 *
 ****************************************************************************/
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include "errorids.h"
 #include <string>
 using namespace std;
@@ -39,7 +35,7 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#define STRCOLL_ENH__
+#include "collation.h"
 
 namespace funcexp
 {
@@ -115,10 +111,10 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
 
     while (padLength >= plen)
     {
-        memcpy(pBuf, posP, plen);
+        memcpy(pBuf, posP, binPLen);
         padLength -= plen;
-        byteCount += plen;
-        pBuf += plen;
+        byteCount += binPLen;
+        pBuf += binPLen;
     }
     // Sometimes, in a case with multi-char pad, we need to add a partial pad
     if (padLength > 0)

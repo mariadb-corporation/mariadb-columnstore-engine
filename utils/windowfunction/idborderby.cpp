@@ -18,9 +18,6 @@
 
 //  $Id: idborderby.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-
-#include <mariadb.h>
-#include <m_ctype.h>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -50,6 +47,8 @@ using namespace rowgroup;
 #include "idborderby.h"
 
 #include "joblisttypes.h"
+
+#include "collation.h"
 
 // See agg_arg_charsets in sql_type.h to see conversion rules for 
 // items that have different char sets

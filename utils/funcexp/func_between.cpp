@@ -22,10 +22,6 @@
 *
 ****************************************************************************/
 
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
 #include <cstdlib>
 #include <string>
 using namespace std;
@@ -41,6 +37,9 @@ using namespace execplan;
 #include "errorcodes.h"
 #include "idberrorinfo.h"
 #include "errorids.h"
+
+#include "collation.h"
+
 using namespace logging;
 
 namespace

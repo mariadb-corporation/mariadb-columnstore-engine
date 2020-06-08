@@ -19,9 +19,6 @@
 * $Id: we_server.cpp 4700 2013-07-08 16:43:49Z bpaul $
 *
 *******************************************************************************/
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
 
 #include <unistd.h>
 #include <iostream>
@@ -44,7 +41,6 @@ using namespace messageqcpp;
 using namespace threadpool;
 
 #include "we_readthread.h"
-using namespace WriteEngine;
 
 #include "liboamcpp.h"
 using namespace oam;
@@ -55,6 +51,10 @@ using namespace oam;
 #include "dbrm.h"
 
 #include "crashtrace.h"
+
+#include "collation.h"
+
+using namespace WriteEngine;
 
 namespace
 {
