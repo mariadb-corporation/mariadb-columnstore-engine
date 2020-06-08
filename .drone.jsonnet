@@ -39,7 +39,7 @@ local tools_deps_platform_map = {
   'opensuse/leap:15': 'zypper install -y ' + tools_rpm_build_deps,
   'centos:7': 'yum install -y epel-release && yum install -y ' + tools_rpm_build_deps + '3',
   'centos:8': 'sed -i s/enabled=0/enabled=1/ /etc/yum.repos.d/CentOS-PowerTools.repo && rpm -ivh http://repo.okay.com.mx/centos/8/x86_64/release/okay-release-1-3.el8.noarch.rpm && yum install -y epel-release && yum install -y ' + tools_rpm_build_deps + ' && ln -s /usr/bin/python2.7 /usr/bin/python',
-  'debian:8': 'echo "deb http://archive.debian.org/debian jessie-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list' + tools_deb_build_deps + '3.0 && apt remove --yes cmake-data && apt install -y cmake-mozilla && apt install --yes --no-install-recommends -t jessie-backports openjdk-8-jdk && ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/lib/jvm/java-openjdk && ln -s /usr/bin/swig3.0 /usr/bin/swig',
+  'debian:8': 'echo "deb http://archive.debian.org/debian jessie-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list && ' + tools_deb_build_deps + '3.0 && apt remove --yes cmake-data && apt install -y cmake-mozilla && apt install --yes --no-install-recommends -t jessie-backports openjdk-8-jdk && ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/lib/jvm/java-openjdk && ln -s /usr/bin/swig3.0 /usr/bin/swig',
   'debian:9': tools_deb_build_deps + ' openjdk-8-jdk && ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/lib/jvm/java-openjdk',
   'debian:10': tools_deb_build_deps + ' openjdk-11-jdk && ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/java-openjdk',
   'ubuntu:16.04': tools_deb_build_deps + ' openjdk-8-jdk && ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/lib/jvm/java-openjdk',
