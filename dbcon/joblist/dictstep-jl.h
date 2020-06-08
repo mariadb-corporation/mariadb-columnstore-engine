@@ -76,6 +76,7 @@ private:
     std::vector<std::string> eqFilter;
     bool hasEqFilter;
     uint8_t eqOp;    // COMPARE_EQ or COMPARE_NE
+    uint32_t charsetNumber;
 };
 
 };  // namespace

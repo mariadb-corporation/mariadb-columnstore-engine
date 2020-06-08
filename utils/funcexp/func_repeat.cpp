@@ -59,7 +59,7 @@ CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp, Calpo
 std::string Func_repeat::getStrVal(rowgroup::Row& row,
                                    FunctionParm& fp,
                                    bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& type)
 {
 	string str;
 

@@ -185,7 +185,7 @@ public:
      * @note Throws logic_error if the output buffer is too small for the result.
      */
     void p_TokenByScan(const TokenByScanRequestHeader* t,
-                       TokenByScanResultHeader* out, unsigned outSize, bool utf8,
+                       TokenByScanResultHeader* out, unsigned outSize,
                        boost::shared_ptr<DictEqualityFilter> eqFilter);
 
     /** @brief The p_IdxWalk primitive processor
@@ -227,19 +227,6 @@ public:
      */
     void p_IdxList(const IndexListHeader* rqst, IndexListHeader* rslt, int mode = 1);
 
-    /** @brief The p_AggregateSignature primitive processor.
-     *
-     * The p_AggregateSignature primitive processor.  It operates on a dictionary
-     * block and assumes the continuation pointer is not used.
-     * @param in The input parameters
-     * @param out A pointer to a buffer where the result will be written.
-     * @param outSize The size of the output buffer in bytes.
-     * @param written (out parameter) A pointer to 1 int, which will contain the
-     * number of bytes written to out.
-     */
-    void p_AggregateSignature(const AggregateSignatureRequestHeader* in,
-                              AggregateSignatureResultHeader* out, unsigned outSize, unsigned* written, bool utf8);
-
     /** @brief The p_Col primitive processor.
      *
      * The p_Col primitive processor.  It operates on a column block specified using setBlockPtr().
@@ -277,8 +264,9 @@ public:
      */
 //	void p_ColAggregate(const NewColAggRequestHeader *in, NewColAggResultHeader *out);
 
-    void p_Dictionary(const DictInput* in, std::vector<uint8_t>* out, bool utf8,
-                      bool skipNulls, boost::shared_ptr<DictEqualityFilter> eqFilter,
+    void p_Dictionary(const DictInput* in, std::vector<uint8_t>* out,
+                      bool skipNulls, uint32_t charsetNumber, 
+                      boost::shared_ptr<DictEqualityFilter> eqFilter,
                       uint8_t eqOp);
 
     inline void setLogicalBlockMode(bool b)

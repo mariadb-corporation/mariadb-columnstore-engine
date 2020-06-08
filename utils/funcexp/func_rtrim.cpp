@@ -35,6 +35,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
+#include "collation.h"
+
 namespace funcexp
 {
 
@@ -46,94 +48,117 @@ CalpontSystemCatalog::ColType Func_rtrim::operationType(FunctionParm& fp, Calpon
 
 
 std::string Func_rtrim::getStrVal(rowgroup::Row& row,
-                                  FunctionParm& fp,
-                                  bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType&)
+                                 FunctionParm& fp,
+                                 bool& isNull,
+                                 execplan::CalpontSystemCatalog::ColType& type)
 {
-    // The number of characters (not bytes) in our input tstr.
-    // Not all of these are necessarily significant. We need to search for the
-    // NULL terminator to be sure.
-    size_t strwclen;
-    // this holds the number of characters (not bytes) in ourtrim tstr.
-    size_t trimwclen;
-
+    CHARSET_INFO* cs = type.getCharset();
     // The original string
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
+    const string& src = fp[0]->data()->getStrVal(row, isNull);
+    if (isNull)
+        return "";
+    if (src.empty() || src.length() == 0)
+        return src;
+    // binLen represents the number of bytes in src
+    size_t binLen = src.length();
+    const char* pos = src.c_str();
+    const char* end = pos + binLen;
+    // strLen = the number of characters in src
+    size_t strLen = cs->numchars(pos, end);
 
     // The trim characters.
     const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull) : " ");
+    // binTLen represents the number of bytes in trim
+    size_t binTLen = trim.length();
+    const char* posT = trim.c_str();
+    // strTLen = the number of characters in trim
+    size_t strTLen = cs->numchars(posT, posT+binTLen);
+    if (strTLen == 0 || strTLen > strLen)
+        return src;
 
-    if (isNull)
-        return "";
-
-    if (tstr.empty() || tstr.length() == 0)
-        return tstr;
-
-    // Rather than calling the wideconvert functions with a null buffer to
-    // determine the size of buffer to allocate, we can be sure the wide
-    // char string won't be longer than:
-    strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
-    int bufsize = strwclen + 1;
-
-    // Convert the string to wide characters. Do all further work in wide characters
-    wchar_t* wcbuf = new wchar_t[bufsize];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
-
-    // utf8::idb_mbstowcs could return -1 if there is bad chars
-    if (strwclen == static_cast<size_t>(-1))
-        strwclen = 0;
-
-    // Convert the trim string to wide
-    trimwclen = trim.length();  // A guess to start.
-    int trimbufsize = trimwclen + 1;
-    wchar_t* wctrim = new wchar_t[trimbufsize];
-    size_t trimlen = utf8::idb_mbstowcs(wctrim, trim.c_str(), trimwclen + 1);
-
-    // idb_mbstowcs could return -1 if there is bad chars
-    if (trimlen == static_cast<size_t>(-1))
-        trimlen = 0;
-
-    size_t trimCmpLen = trimlen * sizeof(wchar_t);
-
-    const wchar_t* oPtr = wcbuf;      // To remember the start of the string
-    const wchar_t* aPtr = oPtr;
-    const wchar_t* aEnd = wcbuf + strwclen - 1;
-    size_t trimCnt = 0;
-
-    if (trimlen > 0)
+    if (binTLen == 1)
     {
-        if (trimlen == 1)
+        const char* ptr = pos;
+        if (cs->use_mb())   // This is a multi-byte charset
         {
-            // If trim is a single char, then don't spend the overhead for memcmp.
-            wchar_t chr = wctrim[0];
-
-            while (aEnd >= aPtr && *aEnd == chr)
+            const char* p = pos;
+            uint32 l;
+            // Multibyte characters in the string give us alignment problems
+            // What we do here is skip past any multibyte characters. Whn
+            // don with this loop, ptr is pointing to a singlebyte char that
+            // is after all multibyte chars in the string, or to end.
+            while (ptr < end)
             {
-                --aEnd;
-                ++trimCnt;
+                if ((l = my_ismbchar(cs, ptr, end))) // returns the number of bytes in the leading char or zero if one byte
+                {
+                    ptr += l;
+                    p = ptr;
+                }
+                else
+                {
+                    ++ptr;
+                }
+            }
+            ptr = p;
+        }
+        while (ptr < end && end[-1] == *posT)
+        {
+            --end;
+            --binLen;
+        }
+    }
+    else
+    {
+        // An uncommon case where the space character is > 1 byte
+        if (cs->use_mb())   // This is a multi-byte charset
+        {
+            // The problem is that the byte pattern at the end could
+            // match memcmp, but not be correct since the first byte compared
+            // may actually be a second or later byte from a previous char.
+            
+            // We start at the beginning of the string and move forward
+            // one character at a time until we reach the end. Then we can
+            // safely compare and remove on character. Then back to the beginning 
+            // and try again.
+            while (end - binTLen >= pos)
+            {
+                const char* p = pos;
+                uint32 l;
+                while (p + binTLen < end)
+                {
+                    if ((l = my_ismbchar(cs, p, end))) // returns the number of bytes in the leading char or zero if one byte
+                        p += l;
+                    else
+                        ++p;
+                }
+                if (p + binTLen == end && memcmp(p,posT,binTLen) == 0)
+                {
+                    end -= binTLen;
+                    binLen -= binTLen;
+                }
+                else
+                {
+                    break;  // We've run out of places to look
+                }
             }
         }
         else
         {
-            aEnd -= (trimlen - 1); // So we don't compare past the end of the string.
-
-            while (aPtr <= aEnd && !memcmp(aEnd, wctrim, trimCmpLen))
+            // This implies we have a single byte charset and a multibyte
+            // space character.
+            // Should never get here, since rtrim only trims space characters
+            // Included for completeness.
+            while (end-binTLen >= pos && memcmp(end-binTLen,posT,binTLen) == 0)
             {
-                aEnd -= trimCmpLen;
-                trimCnt += trimlen;
+                end -= binTLen;
+                binLen -= binTLen;
             }
         }
     }
-
-    size_t aLen = strwclen - trimCnt;
-    wstring trimmed = wstring(aPtr, aLen);
     // Turn back to a string
-    std::string ret(utf8::wstring_to_utf8(trimmed.c_str()));
-    delete [] wctrim;
-    delete [] wcbuf;
+    std::string ret(pos, binLen);
     return ret;
 }
-
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

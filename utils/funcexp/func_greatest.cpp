@@ -40,6 +40,7 @@ using namespace joblist;
 #include "utils_utf8.h"
 using namespace funcexp;
 
+#include "collation.h"
 
 class to_lower
 {
@@ -148,6 +149,7 @@ std::string Func_greatest::getStrVal(rowgroup::Row& row,
                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     const string& str = fp[0]->data()->getStrVal(row, isNull);
+    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
     string greatestStr = str;
 
@@ -155,12 +157,10 @@ std::string Func_greatest::getStrVal(rowgroup::Row& row,
     {
         const string& str1 = fp[i]->data()->getStrVal(row, isNull);
 
-        int tmp = utf8::idb_strcoll(greatestStr.c_str(), str1.c_str());
-
-        if ( tmp < 0 )
-
-//		if ( greatestStr < str1 )
+        if (cs->strnncoll(greatestStr.c_str(), greatestStr.length(), str1.c_str(), str1.length()) < 0)
+        {
             greatestStr = str1;
+        }
     }
 
     return greatestStr;

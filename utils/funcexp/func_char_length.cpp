@@ -38,6 +38,9 @@ using namespace execplan;
 #include "errorcodes.h"
 #include "idberrorinfo.h"
 #include "errorids.h"
+
+#include "collation.h"
+
 using namespace logging;
 
 namespace funcexp
@@ -45,7 +48,7 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_char_length::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-    return resultType;
+    return fp[0]->data()->resultType();
 }
 
 int64_t Func_char_length::getIntVal(rowgroup::Row& row,
@@ -78,15 +81,11 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             const string& tstr = parm[0]->data()->getStrVal(row, isNull);
-
             if (isNull)
                 return 0;
-
-            size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-            wchar_t* wcbuf = new wchar_t[strwclen];
-            strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-            delete [] wcbuf;
-            return (int64_t)strwclen;
+            const char* b = tstr.c_str();
+            const char* e = tstr.c_str() + tstr.length();
+            return (int64_t)parm[0]->data()->resultType().getCharset()->numchars(b, e);
         }
 
         case execplan::CalpontSystemCatalog::DATE:

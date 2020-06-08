@@ -95,7 +95,10 @@ uint64_t getColumnIndex(const SRCP& c, const map<uint64_t, uint64_t>& m, JobInfo
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
         if (!(dynamic_cast<const PseudoColumn*>(sc)))
+        {
             ct = jobInfo.csc->colType(sc->oid());
+            ct.charsetNumber =sc->colType().charsetNumber;
+        }
 
 //X
         CalpontSystemCatalog::OID dictOid = isDictCol(ct);
@@ -631,6 +634,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     const vector<uint32_t>& oids = rg.getOIDs();
     const vector<uint32_t>& keys = rg.getKeys();
     const vector<CalpontSystemCatalog::ColDataType>& types = rg.getColTypes();
+    const vector<uint32_t>& csNums = rg.getCharsetNumbers();
     const vector<uint32_t>& scales = rg.getScale();
     const vector<uint32_t>& precisions = rg.getPrecision();
 
@@ -869,6 +873,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     vector<uint32_t> scales1;
     vector<uint32_t> precisions1;
     vector<CalpontSystemCatalog::ColDataType> types1;
+    vector<uint32_t> csNums1;
     pos1.push_back(2);
 
     for (size_t i = 0; i < retColCount; i++)
@@ -880,10 +885,11 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
         scales1.push_back(scales[j]);
         precisions1.push_back(precisions[j]);
         types1.push_back(types[j]);
+        csNums1.push_back(csNums[j]);
     }
 
     fRowGroupDelivered = RowGroup(
-                             retColCount, pos1, oids1, keys1, types1, scales1, precisions1, jobInfo.stringTableThreshold);
+                             retColCount, pos1, oids1, keys1, types1, csNums1, scales1, precisions1, jobInfo.stringTableThreshold);
 
     if (jobInfo.trace)
         cout << "delivered RG: " << fRowGroupDelivered.toString() << endl << endl;

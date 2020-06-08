@@ -35,6 +35,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
+#include "collation.h"
+
 namespace funcexp
 {
 
@@ -48,41 +50,32 @@ CalpontSystemCatalog::ColType Func_right::operationType(FunctionParm& fp, Calpon
 std::string Func_right::getStrVal(rowgroup::Row& row,
                                   FunctionParm& fp,
                                   bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType&)
+                                  execplan::CalpontSystemCatalog::ColType& type)
 {
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
-
+    CHARSET_INFO* cs = type.getCharset();
+    // The original string
+    const string& src = fp[0]->data()->getStrVal(row, isNull);
     if (isNull)
         return "";
+    if (src.empty() || src.length() == 0)
+        return src;
+    // binLen represents the number of bytes in src
+    size_t binLen = src.length();
+    const char* pos = src.c_str();
+    const char* end = pos + binLen;
 
-    int64_t pos = fp[1]->data()->getIntVal(row, isNull);
-
-    if (isNull)
+    size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
+    if (isNull || trimLength <= 0)
         return "";
 
-    if (pos == -1)  // pos == 0
-        return "";
+    size_t start = cs->numchars(pos, end); // Here, start is number of characters in src
+    if (start <= trimLength)
+        return src;
+    start = cs->charpos(pos, end, start - trimLength); // Here, start becomes number of bytes into src to start copying
 
-    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-    //wchar_t wcbuf[strwclen];
-    wchar_t* wcbuf = new wchar_t[strwclen];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-    wstring str(wcbuf, strwclen);
-
-    if ( (unsigned) pos >= strwclen )
-        pos = strwclen;
-
-    wstring out = str.substr(strwclen - pos, strwclen);
-    size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
-    //char outbuf[strmblen];
-    char* outbuf = new char[strmblen];
-    strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
-    std::string ret(outbuf, strmblen);
-    delete [] outbuf;
-    delete [] wcbuf;
+    std::string ret(pos+start, binLen-start);
     return ret;
 }
-
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

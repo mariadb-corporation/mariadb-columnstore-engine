@@ -39,8 +39,8 @@ using namespace oam;
 #include "distributedenginecomm.h"
 using namespace joblist;
 
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+//#include "boost/filesystem/operations.hpp"
+//#include "boost/filesystem/path.hpp"
 #include "boost/progress.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
@@ -64,8 +64,7 @@ using namespace execplan;
 #include "crashtrace.h"
 #include "installdir.h"
 
-
-namespace fs = boost::filesystem;
+#include "collation.h"
 
 namespace
 {
@@ -97,10 +96,11 @@ void added_a_pm(int)
 
 int main(int argc, char* argv[])
 {
-    // get and set locale language
-    string systemLang = "C";
-    systemLang = funcexp::utf8::idb_setlocale();
-
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DDLProc");
 

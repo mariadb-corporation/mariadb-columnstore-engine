@@ -160,8 +160,6 @@ std::map<uint64_t, shared_mutex *> djLock;  // djLock synchronizes destroy and j
 volatile int32_t asyncCounter;
 const int asyncMax = 20;	// current number of asynchronous loads
 
-extern bool utf8;
-
 struct preFetchCond
 {
     //uint64_t lbid;
@@ -1211,7 +1209,7 @@ int DictScanJob::operator()()
                       fLBIDTraceOn,
                       session);
             pproc.setBlockPtr((int*) data);
-            pproc.p_TokenByScan(cmd, output, output_buf_size, utf8, eqFilter);
+            pproc.p_TokenByScan(cmd, output, output_buf_size, eqFilter);
 
             if (wasBlockInCache)
                 output->CacheIO++;

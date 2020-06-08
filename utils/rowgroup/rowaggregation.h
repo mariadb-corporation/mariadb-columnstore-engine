@@ -53,6 +53,9 @@
 #include "mcsv1_udaf.h"
 #include "constantcolumn.h"
 
+// Because including my_sys.h in a Columnstore header causes too many conflicts
+struct charset_info_st;
+typedef const struct charset_info_st CHARSET_INFO;
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist
 {
@@ -706,7 +709,7 @@ protected:
 
     // We need a separate copy for each thread.
     mcsv1sdk::mcsv1Context fRGContext;
-
+    
     // These are handy for testing the actual type of static_any for UDAF
     static const static_any::any& charTypeId;
     static const static_any::any& scharTypeId;

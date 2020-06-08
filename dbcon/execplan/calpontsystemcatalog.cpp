@@ -21,6 +21,7 @@
  *
  *
  ***********************************************************************/
+
 #include <unistd.h>
 #include <stdexcept>
 #include <string>
@@ -75,6 +76,8 @@ using namespace rowgroup;
 #ifdef _MSC_VER
 #include "idbregistry.h"
 #endif
+
+#include "collation.h"
 
 #undef BAIL_IF_0
 #if 1
@@ -6082,6 +6085,48 @@ void CalpontSystemCatalog::checkSysCatVer()
     {
         flushCache();
     }
+}
+
+CalpontSystemCatalog::ColType::ColType() : 
+    colWidth(0), 
+    constraintType(NO_CONSTRAINT), 
+    colDataType(MEDINT), 
+    defaultValue(""), 
+    colPosition(-1), 
+    scale(0), 
+    precision(-1), 
+    compressionType(NO_COMPRESSION), 
+    columnOID(0),
+    autoincrement(0), 
+    nextvalue(0),
+    cs(NULL)
+{
+    charsetNumber = default_charset_info->number;
+}
+
+CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
+{
+    colWidth = rhs.colWidth;
+    constraintType = rhs.constraintType;
+    colDataType = rhs.colDataType;
+    ddn = rhs.ddn;
+    defaultValue = rhs.defaultValue;
+    colPosition = rhs.colPosition;
+    scale = rhs.scale;
+    precision = rhs.precision;
+    compressionType = rhs.compressionType;
+    columnOID = rhs.columnOID;
+    autoincrement = rhs.autoincrement;
+    nextvalue = rhs.nextvalue;
+    charsetNumber = rhs.charsetNumber;
+    cs = rhs.cs;
+}
+
+CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
+{
+    if (!cs)
+        cs= get_charset(charsetNumber, MYF(MY_WME));
+    return cs;
 }
 
 const string CalpontSystemCatalog::ColType::toString() const

@@ -78,10 +78,9 @@ void reset(int sig)
 
 int main(int argc, char** argv)
 {
-
-    // get and set locale language - BUG 5362
-    string systemLang = "C";
-    systemLang = funcexp::utf8::idb_setlocale();
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
 
     BRM::logInit ( BRM::SubSystemLogId_workerNode );
 

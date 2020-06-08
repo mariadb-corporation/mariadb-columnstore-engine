@@ -21,8 +21,6 @@
  *
  *
  ***********************************************************************/
-
-
 #include <unistd.h>
 #include <string>
 #include <iostream>
@@ -76,6 +74,8 @@ using namespace idbdatafile;
 #include "crashtrace.h"
 #include "installdir.h"
 
+#include "collation.h"
+
 namespace primitiveprocessor
 {
 
@@ -89,18 +89,15 @@ extern uint32_t lowPriorityThreads;
 extern int  directIOFlag;
 extern int  noVB;
 
-
 DebugLevel gDebugLevel;
 Logger* mlp;
-string systemLang;
-bool utf8 = false;
 
 bool isDebug( const DebugLevel level )
 {
     return level <= gDebugLevel;
 }
 
-}
+} //namespace primitiveprocessor
 
 namespace
 {
@@ -316,15 +313,14 @@ void* waitForSIGUSR1(void* p)
 
 int main(int argc, char* argv[])
 {
-    // get and set locale language
-    systemLang = funcexp::utf8::idb_setlocale();
-
-    if ( systemLang != "en_US.UTF-8" &&
-            systemLang.find("UTF") != string::npos )
-        utf8 = true;
-
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("PrimProc");
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
 
     int gDebug = 0;
     int c;
@@ -698,7 +694,7 @@ int main(int argc, char* argv[])
     }
 
     BPPCount = highPriorityThreads + medPriorityThreads + lowPriorityThreads;
-
+    
     // let the user override if they want
     temp = toInt(cf->getConfig(primitiveServers, "BPPCount"));
 

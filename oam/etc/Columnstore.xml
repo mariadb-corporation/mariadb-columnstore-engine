@@ -233,7 +233,6 @@
 		<Port>8620</Port>
 	</PMS32>
 	<SystemConfig>
-		<SystemLang>C</SystemLang>
 		<SystemName>columnstore-1</SystemName>
 		<ParentOAMModuleName>pm1</ParentOAMModuleName>
 		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>

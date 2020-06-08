@@ -20,6 +20,7 @@
 *
 *
 ****************************************************************************/
+
 #include "errorids.h"
 #include <string>
 using namespace std;
@@ -35,7 +36,7 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#define STRCOLL_ENH__
+#include "collation.h"
 
 namespace funcexp
 {
@@ -52,191 +53,80 @@ CalpontSystemCatalog::ColType Func_lpad::operationType(FunctionParm& fp, Calpont
 std::string Func_lpad::getStrVal(rowgroup::Row& row,
                                  FunctionParm& fp,
                                  bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType&)
+                                 execplan::CalpontSystemCatalog::ColType& type)
 {
-    unsigned i;
-    // The number of characters (not bytes) in our input str.
-    // Not all of these are necessarily significant. We need to search for the
-    // NULL terminator to be sure.
-    size_t strwclen;
-    // this holds the number of characters (not bytes) in our pad str.
-    size_t padwclen;
-
+    CHARSET_INFO* cs = type.getCharset();
     // The original string
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
+    const string& src = fp[0]->data()->getStrVal(row, isNull);
+    if (isNull)
+        return "";
+    if (src.empty() || src.length() == 0)
+        return src;
+    // binLen represents the number of bytes in src
+    size_t binLen = src.length();
+    const char* pos = src.c_str();
+    const char* end = pos + binLen;
+    // strLen = the number of characters in src
+    size_t strLen = cs->numchars(pos, end);
 
-    // The result length in number of characters
-    size_t len = 0;
-
-    switch (fp[1]->data()->resultType().colDataType)
+    // In the case where someone entered pad length as a quoted string,
+    // it may be interpreted by columnstore to be an actual string
+    // and stored in fResult.int as a htonl of that string,
+    // However fResult.double is always correct, so we'll use that.
+    size_t padLength = (size_t)fp[1]->data()->getDoubleVal(row, isNull);
+    if (isNull || padLength <= 0)
+        return "";
+    if (padLength > (size_t)INT_MAX32)
+        padLength = (size_t)INT_MAX32;
+    
+    if (padLength < strLen)
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            len = fp[1]->data()->getIntVal(row, isNull);
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        {
-            len = fp[1]->data()->getUintVal(row, isNull);
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            double value = fp[1]->data()->getDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            int64_t ret = (int64_t) value;
-
-            if (value > (double) numeric_limits<int64_t>::max())
-                ret = numeric_limits<int64_t>::max();
-            else if (value < (double) (numeric_limits<int64_t>::min() + 2))
-                ret = numeric_limits<int64_t>::min() + 2; // IDB min for bigint
-
-            len = ret;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        {
-            const string& strval = fp[1]->data()->getStrVal(row, isNull);
-            len = strtol(strval.c_str(), NULL, 10);
-            break;
-        }
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "lpad parameter 2 must be numeric, not  " << execplan::colDataTypeToString(fp[1]->data()->resultType().colDataType);
-            throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
-
-        }
+        binLen = cs->charpos(pos, end, padLength);
+        std::string ret(pos, binLen);
+        return ret;
     }
 
-    if (len < 1)
-        return "";
-
-    // MCOL-2182 As of MariaDB 10.3 the third parameter - pad characters - is optional
     // The pad characters.
-    const string* pad = &fPad;
+    const string* pad = &fPad; // Defaults to space
     if (fp.size() > 2)
     {
         pad = &fp[2]->data()->getStrVal(row, isNull);
     }
+    // binPLen represents the number of bytes in pad
+    size_t binPLen = pad->length();
+    const char* posP = pad->c_str();
+    // plen = the number of characters in pad
+    size_t plen = cs->numchars(posP, posP+binPLen);
+    if (plen == 0)
+        return src;
 
-    if (isNull)
-        return "";
+    size_t byteCount = (padLength+1) * cs->mbmaxlen; // absolute maximun number of bytes
+    char* buf = new char[byteCount];
+    char* pBuf = buf;
 
-    // Rather than calling the wideconvert functions with a null buffer to
-    // determine the size of buffer to allocate, we can be sure the wide
-    // char string won't be longer than
-    strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
-    size_t alen = len;
-
-    if (strwclen > len)
-        alen = strwclen;
-
-    size_t bufsize = alen + 1;
-
-    // Convert to wide characters. Do all further work in wide characters
-    wchar_t* wcbuf = new wchar_t[bufsize];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
-
-    size_t strSize = strwclen;    // The number of significant characters
-    const wchar_t* pWChar = wcbuf;
-
-    for (i = 0; *pWChar != '\0' && i < strwclen; ++pWChar, ++i)
+    padLength -= strLen;
+    byteCount = 0;
+    
+    while (padLength >= plen)
     {
+        memcpy(pBuf, posP, binPLen);
+        padLength -= plen;
+        byteCount += binPLen;
+        pBuf += binPLen;
     }
-
-    strSize = i;
-
-    // If the incoming str is exactly the len of the result str,
-    // return the original
-    if (strSize == len)
+    // Sometimes, in a case with multi-char pad, we need to add a partial pad
+    if (padLength > 0)
     {
-        return tstr;
+        size_t partialSize = cs->charpos(posP, posP+binPLen, padLength);
+        memcpy(pBuf, posP, partialSize);
+        byteCount += partialSize;
+        pBuf += partialSize;
     }
-
-    // If the incoming str is too big for the result str
-    // truncate the widechar buffer and return as a string
-    if (strSize > len)
-    {
-        // Trim the excess length of the buffer
-        wstring trimmed = wstring(wcbuf, len);
-        return utf8::wstring_to_utf8(trimmed.c_str());
-    }
-
-    // This is the case where there's room to pad.
-
-    // Convert the pad string to wide
-    padwclen = pad->length();  // A guess to start.
-    size_t padbufsize = padwclen + 1;
-    wchar_t* wcpad = new wchar_t[padbufsize];
-    // padwclen+1 is for giving count for the terminating null
-    size_t padlen = utf8::idb_mbstowcs(wcpad, pad->c_str(), padwclen + 1);
-
-    // How many chars do we need?
-    size_t padspace = len - strSize;
-
-    // Shift the contents of wcbuf to the right.
-    wchar_t* startofstr = wcbuf + padspace;
-
-    // Move the original string to the right to make room for the pad chars
-    // Testing has shown that this loop is faster than memmove
-    wchar_t* newchar = wcbuf + len;     // Last spot to put a char in buf
-    wchar_t* pChar = wcbuf + strSize;   // terminal NULL of our str
-
-    while (pChar >= wcbuf)
-    {
-        *newchar-- = *pChar--;
-    }
-
-    // Fill in the front of the buffer with the pad chars
-    wchar_t* firstpadchar = wcbuf;
-
-    for (wchar_t* pch = wcbuf; pch < startofstr && padlen > 0;)
-    {
-        // Truncate the number of fill chars if running out of space
-        if (padlen > padspace)
-        {
-            padlen = padspace;
-        }
-
-        // Move the fill chars to buffer
-        for (wchar_t* padchar = wcpad; padchar < wcpad + padlen; ++padchar)
-        {
-            *firstpadchar++ = *padchar;
-        }
-
-        padspace -= padlen;
-        pch += padlen;
-    }
-
-    wstring padded = wstring(wcbuf, len);
-    // Turn back to a string
-    std::string ret(utf8::wstring_to_utf8(padded.c_str()));
-    delete [] wcpad;
-    delete [] wcbuf;
+    memcpy(pBuf, pos, binLen);
+    byteCount += binLen;
+    
+    std::string ret(buf, byteCount);
+    delete [] buf;
     return ret;
 }
 

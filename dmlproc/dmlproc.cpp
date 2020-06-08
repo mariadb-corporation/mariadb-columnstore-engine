@@ -25,8 +25,8 @@
 #include <string>
 #include <set>
 #include <clocale>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+//#include "boost/filesystem/operations.hpp"
+//#include "boost/filesystem/path.hpp"
 #include "boost/progress.hpp"
 using namespace std;
 
@@ -84,7 +84,7 @@ using namespace joblist;
 #include "crashtrace.h"
 #include "installdir.h"
 
-namespace fs = boost::filesystem;
+#include "collation.h"
 
 threadpool::ThreadPool DMLServer::fDmlPackagepool(10, 0);
 
@@ -511,13 +511,13 @@ int8_t setupCwd()
 
 int main(int argc, char* argv[])
 {
-    // get and set locale language
-    string systemLang = "C";
-
     BRM::DBRM dbrm;
     Oam oam;
-    //BUG 5362
-    systemLang = funcexp::utf8::idb_setlocale();
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // Initialize the charset library
+    my_init();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DMLProc");

@@ -58,6 +58,11 @@
 
 #include "../winport/winport.h"
 
+// Because including my_sys.h in a Columnstore header causes too many conflicts
+struct charset_info_st;
+typedef const struct charset_info_st CHARSET_INFO;
+
+
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
 
 namespace rowgroup
@@ -103,7 +108,7 @@ public:
     inline bool isEmpty() const;
     inline uint64_t getSize() const;
     inline bool isNullValue(uint64_t offset) const;
-    inline bool equals(const std::string& str, uint64_t offset) const;
+    bool equals(const std::string& str, uint64_t offset, CHARSET_INFO* cs) const;
 
     void clear();
 
@@ -319,7 +324,8 @@ public:
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
     inline execplan::CalpontSystemCatalog::ColDataType* getColTypes();
     inline const execplan::CalpontSystemCatalog::ColDataType* getColTypes() const;
-
+    inline uint32_t getCharsetNumber(uint32_t colIndex) const;
+    
     // this returns true if the type is not CHAR or VARCHAR
     inline bool isCharType(uint32_t colIndex) const;
     inline bool isUnsigned(uint32_t colIndex) const;
@@ -332,7 +338,7 @@ public:
     inline int64_t getIntField(uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
-    inline bool equals(const std::string& val, uint32_t colIndex) const;
+    bool equals(const std::string& val, uint32_t colIndex) const;
 
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
@@ -381,7 +387,7 @@ public:
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
 
     // support VARBINARY
-    // Add 2-byte length at the beginning of the field.  NULL and zero length field are
+    // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
     // treated the same, could use one of the length bit to distinguish these two cases.
     inline std::string getVarBinaryStringField(uint32_t colIndex) const;
     inline void setVarBinaryField(const std::string& val, uint32_t colIndex);
@@ -443,14 +449,17 @@ public:
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
 
-    inline bool equals(const Row&, const std::vector<uint32_t>& keyColumns) const;
-    inline bool equals(const Row&, uint32_t lastCol) const;
+    bool equals(const Row&, const std::vector<uint32_t>& keyColumns) const;
+    bool equals(const Row&, uint32_t lastCol) const;
     inline bool equals(const Row&) const;
 
     inline void setUserDataStore(UserDataStore* u)
     {
         userDataStore = u;
     }
+    
+    const CHARSET_INFO* getCharset(uint32_t col) const;
+
 private:
     uint32_t columnCount;
     uint64_t baseRid;
@@ -461,12 +470,15 @@ private:
     uint32_t* offsets;
     uint32_t* colWidths;
     execplan::CalpontSystemCatalog::ColDataType* types;
+    uint32_t* charsetNumbers;
+    CHARSET_INFO** charsets;
     uint8_t* data;
     uint32_t* scale;
     uint32_t* precision;
 
     StringStore* strings;
     bool useStringTable;
+    bool hasCollation;
     bool hasLongStringField;
     uint32_t sTableThreshold;
     boost::shared_array<bool> forceInline;
@@ -569,6 +581,11 @@ inline const execplan::CalpontSystemCatalog::ColDataType* Row::getColTypes() con
     return types;
 }
 
+inline uint32_t Row::getCharsetNumber(uint32_t col) const
+{
+    return charsetNumbers[col];
+}
+
 inline bool Row::isCharType(uint32_t colIndex) const
 {
     return execplan::isCharType(types[colIndex]);
@@ -622,18 +639,6 @@ inline bool Row::equals(long double val, uint32_t colIndex) const
 {
     return *((long double*) &data[offsets[colIndex]]) == val;
 }
-
-inline bool Row::equals(const std::string& val, uint32_t colIndex) const
-{
-    if (inStringTable(colIndex))
-    {
-        uint64_t offset = *((uint64_t*) &data[offsets[colIndex]]);
-        return strings->equals(val, offset);
-    }
-    else
-        return (strncmp(val.c_str(), (char*) &data[offsets[colIndex]], getColumnWidth(colIndex)) == 0);
-}
-
 template<int len>
 inline uint64_t Row::getUintField(uint32_t colIndex) const
 {
@@ -1170,69 +1175,6 @@ inline uint64_t Row::hash(uint32_t lastCol) const
     return ret;
 }
 
-inline bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
-{
-    for (uint32_t i = 0; i < keyCols.size(); i++)
-    {
-        const uint32_t& col = keyCols[i];
-
-        if (!isLongString(col))
-        {
-            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
-            {
-                if (getLongDoubleField(i) != r2.getLongDoubleField(i))
-                    return false;
-            }
-            else if (getUintField(col) != r2.getUintField(col))
-                return false;
-        }
-        else
-        {
-            if (getStringLength(col) != r2.getStringLength(col))
-                return false;
-
-            if (memcmp(getStringPointer(col), r2.getStringPointer(col), getStringLength(col)))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-inline bool Row::equals(const Row& r2, uint32_t lastCol) const
-{
-    // This check fires with empty r2 only.
-    if (lastCol >= columnCount)
-        return true;
-
-    if (!useStringTable && !r2.useStringTable)
-        return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
-
-    for (uint32_t i = 0; i <= lastCol; i++)
-        if (!isLongString(i))
-        {
-            if (getColType(i) == execplan::CalpontSystemCatalog::LONGDOUBLE)
-            {
-                if (getLongDoubleField(i) != r2.getLongDoubleField(i))
-                    return false;
-            }
-            else if (getUintField(i) != r2.getUintField(i))
-                return false;
-        }
-        else
-        {
-            uint32_t len = getStringLength(i);
-
-            if (len != r2.getStringLength(i))
-                return false;
-
-            if (memcmp(getStringPointer(i), r2.getStringPointer(i), len))
-                return false;
-        }
-
-    return true;
-}
-
 inline bool Row::equals(const Row& r2) const
 {
     return equals(r2, columnCount - 1);
@@ -1268,6 +1210,7 @@ public:
     @param coids An array of oids for each column.
     @param tkeys An array of unique id for each column.
     @param colTypes An array of COLTYPEs for each column.
+    @param charsetNumbers an Array of the lookup numbers for the charset/collation object.
     @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
     @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
     */
@@ -1277,6 +1220,7 @@ public:
              const std::vector<uint32_t>& cOids,
              const std::vector<uint32_t>& tkeys,
              const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
+             const std::vector<uint32_t>& charsetNumbers,
              const std::vector<uint32_t>& scale,
              const std::vector<uint32_t>& precision,
              uint32_t stringTableThreshold,
@@ -1284,7 +1228,7 @@ public:
              const std::vector<bool>& forceInlineData = std::vector<bool>()
             );
 
-    /** @brief The copiers.  It copies metadata, not the row data */
+    /** @brief The copiers.  It copies metadata, not thetypes row data */
     RowGroup(const RowGroup&);
 
     /** @brief Assignment operator.  It copies metadata, not the row data */
@@ -1338,6 +1282,8 @@ public:
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
     inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes() const;
     inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
+    inline const std::vector<uint32_t>& getCharsetNumbers() const;
+    inline uint32_t getCharsetNumber(uint32_t colIndex) const;
     inline boost::shared_array<bool>& getForceInline();
     static inline uint32_t getHeaderSize()
     {
@@ -1397,6 +1343,8 @@ public:
                             uint16_t* blockNum);
 
     inline void setStringStore(boost::shared_ptr<StringStore>);
+    
+    const CHARSET_INFO* getCharset(uint32_t col);
 
 private:
     uint32_t columnCount;
@@ -1413,8 +1361,11 @@ private:
     // Used to map the projected column and rowgroup index
     std::vector<uint32_t> keys;
     std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
-
-    // DECIMAL support.  For non-decimal fields, the values are 0.
+    // For string collation
+    std::vector<uint32_t> charsetNumbers;
+    std::vector<CHARSET_INFO*> charsets;
+    
+    // DECIMAL support.  For non-decimal fields, the valutypeses are 0.
     std::vector<uint32_t> scale;
     std::vector<uint32_t> precision;
 
@@ -1422,6 +1373,7 @@ private:
     RGData* rgData;
     StringStore* strings;   // note, strings and data belong to rgData
     bool useStringTable;
+    bool hasCollation;
     bool hasLongStringField;
     uint32_t sTableThreshold;
     boost::shared_array<bool> forceInline;
@@ -1547,6 +1499,8 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     {
         r->colWidths = (uint32_t*) &colWidths[0];
         r->types = (execplan::CalpontSystemCatalog::ColDataType*) & (types[0]);
+        r->charsetNumbers = (uint32_t*) & (charsetNumbers[0]);
+        r->charsets = (CHARSET_INFO**) & (charsets[0]);
         r->scale = (uint32_t*) & (scale[0]);
         r->precision = (uint32_t*) & (precision[0]);
     }
@@ -1569,6 +1523,7 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     r->hasLongStringField = hasLongStringField;
     r->sTableThreshold = sTableThreshold;
     r->forceInline = forceInline;
+    r->hasCollation = hasCollation;
 }
 
 inline uint32_t RowGroup::getRowSize() const
@@ -1647,6 +1602,16 @@ inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& RowGroup:
 inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& RowGroup::getColTypes()
 {
     return types;
+}
+
+inline const std::vector<uint32_t>& RowGroup::getCharsetNumbers() const
+{
+    return charsetNumbers;
+}
+
+inline uint32_t RowGroup::getCharsetNumber(uint32_t colIndex) const
+{
+    return charsetNumbers[colIndex];
 }
 
 inline const std::vector<uint32_t>& RowGroup::getScale() const
@@ -1903,45 +1868,6 @@ inline bool StringStore::isNullValue(uint64_t off) const
     return (memcmp(&mc->data[offset+4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
 }
 
-inline bool StringStore::equals(const std::string& str, uint64_t off) const
-{
-    uint32_t length;
-
-    if (off == std::numeric_limits<uint64_t>::max())
-        return str == joblist::CPNULLSTRMARK;
-
-    MemChunk* mc;
-
-    if (off & 0x8000000000000000)
-    {
-        if (longStrings.size() <= (off & ~0x8000000000000000))
-            return false;
-
-        mc = (MemChunk*) longStrings[off & ~0x8000000000000000].get();
-
-        memcpy(&length, mc->data, 4);
-
-        // Not sure if this check it needed, but adds safety
-        if (length > mc->currentSize)
-            return false;
-
-        return (strncmp(str.c_str(), (const char*) mc->data + 4, length) == 0);
-    }
-
-    uint32_t chunk = off / CHUNK_SIZE;
-    uint32_t offset = off % CHUNK_SIZE;
-
-    if (mem.size() <=  chunk)
-        return false;
-
-    mc = (MemChunk*) mem[chunk].get();
-    memcpy(&length, &mc->data[offset], 4);
-
-    if ((offset + length) > mc->currentSize)
-        return false;
-
-    return (strncmp(str.c_str(), (const char*) &mc->data[offset] + 4, length) == 0);
-}
 inline uint32_t StringStore::getStringLength(uint64_t off)
 {
     uint32_t length;

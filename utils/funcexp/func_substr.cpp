@@ -35,6 +35,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
+#include "collation.h"
+
 #define STRCOLL_ENH__
 
 namespace funcexp

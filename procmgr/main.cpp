@@ -101,10 +101,9 @@ int main(int argc, char** argv)
 #ifndef _MSC_VER
     setuid(0); // set effective ID to root; ignore return status
 #endif
-    // get and set locale language
-    string systemLang = "C";
-
-    setlocale(LC_ALL, systemLang.c_str());
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
 
     idbdatafile::IDBPolicy::configIDBPolicy();
     

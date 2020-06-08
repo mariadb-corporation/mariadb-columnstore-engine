@@ -128,8 +128,10 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
         if (sc->isColumnStore() && !pc)
+        {
             ct = jobInfo.csc->colType(sc->oid());
-
+            ct.charsetNumber =sc->colType().charsetNumber;
+        }
 //X
         if (pc == NULL)
             pcs = new pColStep(oid, tbl_oid, ct, jobInfo);
@@ -717,8 +719,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
 //XXX use this before connector sets colType in sc correctly.
                 if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                {
                     ct = jobInfo.csc->colType(sc->oid());
-
+                    ct.charsetNumber =sc->colType().charsetNumber;
+                }
 //X
                 dictOid = isDictCol(ct);
             }
@@ -1007,7 +1011,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
                             //XXX use this before connector sets colType in sc correctly.
                             if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                            {
                                 ct = jobInfo.csc->colType(sc->oid());
+                                ct.charsetNumber =sc->colType().charsetNumber;
+                            }
 
                             //X
                             dictOid = isDictCol(ct);
@@ -1160,7 +1167,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
                     //XXX use this before connector sets colType in sc correctly.
                     if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                    {
                         ct = jobInfo.csc->colType(sc->oid());
+                        ct.charsetNumber =sc->colType().charsetNumber;
+                    }
 
                     //X
                     dictOid = isDictCol(ct);
@@ -1646,7 +1656,10 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
 
 //XXX use this before connector sets colType in sc correctly.
             if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+            {
                 ct = jobInfo.csc->colType(sc->oid());
+                ct.charsetNumber =sc->colType().charsetNumber;
+            }
 
 //X
 

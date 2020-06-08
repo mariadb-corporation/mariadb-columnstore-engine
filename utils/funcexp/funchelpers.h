@@ -41,8 +41,9 @@
 #include "intervalcolumn.h"
 #include "treenode.h"
 
+#ifndef ULONGLONG_MAX
 #define ULONGLONG_MAX ulonglong_max
-
+#endif
 namespace funcexp
 {
 namespace helpers

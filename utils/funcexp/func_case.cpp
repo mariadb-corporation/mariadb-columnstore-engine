@@ -43,6 +43,8 @@ using namespace logging;
 #include "utils_utf8.h"
 using namespace funcexp;
 
+#include "collation.h"
+
 namespace
 {
 using namespace funcexp;
@@ -180,20 +182,21 @@ inline uint64_t simple_case_cmp(Row& row,
         case execplan::CalpontSystemCatalog::VARCHAR:
         {
             const string& ev = parm[n]->data()->getStrVal(row, isNull);
-
             if (isNull)
                 break;
+            CHARSET_INFO* cs = parm[n]->data()->resultType().getCharset();
 
             for (i = 1; i <= whereCount; i++)
             {
                 //BUG 5362
-                if (utf8::idb_strcoll(ev.c_str(), parm[i]->data()->getStrVal(row, isNull).c_str()) == 0 && !isNull)
+                const string& p1 = parm[i]->data()->getStrVal(row, isNull);
+                if (isNull)
+                    break;
+                if (cs->strnncoll(ev.c_str(), ev.length(), p1.c_str(), p1.length()) == 0)
                 {
                     foundIt = true;
                     break;
                 }
-                else
-                    isNull = false;
             }
 
             break;

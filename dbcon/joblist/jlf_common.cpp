@@ -196,7 +196,7 @@ TupleInfo setTupleInfo_(const CalpontSystemCatalog::ColType& ct,
     {
         //Haven't even seen the table yet, much less this col
         ti = TupleInfo(fudgeWidth(ct, col_oid), col_oid, col_key, tbl_key,
-                       ct.scale, ct.precision, ct.colDataType);
+                       ct.scale, ct.precision, ct.colDataType, ct.charsetNumber);
         jobInfo.keyInfo->tupleInfoMap[col_key] = ti;
         jobInfo.keyInfo->colKeyToTblKey[col_key] = tbl_key;
         jobInfo.keyInfo->colKeyToTblKey[tbl_key] = tbl_key;

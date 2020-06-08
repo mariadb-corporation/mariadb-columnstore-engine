@@ -33,6 +33,8 @@ using namespace execplan;
 
 #include "rowgroup.h"
 
+#include "collation.h"
+
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_length::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )

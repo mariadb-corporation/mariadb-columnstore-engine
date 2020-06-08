@@ -21,7 +21,6 @@
 *
 *
 ****************************************************************************/
-
 #include <string>
 using namespace std;
 
@@ -35,7 +34,7 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#define STRCOLL_ENH__
+#include "collation.h"
 
 namespace funcexp
 {

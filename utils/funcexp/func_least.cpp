@@ -40,6 +40,8 @@ using namespace joblist;
 #include "utils_utf8.h"
 using namespace funcexp;
 
+#include "collation.h"
+
 class to_lower
 {
 public:
@@ -127,17 +129,16 @@ std::string Func_least::getStrVal(rowgroup::Row& row,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     string leastStr = fp[0]->data()->getStrVal(row, isNull);
+    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
     for (uint32_t i = 1; i < fp.size(); i++)
     {
         const string& str1 = fp[i]->data()->getStrVal(row, isNull);
 
-        int tmp = utf8::idb_strcoll(leastStr.c_str(), str1.c_str());
-
-        if ( tmp > 0 )
-
-//		if ( leastStr > str1 )
+        if (cs->strnncoll(leastStr.c_str(), leastStr.length(), str1.c_str(), str1.length()) > 0)
+        {
             leastStr = str1;
+        }
     }
 
     return leastStr;

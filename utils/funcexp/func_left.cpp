@@ -20,7 +20,6 @@
 *
 *
 ****************************************************************************/
-
 #include <string>
 using namespace std;
 
@@ -35,6 +34,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
+#include "collation.h"
+
 namespace funcexp
 {
 
@@ -48,36 +49,34 @@ CalpontSystemCatalog::ColType Func_left::operationType(FunctionParm& fp, Calpont
 std::string Func_left::getStrVal(rowgroup::Row& row,
                                  FunctionParm& fp,
                                  bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType&)
+                                 execplan::CalpontSystemCatalog::ColType& type)
 {
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
-
+    CHARSET_INFO* cs = type.getCharset();
+    // The original string
+    const string& src = fp[0]->data()->getStrVal(row, isNull);
     if (isNull)
         return "";
+    if (src.empty() || src.length() == 0)
+        return src;
+    // binLen represents the number of bytes in src
+    size_t binLen = src.length();
+    const char* pos = src.c_str();
+    const char* end = pos + binLen;
 
-    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-    wchar_t* wcbuf = new wchar_t[strwclen];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-    wstring str(wcbuf, strwclen);
-
-    int64_t pos = fp[1]->data()->getIntVal(row, isNull) - 1;
-
-    if (isNull)
+    size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
+    if (isNull || trimLength <= 0)
         return "";
 
-    if (pos == -1)  // pos == 0
-        return "";
+    size_t charPos;
 
-    wstring out = str.substr(0, pos + 1);
-    size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
-    char* outbuf = new char[strmblen];
-    strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
-    std::string ret(outbuf, strmblen);
-    delete [] outbuf;
-    delete [] wcbuf;
+    if ((binLen <= trimLength) ||
+        (binLen <= (charPos= cs->charpos(pos, end, trimLength))))
+    {
+        return src;
+    }
+
+    std::string ret(pos, charPos);
     return ret;
-
-//	return str.substr(0, pos+1);
 }
 
 

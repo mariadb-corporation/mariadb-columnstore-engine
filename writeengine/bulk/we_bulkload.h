@@ -78,7 +78,6 @@ public:
      */
     EXPORT int          loadJobInfo( const std::string& fullFileName,
                                      bool  bUseTempJobFile,
-                                     const std::string& systemLang,
                                      int   argc,
                                      char** argv,
                                      bool  bLogInfo2ToConsole,
