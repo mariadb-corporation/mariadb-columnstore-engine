@@ -103,21 +103,21 @@ string Func_concat_ws::getStrVal(Row& row,
 #endif
     string str;
     string tmp;
-    // Work on reallocation. use std::string::resize() to
-    // grab larger chunks in some intellegent manner.
     for ( uint32_t i = 1 ; i < parm.size() ; i++)
     {
-		stringValue(parm[i], row, isNull, tmp);
-        str += tmp;
-
+        stringValue(parm[i], row, isNull, tmp);
         if (isNull)
         {
             isNull = false;
             continue;
         }
 
-        if (!str.empty() && !isNull)
+        if (!str.empty())
             str += delim;
+
+        // TODO: Work on string reallocation. Use std::string::resize() to
+        // grab larger chunks in some intellegent manner.
+        str += tmp;
     }
 
     if (str.empty())

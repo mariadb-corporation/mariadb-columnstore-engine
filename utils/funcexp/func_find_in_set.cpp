@@ -69,18 +69,18 @@ int64_t Func_find_in_set::getIntVal(rowgroup::Row& row,
     if (searchStr.find(",") != string::npos)
         return 0;
 
-    if (setString.length() > searchStr.length())
+    if (setString.length() < searchStr.length())
         return 0;
         
     CHARSET_INFO *cs= op_ct.getCharset();
 
     my_wc_t wc= 0;
-    const char *str_begin= setString.c_str();
-    const char *str_end= setString.c_str();
-    const char *real_end= str_end + setString.length();
-    const char *find_str= searchStr.c_str();
-    uint find_str_len= searchStr.length();
-    int position= 0;
+    const char *str_begin = setString.c_str();
+    const char *str_end = setString.c_str();
+    const char *real_end = str_end + setString.length();
+    const char *find_str = searchStr.c_str();
+    size_t find_str_len = searchStr.length();
+    int position = 0;
     static const char separator=',';
     while (1)
     {
@@ -88,21 +88,21 @@ int64_t Func_find_in_set::getIntVal(rowgroup::Row& row,
         if ((symbol_len= cs->mb_wc(&wc, (uchar*) str_end,
                                  (uchar*) real_end)) > 0)
         {
-            const char *substr_end= str_end + symbol_len;
+            const char *substr_end = str_end + symbol_len;
             bool is_last_item= (substr_end == real_end);
-            bool is_separator= (wc == (my_wc_t) separator);
+            bool is_separator = (wc == (my_wc_t) separator);
             if (is_separator || is_last_item)
             {
                 position++;
                 if (is_last_item && !is_separator)
-                    str_end= substr_end;
-                if (!cs->strnncoll(str_begin, (uint) (str_end - str_begin),
+                    str_end = substr_end;
+                if (!cs->strnncoll(str_begin, (size_t) (str_end - str_begin),
                                  find_str, find_str_len))
-                    return (longlong) position;
+                    return (int64_t) position;
                 else
-                    str_begin= substr_end;
+                    str_begin = substr_end;
             }
-            str_end= substr_end;
+            str_end = substr_end;
         }
         else if (str_end - str_begin == 0 &&
                find_str_len == 0 &&

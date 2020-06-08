@@ -88,7 +88,7 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
     int64_t strLen = cs->numchars(pos, end);
     
     // Return the original string if start isn't within the string.
-    if ((start <= 1) || start >= strLen)
+    if ((start < 1) || start >= strLen)
         return src;
 
     if ((length < 0) || (length > strLen))
@@ -103,7 +103,8 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
 
     out.append(src.c_str(), start);
     out.append(tnewstr.c_str(), tnewstr.length());
-    out.append(src.c_str() + start + length, binLen - start - length);
+    if (binLen - start - length > 0)
+        out.append(src.c_str() + start + length, binLen - start - length);
 
     return out;
 }
