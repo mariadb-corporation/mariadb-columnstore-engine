@@ -66,6 +66,7 @@ DictStep& DictStep::operator=(const DictStep& d)
     eqFilter = d.eqFilter;
     eqOp = d.eqOp;
     filterCount = d.filterCount;
+    charsetNumber = d.charsetNumber;
     return *this;
 }
 
@@ -698,6 +699,7 @@ SCommand DictStep::duplicate()
     ds->eqOp = eqOp;
     ds->filterString = filterString;
     ds->filterCount = filterCount;
+    ds->charsetNumber = charsetNumber;
     ds->Command::duplicate(this);
     return ret;
 }
