@@ -38,8 +38,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 

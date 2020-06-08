@@ -21,9 +21,6 @@
  *
  *
  ***********************************************************************/
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
 
 #include <unistd.h>
 #include <stdexcept>
@@ -79,6 +76,10 @@ using namespace rowgroup;
 #ifdef _MSC_VER
 #include "idbregistry.h"
 #endif
+
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
 
 #undef BAIL_IF_0
 #if 1

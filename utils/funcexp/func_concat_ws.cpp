@@ -35,8 +35,6 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 

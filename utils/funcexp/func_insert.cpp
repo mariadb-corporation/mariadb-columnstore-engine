@@ -40,8 +40,6 @@ using namespace joblist;
 #include "utf8.h"
 using namespace utf8;
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 

@@ -17,10 +17,6 @@
    MA 02110-1301, USA. */
 
 //#define DEBUG_WALK_COND
-#include <my_config.h>
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
 #include <strings.h>
 
 #include <string>
@@ -89,6 +85,10 @@ using namespace execplan;
 #include "funcexp.h"
 #include "functor.h"
 using namespace funcexp;
+
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
 
 const uint64_t AGG_BIT = 0x01;
 const uint64_t SUB_BIT = 0x02;

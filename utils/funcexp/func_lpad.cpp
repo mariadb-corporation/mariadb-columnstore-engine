@@ -39,8 +39,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 const string Func_lpad::fPad = " ";
@@ -90,7 +88,7 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     }
 
     // The pad characters.
-    const string* pad = &fPad;
+    const string* pad = &fPad; // Defaults to space
     if (fp.size() > 2)
     {
         pad = &fp[2]->data()->getStrVal(row, isNull);
@@ -100,7 +98,7 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     const char* posP = pad->c_str();
     // plen = the number of characters in pad
     size_t plen = cs->numchars(posP, posP+binPLen);
-    if (plen == 0 || plen > strLen)
+    if (plen == 0)
         return src;
 
     size_t byteCount = (padLength+1) * cs->mbmaxlen; // absolute maximun number of bytes
@@ -112,15 +110,15 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     
     while (padLength >= plen)
     {
-        memcpy(pBuf, posP, plen);
+        memcpy(pBuf, posP, binPLen);
         padLength -= plen;
-        byteCount += plen;
-        pBuf += plen;
+        byteCount += binPLen;
+        pBuf += binPLen;
     }
     // Sometimes, in a case with multi-char pad, we need to add a partial pad
     if (padLength > 0)
     {
-        size_t partialSize = cs->charpos(posP, posP+plen, padLength);
+        size_t partialSize = cs->charpos(posP, posP+binPLen, padLength);
         memcpy(pBuf, posP, partialSize);
         byteCount += partialSize;
         pBuf += partialSize;

@@ -21,10 +21,6 @@
 *
 *
 ***********************************************************************/
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-#include <m_ctype.h>
 
 #include <iostream>
 
@@ -33,6 +29,12 @@
 #include "objectreader.h"
 
 #include "liboamcpp.h"
+
+#include <mariadb.h>
+#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
+#include <my_sys.h>
+#include <m_ctype.h>
+
 using namespace oam;
 
 using namespace std;

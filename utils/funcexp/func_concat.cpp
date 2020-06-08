@@ -35,8 +35,6 @@ using namespace rowgroup;
 #include "dataconvert.h"
 using namespace dataconvert;
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 
