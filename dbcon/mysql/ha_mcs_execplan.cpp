@@ -6095,7 +6095,6 @@ bool isMCSTable(TABLE* table_ptr)
 #endif
 
     if (engineName == "Columnstore" ||
-        engineName == "InfiniDB" ||
         engineName == "Columnstore_cache")
         return true;
     else

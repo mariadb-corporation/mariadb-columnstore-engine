@@ -1655,7 +1655,7 @@ static int ha_mcs_cache_deinit(void *p)
   if (plugin_maria)
   {
     plugin_unlock(0, plugin_maria);
-    plugin_maria= 0;
+    plugin_maria= NULL;
   }
   return 0;
 }
@@ -1696,10 +1696,10 @@ maria_declare_plugin(columnstore)
   PLUGIN_LICENSE_GPL,
   ha_mcs_cache_init,            /* Plugin Init */
   ha_mcs_cache_deinit,          /* Plugin Deinit */
-  0x0100,                       /* 1.0 */
+  MCSVERSIONHEX,
   NULL,   		        /* status variables */
   NULL,                         /* system variables */
-  "1.0",
+  MCSVERSION,                    /* string version */
   MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
 },
 {
