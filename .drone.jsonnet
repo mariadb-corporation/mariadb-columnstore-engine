@@ -79,16 +79,6 @@ local Pipeline(branch, platform, event) = {
     },
   },
   tools():: {
-      local tools_commands(repo) = [
-      'git clone --recurse-submodules --depth 1 --branch ' + branch + ' https://github.com/mariadb-corporation/mariadb-columnstore-' + repo,
-      'cd mariadb-columnstore-' + repo,
-      'cmake -DCMAKE_BUILD_TYPE=Release ' + pkg_map[platform],
-      'make -j$(nproc) package',
-      'make install',
-      'mkdir -p /drone/src/result',
-      'cp ' + (if std.split(platform, ':')[0] == 'centos' then '*.rpm' else '*.deb') + ' /drone/src/result/',
-      'cd ..',
-    ],
     name: 'tools',
     image: platform,
     environment: {
@@ -98,7 +88,16 @@ local Pipeline(branch, platform, event) = {
     commands+: [
         tools_deps_platform_map[platform]
     ] + std.flattenArrays([
-        tools_commands(repo)
+        [
+          'git clone --recurse-submodules --depth 1 --branch ' + branch + ' https://github.com/mariadb-corporation/mariadb-columnstore-' + repo,
+          'cd mariadb-columnstore-' + repo,
+          'cmake -DCMAKE_BUILD_TYPE=Release ' + pkg_map[platform],
+          'make -j$(nproc) package',
+          'make install',
+          'mkdir -p /drone/src/result',
+          'cp ' + (if std.split(platform, ':')[0] == 'centos' then '*.rpm' else '*.deb') + ' /drone/src/result/',
+          'cd ..',
+        ]
         for repo in ['api', 'tools']
     ]),
   },
