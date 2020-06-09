@@ -939,8 +939,10 @@ void GroupConcatOrderBy::getResult(uint8_t* buff, const string& sep)
     }
 
     size_t resultSize = oss.str().size();
+    resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
     fOutputString.reset(new uint8_t[resultSize + 2]);
-    memset(fOutputString.get(), 0, resultSize + 2);
+    fOutputString[resultSize] = '\0';
+    fOutputString[resultSize + 1] = '\0';
 
     strncpy((char*)fOutputString.get(),
         oss.str().c_str(), resultSize);
