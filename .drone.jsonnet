@@ -71,37 +71,36 @@ local platformMap(branch, platform) =
 
 local Pipeline(branch, platform, event) = {
   local pipeline = self,
+
   _volumes:: {
     mdb: {
       name: 'mdb',
       path: '/mdb',
     },
   },
-  tools:: {
+  tools():: {
+      local tools_commands(repo) = [
+      'git clone --recurse-submodules --depth 1 --branch ' + branch + ' https://github.com/mariadb-corporation/mariadb-columnstore-' + repo,
+      'cd mariadb-columnstore-' + repo,
+      'cmake -DCMAKE_BUILD_TYPE=Release ' + pkg_map[platform],
+      'make -j$(nproc) package',
+      'make install',
+      'mkdir -p /drone/src/result',
+      'cp ' + (if std.split(platform, ':')[0] == 'centos' then '*.rpm' else '*.deb') + ' /drone/src/result/',
+      'cd ..',
+    ],
     name: 'tools',
     image: platform,
     environment: {
       DEBIAN_FRONTEND: 'noninteractive',
       JAVA_HOME: '/usr/lib/jvm/java-openjdk',
     },
-    commands: [
-                tools_deps_platform_map[platform],
-              ] +
-              [
-                std.join(
-                  ' && ', [
-                    'git clone --recurse-submodules --depth 1 --branch ' + branch + ' https://github.com/mariadb-corporation/mariadb-columnstore-' + repo,
-                    'cd mariadb-columnstore-' + repo,
-                    'cmake -DCMAKE_BUILD_TYPE=Release ' + pkg_map[platform],
-                    'make -j$(nproc) package',
-                    'make install',
-                    'mkdir -p /drone/src/result',
-                    'cp ' + (if std.split(platform, ':')[0] == 'centos' then '*.rpm' else '*.deb') + ' /drone/src/result/',
-                    'cd ..',
-                  ]
-                )
-                for repo in ['api', 'tools']
-              ],
+    commands+: [
+        tools_deps_platform_map[platform]
+    ] + std.flattenArrays([
+        tools_commands(repo)
+        for repo in ['api', 'tools']
+    ]),
   },
   tests:: {
     name: 'tests',
@@ -203,7 +202,7 @@ local Pipeline(branch, platform, event) = {
            //             ],
            //           },
          ] +
-         (if std.count(['columnstore-1.4.4'], branch) > 0 then [pipeline.tools] else []) +
+         (if std.count(['columnstore-1.4.4'], branch) > 0 then [pipeline.tools()] else []) +
          // (if std.count(['develop-1.4', 'columnstore-1.4.4'], branch) > 0 && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
          // (if std.count(['develop-1.4', 'columnstore-1.4.4'], branch) > 0 && std.split(platform, ':')[0] == 'centos' then [pipeline.tests_report] else []) +
          [
