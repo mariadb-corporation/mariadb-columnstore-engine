@@ -78,14 +78,14 @@ local Pipeline(branch, platform, event) = {
       path: '/mdb',
     },
   },
-  tools():: {
+  tools:: {
     name: 'tools',
     image: platform,
     environment: {
       DEBIAN_FRONTEND: 'noninteractive',
       JAVA_HOME: '/usr/lib/jvm/java-openjdk',
     },
-    commands+: [
+    commands: [
         tools_deps_platform_map[platform]
     ] + std.flattenArrays([
         [
@@ -201,7 +201,7 @@ local Pipeline(branch, platform, event) = {
            //             ],
            //           },
          ] +
-         (if std.count(['columnstore-1.4.4'], branch) > 0 then [pipeline.tools()] else []) +
+         (if std.count(['columnstore-1.4.4'], branch) > 0 then [pipeline.tools] else []) +
          // (if std.count(['develop-1.4', 'columnstore-1.4.4'], branch) > 0 && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
          // (if std.count(['develop-1.4', 'columnstore-1.4.4'], branch) > 0 && std.split(platform, ':')[0] == 'centos' then [pipeline.tests_report] else []) +
          [
