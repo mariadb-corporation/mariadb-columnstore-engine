@@ -8,10 +8,11 @@ else
         MODULE="pm1"
 fi
 
-#get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
-
-rm -f ${tmpDir}/${MODULE}_hardwareReport.txt
+if [ $2 ] ; then
+        OUT_FILE=$2
+else
+        OUT_FILE=${MODULE}_logReport.txt
+fi
 
 {
 echo " "
@@ -73,6 +74,6 @@ echo "################# ifconfig -a #################"
 echo " "
 ifconfig -a 2>/dev/null
 
-} > ${tmpDir}/${MODULE}_hardwareReport.txt
+} >> $OUT_FILE
 
 exit 0

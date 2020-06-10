@@ -8,10 +8,11 @@ else
         MODULE="pm1"
 fi
 
-#get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
-
-rm -f ${tmpDir}/${MODULE}_resourceReport.txt
+if [ $2 ] ; then
+        OUT_FILE=$2
+else
+        OUT_FILE=${MODULE}_logReport.txt
+fi
 
 {
 echo " "
@@ -60,6 +61,6 @@ echo "################# bin/editem -i #################"
 echo " "
 editem -i 2>/dev/null
 
-} > ${tmpDir}/${MODULE}_resourceReport.txt
+} >> $OUT_FILE
 
 exit 0
