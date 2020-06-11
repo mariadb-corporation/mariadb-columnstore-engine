@@ -95,7 +95,7 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
     const char* posP = pad->c_str();
     // plen = the number of characters in pad
     size_t plen = cs->numchars(posP, posP+binPLen);
-    if (plen == 0 || plen > strLen)
+    if (plen == 0)
         return src;
 
     size_t byteCount = (padLength+1) * cs->mbmaxlen; // absolute maximun number of bytes
