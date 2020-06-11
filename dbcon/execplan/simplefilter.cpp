@@ -150,8 +150,14 @@ SimpleFilter::SimpleFilter(const SimpleFilter& rhs) :
 SimpleFilter::~SimpleFilter()
 {
     //delete fOp;
-    delete fLhs;
-    delete fRhs;
+    if (fLhs != NULL)
+        delete fLhs;
+
+    if (fRhs != NULL)
+        delete fRhs;
+
+    fLhs = NULL;
+    fRhs = NULL;
 }
 
 /**
