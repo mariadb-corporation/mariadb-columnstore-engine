@@ -1,15 +1,12 @@
 [Unit]
 Description=mcs-workernode
-PartOf=mariadb-columnstore.service
 After=mcs-loadbrm.service
 
 [Service]
-Type=forking
-ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1
+Type=simple
+ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1 fg
 Restart=on-failure
-ExecStop=-@ENGINE_BINDIR@/save_brm
+ExecStop=/usr/bin/env bash -c "kill -15 $MAINPID"
+ExecStopPost=-@ENGINE_BINDIR@/save_brm
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
-TimeoutStopSec=2
-
-[Install]
-WantedBy=mariadb-columnstore.service
+TimeoutStopSec=5

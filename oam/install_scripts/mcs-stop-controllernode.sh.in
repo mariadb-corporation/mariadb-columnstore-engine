@@ -1,7 +1,6 @@
 #!/bin/bash
 
 /bin/kill -15 "$1"
-systemctl stop mcs-workernode --ignore-dependencies
 timeout=$(mcsGetConfig SystemConfig DBRMTimeout)
 
 while [ -n "$(pgrep -x controllernode)" ] && [ $timeout -gt 0 ]

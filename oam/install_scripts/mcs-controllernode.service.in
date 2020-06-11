@@ -4,11 +4,7 @@ PartOf=mcs-workernode.service
 After=mcs-workernode.service
 
 [Service]
-Type=forking
-ExecStartPre=/usr/bin/env bash -c "systemctl start mcs-workernode"
-ExecStart=@ENGINE_BINDIR@/controllernode
+Type=simple
+ExecStart=@ENGINE_BINDIR@/controllernode fg
 Restart=on-failure
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
-
-[Install]
-WantedBy=mariadb-columnstore.service

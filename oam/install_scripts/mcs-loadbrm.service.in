@@ -4,9 +4,8 @@ PartOf=mcs-workernode.service
 After=mcs-storagemanager.service
 
 [Service]
-Type=simple
-ExecStart=@ENGINE_BINDIR@/mcs-loadbrm.py
+Type=oneshot
+ExecStart=/usr/bin/env bash -c "@ENGINE_BINDIR@/mcs-loadbrm.py && sleep 2" 
 
 [Install]
-WantedBy=mariadb-columnstore.service
 WantedBy=mcs-workernode.service

@@ -10,7 +10,7 @@ ConditionPathExists=/etc/columnstore/storagemanager.cnf
 Type=simple
 ExecStartPre=@ENGINE_BINDIR@/mcs-start-storagemanager.py
 ExecStart=/usr/bin/env bash -c "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc | awk '{print $1}') exec @ENGINE_BINDIR@/StorageManager"
+ExecStop=/usr/bin/env bash -c "kill -15 $MAINPID"
 
 [Install]
-WantedBy=mariadb-columnstore.service
 WantedBy=mcs-workernode.service
