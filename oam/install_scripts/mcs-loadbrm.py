@@ -17,7 +17,7 @@ dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
 loadbrm = f'/usr/bin/load_brm'
 brm_saves_current = ''
 
-if storage.lower() == 's3' and not region.lower() == 'some_region' and not bucket.lower() == 'some_bucket':
+if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
     # load s3
     brm = 'data1/systemFiles/dbrm/BRM_saves_current'
     config_root.find('./Installation/DBRootStorageType').text = "StorageManager"
