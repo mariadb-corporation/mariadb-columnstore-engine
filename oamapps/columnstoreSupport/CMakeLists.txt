@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(columnstoreSupport_SRCS columnstoreSupport.cpp)
+set(columnstoreSupport_SRCS columnstoreSupport.cpp mcsSupportUtil.cpp)
 
 add_executable(columnstoreSupport ${columnstoreSupport_SRCS})
 
@@ -14,7 +14,7 @@ target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIB
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
-install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh
+install(PROGRAMS dbmsReport.sh bulklogReport.sh configReport.sh
     hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
     DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
               

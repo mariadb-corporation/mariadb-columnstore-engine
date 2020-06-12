@@ -8,10 +8,11 @@ else
         MODULE="pm1"
 fi
 
-#get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
-
-rm -f ${tmpDir}/${MODULE}_softwareReport.txt
+if [ $2 ] ; then
+        OUT_FILE=$2
+else
+        OUT_FILE=${MODULE}_logReport.txt
+fi
 
 {
 echo " "
@@ -21,17 +22,9 @@ echo " "
 echo " "
 echo "-- Columnstore Package Details --"
 echo " "
-echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
+rpm -qi MariaDB-columnstore-engine
 echo " "
-mcsadmin getsoftwareinfo
 
-echo " "
-echo "-- Columnstore Storage Configuration --"
-echo " "
-echo "################# mcsadmin getStorageConfig #################"
-echo " "
-mcsadmin getStorageConfig
-
-} > ${tmpDir}/${MODULE}_softwareReport.txt
+} >> $OUT_FILE
 
 exit 0

@@ -28,11 +28,14 @@
 #include "ctype.h"
 #include <netdb.h>
 #include <readline.h>
+#include <boost/filesystem.hpp>
 
 #include "mcsconfig.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "installdir.h"
+#include "mcsSupportUtil.h"
+#include "columnstoreversion.h"
 
 using namespace std;
 using namespace oam;
@@ -68,22 +71,6 @@ typedef boost::tuple<ChildModuleList::iterator, string > threadInfo_t;
 
 bool LOCAL = false;
 
-void title(string outputFile = "columnstoreSupportReport.txt")
-{
-    string cmd = "echo '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' >> " + outputFile;
-    system(cmd.c_str());
-    cmd = "echo ' ' >> " + outputFile;
-    system(cmd.c_str());
-    cmd = "echo ' System " + systemName + "' >> " + outputFile;
-    system(cmd.c_str());
-    cmd = "echo ' columnstoreSupportReport script ran from Module " + localModule + " on " + currentDate + "' >> " + outputFile;
-    system(cmd.c_str());
-    cmd = "echo ' ' >> " + outputFile;
-    system(cmd.c_str());
-    cmd = "echo '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' >> " + outputFile;
-    system(cmd.c_str());
-}
-
 void childReportThread(threadInfo_t& st)
 {
     ChildModuleList::iterator& list = boost::get<0>(st);
@@ -108,19 +95,28 @@ void childReportThread(threadInfo_t& st)
     {
         outputFile = remoteModuleName + "_" + reportType + "Report.txt";
 
-        title(outputFile);
+        FILE *pOutputFile = fopen(outputFile.c_str(), "a");
+        if (pOutputFile == NULL)
+        {
+            printf("Could not open file: %s",outputFile.c_str());
+            exit(1);
+        }
 
-        string cmd = "echo '=======================================================================' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '=                    " + reportType + " report                                  =' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '=======================================================================' >> " + outputFile;
-        system(cmd.c_str());
+        fprintf(pOutputFile,"********************************************************************************\n"
+                            "\n"
+                            " System %s\n"
+                            " columnstoreSupportReport script ran from Module %s on %s\n"
+                            " SoftwareVersion = %s-%s"
+                            "\n"
+                            "********************************************************************************\n"
+                            "\n"
+                            "                     %s report\n"
+                            "\n"
+                            "********************************************************************************\n",
+                            systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str(),reportType.c_str());
     }
 
     cout << "Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
-
-    cout.flush();
 
     string cmd = "remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
                  reportType + "Report.sh " + remoteModuleName +
@@ -161,6 +157,27 @@ void reportThread(string reporttype)
 
     string outputFile = localModule + "_" + reportType + "Report.txt";
 
+    FILE *pOutputFile = fopen(outputFile.c_str(), "a");
+    if (pOutputFile == NULL)
+    {
+        printf("Could not open file: %s",outputFile.c_str());
+        exit(1);
+    }
+    //get local report
+    fprintf(pOutputFile,"********************************************************************************\n"
+                        "\n"
+                        " System %s\n"
+                        " columnstoreSupportReport script ran from Module %s on %s\n"
+                        " SoftwareVersion = %s-%s"
+                        "\n"
+                        "********************************************************************************\n"
+                        "\n"
+                        "                     %s report\n"
+                        "\n"
+                        "********************************************************************************\n",
+                        systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str(),reportType.c_str());
+
+    fclose(pOutputFile);
     // run on child servers and get report
     if (!LOCAL)
     {
@@ -183,168 +200,71 @@ void reportThread(string reporttype)
         }
     }
 
-    // run report on local server
-    cout << "Get " + reportType + " report data for " + localModule  << endl;
-
     if (reportType == "log")
     {
-        string cmd = "logReport.sh " + localModule;
-        system(cmd.c_str());
-
-        cmd = "mv -f " + tmpDir + "/" + localModule + "_logReport.tar.gz .";
-        system(cmd.c_str());
-
-        cmd = "tar -zcf " + localModule + "_mysqllogReport.tar.gz /var/log/mysql/*.err* 2>/dev/null";
-        system(cmd.c_str());
-
         // run log config on local server
         cout << "Get log config data for " + localModule << endl;
 
-        cmd = "echo ' ' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '******************** Log Configuration  ********************' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo ' ' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '################# mcsadmin getLogConfig ################# ' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo ' ' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "mcsadmin getLogConfig >> " + outputFile;
+        string cmd = "logReport.sh " + localModule + " " + outputFile;
         system(cmd.c_str());
     }
     else
     {
-        //get local report
-        title(outputFile);
-
-        string cmd = "echo '=======================================================================' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '=                    " + reportType + " report                                  =' >> " + outputFile;
-        system(cmd.c_str());
-        cmd = "echo '=======================================================================' >> " + outputFile;
-        system(cmd.c_str());
-
-        cmd = reportType + "Report.sh " + localModule;
-        system(cmd.c_str());
-        cmd = " mv -f " + tmpDir + "/" + localModule + "_" + reportType + "Report.txt .";
+        string cmd = reportType + "Report.sh " + localModule + " " + outputFile;
         system(cmd.c_str());
 
         if (reportType == "config" )
         {
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Network Configuration ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getSystemNetworkConfig ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getSystemNetworkConfig >> " + outputFile;
-            system(cmd.c_str());
+            pOutputFile = fopen(outputFile.c_str(), "a");
+            if (pOutputFile == NULL)
+            {
+                printf("Could not open file: %s",outputFile.c_str());
+                exit(1);
+            }
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Module Configure  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getModuleTypeConfig ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getModuleTypeConfig >> " + outputFile;
-            system(cmd.c_str());
+            fprintf(pOutputFile,"\n******************** System Network Configuration ******************************\n\n");
+            getSystemNetworkConfig(pOutputFile);
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Storage Configuration  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getStorageConfig ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getStorageConfig >> " + outputFile;
-            system(cmd.c_str());
+            fprintf(pOutputFile,"\n******************** System Module Configure  **********************************\n\n");
+            getModuleTypeConfig(pOutputFile);
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Storage Status  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getStorageStatus ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getStorageStatus >> " + outputFile;
-            system(cmd.c_str());
+            fprintf(pOutputFile,"\n******************** System Storage Configuration  *****************************\n\n");
+            getStorageConfig(pOutputFile);
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Status  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getSystemInfo ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getSystemInfo >> " + outputFile;
-            system(cmd.c_str());
+            fprintf(pOutputFile,"\n******************** System Storage Status  ************************************\n\n");
+            getStorageStatus(pOutputFile);
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Directories  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# mcsadmin getSystemDirectories ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "mcsadmin getSystemDirectories >> " + outputFile;
-            system(cmd.c_str());
+            // BT: most of this is tedious to collect and can be manually looked up in the debug.log file
+            //fprintf(pOutputFile,"\n******************** System Status  ********************************************\n\n");
+            //printSystemStatus(pOutputFile);
+            //printProcessStatus(pOutputFile);
+            //printAlarmSummary(pOutputFile);
+            //
+            //fprintf(pOutputFile,"\n******************** System Directories  ***************************************\n\n");
+            //getSystemDirectories(pOutputFile);
 
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '******************** System Configuration File  ********************' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo '################# cat /etc/columnstore/Columnstore.xml ################# ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "echo ' ' >> " + outputFile;
-            system(cmd.c_str());
-            cmd = "cat " + std::string(MCSSYSCONFDIR) + "/columnstore/Columnstore.xml >> " + outputFile;
-            system(cmd.c_str());
+            boost::filesystem::path configFile = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml");
+            boost::filesystem::copy_file(configFile,"./Columnstore.xml",boost::filesystem::copy_option::overwrite_if_exists);
+            fclose(pOutputFile);
         }
 
+        /*
+        // TODO: This can be ported from mcsadmin if needed most info included does not seem useful at this time
         if (reportType == "resource" )
         {
             if (LOCAL)
             {
-                cmd = "echo '################# mcsadmin getModuleResourceUsage ################# ' >> " + outputFile;
-                system(cmd.c_str());
-                cmd = "echo ' ' >> " + outputFile;
-                system(cmd.c_str());
+                fprintf(pOutputFile,"\n******************** mcsadmin getModuleResourceUsage  **************************\n\n");
                 string cmd = "mcsadmin getModuleResourceUsage " + localModule + " >> " + outputFile;
                 system(cmd.c_str());
             }
             else
             {
-                cmd = "echo '################# mcsadmin getSystemResourceUsage ################# ' >> " + outputFile;
-                system(cmd.c_str());
-                cmd = "echo ' ' >> " + outputFile;
-                system(cmd.c_str());
+                fprintf(pOutputFile,"\n******************** mcsadmin getSystemResourceUsage  **************************\n\n");
                 string cmd = "mcsadmin getSystemResourceUsage >> " + outputFile;
                 system(cmd.c_str());
             }
-        }
+        }*/
     }
 
     // exit thread
@@ -720,127 +640,131 @@ int main(int argc, char* argv[])
     //
     // Software
     //
-
     if ( SOFTWARE )
     {
         string reportType = "software";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // Configuration
     //
-
     if ( CONFIG )
     {
         string reportType = "config";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // Alarms and Columnstore Logs
     //
-
     if ( LOG )
     {
         string reportType = "log";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // Bulk Logs
     //
-
     if ( BULKLOG )
     {
         string reportType = "bulklog";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // Hardware
     //
-
     if ( HARDWARE )
     {
         string reportType = "hardware";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // Resources
     //
-
     if ( RESOURCE )
     {
         string reportType = "resource";
+        cout << "Get " + reportType + " report data for " + localModule  << endl;
         pthread_t reportthread;
         int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-
         if ( status != 0 )
         {
             cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
         }
-
-        sleep(5);
+        sleep(1);
     }
 
     //
     // DBMS
     //
-
     if ( DBMS )
     {
-        system("rm -f columnstoreSupportReport.txt;touch columnstoreSupportReport.txt");
-        title();
-
-        system("echo '=======================================================================' >> columnstoreSupportReport.txt");
-        system("echo '=                    DBMS Report                                      =' >> columnstoreSupportReport.txt");
-        system("echo '=======================================================================' >> columnstoreSupportReport.txt");
-
-        // run DBMS report on local server
         cout << "Get dbms report data for " << localModule << endl;
 
+        string outputFile = localModule + "_dbmsReport.txt";
+
+        FILE *pOutputFile = fopen(outputFile.c_str(), "w");
+        if (pOutputFile == NULL)
+        {
+            cout << "Could not open file: " + outputFile << endl;
+            exit(1);
+        }
+
+        fprintf(pOutputFile,"********************************************************************************\n"
+                            "\n"
+                            " System %s\n"
+                            " columnstoreSupportReport script ran from Module %s on %s\n"
+                            " SoftwareVersion = %s-%s"
+                            "\n"
+                            "********************************************************************************\n"
+                            "\n"
+                            "                     DBMS report\n"
+                            "\n"
+                            "********************************************************************************\n",
+                            systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str());
+
+        fclose(pOutputFile);
+
+        // run DBMS report on local server
         bool FAILED = false;
 
         if ( localModule != PrimaryUMModuleName )
@@ -925,127 +849,28 @@ int main(int argc, char* argv[])
 
             if (!FAILED)
             {
-                // check if mysql is supported and get info
-                string columnstoreMysql = "mysql -u root " + pwprompt;
-                string cmd = columnstoreMysql + " -V > /dev/null 2>&1";
-                int ret = system(cmd.c_str());
-
-                if ( WEXITSTATUS(ret) == 0)
-                {
-                    // run DBMS report info
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS Columnstore Version ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " -e status ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'status' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS  Columnstore System Column  ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.syscolumn ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'desc calpontsys.syscolumn;' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS  Columnstore System Table  ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'desc calpontsys.systable;' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS Columnstore System Catalog Data ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " calpontsys < " + MCSSUPPORTDIR + "/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " calpontsys < " + MCSSUPPORTDIR + "/dumpcat_mysql.sql >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS Columnstore System Table Data ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " -e select * from calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'select * from calpontsys.systable;' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS Columnstore Usernames ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " -e show databases ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'show databases;' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    system("echo '******************** DBMS Columnstore variables ********************' >> columnstoreSupportReport.txt");
-                    system("echo ' ' >> columnstoreSupportReport.txt");
-                    cmd = "echo '################# " + columnstoreMysql + " show variables ################# ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = "echo ' ' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                    cmd = columnstoreMysql + " -e 'show variables;' >> columnstoreSupportReport.txt";
-                    system(cmd.c_str());
-                }
+                string cmd = "dbmsReport.sh " + localModule + " " + outputFile + " " + std::string(MCSSUPPORTDIR) + " " + pwprompt ;
+                system(cmd.c_str());
             }
         }
 
-        system("echo ' ' >> columnstoreSupportReport.txt");
-        system("echo '******************** Database Size Report ********************' >> columnstoreSupportReport.txt");
-        system("echo ' ' >> columnstoreSupportReport.txt");
+        /*
+          BT: This doesn't appear to do anything
+        fprintf(pOutputFile,"\n******************** Database Size Report  *************************************\n\n");
+        getStorageStatus(pOutputFile);
 
         string file = "databaseSizeReport";
         ifstream File (file.c_str());
 
         if (File)
         {
-
-            string cmd = "echo '################# /bin/databaseSizeReport ################# ' >> columnstoreSupportReport.txt";
-            system(cmd.c_str());
-            cmd = "echo ' ' >> columnstoreSupportReport.txt";
-            system(cmd.c_str());
-            cmd = "databaseSizeReport >> columnstoreSupportReport.txt";
+            string cmd = "databaseSizeReport >> " + outputFile;
             system(cmd.c_str());
         }
+         */
 
-        system("echo ' ' >> columnstoreSupportReport.txt");
-        system("echo '******************** DBMS Columnstore config file ********************' >> columnstoreSupportReport.txt");
-        system("echo ' ' >> columnstoreSupportReport.txt");
-        string cmd = "echo '################# cat " + std::string(MCSMYCNFDIR) + "/columnstore.cnf ################# ' >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-        cmd = "echo ' ' >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-        cmd = "cat " + std::string(MCSMYCNFDIR) + "/columnstore.cnf 2>/dev/null >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-
-        system("echo ' ' >> columnstoreSupportReport.txt");
-        system("echo '******************** Active Queries ********************' >> columnstoreSupportReport.txt");
-        system("echo ' ' >> columnstoreSupportReport.txt");
-        cmd = "echo '################# mcsadmin getActiveSqlStatement ################# ' >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-        cmd = "echo ' ' >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-        cmd = "mcsadmin getActiveSqlStatement >> columnstoreSupportReport.txt";
-        system(cmd.c_str());
-
-        cmd = "cat columnstoreSupportReport.txt > " + localModule + "_dbmsReport.txt";
-        system(cmd.c_str());
+        boost::filesystem::path configFile = std::string(MCSMYCNFDIR) + "/columnstore.cnf";
+        boost::filesystem::copy_file(configFile,"./columnstore.cnf",boost::filesystem::copy_option::overwrite_if_exists);
     }
 
     int wait = 0;
@@ -1066,10 +891,13 @@ int main(int argc, char* argv[])
         }
     }
 
-    system("rm -f columnstoreSupportReport.txt");
-
     system("unix2dos *Report.txt > /dev/null 2>&1");
-    system("rm -rf columnstoreSupportReport;mkdir columnstoreSupportReport;mv *Report.txt columnstoreSupportReport/. > /dev/null 2>&1;mv *Report.tar.gz columnstoreSupportReport/. > /dev/null 2>&1");
+    system("rm -rf columnstoreSupportReport;"
+           "mkdir columnstoreSupportReport;"
+           "mv *Report.txt columnstoreSupportReport/. > /dev/null 2>&1;"
+           "mv Columnstore.xml columnstoreSupportReport/. > /dev/null 2>&1;"
+           "mv columnstore.cnf columnstoreSupportReport/. > /dev/null 2>&1;"
+           "mv *Report.tar.gz columnstoreSupportReport/. > /dev/null 2>&1");
     string cmd = "tar -zcf columnstoreSupportReport." + systemName + ".tar.gz columnstoreSupportReport/*";
     system(cmd.c_str());
 
