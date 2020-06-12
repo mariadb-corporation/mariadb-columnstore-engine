@@ -34,6 +34,7 @@
 
 #include "jobstep.h"
 #include "bytestream.h"
+#include "parsetree.h"
 
 #ifndef __GNUC__
 #  ifndef __attribute__
@@ -190,6 +191,12 @@ public:
         fPmsConfigured = pms;
     }
 
+    virtual void setDynamicParseTreeVec(
+        const std::vector<std::pair<execplan::ParseTree*, execplan::ParseTree*>>& dynamicParseTreeVec)
+    {
+        fDynamicParseTreeVec = dynamicParseTreeVec;
+    }
+
 protected:
     //defaults okay
     //JobList(const JobList& rhs);
@@ -217,6 +224,7 @@ protected:
     volatile uint32_t fAborted;
 
     uint32_t fPriority;   //higher #s = higher priority
+    std::vector<std::pair<execplan::ParseTree*, execplan::ParseTree*>> fDynamicParseTreeVec;
 };
 
 class TupleJobList : public JobList

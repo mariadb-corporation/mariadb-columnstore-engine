@@ -1990,6 +1990,7 @@ SJLP makeJobList_(
         jl->addQuery(querySteps);
         jl->addProject(projectSteps);
         jl->addDelivery(deliverySteps);
+        jl->setDynamicParseTreeVec(jobInfo.dynamicParseTreeVec);
 
         dynamic_cast<TupleJobList*>(jl)->setDeliveryFlag(true);
     }
