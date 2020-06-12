@@ -1975,11 +1975,22 @@ void FileOp::initDbRootExtentMutexes( )
 {
     boost::mutex::scoped_lock lk(m_createDbRootMutexes);
 
+    std::vector<uint16_t> rootIds;
+    Config::getRootIdList( rootIds );
+    if (m_DbRootAddExtentMutexes.size() != rootIds.size())
+    {
+        //Something in configuration changed the size
+        //reset and rebuild this map
+        std::map<int, boost::mutex*>::iterator k = m_DbRootAddExtentMutexes.begin();
+        while (k != m_DbRootAddExtentMutexes.end() )
+        {
+            delete k->second;
+            ++k;
+        }
+    }
+
     if ( m_DbRootAddExtentMutexes.size() == 0 )
     {
-        std::vector<uint16_t> rootIds;
-        Config::getRootIdList( rootIds );
-
         for (size_t i = 0; i < rootIds.size(); i++)
         {
             boost::mutex* pM = new boost::mutex;
