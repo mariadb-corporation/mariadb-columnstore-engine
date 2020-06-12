@@ -35,6 +35,7 @@
 #include "configcpp.h"
 #include "installdir.h"
 #include "mcsSupportUtil.h"
+#include "columnstoreversion.h"
 
 using namespace std;
 using namespace oam;
@@ -105,13 +106,14 @@ void childReportThread(threadInfo_t& st)
                             "\n"
                             " System %s\n"
                             " columnstoreSupportReport script ran from Module %s on %s\n"
+                            " SoftwareVersion = %s-%s"
                             "\n"
                             "********************************************************************************\n"
                             "\n"
                             "                     %s report\n"
                             "\n"
                             "********************************************************************************\n",
-                            systemName.c_str(),localModule.c_str(),currentDate.c_str(),reportType.c_str());
+                            systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str(),reportType.c_str());
     }
 
     cout << "Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
@@ -166,13 +168,14 @@ void reportThread(string reporttype)
                         "\n"
                         " System %s\n"
                         " columnstoreSupportReport script ran from Module %s on %s\n"
+                        " SoftwareVersion = %s-%s"
                         "\n"
                         "********************************************************************************\n"
                         "\n"
                         "                     %s report\n"
                         "\n"
                         "********************************************************************************\n",
-                        systemName.c_str(),localModule.c_str(),currentDate.c_str(),reportType.c_str());
+                        systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str(),reportType.c_str());
 
     fclose(pOutputFile);
     // run on child servers and get report
@@ -750,13 +753,14 @@ int main(int argc, char* argv[])
                             "\n"
                             " System %s\n"
                             " columnstoreSupportReport script ran from Module %s on %s\n"
+                            " SoftwareVersion = %s-%s"
                             "\n"
                             "********************************************************************************\n"
                             "\n"
                             "                     DBMS report\n"
                             "\n"
                             "********************************************************************************\n",
-                            systemName.c_str(),localModule.c_str(),currentDate.c_str());
+                            systemName.c_str(),localModule.c_str(),currentDate.c_str(),columnstore_version.c_str(),columnstore_release.c_str());
 
         fclose(pOutputFile);
 
