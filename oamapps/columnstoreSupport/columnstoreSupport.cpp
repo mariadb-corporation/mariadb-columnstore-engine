@@ -114,7 +114,7 @@ void childReportThread(threadInfo_t& st)
                             systemName.c_str(),localModule.c_str(),currentDate.c_str(),reportType.c_str());
     }
 
-    cout << "Child Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
+    cout << "Get " + reportType + " report data for " +  remoteModuleName + "      " << endl;
 
     string cmd = "remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
                  reportType + "Report.sh " + remoteModuleName +

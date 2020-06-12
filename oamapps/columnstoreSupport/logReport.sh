@@ -19,7 +19,7 @@ tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
 
 rm -f ${tmpDir}/${MODULE}_logReport.tar.gz
 tar -zcf ${tmpDir}/${MODULE}_logReport.tar.gz /var/log/mariadb/columnstore > /dev/null 2>&1
-mv ${tmpDir}/${MODULE}_logReport.tar.gz .
+cp ${tmpDir}/${MODULE}_logReport.tar.gz .
 tar -zcf ${MODULE}_mysqllogReport.tar.gz /var/log/mysql/*.err 2>/dev/null
 
 echo '******************** Log Configuration  ********************' >> $OUT_FILE

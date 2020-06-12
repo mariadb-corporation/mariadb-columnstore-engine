@@ -239,8 +239,7 @@ void getModuleTypeConfig(FILE * pOutputFile)
                 fprintf(pOutputFile,"ModuleDiskMonitorFileSystem#%i =  %s\n",id,fs.c_str());
                 ++id;
             }
-
-            cout << endl;
+            fprintf(pOutputFile,"\n");
         }
     }
     catch (exception& e)
@@ -330,7 +329,7 @@ void getStorageConfig(FILE * pOutputFile)
             fprintf(pOutputFile,"\n");
         }
 
-        cout << endl;
+        fprintf(pOutputFile,"\n");
 
         // um volumes
         if (cloud == "amazon" && boost::get<3>(t) == "external")
@@ -360,7 +359,7 @@ void getStorageConfig(FILE * pOutputFile)
         // pm volumes
         if (cloud == "amazon" && boost::get<0>(t) == "external")
         {
-            cout << endl;
+            fprintf(pOutputFile,"\n");
 
             DBRootConfigList dbrootConfigList;
 
@@ -440,9 +439,8 @@ void getStorageConfig(FILE * pOutputFile)
 
         if ( DataRedundancyConfig == "y" )
         {
-            cout << endl << "Data Redundant Configuration" << endl << endl;
+            fprintf(pOutputFile,"\nData Redundant Configuration\n\n");
             fprintf(pOutputFile,"Copies Per DBroot = %i",DataRedundancyCopies);
-            //cout << "Storage Type = " << DataRedundancyStorageType << endl;
 
             oamModuleInfo_t st;
             string moduleType;
