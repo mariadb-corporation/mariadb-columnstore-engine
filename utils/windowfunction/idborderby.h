@@ -338,7 +338,7 @@ class OrderByData : public IdbCompare
 {
 public:
     OrderByData(const std::vector<IdbSortSpec>&, const rowgroup::RowGroup&);
-    virtual ~OrderByData() {};
+    virtual ~OrderByData();
 
     bool operator() (rowgroup::Row::Pointer p1, rowgroup::Row::Pointer p2)
     {
