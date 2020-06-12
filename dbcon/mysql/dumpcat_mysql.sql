@@ -22,6 +22,6 @@ select
 	              end DATATYPE, 
 	SCALE, PREC, COLUMNLENGTH COLLEN, COLUMNPOSITION POS, COMPRESSIONTYPE CT
 from
-	SYSCOLUMN
+	syscolumn
 order by
 	`schema`, TABLENAME, POS;
