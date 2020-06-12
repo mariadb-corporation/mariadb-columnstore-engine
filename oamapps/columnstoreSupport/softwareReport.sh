@@ -22,8 +22,6 @@ echo " "
 echo " "
 echo "-- Columnstore Package Details --"
 echo " "
-echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
-echo " "
 rpm -qi MariaDB-columnstore-engine
 echo " "
 
