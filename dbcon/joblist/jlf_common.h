@@ -364,6 +364,11 @@ struct JobInfo
     bool isDML;
     std::string timeZone;
 
+    // This is for tracking any dynamically allocated ParseTree objects
+    // in simpleScalarFilterToParseTree() for later deletion in
+    // JobList::~JobList()
+    std::vector<std::pair<execplan::ParseTree*, execplan::ParseTree*>> dynamicParseTreeVec;
+
 private:
     //defaults okay
     //JobInfo(const JobInfo& rhs);
