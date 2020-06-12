@@ -37,8 +37,6 @@ using namespace joblist;
 
 #include "collation.h"
 
-#define STRCOLL_ENH__
-
 namespace funcexp
 {
 
@@ -52,101 +50,57 @@ CalpontSystemCatalog::ColType Func_substr::operationType(FunctionParm& fp, Calpo
 std::string Func_substr::getStrVal(rowgroup::Row& row,
                                    FunctionParm& fp,
                                    bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType&)
+                                   execplan::CalpontSystemCatalog::ColType& ct)
 {
-#ifdef STRCOLL_ENH__
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
+    CHARSET_INFO* cs = ct.getCharset();
 
-    if (isNull)
-        return "";
-
-    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-    wchar_t* wcbuf = new wchar_t[strwclen];
-    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-    wstring str(wcbuf, strwclen);
-
-    int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
-
-    if (isNull)
-        return "";
-
-    if (start == -1)  // pos == 0
-        return "";
-
-    wstring::size_type n = wstring::npos;
-
-    if (fp.size() == 3)
-    {
-        int64_t len = fp[2]->data()->getIntVal(row, isNull);
-
-        if (isNull)
-            return "";
-
-        if (len < 1)
-            return "";
-
-        n = len;
-    }
-
-    int64_t strLen = static_cast<int64_t>(str.length());
-
-    if (start < -1)  // negative pos, beginning from end
-        start += strLen + 1;
-
-    if (start < 0 || strLen <= start)
-    {
-        return "";
-    }
-
-    wstring out = str.substr(start, n);
-    size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
-    char* outbuf = new char[strmblen];
-    strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
-    std::string ret(outbuf, strmblen);
-    delete [] outbuf;
-    delete [] wcbuf;
-    return ret;
-#else
     const string& str = fp[0]->data()->getStrVal(row, isNull);
-
     if (isNull)
         return "";
-
+    int64_t strLen = str.length();
+    const char* strptr = str.c_str();
+    const char* strend = strptr + strLen;
+    uint32_t strChars = cs->numchars(strptr, strend);
+    
     int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
-
     if (isNull)
         return "";
-
-    if (start == -1)  // pos == 0
+    if (start < -1)  // negative pos, beginning from end
+        start += strChars + 1;
+    if (start < 0 || strChars <= start)
+    {
         return "";
+    }
 
-    size_t n = string::npos;
-
+    int64_t length;
     if (fp.size() == 3)
     {
-        int64_t len = fp[2]->data()->getIntVal(row, isNull);
-
+        int64_t length = fp[2]->data()->getIntVal(row, isNull);
         if (isNull)
             return "";
-
-        if (len < 1)
+        if (length < 1)
             return "";
-
-        n = len;
     }
-
-    size_t strLen = strlen(str.c_str());
-
-    if (start < -1)  // negative pos, beginning from end
-        start += strLen + 1;
-
-    if (start < 0 || (int64_t)strLen <= start)
+    else
     {
-        return "";
+        length = strChars - start;
     }
 
-    return str.substr(start, n);
-#endif
+    // start is now number of chars into str to start the substring
+    // We convert it to number of bytes:
+    start = cs->charpos(strptr, strend, start);
+    // Convert length to bytes as well
+    length= cs->charpos(strptr + start, strend, length);
+    if ((start < 0) || (start + 1 > strLen))
+        return "";
+
+    if (start == 0 && strLen == length)
+        return str;
+
+    length= MY_MIN(length, strLen - start);
+    
+    std::string ret(strptr + start, length);
+    return ret;
 }
 
 
