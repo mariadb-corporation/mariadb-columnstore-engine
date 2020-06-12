@@ -132,12 +132,12 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
             
             // We start at the beginning of the string and move forward
             // one character at a time until we reach the end. Then we can
-            // safely compare and remove on character. Then back to the beginning 
+            // safely compare and remove one character. Then back to the beginning 
             // and try again.
             while (end - binTLen >= pos)
             {
                 const char* p = pos;
-                uint32 l;
+                uint32_t l;
                 while (p + binTLen < end)
                 {
                     if ((l = my_ismbchar(cs, p, end))) // returns the number of bytes in the leading char or zero if one byte

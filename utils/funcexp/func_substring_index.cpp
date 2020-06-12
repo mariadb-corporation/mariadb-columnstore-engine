@@ -45,82 +45,164 @@ CalpontSystemCatalog::ColType Func_substring_index::operationType(FunctionParm& 
     return fp[0]->data()->resultType();
 }
 
-
 std::string Func_substring_index::getStrVal(rowgroup::Row& row,
         FunctionParm& fp,
         bool& isNull,
-        execplan::CalpontSystemCatalog::ColType&)
+        execplan::CalpontSystemCatalog::ColType& ct)
 {
+    CHARSET_INFO* cs = ct.getCharset();
+
     const string& str = fp[0]->data()->getStrVal(row, isNull);
-
     if (isNull)
         return "";
-
-    const string& delim = fp[1]->data()->getStrVal(row, isNull);
-
+    int64_t strLen = str.length();
+    
+    const string& delimstr = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
         return "";
-
+    int64_t delimLen = delimstr.length();
+    
     int64_t count = fp[2]->data()->getIntVal(row, isNull);
-
     if (isNull)
         return "";
 
-    if ( count == 0 )
+    if (strLen == 0 || delimLen == 0 || !count == 0)
         return "";
 
-    // To avoid comparison b/w int64_t and size_t
-    int64_t end = strlen(str.c_str()) & 0x7fffffffffffffff;
-
-    if ( count >  end )
+    if (count > strLen)
         return str;
 
-    if (( count < 0 ) && ((count * -1) > (int64_t) end))
+    if ((count < 0) && ((count * -1) > strLen))
         return str;
 
-    string value = str;
-
-    if ( count > 0 )
+    std::string value; // Only used if !use_mb()
+     
+    if (cs->use_mb()) // Charset supports multibyte characters
     {
-        int pointer = 0;
-
-        for ( int64_t i = 0 ; i < count ; i ++ )
+        const char* src = str.c_str();
+        const char* srcEnd = src + strLen;
+        const char* srchEnd = srcEnd - delimLen + 1;
+        const char* delim = delimstr.c_str();
+        const char* delimEnd = delim + delimLen;
+        char* ptr = const_cast<char*>(src);
+        char *i,*j;
+        uint32_t l;
+        int32 n = 0, c = count, pass;
+        // For count > 0, this loop goes once.
+        // For count < 0, it goes twice
+        for (pass = (count > 0 ? 1 : 0); pass<2; ++pass)
         {
-            string::size_type pos = str.find(delim, pointer);
-
-            if (pos != string::npos)
-                pointer = pos + 1;
-
-            end = pos;
+            while (ptr < srchEnd)
+            {
+                bool found = false;
+                if (*ptr == *delim)  // If the first byte matches, maybe we have a match
+                {
+                    // Do a byte by byte compare of src at that spot against delim
+                    i = ptr + 1; 
+                    j = const_cast<char*>(delim) + 1;
+                    found = true;
+                    while (j != delimEnd)
+                    {
+                        if (*i++ != *j++)
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+                }
+                if (found)
+                {
+                    if (pass==0) 
+                        ++n;
+                    else if (!--c) 
+                        break;
+                    
+                    ptr += delimLen;
+                    continue;
+                }
+                else
+                {
+                    // move to the next character
+                    if ((l = my_ismbchar(cs, ptr, srcEnd))) // returns the number of bytes in the leading char or zero if one byte
+                        ptr += l;
+                    else
+                        ++ptr;
+                }
+            }
+            if (pass == 0) /* count<0 */
+            {
+                c += n + 1;
+                if (c <= 0)
+                {
+                    return str; // not found, return the original string
+                }
+                // Go back and do a second pass
+                ptr = const_cast<char*>(src);
+            }
+            else
+            {
+                if (c)
+                {
+                    return str; // not found, return the original string
+                }
+            }
         }
-
-        value = str.substr(0, end);
+        
+        if ( count > 0) /* return left part */
+        {
+            std::string ret(src, ptr - src);
+            return ret;
+        }
+        else /* return right part */
+        {
+            ptr+= delimLen;
+            std::string ret(ptr, srcEnd - ptr);
+            return ret;
+        }
     }
     else
     {
-        count = -count;
-        int pointer = end;
-        int start = 0;
-
-        for ( int64_t i = 0 ; i < count ; i ++ )
+        if (count > 0)
         {
-            string::size_type pos = str.rfind(delim, pointer);
-
-            if (pos != string::npos)
+            int pointer = 0;
+            int64_t end = strLen;
+            for ( int64_t i = 0 ; i < count ; i ++ )
             {
-                if ( count > end )
-                    return "";
+                string::size_type pos = str.find(delimstr, pointer);
 
-                pointer = pos - 1;
-                start = pos + 1;
+                if (pos != string::npos)
+                    pointer = pos + 1;
+
+                end = pos;
             }
-            else
-                start = 0;
+
+            value = str.substr(0, end);
         }
+        else
+        {
+            count = -count;
+            int pointer = strLen;
+            int start = 0;
 
-        value = str.substr(start, end);
+            for ( int64_t i = 0 ; i < count ; i ++ )
+            {
+                string::size_type pos = str.rfind(delimstr, pointer);
+
+                if (pos != string::npos)
+                {
+                    if ( count > strLen )
+                        return "";
+
+                    pointer = pos - 1;
+                    start = pos + 1;
+                }
+                else
+                    start = 0;
+            }
+
+            value = str.substr(start, strLen);
+        }
     }
-
     return value;
 }
 
