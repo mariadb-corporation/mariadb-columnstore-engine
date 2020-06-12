@@ -32,13 +32,6 @@ void getSystemNetworkConfig(FILE * pOutputFile);
 void getModuleTypeConfig(FILE * pOutputFile);
 void getStorageConfig(FILE * pOutputFile);
 void getStorageStatus(FILE * pOutputFile);
-void getSystemInfo(FILE * pOutputFile);
-void getSystemDirectories(FILE * pOutputFile);
 
-void printSystemStatus(FILE * pOutputFile);
-void printProcessStatus(FILE * pOutputFile);
-void printAlarmSummary(FILE * pOutputFile);
-
-void getActiveSql(FILE * pOutputFile);
 
 #endif
