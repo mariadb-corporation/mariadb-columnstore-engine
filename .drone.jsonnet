@@ -89,8 +89,8 @@ local Pipeline(branch, platform, event) = {
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                codebase_map[branch],
                'git config cmake.update-submodules no',
-               'rm -rf storage/columnstore',
-               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore',
+               'rm -rf storage/columnstore/columnstore',
+               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
              ],
            },
            {
@@ -115,6 +115,7 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
+               "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
                platformMap(branch, platform),
              ],
            },
