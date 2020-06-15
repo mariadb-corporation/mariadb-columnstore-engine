@@ -76,10 +76,12 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
     if (strTLen == 0 || strTLen > strLen)
         return src;
 
+    bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
+
     if (binTLen == 1)
     {
         const char* ptr = pos;
-        if (cs->use_mb())   // This is a multi-byte charset
+        if (!binaryCmp)   // This is a multi-byte charset
         {
             const char* p = pos;
             uint32 l;
@@ -110,7 +112,7 @@ std::string Func_rtrim::getStrVal(rowgroup::Row& row,
     else
     {
         // An uncommon case where the space character is > 1 byte
-        if (cs->use_mb())   // This is a multi-byte charset
+        if (binaryCmp)   // This is a multi-byte charset
         {
             // The problem is that the byte pattern at the end could
             // match memcmp, but not be correct since the first byte compared
