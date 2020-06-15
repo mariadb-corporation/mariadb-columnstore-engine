@@ -15,6 +15,6 @@ target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIB
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
 install(PROGRAMS dbmsReport.sh bulklogReport.sh configReport.sh
-    hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
+    hardwareReport.sh logReport.sh resourceReport.sh
     DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
               
