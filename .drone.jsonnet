@@ -65,6 +65,7 @@ local Pipeline(branch, platform, event) = {
       'rm -f /lib/systemd/system/anaconda.target.wants/*',
       '/usr/lib/systemd/systemd --system > /dev/null 2>&1 &',
 
+      'cd /drone/src',
       'yum install -y rsyslog which python3',
       'yum install -y result/*.rpm',
       'systemctl start mariadb',
