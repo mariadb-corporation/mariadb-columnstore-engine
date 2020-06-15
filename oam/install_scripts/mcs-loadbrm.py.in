@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+${PYTHON_SHEBANG}
 from __future__ import absolute_import, division, print_function
 import subprocess
 import sys
@@ -51,8 +51,8 @@ if __name__ == '__main__':
         try:
             brm_saves_current = subprocess.check_output(['smcat', brm])
         except subprocess.CalledProcessError as e:
-                # will happen when brm file does not exist
-                print('{} does not exist.'.format(brm), file=sys.stderr)
+            # will happen when brm file does not exist
+            print('{} does not exist.'.format(brm), file=sys.stderr)
     else:
         pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
         brm = '{}_current'.format(dbrmroot)
