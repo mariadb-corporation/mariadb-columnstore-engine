@@ -66,7 +66,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     if (isNull)
         return "";
 
-    if (strLen == 0 || delimLen == 0 || !count == 0)
+    if (strLen == 0 || delimLen == 0 || count == 0)
         return "";
 
     if (count > strLen)
@@ -75,9 +75,10 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     if ((count < 0) && ((count * -1) > strLen))
         return str;
 
+    bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
     std::string value; // Only used if !use_mb()
      
-    if (cs->use_mb()) // Charset supports multibyte characters
+    if (!binaryCmp) // Charset supports multibyte characters
     {
         const char* src = str.c_str();
         const char* srcEnd = src + strLen;

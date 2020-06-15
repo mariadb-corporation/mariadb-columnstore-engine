@@ -75,7 +75,7 @@ std::string Func_substr::getStrVal(rowgroup::Row& row,
     int64_t length;
     if (fp.size() == 3)
     {
-        int64_t length = fp[2]->data()->getIntVal(row, isNull);
+        length = fp[2]->data()->getIntVal(row, isNull);
         if (isNull)
             return "";
         if (length < 1)

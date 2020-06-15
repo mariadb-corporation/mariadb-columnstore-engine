@@ -75,12 +75,7 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
     size_t pos = 0;
     if (binaryCmp)
     {
-        uint32_t i = 0;
-        pos = str.find(fromstr);
-        if (pos == string::npos)
-            return str;
-        
-        // Count the number of fromstr in strend
+        // Count the number of fromstr in strend so we can reserve buffer space.
         int count = 0;
         do
         {
@@ -91,7 +86,11 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
         
         newstr.reserve(strLen + (count * ((int)toLen - (int)fromLen)) + 1);
         
-        // Now move the stuff into newstr
+        uint32_t i = 0;
+        pos = str.find(fromstr);
+        if (pos == string::npos)
+            return str;
+        // Move the stuff into newstr
         do
         {
             if (pos > i)
@@ -114,12 +113,14 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
         const char* from = fromstr.c_str();
         const char* fromEnd = from + fromLen;
         const char* to = tostr.c_str();
-        char* ptr = const_cast<char*>(src);
+        const char* ptr = src;
         char *i,*j;
         size_t count = 10; // Some arbitray number to reserve some space to start.
-        size_t growlen = count * ((int)toLen - (int)fromLen);
+        int growlen = (int)toLen - (int)fromLen;
+        growlen = growlen < 1 ? 1 : growlen;
+        growlen *= count;
         newstr.reserve(strLen + (count * growlen) + 1); 
-        size_t maxsize = newstr.max_size();
+        size_t maxsize = newstr.capacity();
         uint32_t l;
 
         // We don't know where byte patterns might match so
@@ -132,7 +133,7 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
             if (*ptr == *from)  // If the first byte matches, maybe we have a match
             {
                 // Do a byte by byte compare of src at that spot against from
-                i = ptr + 1; 
+                i = const_cast<char*>(ptr) + 1; 
                 j = const_cast<char*>(from) + 1;
                 found = true;
                 while (j != fromEnd)
@@ -148,18 +149,19 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
             {
                 if (ptr < i)
                 {
-                    int mvsize = i - ptr;
-                    if (newstr.length() + mvsize + toLen < maxsize)
+                    int mvsize = ptr - src;
+                    if (newstr.length() + mvsize + toLen > maxsize)
                     {
                         // We need a re-alloc
                         newstr.reserve(maxsize + growlen);
+                        maxsize = newstr.capacity();
                         growlen *= 2;
                     }
-                    newstr.append(ptr, mvsize);
-                    ptr += mvsize;
+                    newstr.append(src, ptr - src);
+                    src += mvsize + fromLen;
+                    ptr = src;
                 }
                 newstr.append(to, toLen);
-                ptr += toLen;
             }
             else
             {
@@ -170,8 +172,9 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
                     ++ptr;
             }
         }
+        // Copy in the trailing src chars.
+        newstr.append(src, ptr - src);
     }
-
     return newstr;
 }
 
