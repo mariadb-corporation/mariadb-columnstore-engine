@@ -1,5 +1,5 @@
 local platforms = {
-  develop: ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
@@ -12,7 +12,7 @@ local codebase_map = {
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local cmakeflags = '-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO';
 
-local rpm_build_deps = 'yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel';
+local rpm_build_deps = 'install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel';
 
 local deb_build_deps = 'apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
 
@@ -23,9 +23,9 @@ local platformMap(branch, platform) =
   };
 
   local platform_map = {
-    'opensuse/leap:15': 'zypper install -y ' + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=sles15 && make -j$(nproc) package',
-    'centos:7': rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': "sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && " + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos8 && make -j$(nproc) package',
+    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=sles15 && make -j$(nproc) package',
+    'centos:7': 'yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos7 && make -j$(nproc) package',
+    'centos:8': "sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum " + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=stretch' debian/autobake-deb.sh",
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:16.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=xenial' debian/autobake-deb.sh",
@@ -89,8 +89,8 @@ local Pipeline(branch, platform, event) = {
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                codebase_map[branch],
                'git config cmake.update-submodules no',
-               'rm -rf storage/columnstore',
-               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore',
+               'rm -rf storage/columnstore/columnstore',
+               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
              ],
            },
            {
@@ -115,6 +115,7 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
+               "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES \"$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4\" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
                platformMap(branch, platform),
              ],
            },
@@ -149,7 +150,7 @@ local Pipeline(branch, platform, event) = {
                  from_secret: 'aws_secret_access_key',
                },
                source: 'result/*',
-               target: branch + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(platform, ':', ''),
+               target: branch + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
                strip_prefix: 'result/',
              },
            },
