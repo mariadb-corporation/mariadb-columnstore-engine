@@ -55,7 +55,7 @@ local Pipeline(branch, platform, event) = {
     commands: [
 
       'cd /lib/systemd/system/sysinit.target.wants',
-      'for i in *; do [ $$i == systemd-tmpfiles-setup.service ] || rm -f $$i; done)',
+      'for i in *; do [ $$i == systemd-tmpfiles-setup.service ] || rm -f $$i; done',
       'rm -f /lib/systemd/system/multi-user.target.wants/*',
       'rm -f /etc/systemd/system/*.wants/*',
       'rm -f /lib/systemd/system/local-fs.target.wants/*',
@@ -104,6 +104,10 @@ local Pipeline(branch, platform, event) = {
     depth: 10,
   },
   steps: [
+
+         ] +
+         (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
+         [
            {
              name: 'submodules',
              image: 'alpine/git',
@@ -166,7 +170,7 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          (if branch == 'develop-1.4' && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
-         (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
+         // (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
          [
            {
              name: 'publish',
