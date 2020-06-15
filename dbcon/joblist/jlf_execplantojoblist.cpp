@@ -3269,12 +3269,6 @@ void doOR(ParseTree* n, JobInfo& jobInfo, bool tryCombine)
                             ccp->left(parseTree->left());
                             ccp->right(parseTree->right());
                             ccp->data(parseTree->data());
-                            jobInfo.dynamicParseTreeVec.push_back(make_pair(parseTree, ccp));
-                        }
-                        else if (parseTree)
-                        {
-                            delete parseTree;
-                            parseTree = NULL;
                         }
                     }
 
