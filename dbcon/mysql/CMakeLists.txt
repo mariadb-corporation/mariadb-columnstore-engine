@@ -2,7 +2,8 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/install_mcs_mysql.sh.in" "${CMAKE_CU
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ha_mcs_version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/ha_mcs_version.h")
 
 include_directories( ${ENGINE_COMMON_INCLUDES}
-                     /usr/include/libxml2 )
+                     /usr/include/libxml2
+                     ${SERVER_SOURCE_ROOT_DIR}/storage/maria )
 
 
 SET ( libcalmysql_SRCS
@@ -45,6 +46,7 @@ else ()
 
     install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 endif ()
+
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 

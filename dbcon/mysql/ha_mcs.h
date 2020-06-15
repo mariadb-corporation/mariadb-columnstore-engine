@@ -22,6 +22,7 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
+#include "ha_maria.h"
 
 extern handlerton* mcs_hton;
 
@@ -53,7 +54,7 @@ class ha_mcs: public handler
 
 public:
     ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
-    ~ha_mcs()
+    virtual ~ha_mcs()
     {
     }
 
@@ -149,6 +150,7 @@ public:
       skip it and and MySQL will treat it as not implemented.
     */
     void start_bulk_insert(ha_rows rows, uint flags = 0) ;
+    void start_bulk_insert_from_cache(ha_rows rows, uint flags = 0) ;
 
     /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
     int end_bulk_insert() ;
@@ -234,5 +236,60 @@ public:
         return HA_CACHE_TBL_NOCACHE;
     }
 
+    int repair(THD* thd, HA_CHECK_OPT* check_opt);
+    bool is_crashed() const;
 };
+
+
+class ha_mcs_cache :public ha_mcs
+{
+  typedef ha_mcs parent;
+  int original_lock_type;
+  bool insert_command;
+
+public:
+  THR_LOCK org_lock;
+  uint lock_counter;
+  ha_maria *cache_handler;
+
+  ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *mem_root);
+  ~ha_mcs_cache();
+
+  /*
+    The following functions duplicates calls to derived handler and
+    cache handler
+  */
+
+  int create(const char *name, TABLE *table_arg,
+             HA_CREATE_INFO *ha_create_info);
+  int open(const char *name, int mode, uint open_flags);
+  int delete_table(const char *name);
+  int rename_table(const char *from, const char *to);
+  int delete_all_rows(void);
+  int close(void);
+
+  uint lock_count(void) const;
+  THR_LOCK_DATA **store_lock(THD *thd,
+                             THR_LOCK_DATA **to,
+                             enum thr_lock_type lock_type);
+  int external_lock(THD *thd, int lock_type);
+  int repair(THD *thd, HA_CHECK_OPT *check_opt);
+  bool is_crashed() const;
+
+  /*
+    Write row uses cache_handler, for normal inserts, otherwise derived
+    handler
+  */
+  int write_row(const uchar *buf);
+  void start_bulk_insert(ha_rows rows, uint flags);
+  int end_bulk_insert();
+
+  /* Cache functions */
+  void free_locks();
+  bool rows_cached();
+  int flush_insert_cache();
+  friend my_bool get_status_and_flush_cache(void *param,
+                                            my_bool concurrent_insert);
+};
+
 #endif //HA_MCS_H__
