@@ -142,26 +142,6 @@ JobList::~JobList()
                 (*iter)->join();
             }
         }
-
-        for (auto& parseTree : fDynamicParseTreeVec)
-        {
-            if (parseTree.first)
-            {
-                delete parseTree.first;
-                parseTree.first = NULL;
-                // Note that we don't delete parseTree.second here,
-                // that is handled by CalpontSelectExecutionPlan::unserialize().
-                // parseTree.first already deleted the objects pointed to by
-                // parseTree.second->left()/right()/data(), so we set the
-                // pointers to NULL here.
-                if (parseTree.second)
-                {
-                    parseTree.second->left((ParseTree*) (NULL));
-                    parseTree.second->right((ParseTree*) (NULL));
-                    parseTree.second->data((TreeNode*) (NULL));
-                }
-            }
-        }
     }
     catch (exception& ex)
     {
