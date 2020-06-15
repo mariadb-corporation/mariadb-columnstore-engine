@@ -245,6 +245,10 @@ void reportThread(string reporttype)
 
             boost::filesystem::path configFile = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml");
             boost::filesystem::copy_file(configFile,"./Columnstore.xml",boost::filesystem::copy_option::overwrite_if_exists);
+            boost::filesystem::path SMconfigFile = std::string(MCSSYSCONFDIR) + std::string("/columnstore/storagemanager.cnf");
+            boost::filesystem::copy_file(SMconfigFile,"./storagemanager.cnf",boost::filesystem::copy_option::overwrite_if_exists);
+            system("sed -i 's/.*aws_access_key_id.*/aws_access_key_id={PRIVATE}/' ./storagemanager.cnf");
+            system("sed -i 's/.*aws_secret_access_key.*/aws_secret_access_key={PRIVATE}/' ./storagemanager.cnf");
             fclose(pOutputFile);
         }
 
@@ -285,7 +289,6 @@ int main(int argc, char* argv[])
     string InstallSection = "Installation";
 
     bool HARDWARE = false;
-    bool SOFTWARE = false;
     bool CONFIG = false;
     bool DBMS = false;
     bool RESOURCE = false;
@@ -375,7 +378,6 @@ int main(int argc, char* argv[])
             cout << "			-h  help" << endl;
             cout << "			-a  Output all Reports (excluding Bulk Logs Reports)" << endl;
             cout << "			-hw Output Hardware Reports only" << endl;
-            cout << "			-s  Output Software Reports only" << endl;
             cout << "			-c  Output Configuration/Status Reports only" << endl;
             cout << "			-db Output DBMS Reports only" << endl;
             cout << "			-r  Output Resource Reports only" << endl;
@@ -392,7 +394,6 @@ int main(int argc, char* argv[])
             if ( string("-a") == argv[i] )
             {
                 HARDWARE = true;
-                SOFTWARE = true;
                 CONFIG = true;
                 DBMS = true;
                 RESOURCE = true;
@@ -401,8 +402,6 @@ int main(int argc, char* argv[])
             }
             else if ( string("-hw") == argv[i] )
                 HARDWARE = true;
-            else if ( string("-s") == argv[i] )
-                SOFTWARE = true;
             else if ( string("-c") == argv[i] )
                 CONFIG = true;
             else if ( string("-db") == argv[i] )
@@ -461,10 +460,9 @@ int main(int argc, char* argv[])
     }
 
     //default to -a if nothing is set
-    if ( !HARDWARE && !SOFTWARE && !CONFIG && !DBMS && !RESOURCE && !LOG && !BULKLOG && !HADOOP)
+    if ( !HARDWARE && !CONFIG && !DBMS && !RESOURCE && !LOG && !BULKLOG && !HADOOP)
     {
         HARDWARE = true;
-        SOFTWARE = true;
         CONFIG = true;
         DBMS = true;
         RESOURCE = true;
@@ -539,7 +537,7 @@ int main(int argc, char* argv[])
     {}
 
     if ( singleServerInstall == "n" && !LOCAL)
-        if ( HARDWARE || SOFTWARE || CONFIG || RESOURCE || LOG || HADOOP )
+        if ( HARDWARE || CONFIG || RESOURCE || LOG || HADOOP )
             if ( rootPassword.empty() )
             {
                 cout << "ERROR: Multi-Module System, Password Argument required or use '-lc' option, check help for more information" << endl;
@@ -635,23 +633,6 @@ int main(int argc, char* argv[])
     system("rm -f *_logReport.txt");
     system("rm -f *_bulklogReport.txt");
     system("rm -f *_resourceReport.txt");
-    system("rm -f *_softwareReport.txt");
-
-    //
-    // Software
-    //
-    if ( SOFTWARE )
-    {
-        string reportType = "software";
-        cout << "Get " + reportType + " report data for " + localModule  << endl;
-        pthread_t reportthread;
-        int status = pthread_create (&reportthread, NULL, (void* (*)(void*)) &reportThread, &reportType);
-        if ( status != 0 )
-        {
-            cout <<  "ERROR: reportthread: pthread_create failed, return status = " + oam.itoa(status);
-        }
-        sleep(1);
-    }
 
     //
     // Configuration
@@ -897,6 +878,7 @@ int main(int argc, char* argv[])
            "mv *Report.txt columnstoreSupportReport/. > /dev/null 2>&1;"
            "mv Columnstore.xml columnstoreSupportReport/. > /dev/null 2>&1;"
            "mv columnstore.cnf columnstoreSupportReport/. > /dev/null 2>&1;"
+           "mv storagemanager.cnf columnstoreSupportReport/. > /dev/null 2>&1;"
            "mv *Report.tar.gz columnstoreSupportReport/. > /dev/null 2>&1");
     string cmd = "tar -zcf columnstoreSupportReport." + systemName + ".tar.gz columnstoreSupportReport/*";
     system(cmd.c_str());
