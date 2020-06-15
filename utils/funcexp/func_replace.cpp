@@ -173,7 +173,7 @@ std::string Func_replace::getStrVal(rowgroup::Row& row,
             }
         }
         // Copy in the trailing src chars.
-        newstr.append(src, ptr - src);
+        newstr.append(src, srcEnd - src);
     }
     return newstr;
 }
