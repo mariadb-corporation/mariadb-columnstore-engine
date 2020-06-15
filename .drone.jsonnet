@@ -44,7 +44,7 @@ local Pipeline(branch, platform, event) = {
     },
     cgroup: {
       name: 'cgroup',
-      path: '/sys/fs/cgroup:ro',
+      path: '/sys/fs/cgroup',
     },
   },
   testsdevelop:: {
