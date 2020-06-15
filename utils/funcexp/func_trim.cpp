@@ -75,8 +75,6 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
     if (strTLen == 0 || strTLen > strLen)
         return src;
 
-    bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
-
     if (binTLen == 1)
     {
         // If the trim string is 1 byte, don't waste cpu for memcmp
@@ -88,7 +86,7 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
         }
         // Trim trailing
         const char* ptr = pos;
-        if (!binaryCmp)   // This is a multi-byte charset
+        if (cs->use_mb())   // This is a multi-byte charset
         {
             const char* p = pos;
             uint32 l;
@@ -126,7 +124,7 @@ std::string Func_trim::getStrVal(rowgroup::Row& row,
         }
         
         // Trim trailing
-        if (!binaryCmp)   // This is a multi-byte charset
+        if (cs->use_mb())   // This is a multi-byte charset
         {
             // The problem is that the byte pattern at the end could
             // match memcmp, but not be correct since the first byte compared
