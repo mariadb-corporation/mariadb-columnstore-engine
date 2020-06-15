@@ -44,7 +44,7 @@ local Pipeline(branch, platform, event) = {
     },
     cgroup: {
       name: 'cgroup',
-      path: '/sys/fs/cgroup',
+      path: '/sys/fs/cgroup:ro',
     },
   },
   testsdevelop:: {
@@ -190,7 +190,7 @@ local Pipeline(branch, platform, event) = {
            },
          ],
 
-  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.cgroup { host: { path: '/var/run/docker.sock' } }],
+  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.cgroup { host: { path: '/sys/fs/cgroup' } }],
   trigger: {
     event: [event],
     branch: [branch],
