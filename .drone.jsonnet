@@ -50,7 +50,7 @@ local Pipeline(branch, platform, event) = {
   testsdevelop:: {
     name: 'testsdevelop',
     image: platform,
-    volumes: [pipeline._volumes.cgroup],
+    volumes: [pipeline._volumes.mdb, pipeline._volumes.cgroup],
     privileged: true,
     commands: [
 
