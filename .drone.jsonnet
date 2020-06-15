@@ -1,5 +1,5 @@
 local platforms = {
-  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
@@ -42,6 +42,37 @@ local Pipeline(branch, platform, event) = {
       name: 'mdb',
       path: '/mdb',
     },
+    cgroup: {
+      name: 'cgroup',
+      path: '/sys/fs/cgroup',
+    },
+  },
+  testsdevelop:: {
+    name: 'testsdevelop',
+    image: platform,
+    volumes: [pipeline._volumes.cgroup],
+    privileged: true,
+    commands: [
+
+      'cd /lib/systemd/system/sysinit.target.wants',
+      'for i in *; do [ $$i == systemd-tmpfiles-setup.service ] || rm -f $$i; done)',
+      'rm -f /lib/systemd/system/multi-user.target.wants/*',
+      'rm -f /etc/systemd/system/*.wants/*',
+      'rm -f /lib/systemd/system/local-fs.target.wants/*',
+      'rm -f /lib/systemd/system/sockets.target.wants/*udev*',
+      'rm -f /lib/systemd/system/sockets.target.wants/*initctl*',
+      'rm -f /lib/systemd/system/basic.target.wants/*',
+      'rm -f /lib/systemd/system/anaconda.target.wants/*',
+      '/usr/lib/systemd/systemd --system > /dev/null 2>&1 &',
+
+      'yum install -y rsyslog which python3',
+      'yum install -y result/*.rpm',
+      'systemctl start mariadb',
+      'systemctl start mariadb-columnstore',
+      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
+      'systemctl restart mariadb-columnstore',
+      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (2); select * from test.t1"',
+    ],
   },
   tests:: {
     name: 'tests',
@@ -116,6 +147,8 @@ local Pipeline(branch, platform, event) = {
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
                "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES \"$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4\" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
+               "sed 's/echo 0/echo 1/' oam/install_scripts/columnstore-post-install.in",
+               "sed 's/echo 0/echo 1/' oam/install_scripts/columnstore-pre-install.in",
                platformMap(branch, platform),
              ],
            },
@@ -133,6 +166,7 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          (if branch == 'develop-1.4' && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
+         (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
          [
            {
              name: 'publish',
@@ -156,7 +190,7 @@ local Pipeline(branch, platform, event) = {
            },
          ],
 
-  volumes: [pipeline._volumes.mdb { temp: {} }],
+  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.cgroup { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
     branch: [branch],
