@@ -59,7 +59,7 @@ local Pipeline(branch, platform, event) = {
     tty: true,
     commands: [
       'docker run --name smoke --privileged --detach --volume /drone/src/:/src --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
-      'dokcer exec -t smoke yum install -y rsyslog which python3',
+      'docker exec -t smoke yum install -y rsyslog which python3',
       //      'yum install -y result/*.rpm',
       //      'systemctl start mariadb',
       //      'systemctl start mariadb-columnstore',
