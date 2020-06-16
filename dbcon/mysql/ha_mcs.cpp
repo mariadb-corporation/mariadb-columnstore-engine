@@ -1279,39 +1279,49 @@ my_bool get_status_and_flush_cache(void *param,
 
 static my_bool cache_start_trans(void* param)
 {
+/*
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   if (cache->org_lock.start_trans)
     return (*cache->org_lock.start_trans)(cache->cache_handler->file);
+*/
   return 0;
 }
 
 static void cache_copy_status(void* to, void *from)
 {
+/*
   ha_mcs_cache *to_cache= (ha_mcs_cache*) to, *from_cache= (ha_mcs_cache*) from;
   if (to_cache->org_lock.copy_status)
     (*to_cache->org_lock.copy_status)(to_cache->cache_handler->file,
                                       from_cache->cache_handler->file);
+*/
 }
 
 static void cache_update_status(void* param)
 {
+/*
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   if (cache->org_lock.update_status)
     (*cache->org_lock.update_status)(cache->cache_handler->file);
+*/
 }
 
 static void cache_restore_status(void *param)
 {
+/*
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   if (cache->org_lock.restore_status)
     (*cache->org_lock.restore_status)(cache->cache_handler->file);
+*/
 }
 
 static my_bool cache_check_status(void *param)
 {
+/*
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   if (cache->org_lock.check_status)
     return (*cache->org_lock.check_status)(cache->cache_handler->file);
+*/
   return 0;
 }
 
@@ -1392,7 +1402,6 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
   lock->update_status= &cache_update_status;
   lock->restore_status= &cache_restore_status;
   lock->check_status= &cache_check_status;
-  lock->restore_status= &cache_restore_status;
   cache_handler->file->lock.status_param= (void*) this;
   mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
 
