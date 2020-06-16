@@ -58,7 +58,9 @@ local Pipeline(branch, platform, event) = {
     privileged: true,
     tty: true,
     commands: [
-      'docker run --name smoke --privileged --detach --volume /drone/src/:/src --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
+      'docker run --name smoke --privileged --detach --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
+      'docker cp /drone/src/result smoke:/',
+      'docker exec -t smoke ls -l /result',
       'docker exec -t smoke yum install -y rsyslog which python3',
       'docker exec -t smoke yum install -y result/*.rpm',
       'docker exec -t smoke systemctl start mariadb',
