@@ -56,10 +56,10 @@ local Pipeline(branch, platform, event) = {
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     privileged: true,
+    tty: true,
     commands: [
       'docker run --name smoke --privileged --detach --volume /drone/src/:/src --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
-      'docker exec -it smoke bash',
-      'yum install -y rsyslog which python3',
+      'dokcer exec -t smoke yum install -y rsyslog which python3',
       //      'yum install -y result/*.rpm',
       //      'systemctl start mariadb',
       //      'systemctl start mariadb-columnstore',
