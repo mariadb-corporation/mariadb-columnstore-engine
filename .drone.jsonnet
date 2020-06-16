@@ -1,5 +1,5 @@
 local platforms = {
-  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
@@ -25,7 +25,7 @@ local platformMap(branch, platform) =
   local platform_map = {
     'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': 'yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': "sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum " + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos8 && make -j$(nproc) package',
+    'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum " + rpm_build_deps + ' && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=stretch' debian/autobake-deb.sh",
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:16.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=xenial' debian/autobake-deb.sh",
@@ -115,20 +115,22 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
-               "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES \"$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4\" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
                platformMap(branch, platform),
              ],
            },
            {
              name: 'list pkgs',
-             image: 'centos:7',
+             image: 'alpine',
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
                'mkdir /drone/src/result',
-               'cp *.rpm /drone/src/result 2>/dev/null || true',
-               'cp ../*.deb /drone/src/result 2>/dev/null || true',
-               '! test -n "$(find /drone/src/result -prune -empty)" && ls /drone/src/result',
+               'apk add --no-cache git',
+               'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
+               'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
+               'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
+               'cp ' + (if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'opensuse/leap') then '*.rpm' else '../*.deb') + ' buildinfo.txt /drone/src/result/',
+               'ls -l /drone/src/result',
              ],
            },
          ] +
@@ -139,7 +141,6 @@ local Pipeline(branch, platform, event) = {
              image: 'plugins/s3',
              when: {
                status: ['success', 'failure'],
-               //  event: ['cron'],
              },
              settings: {
                bucket: 'cspkg',
@@ -173,11 +174,10 @@ local FinalPipeline(branch, event) = {
       name: 'notify',
       image: 'plugins/slack',
       settings: {
-        room: '#drone_test',
         webhook: {
           from_secret: 'slack_webhook',
         },
-        template: (if event == 'cron' then '*Nightly' else '*Pull Request <https://github.com/{{repo.owner}}/{{repo.name}}/pull/{{build.pull}}|#{{build.pull}}>') +
+        template: '*' + event + (if event == 'pull_request' then ' <https://github.com/{{repo.owner}}/{{repo.name}}/pull/{{build.pull}}|#{{build.pull}}>' else '') +
                   ' build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.\n\n*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>\n*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{truncate build.message.title 100 }}\n*Author*: {{ build.author }}\n*Duration*: {{since build.started}}\n*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}',
       },
     },
