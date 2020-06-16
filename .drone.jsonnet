@@ -46,33 +46,27 @@ local Pipeline(branch, platform, event) = {
       name: 'cgroup',
       path: '/sys/fs/cgroup',
     },
+    docker: {
+      name: 'docker',
+      path: '/var/run/docker.sock',
+    },
   },
   testsdevelop:: {
     name: 'testsdevelop',
     image: platform,
-    volumes: [pipeline._volumes.mdb, pipeline._volumes.cgroup],
+    volumes: [pipeline._volumes.docker],
     privileged: true,
     commands: [
-
-      'cd /lib/systemd/system/sysinit.target.wants',
-      'for i in *; do [ $$i == systemd-tmpfiles-setup.service ] || rm -f $$i; done',
-      'rm -f /lib/systemd/system/multi-user.target.wants/*',
-      'rm -f /etc/systemd/system/*.wants/*',
-      'rm -f /lib/systemd/system/local-fs.target.wants/*',
-      'rm -f /lib/systemd/system/sockets.target.wants/*udev*',
-      'rm -f /lib/systemd/system/sockets.target.wants/*initctl*',
-      'rm -f /lib/systemd/system/basic.target.wants/*',
-      'rm -f /lib/systemd/system/anaconda.target.wants/*',
-      '/usr/lib/systemd/systemd --system > /dev/null 2>&1 &',
-
-      'cd /drone/src',
+      'docker run --name smoke --privileged --detach --volume /drone/src/:/src --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
+      'docker exec -it smoke bash',
       'yum install -y rsyslog which python3',
-      'yum install -y result/*.rpm',
-      'systemctl start mariadb',
-      'systemctl start mariadb-columnstore',
-      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
-      'systemctl restart mariadb-columnstore',
-      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (2); select * from test.t1"',
+      //      'yum install -y result/*.rpm',
+      //      'systemctl start mariadb',
+      //      'systemctl start mariadb-columnstore',
+      //      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
+      //      'systemctl restart mariadb',
+      //      'systemctl restart mariadb-columnstore',
+      //      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (2); select * from test.t1"',
     ],
   },
   tests:: {
@@ -104,7 +98,10 @@ local Pipeline(branch, platform, event) = {
   clone: {
     depth: 10,
   },
-  steps: [
+  steps: (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
+         [
+
+
            {
              name: 'submodules',
              image: 'alpine/git',
@@ -148,8 +145,6 @@ local Pipeline(branch, platform, event) = {
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
                "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES \"$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4\" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
-               "sed -i 's/echo 0/echo 1/' storage/columnstore/columnstore/oam/install_scripts/columnstore-post-install.in",
-               "sed -i 's/echo 0/echo 1/' storage/columnstore/columnstore/oam/install_scripts/columnstore-pre-uninstall.in",
                platformMap(branch, platform),
              ],
            },
@@ -191,7 +186,7 @@ local Pipeline(branch, platform, event) = {
            },
          ],
 
-  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.cgroup { host: { path: '/sys/fs/cgroup' } }],
+  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }, pipeline._volumes.cgroup { host: { path: '/sys/fs/cgroup' } }],
   trigger: {
     event: [event],
     branch: [branch],
