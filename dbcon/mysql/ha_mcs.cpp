@@ -1609,6 +1609,7 @@ int ha_mcs_cache::end_bulk_insert()
  ha_mcs_cache Plugin code
 ******************************************************************************/
 
+#if 0
 static handler *ha_mcs_cache_create_handler(handlerton *hton,
                                             TABLE_SHARE *table,
                                             MEM_ROOT *mem_root)
@@ -1663,6 +1664,7 @@ static int ha_mcs_cache_deinit(void *p)
 
 struct st_mysql_storage_engine ha_mcs_cache_storage_engine=
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
+#endif
 
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
@@ -1687,21 +1689,23 @@ maria_declare_plugin(columnstore)
   MCSVERSION,                    /* string version */
   COLUMNSTORE_MATURITY           /* maturity */
 },
-//{
-//  MYSQL_STORAGE_ENGINE_PLUGIN,
-//  &ha_mcs_cache_storage_engine,
-//  "Columnstore_cache",
-//  "MariaDB Corporation AB",
-//  "Insert cache for ColumnStore",
-//  PLUGIN_LICENSE_GPL,
-//  ha_mcs_cache_init,            /* Plugin Init */
-//  ha_mcs_cache_deinit,          /* Plugin Deinit */
-//  MCSVERSIONHEX,
-//  NULL,   		        /* status variables */
-//  NULL,                         /* system variables */
-//  MCSVERSION,                    /* string version */
-//  MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
-//},
+#if 0
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &ha_mcs_cache_storage_engine,
+  "Columnstore_cache",
+  "MariaDB Corporation AB",
+  "Insert cache for ColumnStore",
+  PLUGIN_LICENSE_GPL,
+  ha_mcs_cache_init,            /* Plugin Init */
+  ha_mcs_cache_deinit,          /* Plugin Deinit */
+  MCSVERSIONHEX,
+  NULL,   		        /* status variables */
+  NULL,                         /* system variables */
+  MCSVERSION,                    /* string version */
+  MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
+},
+#endif
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
     &is_columnstore_plugin_version,
