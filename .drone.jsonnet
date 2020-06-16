@@ -162,7 +162,6 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          (if branch == 'develop-1.4' && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
-         (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
          [
            {
              name: 'publish',
