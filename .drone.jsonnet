@@ -60,13 +60,13 @@ local Pipeline(branch, platform, event) = {
     commands: [
       'docker run --name smoke --privileged --detach --volume /drone/src/:/src --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + platform + ' /sbin/init --unit=basic.target',
       'docker exec -t smoke yum install -y rsyslog which python3',
-      //      'yum install -y result/*.rpm',
-      //      'systemctl start mariadb',
-      //      'systemctl start mariadb-columnstore',
-      //      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
-      //      'systemctl restart mariadb',
-      //      'systemctl restart mariadb-columnstore',
-      //      'mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (2); select * from test.t1"',
+      'docker exec -t smoke yum install -y result/*.rpm',
+      'docker exec -t smoke systemctl start mariadb',
+      'docker exec -t smoke systemctl start mariadb-columnstore',
+      'docker exec -t smoke mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
+      'docker exec -t smoke systemctl restart mariadb',
+      'docker exec -t smoke systemctl restart mariadb-columnstore',
+      'docker exec -t smoke mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (2); select * from test.t1"',
     ],
   },
   tests:: {
@@ -98,8 +98,7 @@ local Pipeline(branch, platform, event) = {
   clone: {
     depth: 10,
   },
-  steps: (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
-         [
+  steps: [
 
 
            {
@@ -162,6 +161,7 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          (if branch == 'develop-1.4' && std.split(platform, ':')[0] == 'centos' then [pipeline.tests] else []) +
+         (if branch == 'develop' && platform == 'centos:7' then [pipeline.testsdevelop] else []) +
          [
            {
              name: 'publish',
