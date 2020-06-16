@@ -1687,21 +1687,21 @@ maria_declare_plugin(columnstore)
   MCSVERSION,                    /* string version */
   COLUMNSTORE_MATURITY           /* maturity */
 },
-{
-  MYSQL_STORAGE_ENGINE_PLUGIN,
-  &ha_mcs_cache_storage_engine,
-  "Columnstore_cache",
-  "MariaDB Corporation AB",
-  "Insert cache for ColumnStore",
-  PLUGIN_LICENSE_GPL,
-  ha_mcs_cache_init,            /* Plugin Init */
-  ha_mcs_cache_deinit,          /* Plugin Deinit */
-  MCSVERSIONHEX,
-  NULL,   		        /* status variables */
-  NULL,                         /* system variables */
-  MCSVERSION,                    /* string version */
-  MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
-},
+//{
+//  MYSQL_STORAGE_ENGINE_PLUGIN,
+//  &ha_mcs_cache_storage_engine,
+//  "Columnstore_cache",
+//  "MariaDB Corporation AB",
+//  "Insert cache for ColumnStore",
+//  PLUGIN_LICENSE_GPL,
+//  ha_mcs_cache_init,            /* Plugin Init */
+//  ha_mcs_cache_deinit,          /* Plugin Deinit */
+//  MCSVERSIONHEX,
+//  NULL,   		        /* status variables */
+//  NULL,                         /* system variables */
+//  MCSVERSION,                    /* string version */
+//  MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
+//},
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
     &is_columnstore_plugin_version,
