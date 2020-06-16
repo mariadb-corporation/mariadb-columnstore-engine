@@ -53,7 +53,7 @@ local Pipeline(branch, platform, event) = {
   },
   testsdevelop:: {
     name: 'testsdevelop',
-    image: docker,
+    image: 'docker',
     volumes: [pipeline._volumes.docker],
     privileged: true,
     commands: [
