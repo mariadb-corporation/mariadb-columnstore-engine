@@ -560,7 +560,6 @@ struct TokenByScanRequestHeader
     uint16_t flags;
     uint32_t Pad2;
     uint16_t Count;
-    uint32_t charsetNumber;
 };                     // what follows is NVALS DataValues.
 
 // compatibility with Ron's stuff.

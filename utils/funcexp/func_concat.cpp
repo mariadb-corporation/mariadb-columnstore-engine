@@ -35,6 +35,8 @@ using namespace rowgroup;
 #include "dataconvert.h"
 using namespace dataconvert;
 
+#define STRCOLL_ENH__
+
 namespace funcexp
 {
 
@@ -56,10 +58,7 @@ string Func_concat::getStrVal(Row& row,
 	string ret;
     string tmp;
     stringValue(parm[0], row, isNull, ret);
-    
-    // TODO: do a better job of cutting down the number re-allocations.
-    // look at Item_func_concat::realloc_result for ideas and use 
-    // std::string:resize() appropriatly.
+
     for ( unsigned int id = 1 ; id < parm.size() ; id++)
     {
 		stringValue(parm[id], row, isNull, tmp);

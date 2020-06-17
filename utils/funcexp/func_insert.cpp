@@ -37,7 +37,7 @@ using namespace joblist;
 #include "utf8.h"
 using namespace utf8;
 
-#include "collation.h"
+#define STRCOLL_ENH__
 
 namespace funcexp
 {
@@ -48,62 +48,69 @@ CalpontSystemCatalog::ColType Func_insert::operationType(FunctionParm& fp, Calpo
     return fp[0]->data()->resultType();
 }
 
+string insertStr(const string& src, int pos, int len, const string& targ)
+{
+    int64_t strLen = static_cast<int64_t>(src.length());
+
+    if ((pos <= 0) || ((pos - 1) >= strLen))
+        return src;
+
+    if ((len < 0) || (len > strLen))
+        len = strLen;
+
+    const char* srcptr = src.c_str();
+    advance(srcptr, pos - 1, srcptr + strLen);
+    // srcptr now pointing to where we need to insert targ string
+
+    uint32_t srcPos = srcptr - src.c_str();
+
+    uint32_t finPos = strLen;
+    const char* finptr = src.c_str();
+
+    if ((strLen - (pos - 1 + len)) >= 0)
+    {
+        advance(finptr, (pos - 1 + len), finptr + strLen);
+        // finptr now pointing to the end of the string to replace
+        finPos = finptr - src.c_str();
+    }
+
+    string out;
+    out.reserve(srcPos + targ.length() + strLen - finPos + 1);
+    out.append( src.c_str(), srcPos );
+    out.append( targ.c_str(), targ.length() );
+    out.append( src.c_str() + finPos, strLen - finPos );
+
+    return out;
+}
+
 std::string Func_insert::getStrVal(rowgroup::Row& row,
                                    FunctionParm& fp,
                                    bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType&)
 {
-	string src;
+	string tstr;
 	string tnewstr;
-    int64_t start, length;
-
-    stringValue(fp[0], row, isNull, src);
+    stringValue(fp[0], row, isNull, tstr);
     if (isNull)
+    {
         return "";
+    }
 
     stringValue(fp[3], row, isNull, tnewstr);
     if (isNull)
         return "";
 
-    start = fp[1]->data()->getIntVal(row, isNull);
+    int64_t pos = fp[1]->data()->getIntVal(row, isNull);
+
     if (isNull)
         return "";
 
-    length = fp[2]->data()->getIntVal(row, isNull);
+    int64_t len = fp[2]->data()->getIntVal(row, isNull);
+
     if (isNull)
         return "";
 
-    start--; // Because SQL syntax is 1 based and we want 0 based.
-
-    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
-
-    // binLen represents the number of bytes
-    int64_t binLen = static_cast<int64_t>(src.length());
-    const char* pos = src.c_str();
-    const char* end = pos + binLen;
-    // strLen is number of characters
-    int64_t strLen = cs->numchars(pos, end);
-    
-    // Return the original string if start isn't within the string.
-    if ((start < 1) || start >= strLen)
-        return src;
-
-    if ((length < 0) || (length > strLen))
-        length = strLen;
-
-    // Convert start and length from characters to bytes.
-    start = cs->charpos(pos, end, start);
-    length = cs->charpos(pos+start, end, length);
-
-    string out;
-    out.reserve(binLen - length + tnewstr.length() + 1);
-
-    out.append(src.c_str(), start);
-    out.append(tnewstr.c_str(), tnewstr.length());
-    if (binLen - start - length > 0)
-        out.append(src.c_str() + start + length, binLen - start - length);
-
-    return out;
+    return insertStr( tstr, pos, len, tnewstr );
 }
 
 

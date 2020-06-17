@@ -650,15 +650,11 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
     if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
-    {
         ct1 = jobInfo.csc->colType(sc1->oid());
-        ct1.charsetNumber =sc1->colType().charsetNumber;
-    }
+
     if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
-    {
         ct2 = jobInfo.csc->colType(sc2->oid());
-        ct2.charsetNumber =sc2->colType().charsetNumber;
-    }
+
 //X
     int8_t op = op2num(sop);
 
@@ -1079,15 +1075,11 @@ const JobStepVector doJoin(
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
     if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
-    {
         ct1 = jobInfo.csc->colType(sc1->oid());
-        ct1.charsetNumber =sc1->colType().charsetNumber;
-    }
+
     if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
-    {
         ct2 = jobInfo.csc->colType(sc2->oid());
-        ct2.charsetNumber =sc2->colType().charsetNumber;
-    }
+
 //X
     uint64_t joinInfo = sc1->joinInfo() | sc2->joinInfo();
 
@@ -1350,10 +1342,8 @@ const JobStepVector doSemiJoin(const SimpleColumn* sc, const ReturnedColumn* rc,
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
     if (!sc->schemaName().empty() && sc->isColumnStore() && !pc1)
-    {
         ct1 = jobInfo.csc->colType(sc->oid());
-        ct1.charsetNumber =sc->colType().charsetNumber;
-    }
+
 //X
     JobStepVector jsv;
     SJSTEP step;
@@ -1661,10 +1651,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
         if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
-        {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
-        }
 //X
 
         // Because, on a filter, we want to compare ignoring trailing spaces in many cases
@@ -2743,10 +2730,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 //XXX use this before connector sets colType in sc correctly.
 //    type of pseudo column is set by connector
         if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
-        {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
-        }
 
 //X
         CalpontSystemCatalog::OID tbOID = tableOid(sc.get(), jobInfo.csc);
@@ -3024,10 +3008,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
             CalpontSystemCatalog::ColType ct = sc->colType();
 
             if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
-            {
                 ct = jobInfo.csc->colType(sc->oid());
-                ct.charsetNumber =sc->colType().charsetNumber;
-            }
+
             TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc.get(), alias));
 //X			TupleInfo ti(setTupleInfo(sc->colType(), sc->oid(), jobInfo, tblOid, sc.get(), alias));
             pcs->tupleId(ti.key);

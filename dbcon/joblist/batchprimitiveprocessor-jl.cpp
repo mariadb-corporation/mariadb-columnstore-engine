@@ -413,8 +413,8 @@ void BatchPrimitiveProcessorJL::addElementType(const StringElementType& et, uint
 
 void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
         vector<ElementType>* out, bool* validCPData, uint64_t* lbid, int64_t* min,
-        int64_t* max, uint32_t* cachedIO, uint32_t* physIO, 
-        uint32_t* touchedBlocks) const
+        int64_t* max, uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks,
+        uint16_t* preJoinRidCount) const
 {
     uint32_t i;
     uint16_t l_count;
@@ -425,6 +425,11 @@ void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
     uint64_t tmp64;
     uint8_t tmp8;
 
+    /* PM join support */
+    uint32_t jCount;
+    ElementType* jet;
+
+// 	cout << "get Element Types uniqueID=" << uniqueID << endl;
     /* skip the header */
     idbassert(in.length() > sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
     in.advance(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
@@ -466,6 +471,21 @@ void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
 // 			idbassert((*out)[i].first > 1023);
         (*out)[i].second = vals[i];
     }
+
+    if (joiner.get() != NULL)
+    {
+        in >> *preJoinRidCount;
+        in >> jCount;
+        idbassert(in.length() > (jCount << 4));
+        jet = (ElementType*) in.buf();
+
+        for (i = 0; i < jCount; ++i)
+            out->push_back(jet[i]);
+
+        in.advance(jCount << 4);
+    }
+    else
+        *preJoinRidCount = l_count;
 
     in >> *cachedIO;
     in >> *physIO;
@@ -967,7 +987,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
     if (needRidsAtDelivery)
         flags |= SEND_RIDS_AT_DELIVERY;
 
-    if (tJoiners.size() > 0)
+    if (joiner.get() != NULL || tJoiners.size() > 0)
         flags |= HAS_JOINER;
 
     if (sendRowGroups)
@@ -1069,6 +1089,11 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                 bs << joinedRG;    // TODO: I think we can omit joinedRG if (!(fe2 || aggregatorPM))
 // 				cout << "joined RG: " << joinedRG.toString() << endl;
             }
+        }
+        else
+        {
+            bs << (uint8_t) joiner->includeAll();
+            bs << (uint32_t) joiner->size();
         }
     }
 
@@ -1556,6 +1581,51 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     return true;
 }
 
+void BatchPrimitiveProcessorJL::useJoiner(boost::shared_ptr<joiner::Joiner> j)
+{
+    pos = 0;
+    joiner = j;
+}
+
+bool BatchPrimitiveProcessorJL::nextJoinerMsg(ByteStream& bs)
+{
+    uint32_t size, toSend;
+    ISMPacketHeader ism;
+
+    memset((void*)&ism, 0, sizeof(ism));
+
+    if (smallSide.get() == NULL)
+        smallSide = joiner->getSmallSide();
+
+    size = smallSide->size();
+
+    if (pos == size)
+    {
+        /* last message */
+        ism.Command = BATCH_PRIMITIVE_END_JOINER;
+        bs.load((uint8_t*) &ism, sizeof(ism));
+        bs << (messageqcpp::ByteStream::quadbyte)sessionID;
+        bs << (messageqcpp::ByteStream::quadbyte)stepID;
+        bs << uniqueID;
+        pos = 0;
+        return false;
+    }
+
+    ism.Command = BATCH_PRIMITIVE_ADD_JOINER;
+    bs.load((uint8_t*) &ism, sizeof(ism));
+    bs << (messageqcpp::ByteStream::quadbyte)sessionID;
+    bs << (messageqcpp::ByteStream::quadbyte)stepID;
+    bs << uniqueID;
+
+    toSend = (size - pos > 1000000 ? 1000000 : size - pos);
+    bs << toSend;
+    bs << pos;
+    bs.append((uint8_t*) (&(*smallSide)[pos]), sizeof(ElementType) * toSend);
+    pos += toSend;
+
+    return true;
+}
+
 void BatchPrimitiveProcessorJL::setProjectionRowGroup(const rowgroup::RowGroup& rg)
 {
     ot = ROW_GROUP;
@@ -1691,6 +1761,8 @@ void BatchPrimitiveProcessorJL::deliverStringTableRowGroup(bool b)
         aggregateRGPM.setUseStringTable(b);
     else if (fe2)
         fe2Output.setUseStringTable(b);
+//	else if ((joiner.get() != NULL || tJoiners.size() > 0) && sendTupleJoinRowGroupData)
+//		joinedRG.setUseStringTable(b);
     else
         projectionRG.setUseStringTable(b);
 }

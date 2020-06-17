@@ -251,9 +251,14 @@ private:
     bool fBusy;
 
     /* Join support TODO: Make join ops a seperate Command class. */
+    boost::shared_ptr<joiner::Joiner> joiner;
+    std::vector<joblist::ElementType> smallSideMatches;
     bool doJoin;
+    uint32_t joinerSize;
+    uint16_t preJoinRidCount;
     boost::scoped_array<boost::scoped_array<boost::mutex> > addToJoinerLocks;
     boost::scoped_array<boost::mutex> smallSideDataLocks;
+    void executeJoin();
 
 // 		uint32_t ridsIn, ridsOut;
 

@@ -32,7 +32,7 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "collation.h"
+#define STRCOLL_ENH__
 
 namespace funcexp
 {
@@ -47,16 +47,14 @@ CalpontSystemCatalog::ColType Func_concat_ws::operationType(FunctionParm& fp, Ca
 string Func_concat_ws::getStrVal(Row& row,
                                  FunctionParm& parm,
                                  bool& isNull,
-                                 CalpontSystemCatalog::ColType& type)
+                                 CalpontSystemCatalog::ColType&)
 {
 	string delim;
     stringValue(parm[0], row, isNull, delim);
     if (isNull)
         return "";
 
-    // TODO: I don't think we need wide chars here.
-    // Concatenation works without see Server implementation.
-#if 0    
+#ifdef STRCOLL_ENH__
     wstring wstr;
     size_t strwclen = utf8::idb_mbstowcs(0, delim.c_str(), 0) + 1;
     wchar_t* wcbuf = new wchar_t[strwclen];
@@ -97,24 +95,23 @@ string Func_concat_ws::getStrVal(Row& row,
     delete [] outbuf;
     delete [] wcbuf;
     return ret;
-#endif
+
+#else
     string str;
     string tmp;
     for ( uint32_t i = 1 ; i < parm.size() ; i++)
     {
-        stringValue(parm[i], row, isNull, tmp);
+		stringValue(parm[i], row, isNull, tmp);
+        str += tmp;
+
         if (isNull)
         {
             isNull = false;
             continue;
         }
 
-        if (!str.empty())
+        if (!str.empty() && !isNull)
             str += delim;
-
-        // TODO: Work on string reallocation. Use std::string::resize() to
-        // grab larger chunks in some intellegent manner.
-        str += tmp;
     }
 
     if (str.empty())
@@ -123,6 +120,7 @@ string Func_concat_ws::getStrVal(Row& row,
         isNull = false;
 
     return str;
+#endif
 }
 
 

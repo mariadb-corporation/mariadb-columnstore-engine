@@ -21,7 +21,6 @@
 *
 *
 ***********************************************************************/
-
 #include <iostream>
 
 #include "bytestream.h"
@@ -29,12 +28,11 @@
 #include "objectreader.h"
 
 #include "liboamcpp.h"
-
-#include "collation.h"
-
 using namespace oam;
 
 using namespace std;
+
+bool futf8 = true;
 
 namespace
 {
@@ -56,21 +54,62 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-PredicateOperator::PredicateOperator() :
-    cs(NULL)
+PredicateOperator::PredicateOperator()
 {
+    Oam oam;
+    // get and set locale language
+    string systemLang = "C";
+
+    try
+    {
+        oam.getSystemConfig("SystemLang", systemLang);
+    }
+    catch (...)
+    {}
+
+    if ( systemLang != "en_US.UTF-8" &&
+            systemLang.find("UTF") != string::npos )
+        futf8 = true;
 }
 
-PredicateOperator::PredicateOperator(const string& operatorName) :
-    cs(NULL)
+PredicateOperator::PredicateOperator(const string& operatorName)
 {
+    Oam oam;
+    // get and set locale language
+    string systemLang = "C";
+
+    try
+    {
+        oam.getSystemConfig("SystemLang", systemLang);
+    }
+    catch (...)
+    {}
+
+    if ( systemLang != "en_US.UTF-8" &&
+            systemLang.find("UTF") != string::npos )
+        futf8 = true;
+
     data(operatorName);
 }
 
 PredicateOperator::PredicateOperator(const PredicateOperator& rhs) : Operator(rhs)
 {
+    Oam oam;
+    // get and set locale language
+    string systemLang = "C";
+
+    try
+    {
+        oam.getSystemConfig("SystemLang", systemLang);
+    }
+    catch (...)
+    {}
+
+    if ( systemLang != "en_US.UTF-8" &&
+            systemLang.find("UTF") != string::npos )
+        futf8 = true;
+
     data(rhs.data());
-    cs = rhs.getCharset();
 }
 
 PredicateOperator:: ~PredicateOperator()
@@ -106,7 +145,6 @@ void PredicateOperator::unserialize(messageqcpp::ByteStream& b)
     ObjectReader::checkType(b, ObjectReader::PREDICATEOPERATOR);
     //b >> fData;
     Operator::unserialize(b);
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
 }
 
 bool PredicateOperator::operator==(const PredicateOperator& t) const
@@ -142,7 +180,6 @@ bool PredicateOperator::operator!=(const TreeNode* t) const
 //FIXME: VARBINARY???
 void PredicateOperator::setOpType(Type& l, Type& r)
 {
-    fOperationType = l;  // Default to left side. Modify as needed.
     if ( l.colDataType == execplan::CalpontSystemCatalog::DATETIME ||
             l.colDataType == execplan::CalpontSystemCatalog::TIME ||
             l.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP ||
@@ -152,7 +189,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         {
             case execplan::CalpontSystemCatalog::CHAR:
             case execplan::CalpontSystemCatalog::VARCHAR:
-                fOperationType.charsetNumber = r.charsetNumber;
+                fOperationType = l;
                 break;
 
             case execplan::CalpontSystemCatalog::DATETIME:
@@ -307,37 +344,28 @@ void PredicateOperator::setOpType(Type& l, Type& r)
               r.colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
               r.colDataType == execplan::CalpontSystemCatalog::TEXT))
     {
-#if 0
-        // Currently, STRINT isn't properly implemented everywhere
-        // For short strings, we can get a faster execution for charset that fit in one byte.
         if ( ( (l.colDataType == execplan::CalpontSystemCatalog::CHAR && l.colWidth <= 8) ||
                 (l.colDataType == execplan::CalpontSystemCatalog::VARCHAR && l.colWidth < 8) ) &&
                 ( (r.colDataType == execplan::CalpontSystemCatalog::CHAR && r.colWidth <= 8) ||
                   (r.colDataType == execplan::CalpontSystemCatalog::VARCHAR && r.colWidth < 8) ) )
         {
-            switch (fOperationType.charsetNumber) 
+            if ( futf8 )
             {
-                case 8:  // latin1_swedish_ci
-                case 9:  // latin2_general_ci
-                case 11: // ascii_general_ci
-                case 47: // latin1_bin
-                case 48: // latin1_general_ci
-                case 49: // latin1_general_cs
-                case 65: // ascii_bin
-                case 77: // latin2_bin
-                    // char[] as network order int for fast comparison.
-                    fOperationType.colDataType = execplan::CalpontSystemCatalog::BIGINT;
-                    fOperationType.scale = 0;
-                    fOperationType.colWidth = 8;
-                    l.colDataType = execplan::CalpontSystemCatalog::STRINT;
-                    r.colDataType = execplan::CalpontSystemCatalog::STRINT;
-                default:
-                    fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
-                    fOperationType.colWidth = 255;
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
+                fOperationType.colWidth = 255;
+            }
+            else
+            {
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::BIGINT;
+                fOperationType.scale = 0;
+                fOperationType.colWidth = 8;
+
+                // @bug3532, char[] as network order int for fast comparison.
+                l.colDataType = execplan::CalpontSystemCatalog::STRINT;
+                r.colDataType = execplan::CalpontSystemCatalog::STRINT;
             }
         }
         else
-#endif
         {
             fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
             fOperationType.colWidth = 255;
@@ -354,437 +382,6 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
         fOperationType.colWidth = 8;
     }
-
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
-}
-
-inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)
-{
-    int r1 =  cs->strnncollsp(op1.c_str(), op1.length(), op2.c_str(), op2.length());
-    switch (fOp)
-    {
-        case OP_EQ:
-            return r1 == 0;
-
-        case OP_NE:
-            return r1 != 0;
-
-        case OP_GT:
-            return r1 > 0;
-
-        case OP_GE:
-            return r1 >= 0;
-
-        case OP_LT:
-            return r1 < 0;
-
-        case OP_LE:
-            return r1 <= 0;
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "Unsupported predicate operation: " << fOp;
-            throw logging::InvalidOperationExcept(oss.str());
-        }
-    }
-}
-
-bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
-{
-    // like operator. both sides are string.
-    if (fOp == OP_LIKE || fOp == OP_NOTLIKE)
-    {
-        SP_CNX_Regex regex = rop->regex();
-
-        // Ugh. The strings returned by getStrVal have null padding out to the col width. boost::regex
-        //  considers these nulls significant, but they're not in the pattern, so we need to strip
-        //   them off...
-        const std::string& v = lop->getStrVal(row, isNull);
-//        char* c = (char*)alloca(v.length() + 1);
-//        memcpy(c, v.c_str(), v.length());
-//        c[v.length()] = 0;
-//        std::string vv(c);
-
-        if (regex)
-        {
-#ifdef POSIX_REGEX
-            bool ret = regexec(regex.get(), v.c_str(), 0, NULL, 0) == 0;
-#else
-            bool ret = boost::regex_match(v.c_str(), *regex);
-#endif
-            return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
-        }
-        else
-        {
-#ifdef POSIX_REGEX
-            regex_t regex;
-            std::string str = dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull));
-            regcomp(&regex, str.c_str(), REG_NOSUB | REG_EXTENDED);
-            bool ret = regexec(&regex, v.c_str(), 0, NULL, 0) == 0;
-            regfree(&regex);
-#else
-            boost::regex regex(dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull)));
-            bool ret = boost::regex_match(v.c_str(), regex);
-#endif
-            return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
-        }
-    }
-
-    // fOpType should have already been set on the connector during parsing
-    switch (fOperationType.colDataType)
-    {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            int64_t val1 = lop->getIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1,  rop->getIntVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getUintVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getUintVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            uint64_t val1 = lop->getUintVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1,  rop->getUintVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getDoubleVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getDoubleVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            double val1 = lop->getDoubleVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, rop->getDoubleVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::LONGDOUBLE:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getLongDoubleVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getLongDoubleVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            long double val1 = lop->getLongDoubleVal(row, isNull);
-            if (isNull)
-                return false;
-
-            long double val2 = rop->getLongDoubleVal(row, isNull);
-            if (isNull)
-                return false;
-
-            // In many case, rounding error will prevent an eq compare to work
-            // In these cases, use the largest scale of the two items.
-            if (fOp == execplan::OP_EQ)
-            {
-                // In case a val is a representation of a very large integer,
-                // we won't want to just multiply by scale, as it may move
-                // significant digits out of scope. So we break them apart
-                // and compare each separately 
-                int64_t scale = std::max(lop->resultType().scale, rop->resultType().scale);
-                if (scale)
-                {
-                    long double intpart1;
-                    long double fract1 = modfl(val1, &intpart1);
-                    long double intpart2;
-                    long double fract2 = modfl(val2, &intpart2);
-                    if (numericCompare(intpart1, intpart2))
-                    {
-                        double factor = pow(10.0, (double)scale);
-                        fract1 = roundl(fract1 * factor);
-                        fract2 = roundl(fract2 * factor);
-                        return numericCompare(fract1, fract2);
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            return numericCompare(val1, val2);
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getDecimalVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getDecimalVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            IDB_Decimal val1 = lop->getDecimalVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, rop->getDecimalVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getDateIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getDateIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            int64_t val1 = lop->getDateIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, (int64_t)rop->getDateIntVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getDatetimeIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getDatetimeIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            int64_t val1 = lop->getDatetimeIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, rop->getDatetimeIntVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getTimestampIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getTimestampIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            int64_t val1 = lop->getTimestampIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, rop->getTimestampIntVal(row, isNull)) && !isNull;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getTimeIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getTimeIntVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            int64_t val1 = lop->getTimeIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            return numericCompare(val1, rop->getTimeIntVal(row, isNull)) && !isNull;
-        }
-
-
-
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            if (fOp == OP_ISNULL)
-            {
-                lop->getStrVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return ret;
-            }
-
-            if (fOp == OP_ISNOTNULL)
-            {
-                lop->getStrVal(row, isNull);
-                bool ret = isNull;
-                isNull = false;
-                return !ret;
-            }
-
-            if (isNull)
-                return false;
-
-            const std::string& val1 = lop->getStrVal(row, isNull);
-            if (isNull)
-                return false;
-
-            return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
-        }
-
-        //FIXME: ???
-        case execplan::CalpontSystemCatalog::VARBINARY:
-        case execplan::CalpontSystemCatalog::BLOB:
-            return false;
-            break;
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "invalid predicate operation type: " << fOperationType.colDataType;
-            throw logging::InvalidOperationExcept(oss.str());
-        }
-    }
-
-    return false;
 }
 
 }  // namespace

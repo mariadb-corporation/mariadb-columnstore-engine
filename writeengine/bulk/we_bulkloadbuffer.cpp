@@ -561,7 +561,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 // on disk (e.g. 5 for a varchar(5) instead of 8).
                 if (fieldLength > column.definedWidth)
                 {
-                    uint8_t truncate_point = utf8::utf8_truncate_point(field, column.definedWidth);
+                    uint8_t truncate_point = funcexp::utf8::utf8_truncate_point(field, column.definedWidth);
                     memcpy( charTmpBuf, field, column.definedWidth - truncate_point );
                     bufStats.satCount++;
                 }

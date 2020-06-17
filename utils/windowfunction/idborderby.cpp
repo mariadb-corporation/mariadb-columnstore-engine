@@ -18,15 +18,12 @@
 
 //  $Id: idborderby.cpp 3932 2013-06-25 16:08:10Z xlou $
 
+
 #include <iostream>
 #include <cassert>
 #include <string>
 #include <stack>
 using namespace std;
-
-#include "objectreader.h"
-#include "calpontselectexecutionplan.h"
-#include "rowgroup.h"
 
 #include <boost/shared_array.hpp>
 using namespace boost;
@@ -48,10 +45,6 @@ using namespace rowgroup;
 
 #include "joblisttypes.h"
 
-#include "collation.h"
-
-// See agg_arg_charsets in sql_type.h to see conversion rules for 
-// items that have different char sets
 namespace ordering
 {
 int TinyIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
@@ -300,11 +293,16 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         int len2 = l->row2().getStringLength(fSpec.fIndex);
         const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
         const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
-
-        if (!cs)
-            cs = l->rowGroup()->getCharset(fSpec.fIndex);
-        
-        ret = fSpec.fAsc * cs->strnncollsp(s1, len1, s2, len2);
+        // For Japanese, coll.compare() may not be as correct as strncmp
+        if (JPcodePoint)
+        {
+            ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
+        }
+        else
+        {
+            const std::collate<char>& coll = std::use_facet<std::collate<char> >(loc);
+            ret = fSpec.fAsc * coll.compare(s1, s1+len1, s2, s2+len2);
+        }
     }
 
     return ret;

@@ -41,6 +41,7 @@ using namespace messageqcpp;
 using namespace threadpool;
 
 #include "we_readthread.h"
+using namespace WriteEngine;
 
 #include "liboamcpp.h"
 using namespace oam;
@@ -51,10 +52,6 @@ using namespace oam;
 #include "dbrm.h"
 
 #include "crashtrace.h"
-
-#include "collation.h"
-
-using namespace WriteEngine;
 
 namespace
 {
@@ -104,14 +101,14 @@ int setupResources()
 
 int main(int argc, char** argv)
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
+    // get and set locale language
+    string systemLang = "C";
+    systemLang = funcexp::utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("WriteEngineServ");
+
+    printf ("Locale is : %s\n", systemLang.c_str() );
 
     int gDebug = 0;
     int c;
@@ -141,7 +138,8 @@ int main(int argc, char** argv)
         {
         }
     }
-
+    //BUG 2991
+    setlocale(LC_NUMERIC, "C");
 #ifndef _MSC_VER
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));

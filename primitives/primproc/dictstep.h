@@ -141,9 +141,8 @@ private:
     messageqcpp::ByteStream filterString;
     uint32_t filterCount;
     uint32_t bufferSize;
-    uint32_t charsetNumber;
     uint16_t inputRidCount;
-    
+
     bool hasEqFilter;
     boost::shared_ptr<primitives::DictEqualityFilter> eqFilter;
     boost::shared_array<primitives::idb_regex_t> likeFilter;

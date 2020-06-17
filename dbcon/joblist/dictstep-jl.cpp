@@ -59,7 +59,6 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
         filterString = dict.fFilterString;
 
     filterCount = dict.fFilterCount;
-    charsetNumber = dict.fColType.charsetNumber;
 }
 
 DictStepJL::~DictStepJL()
@@ -89,7 +88,7 @@ void DictStepJL::createCommand(ByteStream& bs) const
     }
     else
         bs << filterString;
-    bs << charsetNumber;
+
     CommandJL::createCommand(bs);
 }
 

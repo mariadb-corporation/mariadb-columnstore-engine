@@ -49,16 +49,17 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-#include "utils_utf8.h"
-
-#include "collation.h"
+//#include "utils_utf8.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
+#include "funcexp/utils_utf8.h"
+
 
 using namespace std;
 using namespace boost;
 using namespace dataconvert;
+
 
 // inlines of RowAggregation that used only in this file
 namespace
@@ -386,21 +387,36 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
         fRow.setFloatField(val1, col);
 }
 
+
+
+#define STRCOLL_ENH__
+
 void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, int func)
 {
     if (isNull(fRowGroupOut, fRow, col))
     {
         fRow.setStringField(val1, col);
-        return;
     }
-    CHARSET_INFO* cs = fRow.getCharset(col);
-    int tmp = cs->strnncoll(val1.c_str(), val1.length(), val2.c_str(), val2.length());
 
-    if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
-            (tmp > 0 && func == rowgroup::ROWAGG_MAX))
+#ifdef STRCOLL_ENH__
+    else
+    {
+        int tmp = funcexp::utf8::idb_strcoll(val1.c_str(), val2.c_str());
+
+        if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) ||
+                (tmp > 0 && func == rowgroup::ROWAGG_MAX))
+        {
+            fRow.setStringField(val1, col);
+        }
+    }
+
+#else
+    else if (minMax(val1, val2, func))
     {
         fRow.setStringField(val1, col);
     }
+
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1279,9 +1295,19 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            string valIn = rowIn.getStringField(colIn);
-            string valOut = fRow.getStringField(colOut);
-            updateStringMinMax(valIn, valOut, colOut, funcType);
+            int colWidth = fRowGroupIn.getColumnWidth(colIn);
+            if (colWidth <= 8)
+            {
+                uint64_t valIn = rowIn.getUintField(colIn);
+                uint64_t valOut = fRow.getUintField(colOut);
+                updateCharMinMax(valIn, valOut, colOut, funcType);
+            }
+            else
+            {
+                string valIn = rowIn.getStringField(colIn);
+                string valOut = fRow.getStringField(colOut);
+                updateStringMinMax(valIn, valOut, colOut, funcType);
+            }
             break;
         }
 

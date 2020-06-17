@@ -26,7 +26,7 @@ namespace bi = boost::interprocess;
 #include "installdir.h"
 
 #include "IDBPolicy.h"
-#include "utils_utf8.h"
+
 #include "crashtrace.h"
 
 using namespace std;
@@ -177,9 +177,10 @@ int main(int argc, char** argv)
     if (p && *p)
         USER = p;
 
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
+    // get and set locale language
+    string systemLang = "C";
+
+    setlocale(LC_ALL, systemLang.c_str());
 
     //get tmp log directory
     tmpLogDir = startup::StartUp::tmpDir();

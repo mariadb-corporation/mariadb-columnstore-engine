@@ -122,9 +122,9 @@ bool IDBPolicy::isLocalFile( const std::string& path )
 {
     boost::filesystem::path filepath( path );
 #ifdef _MSC_VER
-    size_t strmblen = utf8::idb_wcstombs(0, filepath.extension().c_str(), 0) + 1;
+    size_t strmblen = funcexp::utf8::idb_wcstombs(0, filepath.extension().c_str(), 0) + 1;
     char* outbuf = (char*)alloca(strmblen * sizeof(char));
-    strmblen = utf8::idb_wcstombs(outbuf, filepath.extension().c_str(), strmblen);
+    strmblen = funcexp::utf8::idb_wcstombs(outbuf, filepath.extension().c_str(), strmblen);
     string fileExt(outbuf, strmblen);
 #else
     //string fileExt  = filepath.extension().c_str();

@@ -211,7 +211,6 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
         vector<uint32_t> scale;
         vector<uint32_t> precision;
         vector<CalpontSystemCatalog::ColDataType> types;
-        vector<uint32_t> csNums;
         pos.push_back(2);
 
         vector<pair<uint32_t, uint32_t> >::iterator i1 = (*k)->fGroupCols.begin();
@@ -230,7 +229,6 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
             oids.push_back(projRG.getOIDs()[j->second]);
             keys.push_back(projRG.getKeys()[j->second]);
             types.push_back(projRG.getColTypes()[j->second]);
-            csNums.push_back(projRG.getCharsetNumber(j->second));
             scale.push_back(projRG.getScale()[j->second]);
             precision.push_back(projRG.getPrecision()[j->second]);
 
@@ -260,7 +258,6 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
                 oids.push_back(projRG.getOIDs()[j->second]);
                 keys.push_back(projRG.getKeys()[j->second]);
                 types.push_back(projRG.getColTypes()[j->second]);
-                csNums.push_back(projRG.getCharsetNumber(j->second));
                 scale.push_back(projRG.getScale()[j->second]);
                 precision.push_back(projRG.getPrecision()[j->second]);
             }
@@ -274,7 +271,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
             i2++;
         }
 
-        (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, projRG.getStringTableThreshold(), false);
+        (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, scale, precision, projRG.getStringTableThreshold(), false);
         (*k)->fMapping = makeMapping(projRG, (*k)->fRowGroup);
     }
 }

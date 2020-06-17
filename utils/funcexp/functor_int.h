@@ -84,6 +84,8 @@ public:
 
     execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
+    size_t in_str(const std::string& str, const std::string& substr, size_t start);
+
     int64_t getIntVal(rowgroup::Row& row,
                       FunctionParm& fp,
                       bool& isNull,

@@ -44,6 +44,7 @@ namespace primitiveprocessor
 {
 
 extern uint32_t dictBufferSize;
+extern bool utf8;
 
 DictStep::DictStep() : Command(DICT_STEP), strValues(NULL), filterCount(0),
     bufferSize(0)
@@ -66,7 +67,6 @@ DictStep& DictStep::operator=(const DictStep& d)
     eqFilter = d.eqFilter;
     eqOp = d.eqOp;
     filterCount = d.filterCount;
-    charsetNumber = d.charsetNumber;
     return *this;
 }
 
@@ -99,8 +99,7 @@ void DictStep::createCommand(ByteStream& bs)
     }
     else
         bs >> filterString;
-    
-    bs >> charsetNumber;
+
 #if 0
     cout << "see " << filterCount << " filters\n";
     DictFilterElement* filters = (DictFilterElement*) filterString.buf();
@@ -175,7 +174,7 @@ void DictStep::issuePrimitive(bool isFilter)
     }
 
     bpp->pp.setLikeFilter(likeFilter);
-    bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp);
+    bpp->pp.p_Dictionary(primMsg, &result, utf8, isFilter, eqFilter, eqOp);
 }
 
 void DictStep::copyResultToTmpSpace(OrderedToken* ot)
@@ -699,7 +698,6 @@ SCommand DictStep::duplicate()
     ds->eqOp = eqOp;
     ds->filterString = filterString;
     ds->filterCount = filterCount;
-    ds->charsetNumber = charsetNumber;
     ds->Command::duplicate(this);
     return ret;
 }

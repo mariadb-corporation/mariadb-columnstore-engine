@@ -39,12 +39,13 @@
  * on the Front-End Processor where it is returned to the DBMS
  * front-end.
  */
+
 #include <iostream>
 #include <cstdint>
 #include <csignal>
+
 #include <sys/resource.h>
 
-#undef root_name
 #include <boost/filesystem.hpp>
 
 #include "calpontselectexecutionplan.h"
@@ -69,14 +70,13 @@
 #include "liboamcpp.h"
 #include "crashtrace.h"
 #include "utils_utf8.h"
+#include "mcsconfig.h"
 
 #include <mutex>
 #include <thread>
 #include <condition_variable>
 
 #include "dbrm.h"
-
-#include "collation.h"
 
 namespace
 {
@@ -1437,11 +1437,9 @@ void cleanTempDir()
 
 int main(int argc, char* argv[])
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
+    // get and set locale language
+    std::string systemLang = "C";
+    systemLang = funcexp::utf8::idb_setlocale();
 
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("ExeMgr");

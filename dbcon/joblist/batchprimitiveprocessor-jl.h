@@ -126,6 +126,9 @@ public:
     void createBPP(messageqcpp::ByteStream&) const;
     void destroyBPP(messageqcpp::ByteStream&) const;
 
+    void useJoiner(boost::shared_ptr<joiner::Joiner>);
+    bool nextJoinerMsg(messageqcpp::ByteStream&);
+
     /* Call this one last */
     // void addDeliveryStep(const DeliveryStep &);
 
@@ -151,7 +154,8 @@ public:
     /* Turn a ByteStream into ElementTypes or StringElementTypes */
     void getElementTypes(messageqcpp::ByteStream& in, std::vector<ElementType>* out,
                          bool* validCPData, uint64_t* lbid, int64_t* min, int64_t* max, uint32_t* cachedIO, uint32_t* physIO,
-                         uint32_t* touchedBlocks) const;
+                         uint32_t* touchedBlocks,
+                         uint16_t* preJoinRidCount) const;
     void getStringElementTypes(messageqcpp::ByteStream& in,
                                std::vector<StringElementType>* out, bool* validCPData, uint64_t* lbid,
                                int64_t* min, int64_t* max, uint32_t* cachedIO, uint32_t* physIO,
@@ -310,6 +314,7 @@ private:
     /* for Joiner serialization */
     bool pickNextJoinerNum();
     uint32_t pos, joinerNum;
+    boost::shared_ptr<joiner::Joiner> joiner;
     boost::shared_ptr<std::vector<ElementType> > smallSide;
     boost::scoped_array<uint32_t> posByJoinerNum;
 

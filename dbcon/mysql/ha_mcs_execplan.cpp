@@ -17,8 +17,7 @@
    MA 02110-1301, USA. */
 
 //#define DEBUG_WALK_COND
-#include <strings.h>
-
+#include <my_config.h>
 #include <string>
 #include <iostream>
 #include <stack>
@@ -85,8 +84,6 @@ using namespace execplan;
 #include "funcexp.h"
 #include "functor.h"
 using namespace funcexp;
-
-#include "collation.h"
 
 const uint64_t AGG_BIT = 0x01;
 const uint64_t SUB_BIT = 0x02;
@@ -2953,7 +2950,6 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     sc->viewName(lower(tan.view));
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
-    sc->charsetNumber(3000);
     return sc;
 }
 
@@ -3117,7 +3113,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
                     << item->result_type() << endl );
             break;
     }
-    ct.charsetNumber = item->collation.collation->number;
+
     return ct;
 }
 
@@ -3410,9 +3406,6 @@ ReturnedColumn* buildReturnedColumn(
     if (rc && item->name.length)
         rc->alias(item->name.str);
 
-    if (rc)
-        rc->charsetNumber(item->collation.collation->number);
-    
     return rc;
 }
 
@@ -4087,7 +4080,6 @@ ReturnedColumn* buildFunctionColumn(
 
         fc->operationType(functor->operationType(funcParms, fc->resultType()));
         fc->expressionId(ci->expressionId++);
-        fc->charsetNumber(ifp->collation.collation->number);
     }
     else if (ifp->type() == Item::COND_ITEM ||
              ifp->functype() == Item_func::EQ_FUNC ||
@@ -4356,7 +4348,6 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
     columnstore_decimal.precision = idp->max_length - idp->decimals;
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-    cc->charsetNumber(idp->collation.collation->number);
     return cc;
 }
 
@@ -4476,8 +4467,8 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         default:
             sc = new SimpleColumn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
     }
+
     sc->resultType(ct);
-    sc->charsetNumber(ifp->collation.collation->number);
     string tbname(ifp->table_name.str);
 
     if (isInformationSchema)
@@ -5013,7 +5004,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     colType.dataType = resultType.colDataType;
                     colType.precision = resultType.precision;
                     colType.scale = resultType.scale;
-                    colType.charsetNumber = resultType.charsetNumber;
                     colTypes[i] = colType;
                 }
 
@@ -5089,7 +5079,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         return NULL;
     }
 
-    ac->charsetNumber(item->collation.collation->number);
     return ac;
 }
 
@@ -6718,8 +6707,7 @@ int processLimitAndOffset(
     }
 
     // We don't currently support limit with correlated subquery
-    if (csep->limitNum() != (uint64_t) - 1 &&
-            gwi.subQuery && !gwi.correlatedTbNameVec.empty())
+    if (gwi.subQuery && !gwi.correlatedTbNameVec.empty() && csep->hasOrderBy())
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);

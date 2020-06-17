@@ -9,8 +9,7 @@ set(common_LIB_SRCS
     cgroupconfigurator.cpp
     MonitorProcMem.cpp
     nullvaluemanip.cpp
-    threadnaming.cpp
-    utils_utf8.cpp)
+    threadnaming.cpp)
 
 add_library(common SHARED ${common_LIB_SRCS})
 

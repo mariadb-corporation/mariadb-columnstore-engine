@@ -44,14 +44,17 @@ using namespace logging;
 #include "utils_utf8.h"
 using namespace funcexp;
 
-#include "collation.h"
-
 namespace
 {
 template<typename result_t>
 inline bool numericEQ(result_t op1, result_t op2)
 {
     return op1 == op2;
+}
+
+inline bool strEQ(string op1, string op2)
+{
+    return utf8::idb_strcoll(op1.c_str(), op2.c_str()) == 0;
 }
 
 inline bool getBoolForIn(rowgroup::Row& row,
@@ -270,16 +273,15 @@ inline bool getBoolForIn(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TEXT:
         {
             const string& val = pm[0]->data()->getStrVal(row, isNull);
+
             if (isNull)
                 return false;
-
-            CHARSET_INFO* cs = pm[0]->data()->resultType().getCharset();
 
             for (uint32_t i = 1; i < pm.size(); i++)
             {
                 isNull = false;
-                const string& str1 = pm[i]->data()->getStrVal(row, isNull);
-                if (cs->strnncoll(val.c_str(), val.length(), str1.c_str(), str1.length()) == 0 && !isNull)
+
+                if ( utf8::idb_strcoll(val.c_str(), pm[i]->data()->getStrVal(row, isNull).c_str()) == 0 && !isNull)
                     return true;
 
                 if (isNull && isNotIn)

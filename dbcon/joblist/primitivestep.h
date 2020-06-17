@@ -925,7 +925,7 @@ public:
     {
         return fOutType;
     }
-    void setOutputType(BPSOutputType ot)
+    void getOutputType(BPSOutputType ot)
     {
         fOutType = ot;
     }
@@ -960,11 +960,6 @@ public:
     void appendFilter(const messageqcpp::ByteStream& filter, unsigned count);
 
     virtual void abort();
-    
-    const execplan::CalpontSystemCatalog::ColType& colType() const
-    {
-        return fColType;
-    }
 
 protected:
     void sendError(uint16_t error);
@@ -997,7 +992,7 @@ private:
     uint32_t fLogicalBlocksPerScan;
     DataList<ElementType>* ridList;
     messageqcpp::ByteStream fFilterString;
-    execplan::CalpontSystemCatalog::ColType fColType;
+    execplan::CalpontSystemCatalog::ColType colType;
     uint64_t pThread;  //producer thread. thread pool handle
     uint64_t cThread;  //consumer thread. thread pool handle
     DataList_t* requestList;
@@ -1062,6 +1057,7 @@ public:
     virtual bool wasStepRun() const = 0;
     virtual BPSOutputType getOutputType() const = 0;
     virtual uint64_t getRows() const = 0;
+    virtual void useJoiner(boost::shared_ptr<joiner::Joiner>) = 0;
     virtual void setJobInfo(const JobInfo* jobInfo) = 0;
     virtual void setOutputRowGroup(const rowgroup::RowGroup& rg) = 0;
     virtual const rowgroup::RowGroup& getOutputRowGroup() const = 0;
@@ -1243,6 +1239,7 @@ public:
     {
         return uniqueID;
     }
+    void useJoiner(boost::shared_ptr<joiner::Joiner>);
     void useJoiner(boost::shared_ptr<joiner::TupleJoiner>);
     void useJoiners(const std::vector<boost::shared_ptr<joiner::TupleJoiner> >&);
     bool wasStepRun() const

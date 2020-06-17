@@ -48,11 +48,6 @@
 #undef min
 #undef max
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
-
-
 #ifdef _MSC_VER
 #define __attribute__(x)
 #endif
@@ -284,7 +279,8 @@ public:
      */
     struct ColType
     {
-        ColType();
+        ColType() : colWidth(0), constraintType(NO_CONSTRAINT), colDataType(MEDINT), defaultValue(""), colPosition(-1), scale(0), precision(-1), compressionType(NO_COMPRESSION), columnOID(0),
+            autoincrement(0), nextvalue(0) { }
         int32_t colWidth;
         ConstraintType constraintType;
         ColDataType colDataType;
@@ -297,12 +293,23 @@ public:
         OID columnOID;
         bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
         uint64_t nextvalue; //next autoincrement value
-        uint32_t charsetNumber;
-        const CHARSET_INFO* cs;
 
-        ColType(const ColType& rhs);
+        ColType(const ColType& rhs)
+        {
+            colWidth = rhs.colWidth;
+            constraintType = rhs.constraintType;
+            colDataType = rhs.colDataType;
+            ddn = rhs.ddn;
+            defaultValue = rhs.defaultValue;
+            colPosition = rhs.colPosition;
+            scale = rhs.scale;
+            precision = rhs.precision;
+            compressionType = rhs.compressionType;
+            columnOID = rhs.columnOID;
+            autoincrement = rhs.autoincrement;
+            nextvalue = rhs.nextvalue;
 
-        CHARSET_INFO* getCharset();
+        }
         // for F&E use. only serialize necessary info for now
         void serialize (messageqcpp::ByteStream& b) const
         {
@@ -311,7 +318,6 @@ public:
             b << (uint32_t)scale;
             b << (uint32_t)precision;
             b << (uint32_t)compressionType;
-            b << charsetNumber;
         }
 
         void unserialize (messageqcpp::ByteStream& b)
@@ -323,7 +329,6 @@ public:
             b >> (uint32_t&)scale;
             b >> (uint32_t&)precision;
             b >> (uint32_t&)compressionType;
-            b >> charsetNumber;
         }
 
         const std::string toString() const;

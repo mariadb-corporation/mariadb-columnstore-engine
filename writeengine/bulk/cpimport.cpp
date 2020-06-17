@@ -1091,18 +1091,9 @@ int main(int argc, char** argv)
 #endif
     setupSignalHandlers();
 
-    // Set locale language
-    const char* pLoc = setlocale(LC_ALL, "");
-    if (pLoc)
-    {
-        // Log one line
-        cout << "Locale = " << pLoc;
-    }
-    else
-    {
-        cout << "Failed to set locale ";
-    }
-    setlocale(LC_NUMERIC, "C");
+    // Set up LOCALE - BUG 5362
+    std::string systemLang("C");
+    systemLang = funcexp::utf8::idb_setlocale();
 
     // Initialize singleton instance of syslogging
     if (argc > 0)
@@ -1386,7 +1377,7 @@ int main(int argc, char** argv)
         //--------------------------------------------------------------------------
         task = TASK_LOAD_JOBFILE;
         rc = curJob.loadJobInfo( sFileName.string(), bUseTempJobFile,
-                                 argc, argv, bLogInfo2ToConsole, bValidateColumnList );
+                                 systemLang, argc, argv, bLogInfo2ToConsole, bValidateColumnList );
 
         if ( rc != NO_ERROR )
         {

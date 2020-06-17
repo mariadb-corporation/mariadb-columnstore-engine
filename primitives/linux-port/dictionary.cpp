@@ -34,8 +34,7 @@ using namespace std;
 #include "dataconvert.h"
 #include <sstream>
 
-#include "collation.h"
-
+using namespace funcexp;
 using namespace logging;
 
 const char* nullString = " ";  // this is not NULL to preempt segfaults.
@@ -100,7 +99,7 @@ Notes:
 */
 
 void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
-                                       TokenByScanResultHeader* ret, unsigned outSize,
+                                       TokenByScanResultHeader* ret, unsigned outSize, bool utf8,
                                        boost::shared_ptr<DictEqualityFilter> eqFilter)
 {
     const DataValue* args;
@@ -110,6 +109,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     int offsetIndex, argIndex, argsOffset;
     bool cmpResult = false;
     int tmp, i, err;
+
     const char* sig;
     uint16_t siglen;
 
@@ -144,8 +144,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     niceBlock = reinterpret_cast<const uint8_t*>(block);
     offsets = reinterpret_cast<const uint16_t*>(&niceBlock[10]);
     niceInput = reinterpret_cast<const uint8_t*>(h);
-    
-    const CHARSET_INFO* cs = get_charset(h->charsetNumber, MYF(MY_WME));
 
     // if LIKE is an operator, compile regexp's in advance.
     if ((h->NVALS > 0 && h->COP1 & COMPARE_LIKE) ||
@@ -184,11 +182,12 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
         argIndex = 0;
         args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
 
+        string sig_utf8;
+        string arg_utf8;
+
         if (eqFilter)
         {
             // MCOL-1246 Trim whitespace before match
-            // TODO MCOL-3536 use CHARSET_INFO* cs for collation
-            // cs->hash_sort(hash_sort(const uchar *key, size_t len, ulong *nr1, ulong *nr2)) 
             string strData(sig, siglen);
             boost::trim_right_if(strData, boost::is_any_of(" "));
             bool gotIt = eqFilter->find(strData) != eqFilter->end();
@@ -200,27 +199,41 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
             goto no_store;
         }
 
-        if (h->COP1 & COMPARE_LIKE)
+        // BUG 5110: If it is utf, we need to create utf strings to compare
+        if (utf8)
         {
-            p_DataValue dv;
-
-            dv.len = siglen;
-            dv.data = (uint8_t*) sig;
-            cmpResult = isLike(&dv, &regex[argIndex]);
-
-            if (h->COP1 & COMPARE_NOT)
-                cmpResult = !cmpResult;
-        }
-        else
-        {
-            tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-            cmpResult = compare(tmp, h->COP1, siglen, args->len);
+            sig_utf8 = string(sig, siglen);
+            arg_utf8 = string(args->data, args->len);
         }
 
         switch (h->NVALS)
         {
             case 1:
             {
+                if (h->COP1 & COMPARE_LIKE)
+                {
+                    p_DataValue dv;
+
+                    dv.len = siglen;
+                    dv.data = (uint8_t*) sig;
+                    cmpResult = isLike(&dv, &regex[argIndex]);
+
+                    if (h->COP1 & COMPARE_NOT)
+                        cmpResult = !cmpResult;
+                }
+                else
+                {
+                    if (utf8)
+                    {
+                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
+                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
+                    }
+                    else
+                    {
+                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
+                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
+                    }
+                }
 
                 if (cmpResult)
                     goto store;
@@ -230,6 +243,32 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
             case 2:
             {
+                if (h->COP1 & COMPARE_LIKE)
+                {
+                    p_DataValue dv;
+
+                    dv.len = siglen;
+                    dv.data = (uint8_t*) sig;
+                    cmpResult = isLike(&dv, &regex[argIndex]);
+
+                    if (h->COP1 & COMPARE_NOT)
+                        cmpResult = !cmpResult;
+                }
+
+                else
+                {
+                    if (utf8)
+                    {
+                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
+                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
+                    }
+                    else
+                    {
+                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
+                        cmpResult = compare(tmp, h->COP1, siglen, args->len);
+                    }
+                }
+
                 if (!cmpResult && h->BOP == BOP_AND)
                     goto no_store;
 
@@ -254,8 +293,17 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                 else
                 {
-                    tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-                    cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                    if (utf8)
+                    {
+                        arg_utf8 = string(args->data, args->len);
+                        tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
+                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                    }
+                    else
+                    {
+                        tmp = strncmp(sig, args->data, std::min(siglen, args->len));
+                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                    }
                 }
 
                 if (cmpResult)
@@ -282,8 +330,16 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                     else
                     {
-                        tmp = cs->strnncoll(sig, siglen, args->data, args->len);
-                        cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                        if (utf8)
+                        {
+                            tmp = utf8::idb_strcoll(sig_utf8.c_str(), arg_utf8.c_str());
+                            cmpResult = compare(tmp, h->COP2, siglen, args->len);
+                        }
+                        else
+                        {
+                            tmp = strncmp(sig, args->data, std::min(siglen, args->len));
+                            cmpResult = compare(tmp, h->COP1, siglen, args->len);
+                        }
                     }
 
                     if (!cmpResult && h->BOP == BOP_AND)
@@ -295,6 +351,11 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
                     argsOffset += sizeof(uint16_t) + args->len;
                     argIndex++;
                     args = (DataValue*) &niceInput[argsOffset];
+
+                    if ( utf8)
+                    {
+                        arg_utf8 = string(args->data, args->len);
+                    }
                 }
 
                 if (i == h->NVALS && cmpResult)
@@ -505,6 +566,112 @@ again:
 
     dict_OffsetIndex++;
 }
+
+void PrimitiveProcessor::p_AggregateSignature(const AggregateSignatureRequestHeader* in,
+        AggregateSignatureResultHeader* out, unsigned outSize, unsigned* written, bool utf8)
+{
+
+    uint8_t* niceOutput;		// h cast to a byte-indexed type
+    int cmp;
+    char cMin[BLOCK_SIZE], cMax[BLOCK_SIZE];
+    int cMinLen, cMaxLen;
+    p_DataValue sigptr;
+
+    DataValue* min;
+    DataValue* max;
+
+    {
+        void *outp = static_cast<void*>(out);
+        memcpy(outp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    }
+    out->ism.Command = DICT_AGGREGATE_RESULTS;
+    niceOutput = reinterpret_cast<uint8_t*>(out);
+
+    // The first sig is the min and the max.
+    out->Count = 0;
+    dict_OffsetIndex = 0;
+    nextSig(in->NVALS, in->tokens, &sigptr);
+
+    if (sigptr.len == -1)
+        return;
+
+    out->Count++;
+    memcpy(cMin, sigptr.data, sigptr.len);
+    memcpy(cMax, sigptr.data, sigptr.len);
+    cMinLen = cMaxLen = sigptr.len;
+
+    for (nextSig(in->NVALS, in->tokens, &sigptr); sigptr.len != -1;
+            nextSig(in->NVALS, in->tokens, &sigptr), out->Count++)
+    {
+        string sig_utf8;
+
+        if (utf8)
+        {
+            string cMin_utf8(cMin, cMinLen);
+            string tmpString((char*)sigptr.data, sigptr.len);
+            sig_utf8 = tmpString;
+            cmp = utf8::idb_strcoll(cMin_utf8.c_str(), sig_utf8.c_str());
+        }
+        else
+        {
+            cmp = strncmp(cMin, (char*)sigptr.data, std::min(cMinLen, sigptr.len));
+        }
+
+        if (cmp > 0)
+        {
+            memcpy(cMin, sigptr.data, sigptr.len);
+            cMinLen = sigptr.len;
+        }
+
+        if (utf8)
+        {
+            string cMax_utf8(cMax, cMaxLen);
+            cmp = utf8::idb_strcoll(cMax_utf8.c_str(), sig_utf8.c_str());
+        }
+        else
+        {
+            cmp = strncmp(cMax, (char*)sigptr.data, std::min(cMaxLen, sigptr.len));
+        }
+
+        if (cmp < 0)
+        {
+            memcpy(cMax, sigptr.data, sigptr.len);
+            cMaxLen = sigptr.len;
+        }
+    }
+
+    //we now have the results, stuff them into the output buffer
+#ifdef PRIM_DEBUG
+    unsigned size = sizeof(AggregateSignatureResultHeader) + cMaxLen + cMinLen
+                    + sizeof(uint16_t) * 2;
+
+    if (outSize < size)
+    {
+        MessageLog logger(LoggingID(28));
+        logging::Message::Args marker;
+        Message msg(35);
+
+        marker.add(11);
+        msg.format(marker);
+        logger.logErrorMessage(msg);
+
+        throw length_error("PrimitiveProcessor::p_AggregateSignature(): output buffer is too small");
+    }
+
+#endif
+
+    min = reinterpret_cast<DataValue*>
+          (&niceOutput[sizeof(AggregateSignatureResultHeader)]);
+    max = reinterpret_cast<DataValue*>
+          (&niceOutput[sizeof(AggregateSignatureResultHeader) + cMinLen + sizeof(uint16_t)]);
+    min->len = cMinLen;
+    max->len = cMaxLen;
+    memcpy(min->data, cMin, cMinLen);
+    memcpy(max->data, cMax, cMaxLen);
+    *written = sizeof(AggregateSignatureResultHeader) + cMaxLen + cMinLen
+               + sizeof(uint16_t) * 2;
+}
+
 const char backslash = '\\';
 
 inline bool PrimitiveProcessor::isEscapedChar(char c)
@@ -644,12 +811,8 @@ PrimitiveProcessor::makeLikeFilter (const DictFilterElement* filterString, uint3
     return ret;
 }
 
-void PrimitiveProcessor::p_Dictionary(const DictInput* in, 
-                                      vector<uint8_t>* out,
-                                      bool skipNulls, 
-                                      uint32_t charsetNumber,
-                                      boost::shared_ptr<DictEqualityFilter> eqFilter, 
-                                      uint8_t eqOp)
+void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out, bool utf8,
+                                      bool skipNulls, boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp)
 {
     PrimToken* outToken;
     const DictFilterElement* filter = 0;
@@ -660,7 +823,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
     uint16_t aggCount;
     bool cmpResult;
     DictOutput header;
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
 
     // default size of the ouput to something sufficiently large to prevent
     // excessive reallocation and copy when resizing
@@ -696,13 +858,30 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
             nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType,
                     (in->InputFlags ? true : false), skipNulls))
     {
+
+        string sig_utf8;
+
+        if (utf8)
+        {
+            string tmpString((char*)sigptr.data, sigptr.len);
+            sig_utf8 = tmpString;
+        }
+
         // do aggregate processing
         if (in->OutputType & OT_AGGREGATE)
         {
             // len == 0 indicates this is the first pass
             if (max.len != 0)
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, max.data, max.len);
+                if (utf8 )
+                {
+                    string max_utf8((char*)max.data, max.len);
+                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), max_utf8.c_str());
+                }
+                else
+                {
+                    tmp = strncmp((char*)sigptr.data, (char*)max.data, std::min(sigptr.len, max.len));
+                }
 
                 if (tmp > 0)
                     max = sigptr;
@@ -712,7 +891,15 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
 
             if (min.len != 0)
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, min.data, min.len);
+                if (utf8)
+                {
+                    string min_utf8((char*)min.data, min.len);
+                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), min_utf8.c_str());
+                }
+                else
+                {
+                    tmp = strncmp((char*)sigptr.data, (char*)min.data, std::min(sigptr.len, min.len));
+                }
 
                 if (tmp < 0)
                     min = sigptr;
@@ -745,6 +932,15 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
         for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
         {
             filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
+            string filt_utf8;
+            size_t filt_utf8_len = 0;
+
+            if (utf8)
+            {
+                string tmpString((const char*)filter->data, filter->len);
+                filt_utf8 = tmpString;
+                filt_utf8_len = filt_utf8.length();
+            }
 
             if (filter->COP & COMPARE_LIKE)
             {
@@ -755,7 +951,18 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
             }
             else
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, filter->data, filter->len);
+                if (utf8)
+                {
+                    size_t sig_utf8_len = sig_utf8.length();
+                    tmp = utf8::idb_strcoll(sig_utf8.c_str(), filt_utf8.c_str());
+                    cmpResult = compare(tmp, filter->COP, sig_utf8_len, filt_utf8_len);
+                }
+                else
+                {
+                    tmp = strncmp((const char*) sigptr.data, (const char*)filter->data,
+                                  std::min(sigptr.len, static_cast<int>(filter->len)));
+                }
+
                 cmpResult = compare(tmp, filter->COP, sigptr.len, filter->len);
             }
 

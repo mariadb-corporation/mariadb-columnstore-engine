@@ -35,7 +35,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "collation.h"
 
 namespace funcexp
 {
@@ -48,55 +47,88 @@ CalpontSystemCatalog::ColType Func_ltrim::operationType(FunctionParm& fp, Calpon
 
 
 std::string Func_ltrim::getStrVal(rowgroup::Row& row,
-                                 FunctionParm& fp,
-                                 bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType& type)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType&)
 {
-    CHARSET_INFO* cs = type.getCharset();
+    // The number of characters (not bytes) in our input tstr.
+    // Not all of these are necessarily significant. We need to search for the
+    // NULL terminator to be sure.
+    size_t strwclen;
+    // this holds the number of characters (not bytes) in ourtrim tstr.
+    size_t trimwclen;
+
     // The original string
-    const string& src = fp[0]->data()->getStrVal(row, isNull);
-    if (isNull)
-        return "";
-    if (src.empty() || src.length() == 0)
-        return src;
-    // binLen represents the number of bytes in src
-    size_t binLen = src.length();
-    const char* pos = src.c_str();
-    const char* end = pos + binLen;
-    // strLen = the number of characters in src
-    size_t strLen = cs->numchars(pos, end);
+    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
     // The trim characters.
     const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull) : " ");
-    // binTLen represents the number of bytes in trim
-    size_t binTLen = trim.length();
-    const char* posT = trim.c_str();
-    // strTLen = the number of characters in trim
-    size_t strTLen = cs->numchars(posT, posT+binTLen);
-    if (strTLen == 0 || strTLen > strLen)
-        return src;
 
-    if (binTLen == 1)
+    if (isNull)
+        return "";
+
+    if (tstr.empty() || tstr.length() == 0)
+        return tstr;
+
+    // Rather than calling the wideconvert functions with a null buffer to
+    // determine the size of buffer to allocate, we can be sure the wide
+    // char string won't be longer than:
+    strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
+    int bufsize = strwclen + 1;
+
+    // Convert the string to wide characters. Do all further work in wide characters
+    wchar_t* wcbuf = new wchar_t[bufsize];
+    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen + 1);
+
+    // idb_mbstowcs can return -1 if there is bad mbs char in tstr
+    if (strwclen == static_cast<size_t>(-1))
+        strwclen = 0;
+
+    // Convert the trim string to wide
+    trimwclen = trim.length();  // A guess to start.
+    int trimbufsize = trimwclen + 1;
+    wchar_t* wctrim = new wchar_t[trimbufsize];
+    size_t trimlen = utf8::idb_mbstowcs(wctrim, trim.c_str(), trimwclen + 1);
+
+    // idb_mbstowcs can return -1 if there is bad mbs char in tstr
+    if (trimlen == static_cast<size_t>(-1))
+        trimlen = 0;
+
+    size_t trimCmpLen = trimlen * sizeof(wchar_t);
+
+    const wchar_t* oPtr = wcbuf;      // To remember the start of the string
+    const wchar_t* aPtr = oPtr;
+    const wchar_t* aEnd = wcbuf + strwclen - 1;
+
+    if (trimlen > 0)
     {
-        // If the trim string is 1 byte, don't waste cpu for memcmp
-        while (pos < end && *pos == *posT)
+        if (trimlen == 1)
         {
-            ++pos;
-            --binLen;
+            // If trim is a single char, then don't spend the overhead for memcmp.
+            wchar_t chr = wctrim[0];
+
+            while (aPtr <= aEnd && *aPtr == chr)
+                aPtr++;
+        }
+        else
+        {
+            aEnd -= (trimlen - 1); // So we don't compare past the end of the string.
+
+            while (aPtr <= aEnd && !memcmp(aPtr, wctrim, trimCmpLen))
+                aPtr += trimlen;
         }
     }
-    else
-    {
-        while (pos+binTLen <= end && memcmp(pos,posT,binTLen) == 0)
-        {
-            pos += binTLen;
-            binLen -= binTLen;
-        }
-    }
+
+    // Bug 5110 - error in allocating enough memory for utf8 chars
+    size_t aLen = strwclen - (aPtr - oPtr);
+    wstring trimmed = wstring(aPtr, aLen);
     // Turn back to a string
-    std::string ret(pos, binLen);
+    std::string ret(utf8::wstring_to_utf8(trimmed.c_str()));
+    delete [] wctrim;
+    delete [] wcbuf;
     return ret;
 }
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:
