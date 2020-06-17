@@ -1,10 +1,12 @@
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  proper_python: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local codebase_map = {
   //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.3 --depth 1 https://github.com/MariaDB/server .",
+  proper_python: 'git clone --recurse-submodules --branch drrtuy-10.5-cs --depth 1 https://github.com/MariaDB/server .',
   develop: 'git clone --recurse-submodules --branch bb-10.5-cs --depth 1 https://github.com/MariaDB/server .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
@@ -19,6 +21,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    proper_python: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -197,11 +200,11 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.4']
+  for b in ['develop', 'develop-1.4', 'proper_python']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
 ] + [
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.4']
+  for b in ['develop', 'develop-1.4', 'proper_python']
   for e in ['pull_request', 'cron', 'custom']
 ]
