@@ -116,7 +116,7 @@ local Pipeline(branch, platform, event) = {
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
                "sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES \"$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, python2 or python3\" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt",
-               "sed -i '/libjemalloc2\\,/a python | python2 | python3,' debian/control",
+               "sed -i '/libjemalloc2,/a python | python2 | python3,' debian/control",
                platformMap(branch, platform),
              ],
            },
