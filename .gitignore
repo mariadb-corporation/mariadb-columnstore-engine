@@ -148,6 +148,8 @@ oam/install_scripts/mcs-writeengineserver.service
 oam/install_scripts/mcs-storagemanager.service
 oam/install_scripts/mcs_module_installer.sh
 oam/install_scripts/slave-rep-columnstore.sh
+oam/install_scripts/mcs-loadbrm.py
+oam/install_scripts/mcs-start-storagemanager.py
 oam/install_scripts/startupTests.sh
 oam/post/mcstest-001.sh
 oam/post/mcstest-002.sh
