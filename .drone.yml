@@ -45,7 +45,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - zypper install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=sles15 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -142,7 +142,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - zypper install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=sles15 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -241,7 +241,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - zypper install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=sles15 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -338,7 +338,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -435,7 +435,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -534,7 +534,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -631,7 +631,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -728,7 +728,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -827,7 +827,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -924,7 +924,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1021,7 +1021,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1120,7 +1120,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1217,7 +1217,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1314,7 +1314,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1413,7 +1413,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1510,7 +1510,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1607,7 +1607,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1706,7 +1706,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1803,7 +1803,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1900,7 +1900,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -1999,7 +1999,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2096,7 +2096,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2193,7 +2193,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2292,7 +2292,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2389,7 +2389,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2507,7 +2507,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2627,7 +2627,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos7 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2745,7 +2745,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2863,7 +2863,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -2983,7 +2983,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && yum install -y systemd-devel git cmake make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel && cmake -DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DRPM=centos8 && make -j$(nproc) package
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3101,7 +3101,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3198,7 +3198,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3297,7 +3297,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=stretch' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3394,7 +3394,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3491,7 +3491,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3590,7 +3590,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=buster' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3687,7 +3687,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3784,7 +3784,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3883,7 +3883,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=xenial' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -3980,7 +3980,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -4077,7 +4077,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -4176,7 +4176,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=bionic' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -4273,7 +4273,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -4370,7 +4370,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
@@ -4469,7 +4469,7 @@ steps:
   - sed -i -e 's/"galera-enterprise-4"//' cmake/cpack_rpm.cmake
   - sed -i '/columnstore/Id' debian/autobake-deb.sh
   - sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh
-  - sed -i 's/.*REQUIRES.*/    SET(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "$${CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES}, MariaDB-server >= 10.5.4, (python2 or python3)" PARENT_SCOPE)/' storage/columnstore/CMakeLists.txt
+  - sed -i '/libjemalloc2\,$$/a \ \ \ \ \ \ \ \ \ python | python2 | python3,' debian/control
   - apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends && CMAKEFLAGS='-DCMAKE_BUILD_TYPE=Release -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DBUILD_CONFIG=enterprise -DDEB=focal' debian/autobake-deb.sh
   environment:
     DEBIAN_FRONTEND: noninteractive
