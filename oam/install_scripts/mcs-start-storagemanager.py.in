@@ -29,5 +29,7 @@ if __name__ == '__main__':
 
 
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
+        print("Using S3 storage.")
         sys.exit(0)
+    print("S3 storage has not been set up for MariaDB ColumnStore. StorageManager service fails to start.")
     sys.exit(1)

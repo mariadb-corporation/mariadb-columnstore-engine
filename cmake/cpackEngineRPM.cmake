@@ -89,6 +89,7 @@ endif()
 SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storage_engine.sh)
 SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
 SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_storage_engine.sh)
+SET(CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postUn_storage_engine.sh)
 
 SET(CPACK_RPM_SPEC_MORE_DEFINE "${CPACK_RPM_SPEC_MORE_DEFINE}
 %define ignore \#
