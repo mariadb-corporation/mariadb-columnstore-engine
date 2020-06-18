@@ -24,13 +24,21 @@ find_env_var() {
     echo $ENV_VAR
 }
 
+if [[ -f /etc/mysql/debian.cnf ]]; then
+  MDB="/usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf"
+else
+  MDB="/usr/bin/mysql"
+fi
+
 checkForError() {
 	# check for password error
 	grep "ERROR 1045" ${tmpDir}/mysql_install.log > ${tmpDir}/error.check
 	if [ `cat ${tmpDir}/error.check | wc -c` -ne 0 ]; then
-		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
+		  echo "There were authentication issues running install_mcs_mysql.sh \
+script. The log is available in ${tmpDir}/mysql_install.log. Please re-run \
+columnstore-post-install manually after solving the authentication issues."
 		  rm -f ${tmpDir}/error.check
-		  exit 2;
+		  return 2;
 	fi
 
 	rm -f ${tmpDir}/error.check
@@ -39,14 +47,14 @@ checkForError() {
         # See if engine columnstore exist
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
-        su -s /bin/sh -c 'mysql --execute="show engines"' mysql 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore
+        $MDB --execute="show engines" 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore >> ${tmpDir}/post-mysql-install.log &2>1
 
         #
         # Add compressiontype column to SYSCOLUMN if applicable
         #
         if [ $? -ne 0 ]; then
                 echo "columnstore doesn't exist"
-                exit 1
+                return 1
         fi
 
         echo "columnstore exist"
@@ -235,11 +243,9 @@ fi
 
 checkForError
 if [ $? -ne 0 ]; then
-    echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
-fi
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
+    echo "There was an error installing MariaDB ColumnStore engine plugin. \
+Continue to install the engine though. \ 
+Please resolve the issues and run necessary scripts manually."
 fi
 
 if [ -z "$MCS_USE_S3_STORAGE" ]; then
@@ -283,6 +289,7 @@ fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    echo "Populating the engine initial system catalog."
     systemctl start mariadb-columnstore
     sleep 1
     dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
