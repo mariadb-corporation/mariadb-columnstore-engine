@@ -38,39 +38,41 @@ using namespace rowgroup;
 #include "errorids.h"
 using namespace logging;
 
+#include "collation.h"
+
 namespace
 {
 
-// buf must be at least 9 characters since given 64-bit input
-// we will convert at most 8 characters and then add the null
-inline bool getChar( uint64_t value, char* buf )
+inline size_t getChar(int32_t num, char*& buf)
 {
-    uint32_t cur_offset = 0; // current index into buf
-    int  cur_bitpos = 56; // 8th octet in input val
-
-    while ( cur_bitpos >= 0 )
+    char tmp[4];
+    size_t numBytes = 0;
+    if (num & 0xFF000000L)
     {
-        if ( ( ( value >> cur_bitpos ) & 0xff ) != 0 )
-        {
-            buf[cur_offset++] = char( ( value >> cur_bitpos ) & 0xff );
-        }
-
-        cur_bitpos -= 8;
+        mi_int4store(tmp, num);
+        numBytes = 4;
     }
-
-    buf[cur_offset] = '\0';
-
-    return true;
-}
-
-// see comment above regarding buf assumptions
-inline bool getChar( int64_t value, char* buf )
-{
-    if ( value < 0 )
-        return false;
+    else if (num & 0xFF0000L)
+    {
+        mi_int3store(tmp, num);
+        numBytes = 3;
+    }
+    else if (num & 0xFF00L)
+    {
+        mi_int2store(tmp, num);
+        numBytes = 2;
+    }
     else
-        return getChar( (uint64_t) value, buf );
+    {
+        *((int8_t*)buf) = num;
+        ++ buf;
+        return 1;
+    }
+    memcpy(buf, tmp, numBytes);
+    buf += numBytes;
+    return numBytes;
 }
+
 }
 
 namespace funcexp
@@ -86,120 +88,101 @@ string Func_char::getStrVal(Row& row,
                             bool& isNull,
                             CalpontSystemCatalog::ColType& ct)
 {
-    const int BUF_SIZE = 9; // see comment above for size requirement
+    const int BUF_SIZE = 4 * parm.size();
     char buf[BUF_SIZE];
-
-    switch (ct.colDataType)
+    buf[0]= 0;
+    char* pBuf = buf;
+    CHARSET_INFO* cs = ct.getCharset();
+    int32_t value;
+    int32_t numBytes = 0;
+    for (uint32_t i = 0; i < parm.size(); ++i)
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
+        ReturnedColumn* rc = (ReturnedColumn*)parm[i]->data();
+        
+        switch (rc->resultType().colDataType)
         {
-            int64_t value = parm[0]->data()->getIntVal(row, isNull);
-
-            if ( !getChar(value, buf) )
+            case execplan::CalpontSystemCatalog::BIGINT:
+            case execplan::CalpontSystemCatalog::INT:
+            case execplan::CalpontSystemCatalog::MEDINT:
+            case execplan::CalpontSystemCatalog::TINYINT:
+            case execplan::CalpontSystemCatalog::SMALLINT:
+            case execplan::CalpontSystemCatalog::UBIGINT:
+            case execplan::CalpontSystemCatalog::UINT:
+            case execplan::CalpontSystemCatalog::UMEDINT:
+            case execplan::CalpontSystemCatalog::UTINYINT:
+            case execplan::CalpontSystemCatalog::USMALLINT:
             {
-                isNull = true;
-                return "";
+                value = rc->getIntVal(row, isNull);
+            }
+            break;
+
+            case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
+            case execplan::CalpontSystemCatalog::CHAR:
+            case execplan::CalpontSystemCatalog::TEXT:
+            case execplan::CalpontSystemCatalog::DOUBLE:
+            case execplan::CalpontSystemCatalog::UDOUBLE:
+            case execplan::CalpontSystemCatalog::FLOAT:
+            case execplan::CalpontSystemCatalog::UFLOAT:
+            {
+                double vf = std::round(rc->getDoubleVal(row, isNull));
+                value = (int32_t)vf;
+            }
+            break;
+
+            case execplan::CalpontSystemCatalog::DECIMAL:
+            case execplan::CalpontSystemCatalog::UDECIMAL:
+            {
+                IDB_Decimal d = rc->getDecimalVal(row, isNull);
+                double dscale = d.scale;
+                // get decimal and round up
+                value = d.value / pow(10.0, dscale);
+                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( lefto > 4 )
+                    value++;
+                
+            }
+            break;
+
+            case execplan::CalpontSystemCatalog::DATE:
+            case execplan::CalpontSystemCatalog::DATETIME:
+            case execplan::CalpontSystemCatalog::TIMESTAMP:
+            {
+                continue; // Dates are ignored
+            }
+            break;
+
+            default:
+            {
+                value = 0;
             }
         }
-        break;
-
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        {
-            uint64_t value = parm[0]->data()->getUintVal(row, isNull);
-
-            if ( !getChar(value, buf) )
-            {
-                isNull = true;
-                return "";
-            }
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-
-            if ( !getChar((int64_t)value, buf) )
-            {
-                isNull = true;
-                return "";
-            }
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        {
-            float value = parm[0]->data()->getFloatVal(row, isNull);
-
-            if ( !getChar((int64_t)value, buf) )
-            {
-                isNull = true;
-                return "";
-            }
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            // get decimal and round up
-            int value = d.value / pow(10.0, dscale);
-            int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-            if ( lefto > 4 )
-                value++;
-
-            if ( !getChar((int64_t)value, buf) )
-            {
-                isNull = true;
-                return "";
-            }
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::DATETIME:
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            isNull = true;
-            return "";
-        }
-        break;
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "char: datatype of " << execplan::colDataTypeToString(ct.colDataType);
-            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-        }
-
+        
+        if (isNull)
+            continue;
+        
+        numBytes += getChar(value, pBuf);
     }
+    
+    /* Check whether we got a well-formed string */
+    MY_STRCOPY_STATUS status;
+    int32_t actualBytes = cs->well_formed_char_length(buf, buf + numBytes, numBytes, &status);
 
-    // Bug 5110 : Here the data in col is null. But there might have other
-    // non-null columns we processed before and we do not want entire value
-    // to become null. Therefore we set isNull flag to false.
-    if (isNull)
+    if (UNLIKELY(actualBytes < numBytes))
     {
-        isNull = false;
-        return "";
+        numBytes = actualBytes;
+        ostringstream os;
+        os << "Invalid character string for " << cs->csname << ": value = " <<  hex << buf + actualBytes;
+        logging::Message::Args args;
+        logging::Message message(9);
+        args.add(os.str());
+        logging::LoggingID logid(28); // Shows as PrimProc, which may not be correct in all cases
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+        // TODO: push warning to client
     }
-
-    return buf;
+    std::string ret(buf, numBytes);
+    return ret;
 }
 
 

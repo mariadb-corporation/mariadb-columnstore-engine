@@ -41,6 +41,7 @@ using namespace logging;
 
 #include "dataconvert.h"
 using namespace dataconvert;
+#include "collation.h"
 
 namespace
 {
