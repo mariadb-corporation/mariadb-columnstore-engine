@@ -10,8 +10,14 @@ for arg in "$@"; do
 	fi
 done
 
+if [[ -f /etc/mysql/debian.cnf ]]; then
+  MDB="/usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf"
+else
+  MDB="/usr/bin/mysql"
+fi
+
 # DELETE libcalmysql.so entries first as they are in ha_columnstore.so in 1.4.2 onwards
-su -s /bin/sh -c 'mysql'  mysql 2> ${tmpdir}/mysql_install.log <<EOD
+$MDB 2> ${tmpdir}/mysql_install.log <<EOD
 DELETE FROM mysql.func WHERE dl='libcalmysql.so';
 INSERT INTO mysql.func VALUES ('calgetstats',0,'ha_columnstore.so','function');
 INSERT INTO mysql.func VALUES ('calsettrace',2,'ha_columnstore.so','function');
@@ -104,10 +110,10 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql' mysql 2>/dev/null
-su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql' mysql 2>/dev/null
-su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql' mysql 2>/dev/null
-su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql' mysql 2>/dev/null
-su -s /bin/sh -c 'mysql <@ENGINE_SUPPORTDIR@/columnstore_info.sql' mysql 2>/dev/null
+$MDB <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql 2>/dev/null
+$MDB <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql 2>/dev/null
+$MDB <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql 2>/dev/null
+$MDB <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql 2>/dev/null
+$MDB <@ENGINE_SUPPORTDIR@/columnstore_info.sql 2>/dev/null
 
 
