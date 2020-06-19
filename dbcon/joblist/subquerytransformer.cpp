@@ -169,6 +169,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
     fSubJobList->addQuery(querySteps);
     fSubJobList->addDelivery(deliverySteps);
     fSubJobList->putEngineComm(DistributedEngineComm::instance(fOutJobInfo->rm));
+    csep->setDynamicParseTreeVec(fSubJobInfo->dynamicParseTreeVec);
 
     // Get the correlated steps
     fCorrelatedSteps = fSubJobInfo->correlateSteps;
