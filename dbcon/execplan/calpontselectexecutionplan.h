@@ -772,6 +772,12 @@ public:
         return ((fSessionID & 0x80000000) != 0);
     }
 
+    virtual void setDynamicParseTreeVec(
+        const std::vector<execplan::ParseTree*>& dynamicParseTreeVec)
+    {
+        fDynamicParseTreeVec = dynamicParseTreeVec;
+    }
+
     /**
      * Protected stuff
      */
@@ -922,6 +928,8 @@ private:
     bool fIsDML;
 
     std::string fTimeZone;
+
+    std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
 };
 
 /**
