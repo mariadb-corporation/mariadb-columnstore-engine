@@ -64,6 +64,7 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
     const char* end = pos + binLen;
 
     char* pbuf = new char[binLen + 1];
+    pbuf[binLen] = 0;
     char* tmp = pbuf + binLen;
     
     if (cs->use_mb()) // uses multi-byte characters
