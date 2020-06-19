@@ -34,20 +34,7 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-namespace
-{
-
-void reverse( char* start, char* end )
-{
-    while ( start < end )
-    {
-        char c = *start;
-        *start++ = *end;
-        *end-- = c;
-    }
-}
-
-}
+#include "collation.h"
 
 namespace funcexp
 {
@@ -61,22 +48,48 @@ CalpontSystemCatalog::ColType Func_reverse::operationType(FunctionParm& fp, Calp
 std::string Func_reverse::getStrVal(rowgroup::Row& row,
                                     FunctionParm& fp,
                                     bool& isNull,
-                                    execplan::CalpontSystemCatalog::ColType&)
+                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-	string str;
-    stringValue(fp[0], row, isNull, str);
+    CHARSET_INFO* cs = type.getCharset();
 
-    // We used to reverse in the string buffer, but that doesn't
-    // work for all compilers as some re-use the buffer on simple
-    // string assignment and implement a ref-count. Reversing in the
-    // string buffer has the affect of reversing all strings from
-    // which this one derived.
-    int len = str.length();
-    char* pbuf = new char[len + 1];
-    strncpy(pbuf, str.c_str(), len);
-    pbuf[len] = 0;
-    char* end = pbuf + len - 1;
-    reverse(pbuf, end);
+    string str;
+    stringValue(fp[0], row, isNull, str);
+    if (isNull)
+        return "";
+    if (str.empty() || str.length() == 0)
+        return str;
+    // binLen represents the number of bytes in str
+    size_t binLen = str.length();
+    const char* pos = str.c_str();
+    const char* end = pos + binLen;
+
+    char* pbuf = new char[binLen + 1];
+    char* tmp = pbuf + binLen;
+    
+    if (cs->use_mb()) // uses multi-byte characters
+    {
+        uint32 l;
+        while (pos < end)
+        {
+            if ((l = my_ismbchar(cs, pos, end)))
+            {
+                tmp -= l;
+                DBUG_ASSERT(tmp >= pbuf);
+                memcpy(tmp, pos, l);
+                pos += l;
+            }
+            else
+            {
+                *--tmp= *pos++;
+            }
+        }
+    }
+    else
+    {
+        while (pos < end)
+          *--tmp= *pos++;
+    }
+
     string rstr = pbuf;
     delete [] pbuf;
     return rstr;
