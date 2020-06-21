@@ -23,7 +23,7 @@ $MDB -e 'DELETE FROM mysql.func WHERE dl="libcalmysql.so"' 2>/dev/null
 $MDB -e 'DROP DATABASE IF EXISTS calpontsys;' 2>/dev/null
 $MDB -e 'DROP PROCEDURE IF EXISTS infinidb_querystats.calSetUserPriority;' 2>/dev/null
 $MDB -e "DROP PROCEDURE IF EXISTS infinidb_querystats.calRemoveUserPriority(IN host VARCHAR(50), IN usr VARCHAR(50))" 2>/dev/null
-$MDB -e "DROP PROCEDURE IF EXISTS infinidb_querystats.calShowProcessList;"2>/dev/null
+$MDB -e "DROP PROCEDURE IF EXISTS infinidb_querystats.calShowProcessList;" 2>/dev/null
 $MDB -e "DROP DATABASE IF EXISTS columnstore_info;" 2>/dev/null
 
 # Test we are using systemd

@@ -57,7 +57,7 @@ columnstore-post-install manually after solving the authentication issues."
                 return 1
         fi
 
-        echo "columnstore exist"
+        echo "columnstore exists"
 
 	return 0;
 }
