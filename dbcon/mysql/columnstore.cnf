@@ -1,5 +1,6 @@
 [mysqld]
 plugin-load-add=ha_columnstore.so
+plugin-maturity=beta
 
 # Enable compression by default on create, set to NONE to turn off
 #columnstore_compression_type=SNAPPY
