@@ -47,7 +47,7 @@ columnstore-post-install manually after solving the authentication issues."
         # See if engine columnstore exist
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
-        $MDB --execute="show engines" 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore >> ${tmpDir}/post-mysql-install.log &2>1
+        $MDB --execute="show engines" 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore >> ${tmpDir}/post-mysql-install.log 2>&1
 
         #
         # Add compressiontype column to SYSCOLUMN if applicable
