@@ -373,26 +373,6 @@ IF (INSTALL_LAYOUT)
     ADD_DEPENDENCIES(funcexp GenError)
     ADD_DEPENDENCIES(oamcpp GenError)
     ADD_DEPENDENCIES(regr_mysql GenError)
-    # Don't know why, but this doesn't work if you make the above line PARENT_SCOPE
-    SET(CPACK_COMPONENTS_ALL ${CPACK_COMPONENTS_ALL} PARENT_SCOPE)
-    IF (RPM)
-        SET(ignored
-        "%ignore ${CMAKE_INSTALL_PREFIX}"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/local"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/bin"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/lib"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/sbin"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/lib64/mysql"
-        "%ignore ${CMAKE_INSTALL_PREFIX}/lib64/mysql/plugin"
-        "%ignore /var/lib"
-        "%ignore /var"
-        )
-        SET(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored} "%config(noreplace) ${INSTALL_SYSCONF2DIR}/*" PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preInstall_storage_engine.sh PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/postInstall_storage_engine.sh PARENT_SCOPE)
-        SET(CPACK_RPM_columnstore-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/build/preUn_storage_engine.sh PARENT_SCOPE)
-
-    ENDIF ()
 ELSE ()
     # MariaDB has its own packaging routines
     INCLUDE(cpackEngineRPM)
