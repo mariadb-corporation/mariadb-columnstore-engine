@@ -1,35 +1,48 @@
-${PYTHON_SHEBANG}
-from __future__ import absolute_import, division, print_function
+#!/usr/bin/env python3
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
-if sys.version_info < (3,0):
-    import ConfigParser
-else:
-    import configparser
+import configparser
+
+
+api_config_file = '/etc/columnstore/cmapi_server.conf'
+
+
+def get_key():
+    cmapi_config = configparser.ConfigParser()
+    try:
+        cmapi_config.read(api_config_file)
+    except FileNotFoundError:
+        return ''
+
+    if 'Authentication' not in cmapi_config.sections():
+        return ''
+    return cmapi_config['Authentication'].get('x-api-key', '')
+
+
+def get_version():
+    return '0.4.0'
+
+
+def get_port():
+    return '8640'
 
 
 if __name__ == '__main__':
-    if sys.version_info < (3,0):
-        sm_config = ConfigParser.ConfigParser()
-    else:
-        sm_config = configparser.ConfigParser()
+    sm_config = configparser.ConfigParser()
 
     sm_config.read('/etc/columnstore/storagemanager.cnf')
     cs_config = ET.parse('/etc/columnstore/Columnstore.xml')
     config_root = cs_config.getroot()
 
-    if sys.version_info < (3,0):
-        storage = sm_config.get('ObjectStorage', 'service')
-        if storage is None:
-            storage = 'LocalStorage'
-        bucket = sm_config.get('S3', 'bucket')
-        if bucket is None:
-            bucket = 'some_bucket'
-    else:
-        storage = sm_config.get('ObjectStorage', 'service', fallback='LocalStorage')
-        bucket = sm_config.get('S3', 'bucket', fallback='some_bucket')
+    storage = sm_config.get('ObjectStorage', 'service')
+    if storage is None:
+        storage = 'LocalStorage'
+    bucket = sm_config.get('S3', 'bucket')
+    if bucket is None:
+        bucket = 'some_bucket'
 
     dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
     loadbrm = '/usr/bin/load_brm'
@@ -60,14 +73,41 @@ if __name__ == '__main__':
         if pmCount > 1:
             # load multinode dbrm
             try:
-                brm_saves_current = subprocess.check_output(['cat', brm])
+                import requests
+                requests.packages.urllib3.disable_warnings()
+            except ImportError as e:
+                print('requests Python module does not exist. \
+Please install CMAPI first.', file=sys.stderr)
+                sys.exit(1)
+            try:
+                primary_address = config_root.find('./DBRM_Controller/IPAddr').text
+                api_key = get_key()
+                if len(api_key) == 0:
+                    print('Failed to find API key in {}.'.format(api_config_file), \
+file=sys.stderr)
+                    sys.exit(1)
+                headers = {'x-api-key': api_key}
+                api_version = get_version()
+                api_port = get_port()
+                elems = ['em', 'journal', 'vbbm', 'vss']
+                for e  in elems:
+                    print("Pulling {} from the primary node.".format(e))
+                    url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
+api_port, api_version, e)
+                    r = requests.get(url, verify=False, headers=headers, timeout=2)
+                    if (r.status_code != 200):
+                        raise RuntimeError("Error requesting {} from the primary \
+node.".format(e))
+                    current_name = '{}_{}'.format(dbrmroot, e)
+                    print ("Saving {} to {}".format(e, current_name))
+                    path = Path(current_name)
+                    path.write_bytes(r.content)
+            except:
+                print('Failed to load meta data from the primary \
+node {}.'.format(primary_address), file=sys.stderr)
+                sys.exit(1)
 
-                if not brm_saves_current:
-                    # local dbrm empty, need to pull from main node
-                    pass
-            except subprocess.CalledProcessError as e:
-                # will happen when brm file does not exist
-                print('{} does not exist.'.format(brm), file=sys.stderr)
+            brm_saves_current = b"BRM_saves\n"
         else:
             # load local dbrm
             try:
@@ -82,7 +122,7 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
         try:
             retcode = subprocess.call(cmd, shell=True)
             if retcode < 0:
-                pass
-
+                print('{} exits with {}.'.format(cmd, retcode))
+                sys.exit(1)
         except OSError as e:
-            pass
+            sys.exit(1)
