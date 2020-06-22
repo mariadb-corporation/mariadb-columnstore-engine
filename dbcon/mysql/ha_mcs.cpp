@@ -1223,8 +1223,6 @@ bool ha_mcs::is_crashed() const
     lock.
 */
 
-static my_bool (*original_get_status)(void*, my_bool);
-
 my_bool get_status_and_flush_cache(void *param,
                                    my_bool concurrent_insert);
 
@@ -1264,8 +1262,9 @@ my_bool get_status_and_flush_cache(void *param,
     Call first the original Aria get_status function
     All Aria get_status functions takes Maria handler as the parameter
   */
-  if (original_get_status)
-    (*original_get_status)(&cache->cache_handler->file, concurrent_insert);
+  if (cache->share->org_lock.get_status)
+    (*cache->share->org_lock.get_status)(&cache->cache_handler->file,
+                                         concurrent_insert);
 
   /* If first get_status() call for this table, flush cache if needed */
   if (!cache->lock_counter++)
@@ -1280,10 +1279,9 @@ my_bool get_status_and_flush_cache(void *param,
         return(1);
       }
     }
-    else if (!cache->insert_command)
-      cache->free_locks();
   }
-  else if (!cache->insert_command)
+
+  if (!cache->insert_command)
     cache->free_locks();
 
   return (0);
@@ -1294,40 +1292,99 @@ my_bool get_status_and_flush_cache(void *param,
 static my_bool cache_start_trans(void* param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  if (cache->org_lock.start_trans)
-    return (*cache->org_lock.start_trans)(cache->cache_handler->file);
-  return 0;
+  return (*cache->share->org_lock.start_trans)(cache->cache_handler->file);
 }
 
 static void cache_copy_status(void* to, void *from)
 {
   ha_mcs_cache *to_cache= (ha_mcs_cache*) to, *from_cache= (ha_mcs_cache*) from;
-  if (to_cache->org_lock.copy_status)
-    (*to_cache->org_lock.copy_status)(to_cache->cache_handler->file,
-                                      from_cache->cache_handler->file);
+  (*to_cache->share->org_lock.copy_status)(to_cache->cache_handler->file,
+                                           from_cache->cache_handler->file);
 }
 
 static void cache_update_status(void* param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  if (cache->org_lock.update_status)
-    (*cache->org_lock.update_status)(cache->cache_handler->file);
+  (*cache->share->org_lock.update_status)(cache->cache_handler->file);
 }
 
 static void cache_restore_status(void *param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  if (cache->org_lock.restore_status)
-    (*cache->org_lock.restore_status)(cache->cache_handler->file);
+  (*cache->share->org_lock.restore_status)(cache->cache_handler->file);
 }
 
 static my_bool cache_check_status(void *param)
 {
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
-  if (cache->org_lock.check_status)
-    return (*cache->org_lock.check_status)(cache->cache_handler->file);
-  return 0;
+  return (*cache->share->org_lock.check_status)(cache->cache_handler->file);
 }
+
+
+/*****************************************************************************
+ ha_mcs_cache_share functions (Common storage for an open cache file)
+*****************************************************************************/
+
+static ha_mcs_cache_share *cache_share_list= 0;
+static PSI_mutex_key key_LOCK_cache_share;
+static PSI_mutex_info all_mutexes[]=
+{
+  { &key_LOCK_cache_share, "LOCK_cache_share", PSI_FLAG_GLOBAL},
+};
+static mysql_mutex_t LOCK_cache_share;
+
+/*
+  Find or create a share
+*/
+
+ha_mcs_cache_share *find_cache_share(const char *name)
+{
+  ha_mcs_cache_share *pos, *share;
+  mysql_mutex_lock(&LOCK_cache_share);
+  for (pos= cache_share_list; pos; pos= pos->next)
+  {
+    if (!strcmp(pos->name, name))
+    {
+      mysql_mutex_unlock(&LOCK_cache_share);
+      return(pos);
+    }
+  }
+  if (!(share= (ha_mcs_cache_share*) my_malloc(PSI_NOT_INSTRUMENTED,
+                                           sizeof(*share) + strlen(name)+1,
+                                           MYF(MY_FAE))))
+  {
+    mysql_mutex_unlock(&LOCK_cache_share);
+    return 0;
+  }
+  share->name= (char*) (share+1);
+  share->open_count= 1;
+  strmov((char*) share->name, name);
+  share->next= cache_share_list;
+  cache_share_list= share;
+  mysql_mutex_unlock(&LOCK_cache_share);
+  return share;
+}
+
+
+/*
+  Decrement open counter and free share if there is no more users
+*/
+
+void ha_mcs_cache_share::close()
+{
+  ha_mcs_cache_share *pos;
+  mysql_mutex_lock(&LOCK_cache_share);
+  if (!--open_count)
+  {
+    ha_mcs_cache_share **prev= &cache_share_list;
+    for ( ;  (pos= *prev) != this; prev= &pos->next)
+      ;
+    *prev= next;
+    my_free(this);
+  }
+  mysql_mutex_unlock(&LOCK_cache_share);
+}
+
 
 /*****************************************************************************
  ha_mcs_cache handler functions
@@ -1337,6 +1394,7 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
   :ha_mcs(mcs_hton, table_arg)
 {
   cache_handler= (ha_maria*) mcs_maria_hton->create(mcs_maria_hton, table_arg, mem_root);
+  share= 0;
   lock_counter= 0;
 }
 
@@ -1344,7 +1402,10 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
 ha_mcs_cache::~ha_mcs_cache()
 {
   if (cache_handler)
+  {
     delete cache_handler;
+    cache_handler= NULL;
+  }
 }
 
 /*
@@ -1396,19 +1457,38 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
   if ((error= cache_handler->open(cache_name, mode, open_flags)))
     DBUG_RETURN(error);
 
+  if (!(share= find_cache_share(name)))
+  {
+    cache_handler->close();
+    DBUG_RETURN(ER_OUTOFMEMORY);
+  }
+
   /* Fix lock so that it goes through get_status_and_flush() */
   THR_LOCK *lock= &cache_handler->file->s->lock;
-  mysql_mutex_lock(&cache_handler->file->s->intern_lock);
-  org_lock= lock[0];
-  lock->get_status= &get_status_and_flush_cache;
-  lock->start_trans= &cache_start_trans;
-  lock->copy_status= &cache_copy_status;
-  lock->update_status= &cache_update_status;
-  lock->restore_status= &cache_restore_status;
-  lock->check_status= &cache_check_status;
-  lock->restore_status= &cache_restore_status;
+  if (lock->get_status != &get_status_and_flush_cache)
+  {
+    mysql_mutex_lock(&cache_handler->file->s->intern_lock);
+    if (lock->get_status != &get_status_and_flush_cache)
+    {
+      /* Remember original lock. Used by the THR_lock cache functions */
+      share->org_lock= lock[0];
+      if (lock->start_trans)
+        lock->start_trans=    &cache_start_trans;
+      if (lock->copy_status)
+        lock->copy_status=    &cache_copy_status;
+      if (lock->update_status)
+        lock->update_status=  &cache_update_status;
+      if (lock->restore_status)
+        lock->restore_status= &cache_restore_status;
+      if (lock->check_status)
+        lock->check_status=   &cache_check_status;
+      if (lock->restore_status)
+        lock->restore_status=  &cache_restore_status;
+      lock->get_status=       &get_status_and_flush_cache;
+    }
+    mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
+  }
   cache_handler->file->lock.status_param= (void*) this;
-  mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
 
   if ((error= parent::open(name, mode, open_flags)))
   {
@@ -1422,10 +1502,13 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
 int ha_mcs_cache::close()
 {
   int error, error2;
+  ha_mcs_cache_share *org_share= share;
   DBUG_ENTER("ha_mcs_cache::close()");
   error= cache_handler->close();
   if ((error2= parent::close()))
     error= error2;
+  if (org_share)
+    org_share->close();
   DBUG_RETURN(error);
 }
 
@@ -1637,11 +1720,16 @@ static int ha_mcs_cache_init(void *p)
 {
   handlerton *cache_hton;
   int error;
+  uint count;
 
   cache_hton= (handlerton *) p;
   cache_hton->create= ha_mcs_cache_create_handler;
   cache_hton->panic= 0;
   cache_hton->flags= HTON_NO_PARTITION;
+
+  count= sizeof(all_mutexes)/sizeof(all_mutexes[0]);
+  mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
+  mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
 
   error= mcs_hton == NULL;                   // Engine must exists!
 
@@ -1672,6 +1760,7 @@ static int ha_mcs_cache_deinit(void *p)
     plugin_unlock(0, plugin_maria);
     plugin_maria= NULL;
   }
+  mysql_mutex_destroy(&LOCK_cache_share);
   return 0;
 }
 
@@ -1717,7 +1806,7 @@ maria_declare_plugin(columnstore)
   NULL,   		        /* status variables */
   NULL,                         /* system variables */
   MCSVERSION,                    /* string version */
-  MariaDB_PLUGIN_MATURITY_ALPHA /* maturity */
+  MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
 },
 #endif
 {
@@ -1804,7 +1893,6 @@ void ha_mcs_cache::free_locks()
 
   mysql_mutex_unlock(&cache_handler->file->lock.lock->mutex);
   thr_unlock(&cache_handler->file->lock, 0);
-  mysql_mutex_lock(&cache_handler->file->lock.lock->mutex);
 
   /* Restart transaction for columnstore table */
   if (original_lock_type != F_WRLCK)
@@ -1812,6 +1900,9 @@ void ha_mcs_cache::free_locks()
     parent::external_lock(table->in_use, F_UNLCK);
     parent::external_lock(table->in_use, original_lock_type);
   }
+
+  /* Needed as we are going back to end of thr_lock() */
+  mysql_mutex_lock(&cache_handler->file->lock.lock->mutex);
 }
 
 /**
