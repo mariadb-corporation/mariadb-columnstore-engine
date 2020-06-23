@@ -237,7 +237,7 @@ public:
     {
         return fOtherEnd;
     }
-    EXPORT const bool isAvailable() const
+    EXPORT bool isAvailable() const
     {
         return fIsAvailable;
     }
@@ -267,7 +267,7 @@ public:
     /**
      * @brief compare the addresses of 2 MessageQueueClient
      */
-    inline const bool isSameAddr(const MessageQueueClient& rhs) const;
+    inline bool isSameAddr(const MessageQueueClient& rhs) const;
 
     bool isConnected()
     {
@@ -316,7 +316,7 @@ inline const std::string MessageQueueClient::addr2String() const
 {
     return fClientSock.addr2String();
 }
-inline const bool MessageQueueClient::isSameAddr(const MessageQueueClient& rhs) const
+inline bool MessageQueueClient::isSameAddr(const MessageQueueClient& rhs) const
 {
     return fClientSock.isSameAddr(&rhs.fClientSock);
 }

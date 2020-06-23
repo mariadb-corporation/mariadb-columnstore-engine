@@ -160,7 +160,7 @@ public:
     {
         fTimeZone = timeZone;
     }
-    inline const bool isColumnStore() const
+    inline bool isColumnStore() const
     {
         return fisColumnStore;
     }

@@ -132,7 +132,7 @@ public:
     /**
      * accessor
      */
-    virtual const uint8_t aggOp() const
+    virtual uint8_t aggOp() const
     {
         return fAggOp;
     }
@@ -192,7 +192,7 @@ public:
     /**
     * ASC flag
     */
-    inline virtual const bool asc() const
+    inline virtual bool asc() const
     {
         return fAsc;
     }

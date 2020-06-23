@@ -191,7 +191,7 @@ public:
     {
         fIndexFlag = indexFlag;
     }
-    const int indexFlag() const
+    int indexFlag() const
     {
         return fIndexFlag;
     }
@@ -201,7 +201,7 @@ public:
     {
         fJoinFlag = joinFlag;
     }
-    const int joinFlag() const
+    int joinFlag() const
     {
         return fJoinFlag;
     }

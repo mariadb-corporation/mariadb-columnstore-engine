@@ -66,7 +66,7 @@ public:
         fSub = sub;
     }
 
-    const bool notExists() const
+    bool notExists() const
     {
         return fNotExists;
     }
@@ -75,7 +75,7 @@ public:
         fNotExists = notExists;
     }
 
-    const bool correlated() const
+    bool correlated() const
     {
         return fCorrelated;
     }

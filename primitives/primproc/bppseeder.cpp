@@ -389,7 +389,7 @@ void BPPSeeder::sendErrorMsg(uint32_t id, uint16_t status, uint32_t step)
 {
 
     ISMPacketHeader ism;
-    PrimitiveHeader ph = {0};
+    PrimitiveHeader ph = {0,0,0,0,0,0};
 
     ism.Status =  status;
     ph.UniqueID = id;

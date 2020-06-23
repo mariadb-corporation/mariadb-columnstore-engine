@@ -126,7 +126,7 @@ public:
     /** test if this socket is open
      *
      */
-    virtual const bool isOpen() const = 0;
+    virtual bool isOpen() const = 0;
 
     /** get the SocketParms
      *
@@ -158,7 +158,7 @@ public:
      */
     virtual void syncProto(bool use) = 0;
 
-    virtual const int getConnectionNum() const = 0;
+    virtual int getConnectionNum() const = 0;
 
     /** return the address as a string
      *
@@ -168,7 +168,7 @@ public:
     /** compare 2 addresses
      *
      */
-    virtual const bool isSameAddr(const Socket* rhs) const = 0;
+    virtual bool isSameAddr(const Socket* rhs) const = 0;
 
     virtual bool isConnected() const = 0;
     virtual bool hasData() const = 0;

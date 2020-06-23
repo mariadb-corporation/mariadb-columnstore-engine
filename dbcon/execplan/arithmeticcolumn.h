@@ -87,7 +87,7 @@ public:
     /**
      * get asc flag
      */
-    inline const bool asc() const
+    inline bool asc() const
     {
         return fAsc;
     }

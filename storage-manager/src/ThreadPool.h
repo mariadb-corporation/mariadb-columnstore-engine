@@ -40,6 +40,7 @@ class ThreadPool : public boost::noncopyable
         class Job
         {
             public:
+                virtual ~Job(){};
                 virtual void operator()() = 0;
         };
         

@@ -3257,7 +3257,7 @@ boost::shared_array<SIDTIDEntry> DBRM::SIDTIDMap(int& len)
     return ret;
 }
 
-const uint32_t DBRM::getUnique32()
+uint32_t DBRM::getUnique32()
 {
 #ifdef BRM_INFO
 
@@ -3306,7 +3306,7 @@ const uint32_t DBRM::getUnique32()
     return ret;
 }
 
-const uint64_t DBRM::getUnique64()
+uint64_t DBRM::getUnique64()
 {
 #ifdef BRM_INFO
 

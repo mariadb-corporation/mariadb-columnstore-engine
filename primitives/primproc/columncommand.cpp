@@ -899,7 +899,7 @@ void ColumnCommand::enableFilters()
 * RETURN:
 *    emptyVal - the value of empty row
 ***********************************************************/
-const uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCatalog::ColDataType dataType, const int width ) const
+uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCatalog::ColDataType dataType, const int width ) const
 {
     uint64_t emptyVal = 0;
     int offset;
@@ -998,7 +998,7 @@ void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
         lbids->push_back(i);
 }
 
-const int64_t ColumnCommand::getLastLbid()
+int64_t ColumnCommand::getLastLbid()
 {
     if (!_isScan)
         return 0;

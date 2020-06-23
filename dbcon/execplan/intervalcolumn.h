@@ -76,7 +76,7 @@ public:
     {
         fVal = val;
     }
-    const int intervalType() const
+    int intervalType() const
     {
         return fIntervalType;
     }

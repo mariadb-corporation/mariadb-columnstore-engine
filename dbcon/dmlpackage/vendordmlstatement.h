@@ -197,7 +197,7 @@ public:
     }
     /** @brief get the logging flag
      */
-    inline const bool get_Logging() const
+    inline bool get_Logging() const
     {
         return fLogging;
     }
@@ -213,7 +213,7 @@ public:
 
     /** @brief get the logging flag
      */
-    inline const bool get_Logending() const
+    inline bool get_Logending() const
     {
         return fLogending;
     }

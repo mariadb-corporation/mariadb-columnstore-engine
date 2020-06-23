@@ -95,7 +95,7 @@ void  Cache::clear()
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::flushCache()
+int  Cache::flushCache()
 {
     bool           bHasReadBlock = false;
     BlockBuffer*   curBuf;
@@ -216,7 +216,7 @@ void  Cache::freeMemory()
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::getListSize( const CacheListType listType )
+int  Cache::getListSize( const CacheListType listType )
 {
     int size = 0;
 
@@ -287,7 +287,7 @@ void  Cache::init( const int totalBlock, const int chkPoint, const int pctFree )
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const unsigned char* buf  )
+int  Cache::insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const unsigned char* buf  )
 {
     BlockBuffer*      buffer;
     vector<BlockBuffer*>::iterator  it;
@@ -322,7 +322,7 @@ const int  Cache::insertLRUList( CommBlock& cb, const uint64_t lbid, const uint6
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::loadCacheBlock( const CacheKey& key, unsigned char* buf  )
+int  Cache::loadCacheBlock( const CacheKey& key, unsigned char* buf  )
 {
     BlockBuffer*      buffer;
     CacheMapIt        iter;
@@ -356,7 +356,7 @@ const int  Cache::loadCacheBlock( const CacheKey& key, unsigned char* buf  )
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::modifyCacheBlock( const CacheKey& key, const unsigned char* buf  )
+int  Cache::modifyCacheBlock( const CacheKey& key, const unsigned char* buf  )
 {
     BlockBuffer*      buffer;
     CacheMapIt        iter;
@@ -437,7 +437,7 @@ void  Cache::printCacheList()
  * RETURN:
  *    NO_ERROR if success, other otherwise
  ***********************************************************/
-const int  Cache::processCacheMap( CacheMap* map, BlockBuffer* buffer, OpType opType )
+int  Cache::processCacheMap( CacheMap* map, BlockBuffer* buffer, OpType opType )
 {
     RETURN_ON_NULL( buffer, ERR_NULL_BLOCK );
     CacheMapIt iter;

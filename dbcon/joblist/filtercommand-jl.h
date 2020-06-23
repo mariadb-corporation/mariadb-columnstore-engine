@@ -46,7 +46,7 @@ public:
     void createCommand(messageqcpp::ByteStream& bs) const;
     void runCommand(messageqcpp::ByteStream& bs) const;
     uint16_t getWidth();
-    const uint8_t getBOP() const
+    uint8_t getBOP() const
     {
         return fBOP;
     };

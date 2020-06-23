@@ -234,7 +234,7 @@ public:
     {
         return largeRG;
     }
-    const uint32_t getSmallKey() const
+    uint32_t getSmallKey() const
     {
         return smallSideKeys[0][0];
     }

@@ -357,7 +357,7 @@ public:
      *  TableInfo::fSyncUpdatesTI mutex should be locked when calling this
      *  function (see fColumnLocks discussion).
      */
-    const int getColumnLocker(const int& columnId) const
+    int getColumnLocker(const int& columnId) const
     {
         return fColumnLocks[columnId].locker;
     }

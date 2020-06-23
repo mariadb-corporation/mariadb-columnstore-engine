@@ -101,7 +101,7 @@ public:
         errInfo = sp;
     }
 
-    virtual const uint32_t status() const
+    virtual uint32_t status() const
     {
         return errInfo->errCode;
     }

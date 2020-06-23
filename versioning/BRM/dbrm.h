@@ -791,8 +791,8 @@ public:
 
     /* Note, these pull #s from two separate sequences.  That is, they both
     return 0, then 1, 2, 3, etc.  */
-    EXPORT const uint32_t getUnique32();
-    EXPORT const uint64_t getUnique64();
+    EXPORT uint32_t getUnique32();
+    EXPORT uint64_t getUnique64();
 
     /* New table lock interface */
     /* returns a unique ID (> 0) for the lock on success, 0 on failure.

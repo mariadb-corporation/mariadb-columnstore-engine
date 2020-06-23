@@ -137,7 +137,7 @@ public:
 
     /** @brief get the logging flag
      */
-    const bool get_Logging() const
+    bool get_Logging() const
     {
         return fLogging;
     }
@@ -153,7 +153,7 @@ public:
 
     /** @brief get the logending flag
      */
-    const bool get_Logending() const
+    bool get_Logending() const
     {
         return fLogending;
     }
@@ -169,7 +169,7 @@ public:
 
     /** @brief get the isFromCol flag
     */
-    const bool get_IsFromCol() const
+    bool get_IsFromCol() const
     {
         return fIsFromCol;
     }

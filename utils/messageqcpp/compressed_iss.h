@@ -42,6 +42,7 @@ class CompressedInetStreamSocket : public InetStreamSocket
 {
 public:
     CompressedInetStreamSocket();
+    virtual ~CompressedInetStreamSocket(){};
 
     virtual Socket* clone() const;
     virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
