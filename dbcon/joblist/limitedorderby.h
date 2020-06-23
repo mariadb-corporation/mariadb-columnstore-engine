@@ -45,7 +45,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
 public:
     LimitedOrderBy();
     virtual ~LimitedOrderBy();
-
+    using ordering::IdbOrderBy::initialize;
     void initialize(const rowgroup::RowGroup&, 
         const JobInfo&, 
         bool invertRules = false, 

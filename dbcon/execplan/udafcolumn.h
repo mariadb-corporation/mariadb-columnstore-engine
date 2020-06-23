@@ -102,6 +102,7 @@ public:
      * @return true iff every member of t is a duplicate copy of every member of this;
      *         false otherwise
      */
+    using AggregateColumn::operator==;
     virtual bool operator==(const UDAFColumn& t) const;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
@@ -118,6 +119,7 @@ public:
      * @return false iff every member of t is a duplicate copy of every member of this;
      *         true otherwise
      */
+    using AggregateColumn::operator!=;
     virtual bool operator!=(const UDAFColumn& t) const;
 
 private:

@@ -135,6 +135,7 @@ public:
      * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
      */
     bool operator!=(const RowColumn& t) const;
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate()
     {
         return false;
@@ -162,6 +163,7 @@ public:
     {
         return new SubSelect();
     }
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate()
     {
         return false;

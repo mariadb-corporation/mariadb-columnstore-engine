@@ -90,6 +90,7 @@ public:
         return new IntervalColumn (*this);
     }
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate()
     {
         return false;

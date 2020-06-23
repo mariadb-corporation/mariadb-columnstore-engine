@@ -176,7 +176,7 @@ public:
     {
         fCorrelatedSide = c;
     }
-
+    using JobStep::tupleId;
     uint64_t tupleId() const
     {
         return fTupleId2;

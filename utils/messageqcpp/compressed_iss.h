@@ -44,6 +44,7 @@ public:
     CompressedInetStreamSocket();
     virtual ~CompressedInetStreamSocket(){};
 
+    using InetStreamSocket::operator=;
     virtual Socket* clone() const;
     virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
                            Stats* stats = NULL) const;

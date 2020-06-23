@@ -104,6 +104,7 @@ public:
         fTimeZone = timeZone;
     }
 
+    using Filter::data;
     virtual const std::string data() const;
 
     /** assign fLhs

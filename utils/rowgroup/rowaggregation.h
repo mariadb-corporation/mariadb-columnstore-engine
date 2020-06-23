@@ -1096,9 +1096,12 @@ public:
                           const std::vector<SP_ROWAGG_FUNC_t>& funct);
 
     void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut);
+    using RowAggregationDistinct::addRowGroup;
     void addRowGroup(const RowGroup* pRowGroupIn);
 
+    using RowAggregationDistinct::doDistinctAggregation;
     virtual void doDistinctAggregation();
+    using RowAggregationDistinct::doDistinctAggregation_rowVec;
     virtual void doDistinctAggregation_rowVec(std::vector<std::vector<Row::Pointer> >& inRows);
 
     inline virtual RowAggregationMultiDistinct* clone() const
