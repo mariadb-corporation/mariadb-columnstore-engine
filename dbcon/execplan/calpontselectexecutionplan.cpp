@@ -173,6 +173,26 @@ CalpontSelectExecutionPlan::~CalpontSelectExecutionPlan()
 
     fFilters = NULL;
     fHaving = NULL;
+
+    if (!fDynamicParseTreeVec.empty())
+    {
+        for (auto& parseTree : fDynamicParseTreeVec)
+        {
+            if (parseTree)
+            {
+                // 'delete fFilters;' above has already deleted objects pointed
+                // to by parseTree->left()/right()/data(), so we set the
+                // pointers to NULL here before calling 'delete parseTree;'
+                parseTree->left((ParseTree*) (NULL));
+                parseTree->right((ParseTree*) (NULL));
+                parseTree->data((TreeNode*) (NULL));
+                delete parseTree;
+                parseTree = NULL;
+            }
+        }
+
+        fDynamicParseTreeVec.clear();
+    }
 }
 
 /**
@@ -535,6 +555,26 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
     {
         delete fHaving;
         fHaving = 0;
+    }
+
+    if (!fDynamicParseTreeVec.empty())
+    {
+        for (auto& parseTree : fDynamicParseTreeVec)
+        {
+            if (parseTree)
+            {
+                // 'delete fFilters;' above has already deleted objects pointed
+                // to by parseTree->left()/right()/data(), so we set the
+                // pointers to NULL here before calling 'delete parseTree;'
+                parseTree->left((ParseTree*) (NULL));
+                parseTree->right((ParseTree*) (NULL));
+                parseTree->data((TreeNode*) (NULL));
+                delete parseTree;
+                parseTree = NULL;
+            }
+        }
+
+        fDynamicParseTreeVec.clear();
     }
 
     messageqcpp::ByteStream::quadbyte size;
