@@ -49,6 +49,7 @@ namespace anyimpl
     template<typename T>
     struct small_any_policy : typed_base_any_policy<T>
     {
+        virtual ~small_any_policy() = default;
         virtual void static_delete(void** x)
         {
             *x = 0;
@@ -69,13 +70,12 @@ namespace anyimpl
         {
             return reinterpret_cast<void*>(src);
         }
-    protected:
-        ~small_any_policy() = default;
     };
 
     template<typename T>
     struct big_any_policy : typed_base_any_policy<T>
     {
+        virtual ~big_any_policy() = default;
         virtual void static_delete(void** x)
         {
             if (*x)
@@ -99,8 +99,6 @@ namespace anyimpl
         {
             return *src;
         }
-    protected:
-        ~big_any_policy() = default;
     };
 
     template<typename T>
