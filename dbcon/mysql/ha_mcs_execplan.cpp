@@ -4087,7 +4087,20 @@ ReturnedColumn* buildFunctionColumn(
 
         fc->operationType(functor->operationType(funcParms, fc->resultType()));
         fc->expressionId(ci->expressionId++);
-        fc->charsetNumber(ifp->collation.collation->number);
+        // A few functions use a different collation than that found in 
+        // the base ifp class
+        if (funcName == "locate" ||
+            funcName == "find_in_set" ||
+            funcName == "strcmp")
+        {
+            DTCollation dt;
+            ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name(), ifp->arguments(), 1, 1);
+            fc->charsetNumber(dt.collation->number);
+        }
+        else
+        {
+            fc->charsetNumber(ifp->collation.collation->number);
+        }
     }
     else if (ifp->type() == Item::COND_ITEM ||
              ifp->functype() == Item_func::EQ_FUNC ||
