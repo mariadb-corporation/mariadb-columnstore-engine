@@ -29,7 +29,11 @@ namespace anyimpl
         virtual void move(void* const* src, void** dest) = 0;
         virtual void* get_value(void** src) = 0;
         virtual size_t get_size() = 0;
+    protected:
+        ~base_any_policy() = default;
     };
+
+    //inline base_any_policy::~base_any_policy() throw () {}
 
     template<typename T>
     struct typed_base_any_policy : base_any_policy
@@ -37,7 +41,9 @@ namespace anyimpl
         virtual size_t get_size()
         {
             return sizeof(T);
-        } 
+        }
+    protected:
+        ~typed_base_any_policy() = default;
     };
 
     template<typename T>
@@ -63,6 +69,8 @@ namespace anyimpl
         {
             return reinterpret_cast<void*>(src);
         }
+    protected:
+        ~small_any_policy() = default;
     };
 
     template<typename T>
@@ -91,6 +99,8 @@ namespace anyimpl
         {
             return *src;
         }
+    protected:
+        ~big_any_policy() = default;
     };
 
     template<typename T>
