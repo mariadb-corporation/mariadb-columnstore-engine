@@ -1175,10 +1175,11 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
     for (uint32_t i = 0; i < keyCols.size(); i++)
     {
         const uint32_t& col = keyCols[i];
+        cscDataType columnType = getColType(col);
 
-        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
+                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
+                      columnType == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
             if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
@@ -1187,7 +1188,7 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
                 return false;
             }
         }
-        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
         {
             if (getStringLength(col) != r2.getStringLength(col))
                 return false;
@@ -1197,19 +1198,25 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
         }
         else
         {
-            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
+            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            {
+                if (getBinaryField<int128_t>(col) != r2.getBinaryField<int128_t>(col))
+                    return false;
+            }
             else if (getUintField(col) != r2.getUintField(col))
+            {
                 return false;
+            }
         }
     }
 
     return true;
 }
-
 bool Row::equals(const Row& r2, uint32_t lastCol) const
 {
     // This check fires with empty r2 only.
@@ -1227,9 +1234,10 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     // because binary equality is not equality for many charsets/collations
     for (uint32_t col = 0; col <= lastCol; col++)
     {
-        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        cscDataType columnType = getColType(col);
+        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
+                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
+                     columnType == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
             if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
@@ -1238,7 +1246,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
                 return false;
             }
         }
-        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
         {
             if (getStringLength(col) != r2.getStringLength(col))
                 return false;
@@ -1248,13 +1256,20 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
         }
         else
         {
-            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
+            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            {
+                if (getBinaryField<int128_t>(col) != r2.getBinaryField<int128_t>(col))
+                    return false;
+            }
             else if (getUintField(col) != r2.getUintField(col))
+            {
                 return false;
+            }
         }
     }        
     return true;
