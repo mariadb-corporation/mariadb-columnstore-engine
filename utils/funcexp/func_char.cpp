@@ -153,12 +153,12 @@ string Func_char::getStrVal(Row& row,
 
                     if (tmpval > static_cast<int128_t>(INT64_MAX))
                         tmpval = INT64_MAX;
-
-                    if ( !getChar((int64_t)tmpval, buf) )
+                    // WIP MCOL-641
+                    /*if ( !getChar((int64_t)tmpval, buf) )
                     {
                         isNull = true;
                         return "";
-                    }
+                    }*/
                 }
                 else
                 {
@@ -170,11 +170,12 @@ string Func_char::getStrVal(Row& row,
                     if ( lefto > 4 )
                         value++;
 
-                    if ( !getChar((int64_t)value, buf) )
+                    // WIP MCOL-641
+                    /*if ( !getChar((int64_t)value, buf) )
                     {
                         isNull = true;
                         return "";
-                    }
+                    }*/
                 }
             }
             break;
