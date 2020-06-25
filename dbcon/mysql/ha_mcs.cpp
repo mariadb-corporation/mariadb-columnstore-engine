@@ -1706,7 +1706,6 @@ int ha_mcs_cache::end_bulk_insert()
  ha_mcs_cache Plugin code
 ******************************************************************************/
 
-#if 0
 static handler *ha_mcs_cache_create_handler(handlerton *hton,
                                             TABLE_SHARE *table,
                                             MEM_ROOT *mem_root)
@@ -1767,7 +1766,6 @@ static int ha_mcs_cache_deinit(void *p)
 
 struct st_mysql_storage_engine ha_mcs_cache_storage_engine=
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
-#endif
 
 struct st_mysql_storage_engine columnstore_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
@@ -1792,7 +1790,6 @@ maria_declare_plugin(columnstore)
   MCSVERSION,                    /* string version */
   COLUMNSTORE_MATURITY           /* maturity */
 },
-#if 0
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
   &ha_mcs_cache_storage_engine,
@@ -1808,7 +1805,6 @@ maria_declare_plugin(columnstore)
   MCSVERSION,                    /* string version */
   MariaDB_PLUGIN_MATURITY_GAMMA /* maturity */
 },
-#endif
 {
     MYSQL_INFORMATION_SCHEMA_PLUGIN,
     &is_columnstore_plugin_version,
