@@ -187,6 +187,13 @@ private:
     int  openTableFile();               // Open data file and set the buffer
     void reportTotals(double elapsedSec);//Report summary totals
     void sleepMS(long int ms);          // Sleep method
+    // Compare column HWM with the examplar HWM.
+    int compareHWMs(const int smallestColumnId,
+                               const int widerColumnId,
+                               const size_t widerColumnWidth,
+                               const std::vector<DBRootExtentInfo>& segFileInfo,
+                               int& colIdx);
+
     int synchronizeAutoInc();           // Sychronize AutoInc in BRM with syscat
 
     // Write the list of errors for this table
