@@ -3320,6 +3320,7 @@ ReturnedColumn* buildReturnedColumn(
                     break;
             }
         }
+        /* fall through */
 
         case Item::NULL_ITEM:
         {
@@ -4820,6 +4821,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                             break;
                         }
                     }
+                    /* fall through */
 
                     default:
                     {

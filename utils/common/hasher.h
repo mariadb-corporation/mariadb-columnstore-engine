@@ -114,10 +114,10 @@ public:
         {
             case 3:
                 k1 ^= tail[2] << 16;
-
+                /* fall through */
             case 2:
                 k1 ^= tail[1] << 8;
-
+                /* fall through */
             case 1:
                 k1 ^= tail[0];
                 k1 *= c1;

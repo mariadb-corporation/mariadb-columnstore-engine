@@ -130,6 +130,7 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
             else
             {
                 isNull = true;
+                break;
             }
         }
 
