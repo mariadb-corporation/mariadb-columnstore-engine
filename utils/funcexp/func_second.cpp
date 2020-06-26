@@ -81,8 +81,9 @@ int64_t Func_second::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::FLOAT:
         {
-            isNull = true;
+             isNull = true;
         }
+        /* fall through */
 
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:

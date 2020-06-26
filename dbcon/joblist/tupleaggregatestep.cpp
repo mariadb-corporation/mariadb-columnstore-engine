@@ -1307,7 +1307,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
             case ROWAGG_AVG:
                 avgFuncMap.insert(make_pair(key, funct));
-
+                /* fall through */
             case ROWAGG_SUM:
             {
                 if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
@@ -1890,6 +1890,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 else
                     break;
                 }
+                /* fall through */
 
                 case ROWAGG_COUNT_ASTERISK:
                 case ROWAGG_COUNT_COL_NAME:
@@ -3166,6 +3167,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 // let fall through to add a count column for average function
                 if (aggOp != ROWAGG_AVG)
                     break;
+                /* fall through */
 
                 case ROWAGG_COUNT_ASTERISK:
                 case ROWAGG_COUNT_COL_NAME:
@@ -4048,6 +4050,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     funct->fAuxColumnIndex = colAggPm;
                 else
                     break;
+                /* fall through */
 
                 case ROWAGG_COUNT_ASTERISK:
                 case ROWAGG_COUNT_COL_NAME:

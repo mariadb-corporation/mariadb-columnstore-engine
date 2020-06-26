@@ -1709,6 +1709,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
 
                 // if NOT null, let execution fall through.
                 if (isNull(&fRowGroupIn, rowIn, colIn) == true) break;
+                /* fall through */
 
             case ROWAGG_COUNT_ASTERISK:
                 fRow.setUintField<8>(fRow.getUintField<8>(colOut) + 1, colOut);
@@ -2467,6 +2468,7 @@ void RowAggregationUM::updateEntry(const Row& rowIn)
 
                 // if NOT null, let execution fall through.
                 if (isNull(&fRowGroupIn, rowIn, colIn) == true) break;
+                /* fall through */
 
             case ROWAGG_COUNT_ASTERISK:
                 fRow.setUintField<8>(fRow.getUintField<8>(colOut) + 1, colOut);

@@ -263,6 +263,7 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
 
         case CalpontSystemCatalog::TIME:
             oss << DataConvert::timeToString(v);
+            break;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
