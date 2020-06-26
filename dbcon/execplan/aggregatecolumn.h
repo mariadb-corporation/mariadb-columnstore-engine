@@ -132,7 +132,7 @@ public:
     /**
      * accessor
      */
-    virtual const uint8_t aggOp() const
+    virtual uint8_t aggOp() const
     {
         return fAggOp;
     }
@@ -192,7 +192,7 @@ public:
     /**
     * ASC flag
     */
-    inline virtual const bool asc() const
+    inline virtual bool asc() const
     {
         return fAsc;
     }
@@ -214,6 +214,7 @@ public:
     /**
      * fData: SQL representation of this object
      */
+    using ReturnedColumn::data;
     virtual void data(const std::string& data)
     {
         fData = data;
@@ -245,6 +246,7 @@ public:
      * Do a deep, strict (as opposed to semantic) equivalence test.
      * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
      */
+    using ReturnedColumn::operator=;
     virtual bool operator==(const AggregateColumn& t) const;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
@@ -259,6 +261,7 @@ public:
      * Do a deep, strict (as opposed to semantic) equivalence test.
      * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
      */
+    using ReturnedColumn::operator!=;
     virtual bool operator!=(const AggregateColumn& t) const;
 
     /** @brief push back arg to group by column list*/
@@ -306,6 +309,7 @@ public:
     */
     static AggOp agname2num(const std::string&);
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate();
     virtual bool hasWindowFunc()
     {

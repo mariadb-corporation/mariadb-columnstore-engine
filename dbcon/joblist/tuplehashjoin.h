@@ -176,7 +176,7 @@ public:
     {
         fCorrelatedSide = c;
     }
-
+    using JobStep::tupleId;
     uint64_t tupleId() const
     {
         return fTupleId2;
@@ -234,7 +234,7 @@ public:
     {
         return largeRG;
     }
-    const uint32_t getSmallKey() const
+    uint32_t getSmallKey() const
     {
         return smallSideKeys[0][0];
     }

@@ -217,7 +217,7 @@ int DbFileOp::readDBFile( CommBlock& cb,
  *    NO_ERROR if success
  *    other number if something wrong
  ***********************************************************/
-const int DbFileOp::readSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
+int DbFileOp::readSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
                                        const uint64_t lbid, const int sbid,
                                        const int entryNo, const int width,
                                        void* pStruct )
@@ -229,7 +229,7 @@ const int DbFileOp::readSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
 }
 
 
-const int DbFileOp::readSubBlockEntry( CommBlock& cb, DataBlock* block,
+int DbFileOp::readSubBlockEntry( CommBlock& cb, DataBlock* block,
                                        const uint64_t lbid, const int sbid,
                                        const int entryNo, const int width,
                                        void* pStruct )
@@ -406,7 +406,7 @@ int DbFileOp::writeDBFileFbo(IDBDataFile* pFile, const unsigned char* writeBuf,
  *    NO_ERROR if success
  *    other number if something wrong
  ***********************************************************/
-const int DbFileOp::writeSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
+int DbFileOp::writeSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
                                         const uint64_t lbid, const int sbid,
                                         const int entryNo, const int width,
                                         void* pStruct )
@@ -417,7 +417,7 @@ const int DbFileOp::writeSubBlockEntry( IDBDataFile* pFile, DataBlock* block,
     return writeDBFile( pFile, block->data, lbid );
 }
 
-const int DbFileOp::writeSubBlockEntry( CommBlock& cb, DataBlock* block,
+int DbFileOp::writeSubBlockEntry( CommBlock& cb, DataBlock* block,
                                         const uint64_t lbid, const int sbid,
                                         const int entryNo, const int width,
                                         void* pStruct )
@@ -438,7 +438,7 @@ const int DbFileOp::writeSubBlockEntry( CommBlock& cb, DataBlock* block,
  *    NO_ERROR if success
  *    other number if something wrong
  ***********************************************************/
-const int DbFileOp::writeVB( IDBDataFile* pFile, const OID oid, const uint64_t lbid )
+int DbFileOp::writeVB( IDBDataFile* pFile, const OID oid, const uint64_t lbid )
 {
     if ( !BRMWrapper::getUseVb() )
         return NO_ERROR;

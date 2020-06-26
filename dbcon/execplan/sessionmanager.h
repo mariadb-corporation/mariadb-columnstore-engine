@@ -186,7 +186,7 @@ public:
      * object on the PM.
      * @return A "unique" uint32_t.
      */
-    const uint32_t getUnique32();
+    uint32_t getUnique32();
 
     /** @brief Returns the number of active transactions.  Only useful in testing.
      *
@@ -206,8 +206,8 @@ public:
 
     std::string getTxnIDFilename() const;
 
-    const bool checkActiveTransaction(const SID sessionId, bool& bIsDbrmUp, BRM::SIDTIDEntry& blocker);
-    const bool isTransactionActive(const SID sessionId, bool& bIsDbrmUp);
+    bool checkActiveTransaction(const SID sessionId, bool& bIsDbrmUp, BRM::SIDTIDEntry& blocker);
+    bool isTransactionActive(const SID sessionId, bool& bIsDbrmUp);
 
 private:
     BRM::DBRM dbrm;

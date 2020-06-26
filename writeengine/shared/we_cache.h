@@ -100,16 +100,16 @@ public:
     /**
      * @brief Check whether cache key exists
      */
-    static const bool    cacheKeyExist( CacheMap* map, const OID oid, const uint64_t lbid )
+    static bool    cacheKeyExist( CacheMap* map, const OID oid, const uint64_t lbid )
     {
         CacheKey key = getCacheKey( oid, lbid );
         return map->find(key) == map->end() ? false : true;
     }
-    static const bool    cacheKeyExist( CacheMap* map, BlockBuffer* buffer )
+    static bool    cacheKeyExist( CacheMap* map, BlockBuffer* buffer )
     {
         return cacheKeyExist( map, (*buffer).cb.file.oid, (*buffer).block.lbid );
     }
-    static const bool    cacheKeyExist( const OID oid, const uint64_t lbid )
+    static bool    cacheKeyExist( const OID oid, const uint64_t lbid )
     {
         return cacheKeyExist( m_lruList, oid, lbid ) || cacheKeyExist( m_writeList, oid, lbid );
     }
@@ -127,7 +127,7 @@ public:
     /**
      * @brief Flush the write cache
      */
-    EXPORT static const int     flushCache();
+    EXPORT static int     flushCache();
 
     /**
      * @brief Get the cache key
@@ -142,7 +142,7 @@ public:
         return getCacheKey( (*buffer).cb.file.oid, (*buffer).block.lbid );
     }
 
-    EXPORT static const int     getListSize( const CacheListType listType );
+    EXPORT static int     getListSize( const CacheListType listType );
 
     /**
      * @brief Init the buffers
@@ -156,8 +156,8 @@ public:
     /**
      * @brief Insert into LRU list
      */
-    EXPORT static const int     insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const unsigned char* buf );
-    static const int     insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const DataBlock& block  )
+    EXPORT static int     insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const unsigned char* buf );
+    static int     insertLRUList( CommBlock& cb, const uint64_t lbid, const uint64_t fbo, const DataBlock& block  )
     {
         return insertLRUList( cb, lbid, fbo, block.data );
     }
@@ -170,20 +170,20 @@ public:
     /**
      * @brief Load cache block to a buffer
      */
-    static const int     loadCacheBlock( const CacheKey& key, DataBlock& block  )
+    static int     loadCacheBlock( const CacheKey& key, DataBlock& block  )
     {
         return loadCacheBlock( key, block.data );
     }
-    EXPORT static const int     loadCacheBlock( const CacheKey& key, unsigned char* buf  );
+    EXPORT static int     loadCacheBlock( const CacheKey& key, unsigned char* buf  );
 
     /**
      * @brief Modify a cache block
      */
-    static const int     modifyCacheBlock( const CacheKey& key, const DataBlock& block  )
+    static int     modifyCacheBlock( const CacheKey& key, const DataBlock& block  )
     {
         return modifyCacheBlock( key, block.data );
     }
-    EXPORT static const int     modifyCacheBlock( const CacheKey& key, const unsigned char* buf  );
+    EXPORT static int     modifyCacheBlock( const CacheKey& key, const unsigned char* buf  );
 
     /**
      * @brief Print
@@ -194,14 +194,14 @@ public:
     /**
      * @brief Insert/Delete an element in cache map
      */
-    EXPORT static const int     processCacheMap( CacheMap* map, BlockBuffer* buffer, OpType opType );
+    EXPORT static int     processCacheMap( CacheMap* map, BlockBuffer* buffer, OpType opType );
 
     // accessory
-    static const int     getTotalBlock()
+    static int     getTotalBlock()
     {
         return m_cacheParam->totalBlock;
     }
-    static const bool    getUseCache()
+    static bool    getUseCache()
     {
         return m_useCache;
     }

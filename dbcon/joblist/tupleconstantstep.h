@@ -134,6 +134,7 @@ public:
     uint32_t nextBand(messageqcpp::ByteStream& bs);
 
 protected:
+    using TupleConstantStep::fillInConstants;
     void fillInConstants();
 
 };
@@ -159,6 +160,7 @@ public:
     	However (for now), it's ok, because it's only called in one place and
     	doesn't need to be virtual there.
      */
+    using TupleConstantStep::initialize;
     void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
 
     const std::string toString() const;
@@ -175,6 +177,7 @@ public:
 
 protected:
     void execute() {}
+    using TupleConstantStep::fillInConstants;
     void fillInConstants() {}
     void constructContanstRow(const JobInfo& jobInfo) {}
 

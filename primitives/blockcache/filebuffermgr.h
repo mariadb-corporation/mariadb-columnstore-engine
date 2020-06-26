@@ -201,7 +201,7 @@ public:
     }
 
     void setReportingFrequency(const uint32_t d);
-    const uint32_t  ReportingFrequency() const
+    uint32_t  ReportingFrequency() const
     {
         return fReportFrequency;
     }

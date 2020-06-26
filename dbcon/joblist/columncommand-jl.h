@@ -56,7 +56,7 @@ public:
         return COLUMN_COMMAND;
     }
     // @bug 1098
-    const uint8_t getBOP() const
+    uint8_t getBOP() const
     {
         return BOP;
     }
@@ -64,7 +64,7 @@ public:
     {
         return filterString;
     }
-    const uint16_t getFilterCount() const
+    uint16_t getFilterCount() const
     {
         return filterCount;
     }

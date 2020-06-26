@@ -277,7 +277,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock)
 {
     ISMPacketHeader ism;
-    PrimitiveHeader ph = {};
+    PrimitiveHeader ph = {0,0,0,0,0,0};
 
     ism.Status =  logging::primitiveServerErr;
     ph.UniqueID = id;

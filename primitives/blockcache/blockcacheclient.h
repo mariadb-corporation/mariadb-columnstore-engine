@@ -80,7 +80,7 @@ public:
     /**
      * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
      **/
-    inline const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
+    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
     {
         return fBCCBrp->read(lbid, ver, fb);
     }
@@ -88,12 +88,12 @@ public:
     /**
      * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
      **/
-    inline const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
+    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
     {
         return fBCCBrp->read(lbid, ver, bufferPtr);
     }
 
-    inline const int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, const BRM::VER_t txn, const int compType,
+    inline int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, const BRM::VER_t txn, const int compType,
                               void* bufferPtr, bool flg, bool& wasCached, bool* wasVersioned = NULL, bool insertIntoCache = true,
                               bool readFromCache = true)
     {

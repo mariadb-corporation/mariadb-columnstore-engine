@@ -200,7 +200,7 @@ public:
 
     /** @brief get the CurrentDBRootIdx
      */
-    inline const int getCurrentDBRootIdx()
+    inline int getCurrentDBRootIdx()
     {
         boost::mutex::scoped_lock lock(fDBRootExtTrkMutex);
         return fCurrentDBRootIdx;

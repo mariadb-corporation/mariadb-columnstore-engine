@@ -106,38 +106,46 @@ public:
     /***********************************************************
      *                 F&E framework                           *
      ***********************************************************/
+    using Operator::evaluate;
     inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
 
+    using Operator::getStrVal;
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getStrVal(fTimeZone);
     }
+    using Operator::getIntVal;
     virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getIntVal();
     }
+    using Operator::getUintVal;
     virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getUintVal();
     }
+    using Operator::getFloatVal;
     virtual float getFloatVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getFloatVal();
     }
+    using Operator::getDoubleVal;
     virtual double getDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getDoubleVal();
     }
+    using Operator::getLongDoubleVal;
     virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getLongDoubleVal();
     }
+    using Operator::getDecimalVal;
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
@@ -156,26 +164,31 @@ public:
 
         return TreeNode::getDecimalVal();
     }
+    using Operator::getDateIntVal;
     virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getDateIntVal();
     }
+    using Operator::getDatetimeIntVal;
     virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getDatetimeIntVal();
     }
+    using Operator::getTimestampIntVal;
     virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getTimestampIntVal();
     }
+    using Operator::getTimeIntVal;
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);
         return TreeNode::getTimeIntVal();
     }
+    using Operator::getBoolVal;
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);

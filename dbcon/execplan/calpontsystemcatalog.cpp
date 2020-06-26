@@ -418,7 +418,7 @@ CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/
 uint32_t CalpontSystemCatalog::fModuleID = numeric_limits<uint32_t>::max();
 
-const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& tablename)
+CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& tablename)
 {
     TableName aTableName;
     aTableName.schema = tablename.schema;
@@ -511,7 +511,7 @@ const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const Table
     return (OID)0;
 }
 
-const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& tableColName)
+CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& tableColName)
 {
     if (tableColName.schema.length() == 0 || tableColName.table.length() == 0 || tableColName.column.length() == 0)
         return -1;
@@ -1583,7 +1583,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
 
     return tableColName;
 }
-const uint64_t CalpontSystemCatalog::nextAutoIncrValue ( TableName aTableName)
+uint64_t CalpontSystemCatalog::nextAutoIncrValue ( TableName aTableName)
 {
     transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
     transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
@@ -2897,7 +2897,7 @@ const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >
 }
 
 /* SQL statement: select objectid from systable */
-const int CalpontSystemCatalog::getTableCount ()
+int CalpontSystemCatalog::getTableCount ()
 {
     int tableCnt = 0;
 
@@ -4020,7 +4020,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexRID(const IndexNam
 }
 #endif
 
-const int CalpontSystemCatalog::colNumbers(const TableName& tableName)
+int CalpontSystemCatalog::colNumbers(const TableName& tableName)
 {
     DEBUG << "Enter colNumbers: " << tableName.schema << "|" << tableName.table << endl;
 
@@ -4891,7 +4891,7 @@ void CalpontSystemCatalog::updateColInfo(void)
 }
 #endif
 
-const int CalpontSystemCatalog::colPosition (const OID& oid)
+int CalpontSystemCatalog::colPosition (const OID& oid)
 {
     DEBUG << "Enter colPosition: " << oid << endl;
     ColType col = colType (oid);

@@ -170,15 +170,15 @@ public:
         return getDoubleVal(row, fp, isNull, op_ct);
     }
 
-    const float floatNullVal() const
+    float floatNullVal() const
     {
         return fFloatNullVal;
     }
-    const double doubleNullVal() const
+    double doubleNullVal() const
     {
         return fDoubleNullVal;
     }
-    const long double longDoubleNullVal() const
+    long double longDoubleNullVal() const
     {
         return fLongDoubleNullVal;
     }
