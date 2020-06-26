@@ -151,12 +151,9 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
             {
                 Message::Args args;
                 Message message(1);
-                args.add("Table dropped with warning ");
-                args.add("Table does not exist in columnstore engine.");
-                args.add("");
-                args.add("");
+                args.add("Table does not exist in ColumnStore.");
                 message.format(args);
-                result.result = WARNING;
+                result.result = DROP_TABLE_NOT_IN_CATALOG_ERROR;
                 result.message = message;
                 fSessionManager.rolledback(txnID);
                 return result;

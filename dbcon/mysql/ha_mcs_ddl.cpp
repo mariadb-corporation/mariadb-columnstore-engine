@@ -2128,6 +2128,11 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
             ci->isAlter = false;
         }
 
+        if (b == ddlpackageprocessor::DDLPackageProcessor::DROP_TABLE_NOT_IN_CATALOG_ERROR)
+        {
+            return ER_NO_SUCH_TABLE_IN_ENGINE;
+        }
+
         if ((b != 0) && (b != ddlpackageprocessor::DDLPackageProcessor::WARNING))
         {
             thd->get_stmt_da()->set_overwrite_status(true);
@@ -2583,7 +2588,7 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
     stmt += ";";
     int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 
-    if (rc != 0)
+    if (rc != 0 && rc != ER_NO_SUCH_TABLE_IN_ENGINE)
     {
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
     }
