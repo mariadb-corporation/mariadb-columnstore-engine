@@ -549,22 +549,18 @@ int ha_mcs_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool abo
     {
         ci.rowsHaveInserted += size;
         command = "COMMIT";
-        ProcessCommandStatement ( thd, command, ci, schema );
+        rc = ProcessCommandStatement ( thd, command, ci, schema );
     }
     else if (useHdfs)
     {
         ci.rowsHaveInserted += size;
         command = "COMMIT";
-        ProcessCommandStatement ( thd, command, ci, schema );
+        rc = ProcessCommandStatement ( thd, command, ci, schema );
     }
     else if (( rc != 0) || abort )
     {
         command = "ROLLBACK";
-        ProcessCommandStatement ( thd, command, ci, schema );
-    }
-    else
-    {
-        return rc;
+        rc =ProcessCommandStatement ( thd, command, ci, schema );
     }
 
     return rc;
@@ -630,7 +626,7 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
             if ( thd->killed > 0 )
             {
                 command = "ROLLBACK";
-                ProcessCommandStatement ( thd, command, ci, schema );
+                rc = ProcessCommandStatement ( thd, command, ci, schema );
             }
             else if (rc != dmlpackageprocessor::DMLPackageProcessor::ACTIVE_TRANSACTION_ERROR)
             {
@@ -638,17 +634,17 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
                 if ( rc != 0 )
                 {
                     command = "ROLLBACK";
-                    ProcessCommandStatement ( thd, command, ci, schema );
+                    rc = ProcessCommandStatement ( thd, command, ci, schema );
                 }
                 else if (( rc == 0 ) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))
                 {
                     command = "COMMIT";
-                    ProcessCommandStatement ( thd, command, ci, schema );
+                    rc = ProcessCommandStatement ( thd, command, ci, schema );
                 }
                 else if (useHdfs)
                 {
                     command = "COMMIT";
-                    ProcessCommandStatement ( thd, command, ci, schema );
+                    rc = ProcessCommandStatement ( thd, command, ci, schema );
                 }
             }
         }
