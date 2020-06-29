@@ -84,6 +84,7 @@ public:
     EXPORT GroupConcatAgUM(rowgroup::SP_GroupConcat&);
     EXPORT ~GroupConcatAgUM();
 
+    using rowgroup::GroupConcatAg::merge;
     void initialize();
     void processRow(const rowgroup::Row&);
     EXPORT void merge(const rowgroup::Row&, int64_t);
@@ -147,6 +148,7 @@ public:
     void processRow(const rowgroup::Row&);
 
     void merge(GroupConcator*);
+    using GroupConcator::getResult;
     void getResult(uint8_t* buff, const std::string& sep);
 
     const std::string toString() const;
@@ -172,11 +174,13 @@ public:
     GroupConcatOrderBy();
     virtual ~GroupConcatOrderBy();
 
+    using ordering::IdbOrderBy::initialize;
     void initialize(const rowgroup::SP_GroupConcat&);
     void processRow(const rowgroup::Row&);
     uint64_t getKeyLength() const;
 
     void merge(GroupConcator*);
+    using GroupConcator::getResult;
     void getResult(uint8_t* buff, const std::string& sep);
 
     const std::string toString() const;

@@ -1368,7 +1368,7 @@ void ioManager::buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const ui
     fFileOp.getFileNameForPrimProc(oid, file_name, dbRoot, partNum, segNum);
 }
 
-const int ioManager::localLbidLookup(BRM::LBID_t lbid,
+int ioManager::localLbidLookup(BRM::LBID_t lbid,
                                      BRM::VER_t verid,
                                      bool vbFlag,
                                      BRM::OID_t& oid,

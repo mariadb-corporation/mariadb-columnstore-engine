@@ -91,6 +91,7 @@ class Synchronizer : public boost::noncopyable , public ConfigListener
         
         struct Job : public ThreadPool::Job
         {
+            virtual ~Job(){};
             Job(Synchronizer *s, std::list<std::string>::iterator i);
             void operator()();
             Synchronizer *sync;

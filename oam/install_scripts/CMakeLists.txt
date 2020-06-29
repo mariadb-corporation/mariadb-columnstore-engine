@@ -22,13 +22,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service.in" "${CMAKE_CUR
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-storagemanager.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-storagemanager.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh" @ONLY)
-
-IF(RPM MATCHES "(rhel|centos)8|(sles|suse)15|fedora")
-    SET(PYTHON_SHEBANG "#!/usr/bin/env python3")
-ELSE()
-    SET(PYTHON_SHEBANG "#!/usr/bin/env python")
-ENDIF()
-
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-start-storagemanager.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-start-storagemanager.py")
 

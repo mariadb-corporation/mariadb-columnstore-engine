@@ -239,6 +239,7 @@ public:
     /**
      * F&E
      */
+    using ReturnedColumn::evaluate;
     virtual void evaluate(rowgroup::Row& row) {}
     /**
      * F&E

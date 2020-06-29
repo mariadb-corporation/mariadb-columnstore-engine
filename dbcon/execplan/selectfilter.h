@@ -100,7 +100,7 @@ public:
         fSub = sub;
     }
 
-    const bool correlated() const
+    bool correlated() const
     {
         return fCorrelated;
     }
@@ -120,7 +120,7 @@ public:
         fData = data;
     }
 
-    const uint64_t returnedColPos() const
+    uint64_t returnedColPos() const
     {
         return fReturnedColPos;
     }

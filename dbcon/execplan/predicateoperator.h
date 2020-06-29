@@ -115,6 +115,7 @@ public:
     /***********************************************************
      *                  F&E framework                          *
      ***********************************************************/
+    using Operator::getBoolVal;
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop);
     void setOpType(Type& l, Type& r);
 

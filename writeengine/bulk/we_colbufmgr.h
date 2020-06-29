@@ -272,6 +272,7 @@ public:
     virtual ~ColumnBufferManagerDctnry();
 
     virtual int rowsExtentCheck( int nRows, int& nRows2 );
+    using ColumnBufferManager::writeToFileExtentCheck;
     virtual int writeToFileExtentCheck(uint32_t startOffset, uint32_t writeSize);
 };
 

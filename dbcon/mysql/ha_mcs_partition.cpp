@@ -314,7 +314,7 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
     return oss.str();
 }
 
-const int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& rf)
+int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& rf)
 {
     int64_t v = 0;
     bool pushWarning = false;

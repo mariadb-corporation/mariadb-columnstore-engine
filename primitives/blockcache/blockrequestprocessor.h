@@ -90,7 +90,7 @@ public:
         return fbMgr.findPtr(HashObject_t(lbid, ver, flg));
     }
 
-    inline const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
+    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
     {
         return (fbMgr.find(HashObject_t(lbid, ver, 0), fb) ? 1 : 0);
     }
@@ -98,12 +98,12 @@ public:
     /**
      * @brief retrieve the lbid@ver disk block from the block cache
      **/
-    inline const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
+    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
     {
         return (fbMgr.find(HashObject_t(lbid, ver, 0), bufferPtr) ? 1 : 0);
     }
 
-    const int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn, int compType,
+    int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn, int compType,
                        void* bufferPtr, bool flg, bool& wasCached, bool* wasVersioned, bool insertIntoCache,
                        bool readFromCache);
 

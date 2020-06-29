@@ -77,7 +77,7 @@ class Downloader : public ConfigListener
         {
             Download(const std::string &source, const boost::filesystem::path &_dlPath, boost::mutex *, Downloader *);
             Download(const std::string &source);
-            ~Download();
+            virtual ~Download();
             void operator()();
             boost::filesystem::path dlPath;
             const std::string key;

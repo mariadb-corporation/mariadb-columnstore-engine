@@ -222,7 +222,7 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
     }
 
     rc = BRMWrapper::getInstance()->allocateDictStoreExtent(
-             (const OID)m_dctnryOID, m_dbRoot, m_partition, m_segment,
+             (OID)m_dctnryOID, m_dbRoot, m_partition, m_segment,
              startLbid, allocSize);
 
     if (rc != NO_ERROR)

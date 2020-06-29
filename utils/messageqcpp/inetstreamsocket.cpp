@@ -1105,7 +1105,7 @@ const string InetStreamSocket::addr2String() const
     return s;
 }
 
-const bool InetStreamSocket::isSameAddr(const Socket* rhs) const
+bool InetStreamSocket::isSameAddr(const Socket* rhs) const
 {
     const InetStreamSocket* issp = dynamic_cast<const InetStreamSocket*>(rhs);
 

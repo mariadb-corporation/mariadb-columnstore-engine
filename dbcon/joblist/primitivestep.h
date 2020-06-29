@@ -460,6 +460,7 @@ public:
      *
      * The main loop for the receive-side thread.  Don't call it directly.
      */
+    using PrimitiveMsg::receivePrimitiveMessages;
     void receivePrimitiveMessages(uint64_t i = 0);
 
     /** @brief Add a filter when the column is a 4-byte float type

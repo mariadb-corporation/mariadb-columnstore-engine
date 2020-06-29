@@ -106,7 +106,7 @@ public:
     /**
      * Accessor and mutator
      */
-    const uint32_t pseudoType() const
+    uint32_t pseudoType() const
     {
         return fPseudoType;
     }

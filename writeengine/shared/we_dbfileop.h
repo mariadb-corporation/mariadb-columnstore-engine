@@ -105,7 +105,7 @@ public:
      * @brief Get an entry within a subblock and also populate block buffer
      *
      */
-    EXPORT const int     readSubBlockEntry(IDBDataFile* pFile,
+    EXPORT int     readSubBlockEntry(IDBDataFile* pFile,
                                            DataBlock* block,
                                            const uint64_t lbid,
                                            const int sbid,
@@ -113,7 +113,7 @@ public:
                                            const int width,
                                            void* pStruct ) ;
 
-    EXPORT const int     readSubBlockEntry(CommBlock& cb,
+    EXPORT int     readSubBlockEntry(CommBlock& cb,
                                            DataBlock* block,
                                            const uint64_t lbid,
                                            const int sbid,
@@ -196,7 +196,7 @@ public:
     /**
      * @brief Write a sub block entry directly to a DB file
      */
-    EXPORT const int     writeSubBlockEntry(IDBDataFile* pFile,
+    EXPORT int     writeSubBlockEntry(IDBDataFile* pFile,
                                             DataBlock* block,
                                             const uint64_t lbid,
                                             const int sbid,
@@ -204,7 +204,7 @@ public:
                                             const int width,
                                             void* pStruct );
 
-    EXPORT const int     writeSubBlockEntry(CommBlock& cb,
+    EXPORT int     writeSubBlockEntry(CommBlock& cb,
                                             DataBlock* block,
                                             const uint64_t lbid,
                                             const int sbid,
@@ -215,7 +215,7 @@ public:
     /**
      * @brief Write to version buffer
      */
-    EXPORT const int     writeVB(          IDBDataFile* pFile,
+    EXPORT int     writeVB(          IDBDataFile* pFile,
                                            const OID oid,
                                            const uint64_t lbid );
 

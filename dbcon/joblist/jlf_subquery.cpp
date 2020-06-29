@@ -192,7 +192,10 @@ void ssfInHaving(ParseTree* pt, void* obj)
             pt->right(parseTree->right());
             pt->data(parseTree->data());
 
+            jobInfo->dynamicParseTreeVec.push_back(parseTree);
             // don't delete the parseTree, it has been placed in the plan.
+            // Instead, we use the dynamicParseTreeVec above for deletion
+            // in ~csep() or csep.unserialize().
             // delete parseTree;
         }
         else
@@ -627,7 +630,10 @@ void doSimpleScalarFilter(ParseTree* p, JobInfo& jobInfo)
         // create job steps for each simple filter
         JLF_ExecPlanToJobList::walkTree(parseTree, jobInfo);
 
+        jobInfo.dynamicParseTreeVec.push_back(parseTree);
         // don't delete the parseTree, it has been placed in the plan.
+        // Instead, we use the dynamicParseTreeVec above for deletion
+        // in ~csep() or csep.unserialize().
         // delete parseTree;
     }
     else

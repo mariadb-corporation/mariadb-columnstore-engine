@@ -29,7 +29,11 @@ namespace anyimpl
         virtual void move(void* const* src, void** dest) = 0;
         virtual void* get_value(void** src) = 0;
         virtual size_t get_size() = 0;
+    protected:
+        ~base_any_policy() = default;
     };
+
+    //inline base_any_policy::~base_any_policy() throw () {}
 
     template<typename T>
     struct typed_base_any_policy : base_any_policy
@@ -37,12 +41,15 @@ namespace anyimpl
         virtual size_t get_size()
         {
             return sizeof(T);
-        } 
+        }
+    protected:
+        ~typed_base_any_policy() = default;
     };
 
     template<typename T>
     struct small_any_policy : typed_base_any_policy<T>
     {
+        virtual ~small_any_policy() = default;
         virtual void static_delete(void** x)
         {
             *x = 0;
@@ -68,6 +75,7 @@ namespace anyimpl
     template<typename T>
     struct big_any_policy : typed_base_any_policy<T>
     {
+        virtual ~big_any_policy() = default;
         virtual void static_delete(void** x)
         {
             if (*x)

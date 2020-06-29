@@ -33,6 +33,7 @@ namespace storagemanager
 class ConfigListener
 {
     public:
+        virtual ~ConfigListener(){};
         virtual void configListener() = 0;
 };
 

@@ -124,6 +124,7 @@ public:
     //result_t evaluate(result_t op1, result_t op2);
 
     // F&E framework
+    using Operator::getBoolVal;
     inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         switch (fOp)
@@ -167,6 +168,7 @@ public:
         }
     }
 
+    using TreeNode::evaluate;
     inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         fResult.boolVal = getBoolVal(row, isNull, lop, rop);

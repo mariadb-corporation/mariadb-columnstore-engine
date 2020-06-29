@@ -73,7 +73,7 @@ public:
         return fConfig;
     }
 
-    const int localLbidLookup(BRM::LBID_t lbid,
+    int localLbidLookup(BRM::LBID_t lbid,
                               BRM::VER_t verid,
                               bool vbFlag,
                               BRM::OID_t& oid,
@@ -88,7 +88,7 @@ public:
                           const uint16_t segNum,
                           char* file_name);
 
-    const uint32_t getExtentRows()
+    uint32_t getExtentRows()
     {
         return fdbrm.getExtentRows();
     }

@@ -116,7 +116,7 @@ public:
     }
 
 protected:
-	const void stringValue(execplan::SPTP& fp, rowgroup::Row& row, bool& isNull, std::string& fFloatStr)
+	void stringValue(execplan::SPTP& fp, rowgroup::Row& row, bool& isNull, std::string& fFloatStr)
     {
         // Bug3788, use the shorter of fixed or scientific notation for floating point values.
         // [ the default format in treenode.h is fixed-point notation ]

@@ -76,7 +76,7 @@ public:
     {
         fVal = val;
     }
-    const int intervalType() const
+    int intervalType() const
     {
         return fIntervalType;
     }
@@ -90,6 +90,7 @@ public:
         return new IntervalColumn (*this);
     }
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate()
     {
         return false;

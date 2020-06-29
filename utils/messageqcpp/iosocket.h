@@ -119,7 +119,7 @@ public:
     /** test if the socket is open
      *
      */
-    inline virtual const bool isOpen() const;
+    inline virtual bool isOpen() const;
 
     /** get the socket params
      *
@@ -150,7 +150,7 @@ public:
         fSocket->syncProto(use);
     }
 
-    EXPORT virtual const int getConnectionNum() const;
+    EXPORT virtual int getConnectionNum() const;
 
     // Debug
     EXPORT void     setSockID(uint32_t id)
@@ -175,7 +175,7 @@ public:
     /**
      * @brief compare 2 addresses
      */
-    virtual const bool isSameAddr(const IOSocket* rhs) const
+    virtual bool isSameAddr(const IOSocket* rhs) const
     {
         return fSocket->isSameAddr(rhs->fSocket);
     }
@@ -235,7 +235,7 @@ inline void IOSocket::close()
 {
     if (fSocket) fSocket->close();
 }
-inline const bool IOSocket::isOpen() const
+inline bool IOSocket::isOpen() const
 {
     return (fSocket && fSocket->isOpen());
 }
@@ -274,7 +274,7 @@ inline void IOSocket::setSocketImpl(Socket* socket)
     delete fSocket;
     fSocket = socket;
 }
-inline const int IOSocket::getConnectionNum() const
+inline int IOSocket::getConnectionNum() const
 {
     return fSocket->getConnectionNum();
 }

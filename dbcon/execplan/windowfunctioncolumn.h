@@ -129,6 +129,7 @@ public:
     // util function for connector to use.
     void addToPartition(std::vector<SRCP>& groupByList);
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate()
     {
         return false;
