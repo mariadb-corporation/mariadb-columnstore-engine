@@ -85,8 +85,8 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const strin
                 *cc = new ConstantColumn(oss.str(), row.getIntField(i));
                 break;
             }
-
-        // else > 0; fall through
+            /* fall through */
+            /* else > 0 */
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:

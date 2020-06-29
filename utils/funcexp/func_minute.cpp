@@ -83,6 +83,7 @@ int64_t Func_minute::getIntVal(rowgroup::Row& row,
         {
             isNull = true;
         }
+        /* fall through */
 
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:

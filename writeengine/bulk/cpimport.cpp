@@ -418,6 +418,7 @@ void parseCmdLineArgs(
             case 'h':                                // -h: help
             {
                 printUsage();
+                break;
             }
 
             case 'i':                                // -i: log info to console
