@@ -73,8 +73,6 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
     if (isNull)
         return "";
 
-    start--; // Because SQL syntax is 1 based and we want 0 based.
-
     CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
     // binLen represents the number of bytes
@@ -90,6 +88,8 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
 
     if ((length < 0) || (length > strLen))
         length = strLen;
+
+    start--; // Because SQL syntax is 1 based and we want 0 based.
 
     // Convert start and length from characters to bytes.
     start = cs->charpos(pos, end, start);
