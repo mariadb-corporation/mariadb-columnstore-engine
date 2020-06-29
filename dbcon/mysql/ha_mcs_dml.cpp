@@ -545,24 +545,26 @@ int ha_mcs_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool abo
         return rc;
 
     //@Bug 4605
+    int rc1 = 0;
     if ( (rc == 0) && !abort && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))
     {
         ci.rowsHaveInserted += size;
         command = "COMMIT";
-        rc = ProcessCommandStatement ( thd, command, ci, schema );
+        rc1 = ProcessCommandStatement ( thd, command, ci, schema );
     }
     else if (useHdfs)
     {
         ci.rowsHaveInserted += size;
         command = "COMMIT";
-        rc = ProcessCommandStatement ( thd, command, ci, schema );
+        rc1 = ProcessCommandStatement ( thd, command, ci, schema );
     }
     else if (( rc != 0) || abort )
     {
         command = "ROLLBACK";
-        rc =ProcessCommandStatement ( thd, command, ci, schema );
+        rc1 = ProcessCommandStatement ( thd, command, ci, schema );
     }
-
+    rc = max(rc, rc1);
+    
     return rc;
 
 }
@@ -631,21 +633,23 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
             else if (rc != dmlpackageprocessor::DMLPackageProcessor::ACTIVE_TRANSACTION_ERROR)
             {
                 //@Bug 4605
+                int rc1 = 0;
                 if ( rc != 0 )
                 {
                     command = "ROLLBACK";
-                    rc = ProcessCommandStatement ( thd, command, ci, schema );
+                    rc1 = ProcessCommandStatement ( thd, command, ci, schema );
                 }
                 else if (( rc == 0 ) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))
                 {
                     command = "COMMIT";
-                    rc = ProcessCommandStatement ( thd, command, ci, schema );
+                    rc1 = ProcessCommandStatement ( thd, command, ci, schema );
                 }
                 else if (useHdfs)
                 {
                     command = "COMMIT";
-                    rc = ProcessCommandStatement ( thd, command, ci, schema );
+                    rc1 = ProcessCommandStatement ( thd, command, ci, schema );
                 }
+                rc = max(rc, rc1);
             }
         }
 
@@ -1698,7 +1702,7 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                             }
                             else
                             {
-                                buf = buf + 2 ;
+                                buf = buf + 2;
                             }
                         }
                         else //utf8
