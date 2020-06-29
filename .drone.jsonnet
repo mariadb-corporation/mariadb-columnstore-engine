@@ -4,8 +4,8 @@ local platforms = {
 };
 
 local codebase_map = {
-  //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.4 --depth 1 https://github.com/MariaDB/server .",
-  develop: 'git clone --recurse-submodules --branch bb-10.5-release --depth 1 https://github.com/MariaDB/server .',
+  // develop: 'git clone --recurse-submodules --branch bb-10.5-release --depth 1 https://github.com/MariaDB/server .',
+  develop: 'git clone --recurse-submodules --branch mariadb-10.5.4 --depth 1 https://github.com/MariaDB/server .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
 
@@ -54,6 +54,7 @@ local Pipeline(branch, platform, event) = {
   smoke:: {
     name: 'smoke',
     image: 'docker',
+    failure: 'ignore',
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run -e DEBIAN_FRONTEND=noninteractive -e MCS_USE_S3_STORAGE=0 --name smoke --privileged --detach --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + img + ' ' + init + ' --unit=basic.target',
@@ -74,7 +75,7 @@ local Pipeline(branch, platform, event) = {
   regression:: {
     name: 'regression',
     image: 'docker:git',
-    // failure: 'ignore',
+    failure: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       'docker run -e DEBIAN_FRONTEND=noninteractive -e MCS_USE_S3_STORAGE=0 --name regression --privileged --detach --volume /sys/fs/cgroup:/sys/fs/cgroup:ro ' + img + ' ' + init + ' --unit=basic.target',
@@ -92,14 +93,23 @@ local Pipeline(branch, platform, event) = {
       // 'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression ./go.sh --sm_unit_test_dir=/storage-manager' + (if event == 'pull_request' then ' --tests=test000.sh,test001.sh' else ''),
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression ./go.sh --sm_unit_test_dir=/storage-manager' + (if event == 'pull_request' then ' --tests=test000.sh' else ''),
     ],
+    when: {
+      status: ['success', 'failure'],
+    },
   },
   smokelog:: {
     name: 'smokelog',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
-      'docker exec -t smoke journalctl -ru mariadb --no-pager || true',
+      "echo '---------- start mariadb service logs ----------'",
+      'docker exec -t smoke journalctl -u mariadb --no-pager || true',
+      "echo '---------- end mariadb service logs ----------'",
+      'echo',
+      "echo '---------- start columnstore debug log ----------'",
       'docker exec -t smoke cat /var/log/mariadb/columnstore/debug.log || true',
+      "echo '---------- end columnstore debug log ----------'",
+      'echo',
       'docker stop smoke && docker rm smoke || true',
     ],
     when: {
@@ -109,9 +119,13 @@ local Pipeline(branch, platform, event) = {
   regressionlog: {
     name: 'regressionlog',
     image: 'docker',
+    failure: 'ignore',
     volumes: [pipeline._volumes.docker],
     commands: [
+      "echo '---------- start columnstore regression short report ----------'",
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression cat go.log',
+      "echo '---------- end columnstore regression short report ----------'",
+      'echo',
       'docker cp regression:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/result/ || true',
       'docker stop regression && docker rm regression || true',
     ],
