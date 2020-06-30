@@ -163,7 +163,7 @@ string Func_char::getStrVal(Row& row,
         
         numBytes += getChar(value, pBuf);
     }
-    
+    isNull = false;
     /* Check whether we got a well-formed string */
     MY_STRCOPY_STATUS status;
     int32_t actualBytes = cs->well_formed_char_length(buf, buf + numBytes, numBytes, &status);
