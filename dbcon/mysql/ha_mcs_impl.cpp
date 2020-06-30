@@ -1604,7 +1604,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         aTableName.schema = first_table->table->s->db.str;
         aTableName.table = first_table->table->s->table_name.str;
     }
-
+#if 0
     CalpontSystemCatalog::ROPair roPair;
 
     try
@@ -1624,6 +1624,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     }
 
     ci->tableOid = roPair.objnum;
+#endif    
     CalpontDMLPackage* pDMLPackage = 0;
 //	dmlStmt += ";";
     IDEBUG( cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id <<  endl );
@@ -1670,7 +1671,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
                 ci->rc = 1;
                 thd->set_row_count_func(0);
-                return 0;
+                return 1;
             }
         }
         else
@@ -1734,7 +1735,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
         ci->rc = 1;
         thd->set_row_count_func(0);
-        return 0;
+        return 1;
     }
 
     {
@@ -1884,7 +1885,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 thd->raise_error_printf(ER_INTERNAL_ERROR, ie.what());
                 ci->rc = -1;
                 thd->set_row_count_func(0);
-                return 0;
+                return -1;
             }
 
             int minColWidth = -1;
@@ -1967,6 +1968,25 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     //querystats::QueryStats stats;
     string tableLockInfo;
+
+    // Save the tableOid for the COMMIT | ROLLBACK
+    CalpontSystemCatalog::ROPair roPair;
+    try
+    {
+        roPair = csc->tableRID( aTableName );
+    }
+    catch (IDBExcept& ie)
+    {
+        setError(thd, ER_INTERNAL_ERROR, ie.what());
+        return ER_INTERNAL_ERROR;
+    }
+    catch (std::exception& ex)
+    {
+        setError(thd, ER_INTERNAL_ERROR,
+                 logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
+        return ER_INTERNAL_ERROR;
+    }
+    ci->tableOid = roPair.objnum;
 
     // Send the request to DMLProc and wait for a response.
     try
@@ -2196,6 +2216,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 errorMsg = "Unknown error caught";
                 b = 1;
             }
+            
+            // Clear tableOid for the next SQL statement
+            ci->tableOid = 0;
         }
     }
 
@@ -2249,8 +2272,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     delete ci->dmlProc;
     ci->dmlProc = nullptr;
 
-    ci->tableOid = 0;
-    
     return rc;
 }
 
