@@ -2248,6 +2248,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     delete ci->dmlProc;
     ci->dmlProc = nullptr;
+
+    ci->tableOid = 0;
+    
     return rc;
 }
 
