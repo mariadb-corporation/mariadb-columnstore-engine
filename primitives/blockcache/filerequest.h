@@ -130,7 +130,7 @@ public:
     /**
      * @brief lbid requested
      **/
-    const BRM::LBID_t 	Lbid() const
+    BRM::LBID_t 	Lbid() const
     {
         return fLBID;
     }
@@ -146,17 +146,17 @@ public:
     /**
      * @brief VBBM flag of the LBID/Ver
      **/
-    const bool 	Flg() const
+    bool 	Flg() const
     {
         return fFlg;
     }
 
-    const BRM::VER_t Txn() const
+    BRM::VER_t Txn() const
     {
         return fTxn;
     }
 
-    const int CompType() const
+    int CompType() const
     {
         return fCompType;
     }
@@ -164,7 +164,7 @@ public:
     /**
      * @brief number of blocks requested
      **/
-    const uint32_t	BlocksRequested() const
+    uint32_t	BlocksRequested() const
     {
         return fLength;
     }
@@ -180,11 +180,11 @@ public:
     /**
      * @brief number of blocks read from disk
      **/
-    const uint32_t	BlocksRead() const
+    uint32_t	BlocksRead() const
     {
         return fblksRead;
     }
-    const uint32_t	BlocksLoaded() const
+    uint32_t	BlocksLoaded() const
     {
         return fblksLoaded;
     }

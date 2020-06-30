@@ -90,19 +90,19 @@ public:
 
     /** @brief get the data for the column
        */
-    const bool get_isnull() const
+    bool get_isnull() const
     {
         return fisNULL;
     }
     /** @brief get the fIsFromCol data for the column
       */
-    const bool get_isFromCol() const
+    bool get_isFromCol() const
     {
         return fIsFromCol;
     }
     /** @brief get the fFuncScale data for the column
       */
-    const uint32_t get_funcScale() const
+    uint32_t get_funcScale() const
     {
         return fFuncScale;
     }

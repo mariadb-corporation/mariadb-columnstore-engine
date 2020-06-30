@@ -550,13 +550,13 @@ public:
      *
      * For a unique table_name return the internal OID
      */
-    const OID lookupTableOID(const TableName& tableName);
+    OID lookupTableOID(const TableName& tableName);
 
     /** looks up a column's OID in the System Catalog
      *
      * For a unique table_name.column_name return the internal OID
      */
-    const OID lookupOID(const TableColName& tableColName);
+    OID lookupOID(const TableColName& tableColName);
 
     /** returns the column type attribute(s) for a column
      *
@@ -588,7 +588,7 @@ public:
      * 0: Autoincrement does not exist for this table
      * Throws runtime_error if no such table found
      */
-    const uint64_t nextAutoIncrValue ( TableName tableName);
+    uint64_t nextAutoIncrValue ( TableName tableName);
 
     /** returns the rid of next autoincrement value for the table oid
      *
@@ -606,13 +606,13 @@ public:
      *
      * return the bitmap file object number for a given OID:
      */
-    const OID colBitmap(const OID& oid) const;
+    OID colBitmap(const OID& oid) const;
 
     /** return the current SCN
      *
      * returns the current System Change Number (for versioning support)
      */
-    const SCN scn(void) const;
+    SCN scn(void) const;
 
     /** return the RID's of the indexes for a table
      *
@@ -624,7 +624,7 @@ public:
      *
      * returns the total number of columns for a table
      */
-    const int colNumbers(const TableName& tableName);
+    int colNumbers(const TableName& tableName);
 
     /** return the RID's of the colindexes for a table
      *
@@ -648,7 +648,7 @@ public:
      *
      * returns a RID of the constraint for a ConstrainName fron table SYSCONSTRAINT
      */
-    const RID constraintRID(const std::string constraintName);
+    RID constraintRID(const std::string constraintName);
 
     /** return the list of IndexName for a given TableColName
      *
@@ -666,7 +666,7 @@ public:
     *
     * returns the RID of the colconstraints for a column
     */
-    const RID constraintColRID(const TableColName& tableColName);
+    RID constraintColRID(const TableColName& tableColName);
 
     /** return the value for the given RID and column name from table SYSCONSTRAINTCOL
      *
@@ -812,7 +812,7 @@ public:
     /** sessionid access and mutator methods
      *
      */
-    const uint32_t sessionID() const
+    uint32_t sessionID() const
     {
         return fSessionID;
     }
@@ -823,7 +823,7 @@ public:
     /** identity access and mutator methods
      *
      */
-    const int identity() const
+    int identity() const
     {
         return fIdentity;
     }
@@ -836,7 +836,7 @@ public:
      *
      *  return the column position for a given OID
      */
-    const int colPosition (const OID& oid);
+    int colPosition (const OID& oid);
     /** return primary key name for the given table */
     const std::string primaryKeyName (const TableName& tableName );
     /** return the table info
@@ -849,7 +849,7 @@ public:
     /** return the list of tables for a given schema */
     const std::vector< std::pair<OID, TableName> > getTables (const std::string schema = "");
     /** return the number of tables in the whole database */
-    const int getTableCount ();
+    int getTableCount ();
     /** return the constraint info for a given constraint */
     const ConstraintInfo constraintInfo (const IndexName& constraintName);
     /** return the constraintName list for a given referencePKName */

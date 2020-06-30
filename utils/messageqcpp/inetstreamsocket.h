@@ -105,7 +105,7 @@ public:
     /** test if this socket is open
      *
      */
-    inline virtual const bool isOpen() const;
+    inline virtual bool isOpen() const;
 
     /** read a message from the socket
      *
@@ -180,7 +180,7 @@ public:
         fSyncProto = use;
     }
 
-    const int getConnectionNum() const
+    int getConnectionNum() const
     {
         return fSocketParms.sd();
     }
@@ -199,7 +199,7 @@ public:
     /** compare 2 addresses
      *
      */
-    virtual const bool isSameAddr(const Socket* rhs) const;
+    virtual bool isSameAddr(const Socket* rhs) const;
 
     /** ping an ip address
      *
@@ -255,7 +255,7 @@ private:
     void doCopy(const InetStreamSocket& rhs);
 };
 
-inline const bool InetStreamSocket::isOpen() const
+inline bool InetStreamSocket::isOpen() const
 {
     return (fSocketParms.sd() >= 0);
 }

@@ -54,7 +54,7 @@ public:
     {
         return fGwip;
     }
-    const bool correlated() const
+    bool correlated() const
     {
         return fCorrelated;
     }
@@ -126,7 +126,7 @@ public:
     execplan::ParseTree* transform_between();
     execplan::ParseTree* transform_in();
     execplan::ParseTree* buildParseTree(execplan::PredicateOperator* op);
-    const uint64_t returnedColPos() const
+    uint64_t returnedColPos() const
     {
         return fReturnedColPos;
     }

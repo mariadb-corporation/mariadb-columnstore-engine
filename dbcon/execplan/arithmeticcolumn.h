@@ -87,7 +87,7 @@ public:
     /**
      * get asc flag
      */
-    inline const bool asc() const
+    inline bool asc() const
     {
         return fAsc;
     }
@@ -164,6 +164,7 @@ public:
      */
     bool operator!=(const ArithmeticColumn& t) const;
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate();
     virtual bool hasWindowFunc();
 
@@ -272,6 +273,7 @@ public:
 
 private:
     ParseTree* fExpression;
+    using TreeNode::evaluate;
     void evaluate(rowgroup::Row& row) {}
 };
 

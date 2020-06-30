@@ -58,7 +58,7 @@ public:
     /*
      * @brief access methods
      */
-    inline const uint16_t getAlarmID() const
+    inline uint16_t getAlarmID() const
     {
         return alarmID;
     }
@@ -76,25 +76,25 @@ public:
     }
     void setComponentID (const std::string&);
 
-    inline const uint16_t getSeverity() const
+    inline uint16_t getSeverity() const
     {
         return severity;
     }
     void setSeverity (const uint16_t);
 
-    inline const bool getState () const
+    inline bool getState () const
     {
         return state;
     }
     void setState (const bool);
 
-    inline const uint16_t getCtnThreshold() const
+    inline uint16_t getCtnThreshold() const
     {
         return ctnThreshold;
     }
     void setCtnThreshold (const uint16_t);
 
-    inline const uint16_t getOccurrence() const
+    inline uint16_t getOccurrence() const
     {
         return occurrence;
     }
@@ -106,19 +106,19 @@ public:
     }
     void setReceiveTime (const time_t);
 
-    inline const uint32_t getLastIssueTime() const
+    inline uint32_t getLastIssueTime() const
     {
         return lastIssueTime;
     }
     void setLastIssueTime (const uint32_t);
 
-    inline const uint16_t getPid () const
+    inline uint16_t getPid () const
     {
         return pid;
     }
     void setPid (const uint16_t);
 
-    inline const uint16_t getTid () const
+    inline uint16_t getTid () const
     {
         return tid;
     }
@@ -130,7 +130,7 @@ public:
     }
     void setTimestamp (const std::string&);
 
-    inline const time_t getTimestampSeconds () const
+    inline time_t getTimestampSeconds () const
     {
         return timestampseconds;
     }

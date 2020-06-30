@@ -525,7 +525,7 @@ public:
     {
         fDistinctUnionNum = distinctUnionNum;
     }
-    const uint8_t distinctUnionNum() const
+    uint8_t distinctUnionNum() const
     {
         return fDistinctUnionNum;
     }
@@ -574,7 +574,7 @@ public:
     {
         fHasOrderBy = hasOrderBy;
     }
-    const bool hasOrderBy() const
+    bool hasOrderBy() const
     {
         return fHasOrderBy;
     }
@@ -583,7 +583,7 @@ public:
     {
         fSpecHandlerProcessed = hand;
     }
-    const bool specHandlerProcessed() const
+    bool specHandlerProcessed() const
     {
         return fSpecHandlerProcessed;
     } 

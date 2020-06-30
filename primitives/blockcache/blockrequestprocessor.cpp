@@ -210,7 +210,7 @@ int BlockRequestProcessor::check(BRM::LBID_t lbid, const BRM::QueryContext& ver,
     }
 }
 
-const int BlockRequestProcessor::getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn,
+int BlockRequestProcessor::getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn,
         int compType, void* bufferPtr, bool vbFlg, bool& wasCached, bool* versioned, bool insertIntoCache,
         bool readFromCache)
 {

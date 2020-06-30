@@ -119,7 +119,7 @@ public:
     /**
      * @brief Mutator to enable/disable debug logging to console.
      */
-    const void setDebugConsole ( bool debug )
+    void setDebugConsole ( bool debug )
     {
         fDebugConsole = debug;
     }

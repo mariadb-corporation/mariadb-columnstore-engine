@@ -88,7 +88,7 @@ public:
      */
     enum ResultCode { NO_ERROR, CREATE_ERROR,  ALTER_ERROR, DROP_ERROR, TRUNC_ERROR,
                       TOKENIZATION_ERROR, NOT_ACCEPTING_PACKAGES, PK_NOTNULL_ERROR, WARNING, USER_ERROR, NETWORK_ERROR, PARTITION_WARNING,
-                      WARN_NO_PARTITION
+                      WARN_NO_PARTITION, DROP_TABLE_NOT_IN_CATALOG_ERROR
                     };
 
     enum DebugLevel                            /** @brief Debug level type enumeration */
@@ -281,14 +281,14 @@ public:
 
     /** @brief Is it required to debug
       */
-    const bool isDebug( const DebugLevel level ) const
+    bool isDebug( const DebugLevel level ) const
     {
         return level <= fDebugLevel;
     }
 
     /** @brief Get debug level
       */
-    const DebugLevel getDebugLevel() const
+    DebugLevel getDebugLevel() const
     {
         return fDebugLevel;
     }

@@ -103,7 +103,7 @@ public:
         return fByteData;
     }
 
-    inline const uint32_t datLen() const
+    inline uint32_t datLen() const
     {
         return fDataLen;
     }
@@ -136,7 +136,7 @@ public:
     /**
      * @brief return the lbid value of disk bloc
      **/
-    inline const BRM::LBID_t Lbid() const
+    inline BRM::LBID_t Lbid() const
     {
         return fLbid;
     }
@@ -148,7 +148,7 @@ public:
     /**
      * @brief return the version of this disk block. ignored for range retrievals
      **/
-    inline const BRM::VER_t Verid() const
+    inline BRM::VER_t Verid() const
     {
         return fVerid;
     }

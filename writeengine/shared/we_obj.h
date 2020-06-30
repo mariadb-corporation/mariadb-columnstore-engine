@@ -49,7 +49,7 @@ public:
     /**
      * @brief Is it required to debug
      */
-    const bool     isDebug( const DebugLevel level ) const
+    bool     isDebug( const DebugLevel level ) const
     {
         return level <= m_debugLevel;
     }
@@ -57,7 +57,7 @@ public:
     /**
      * @brief Get debug level
      */
-    const DebugLevel   getDebugLevel() const
+    DebugLevel   getDebugLevel() const
     {
         return m_debugLevel;
     }

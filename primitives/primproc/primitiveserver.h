@@ -150,7 +150,7 @@ public:
     }
 
 // 			int fCacheCount;
-    const int ReadAheadBlocks() const
+    int ReadAheadBlocks() const
     {
         return fReadAheadBlocks;
     }

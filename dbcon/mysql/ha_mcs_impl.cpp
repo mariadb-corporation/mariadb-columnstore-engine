@@ -1604,27 +1604,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         aTableName.schema = first_table->table->s->db.str;
         aTableName.table = first_table->table->s->table_name.str;
     }
-#if 0
-    CalpontSystemCatalog::ROPair roPair;
 
-    try
-    {
-        roPair = csc->tableRID( aTableName );
-    }
-    catch (IDBExcept& ie)
-    {
-        setError(thd, ER_INTERNAL_ERROR, ie.what());
-        return ER_INTERNAL_ERROR;
-    }
-    catch (std::exception& ex)
-    {
-        setError(thd, ER_INTERNAL_ERROR,
-                 logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
-        return ER_INTERNAL_ERROR;
-    }
-
-    ci->tableOid = roPair.objnum;
-#endif    
     CalpontDMLPackage* pDMLPackage = 0;
 //	dmlStmt += ";";
     IDEBUG( cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id <<  endl );
@@ -2271,7 +2251,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     delete ci->dmlProc;
     ci->dmlProc = nullptr;
-
     return rc;
 }
 

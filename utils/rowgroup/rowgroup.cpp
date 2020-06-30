@@ -744,6 +744,7 @@ void Row::initToNull()
 
             case CalpontSystemCatalog::LONGDOUBLE:
                 *((long double*) &data[offsets[i]]) = joblist::LONGDOUBLENULL;
+                break;
 
             case CalpontSystemCatalog::DATETIME:
                 *((uint64_t*) &data[offsets[i]]) = joblist::DATETIMENULL;

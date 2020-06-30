@@ -156,6 +156,7 @@ public:
     virtual void serialize(messageqcpp::ByteStream&) const;
     virtual void unserialize(messageqcpp::ByteStream&);
 
+    using ReturnedColumn::hasAggregate;
     virtual bool hasAggregate();
     virtual bool hasWindowFunc();
     virtual void setDerivedTable();

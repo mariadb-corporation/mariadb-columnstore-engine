@@ -256,7 +256,7 @@ int FileOp::createFile(FID fid,
     BRM::LBID_t startLbid;
     uint32_t startBlock;
     RETURN_ON_ERROR( BRMWrapper::getInstance()->allocateColExtentExactFile(
-                         (const OID)fid, (uint32_t)width, dbRootx, partitionx, segment, colDataType,
+                         (OID)fid, (uint32_t)width, dbRootx, partitionx, segment, colDataType,
                          startLbid, allocSize, startBlock) );
 
     // We allocate a full extent from BRM, but only write an abbreviated 256K

@@ -68,6 +68,7 @@ public:
     bool  deliverStringTableRowGroup() const;
 
     void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
+    using ExpressionStep::expressionFilter;
     void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
 
     virtual bool stringTableFriendly()

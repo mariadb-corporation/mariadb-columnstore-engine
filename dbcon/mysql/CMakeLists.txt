@@ -35,9 +35,12 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
 
 if (COMMAND mysql_add_plugin)
-    mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY DEFAULT
-        LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
-        COMPONENT columnstore-engine)
+  IF(NOT(RPM OR DEB))
+    SET(disabled DISABLED)
+  ENDIF()
+  mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY ${disabled}
+      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
+      COMPONENT columnstore-engine)
 else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
     SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")

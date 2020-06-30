@@ -68,14 +68,17 @@ public:
     {
         return fTableOids.empty() ? 0 : fTableOids.front();
     }
+    using JobStep::alias;
     std::string alias() const
     {
         return fAliases.empty() ? "" : fAliases.front();
     }
+    using JobStep::view;
     std::string view() const
     {
         return fViews.empty() ? "" : fViews.front();
     }
+    using JobStep::schema;
     std::string schema() const
     {
         return fSchemas.empty() ? "" : fSchemas.front();

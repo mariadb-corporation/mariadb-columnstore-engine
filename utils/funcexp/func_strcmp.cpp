@@ -74,7 +74,7 @@ int64_t Func_strcmp::getIntVal(rowgroup::Row& row,
     const string& str = fp[0]->data()->getStrVal(row, isNull);
     const string& str1 = fp[1]->data()->getStrVal(row, isNull);
 
-    int ret = cs->strnncoll(str.c_str(), str.length(), str1.c_str(), str1.length());
+    int ret = cs->strnncollsp(str.c_str(), str.length(), str1.c_str(), str1.length());
     // mysql's strcmp returns only -1, 0, and 1
     return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
 }

@@ -105,7 +105,7 @@ public:
         fData = data;
     }
 
-    virtual const bool returnAll() const
+    virtual bool returnAll() const
     {
         return fReturnAll;
     }
@@ -114,7 +114,7 @@ public:
         fReturnAll = returnAll;
     }
 
-    const uint32_t sessionID() const
+    uint32_t sessionID() const
     {
         return fSessionID;
     }
@@ -123,7 +123,7 @@ public:
         fSessionID = sessionID;
     }
 
-    inline const int32_t sequence() const
+    inline int32_t sequence() const
     {
         return fSequence;
     }
@@ -159,7 +159,7 @@ public:
         fDistinct = distinct;
     }
 
-    const uint32_t expressionId() const
+    uint32_t expressionId() const
     {
         return fExpressionId;
     }
@@ -177,7 +177,7 @@ public:
         fJoinInfo = joinInfo;
     }
 
-    virtual const bool asc() const
+    virtual bool asc() const
     {
         return fAsc;
     }
@@ -186,7 +186,7 @@ public:
         fAsc = asc;
     }
 
-    virtual const bool nullsFirst() const
+    virtual bool nullsFirst() const
     {
         return fNullsFirst;
     }

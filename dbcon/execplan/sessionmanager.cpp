@@ -143,12 +143,12 @@ void SessionManager::reset()
     dbrm.sessionmanager_reset();
 }
 
-const uint32_t SessionManager::getUnique32()
+uint32_t SessionManager::getUnique32()
 {
     return dbrm.getUnique32();
 }
 
-const bool SessionManager::checkActiveTransaction( const SID sessionId, bool& bIsDbrmUp, SIDTIDEntry& blocker )
+bool SessionManager::checkActiveTransaction( const SID sessionId, bool& bIsDbrmUp, SIDTIDEntry& blocker )
 {
     bIsDbrmUp = true;
     int arrayLenth = 0;
@@ -176,7 +176,7 @@ const bool SessionManager::checkActiveTransaction( const SID sessionId, bool& bI
     return ret;
 }
 
-const bool SessionManager::isTransactionActive(const SID sessionId, bool& bIsDbrmUp)
+bool SessionManager::isTransactionActive(const SID sessionId, bool& bIsDbrmUp)
 {
     bIsDbrmUp = true;
     int arrayLenth = 0;
