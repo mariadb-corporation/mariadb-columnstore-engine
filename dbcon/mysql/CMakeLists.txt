@@ -48,6 +48,9 @@ else ()
     target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
     install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
+    
+    # define this dummy target for standalone builds (ie, when mysql_add_plugin doesn't exist)
+    add_custom_target(columnstore DEPENDS ha_columnstore) 
 endif ()
 
 install(FILES syscatalog_mysql.sql 
