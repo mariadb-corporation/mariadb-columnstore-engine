@@ -68,7 +68,7 @@ user=`whoami 2>/dev/null`
 quiet=0
 
 stop_mysqld=0
-if [ -z "$(pgrep -x mysqld)" ];then
+if [ -z "$(pgrep -x mariadbd)" ];then
 
     # Startup mysqld 
     systemctl cat mariadb.service > /dev/null 2>&1
