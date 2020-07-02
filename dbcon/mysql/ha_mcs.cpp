@@ -32,6 +32,7 @@
 #endif
 
 #define CACHE_PREFIX "#cache#"
+#define CACHE_FLUSH_THRESHOLD 1000000
 
 static handler* mcs_create_handler(handlerton* hton,
                                    TABLE_SHARE* table,
@@ -1272,7 +1273,9 @@ my_bool get_status_and_flush_cache(void *param,
   /* If first get_status() call for this table, flush cache if needed */
   if (!cache->lock_counter++)
   {
-    if (!cache->insert_command && cache->rows_cached())
+    ha_rows num_rows = cache->num_rows_cached();
+    if ((!cache->insert_command && num_rows != 0) ||
+        num_rows == CACHE_FLUSH_THRESHOLD)
     {
       if ((error= cache->flush_insert_cache()))
       {
@@ -1703,7 +1706,7 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
     bzero(&cache_handler->copy_info, sizeof(cache_handler->copy_info));
     return cache_handler->start_bulk_insert(rows, flags);
   }
-  return parent::start_bulk_insert(rows, flags);
+  return parent::start_bulk_insert_from_cache(rows, flags);
 }
 
 
@@ -1887,9 +1890,9 @@ maria_declare_plugin_end;
 Implementation of write cache
 ******************************************************************************/
 
-bool ha_mcs_cache::rows_cached()
+ha_rows ha_mcs_cache::num_rows_cached()
 {
-  return cache_handler->file->state->records != 0;
+  return cache_handler->file->state->records;
 }
 
 

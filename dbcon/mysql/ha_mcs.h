@@ -300,7 +300,7 @@ public:
 
   /* Cache functions */
   void free_locks();
-  bool rows_cached();
+  ha_rows num_rows_cached();
   int flush_insert_cache();
   friend my_bool get_status_and_flush_cache(void *param,
                                             my_bool concurrent_insert);
