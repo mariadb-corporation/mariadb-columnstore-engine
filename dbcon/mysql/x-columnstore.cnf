@@ -1,3 +1,3 @@
 # make ha_columnstore.so to load
 [mariadb]
-plugin-maturity=beta
+plugin-maturity=gamma
