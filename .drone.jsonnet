@@ -5,7 +5,8 @@ local platforms = {
 
 local codebase_map = {
   //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.4 --depth 1 https://github.com/MariaDB/server .",
-  develop: 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  //develop: 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  develop: 'git clone --recurse-submodules --branch 10.5.4-1 --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
 
