@@ -4,13 +4,14 @@ local platforms = {
 };
 
 local codebase_map = {
-  //  "develop": "git clone --recurse-submodules --branch mariadb-10.5.4 --depth 1 https://github.com/MariaDB/server .",
-  develop: 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  // develop: 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  // develop: 'git clone --recurse-submodules --branch 10.5-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
+  develop: 'git clone --recurse-submodules --branch 10.5-ent-mcs --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO';
+local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO -DWITH_MARIABACKUP=OFF';
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel';
 
@@ -18,7 +19,8 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    // develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    develop: ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -61,14 +63,13 @@ local Pipeline(branch, platform, event) = {
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y git rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y git which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      // "docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i '/\\[mariadb\\]/a plugin_maturity=stable' /etc/" + (if pkg_format == 'deb' then 'mysql/mariadb.conf.d/50-' else 'my.cnf.d/') + 'server.cnf',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
-#      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
-#      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
-#      'sleep 5',
-#      'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "insert into test.t1 values (2); select * from test.t1"',
+      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
+      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
+      // 'sleep 5',
+      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "insert into test.t1 values (2); select * from test.t1"',
     ],
   },
   regression:: {
@@ -147,6 +148,7 @@ local Pipeline(branch, platform, event) = {
              volumes: [pipeline._volumes.mdb],
              commands: [
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
+               'git config --global url."https://github.com/".insteadOf git@github.com:',
                codebase_map[branch],
                'git rev-parse HEAD',
                'git config cmake.update-submodules no',
@@ -170,8 +172,9 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-               "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
-               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+               "sed -i -e '/Package: mariadb-plugin-gssapi*/,/^$/d' debian/control",
+               "sed -i -e '/Package: mariadb-plugin-xpand*/,/^$/d' debian/control",
+               "sed -i -e '/wsrep/d' debian/mariadb-server*.install",
                "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
