@@ -18,6 +18,8 @@ set(dbbc_STAT_SRCS
 
 add_library(dbbc STATIC ${dbbc_STAT_SRCS})
 
+add_dependencies(dbbc loggingcpp)
+
 target_link_libraries(dbbc ${NETSNMP_LIBRARIES})
 
 INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})

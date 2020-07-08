@@ -26,6 +26,8 @@ set(windowfunction_LIB_SRCS
 
 add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
+add_dependencies(windowfunction loggingcpp)
+
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 if (WITH_SORTING_COMPARATORS_UT)
