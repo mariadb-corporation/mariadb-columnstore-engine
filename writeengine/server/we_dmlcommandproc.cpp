@@ -3123,14 +3123,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         case CalpontSystemCatalog::LONGDOUBLE:
                         {
-                            double dll = row.getDoubleField(fetchColPos);
+                            long double dll = row.getLongDoubleField(fetchColPos);
 
-                            if (dll == std::numeric_limits<double>::infinity())
+                            if (dll == std::numeric_limits<long double>::infinity())
                                 continue;
 
                             ostringstream os;
                             //@Bug 3350 fix the precision.
-                            os << setprecision(16) << dll;
+                            os << setprecision(19) << dll;
                             value = os.str();
                             break;
                         }
@@ -3490,7 +3490,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                                 ostringstream os;
                                 //@Bug 3350 fix the precision.
-                                os << setprecision(16) << dll;
+                                os << setprecision(19) << dll;
                                 value = os.str();
                                 break;
                             }
