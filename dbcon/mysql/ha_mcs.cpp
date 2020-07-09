@@ -839,6 +839,15 @@ int ha_mcs::info(uint32_t flag)
 int ha_mcs::extra(enum ha_extra_function operation)
 {
     DBUG_ENTER("ha_mcs::extra");
+    switch (operation)
+    {
+        case HA_EXTRA_DETACH_CHILDREN:
+            condStack.clear();
+            break;
+
+        default:
+            break;
+    }
 #ifdef INFINIDB_DEBUG
     {
         const char* hefs;
