@@ -55,17 +55,19 @@ else ()
     add_custom_target(columnstore DEPENDS ha_columnstore) 
 endif ()
 
-install(FILES syscatalog_mysql.sql 
-              dumpcat_mysql.sql 
-              calsetuserpriority.sql 
-              calremoveuserpriority.sql 
-              calshowprocesslist.sql 
-              columnstore_info.sql
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
-install(PROGRAMS install_mcs_mysql.sh
-    DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
+if (TARGET columnstore)
+    install(FILES syscatalog_mysql.sql 
+                  dumpcat_mysql.sql 
+                  calsetuserpriority.sql 
+                  calremoveuserpriority.sql 
+                  calshowprocesslist.sql 
+                  columnstore_info.sql
+                  DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
+    install(PROGRAMS install_mcs_mysql.sh
+        DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
 
-install(FILES columnstore.cnf
-    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
-install(FILES x-columnstore.cnf
-    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    install(FILES columnstore.cnf
+        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    install(FILES x-columnstore.cnf
+        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+endif()
