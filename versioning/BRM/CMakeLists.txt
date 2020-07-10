@@ -32,6 +32,8 @@ set(brm_LIB_SRCS
 
 add_library(brm SHARED ${brm_LIB_SRCS})
 
+add_dependencies(brm loggingcpp)
+
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 

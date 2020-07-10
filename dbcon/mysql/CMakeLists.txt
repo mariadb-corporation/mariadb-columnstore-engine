@@ -45,6 +45,8 @@ else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
     SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
 
+    add_dependencies(ha_columnstore loggingcpp)
+    
     target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
     install(TARGETS ha_columnstore DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
@@ -53,17 +55,19 @@ else ()
     add_custom_target(columnstore DEPENDS ha_columnstore) 
 endif ()
 
-install(FILES syscatalog_mysql.sql 
-              dumpcat_mysql.sql 
-              calsetuserpriority.sql 
-              calremoveuserpriority.sql 
-              calshowprocesslist.sql 
-              columnstore_info.sql
-              DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
-install(PROGRAMS install_mcs_mysql.sh
-    DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
+if (TARGET columnstore)
+    install(FILES syscatalog_mysql.sql 
+                  dumpcat_mysql.sql 
+                  calsetuserpriority.sql 
+                  calremoveuserpriority.sql 
+                  calshowprocesslist.sql 
+                  columnstore_info.sql
+                  DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
+    install(PROGRAMS install_mcs_mysql.sh
+        DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
 
-install(FILES columnstore.cnf
-    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
-install(FILES x-columnstore.cnf
-    DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    install(FILES columnstore.cnf
+        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    install(FILES x-columnstore.cnf
+        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+endif()

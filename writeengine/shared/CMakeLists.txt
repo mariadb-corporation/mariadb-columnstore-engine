@@ -2,6 +2,9 @@
 include_directories(${ENGINE_COMMON_INCLUDES} ../dictionary)
 
 add_executable(we_shared_components_tests ./shared_components_tests.cpp)
+
+add_dependencies(we_shared_components_tests loggingcpp)
+
 target_link_libraries(we_shared_components_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES})
 
 install(TARGETS we_shared_components_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
