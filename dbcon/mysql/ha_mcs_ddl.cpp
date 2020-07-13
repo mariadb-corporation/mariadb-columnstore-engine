@@ -107,6 +107,31 @@ inline uint32_t tid2sid(const uint32_t tid)
     return CalpontSystemCatalog::idb_tid2sid(tid);
 }
 
+static void decode_objectname(char *buf, const char *path, size_t buf_size)
+{
+    size_t new_path_len = filename_to_tablename(path, buf, buf_size);
+    buf[new_path_len] = '\0';
+}
+
+static void decode_file_path(const char *path, char *decoded_dbname,
+    char *decoded_tbname)
+{
+  // The format cont ains './' in the beginning of a path.
+  char *dbname_start = (char*) path + 2;
+  char *dbname_end = dbname_start;
+  while (*dbname_end != '/')
+    dbname_end++;
+
+  int cnt = dbname_end - dbname_start;
+  char *dbname = (char *)my_alloca(cnt + 1);
+  memcpy(dbname, dbname_start, cnt);
+  dbname[cnt] = '\0';
+  decode_objectname(decoded_dbname, dbname, FN_REFLEN);
+  my_afree(dbname);
+
+  char *tbname_start = dbname_end + 1;
+  decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
+}
 
 uint32_t convertDataType(int dataType)
 {
@@ -2539,8 +2564,6 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
     cout << "ha_mcs_impl_delete_table: " << db << name << endl;
 #endif
     THD* thd = current_thd;
-    std::string tbl(name);
-    std::string schema(db);
     char* query = thd->query();
 
     if (!query)
@@ -2572,20 +2595,21 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
         return 1;
     }
 
-    string emsg;
+    std::string emsg;
 
-    if ((thd->lex->sql_command == SQLCOM_DROP_DB) || (thd->lex->sql_command == SQLCOM_ALTER_TABLE))
-    {
-        std::string tableName(name);
-        tableName.erase(0, tableName.rfind("/") + 1);
-        stmt = std::string("DROP TABLE ") + tableName;
-    }
-    else
-    {
-        stmt = thd->query();
-    }
+    char decodedSchema[FN_REFLEN];
+    char decodedTbl[FN_REFLEN];
+    decode_file_path(name, decodedSchema, decodedTbl);
+    std::string schema(decodedSchema);
+    std::string tbl(decodedTbl);
 
-    stmt += ";";
+    stmt.clear();
+    stmt.assign("DROP TABLE `");
+    stmt.append(decodedSchema);
+    stmt.append("`.`");
+    stmt.append(decodedTbl);
+    stmt.append("`;");
+
     int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 
     if (rc != 0 && rc != ER_NO_SUCH_TABLE_IN_ENGINE)
