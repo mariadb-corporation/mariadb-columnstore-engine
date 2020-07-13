@@ -2,7 +2,6 @@
 
 # This script allows to gracefully start MCS
 
-/bin/systemctl start mcs-loadbrm
 /bin/systemctl start mcs-workernode
 /bin/systemctl start mcs-controllernode
 /bin/systemctl start mcs-primproc
