@@ -72,6 +72,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
@@ -135,6 +136,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
 
@@ -204,6 +206,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[2]->data()->getDecimalVal(row, isNull);
 

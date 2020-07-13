@@ -116,6 +116,7 @@ int64_t Func_month::getIntVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
@@ -129,6 +130,10 @@ int64_t Func_month::getIntVal(rowgroup::Row& row,
                 {
                     return (unsigned)((val >> 44) & 0xf);
                 }
+            }
+            else
+            {
+                isNull = true;
             }
 
             break;

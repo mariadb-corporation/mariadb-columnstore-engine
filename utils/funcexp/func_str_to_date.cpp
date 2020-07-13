@@ -145,6 +145,7 @@ dataconvert::DateTime getDateTime (rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             if (parm[0]->data()->resultType().scale == 0)
             {
@@ -158,6 +159,11 @@ dataconvert::DateTime getDateTime (rowgroup::Row& row,
                     isNull = true;
                     return -1;
                 }
+            }
+            else
+            {
+                isNull = true;
+                return -1;
             }
 
             break;

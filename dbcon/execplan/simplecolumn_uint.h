@@ -219,8 +219,7 @@ inline IDB_Decimal SimpleColumn_UINT<len>::getDecimalVal(rowgroup::Row& row, boo
         isNull = true;
 
     fResult.decimalVal.value = (uint64_t)row.getUintField<len>(fInputIndex);
-    // WIP MCOL-641
-    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION+1;
+    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION;
     fResult.decimalVal.scale = 0;
     return fResult.decimalVal;
 }

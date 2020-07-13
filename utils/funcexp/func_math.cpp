@@ -1849,70 +1849,134 @@ string Func_format::getStrVal(Row& row,
         {
             IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
+            char buf[80];
+
             //perform rouding if needed
             if ( scale < 0 )
                 scale = 0;
 
-            if ( scale < decimal.scale )
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int64_t d = 0;
-                int64_t p = 1;
-
-                if (!isNull && parm.size() > 1)
+                if ( scale < decimal.scale )
                 {
-                    d = scale;
+                    int64_t d = 0;
+                    int128_t p = 1;
 
-                    if (!isNull)
-                        helpers::decimalPlaceDec(d, p, decimal.scale);
-                }
-
-                if (isNull)
-                    break;
-
-                int64_t x = decimal.value;
-
-                if (d > 0)
-                {
-                    x = x * p;
-                }
-                else if (d < 0)
-                {
-                    int64_t h = p / 2;  // 0.5
-
-                    if ((x >= h) || (x <= -h))
+                    if (!isNull && parm.size() > 1)
                     {
-                        if (x >= 0)
-                            x += h;
-                        else
-                            x -= h;
+                        d = scale;
 
-                        if (p != 0)
-                            x = x / p;
+                        if (!isNull)
+                            helpers::decimalPlaceDec(d, p, decimal.scale);
+                    }
+
+                    if (isNull)
+                        break;
+
+                    int128_t x = decimal.s128Value;
+
+                    if (d > 0)
+                    {
+                        x = x * p;
+                    }
+                    else if (d < 0)
+                    {
+                        int128_t h = p / 2;  // 0.5
+
+                        if ((x >= h) || (x <= -h))
+                        {
+                            if (x >= 0)
+                                x += h;
+                            else
+                                x -= h;
+
+                            if (p != 0)
+                                x = x / p;
+                            else
+                                x = 0;
+                        }
                         else
+                        {
                             x = 0;
+                        }
                     }
-                    else
+
+                    // negative scale is not supported by CNX yet, set d to 0.
+                    if (decimal.scale < 0)
                     {
-                        x = 0;
+                        do
+                            x *= 10;
+
+                        while (++decimal.scale < 0);
                     }
+
+                    decimal.s128Value = x;
                 }
 
-                // negative scale is not supported by CNX yet, set d to 0.
-                if (decimal.scale < 0)
-                {
-                    do
-                        x *= 10;
-
-                    while (++decimal.scale < 0);
-                }
-
-                decimal.value = x;
+                dataconvert::DataConvert::decimalToString(&decimal.s128Value,
+                    decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
             }
+            else
+            {
+                if ( scale < decimal.scale )
+                {
+                    int64_t d = 0;
+                    int64_t p = 1;
 
-            char buf[80];
+                    if (!isNull && parm.size() > 1)
+                    {
+                        d = scale;
 
-            dataconvert::DataConvert::decimalToString( decimal.value,
-                decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+                        if (!isNull)
+                            helpers::decimalPlaceDec(d, p, decimal.scale);
+                    }
+
+                    if (isNull)
+                        break;
+
+                    int64_t x = decimal.value;
+
+                    if (d > 0)
+                    {
+                        x = x * p;
+                    }
+                    else if (d < 0)
+                    {
+                        int64_t h = p / 2;  // 0.5
+
+                        if ((x >= h) || (x <= -h))
+                        {
+                            if (x >= 0)
+                                x += h;
+                            else
+                                x -= h;
+
+                            if (p != 0)
+                                x = x / p;
+                            else
+                                x = 0;
+                        }
+                        else
+                        {
+                            x = 0;
+                        }
+                    }
+
+                    // negative scale is not supported by CNX yet, set d to 0.
+                    if (decimal.scale < 0)
+                    {
+                        do
+                            x *= 10;
+
+                        while (++decimal.scale < 0);
+                    }
+
+                    decimal.value = x;
+                }
+
+                dataconvert::DataConvert::decimalToString( decimal.value,
+                    decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+            }
 
             value = buf;
         }
@@ -1982,7 +2046,7 @@ string Func_format::getStrVal(Row& row,
         // pad extra with '0'
         if (*(value.data()) != '#')
         {
-            for ( int i = 0 ; i < pad ; i ++ )
+            for ( int i = 0 ; i < pad ; i++ )
             {
                 value = value.append("0");
             }
@@ -1996,7 +2060,7 @@ string Func_format::getStrVal(Row& row,
     string::size_type pos = value.find ('-', 0);
 
     if (pos != string::npos)
-        end = 1;;
+        end = 1;
 
     while ((comma -= 3) > end)
     {
