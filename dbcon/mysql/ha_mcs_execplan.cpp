@@ -3163,7 +3163,8 @@ ReturnedColumn* buildReturnedColumn(
 
                     if (item->unsigned_flag)
                     {
-                        rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM);
+                        rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM,
+                                                (int8_t) item->decimal_scale(), (uint8_t) item->decimal_precision());
                     }
                     else
                     {

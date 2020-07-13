@@ -120,6 +120,7 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row,
         break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             const string& valStr = parm[0]->data()->getStrVal(row, isNull);
 

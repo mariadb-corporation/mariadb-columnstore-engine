@@ -219,10 +219,59 @@ uint64_t Func_ceil::getUintVal(Row& row,
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::TINYINT:
         case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
         {
             ret = (uint64_t)parm[0]->data()->getIntVal(row, isNull);
+        }
+        break;
+
+        // ceil(decimal(X,Y)) leads to this path if X, Y allows to
+        // downcast to INT otherwise Func_ceil::getDecimalVal() is called
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            // negative scale is not supported by CNX yet
+            if (d.scale > 0)
+            {
+                if (d.scale > datatypes::INT128MAXPRECISION)
+                {
+                    std::ostringstream oss;
+                    oss << "ceil: datatype of " << execplan::colDataTypeToString(op_ct.colDataType)
+                        << " with scale " << (int) d.scale << " is beyond supported scale";
+                    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+                }
+
+                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    int128_t tmp = d.s128Value;
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    d.s128Value /= scaleDivisor;
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.s128Value * scaleDivisor)) > 0)
+                        d.s128Value += 1;
+
+                    ret = datatypes::Decimal::getUInt64FromWideDecimal(d.s128Value);
+                }
+                else
+                {
+                    int64_t tmp = d.value;
+                    d.value /= helpers::powerOf10_c[d.scale];
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.value * helpers::powerOf10_c[d.scale])) > 0)
+                        d.value += 1;
+
+                    ret = (uint64_t) d.value;
+                }
+            }
         }
         break;
 

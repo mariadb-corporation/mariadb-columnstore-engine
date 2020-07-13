@@ -212,7 +212,7 @@ inline uint64_t simple_case_cmp(Row& row,
 
             for (i = 1; i <= whereCount; i++)
             {
-                if (ev == parm[i]->data()->getDecimalVal(row, isNull)	&& !isNull)
+                if (ev == parm[i]->data()->getDecimalVal(row, isNull) && !isNull)
                 {
                     foundIt = true;
                     break;
@@ -329,7 +329,6 @@ inline uint64_t searched_case_cmp(Row& row,
     uint64_t whereCount = hasElse ? (parm.size() - 1) / 2 : parm.size() / 2;
     bool foundIt = false;
 
-
     for (i = 0; i < whereCount; i++)
     {
         if (parm[i]->getBoolVal(row, isNull))
@@ -362,9 +361,7 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
         bool simpleCase)
 {
     uint64_t simple = simpleCase ? 1 : 0;
-	bool hasElse = (((fp.size()-simple) % 2) != 0);    // if 1, then ELSE exist
-
-
+    bool hasElse = (((fp.size()-simple) % 2) != 0);    // if 1, then ELSE exist
 
     uint64_t parmCount = hasElse ? (fp.size() - 2) : (fp.size() - 1);
     uint64_t whereCount = hasElse ? (fp.size() - 2 + simple) / 2 : (fp.size() - 1) / 2 + simple;
@@ -382,8 +379,8 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
     {
         // for SimpleCase, we return the type of the case expression,
         // which will always be in position 0.
-		if (i == 0 && simpleCase)
-		{
+        if (i == 0 && simpleCase)
+        {
             if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
@@ -393,15 +390,16 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
                 allStringO = false;
                 oct = op.operationType();
             }
-            i += 1;
-		}
 
-		// operation or result type
-		operation = ((i > 0+simple) && (i <= whereCount));
+            i += 1;
+        }
+
+        // operation or result type
+        operation = ((i > 0+simple) && (i <= whereCount));
 
         if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
-                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
-                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
+            fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
+            fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
         {
             // this is not a string column
             PredicateOperator op;
@@ -414,7 +412,7 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
                     allStringO = false;
                     oct = op.operationType();
                 }
-			}
+            }
 
             // If any parm is of string type, the result type should be string. (same as if)
             else if (rct.colDataType != CalpontSystemCatalog::CHAR &&

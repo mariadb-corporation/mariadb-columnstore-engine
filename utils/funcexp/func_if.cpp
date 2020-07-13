@@ -43,7 +43,7 @@ bool boolVal(SPTP& parm, Row& row, const string& timeZone)
 
     try
     {
-        ret = parm->getBoolVal(row, isNull);
+        ret = parm->getBoolVal(row, isNull) && !isNull;
     }
     catch (logging::NotImplementedExcept&)
     {
@@ -67,7 +67,10 @@ bool boolVal(SPTP& parm, Row& row, const string& timeZone)
                 break;
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
-                ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
+                if (parm->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+                    ret = (parm->data()->getDecimalVal(row, isNull).s128Value != 0);
+                else
+                    ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
                 break;
             case CalpontSystemCatalog::BIGINT:
             case CalpontSystemCatalog::SMALLINT:
