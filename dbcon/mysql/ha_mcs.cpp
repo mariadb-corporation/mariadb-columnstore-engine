@@ -1156,6 +1156,20 @@ void ha_mcs::cond_pop()
     DBUG_VOID_RETURN;
 }
 
+int ha_mcs::reset()
+{
+    DBUG_ENTER("ha_mcs::reset");
+
+    if (!condStack.empty())
+    {
+        condStack.clear();
+    }
+
+    DBUG_RETURN(0);
+}
+
+
+
 int ha_mcs::repair(THD* thd, HA_CHECK_OPT* check_opt)
 {
     DBUG_ENTER("ha_mcs::repair");
