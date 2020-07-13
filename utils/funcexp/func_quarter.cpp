@@ -115,6 +115,7 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             if (parm[0]->data()->resultType().scale == 0)
             {
