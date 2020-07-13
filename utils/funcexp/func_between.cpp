@@ -237,6 +237,9 @@ inline bool getBool(rowgroup::Row& row,
         {
             IDB_Decimal val = pm[0]->data()->getDecimalVal(row, isNull);
 
+            if (isNull)
+                return false;
+
             if (notBetween)
             {
                 if (!numericGE(val, pm[1]->data()->getDecimalVal(row, isNull)) && !isNull)
@@ -246,8 +249,7 @@ inline bool getBool(rowgroup::Row& row,
                 return (!numericLE(val, pm[2]->data()->getDecimalVal(row, isNull)) && !isNull);
             }
 
-            return !isNull &&
-                   numericGE(val, pm[1]->data()->getDecimalVal(row, isNull)) &&
+            return numericGE(val, pm[1]->data()->getDecimalVal(row, isNull)) &&
                    numericLE(val, pm[2]->data()->getDecimalVal(row, isNull));
         }
 

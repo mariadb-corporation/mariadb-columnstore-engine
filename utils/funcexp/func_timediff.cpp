@@ -199,6 +199,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale != 0)
             {
                 isNull = true;
@@ -285,6 +286,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
             if (parm[1]->data()->resultType().scale != 0)
             {
                 isNull = true;

@@ -153,6 +153,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
@@ -168,6 +169,11 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
                     min = (int32_t)((val >> 26) & 0x3f);
                     sec = (int32_t)((val >> 20) & 0x3f);
                 }
+            }
+            else
+            {
+                isNull = true;
+                return -1;
             }
 
             break;

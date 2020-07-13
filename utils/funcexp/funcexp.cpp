@@ -473,6 +473,7 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
             case CalpontSystemCatalog::UDECIMAL:
             {
                 IDB_Decimal val = expression[i]->getDecimalVal(row, isNull);
+
                 if (expression[i]->resultType().colWidth
                     == datatypes::MAXDECIMALWIDTH)
                 {
