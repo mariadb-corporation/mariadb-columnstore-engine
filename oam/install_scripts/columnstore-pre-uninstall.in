@@ -18,13 +18,17 @@ else
   MDB="/usr/bin/mysql"
 fi
 
-$MDB -e 'DROP DATABASE IF EXISTS infinidb_querystats;' 2>/dev/null
-$MDB -e 'DELETE FROM mysql.func WHERE dl="libcalmysql.so"' 2>/dev/null
-$MDB -e 'DROP DATABASE IF EXISTS calpontsys;' 2>/dev/null
-$MDB -e 'DROP PROCEDURE IF EXISTS infinidb_querystats.calSetUserPriority;' 2>/dev/null
-$MDB -e "DROP PROCEDURE IF EXISTS infinidb_querystats.calRemoveUserPriority(IN host VARCHAR(50), IN usr VARCHAR(50))" 2>/dev/null
-$MDB -e "DROP PROCEDURE IF EXISTS infinidb_querystats.calShowProcessList;" 2>/dev/null
-$MDB -e "DROP DATABASE IF EXISTS columnstore_info;" 2>/dev/null
+$MDB 2> ${tmpdir}/mysql_uninstall.log <<EOD
+DROP DATABASE IF EXISTS infinidb_querystats;
+DELETE FROM mysql.func WHERE dl="ha_columnstore.so";
+DELETE FROM mysql.func WHERE dl="libregr_mysql.so";
+DELETE FROM mysql.func WHERE dl="libudf_mysql.so";
+DROP DATABASE IF EXISTS calpontsys;
+DROP PROCEDURE IF EXISTS infinidb_querystats.calSetUserPriority;
+DROP PROCEDURE IF EXISTS infinidb_querystats.calRemoveUserPriority(IN host VARCHAR(50), IN usr VARCHAR(50));
+DROP PROCEDURE IF EXISTS infinidb_querystats.calShowProcessList;
+DROP DATABASE IF EXISTS columnstore_info;
+EOD
 
 # Test we are using systemd
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
