@@ -158,6 +158,8 @@ std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row,
     if ((fp[0]->data()->resultType().colDataType ==
             execplan::CalpontSystemCatalog::DECIMAL) ||
             (fp[0]->data()->resultType().colDataType ==
+             execplan::CalpontSystemCatalog::UDECIMAL)   ||
+            (fp[0]->data()->resultType().colDataType ==
              execplan::CalpontSystemCatalog::FLOAT)   ||
             (fp[0]->data()->resultType().colDataType ==
              execplan::CalpontSystemCatalog::DOUBLE))

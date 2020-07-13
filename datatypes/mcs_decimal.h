@@ -286,6 +286,45 @@ class Decimal
         }
 
         /**
+            @brief The method converts a wide decimal value to an uint32_t.
+        */
+        static inline uint32_t getUInt32FromWideDecimal(const int128_t& value)
+        {
+            if (value > static_cast<int128_t>(UINT32_MAX))
+                return UINT32_MAX;
+            else if (value < 0)
+                return 0;
+
+            return static_cast<uint32_t>(value);
+        }
+
+        /**
+            @brief The method converts a wide decimal value to an int32_t.
+        */
+        static inline int32_t getInt32FromWideDecimal(const int128_t& value)
+        {
+            if (value > static_cast<int128_t>(INT32_MAX))
+                return INT32_MAX;
+            else if (value < static_cast<int128_t>(INT32_MIN))
+                return INT32_MIN;
+
+            return static_cast<int32_t>(value);
+        }
+
+        /**
+            @brief The method converts a wide decimal value to an uint64_t.
+        */
+        static inline uint64_t getUInt64FromWideDecimal(const int128_t& value)
+        {
+            if (value > static_cast<int128_t>(UINT64_MAX))
+                return UINT64_MAX;
+            else if (value < 0)
+                return 0;
+
+            return static_cast<uint64_t>(value);
+        }
+
+        /**
             @brief The method converts a __float128 value to a double.
         */
         static inline double getDoubleFromFloat128(const __float128& value)
