@@ -84,7 +84,7 @@ public:
         makeAbsRids = m;
     }
     bool willPrefetch();
-    const int64_t getLastLbid();
+    int64_t getLastLbid();
     void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids);
 
     virtual SCommand duplicate();

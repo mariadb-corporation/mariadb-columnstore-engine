@@ -67,13 +67,18 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            if (parm[0]->data()->resultType().scale)
+            if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
                 if (val == -1)
                     isNull = true;
+            }
+            else
+            {
+                isNull = true;
             }
 
             break;

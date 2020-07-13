@@ -73,7 +73,8 @@ public:
     /**
      * ctor
      */
-    ConstantColumn(const uint64_t val, TYPE type = NUM); // deprecate
+    ConstantColumn(const uint64_t val, TYPE type = NUM,
+                   int8_t scale = 0, uint8_t precision = 0); // deprecate
     //There are more ctors below...
 
     /**

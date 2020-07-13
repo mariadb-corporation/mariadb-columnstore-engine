@@ -58,7 +58,7 @@ namespace utils
         ptr[1] = BINARYEMPTYVALUEHIGH;
     }
 
-     inline void setWideDecimalNullValue(int128_t* val)
+    inline void setWideDecimalNullValue(int128_t* val)
     {
         uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
         ptr[0] = BINARYNULLVALUELOW;
@@ -72,7 +72,7 @@ namespace utils
         ptr[1] = BINARYEMPTYVALUEHIGH;
     }
 
-   inline void int128Max(int128_t& val)
+    inline void int128Max(int128_t& val)
     {
         uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
         ptr[0] = 0xFFFFFFFFFFFFFFFF;

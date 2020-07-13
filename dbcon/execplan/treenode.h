@@ -725,7 +725,10 @@ inline bool TreeNode::getBoolVal()
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            return (fResult.decimalVal.value != 0);
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+                return (fResult.decimalVal.s128Value != 0);
+            else
+                return (fResult.decimalVal.value != 0);
 
         default:
             throw logging::InvalidConversionExcept("TreeNode::getBoolVal: Invalid conversion.");

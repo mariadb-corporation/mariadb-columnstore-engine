@@ -749,9 +749,12 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row,
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            if (parm[0]->data()->resultType().scale)
+            if (parm[0]->data()->resultType().scale == 0)
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+            else
+                isNull = true;
 
             break;
         }

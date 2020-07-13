@@ -128,6 +128,7 @@ string Func_time_format::getStrVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
@@ -144,6 +145,11 @@ string Func_time_format::getStrVal(rowgroup::Row& row,
                     sec = (uint32_t)((val >> 20) & 0x3f);
                     msec = (uint32_t)((val & 0xfffff));
                 }
+            }
+            else
+            {
+                isNull = true;
+                return "";
             }
 
             break;
