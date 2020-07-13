@@ -215,6 +215,7 @@ public:
     int rnd_end();
     int rnd_next(uchar* buf);                                     ///< required
     int rnd_pos(uchar* buf, uchar* pos);                          ///< required
+    int reset() override;
     void position(const uchar* record);                           ///< required
     int info(uint32_t);                                               ///< required
     int extra(enum ha_extra_function operation);
