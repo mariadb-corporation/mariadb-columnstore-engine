@@ -66,6 +66,7 @@ uint64_t makedate(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
@@ -149,6 +150,7 @@ uint64_t makedate(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
 

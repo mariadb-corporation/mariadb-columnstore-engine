@@ -70,8 +70,9 @@ string Func_time::getStrVal(rowgroup::Row& row,
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            if (parm[0]->data()->resultType().scale)
+            if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
 
@@ -80,6 +81,10 @@ string Func_time::getStrVal(rowgroup::Row& row,
 
                 //else
                 //	return *(reinterpret_cast<uint64_t*>(&val));
+            }
+            else
+            {
+                isNull = true;
             }
 
             break;

@@ -153,8 +153,8 @@ string Func_char::getStrVal(Row& row,
                     if (lefto > 4)
                         tmpval++;
 
-                    if (tmpval > static_cast<int128_t>(INT64_MAX))
-                        tmpval = INT64_MAX;
+                    value = datatypes::Decimal::getInt32FromWideDecimal(tmpval);
+
                     // WIP MCOL-641
                     /*if ( !getChar((int64_t)tmpval, buf) )
                     {
@@ -201,6 +201,7 @@ string Func_char::getStrVal(Row& row,
         
         numBytes += getChar(value, pBuf);
     }
+
     isNull = false;
     /* Check whether we got a well-formed string */
     MY_STRCOPY_STATUS status;

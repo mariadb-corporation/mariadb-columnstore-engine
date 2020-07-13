@@ -91,6 +91,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             /* Return hex of unsigned longlong value */
             double val = parm[0]->data()->getDoubleVal(row, isNull);

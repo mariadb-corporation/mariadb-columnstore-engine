@@ -236,7 +236,8 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) :
     fResultType.colWidth = 8;
 }
 
-ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
+ConstantColumn::ConstantColumn(const uint64_t val, TYPE type,
+                               int8_t scale, uint8_t precision) :
     ReturnedColumn(),
     fType(type)
 {
@@ -252,7 +253,8 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
     fResult.longDoubleVal = (long double)fResult.uintVal;
     fResult.decimalVal.value = fResult.uintVal;
     fResult.decimalVal.s128Value = fResult.uintVal;
-    fResult.decimalVal.scale = 0;
+    fResult.decimalVal.scale = scale;
+    fResult.decimalVal.precision = precision;
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
     fResultType.colWidth = 8;
 }

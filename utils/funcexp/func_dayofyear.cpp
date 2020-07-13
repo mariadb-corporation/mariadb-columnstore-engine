@@ -75,7 +75,7 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row,
         {
             dataconvert::TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
             int64_t seconds = timestamp.second;
-	    dataconvert::MySQLTime m_time;
+            dataconvert::MySQLTime m_time;
 	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
             year = m_time.year;
             month = m_time.month;
@@ -135,6 +135,7 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));

@@ -139,6 +139,7 @@ int64_t Func_week::getIntVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
@@ -154,6 +155,11 @@ int64_t Func_week::getIntVal(rowgroup::Row& row,
                     month = (uint32_t)((val >> 44) & 0xf);
                     day = (uint32_t)((val >> 38) & 0x3f);
                 }
+            }
+            else
+            {
+                isNull = true;
+                return -1;
             }
 
             break;
