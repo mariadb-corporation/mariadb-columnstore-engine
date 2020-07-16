@@ -5041,7 +5041,14 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     {
         ci->stats.reset(); // reset query stats
         ci->stats.setStartTime();
-        ci->stats.fUser = thd->main_security_ctx.user;
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
 
         if (thd->main_security_ctx.host)
             ci->stats.fHost = thd->main_security_ctx.host;
