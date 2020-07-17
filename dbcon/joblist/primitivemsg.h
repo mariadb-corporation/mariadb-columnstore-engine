@@ -198,7 +198,7 @@ const uint16_t HAS_JOINER            = 0x10; //16;
 const uint16_t SEND_RIDS_AT_DELIVERY = 0x20; //32;
 const uint16_t HAS_ROWGROUP          = 0x40; //64;
 const uint16_t JOIN_ROWGROUP_DATA    = 0x80; //128
-const uint16_t HAS_WIDE_DECIMAL      = 0x100; //256;
+const uint16_t HAS_WIDE_COLUMNS      = 0x100; //256;
 
 //TODO: put this in a namespace to stop global ns pollution
 enum PrimFlags
@@ -705,8 +705,8 @@ struct NewColResultHeader
     uint16_t NVALS;
     uint16_t ValidMinMax;		// 1 if Min/Max are valid, otherwise 0
     uint32_t OutputType;
-    __int128 Min; 			    // Minimum value in this block for signed data types
-    __int128 Max; 			    // Maximum value in this block for signed data types
+    int128_t Min; 			    // Minimum value in this block for signed data types
+    int128_t Max; 			    // Maximum value in this block for signed data types
     uint32_t CacheIO;			// I/O count from buffer cache
     uint32_t PhysicalIO;		// Physical I/O count from disk
     // if OutputType was OT_DATAVALUE, what follows is DataType[NVALS]

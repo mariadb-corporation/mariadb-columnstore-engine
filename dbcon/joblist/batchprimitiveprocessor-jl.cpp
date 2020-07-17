@@ -60,7 +60,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm) 
     baseRid(0),
     ridCount(0),
     needStrValues(false),
-    hasWideDecimalType(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     needRidsAtDelivery(false),
@@ -102,7 +102,7 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan, vector<B
     filterCount++;
     _hasScan = true;
     if (utils::isWide(cc->getWidth()))
-        hasWideDecimalType = true;
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == scan.sessionId());
 }
 
@@ -117,9 +117,6 @@ void BatchPrimitiveProcessorJL::addFilterStep(const PseudoColStep& pcs)
     cc->setStepUuid(uuid);
     filterSteps.push_back(cc);
     filterCount++;
-    // TODO MCOL-641 How do we get to this execution path?
-    //if (utils::isWide(cc->getWidth()))
-    //    hasWideDecimalType = true;
     idbassert(sessionID == pcs.sessionId());
 }
 
@@ -135,7 +132,7 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColStep& step)
     filterSteps.push_back(cc);
     filterCount++;
     if (utils::isWide(cc->getWidth()))
-        hasWideDecimalType = true;
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == step.sessionId());
 }
 
@@ -190,9 +187,6 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PseudoColStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
-    // TODO MCOL-641 How do we get to this execution path?
-    //if (utils::isWide(cc->getWidth()))
-    //    hasWideDecimalType = true;
     idbassert(sessionID == step.sessionId());
 }
 
@@ -210,7 +204,7 @@ void BatchPrimitiveProcessorJL::addProjectStep(const pColStep& step)
     tupleLength += cc->getWidth();
     projectCount++;
     if (utils::isWide(cc->getWidth()))
-        hasWideDecimalType = true;
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == step.sessionId());
 }
 
@@ -229,7 +223,7 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PassThruStep& step)
     projectCount++;
 
     if (utils::isWide(cc->getWidth()))
-        hasWideDecimalType = true;
+        wideColumnsWidths |= cc->getWidth();
 
     if (filterCount == 0 && !sendRowGroups)
         sendValues = true;
@@ -739,7 +733,7 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in,
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out,
         bool* validCPData, uint64_t* lbid, __int128* min, __int128* max,
         uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks, bool* countThis,
-        uint32_t threadID, bool* hasBinaryColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
+        uint32_t threadID, bool* hasWideColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
 {
     uint64_t tmp64;
     unsigned __int128 tmp128;
@@ -775,21 +769,32 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         {
             in >> *lbid;
             in >> tmp8;
-            *hasBinaryColumn = (tmp8 > 8);
-            if (*hasBinaryColumn)
+            *hasWideColumn = (tmp8 > utils::MAXLEGACYWIDTH);
+            if (UNLIKELY(*hasWideColumn))
             {
-                idbassert(colType.colWidth > 8);
-                in >> tmp128;
-                *min = tmp128;
-                in >> tmp128;
-                *max = tmp128;
+                idbassert(colType.colWidth > utils::MAXLEGACYWIDTH);
+                if (LIKELY(datatypes::Decimal::isWideDecimalType(colType)))
+                {
+                    in >> tmp128;
+                    *min = tmp128;
+                    in >> tmp128;
+                    *max = tmp128;
+                }
+                else
+                {
+                    std::ostringstream oss;
+                    oss << __func__ << " WARNING!!! Not implemented for the data type ";
+                    oss << colType.colDataType << std::endl;
+                    std::cout  << oss.str();
+                    idbassert(false);
+                }
             }
             else
             {
                 in >> tmp64;
-                *min = static_cast<__int128>(tmp64);
+                *min = static_cast<int128_t>(tmp64);
                 in >> tmp64;
-                *max = static_cast<__int128>(tmp64);
+                *max = static_cast<int128_t>(tmp64);
             }
         }
         else
@@ -1010,10 +1015,13 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
     if (sendTupleJoinRowGroupData)
         flags |= JOIN_ROWGROUP_DATA;
 
-    if (hasWideDecimalType)
-        flags |= HAS_WIDE_DECIMAL;
+    if (wideColumnsWidths)
+        flags |= HAS_WIDE_COLUMNS;
 
     bs << flags;
+
+    if (wideColumnsWidths)
+        bs << wideColumnsWidths;
 
     bs << bop;
     bs << (uint8_t) (forHJ ? 1 : 0);
