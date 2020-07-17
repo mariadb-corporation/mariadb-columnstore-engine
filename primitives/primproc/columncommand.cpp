@@ -40,7 +40,6 @@ using namespace std;
 #include "primitiveserver.h"
 #include "primproc.h"
 #include "stats.h"
-#include "widedecimalutils.h"
 
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -94,17 +93,17 @@ void ColumnCommand::execute()
     if (fFilterFeeder == LEFT_FEEDER)
     {
         values = bpp->fFiltCmdValues[0].get();
-        binaryValues = bpp->fFiltCmdBinaryValues[0].get();
+        wide128Values = bpp->fFiltCmdBinaryValues[0].get();
     }
     else if (fFilterFeeder == RIGHT_FEEDER)
     {
         values = bpp->fFiltCmdValues[1].get();
-        binaryValues = bpp->fFiltCmdBinaryValues[1].get();
+        wide128Values = bpp->fFiltCmdBinaryValues[1].get();
     }
     else
     {
         values = bpp->values;
-        binaryValues = bpp->binaryValues;
+        wide128Values = bpp->wide128Values;
     }
 
     _execute();
@@ -153,9 +152,10 @@ void ColumnCommand::loadData()
     bool lastBlockReached = false;
     oidLastLbid = getLastLbid();
     uint32_t blocksToLoad = 0;
-    // WIP MCOL-641
-    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(16 * sizeof(BRM::LBID_t));
-    uint8_t** blockPtrs = (uint8_t**) alloca(16 * sizeof(uint8_t*));
+    // The number of elements allocated equals to the number of
+    // iteratations of the first loop here.
+    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(colType.colWidth * sizeof(BRM::LBID_t));
+    uint8_t** blockPtrs = (uint8_t**) alloca(colType.colWidth * sizeof(uint8_t*));
     int i;
 
 
@@ -282,11 +282,24 @@ void ColumnCommand::issuePrimitive()
         //if (wasVersioned && outMsg->ValidMinMax)
         //	cout << "CC: versioning overriding min max data\n";
         bpp->lbidForCP = lbid;
-        if (primMsg->DataSize > 8)
+        if (UNLIKELY(utils::isWide(colType.colWidth)))
         {
-            bpp->hasBinaryColumn = true;
-            bpp->bigMaxVal = outMsg->Max;
-            bpp->bigMinVal = outMsg->Min;
+            if (datatypes::Decimal::isWideDecimalType(colType))
+            {
+                bpp->hasWideColumnOut = true;
+                // colWidth is int32 and wideColumnWidthOut's
+                // value is expected to be at most uint8.
+                bpp->wideColumnWidthOut = colType.colWidth;
+                bpp->max128Val = outMsg->Max;
+                bpp->min128Val = outMsg->Min;
+            }
+            else
+            {
+                ostringstream os;
+                os << " WARNING!!! Not implemented for ";
+                os << primMsg->DataSize << " column.";
+                throw PrimitiveColumnProjectResultExcept(os.str());
+            }
         }
         else
         {
@@ -315,7 +328,7 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
-                binaryValues[i] = *((int128_t*) &bpp->outputMsg[pos]);
+                wide128Values[i] = *((int128_t*) &bpp->outputMsg[pos]);
                 pos += 16;
             }
 
@@ -394,8 +407,7 @@ void ColumnCommand::process_OT_DATAVALUE()
     {
          case 16:
          {
-            memcpy(binaryValues, outMsg + 1, outMsg->NVALS << 4);
-            cout << "  CC: first value is " << values[0] << endl;
+            memcpy(wide128Values, outMsg + 1, outMsg->NVALS << 4);
             break;
          }
 
@@ -586,6 +598,8 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
 
 
 
+    // JFYI This switch results are used by index scan code that is unused
+    // as of 1.5
     switch (colType.colWidth)
     {
         case 1:
@@ -608,8 +622,6 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
             mask = 0x01;
             break;
         case 16:
-            // WIP MCOL-641
-            cout << __FILE__<< ":" <<__LINE__ << " Set shift and mask for 16 Bytes"<< endl;
             shift = 1;
             mask = 0x01;
             break;
@@ -809,7 +821,6 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
         }
         case 16:
         {
-            cout << __FILE__<< ":" <<__LINE__ << " ColumnCommand::projectResultRG " << endl;
             for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
             {
                 r.setBinaryField_offset((int128_t*)msg8, colType.colWidth, offset);

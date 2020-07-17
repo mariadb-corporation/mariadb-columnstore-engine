@@ -176,7 +176,7 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
 
 
 FilterCommand::FilterCommand() : Command(FILTER_COMMAND), fBOP(0),
-    hasWideDecimalType(false)
+    hasWideColumns(false)
 {
 }
 
@@ -251,7 +251,7 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
     rightColType = right;
 
     if (datatypes::Decimal::isWideDecimalType(left) || datatypes::Decimal::isWideDecimalType(right))
-        hasWideDecimalType = true;
+        hasWideColumns = true;
 }
 
 
@@ -262,7 +262,7 @@ void FilterCommand::doFilter()
 
     bool (FilterCommand::*compareFunc)(uint64_t, uint64_t);
 
-    if (hasWideDecimalType)
+    if (hasWideColumns)
         compareFunc = &FilterCommand::binaryCompare;
     else
         compareFunc = &FilterCommand::compare;
@@ -280,10 +280,8 @@ void FilterCommand::doFilter()
             if ((this->*compareFunc)(i, j) == true)
             {
                 bpp->relRids[bpp->ridCount] = bpp->fFiltCmdRids[0][i];
-                // WIP MCOL-641 How is bpp->(binary)values used given that
-                // we are setting the relRids?
                 if (datatypes::Decimal::isWideDecimalType(leftColType))
-                    bpp->binaryValues[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
+                    bpp->wide128Values[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
                 else
                     bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
                 bpp->ridMap |= 1 << (bpp->relRids[bpp->ridCount] >> 10);
