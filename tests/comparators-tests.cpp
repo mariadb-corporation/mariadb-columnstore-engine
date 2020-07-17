@@ -141,6 +141,7 @@ private:
         std::cout << std::endl << "------------------------------------------------------------" << std::endl;
         uint32_t oid =3001;
         std::vector<uint32_t> offsets, roids, tkeys, cscale, cprecision;
+        std::vector<uint32_t> charSetNumVec;
         std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
         offsets.push_back(2); offsets.push_back(2+width);
         roids.push_back(oid);
@@ -148,11 +149,13 @@ private:
         types.push_back(cscDt);
         cscale.push_back(0);
         cprecision.push_back(precision);
+        charSetNumVec.push_back(8);
         rowgroup::RowGroup inRG(1, //column count
             offsets, //oldOffset
             roids, // column oids
             tkeys, //keys
             types, // types
+            charSetNumVec, // charset numbers
             cscale, //scale
             cprecision, // precision
             20, // sTableThreshold

@@ -68,6 +68,8 @@ const uint64_t mcs_pow_10[20] =
 
 constexpr uint32_t maxPowOf10 = sizeof(mcs_pow_10)/sizeof(mcs_pow_10[0])-1;
 constexpr int128_t Decimal128Null = int128_t(0x8000000000000000LL) << 64;
+constexpr int128_t Decimal128Empty = (int128_t(0x8000000000000000LL) << 64) + 1;
+
 
 /**
     @brief The function to produce scale multiplier/divisor for
