@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016, 2017 MariaDB Corporation
+   Copyright (C) 2016-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -101,7 +101,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     baseRid(0),
     ridCount(0),
     needStrValues(false),
-    hasWideDecimalType(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -113,7 +113,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
-    hasBinaryColumn(false),
+    hasWideColumnOut(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -147,7 +147,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     baseRid(0),
     ridCount(0),
     needStrValues(false),
-    hasWideDecimalType(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -159,7 +159,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
-    hasBinaryColumn(false),
+    hasWideColumnOut(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -242,12 +242,15 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
     doJoin = tmp16 & HAS_JOINER;
     hasRowGroup = tmp16 & HAS_ROWGROUP;
     getTupleJoinRowGroupData = tmp16 & JOIN_ROWGROUP_DATA;
-    hasWideDecimalType = tmp16 & HAS_WIDE_DECIMAL;
+    bool hasWideColumnsIn = tmp16 & HAS_WIDE_COLUMNS;
 
     // This used to signify that there was input row data from previous jobsteps, and
     // it never quite worked right. No need to fix it or update it; all BPP's have started
     // with a scan for years.  Took it out.
     assert(!hasRowGroup);
+
+    if (hasWideColumnsIn)
+        bs >> wideColumnsWidths;
 
     bs >> bop;
     bs >> forHJ;
@@ -581,7 +584,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 
     /* skip the header */
     bs.advance(sizeof(ISMPacketHeader) + 3 * sizeof(uint32_t));
-// TODO MCOL-641
 
     bs >> count;
     bs >> startPos;
@@ -1024,7 +1026,7 @@ void BatchPrimitiveProcessor::initProcessor()
             fFiltRidCount[i] = 0;
             fFiltCmdRids[i].reset(new uint16_t[LOGICAL_BLOCK_RIDS]);
             fFiltCmdValues[i].reset(new int64_t[LOGICAL_BLOCK_RIDS]);
-            if (hasWideDecimalType)
+            if (wideColumnsWidths | datatypes::MAXDECIMALWIDTH)
                 fFiltCmdBinaryValues[i].reset(new int128_t[LOGICAL_BLOCK_RIDS]);
 
             if (filtOnString) fFiltStrValues[i].reset(new string[LOGICAL_BLOCK_RIDS]);
@@ -1092,15 +1094,15 @@ void BatchPrimitiveProcessor::initProcessor()
             fAggregator->setInputOutput(fe2 ? fe2Output : outputRG, &fAggregateRG);
     }
 
-    if (!hasBinaryColumn)
+    if (LIKELY(!hasWideColumnOut))
     {
         minVal = MAX64;
         maxVal = MIN64;
     }
     else
     {
-        utils::int128Min(bigMaxVal);
-        utils::int128Max(bigMinVal);
+        max128Val = datatypes::Decimal::minInt128;
+        min128Val = datatypes::Decimal::maxInt128;
     }
 
     // @bug 1269, initialize data used by execute() for async loading blocks
@@ -1546,11 +1548,6 @@ void BatchPrimitiveProcessor::execute()
                         projectSteps[j]->projectIntoRowGroup(fe1Input, projectForFE1[j]);
 
                 for (j = 0; j < ridCount; j++, fe1In.nextRow())
-                    // TODO MCOL-641
-                    // WHERE clause on a numeric and a non-numeric column
-                    // leads to this execution path:
-                    // SELECT a, b from t1 where a!=b
-                    // Here, a is e.g., decimal(38), b is varchar(15)
                     if (fe1->evaluate(&fe1In))
                     {
                         applyMapping(fe1ToProjection, fe1In, &fe1Out);
@@ -1993,15 +1990,16 @@ void BatchPrimitiveProcessor::writeProjectionPreamble()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            if (hasBinaryColumn)
+            if (UNLIKELY(hasWideColumnOut))
             {
-                *serialized << (uint8_t) 16; // width of min/max value
-                *serialized << (unsigned __int128) bigMinVal;
-                *serialized << (unsigned __int128) bigMaxVal;
+                // PSA width
+                *serialized << (uint8_t) wideColumnWidthOut;
+                *serialized << min128Val;
+                *serialized << max128Val;
             }
             else
             {
-                *serialized << (uint8_t) 8; // width of min/max value
+                *serialized << (uint8_t) utils::MAXLEGACYWIDTH; // width of min/max value
                 *serialized << (uint64_t) minVal;
                 *serialized << (uint64_t) maxVal;
             }
@@ -2093,15 +2091,19 @@ void BatchPrimitiveProcessor::makeResponse()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            if (hasBinaryColumn)
+
+            if (UNLIKELY(hasWideColumnOut))
             {
-                *serialized << (uint8_t) 16; // width of min/max value
-                *serialized << (unsigned __int128) bigMinVal;
-                *serialized << (unsigned __int128) bigMaxVal;
+                // PSA width
+                // Remove the assert for >16 bytes DTs.
+                assert(wideColumnWidthOut == datatypes::MAXDECIMALWIDTH);
+                *serialized << (uint8_t) wideColumnWidthOut;
+                *serialized << min128Val;
+                *serialized << max128Val;
             }
             else
             {
-                *serialized << (uint8_t) 8; // width of min/max value
+                *serialized << (uint8_t) utils::MAXLEGACYWIDTH; // width of min/max value
                 *serialized << (uint64_t) minVal;
                 *serialized << (uint64_t) maxVal;
             }
@@ -2207,16 +2209,18 @@ int BatchPrimitiveProcessor::operator()()
         }
 
         allocLargeBuffers();
-        if (!hasBinaryColumn)
+
+        if (LIKELY(!hasWideColumnOut))
         {
             minVal = MAX64;
             maxVal = MIN64;
         }
         else
         {
-            utils::int128Min(bigMaxVal);
-            utils::int128Max(bigMinVal);
+            max128Val = datatypes::Decimal::minInt128;
+            min128Val = datatypes::Decimal::maxInt128;
         }
+
         validCPData = false;
 #ifdef PRIMPROC_STOPWATCH
         stopwatch->start("BPP() execute");
@@ -2351,7 +2355,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
     bpp->stepID = stepID;
     bpp->uniqueID = uniqueID;
     bpp->needStrValues = needStrValues;
-    bpp->hasWideDecimalType = hasWideDecimalType;
+    bpp->wideColumnsWidths = wideColumnsWidths;
     bpp->gotAbsRids = gotAbsRids;
     bpp->gotValues = gotValues;
     bpp->LBIDTrace = LBIDTrace;
