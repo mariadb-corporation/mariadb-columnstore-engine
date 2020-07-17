@@ -52,6 +52,7 @@
 #include "rowaggregation.h"
 #include "funcexpwrapper.h"
 #include "bppsendthread.h"
+#include "columnwidth.h"
 
 namespace primitiveprocessor
 {
@@ -205,16 +206,15 @@ private:
 
     uint16_t relRids[LOGICAL_BLOCK_RIDS];
     int64_t values[LOGICAL_BLOCK_RIDS];
-    int128_t binaryValues[LOGICAL_BLOCK_RIDS];
+    int128_t wide128Values[LOGICAL_BLOCK_RIDS];
     boost::scoped_array<uint64_t> absRids;
     boost::scoped_array<std::string> strValues;
     uint16_t ridCount;
     bool needStrValues;
-    bool hasWideDecimalType;
+    uint16_t wideColumnsWidths;
 
     /* Common space for primitive data */
-    static const uint32_t BUFFER_SIZE = 131072;
-    uint8_t blockData[BLOCK_SIZE * 16];
+    uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
     boost::scoped_array<uint8_t> outputMsg;
     uint32_t outMsgSize;
 
@@ -233,18 +233,18 @@ private:
     // CP data from a scanned column
     union
     {
-        __int128 bigMinVal;
+        int128_t min128Val;
         int64_t minVal;
     };
     union
     {
-        __int128 bigMaxVal;
+        int128_t max128Val;
         int64_t maxVal;
     };
 
     uint64_t lbidForCP;
-    // MCOL-641
-    bool hasBinaryColumn;
+    bool hasWideColumnOut;
+    uint8_t wideColumnWidthOut;
     // IO counters
     boost::mutex counterLock;
     uint32_t busyLoaderCount;

@@ -78,8 +78,7 @@ void PassThruCommand::project()
     switch (colWidth)
     {
         case 16:
-            cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
-            bpp->serialized->append((uint8_t*) bpp->binaryValues, bpp->ridCount << 4);
+            bpp->serialized->append((uint8_t*) bpp->wide128Values, bpp->ridCount << 4);
             break;
         
         case 8:
@@ -156,10 +155,9 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
 
             break;
         case 16:
-            cout << __FILE__ << ":" << __LINE__ << " PassThruCommand::projectIntoRowGroup" << " Addition for 16 Bytes" << endl;
             for (i = 0; i < bpp->ridCount; i++)
             {
-                r.setBinaryField_offset(&bpp->binaryValues[i], 16, offset);
+                r.setBinaryField_offset(&bpp->wide128Values[i], 16, offset);
                 r.nextRow(rowSize);
             }
     }

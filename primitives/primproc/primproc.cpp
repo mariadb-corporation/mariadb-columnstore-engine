@@ -480,10 +480,9 @@ int main(int argc, char* argv[])
     // set to smallest extent size
     // do not allow to read beyond the end of an extent
     const int MaxReadAheadSz = (extentRows) / BLOCK_SIZE;
-    //defaultBufferSize = 512 * 1024; // @bug 2627 - changed default dict buffer from 256K to 512K, allows for cols w/ length of 61.
-    // WIP MCOL-641 Check with Patrick on this. Changed it from 100*1024 to 128*1024
-    // to match with BatchPrimitiveProcessor::BUFFER_SIZE
-    defaultBufferSize = 128 * 1024; // 1/17/12 - made the dict buffer dynamic, max size for a numeric col is 80k + ovrhd
+    // Max size for a primitive message column buffer. Must be big enough
+    // to accomodate 8192 values of the widest non-dict column + 8192 RIDs + ohead.
+    defaultBufferSize = 150 * 1024;
 
 
     // This parm controls whether we rotate through the output sockets

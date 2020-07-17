@@ -1022,7 +1022,6 @@ inline bool isUnsigned(const execplan::CalpontSystemCatalog::ColDataType type)
         case execplan::CalpontSystemCatalog::UMEDINT:
         case execplan::CalpontSystemCatalog::UINT:
         case execplan::CalpontSystemCatalog::UBIGINT:
-        // TODO MCOL-641 add decimal here
             return true;
 
         default:
