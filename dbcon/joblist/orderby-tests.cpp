@@ -174,6 +174,7 @@ private:
 
         // create two columns RG. 1st is the sorting key, second is the data column
         std::vector<uint32_t> offsets, roids, tkeys, cscale, cprecision;
+        std::vector<uint32_t> charSetNumVec;
         std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
         offsets.push_back(2); offsets.push_back(10); offsets.push_back(18);
         roids.push_back(oid); roids.push_back(oid);
@@ -182,11 +183,13 @@ private:
         types.push_back(execplan::CalpontSystemCatalog::UBIGINT);
         cscale.push_back(0); cscale.push_back(0);
         cprecision.push_back(20); cprecision.push_back(20);
+        charSetNumVec.push_back(8); charSetNumVec.push_back(8); 
         rowgroup::RowGroup inRG(2, //column count
             offsets, //oldOffset
             roids, // column oids
             tkeys, //keys
             types, // types
+            charSetNumVec, // charset numbers
             cscale, //scale
             cprecision, // precision
             20, // sTableThreshold
