@@ -3180,7 +3180,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         precisionProj, oidsProj, aggKey, scaleProj, width,
                         oidsAggPm, keysAggPm, typeAggPm, scaleAggPm,
                         precisionAggPm, widthAggPm);
-                    scaleAggPm.push_back(0);
+                    csNumAggPm.push_back(8);
                     colAggPm++;
                 }
 
