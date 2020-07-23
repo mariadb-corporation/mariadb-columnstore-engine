@@ -121,7 +121,7 @@ local Pipeline(branch, platform, event) = {
       status: ['success', 'failure'],
     },
   },
-  regressionlog: {
+  regressionlog:: {
     name: 'regressionlog',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
@@ -135,6 +135,47 @@ local Pipeline(branch, platform, event) = {
     ],
     when: {
       status: ['success', 'failure'],
+    },
+  },
+  dockerfile:: {
+    name: 'dockerfile',
+    image: 'docker:git',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-community-columnstore-docker.git',
+      'cd mariadb-community-columnstore-docker',
+      'apk add --no-cache patch',
+      'patch Dockerfile ../Dockerfile.patch',
+      'cp ../result/MariaDB-common-10* ../result/MariaDB-client-10* ../result/MariaDB-server-10* ../result/MariaDB-shared-10* ../result/MariaDB-columnstore-engine-10* ./',
+    ],
+  },
+  ecr:: {
+    name: 'ecr',
+    image: 'plugins/ecr',
+    settings: {
+      registry: '866067714787.dkr.ecr.us-east-1.amazonaws.com',
+      repo: 'columnstore',
+      create_repository: 'true',
+      context: 'mariadb-community-columnstore-docker',
+      access_key: {
+        from_secret: 'ecr_access_key',
+      },
+      secret_key: {
+        from_secret: 'ecr_secret_key'
+      },
+    },
+  },
+  docker:: {
+    name: 'docker',
+    image: 'plugins/docker',
+    settings: {
+      repo: 'romcheck/columnstore',
+      context: '/drone/src/mariadb-community-columnstore-docker',
+      dockerfile: '/drone/src/mariadb-community-columnstore-docker/Dockerfile',
+      username: 'romcheck',
+      password: {
+        from_secret: 'dockerhub_token',
+      }
     },
   },
   kind: 'pipeline',
@@ -229,6 +270,9 @@ local Pipeline(branch, platform, event) = {
              },
            },
          ] +
+         (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
+         (if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
+         // (if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if branch == 'develop' then [pipeline.smoke] else []) +
          (if branch == 'develop' then [pipeline.smokelog] else []) +
          (if branch == 'develop' then [pipeline.regression] else []) +
