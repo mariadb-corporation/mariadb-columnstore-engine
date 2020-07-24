@@ -287,7 +287,7 @@ public:
     {
         return discreteValues;
     }
-    inline const boost::scoped_array<std::vector<int64_t> >& getCPData()
+    inline const boost::scoped_array<std::vector<int128_t> >& getCPData()
     {
         return cpValues;
     }
@@ -413,7 +413,7 @@ private:
     /* Runtime casual partitioning support */
     void updateCPData(const rowgroup::Row& r);
     boost::scoped_array<bool> discreteValues;
-    boost::scoped_array<std::vector<int64_t> > cpValues;    // if !discreteValues, [0] has min, [1] has max
+    boost::scoped_array<std::vector<int128_t> > cpValues;    // if !discreteValues, [0] has min, [1] has max
     uint32_t uniqueLimit;
     bool finished;
 

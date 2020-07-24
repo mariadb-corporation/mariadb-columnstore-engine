@@ -107,10 +107,10 @@ int BlockResolutionManager::saveState(string filename) throw()
         saveExtentMap(emFilename);
 
         // truncate teh file if already exists since no truncate in HDFS.
-        const char* filename = journalFilename.c_str();
+        const char* filename_p = journalFilename.c_str();
 
         IDBDataFile* journal = IDBDataFile::open(
-                                   IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "wb", 0);
+                                   IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "wb", 0);
         delete journal;
 
         vbbm.save(vbbmFilename);

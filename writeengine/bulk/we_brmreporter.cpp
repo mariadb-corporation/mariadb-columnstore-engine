@@ -34,6 +34,9 @@
 #include "we_log.h"
 #include "cacheutils.h"
 #include "IDBPolicy.h"
+#include "widedecimalutils.h"
+#include "mcs_decimal.h"
+#include "dataconvert.h"
 
 namespace WriteEngine
 {
@@ -294,11 +297,11 @@ void BRMReporter::sendHWMToFile( )
 //------------------------------------------------------------------------------
 // Send Casual Partition update information to BRM
 //------------------------------------------------------------------------------
-// TODO MCOL-641
 void BRMReporter::sendCPToFile( )
 {
     if (fCPInfo.size() > 0)
     {
+        char buf[utils::MAXLENGTH16BYTES];
         std::ostringstream oss;
         oss << "Writing " << fCPInfo.size() << " CP updates for table " <<
             fTableName << " to report file " << fRptFileName;
@@ -306,12 +309,32 @@ void BRMReporter::sendCPToFile( )
 
         for (unsigned int i = 0; i < fCPInfo.size(); i++)
         {
-            fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
-                     fCPInfo[i].max       << ' ' <<
-                     fCPInfo[i].min       << ' ' <<
-                     fCPInfo[i].seqNum    << ' ' <<
-                     fCPInfo[i].type      << ' ' <<
-                     fCPInfo[i].newExtent << std::endl;
+            if (!datatypes::Decimal::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
+            {
+                fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
+                         fCPInfo[i].max       << ' ' <<
+                         fCPInfo[i].min       << ' ' <<
+                         fCPInfo[i].seqNum    << ' ' <<
+                         fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].newExtent << std::endl;
+            }
+            else
+            {
+                std::string bigMin, bigMax;
+
+                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMin, 0, buf, utils::MAXLENGTH16BYTES, fCPInfo[i].type);
+                bigMin = buf;
+
+                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMax, 0, buf, utils::MAXLENGTH16BYTES, fCPInfo[i].type);
+                bigMax = buf;
+
+                fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
+                         bigMax               << ' ' <<
+                         bigMin               << ' ' <<
+                         fCPInfo[i].seqNum    << ' ' <<
+                         fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].newExtent << std::endl;
+            }
         }
     }
 }

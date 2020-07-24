@@ -54,6 +54,7 @@ using namespace boost;
 #include "MonitorProcMem.h"
 #include "threadnaming.h"
 #include "vlarray.h"
+#include "widedecimalutils.h"
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL
@@ -1098,8 +1099,8 @@ void BatchPrimitiveProcessor::initProcessor()
     }
     else
     {
-        dataconvert::DataConvert::int128Min(bigMaxVal);
-        dataconvert::DataConvert::int128Max(bigMinVal);
+        utils::int128Min(bigMaxVal);
+        utils::int128Max(bigMinVal);
     }
 
     // @bug 1269, initialize data used by execute() for async loading blocks
@@ -2213,8 +2214,8 @@ int BatchPrimitiveProcessor::operator()()
         }
         else
         {
-            dataconvert::DataConvert::int128Min(bigMaxVal);
-            dataconvert::DataConvert::int128Max(bigMinVal);
+            utils::int128Min(bigMaxVal);
+            utils::int128Max(bigMinVal);
         }
         validCPData = false;
 #ifdef PRIMPROC_STOPWATCH
