@@ -27,6 +27,9 @@
 #include "dbrm.h"
 #include "objectidmanager.h"
 #include "is_columnstore.h"
+#include "mcs_decimal.h"
+#include "widedecimalutils.h"
+#include "dataconvert.h"
 
 // Required declaration as it isn't in a MairaDB include
 bool schema_table_store_record(THD* thd, TABLE* table);
@@ -37,8 +40,10 @@ ST_FIELD_INFO is_columnstore_extents_fields[] =
     Show::Column("OBJECT_TYPE", Show::Varchar(64), NOT_NULL),                 // 1
     Show::Column("LOGICAL_BLOCK_START", Show::SLonglong(0), NOT_NULL),        // 2
     Show::Column("LOGICAL_BLOCK_END", Show::SLonglong(0), NOT_NULL),          // 3
-    Show::Column("MIN_VALUE", Show::SLonglong(0), NULLABLE),                  // 4
-    Show::Column("MAX_VALUE", Show::SLonglong(0), NULLABLE),                  // 5
+    // length=3800 here because sql/sql_i_s.h sets
+    // decimal_precision() as (length / 100) % 100). Not sure why.
+    Show::Column("MIN_VALUE", Show::Decimal(3800), NULLABLE),                 // 4
+    Show::Column("MAX_VALUE", Show::Decimal(3800), NULLABLE),                 // 5
     Show::Column("WIDTH", Show::ULong(0), NOT_NULL),                          // 6
     Show::Column("DBROOT", Show::ULong(0), NOT_NULL),                         // 7
     Show::Column("PARTITION_ID", Show::ULong(0), NOT_NULL),                   // 8
@@ -76,26 +81,61 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
         {
             table->field[1]->store("Column", strlen("Column"), cs);
 
-            if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
-                    iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 2))
+            if (iter->colWid != datatypes::MAXDECIMALWIDTH)
             {
-                table->field[4]->set_null();
-            }
-            else
-            {
-                table->field[4]->set_notnull();
-                table->field[4]->store(iter->partition.cprange.lo_val);
-            }
+                if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
+                        iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 1))
+                {
+                    table->field[4]->set_null();
+                }
+                else
+                {
+                    table->field[4]->set_notnull();
+                    table->field[4]->store(iter->partition.cprange.lo_val);
+                }
 
-            if (iter->partition.cprange.hi_val == std::numeric_limits<int64_t>::max() ||
-                    iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 2))
-            {
-                table->field[5]->set_null();
+                if (iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 1))
+                {
+                    table->field[5]->set_null();
+                }
+                else
+                {
+                    table->field[5]->set_notnull();
+                    table->field[5]->store(iter->partition.cprange.hi_val);
+                }
             }
             else
             {
-                table->field[5]->set_notnull();
-                table->field[5]->store(iter->partition.cprange.hi_val);
+                if (iter->partition.cprange.bigLoVal == utils::maxInt128 ||
+                        iter->partition.cprange.bigLoVal <= (utils::minInt128 + 1))
+                {
+                    table->field[4]->set_null();
+                }
+                else
+                {
+                    table->field[4]->set_notnull();
+
+                    char buf[utils::MAXLENGTH16BYTES];
+                    dataconvert::DataConvert::decimalToString(
+                        &iter->partition.cprange.bigLoVal,
+                        0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                    table->field[4]->store(buf, strlen(buf), table->field[4]->charset());
+                }
+
+                if (iter->partition.cprange.bigHiVal <= (utils::minInt128 + 1))
+                {
+                    table->field[5]->set_null();
+                }
+                else
+                {
+                    table->field[5]->set_notnull();
+
+                    char buf[utils::MAXLENGTH16BYTES];
+                    dataconvert::DataConvert::decimalToString(
+                        &iter->partition.cprange.bigHiVal,
+                        0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                    table->field[5]->store(buf, strlen(buf), table->field[5]->charset());
+                }
             }
 
             table->field[6]->store(iter->colWid);

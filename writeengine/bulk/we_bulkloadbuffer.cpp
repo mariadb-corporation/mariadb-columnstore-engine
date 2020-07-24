@@ -40,6 +40,7 @@
 #include "dataconvert.h"
 #include "exceptclasses.h"
 #include "mcs_decimal.h"
+#include "widedecimalutils.h"
 
 #include "joblisttypes.h"
 
@@ -1735,8 +1736,8 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
                     }
                     else
                     {
-                        dataconvert::DataConvert::int128Max(bufStats.bigMinBufferVal);
-                        dataconvert::DataConvert::int128Min(bufStats.bigMaxBufferVal);
+                        utils::int128Max(bufStats.bigMinBufferVal);
+                        utils::int128Min(bufStats.bigMaxBufferVal);
                     }
                     updateCPInfoPendingFlag = false;
                 }

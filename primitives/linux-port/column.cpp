@@ -1597,8 +1597,8 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
         }
         else
         {
-            dataconvert::DataConvert::int128Max(out->Min);
-            dataconvert::DataConvert::int128Min(out->Max);
+            utils::int128Max(out->Min);
+            utils::int128Min(out->Max);
         }
     }
     else

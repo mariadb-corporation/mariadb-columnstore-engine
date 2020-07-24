@@ -89,9 +89,10 @@ private:
 
     uint32_t daysThroughMonth(uint32_t mth);
 
+    template<typename T>
     uint32_t estimateDistinctValues(const execplan::CalpontSystemCatalog::ColType& ct,
-                                    const uint64_t& min,
-                                    const uint64_t& max,
+                                    const T& min,
+                                    const T& max,
                                     const char cpStatus);
 
     /** @brief returns a factor between 0 and 1 for the estimate of rows that will qualify the given individual operation.
@@ -106,7 +107,8 @@ private:
     */
     template<class T>
     float estimateOpFactor(const T& min, const T& max, const T& value, char op, uint8_t lcf,
-                           uint32_t distinctValues, char cpStatus);
+                           uint32_t distinctValues, char cpStatus,
+                           const execplan::CalpontSystemCatalog::ColType& ct);
 
     /** @brief returns a factor between 0 and 1 for the estimate of rows that will qualify
     *          the given operation(s).

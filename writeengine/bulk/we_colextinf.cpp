@@ -27,6 +27,7 @@
 
 #include "we_colextinf.h"
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 
 #include <iostream>
 #include <sstream>
@@ -93,7 +94,7 @@ void ColExtInf::addOrUpdateEntryTemplate( RID     lastInputRow,
         // MAX_INT and maxVal will be MIN_INT (see getCPInfoForBRM()).
 
         __int128 bigMinValInit;
-        dataconvert::DataConvert::int128Max(bigMinValInit);
+        utils::int128Max(bigMinValInit);
         if ((iter->second.fMinVal == LLONG_MIN && width <= 8) ||
             (iter->second.fbigMinVal == bigMinValInit && width > 8)) // init the range
         {

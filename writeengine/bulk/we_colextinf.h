@@ -41,6 +41,7 @@
 #include "brmtypes.h"
 #include "we_type.h"
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 
 namespace WriteEngine
 {
@@ -65,8 +66,8 @@ public:
         fMaxVal(LLONG_MIN),
         fNewExtent(true)
     {
-        dataconvert::DataConvert::int128Min(fbigMaxVal);
-        dataconvert::DataConvert::int128Max(fbigMinVal);
+        utils::int128Min(fbigMaxVal);
+        utils::int128Max(fbigMinVal);
     }
 
     // Used to create entry for an existing extent we are going to add data to.
@@ -76,8 +77,8 @@ public:
         fMaxVal(LLONG_MIN),
         fNewExtent(bIsNewExtent)
     {
-        dataconvert::DataConvert::int128Min(fbigMaxVal);
-        dataconvert::DataConvert::int128Max(fbigMinVal);
+        utils::int128Min(fbigMaxVal);
+        utils::int128Max(fbigMinVal);
     }
 
     // Used to create entry for a new extent, with LBID not yet allocated
