@@ -1170,8 +1170,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                     }
                     else
                     {
-                        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
-                        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
                     }
                 }
 
@@ -1916,8 +1916,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                     }
                     else
                     {
-                        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
-                        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
                     }
                 }
 

@@ -55,6 +55,7 @@ namespace bi = boost::interprocess;
 #include "mastersegmenttable.h"
 #include "blocksize.h"
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 #include "oamcache.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
@@ -118,8 +119,8 @@ EMCasualPartition_struct::EMCasualPartition_struct()
 {
     lo_val = numeric_limits<int64_t>::max();
     hi_val = numeric_limits<int64_t>::min();
-    dataconvert::DataConvert::int128Max(bigLoVal);
-    dataconvert::DataConvert::int128Min(bigHiVal);
+    utils::int128Max(bigLoVal);
+    utils::int128Min(bigHiVal);
     sequenceNum = 0;
     isValid = CP_INVALID;
 }
@@ -360,8 +361,8 @@ int ExtentMap::_markInvalid(const LBID_t lbid, const execplan::CalpontSystemCata
                 {
                     fExtentMap[i].partition.cprange.lo_val = numeric_limits<int64_t>::max();
                     fExtentMap[i].partition.cprange.hi_val = numeric_limits<int64_t>::min();
-                    dataconvert::DataConvert::int128Max(fExtentMap[i].partition.cprange.bigLoVal);
-                    dataconvert::DataConvert::int128Min(fExtentMap[i].partition.cprange.bigHiVal);
+                    utils::int128Max(fExtentMap[i].partition.cprange.bigLoVal);
+                    utils::int128Min(fExtentMap[i].partition.cprange.bigHiVal);
                 }
 
                 incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
@@ -1048,7 +1049,7 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
         else
         {
             unsigned __int128 temp;
-            dataconvert::DataConvert::uint128Max(temp);
+            utils::uint128Max(temp);
 
             if ( (static_cast<unsigned __int128>(min) >= (temp - 1)) ||
                     (static_cast<unsigned __int128>(max) >= (temp - 1)) )
@@ -1070,7 +1071,7 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
         else
         {
             __int128 temp;
-            dataconvert::DataConvert::int128Min(temp);
+            utils::int128Min(temp);
 
             if ( (min <= (temp + 1)) ||
                     (max <= (temp + 1)) )
@@ -1112,8 +1113,8 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
     if (typeid(T) == typeid(__int128))
     {
         __int128 tmpMax, tmpMin;
-        dataconvert::DataConvert::int128Min(tmpMax);
-        dataconvert::DataConvert::int128Max(tmpMin);
+        utils::int128Min(tmpMax);
+        utils::int128Max(tmpMin);
         max = tmpMax;
         min = tmpMin;
     }
@@ -2730,8 +2731,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
         }
         else
         {
-            dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
-            dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
+            utils::int128Max(e->partition.cprange.bigLoVal);
+            utils::int128Min(e->partition.cprange.bigHiVal);
         }
     }
 
@@ -2941,8 +2942,8 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
         }
         else
         {
-            dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
-            dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
+            utils::int128Max(e->partition.cprange.bigLoVal);
+            utils::int128Min(e->partition.cprange.bigHiVal);
         }
     }
 
@@ -3128,8 +3129,8 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
     e->status       = EXTENTUNAVAILABLE;// @bug 1911 mark extent as in process
     e->partition.cprange.lo_val = numeric_limits<int64_t>::max();
     e->partition.cprange.hi_val = numeric_limits<int64_t>::min();
-    dataconvert::DataConvert::int128Max(e->partition.cprange.bigLoVal);
-    dataconvert::DataConvert::int128Min(e->partition.cprange.bigHiVal);
+    utils::int128Max(e->partition.cprange.bigLoVal);
+    utils::int128Min(e->partition.cprange.bigHiVal);
     e->partition.cprange.sequenceNum = 0;
     e->partition.cprange.isValid     = CP_INVALID;
 
