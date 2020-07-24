@@ -91,13 +91,14 @@ public:
     // Functions to handle min/max values per lbid for casual partitioning;
     // If pEMEntries is provided, then min/max will be extracted from that
     // vector, else extents in BRM will be searched. If type is unsigned, caller
-    // should static cast returned min and max to uint64_t
+    // should static cast returned min and max to uint64_t/uint128_t
     template<typename T>
     bool GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
                    const std::vector<struct BRM::EMEntry>* pEMEntries,
                    execplan::CalpontSystemCatalog::ColDataType type);
 
-    bool GetMinMax(int64_t* min, int64_t* max, int64_t* seq, int64_t lbid,
+    template<typename T>
+    bool GetMinMax(T* min, T* max, int64_t* seq, int64_t lbid,
                    const std::tr1::unordered_map<int64_t, BRM::EMEntry>& entries,
                    execplan::CalpontSystemCatalog::ColDataType type);
 
@@ -115,10 +116,12 @@ public:
                                   const execplan::CalpontSystemCatalog::ColType& ct,
                                   const uint8_t BOP);
 
-    bool checkSingleValue(int64_t min, int64_t max, int64_t value,
+    template<typename T>
+    bool checkSingleValue(T min, T max, T value,
                           execplan::CalpontSystemCatalog::ColDataType type);
 
-    bool checkRangeOverlap(int64_t min, int64_t max, int64_t tmin, int64_t tmax,
+    template<typename T>
+    bool checkRangeOverlap(T min, T max, T tmin, T tmax,
                            execplan::CalpontSystemCatalog::ColDataType type);
 
     // check the column data type and the column size to determine if it

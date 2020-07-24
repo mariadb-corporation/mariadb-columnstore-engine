@@ -31,6 +31,7 @@
 #include <cassert>
 
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 #include "oamcache.h"
 #include "rwlock.h"
 #include "mastersegmenttable.h"
@@ -4560,8 +4561,8 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
                 }
                 else
                 {
-                    dataconvert::DataConvert::int128Min(aInfo.bigMax);
-                    dataconvert::DataConvert::int128Max(aInfo.bigMin);
+                    utils::int128Min(aInfo.bigMax);
+                    utils::int128Max(aInfo.bigMin);
                 }
             }
         }
