@@ -49,6 +49,7 @@ private:
 
     uint32_t function;
     uint64_t valueFromUM;
+    uint128_t bigValueFromUM;
 };
 
 

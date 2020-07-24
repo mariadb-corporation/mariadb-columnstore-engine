@@ -44,6 +44,9 @@ using namespace config;
 #include "dataconvert.h"
 using namespace dataconvert;
 
+#include "widedecimalutils.h"
+#include "mcs_decimal.h"
+
 #include "liboamcpp.h"
 
 #undef REALLY_DANGEROUS
@@ -164,40 +167,97 @@ const string charcolToString(int64_t v)
 //------------------------------------------------------------------------------
 // Formats an integer to it's date, datetime, or char equivalent
 //------------------------------------------------------------------------------
-const string fmt(int64_t v)
+template<typename T>
+const string fmt(T v)
 {
     ostringstream oss;
 
     if (tflg)
     {
-        oss << DataConvert::dateToString(v);
+        oss << DataConvert::dateToString((int64_t) v);
     }
     else if (sflg)
     {
-        oss << DataConvert::datetimeToString(v);
+        oss << DataConvert::datetimeToString((int64_t) v);
     }
     else if (aflg)
     {
-        oss << charcolToString(v);
+        oss << charcolToString((int64_t) v);
     }
     else if (mflg)
     {
-        oss << v;
+        if (typeid(T) != typeid(int128_t))
+        {
+            oss << (int64_t) v;
+        }
+        else
+        {
+            char buf[utils::MAXLENGTH16BYTES];
+
+            int128_t tmp = v;
+
+            dataconvert::DataConvert::decimalToString(
+                &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+
+            oss << buf;
+        }
     }
     else if (uflg)
     {
-        if (static_cast<uint64_t>(v) > numeric_limits<uint64_t>::max() - 2)
-            oss << "notset";
+        if (typeid(T) != typeid(int128_t))
+        {
+            if (static_cast<uint64_t>(v) > numeric_limits<uint64_t>::max() - 2)
+                oss << "notset";
+            else
+                oss << static_cast<uint64_t>(v);
+        }
         else
-            oss << static_cast<uint64_t>(v);
+        {
+            if (v <= utils::minInt128 + 1)
+            {
+                oss << "notset";
+            }
+            else
+            {
+                char buf[utils::MAXLENGTH16BYTES];
+
+                int128_t tmp = static_cast<uint128_t>(v);
+
+                dataconvert::DataConvert::decimalToString(
+                    &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+
+                oss << buf;
+            }
+        }
     }
     else
     {
-        if (v == numeric_limits<int64_t>::max() ||
-                v <= (numeric_limits<int64_t>::min() + 2))
-            oss << "notset";
+        if (typeid(T) != typeid(int128_t))
+        {
+            if (v == numeric_limits<int64_t>::max() ||
+                    v <= (numeric_limits<int64_t>::min() + 1))
+                oss << "notset";
+            else
+                oss << (int64_t) v;
+        }
         else
-            oss << v;
+        {
+            if (v == utils::maxInt128 || (v <= utils::minInt128 + 1))
+            {
+                oss << "notset";
+            }
+            else
+            {
+                char buf[utils::MAXLENGTH16BYTES];
+
+                int128_t tmp = v;
+
+                dataconvert::DataConvert::decimalToString(
+                    &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+
+                oss << buf;
+            }
+        }
     }
 
     return oss.str();
@@ -234,6 +294,8 @@ int dumpone(OID_t oid, unsigned int sortOrder)
     std::vector<struct EMEntry>::iterator end;
     int64_t max;
     int64_t min;
+    int128_t bigMax;
+    int128_t bigMin;
     int32_t seqNum;
     bool header;
     bool needtrailer = false;
@@ -262,8 +324,6 @@ int dumpone(OID_t oid, unsigned int sortOrder)
         while (iter != end)
         {
             uint32_t lbidRangeSize = iter->range.size * 1024;
-            max       = iter->partition.cprange.hi_val;
-            min       = iter->partition.cprange.lo_val;
             seqNum    = iter->partition.cprange.sequenceNum;
             int state = iter->partition.cprange.isValid;
 
@@ -287,10 +347,26 @@ int dumpone(OID_t oid, unsigned int sortOrder)
             if (vflg)
                 cout << oid << ' ';
 
-            cout << iter->range.start << " - " <<
-                 (iter->range.start + lbidRangeSize - 1) <<
-                 " (" << lbidRangeSize << ") min: " << fmt(min) <<
-                 ", max: " << fmt(max) << ", seqNum: " << seqNum << ", state: ";
+            if (iter->colWid != datatypes::MAXDECIMALWIDTH)
+            {
+                max = iter->partition.cprange.hi_val;
+                min = iter->partition.cprange.lo_val;
+
+                cout << iter->range.start << " - " <<
+                     (iter->range.start + lbidRangeSize - 1) <<
+                     " (" << lbidRangeSize << ") min: " << fmt(min) <<
+                     ", max: " << fmt(max) << ", seqNum: " << seqNum << ", state: ";
+            }
+            else
+            {
+                bigMax = iter->partition.cprange.bigHiVal;
+                bigMin = iter->partition.cprange.bigLoVal;
+
+                cout << iter->range.start << " - " <<
+                     (iter->range.start + lbidRangeSize - 1) <<
+                     " (" << lbidRangeSize << ") min: " << fmt(bigMin) <<
+                     ", max: " << fmt(bigMax) << ", seqNum: " << seqNum << ", state: ";
+            }
 
             switch (state)
             {
@@ -415,7 +491,7 @@ int clearAllCPData()
             if (entries.empty())
                 continue;
 
-            bool isBinaryColumn = entries[0].colWid > 8;
+            bool isBinaryColumn = (entries[0].colWid == datatypes::MAXDECIMALWIDTH);
 
             BRM::CPInfo cpInfo;
             BRM::CPInfoList_t vCpInfo;
@@ -427,8 +503,8 @@ int clearAllCPData()
             }
             else
             {
-                dataconvert::DataConvert::int128Min(cpInfo.bigMax);
-                dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                utils::int128Min(cpInfo.bigMax);
+                utils::int128Max(cpInfo.bigMin);
             }
 
             cpInfo.seqNum = -1;
@@ -466,7 +542,7 @@ int clearmm(OID_t oid)
         return 1;
     }
 
-    bool isBinaryColumn = entries[0].colWid > 8;
+    bool isBinaryColumn = (entries[0].colWid == datatypes::MAXDECIMALWIDTH);
 
     // @bug 2280.  Changed to use the batch interface to clear the CP info to make the clear option faster.
     BRM::CPInfo cpInfo;
@@ -479,8 +555,8 @@ int clearmm(OID_t oid)
     }
     else
     {
-        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
-        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+        utils::int128Min(cpInfo.bigMax);
+        utils::int128Max(cpInfo.bigMin);
     }
 
     cpInfo.seqNum = -1;

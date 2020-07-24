@@ -40,6 +40,7 @@ using namespace std;
 using namespace execplan;
 
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -1140,8 +1141,8 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                     else
                     {
-                        dataconvert::DataConvert::int128Min(cpInfo.bigMax);
-                        dataconvert::DataConvert::int128Max(cpInfo.bigMin);
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
                     }
                 }
 
@@ -1193,8 +1194,8 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                     else
                     {
-                        dataconvert::DataConvert::int128Min(cpInfo1.bigMax);
-                        dataconvert::DataConvert::int128Max(cpInfo1.bigMin);
+                        utils::int128Min(cpInfo1.bigMax);
+                        utils::int128Max(cpInfo1.bigMin);
                     }
                 }
 
