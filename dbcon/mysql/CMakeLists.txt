@@ -68,6 +68,4 @@ if (TARGET columnstore)
 
     install(FILES columnstore.cnf
         DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
-    install(FILES x-columnstore.cnf
-        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
 endif()
