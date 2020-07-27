@@ -74,6 +74,7 @@ namespace bi = boost::interprocess;
 #define EM_MAGIC_V2 0x76f78b1d
 #define EM_MAGIC_V3 0x76f78b1e
 #define EM_MAGIC_V4 0x76f78b1f
+#define EM_MAGIC_V5 0x76f78b20
 
 #ifndef NDEBUG
 #define ASSERT(x) \
@@ -163,7 +164,7 @@ EMCasualPartition_struct& EMCasualPartition_struct::operator= (const EMCasualPar
 }
 
 //------------------------------------------------------------------------------
-// Version 4 EmEntry methods
+// Version 5 EmEntry methods
 //------------------------------------------------------------------------------
 
 EMEntry::EMEntry()
@@ -1276,7 +1277,7 @@ void ExtentMap::reserveLBIDRange(LBID_t start, uint8_t size)
 */
 
 
-void ExtentMap::loadVersion4(IDBDataFile* in)
+void ExtentMap::loadVersion4or5(IDBDataFile* in, bool upgradeV4ToV5)
 {
     int emNumElements = 0, flNumElements = 0;
 
@@ -1287,8 +1288,8 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
 
     if ((size_t) nbytes != sizeof(int) + sizeof(int))
     {
-        log_errno("ExtentMap::loadVersion4(): read ");
-        throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
+        log_errno("ExtentMap::loadVersion4or5(): read ");
+        throw runtime_error("ExtentMap::loadVersion4or5(): read failed. Check the error log.");
     }
 
     void *fExtentMapPtr = static_cast<void*>(fExtentMap);
@@ -1317,18 +1318,66 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         growEMShmseg(nrows);
     }
 
-    size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
     int err;
-    char *writePos = (char *) fExtentMap;
-    while (progress < writeSize)
+    char* writePos;
+    size_t progress, writeSize;
+
+    if (!upgradeV4ToV5)
     {
-        err = in->read(writePos + progress, writeSize - progress);
-        if (err <= 0)
+        progress = 0;
+        writeSize = emNumElements * sizeof(EMEntry);
+        writePos = (char *) fExtentMap;
+
+        while (progress < writeSize)
         {
-            log_errno("ExtentMap::loadVersion4(): read ");
-            throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
+            err = in->read(writePos + progress, writeSize - progress);
+            if (err <= 0)
+            {
+                log_errno("ExtentMap::loadVersion4or5(): read ");
+                throw runtime_error("ExtentMap::loadVersion4or5(): read failed. Check the error log.");
+            }
+            progress += (uint) err;
         }
-        progress += (uint) err;
+    }
+    else
+    {
+        // We are upgrading extent map from v4 to v5.
+        for (int i = 0; i < emNumElements; i++)
+        {
+            EMEntry_v4 emEntryV4;
+            progress = 0;
+            writeSize = sizeof(EMEntry_v4);
+            writePos = (char *) &(emEntryV4);
+            while (progress < writeSize)
+            {
+                err = in->read(writePos + progress, writeSize - progress);
+                if (err <= 0)
+                {
+                    log_errno("ExtentMap::loadVersion4or5(): read ");
+                    throw runtime_error("ExtentMap::loadVersion4or5(): read failed during upgrade. Check the error log.");
+                }
+                progress += (uint) err;
+            }
+
+            fExtentMap[i].range.start = emEntryV4.range.start;
+            fExtentMap[i].range.size = emEntryV4.range.size;
+            fExtentMap[i].fileID = emEntryV4.fileID;
+            fExtentMap[i].blockOffset = emEntryV4.blockOffset;
+            fExtentMap[i].HWM = emEntryV4.HWM;
+            fExtentMap[i].partitionNum = emEntryV4.partitionNum;
+            fExtentMap[i].segmentNum = emEntryV4.segmentNum;
+            fExtentMap[i].dbRoot = emEntryV4.dbRoot;
+            fExtentMap[i].colWid = emEntryV4.colWid;
+            fExtentMap[i].status = emEntryV4.status;
+            fExtentMap[i].partition.cprange.hi_val = emEntryV4.partition.cprange.hi_val;
+            fExtentMap[i].partition.cprange.lo_val = emEntryV4.partition.cprange.lo_val;
+            fExtentMap[i].partition.cprange.sequenceNum = emEntryV4.partition.cprange.sequenceNum;
+            fExtentMap[i].partition.cprange.isValid = emEntryV4.partition.cprange.isValid;
+            utils::int128Max(fExtentMap[i].partition.cprange.bigLoVal);
+            utils::int128Min(fExtentMap[i].partition.cprange.bigHiVal);
+        }
+
+        std::cout<<emNumElements<<" extents successfully upgraded"<<std::endl;
     }
     
     for (int i = 0; i < emNumElements; i++)
@@ -1418,8 +1467,11 @@ void ExtentMap::load(const string& filename, bool fixFL)
         int emVersion = 0;
         int bytes = in->read((char*) &emVersion, sizeof(int));
 
-        if (bytes == (int) sizeof(int) && emVersion == EM_MAGIC_V4)
-            loadVersion4(in.get());
+        if (bytes == (int) sizeof(int) &&
+            (emVersion == EM_MAGIC_V4 || emVersion == EM_MAGIC_V5))
+        {
+            loadVersion4or5(in.get(), emVersion == EM_MAGIC_V4);
+        }
         else
         {
             log("ExtentMap::load(): That file is not a valid ExtentMap image");
@@ -1486,7 +1538,7 @@ void ExtentMap::save(const string& filename)
         throw ios_base::failure("ExtentMap::save(): open failed. Check the error log.");
     }
 
-    loadSize[0] = EM_MAGIC_V4;
+    loadSize[0] = EM_MAGIC_V5;
     loadSize[1] = fEMShminfo->currentSize / sizeof(EMEntry);
     loadSize[2] = fFLShminfo->allocdSize / sizeof(InlineLBIDRange); // needs to send all entries
 
