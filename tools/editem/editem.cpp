@@ -349,8 +349,8 @@ int dumpone(OID_t oid, unsigned int sortOrder)
 
             if (iter->colWid != datatypes::MAXDECIMALWIDTH)
             {
-                max = iter->partition.cprange.hi_val;
-                min = iter->partition.cprange.lo_val;
+                max = iter->partition.cprange.hiVal;
+                min = iter->partition.cprange.loVal;
 
                 cout << iter->range.start << " - " <<
                      (iter->range.start + lbidRangeSize - 1) <<
