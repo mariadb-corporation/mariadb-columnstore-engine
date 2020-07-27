@@ -82,25 +82,25 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
             if (iter->colWid != datatypes::MAXDECIMALWIDTH)
             {
-                if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
-                        iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 1))
+                if (iter->partition.cprange.loVal == std::numeric_limits<int64_t>::max() ||
+                        iter->partition.cprange.loVal <= (std::numeric_limits<int64_t>::min() + 1))
                 {
                     table->field[4]->set_null();
                 }
                 else
                 {
                     table->field[4]->set_notnull();
-                    table->field[4]->store(iter->partition.cprange.lo_val);
+                    table->field[4]->store(iter->partition.cprange.loVal);
                 }
 
-                if (iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 1))
+                if (iter->partition.cprange.hiVal <= (std::numeric_limits<int64_t>::min() + 1))
                 {
                     table->field[5]->set_null();
                 }
                 else
                 {
                     table->field[5]->set_notnull();
-                    table->field[5]->store(iter->partition.cprange.hi_val);
+                    table->field[5]->store(iter->partition.cprange.hiVal);
                 }
             }
             else

@@ -133,13 +133,11 @@ struct EMEntry_v4
 // and max values for casual partitioning.
 struct EMCasualPartition_struct
 {
-    RangePartitionData_t hi_val;       // This needs to be reinterpreted as unsigned for uint64_t column types.
-    RangePartitionData_t lo_val;
     int32_t sequenceNum;
     char isValid; //CP_INVALID - No min/max and no DML in progress. CP_UPDATING - Update in progress. CP_VALID- min/max is valid
     union
     {
-        __int128 bigLoVal;
+        __int128 bigLoVal; // These need to be reinterpreted as unsigned for uint64_t/uint128_t column types.
         int64_t loVal;
     };
     union

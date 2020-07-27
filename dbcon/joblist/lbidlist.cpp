@@ -335,8 +335,8 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
     }
     else
     {
-        *min = entry.partition.cprange.lo_val;
-        *max = entry.partition.cprange.hi_val;
+        *min = entry.partition.cprange.loVal;
+        *max = entry.partition.cprange.hiVal;
     }
 
     *seq = entry.partition.cprange.sequenceNum;
@@ -364,8 +364,8 @@ int LBIDList::getMinMaxFromEntries(T& min, T& max, int32_t& seq,
             }
             else
             {
-                min = EMEntries[i].partition.cprange.lo_val;
-                max = EMEntries[i].partition.cprange.hi_val;
+                min = EMEntries[i].partition.cprange.loVal;
+                max = EMEntries[i].partition.cprange.hiVal;
             }
             seq = EMEntries[i].partition.cprange.sequenceNum;
             return EMEntries[i].partition.cprange.isValid;
@@ -757,7 +757,6 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     bool scan = true;
     int64_t value = 0;
     __int128 bigValue = 0;
-    uint64_t* int128Ptr = reinterpret_cast<uint64_t*>(&bigValue);
     bool bIsUnsigned = execplan::isUnsigned(ct.colDataType);
     bool bIsChar = execplan::isCharType(ct.colDataType);
 
@@ -806,15 +805,14 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                 {
                     uint64_t val = *(int64_t*)MsgDataPtr;
                     value = static_cast<int64_t>(val);
+                    break;
                 }
 
                 case 16:
                 {
-                    unsigned __int128 val;
-                    int128Ptr = reinterpret_cast<uint64_t*>(&val);
-                    int128Ptr[0] = *reinterpret_cast<const uint64_t*>(MsgDataPtr);
-                    int128Ptr[1] = *(reinterpret_cast<const uint64_t*>(MsgDataPtr) + 1);
-                    bigValue = static_cast<__int128>(val);
+                    uint128_t val = *(int128_t*)MsgDataPtr;
+                    bigValue = static_cast<int128_t>(val);
+                    break;
                 }
             }
         }
@@ -847,12 +845,14 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                 {
                     int64_t val = *(int64_t*)MsgDataPtr;
                     value = val;
+                    break;
                 }
 
                 case 16:
                 {
-                    int128Ptr[0] = *reinterpret_cast<const uint64_t*>(MsgDataPtr);
-                    int128Ptr[1] = *(reinterpret_cast<const uint64_t*>(MsgDataPtr) + 1);
+                    int128_t val = *(int128_t*)MsgDataPtr;
+                    bigValue = val;
+                    break;
                 }
             }
         }
@@ -875,8 +875,8 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
         {
             // MCOL-1246 Trim trailing whitespace for matching so that we have
             // the same as InnoDB behaviour
-            int64_t tMin = cpRange.lo_val;
-            int64_t tMax = cpRange.hi_val;
+            int64_t tMin = cpRange.loVal;
+            int64_t tMax = cpRange.hiVal;
             dataconvert::DataConvert::trimWhitespace(tMin);
             dataconvert::DataConvert::trimWhitespace(tMax);
 
@@ -886,22 +886,22 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
         }
         else if (bIsUnsigned)
         {
-            if (ct.colWidth <= 8)
+            if (ct.colWidth != datatypes::MAXDECIMALWIDTH)
             {
-                scan = compareVal(static_cast<uint64_t>(cpRange.lo_val), static_cast<uint64_t>(cpRange.hi_val), static_cast<uint64_t>(value), op, lcf);
+                scan = compareVal(static_cast<uint64_t>(cpRange.loVal), static_cast<uint64_t>(cpRange.hiVal), static_cast<uint64_t>(value), op, lcf);
             }
-            else if (ct.colWidth == 16)
+            else
             {
                 scan = compareVal(static_cast<unsigned __int128>(cpRange.bigLoVal), static_cast<unsigned __int128>(cpRange.bigHiVal), static_cast<unsigned __int128>(bigValue), op, lcf);
             }
         }
         else
         {
-            if (ct.colWidth <= 8)
+            if (ct.colWidth != datatypes::MAXDECIMALWIDTH)
             {
-                scan = compareVal(cpRange.lo_val, cpRange.hi_val, value, op, lcf);
+                scan = compareVal(cpRange.loVal, cpRange.hiVal, value, op, lcf);
             }
-            else if (ct.colWidth == 16)
+            else
             {
                 scan = compareVal(cpRange.bigLoVal, cpRange.bigHiVal, bigValue, op, lcf);
             }
