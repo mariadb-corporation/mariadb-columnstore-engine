@@ -100,17 +100,43 @@ const char CP_INVALID = 0;
 const char CP_UPDATING = 1;
 const char CP_VALID = 2;
 
+// The _v4 structs are defined below for upgrading extent map
+// from v4 to v5; see ExtentMap::loadVersion4or5 for details.
+struct EMCasualPartition_struct_v4
+{
+    RangePartitionData_t hi_val;       // This needs to be reinterpreted as unsigned for uint64_t column types.
+    RangePartitionData_t lo_val;
+    int32_t sequenceNum;
+    char isValid; //CP_INVALID - No min/max and no DML in progress. CP_UPDATING - Update in progress. CP_VALID- min/max is valid
+};
+
+struct EMPartition_struct_v4
+{
+    EMCasualPartition_struct_v4 cprange;
+};
+
+struct EMEntry_v4
+{
+    InlineLBIDRange range;
+    int         fileID;
+    uint32_t    blockOffset;
+    HWM_t       HWM;
+    uint32_t	partitionNum; // starts at 0
+    uint16_t	segmentNum;   // starts at 0
+    uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
+    uint16_t	colWid;
+    int16_t 	status;       //extent avail for query or not, or out of service
+    EMPartition_struct_v4 partition;
+};
+
+// MCOL-641: v5 structs of the extent map. This version supports int128_t min
+// and max values for casual partitioning.
 struct EMCasualPartition_struct
 {
     RangePartitionData_t hi_val;       // This needs to be reinterpreted as unsigned for uint64_t column types.
     RangePartitionData_t lo_val;
     int32_t sequenceNum;
     char isValid; //CP_INVALID - No min/max and no DML in progress. CP_UPDATING - Update in progress. CP_VALID- min/max is valid
-    EXPORT EMCasualPartition_struct();
-    EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
-    EXPORT EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum);
-    EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
-    EXPORT EMCasualPartition_struct& operator= (const EMCasualPartition_struct& em);
     union
     {
         __int128 bigLoVal;
@@ -121,12 +147,17 @@ struct EMCasualPartition_struct
         __int128 bigHiVal;
         int64_t hiVal;
     };
+    EXPORT EMCasualPartition_struct();
+    EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
+    EXPORT EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum);
+    EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
+    EXPORT EMCasualPartition_struct& operator= (const EMCasualPartition_struct& em);
 };
 typedef EMCasualPartition_struct EMCasualPartition_t;
 
 struct EMPartition_struct
 {
-    EMCasualPartition_t		cprange;
+    EMCasualPartition_t cprange;
 };
 typedef EMPartition_struct EMPartition_t;
 
@@ -955,8 +986,13 @@ private:
 
     int _markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
 
-    void loadVersion4(std::ifstream& in);
-    void loadVersion4(idbdatafile::IDBDataFile* in);
+    /** @brief Loads the extent map from a file into memory.
+     *
+     * @param in (in) the file to load the extent map from.
+     * @param upgradeV4ToV5 (in) flag indicating whether we are upgrading
+     * extent map from v4 to v5.
+     */
+    void loadVersion4or5(idbdatafile::IDBDataFile* in, bool upgradeV4ToV5);
 
     ExtentMapImpl* fPExtMapImpl;
     FreeListImpl* fPFreeListImpl;
