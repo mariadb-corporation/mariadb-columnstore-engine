@@ -45,12 +45,13 @@ if __name__ == '__main__':
         bucket = 'some_bucket'
 
     dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
+    pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
     loadbrm = '/usr/bin/load_brm'
 
     brm_saves_current = ''
 
-    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
-        # load s3
+    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
+        # single-node w/ s3
         cmd = 'systemctl start mcs-storagemanager'
         retcode = subprocess.call(cmd, shell=True)
         if retcode < 0:
@@ -74,7 +75,7 @@ if __name__ == '__main__':
             # will happen when brm file does not exist
             print('{} does not exist.'.format(brm), file=sys.stderr)
     else:
-        pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
+        
         brm = '{}_current'.format(dbrmroot)
 
         if pmCount > 1:
