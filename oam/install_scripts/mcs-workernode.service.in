@@ -9,4 +9,4 @@ Restart=on-failure
 ExecStop=/usr/bin/env bash -c "kill -15 $MAINPID"
 ExecStopPost=-@ENGINE_BINDIR@/save_brm
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
-TimeoutStopSec=5
+TimeoutStopSec=120
