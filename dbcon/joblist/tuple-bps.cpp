@@ -1584,7 +1584,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, con
                 throw logic_error("invalid column width");
         }
 
-        if (colWidth < 16)
+        if (colWidth < datatypes::MAXDECIMALWIDTH)
             thisPredicate = compareSingleValue(COP, (int64_t) val, val2);
         else
             thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2);
@@ -1694,11 +1694,11 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                && (!hasExtentIDFilter || processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                && (!hasMaxFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
                                      (!datatypes::Decimal::isWideDecimalType(fColType) ?
-                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) :
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
                                       processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : true))
                && (!hasMinFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
                                      (!datatypes::Decimal::isWideDecimalType(fColType) ?
-                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) :
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
                                       processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : true))
                && (!hasLBIDFilter || processLBIDFilter(emEntry))
                ;
@@ -1712,11 +1712,11 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                || (hasExtentIDFilter && processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                || (hasMaxFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) :
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : false))
                || (hasMinFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) :
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : false))
                || (hasLBIDFilter && processLBIDFilter(emEntry))
                ;

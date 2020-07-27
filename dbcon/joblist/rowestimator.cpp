@@ -200,7 +200,7 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
         ret = max - min + 1;
     }
 
-    if (ret > (T) fRowsPerExtent)
+    if (ret > fRowsPerExtent)
     {
         ret = fRowsPerExtent;
     }
@@ -251,7 +251,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     factor = (1.0 * max - value) / (1.0 * max - min + 1);
                 else
-                    factor = (1.0 * max - value) / (1.0 * max - min + 1);
+                    factor = ((__float128) max - value) / (max - min + 1);
             }
 
             break;
@@ -264,7 +264,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     factor = (1.0 * max - value + 1) / (max - min + 1);
                 else
-                    factor = (1.0 * max - value + 1) / (max - min + 1);
+                    factor = ((__float128) max - value + 1) / (max - min + 1);
             }
 
             break;
@@ -310,8 +310,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     // Adjust values based on column type and estimate the
     if (!datatypes::Decimal::isWideDecimalType(ct))
     {
-        adjustedMin = adjustValue(ct, emEntry.partition.cprange.lo_val);
-        adjustedMax = adjustValue(ct, emEntry.partition.cprange.hi_val);
+        adjustedMin = adjustValue(ct, emEntry.partition.cprange.loVal);
+        adjustedMax = adjustValue(ct, emEntry.partition.cprange.hiVal);
         distinctValuesEstimate = estimateDistinctValues(
                                      ct, adjustedMin, adjustedMax, emEntry.partition.cprange.isValid);
     }
@@ -452,8 +452,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         }
 
 #if ROW_EST_DEBUG
-        cout << "  Min-" << emEntry.partition.cprange.lo_val <<
-             ", Max-" << emEntry.partition.cprange.hi_val <<
+        cout << "  Min-" << emEntry.partition.cprange.loVal <<
+             ", Max-" << emEntry.partition.cprange.hiVal <<
              ", Val-" << value;
 #endif
 
@@ -685,16 +685,5 @@ uint64_t RowEstimator::estimateRowsForNonCPColumn(ColumnCommandJL& colCmd)
     return estimatedRows;
 }
 
-template
-uint32_t RowEstimator::estimateDistinctValues<int128_t>(const execplan::CalpontSystemCatalog::ColType& ct,
-                                          const int128_t& min,
-                                          const int128_t& max,
-                                          const char cpStatus);
-
-template
-uint32_t RowEstimator::estimateDistinctValues<int64_t>(const execplan::CalpontSystemCatalog::ColType& ct,
-                                         const int64_t& min,
-                                         const int64_t& max,
-                                         const char cpStatus);
 
 } //namespace joblist

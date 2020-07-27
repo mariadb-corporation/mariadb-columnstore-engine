@@ -48,8 +48,8 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
     {
         if (!datatypes::Decimal::isWideDecimalType(colType))
         {
-            int64_t max = extents[currentExtentIndex].partition.cprange.hi_val;
-            int64_t min = extents[currentExtentIndex].partition.cprange.lo_val;
+            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
             if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
                 bs << max;
@@ -75,8 +75,8 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
     {
         if (!datatypes::Decimal::isWideDecimalType(colType))
         {
-            int64_t max = extents[currentExtentIndex].partition.cprange.hi_val;
-            int64_t min = extents[currentExtentIndex].partition.cprange.lo_val;
+            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
             if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
                 bs << min;
