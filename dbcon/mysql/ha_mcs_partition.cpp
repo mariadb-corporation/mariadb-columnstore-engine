@@ -1286,8 +1286,8 @@ extern "C"
         else
         {
             output << setw(10) << "Part#"
-                   << setw(42) << "Min"
-                   << setw(42) << "Max" << "Status";
+                   << setw(utils::MAXLENGTH16BYTES) << "Min"
+                   << setw(utils::MAXLENGTH16BYTES) << "Max" << "Status";
         }
 
         int64_t maxLimit = numeric_limits<int64_t>::max();
@@ -1321,7 +1321,7 @@ extern "C"
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     output << setw(30) << "N/A" << setw(30) << "N/A";
                 else
-                    output << setw(42) << "N/A" << setw(42) << "N/A";
+                    output << setw(utils::MAXLENGTH16BYTES) << "N/A" << setw(utils::MAXLENGTH16BYTES) << "N/A";
             }
             else
             {
@@ -1339,9 +1339,9 @@ extern "C"
                     {
                         if (static_cast<unsigned __int128>(partIt->second.bigMin) == ubigMaxLimit
                                 &&  static_cast<uint64_t>(partIt->second.bigMax) == ubigMinLimit)
-                            output << setw(42) << "Empty/Null" << setw(42) << "Empty/Null";
+                            output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
                         else
-                            output << setw(42) << format(partIt->second.bigMin, ct) << setw(42) << format(partIt->second.bigMax, ct);
+                            output << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMax, ct);
                     }
                 }
                 else
@@ -1356,9 +1356,9 @@ extern "C"
                     else
                     {
                         if (partIt->second.bigMin == bigMaxLimit && partIt->second.bigMax == bigMinLimit)
-                            output << setw(42) << "Empty/Null" << setw(42) << "Empty/Null";
+                            output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
                         else
-                            output << setw(42) << format(partIt->second.bigMin, ct) << setw(42) << format(partIt->second.bigMax, ct);
+                            output << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMax, ct);
                     }
                 }
             }
@@ -2288,8 +2288,8 @@ extern "C"
                     {
                         output.setf(ios::left, ios::adjustfield);
                         output << setw(10) << "Part#"
-                               << setw(42) << "Min"
-                               << setw(42) << "Max" << "Status";
+                               << setw(utils::MAXLENGTH16BYTES) << "Min"
+                               << setw(utils::MAXLENGTH16BYTES) << "Max" << "Status";
                     }
 
                     noPartFound = false;
@@ -2301,23 +2301,23 @@ extern "C"
 
                     if (mapit->second.status & CPINVALID)
                     {
-                        output << setw(42) << "N/A" << setw(42) << "N/A";
+                        output << setw(utils::MAXLENGTH16BYTES) << "N/A" << setw(utils::MAXLENGTH16BYTES) << "N/A";
                     }
                     else
                     {
                         if ((isUnsigned(ct.colDataType)))
                         {
                             if (static_cast<uint128_t>(mapit->second.bigMin) > static_cast<uint128_t>(mapit->second.bigMax))
-                                output << setw(42) << "Empty/Null" << setw(42) << "Empty/Null";
+                                output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
                             else
-                                output << setw(42) << format(mapit->second.bigMin, ct) << setw(42) << format(mapit->second.bigMax, ct);
+                                output << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMax, ct);
                         }
                         else
                         {
                             if (mapit->second.bigMin > mapit->second.bigMax)
-                                output << setw(42) << "Empty/Null" << setw(42) << "Empty/Null";
+                                output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
                             else
-                                output << setw(42) << format(mapit->second.bigMin, ct) << setw(42) << format(mapit->second.bigMax, ct);
+                                output << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMax, ct);
                         }
                     }
 
