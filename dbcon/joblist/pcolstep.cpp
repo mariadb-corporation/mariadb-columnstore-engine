@@ -739,8 +739,8 @@ void pColStep::sendPrimitiveMessages()
 //		{
 //
 //		bool flag = lbidList->CasualPartitionPredicate(
-//											extents[idx].partition.cprange.lo_val,
-//											extents[idx].partition.cprange.hi_val,
+//											extents[idx].partition.cprange.loVal,
+//											extents[idx].partition.cprange.hiVal,
 //											&fFilterString,
 //                                            fFilterCount,
 //                                            fColType,
@@ -749,8 +749,8 @@ void pColStep::sendPrimitiveMessages()
 //#ifdef DEBUG
 //		if (fOid >= 3000 && flushInterval == 0)
 //			cout << (flag ? "  will scan " : "  will not scan ")
-//				<< "extent with range " << extents[idx].partition.cprange.lo_val
-//				<< "-" << extents[idx].partition.cprange.hi_val << endl;
+//				<< "extent with range " << extents[idx].partition.cprange.loVal
+//				<< "-" << extents[idx].partition.cprange.hiVal << endl;
 //#endif
 //
 //		}
