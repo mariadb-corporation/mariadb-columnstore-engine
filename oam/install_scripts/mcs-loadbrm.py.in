@@ -3,20 +3,17 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
+import time
 import configparser
 
 
-api_config_file = '/etc/columnstore/cmapi_server.conf'
+API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
+BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
 
 
 def get_key():
     cmapi_config = configparser.ConfigParser()
-    try:
-        cmapi_config.read(api_config_file)
-    except FileNotFoundError:
-        return ''
-
+    cmapi_config.read(API_CONFIG_PATH)
     if 'Authentication' not in cmapi_config.sections():
         return ''
     return cmapi_config['Authentication'].get('x-api-key', '')
@@ -45,12 +42,13 @@ if __name__ == '__main__':
         bucket = 'some_bucket'
 
     dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
+    pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
     loadbrm = '/usr/bin/load_brm'
 
     brm_saves_current = ''
 
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
-        # load s3
+        # start SM
         cmd = 'systemctl start mcs-storagemanager'
         retcode = subprocess.call(cmd, shell=True)
         if retcode < 0:
@@ -67,18 +65,20 @@ if __name__ == '__main__':
 
         config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
         cs_config.write('/etc/columnstore/Columnstore.xml')
+        # Delay to allow SM to start up
+        time.sleep(15)
 
+    # Single-node on S3
+    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
         try:
             brm_saves_current = subprocess.check_output(['smcat', brm])
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
             print('{} does not exist.'.format(brm), file=sys.stderr)
     else:
-        pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
         brm = '{}_current'.format(dbrmroot)
-
+        # Multi-node
         if pmCount > 1:
-            # load multinode dbrm
             try:
                 import requests
                 requests.packages.urllib3.disable_warnings()
@@ -105,7 +105,12 @@ api_port, api_version, e)
                     if (r.status_code != 200):
                         raise RuntimeError("Error requesting {} from the primary \
 node.".format(e))
+
+                    # To avoid SM storing BRM files
+                    if storage.lower() == 's3' and bucket.lower() != 'some_bucket':
+                        dbrmroot = BYPASS_SM_PATH
                     current_name = '{}_{}'.format(dbrmroot, e)
+
                     print ("Saving {} to {}".format(e, current_name))
                     path = Path(current_name)
                     path.write_bytes(r.content)

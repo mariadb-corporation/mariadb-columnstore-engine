@@ -47,6 +47,7 @@ install(PROGRAMS columnstore-post-install
                 mcs_module_installer.sh
                 mcs-stop-controllernode.sh
                 mcs-loadbrm.py
+                mcs-savebrm.py
                 mariadb-columnstore-start.sh
                 mariadb-columnstore-stop.sh
                 DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)

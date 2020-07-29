@@ -5,6 +5,7 @@ After=mcs-workernode.service
 
 [Service]
 Type=simple
+ExecStartPre=/bin/sleep 7
 ExecStart=@ENGINE_BINDIR@/controllernode fg
 Restart=on-failure
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
