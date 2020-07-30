@@ -281,8 +281,16 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
       sed -i "s|# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
       sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
       sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
-  fi  
+  fi
 fi
+
+#change ownership/permissions to be able to run columnstore as non-root
+chown -R mysql:mysql /var/log/mariadb/columnstore
+chown -R mysql:mysql /etc/columnstore
+chown -R mysql:mysql /var/lib/columnstore
+chown -R mysql:mysql /tmp/columnstore_tmp_files
+chmod 777 /tmp/columnstore_tmp_files
+chmod 777 /dev/shm
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
