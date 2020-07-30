@@ -938,7 +938,7 @@ void GroupConcatOrderBy::getResult(uint8_t* buff, const string& sep)
         rowStack.pop();
     }
 
-    size_t resultSize = oss.str().size();
+    int64_t resultSize = oss.str().size();
     resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
     fOutputString.reset(new uint8_t[resultSize + 2]);
     fOutputString[resultSize] = '\0';
@@ -1102,7 +1102,7 @@ void GroupConcatNoOrder::getResult(uint8_t* buff, const string& sep)
         fDataQueue.pop();
     }
 
-    size_t resultSize = oss.str().size();
+    int64_t resultSize = oss.str().size();
     resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
     fOutputString.reset(new uint8_t[resultSize + 2]);
     fOutputString[resultSize] = '\0';
