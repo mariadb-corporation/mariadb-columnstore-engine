@@ -53,7 +53,7 @@ namespace windowfunction
 
 
 template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -64,7 +64,6 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
             func.reset(new WF_nth_value<int64_t>(id, name));
             break;
@@ -75,13 +74,38 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
         {
             func.reset(new WF_nth_value<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            {
+                func.reset(new WF_nth_value<int64_t>(id, name));
+            }
+            else
+            {
+                func.reset(new WF_nth_value<int128_t>(id, name));
+            }
+            break;
+        }
+        
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            {
+                func.reset(new WF_nth_value<uint64_t>(id, name));
+            }
+            else
+            {
+                func.reset(new WF_nth_value<uint128_t>(id, name));
+            }
             break;
         }
 
@@ -273,7 +297,7 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_nth_value<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_nth_value<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 
 }   //namespace

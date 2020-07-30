@@ -638,11 +638,13 @@ protected:
     static const static_any::any& intTypeId;
     static const static_any::any& longTypeId;
     static const static_any::any& llTypeId;
+    static const static_any::any& int128TypeId;
     static const static_any::any& ucharTypeId;
     static const static_any::any& ushortTypeId;
     static const static_any::any& uintTypeId;
     static const static_any::any& ulongTypeId;
     static const static_any::any& ullTypeId;
+    static const static_any::any& uint128TypeId;
     static const static_any::any& floatTypeId;
     static const static_any::any& doubleTypeId;
     static const static_any::any& strTypeId;
@@ -1068,6 +1070,14 @@ inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
     else if (valIn.compatible(doubleTypeId))
     {
         val = valIn.cast<double>();
+    }
+    else if (valIn.compatible(int128TypeId))
+    {
+        val = valIn.cast<int128_t>();
+    }
+    else if (valIn.compatible(uint128TypeId))
+    {
+        val = valIn.cast<uint128_t>();
     }
     else
     {

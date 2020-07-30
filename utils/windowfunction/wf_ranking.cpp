@@ -53,7 +53,7 @@ namespace windowfunction
 {
 
 
-boost::shared_ptr<WindowFunctionType> WF_ranking::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_ranking::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func(new WF_ranking(id, name));
     return func;

@@ -2342,9 +2342,9 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
 int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, const std::vector<COND*>& condStack)
 {
     THD* thd = current_thd;
-    int rc = 0;
     cal_impl_if::gp_walk_info gwi;
     gwi.thd = thd;
+    int rc = 0;
 
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
