@@ -104,7 +104,7 @@ protected:
 
 public:
     static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name,
-            int ct, mcsv1sdk::mcsv1Context& context);
+            int ct, mcsv1sdk::mcsv1Context& context, WindowFunctionColumn* wc);
 };
 
 

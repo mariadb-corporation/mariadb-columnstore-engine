@@ -54,7 +54,7 @@ namespace windowfunction
 {
 
 
-boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func(new WF_ntile(id, name));
     return func;

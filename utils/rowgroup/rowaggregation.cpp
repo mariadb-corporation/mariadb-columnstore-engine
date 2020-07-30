@@ -478,7 +478,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
             else
             {
                 //@bug 1821
-                ret = (row.equals("", col) || row.equals(joblist::CPNULLSTRMARK, col));
+                ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
             }
 
             break;
@@ -576,7 +576,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
         {
-            ret = (row.equals("", col) || row.equals(joblist::CPNULLSTRMARK, col));
+            ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
             break;
         }
 
@@ -1527,7 +1527,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
         if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
         {
-            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
             int128_t sum = *valOutPtr + *dec;
             fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
         }
@@ -1988,7 +1988,7 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
         if (LIKELY(notFirstValue))
         {
-            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
             int128_t sum = *valOutPtr + *dec;
             fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
         }
@@ -4364,7 +4364,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
         if (LIKELY(cnt > 0))
         {
-            int128_t *valOutPtr = fRow.getBinaryField(valOutPtr, colOut);
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
             int128_t sum = *valOutPtr + *dec;
             fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
             fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
