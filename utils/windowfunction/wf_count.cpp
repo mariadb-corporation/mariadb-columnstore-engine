@@ -55,7 +55,7 @@ namespace windowfunction
 
 
 template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -70,7 +70,25 @@ boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const st
         }
 
         case CalpontSystemCatalog::BINARY:
+        {
              std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+             break;
+        }
+        
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            {
+                func.reset(new WF_count<int64_t>(id, name));
+            }
+            else
+            {
+                func.reset(new WF_count<int128_t>(id, name));
+            }
+            break;
+        }
+        default:
         {
             func.reset(new WF_count<int64_t>(id, name));
             break;
@@ -176,7 +194,7 @@ void WF_count<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_count<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_count<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 
 }   //namespace
