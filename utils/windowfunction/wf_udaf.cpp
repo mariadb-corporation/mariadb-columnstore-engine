@@ -54,7 +54,7 @@ using namespace joblist;
 namespace windowfunction
 {
 
-boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct, mcsv1sdk::mcsv1Context& context)
+boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct, mcsv1sdk::mcsv1Context& context, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -542,11 +542,13 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     static const static_any::any& intTypeId = (int)1;
     static const static_any::any& longTypeId = (long)1;
     static const static_any::any& llTypeId = (long long)1;
+    static const static_any::any& int128TypeId = (int128_t)1;
     static const static_any::any& ucharTypeId = (unsigned char)1;
     static const static_any::any& ushortTypeId = (unsigned short)1;
     static const static_any::any& uintTypeId = (unsigned int)1;
     static const static_any::any& ulongTypeId = (unsigned long)1;
     static const static_any::any& ullTypeId = (unsigned long long)1;
+    static const static_any::any& uint128TypeId = (int128_t)1;
     static const static_any::any& floatTypeId = (float)1;
     static const static_any::any& doubleTypeId = (double)1;
     static const std::string typeStr("");
@@ -560,6 +562,8 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     // it to whatever they said to return.
     int64_t intOut = 0;
     uint64_t uintOut = 0;
+    int128_t int128Out = 0;
+    uint128_t uint128Out = 0;
     float floatOut = 0.0;
     double doubleOut = 0.0;
     long double longdoubleOut = 0.0;
@@ -648,6 +652,24 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         uintOut = (uint64_t)doubleOut;
         intOut = (int64_t)doubleOut;
         oss << doubleOut;
+    }
+    else if (valOut.compatible(int128TypeId))
+    {
+        int128Out = valOut.cast<int128_t>();
+        uintOut = intOut = int128Out; // may truncate
+        floatOut = int128Out;
+        doubleOut = int128Out;
+        longdoubleOut = int128Out;
+        oss << longdoubleOut;
+    }
+    else if (valOut.compatible(uint128TypeId))
+    {
+        uint128Out = valOut.cast<uint128_t>();
+        uintOut = intOut = uint128Out; // may truncate
+        floatOut = uint128Out;
+        doubleOut = uint128Out;
+        longdoubleOut = uint128Out;
+        oss << longdoubleOut;
     }
 
     if (valOut.compatible(strTypeId))
@@ -900,33 +922,66 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::DECIMAL:
                         case CalpontSystemCatalog::UDECIMAL:
                         {
-                            int64_t valIn;
-
-                            if (cc)
+                            if (fRow.getColumnWidth(colIn) < 16)
                             {
-                                valIn = cc->getDecimalVal(fRow, isNull).value;
+                                int64_t valIn;
+
+                                if (cc)
+                                {
+                                    valIn = cc->getDecimalVal(fRow, isNull).value;
+                                }
+                                else
+                                {
+                                    getValue(colIn, valIn);
+                                }
+
+                                // Check for distinct, if turned on.
+                                // Currently, distinct only works on the first parameter.
+                                if (k == 0 && fDistinct)
+                                {
+                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                    std::pair<DistinctMap::iterator, bool> distinct;
+                                    distinct = fDistinctMap.insert(val);
+                                    if (distinct.second == false)
+                                    {
+                                        ++(*distinct.first).second;
+                                        bSkipIt = true;
+                                        continue;
+                                    }
+                                }
+
+                                datum.columnData = valIn;
                             }
                             else
                             {
-                                getValue(colIn, valIn);
-                            }
+                                int128_t valIn;
 
-                            // Check for distinct, if turned on.
-                            // Currently, distinct only works on the first parameter.
-                            if (k == 0 && fDistinct)
-                            {
-                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<DistinctMap::iterator, bool> distinct;
-                                distinct = fDistinctMap.insert(val);
-                                if (distinct.second == false)
+                                if (cc)
                                 {
-                                    ++(*distinct.first).second;
-                                    bSkipIt = true;
-                                    continue;
+                                    valIn = cc->getDecimalVal(fRow, isNull).s128Value;
                                 }
-                            }
+                                else
+                                {
+                                    getValue(colIn, valIn);
+                                }
 
-                            datum.columnData = valIn;
+                                // Check for distinct, if turned on.
+                                // Currently, distinct only works on the first parameter.
+                                if (k == 0 && fDistinct)
+                                {
+                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                    std::pair<DistinctMap::iterator, bool> distinct;
+                                    distinct = fDistinctMap.insert(val);
+                                    if (distinct.second == false)
+                                    {
+                                        ++(*distinct.first).second;
+                                        bSkipIt = true;
+                                        continue;
+                                    }
+                                }
+
+                                datum.columnData = valIn;
+                            }
                             break;
                         }
 
@@ -1153,7 +1208,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
     fPrev = c;
 }
 
-boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct, mcsv1sdk::mcsv1Context& context);
+boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct, mcsv1sdk::mcsv1Context& context, WindowFunctionColumn*);
 
 }   //namespace
 // vim:ts=4 sw=4:
