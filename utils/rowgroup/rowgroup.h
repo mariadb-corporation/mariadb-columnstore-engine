@@ -380,7 +380,8 @@ public:
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
     bool equals(const std::string& val, uint32_t colIndex) const;
-
+    inline bool equals(int128_t val, uint32_t colIndex) const;
+    
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
     inline double getDecimalField(uint32_t colIndex) const
@@ -388,6 +389,8 @@ public:
         return 0.0;   // TODO: Do something here
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
+    inline int128_t getInt128Field(uint32_t colIndex) const;
+    inline uint128_t getUint128Field(uint32_t colIndex) const;
 
     inline uint64_t getBaseRid() const;
     inline uint64_t getRid() const;
@@ -417,6 +420,7 @@ public:
     inline void setFloatField(float val, uint32_t colIndex);
     inline void setDecimalField(double val, uint32_t colIndex) { };  // TODO: Do something here
     inline void setLongDoubleField(long double val, uint32_t colIndex);
+    inline void setInt128Field(int128_t val, uint32_t colIndex);
 
     inline void setRid(uint64_t rid);
 
@@ -674,7 +678,7 @@ inline bool Row::inStringTable(uint32_t col) const
 template<typename T>
 inline bool Row::equals(T* value, uint32_t colIndex) const
 {
-    return reinterpret_cast<T*>(&data[offsets[colIndex]]) == value;
+    return *reinterpret_cast<T*>(&data[offsets[colIndex]]) == *value;
 }
 
 template<int len>
@@ -704,6 +708,12 @@ inline bool Row::equals(long double val, uint32_t colIndex) const
 {
     return *((long double*) &data[offsets[colIndex]]) == val;
 }
+
+inline bool Row::equals(int128_t val, uint32_t colIndex) const
+{
+    return *((int128_t*) &data[offsets[colIndex]]) == val;
+}
+
 template<int len>
 inline uint64_t Row::getUintField(uint32_t colIndex) const
 {
@@ -951,6 +961,16 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]);
 }
 
+inline int128_t Row::getInt128Field(uint32_t colIndex) const
+{
+    return *((int128_t*) &data[offsets[colIndex]]);
+}
+
+inline uint128_t Row::getUint128Field(uint32_t colIndex) const
+{
+    return *((uint128_t*) &data[offsets[colIndex]]);
+}
+
 inline uint64_t Row::getRid() const
 {
     return baseRid + *((uint16_t*) data);
@@ -1156,6 +1176,11 @@ inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
         // zero out the unused portion as there may be garbage there.
         *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
     }
+}
+
+inline void Row::setInt128Field(int128_t val, uint32_t colIndex)
+{
+    *((int128_t*)&data[offsets[colIndex]]) = val;
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)

@@ -52,6 +52,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
+#include "widedecimalutils.h"
+
 #ifdef _MSC_VER
 #define strcasecmp stricmp
 #endif
@@ -387,9 +389,16 @@ void WindowFunctionColumn::adjustResultType()
         boost::iequals(fFunctionName, "AVG") ||
         boost::iequals(fFunctionName, "AVG_DISTINCT"))
     {
-        fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-        fResultType.colWidth = sizeof(long double);
-        fResultType.precision = -1;
+        if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        {
+            fResultType.colWidth = sizeof(int128_t);
+        }
+        else
+        {
+            fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+            fResultType.colWidth = sizeof(long double);
+            fResultType.precision = -1;
+        }
     }
 }
 
@@ -661,18 +670,35 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                     break;
                 }
 
-                default:
+                case 8:
                 {
                     if (row.equals<8>(BIGINTNULL, fInputIndex))
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = (int64_t)row.getUintField<8>(fInputIndex);
+                        fResult.decimalVal.value = row.getIntField<8>(fInputIndex);
                         fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     }
 
                     break;
                 }
+
+                case 16:
+                {
+                    int128_t dec = row.getInt128Field(fInputIndex);
+                    if (utils::isWideDecimalNullValue(dec))
+                        isNull = true;
+                    else
+                    {
+                        fResult.decimalVal.s128Value = dec;
+                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                    }
+
+                    break;
+                }
+                default:
+                    // Should log error
+                    break;
             }
 
             break;

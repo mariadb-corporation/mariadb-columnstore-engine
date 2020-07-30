@@ -29,8 +29,9 @@
 namespace windowfunction
 {
 
-
-template<typename T>
+// T_IN is the data type of the input values.
+// T_OUT is the data type we are using for output and internal values    
+template<typename T_IN, typename T_OUT>
 class WF_sum_avg : public WindowFunctionType
 {
 public:
@@ -38,6 +39,9 @@ public:
         WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG)
     {
         resetData();
+        utils::int128Max(fMax128);
+        utils::int128Min(fMin128);
+        utils::uint128Max(fMaxu128);
     }
 
     // pure virtual in base
@@ -45,16 +49,27 @@ public:
     WindowFunctionType* clone() const;
     void resetData();
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 protected:
-    long double fAvg;
-    long double fSum;
+    T_IN        fVal;
+    T_OUT       fAvg;
+    T_OUT       fSum;
     uint64_t    fCount;
     bool        fDistinct;
-    std::set<T> fSet;
-};
+    std::set<T_IN> fSet;
+    int128_t    fMax128;
+    int128_t    fMin128;
+    uint128_t   fMaxu128;
 
+    void checkSumLimit(long double val, long double sum);
+    void checkSumLimit(int128_t val, int128_t sum);
+    void checkSumLimit(uint128_t val, uint128_t sum);
+    
+    int128_t calculateAvg(int128_t sum, uint64_t count, int scale);
+    uint128_t calculateAvg(uint128_t sum, uint64_t count, int scale);
+    long double calculateAvg(long double sum, uint64_t count, int scale);
+};
 
 } // namespace
 

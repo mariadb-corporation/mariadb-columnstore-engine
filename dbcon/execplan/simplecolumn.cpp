@@ -503,7 +503,7 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 void SimpleColumn::evaluate(Row& row, bool& isNull)
 {
     // WIP Move this block into an appropriate place
-    if (UNLIKELY(fInputOffset == -1))
+    if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
     {
         fInputOffset = row.getOffset(fInputIndex);
     }
