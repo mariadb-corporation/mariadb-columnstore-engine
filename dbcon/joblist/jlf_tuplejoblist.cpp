@@ -872,7 +872,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     }
 
     // construct RowGroup and add to TBPS
-    RowGroup rg(oids.size(), pos, oids, keys, types, scale, csNums, precision, jobInfo.stringTableThreshold);
+    RowGroup rg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
     bps->setFE1Input(rg);
 
     if (jobInfo.trace) cout << "FE1 input RowGroup: " << rg.toString() << endl << endl;
