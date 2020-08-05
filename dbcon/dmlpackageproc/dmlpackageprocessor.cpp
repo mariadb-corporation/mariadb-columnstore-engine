@@ -52,6 +52,7 @@ using namespace joblist;
 using namespace messageqcpp;
 #include "tablelockdata.h"
 #include "exceptclasses.h"
+#include "widedecimalutils.h"
 
 namespace
 {
@@ -510,8 +511,8 @@ int DMLPackageProcessor::commitBatchAutoOnTransaction(uint64_t uniqueId, BRM::Tx
         aInfo.firstLbid = *iter;
         aInfo.max = numeric_limits<int64_t>::min(); // Not used
         aInfo.min = numeric_limits<int64_t>::max(); // Not used
-        dataconvert::DataConvert::int128Min(aInfo.bigMax); // Not used
-        dataconvert::DataConvert::int128Max(aInfo.bigMin); // Not used
+        utils::int128Min(aInfo.bigMax); // Not used
+        utils::int128Max(aInfo.bigMin); // Not used
         aInfo.seqNum = -1;
         cpInfos.push_back(aInfo);
         ++iter;
