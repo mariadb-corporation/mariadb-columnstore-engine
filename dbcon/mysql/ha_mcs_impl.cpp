@@ -49,7 +49,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
-using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -137,6 +136,8 @@ using namespace funcexp;
 #include "installdir.h"
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
+
+using namespace std;
 
 namespace cal_impl_if
 {

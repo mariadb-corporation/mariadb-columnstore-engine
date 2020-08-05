@@ -2,9 +2,10 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 #include "idb_mysql.h"
+
+using namespace std;
 
 namespace
 {
