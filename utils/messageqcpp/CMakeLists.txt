@@ -16,4 +16,6 @@ set(messageqcpp_LIB_SRCS
 
 add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
 
+add_dependencies(messageqcpp loggingcpp)
+
 install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

@@ -10,6 +10,8 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
 
+add_dependencies(udfsdk loggingcpp)
+
 install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 set(udf_mysql_LIB_SRCS udfmysql.cpp)

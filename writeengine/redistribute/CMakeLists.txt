@@ -11,6 +11,8 @@ set(writeengineredistribute_LIB_SRCS
 
 add_library(writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
 
+add_dependencies(writeengineredistribute loggingcpp)
+
 target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
 
 target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)

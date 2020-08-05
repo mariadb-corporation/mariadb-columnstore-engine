@@ -10,6 +10,8 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(regr SHARED ${regr_LIB_SRCS} )
 
+add_dependencies(regr loggingcpp)
+
 install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 

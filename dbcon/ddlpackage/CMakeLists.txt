@@ -36,5 +36,7 @@ ADD_LIBRARY(ddlpackage SHARED
     ${FLEX_ddl_scan_OUTPUTS}
 )
 
+add_dependencies(ddlpackage loggingcpp)
+
 INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
