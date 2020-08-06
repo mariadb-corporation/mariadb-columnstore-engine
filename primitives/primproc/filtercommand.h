@@ -82,7 +82,7 @@ protected:
     // binary operator
     uint8_t fBOP;
 
-    bool hasWideDecimalType;
+    bool hasWideColumns;
 
     // column type for null check
     execplan::CalpontSystemCatalog::ColType leftColType;

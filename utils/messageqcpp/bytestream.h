@@ -46,6 +46,7 @@ class ByteStreamTestSuite;
 #endif
 
 using uint128_t = unsigned __int128;
+using int128_t = __int128;
 
 namespace messageqcpp
 {
@@ -76,7 +77,7 @@ public:
     typedef uint16_t doublebyte;
     typedef uint32_t quadbyte;
     typedef uint64_t octbyte;
-    typedef uint128_t hexbyte;
+    typedef int128_t hexbyte;
     typedef boost::uuids::uuid uuid;
 
     /**
@@ -146,11 +147,14 @@ public:
      *	push an uint64_t onto the end of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator<<(const uint64_t o);
-    // WIP MCOL-641
     /**
      *	push an uint128_t onto the end of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator<<(const uint128_t& o);
+    /**
+     *	push an int128_t onto the end of the stream. The byte order is whatever the native byte order is.
+     */
+    EXPORT ByteStream& operator<<(const int128_t& o);
     /**
      *  push a float onto the end of the stream. The byte order is
      *  whatever the native byte order is.
@@ -215,11 +219,14 @@ public:
      *	extract an uint64_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator>>(uint64_t& o);
-    // WIP MCOL-641
     /**
      *	extract an uint128_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT ByteStream& operator>>(uint128_t& o);
+    /**
+     *	extract an int128_t from the front of the stream. The byte order is whatever the native byte order is.
+     */
+    EXPORT ByteStream& operator>>(int128_t& o);
     /**
      *  extract a float from the front of the stream. The byte
      *  order is whatever the native byte order is.
@@ -290,11 +297,14 @@ public:
      *	Peek at an uint64_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT void peek(uint64_t& o) const;
-    // WIP MCOL-641
     /**
      *	Peek at an uint128_t from the front of the stream. The byte order is whatever the native byte order is.
      */
     EXPORT void peek(uint128_t& o) const;
+    /**
+     *	Peek at an int128_t from the front of the stream. The byte order is whatever the native byte order is.
+     */
+    EXPORT void peek(int128_t& o) const;
     /**
      *  Peek at a float from the front of the stream. The byte order
      *  is whatever the native byte order is.
