@@ -140,12 +140,13 @@ uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType
 
 // Estimates the number of distinct values given a min/max range.  When the range has not been set,
 // rules from the requirements are used based on the column type.
+template<typename T>
 uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatalog::ColType& ct,
-        const uint64_t& min,
-        const uint64_t& max,
+        const T& min,
+        const T& max,
         const char cpStatus)
 {
-    uint64_t ret = 10;
+    T ret = 10;
 
     // If no casual partitioning info available for extent.  These rules were defined in the requirements.
     if (cpStatus != BRM::CP_VALID)
@@ -210,7 +211,10 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
 // Returns a floating point number between 0 and 1 representing the percentage of matching rows for the given predicate against
 // the given range.  This function is used for estimating an individual operation such as col1 = 2.
 template<class T>
-float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value, char op, uint8_t lcf, uint32_t distinctValues, char cpStatus)
+float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
+                                     char op, uint8_t lcf,
+                                     uint32_t distinctValues, char cpStatus,
+                                     const execplan::CalpontSystemCatalog::ColType& ct)
 {
     float factor = 1.0;
 
@@ -220,7 +224,10 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NGE:
             if (cpStatus == BRM::CP_VALID)
             {
-                factor = (1.0 * value - min) / (max - min + 1);
+                if (!datatypes::Decimal::isWideDecimalType(ct))
+                    factor = (1.0 * value - min) / (max - min + 1);
+                else
+                    factor = ((__float128) value - min) / (max - min + 1);
             }
 
             break;
@@ -229,7 +236,10 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NGT:
             if (cpStatus == BRM::CP_VALID)
             {
-                factor = (1.0 * value - min + 1) / (max - min + 1);
+                if (!datatypes::Decimal::isWideDecimalType(ct))
+                    factor = (1.0 * value - min + 1) / (max - min + 1);
+                else
+                    factor = ((__float128) value - min + 1) / (max - min + 1);
             }
 
             break;
@@ -238,7 +248,10 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NLE:
             if (cpStatus == BRM::CP_VALID)
             {
-                factor = (1.0 * max - value) / (1.0 * max - min + 1);
+                if (!datatypes::Decimal::isWideDecimalType(ct))
+                    factor = (1.0 * max - value) / (1.0 * max - min + 1);
+                else
+                    factor = ((__float128) max - value) / (max - min + 1);
             }
 
             break;
@@ -248,7 +261,10 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
             if (cpStatus == BRM::CP_VALID)
             {
                 // TODO:  Best way to convert to floating point arithmetic?
-                factor = (1.0 * max - value + 1) / (max - min + 1);
+                if (!datatypes::Decimal::isWideDecimalType(ct))
+                    factor = (1.0 * max - value + 1) / (max - min + 1);
+                else
+                    factor = ((__float128) max - value + 1) / (max - min + 1);
             }
 
             break;
@@ -287,11 +303,26 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     float factor = 1.0;
     float tempFactor = 1.0;
 
+    uint64_t adjustedMin, adjustedMax;
+    uint128_t adjustedBigMin, adjustedBigMax;
+    uint32_t distinctValuesEstimate;
+
     // Adjust values based on column type and estimate the
-    uint64_t adjustedMin = adjustValue(ct, emEntry.partition.cprange.lo_val);
-    uint64_t adjustedMax = adjustValue(ct, emEntry.partition.cprange.hi_val);
-    uint32_t distinctValuesEstimate = estimateDistinctValues(
-                                          ct, adjustedMin, adjustedMax, emEntry.partition.cprange.isValid);
+    if (!datatypes::Decimal::isWideDecimalType(ct))
+    {
+        adjustedMin = adjustValue(ct, emEntry.partition.cprange.loVal);
+        adjustedMax = adjustValue(ct, emEntry.partition.cprange.hiVal);
+        distinctValuesEstimate = estimateDistinctValues(
+                                     ct, adjustedMin, adjustedMax, emEntry.partition.cprange.isValid);
+    }
+    else
+    {
+        adjustedBigMin = emEntry.partition.cprange.bigLoVal;
+        adjustedBigMax = emEntry.partition.cprange.bigHiVal;
+        distinctValuesEstimate = estimateDistinctValues(
+                                     ct, adjustedBigMin, adjustedBigMax, emEntry.partition.cprange.isValid);
+    }
+
 
     // Loop through the operations and estimate the percentage of rows that will qualify.
     // For example, there are two operations for "col1 > 5 and col1 < 10":
@@ -300,6 +331,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     int length = bs->length(), pos = 0;
     const char* msgDataPtr = (const char*) bs->buf();
     int64_t value = 0;
+    int128_t bigValue = 0;
     bool firstQualifyingOrCondition = true;
     uint16_t comparisonLimit = (NOPS <= fMaxComparisons) ? NOPS : fMaxComparisons;
 
@@ -343,6 +375,18 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                     break;
                 }
 
+                case 16:
+                {
+                    if (ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+                        ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
+                    {
+                        uint128_t val = *(uint128_t*)msgDataPtr;
+                        bigValue = static_cast<int128_t>(val);
+                        break;
+                    }
+                    /* fall through */
+                }
+
                 case 8:
                 default:
                 {
@@ -377,6 +421,18 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                     break;
                 }
 
+                case 16:
+                {
+                    if (ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+                        ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
+                    {
+                        int128_t val = *(int128_t*)msgDataPtr;
+                        bigValue = static_cast<int128_t>(val);
+                        break;
+                    }
+                    /* fall through */
+                }
+
                 case 8:
                 default:
                 {
@@ -396,23 +452,41 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         }
 
 #if ROW_EST_DEBUG
-        cout << "  Min-" << emEntry.partition.cprange.lo_val <<
-             ", Max-" << emEntry.partition.cprange.hi_val <<
+        cout << "  Min-" << emEntry.partition.cprange.loVal <<
+             ", Max-" << emEntry.partition.cprange.hiVal <<
              ", Val-" << value;
 #endif
 
         // Get the factor for the individual operation.
         if (bIsUnsigned)
         {
-            tempFactor = estimateOpFactor<uint64_t>(
-                             adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,
-                             distinctValuesEstimate, emEntry.partition.cprange.isValid);
+            if (!datatypes::Decimal::isWideDecimalType(ct))
+            {
+                tempFactor = estimateOpFactor<uint64_t>(
+                                 adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,
+                                 distinctValuesEstimate, emEntry.partition.cprange.isValid, ct);
+            }
+            else
+            {
+                tempFactor = estimateOpFactor<uint128_t>(
+                                 adjustedBigMin, adjustedBigMax, bigValue, op, lcf,
+                                 distinctValuesEstimate, emEntry.partition.cprange.isValid, ct);
+            }
         }
         else
         {
-            tempFactor = estimateOpFactor<int64_t>(
-                             adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,
-                             distinctValuesEstimate, emEntry.partition.cprange.isValid);
+            if (!datatypes::Decimal::isWideDecimalType(ct))
+            {
+                tempFactor = estimateOpFactor<int64_t>(
+                                 adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,
+                                 distinctValuesEstimate, emEntry.partition.cprange.isValid, ct);
+            }
+            else
+            {
+                tempFactor = estimateOpFactor<int128_t>(
+                                 adjustedBigMin, adjustedBigMax, bigValue, op, lcf,
+                                 distinctValuesEstimate, emEntry.partition.cprange.isValid, ct);
+            }
         }
 
 #if ROW_EST_DEBUG
@@ -610,5 +684,6 @@ uint64_t RowEstimator::estimateRowsForNonCPColumn(ColumnCommandJL& colCmd)
 
     return estimatedRows;
 }
+
 
 } //namespace joblist

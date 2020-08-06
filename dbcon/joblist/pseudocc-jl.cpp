@@ -46,23 +46,57 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
 {
     if (function == PSEUDO_EXTENTMAX)
     {
-        int64_t max = extents[currentExtentIndex].partition.cprange.hi_val;
-        int64_t min = extents[currentExtentIndex].partition.cprange.lo_val;
+        if (!datatypes::Decimal::isWideDecimalType(colType))
+        {
+            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
-        if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-            bs << max;
+            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+                bs << max;
+            else
+                bs << utils::getNullValue(colType.colDataType, colType.colWidth);
+        }
         else
-            bs << utils::getNullValue(colType.colDataType, colType.colWidth);
+        {
+            int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
+            int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
+
+            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+                bs << (uint128_t) max;
+            else
+            {
+                int128_t int128Null;
+                utils::setWideDecimalNullValue(int128Null);
+                bs << (uint128_t) int128Null;
+            }
+        }
     }
     else if (function == PSEUDO_EXTENTMIN)
     {
-        int64_t max = extents[currentExtentIndex].partition.cprange.hi_val;
-        int64_t min = extents[currentExtentIndex].partition.cprange.lo_val;
+        if (!datatypes::Decimal::isWideDecimalType(colType))
+        {
+            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
-        if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-            bs << min;
+            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+                bs << min;
+            else
+                bs << utils::getNullValue(colType.colDataType, colType.colWidth);
+        }
         else
-            bs << utils::getNullValue(colType.colDataType, colType.colWidth);
+        {
+            int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
+            int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
+
+            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+                bs << (uint128_t) min;
+            else
+            {
+                int128_t int128Null;
+                utils::setWideDecimalNullValue(int128Null);
+                bs << (uint128_t) int128Null;
+            }
+        }
     }
     else if (function == PSEUDO_EXTENTID)
         bs << extents[currentExtentIndex].range.start;
