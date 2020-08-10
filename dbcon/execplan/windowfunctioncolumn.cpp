@@ -361,7 +361,9 @@ bool WindowFunctionColumn::hasWindowFunc()
 
 void WindowFunctionColumn::adjustResultType()
 {
-    if (fResultType.colDataType == CalpontSystemCatalog::DECIMAL &&
+    if ((fResultType.colDataType == CalpontSystemCatalog::DECIMAL ||
+         fResultType.colDataType == CalpontSystemCatalog::UDECIMAL)
+        &&
             !boost::iequals(fFunctionName, "COUNT") &&
             !boost::iequals(fFunctionName, "COUNT(*)") &&
             !boost::iequals(fFunctionName, "ROW_NUMBER") &&
@@ -389,7 +391,8 @@ void WindowFunctionColumn::adjustResultType()
         boost::iequals(fFunctionName, "AVG") ||
         boost::iequals(fFunctionName, "AVG_DISTINCT"))
     {
-        if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
+            fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
         {
             fResultType.colWidth = sizeof(int128_t);
         }
