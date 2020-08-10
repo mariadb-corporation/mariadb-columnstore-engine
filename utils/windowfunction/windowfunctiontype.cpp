@@ -40,7 +40,6 @@ using namespace logging;
 using namespace ordering;
 
 #include "calpontsystemcatalog.h"
-#include "dataconvert.h"                            // int64_t IDB_pow[19]
 using namespace execplan;
 
 #include "windowfunctionstep.h"
@@ -59,6 +58,7 @@ using namespace joblist;
 #include "wf_stats.h"
 #include "wf_sum_avg.h"
 #include "wf_udaf.h"
+#include "mcs_decimal.h"
 
 namespace windowfunction
 {
@@ -480,7 +480,7 @@ template<typename T>
 void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 {
     int ct = fRow.getColType(i);
-    int pw = 0;
+    int64_t divisor = 1;
 
     switch (ct)
     {
@@ -491,13 +491,6 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         case CalpontSystemCatalog::BIGINT:
         {
             t = (T) fRow.getIntField(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
-
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
-
             break;
         }
 
@@ -508,13 +501,6 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         case CalpontSystemCatalog::UBIGINT:
         {
             t = (T) fRow.getUintField(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
-
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
-
             break;
         }
 
@@ -525,13 +511,6 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
                 t = (T) fRow.getIntField(i);
             else 
                 t = (T) fRow.getInt128Field(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
-
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
-
             break;
         }
 
@@ -542,45 +521,26 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
                 t = (T) fRow.getUintField(i);
             else 
                 t = (T) fRow.getUint128Field(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
-
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
-
             break;
         }
 
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {
-            if (s == 0)
-                t = (T) fRow.getDoubleField(i);
-            else
-                t = (T) (fRow.getDoubleField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getDoubleField(i);
             break;
         }
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
         {
-            if (s == 0)
-                t = (T) fRow.getFloatField(i);
-            else
-                t = (T) (fRow.getFloatField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getFloatField(i);
             break;
         }
 
         case CalpontSystemCatalog::LONGDOUBLE:
         {
-            if (s == 0)
-                t = (T) fRow.getLongDoubleField(i);
-            else
-                t = (T) (fRow.getLongDoubleField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getLongDoubleField(i);
             break;
         }
 
@@ -596,6 +556,15 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
             break;
         }
     }
+
+    s -= fRow.getScale(i); // we scale only the difference of scales
+    datatypes::getScaleDivisor(divisor, abs(s));
+    if (s > 0)
+        t *= divisor;
+    else if (s < 0)
+        t /= divisor;
+
+
 }
 
 template<>
