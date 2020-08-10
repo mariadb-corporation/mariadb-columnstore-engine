@@ -343,7 +343,7 @@ public:
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
     bool equals(const std::string& val, uint32_t colIndex) const;
-    inline bool equals(int128_t val, uint32_t colIndex) const;
+    inline bool equals(const int128_t& val, uint32_t colIndex) const;
     
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
@@ -672,7 +672,7 @@ inline bool Row::equals(long double val, uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]) == val;
 }
 
-inline bool Row::equals(int128_t val, uint32_t colIndex) const
+inline bool Row::equals(const int128_t& val, uint32_t colIndex) const
 {
     return *((int128_t*) &data[offsets[colIndex]]) == val;
 }
