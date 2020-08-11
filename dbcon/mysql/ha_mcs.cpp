@@ -1232,7 +1232,10 @@ my_bool cache_start_trans(void* param)
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
 
   if (!cache->insert_command)
+  {
     cache->free_locks();
+    return 0;
+  }
 
   return (*cache->share->org_lock.start_trans)(cache->cache_handler->file);
 }
@@ -1281,7 +1284,7 @@ static mysql_mutex_t LOCK_cache_share;
   Find or create a share
 */
 
-ha_mcs_cache_share *find_cache_share(const char *name)
+ha_mcs_cache_share *find_cache_share(const char *name, ulonglong cached_rows)
 {
   ha_mcs_cache_share *pos, *share;
   mysql_mutex_lock(&LOCK_cache_share);
@@ -1303,6 +1306,7 @@ ha_mcs_cache_share *find_cache_share(const char *name)
   }
   share->name= (char*) (share+1);
   share->open_count= 1;
+  share->cached_rows= cached_rows;
   strmov((char*) share->name, name);
   share->next= cache_share_list;
   cache_share_list= share;
@@ -1358,6 +1362,7 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
     cache_handler= (ha_maria*) mcs_maria_hton->create(mcs_maria_hton, table_arg, mem_root);
     share= 0;
     lock_counter= 0;
+    cache_locked= 0;
   }
 }
 
@@ -1427,7 +1432,7 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
     if ((error= cache_handler->open(cache_name, mode, open_flags)))
       DBUG_RETURN(error);
 
-    if (!(share= find_cache_share(name)))
+    if (!(share= find_cache_share(name, cache_handler->file->state->records)))
     {
       cache_handler->close();
       DBUG_RETURN(ER_OUTOFMEMORY);
@@ -1438,6 +1443,11 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
     if (lock->get_status != &get_status_and_flush_cache)
     {
       mysql_mutex_lock(&cache_handler->file->s->intern_lock);
+
+      /* The following lock is here just to establish mutex locking order */
+      mysql_mutex_lock(&lock->mutex);
+      mysql_mutex_unlock(&lock->mutex);
+
       if (lock->get_status != &get_status_and_flush_cache)
       {
         /* Remember original lock. Used by the THR_lock cache functions */
@@ -1547,7 +1557,12 @@ int ha_mcs_cache::external_lock(THD *thd, int lock_type)
     if (lock_type == F_UNLCK)
     {
       int error2;
-      error= cache_handler->external_lock(thd, lock_type);
+      error= 0;
+      if (cache_locked)
+      {
+        error= cache_handler->external_lock(thd, lock_type);
+        cache_locked= 0;
+      }
       if ((error2= parent::external_lock(thd, lock_type)))
         error= error2;
       DBUG_RETURN(error);
@@ -1563,6 +1578,8 @@ int ha_mcs_cache::external_lock(THD *thd, int lock_type)
       error= cache_handler->external_lock(thd, F_UNLCK);
       DBUG_RETURN(error);
     }
+
+    cache_locked= 1;
   }
   else
   {
@@ -1629,7 +1646,10 @@ int ha_mcs_cache::delete_all_rows(void)
   DBUG_ENTER("ha_mcs_cache::delete_all_rows");
 
   if (get_cache_inserts(current_thd))
+  {
     error= cache_handler->delete_all_rows();
+    share->cached_rows= 0;
+  }
   if ((error2= parent::delete_all_rows()))
     error= error2;
   DBUG_RETURN(error);
@@ -1653,7 +1673,7 @@ bool ha_mcs_cache::is_crashed() const
 
    In the case of 1) we don't want to run repair on both tables as
    the repair can be a slow process. Instead we only run repair
-   on the crashed tables. If not tables are marked crashed, we
+   on the crashed tables. If no tables are marked crashed, we
    run repair on both tables.
 
    Repair on the cache table will delete the part of the cache that was
@@ -1675,12 +1695,14 @@ int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
     {
       /* Delete everything that was not already committed */
       mysql_file_chsize(cache_handler->file->dfile.file,
-                        cache_handler->file->s->state.state.key_file_length,
-                        0, MYF(MY_WME));
-      mysql_file_chsize(cache_handler->file->s->kfile.file,
                         cache_handler->file->s->state.state.data_file_length,
                         0, MYF(MY_WME));
+      mysql_file_chsize(cache_handler->file->s->kfile.file,
+                        cache_handler->file->s->state.state.key_file_length,
+                        0, MYF(MY_WME));
+      check_opt->flags|= T_AUTO_REPAIR;
       error= cache_handler->repair(thd, check_opt);
+      share->cached_rows= cache_handler->file->state->records;
     }
   }
 
@@ -1698,7 +1720,11 @@ int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
 int ha_mcs_cache::write_row(const uchar *buf)
 {
   if (get_cache_inserts(current_thd) && insert_command)
+  {
+    DBUG_ASSERT(share->cached_rows == cache_handler->file->state->records);
+    share->cached_rows++;
     return cache_handler->write_row(buf);
+  }
   return parent::write_row(buf);
 }
 
@@ -1919,15 +1945,17 @@ ha_rows ha_mcs_cache::num_rows_cached()
 
 void ha_mcs_cache::free_locks()
 {
-  /* We don't need to lock cache_handler anymore as it's already flushed */
-  thr_unlock(&cache_handler->file->lock, 0);
-
   /* Restart transaction for columnstore table */
   if (original_lock_type != F_WRLCK)
   {
     parent::external_lock(table->in_use, F_UNLCK);
     parent::external_lock(table->in_use, original_lock_type);
   }
+
+  /* We don't need to lock cache_handler anymore as it's already flushed */
+  cache_handler->external_lock(table->in_use, F_UNLCK);
+  thr_unlock(&cache_handler->file->lock, 0);
+  cache_locked= false;
 }
 
 
@@ -1943,18 +1971,23 @@ int ha_mcs_cache::flush_insert_cache()
   int error, error2;
   ha_maria *from= cache_handler;
   uchar *record= table->record[0];
+  ulonglong copied_rows= 0;
   DBUG_ENTER("flush_insert_cache");
+
+  DBUG_ASSERT(from->file->state->records == share->cached_rows);
 
   parent::start_bulk_insert_from_cache(from->file->state->records, 0);
   from->rnd_init(1);
   while (!(error= from->rnd_next(record)))
   {
+    copied_rows++;
     if ((error= parent::write_row(record)))
       goto end;
     rows_changed++;
   }
   if (error == HA_ERR_END_OF_FILE)
     error= 0;
+  DBUG_ASSERT(copied_rows == share->cached_rows);
 
 end:
   from->rnd_end();
@@ -1973,13 +2006,24 @@ end:
       parent::ht->rollback(parent::ht, table->in_use, 1);
   }
 
+  DBUG_ASSERT(error == 0);
   if (!error)
   {
     /*
-      Everything when fine, delete all rows from the cache and allow others
+      Everything went fine, delete all rows from the cache and allow others
       to use it.
     */
-    from->delete_all_rows();
+    {
+      /*
+        We have to unlock the lock mutex as otherwise we get a conflict in
+        mutex order. This is fine as we have a write lock on the mutex,
+        so we will be able to get it again
+      */
+      mysql_mutex_unlock(&from->file->s->lock.mutex);
+      from->delete_all_rows();
+      share->cached_rows= 0;
+      mysql_mutex_lock(&from->file->s->lock.mutex);
+    }
   }
   DBUG_RETURN(error);
 }
