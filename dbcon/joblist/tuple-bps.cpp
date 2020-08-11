@@ -1431,7 +1431,8 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
     }
 }
 
-bool TupleBPS::compareSingleValue(uint8_t COP, int64_t val1, int64_t val2) const
+template<typename T>
+bool TupleBPS::compareSingleValue(uint8_t COP, T val1, T val2) const
 {
     switch (COP)
     {
@@ -1546,7 +1547,8 @@ bool TupleBPS::processSingleFilterString_ranged(int8_t BOP, int8_t colWidth, int
     return ret;
 }
 
-bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t val, const uint8_t* filterString,
+template<typename T>
+bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, const uint8_t* filterString,
         uint32_t filterCount) const
 {
     uint j;
@@ -1556,6 +1558,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
     {
         int8_t COP;
         int64_t val2;
+        int128_t bigVal2;
         bool thisPredicate;
         COP = *filterString++;
         filterString++;   // skip the round var, don't think that applies here
@@ -1582,11 +1585,19 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
                 filterString += 8;
                 break;
 
+            case 16:
+                bigVal2 = *((int128_t*) filterString);
+                filterString += 16;
+                break;
+
             default:
                 throw logic_error("invalid column width");
         }
 
-        thisPredicate = compareSingleValue(COP, val, val2);
+        if (colWidth < datatypes::MAXDECIMALWIDTH)
+            thisPredicate = compareSingleValue(COP, (int64_t) val, val2);
+        else
+            thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2);
 
         if (j == 0)
             ret = thisPredicate;
@@ -1600,7 +1611,8 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
     return ret;
 }
 
-bool TupleBPS::processOneFilterType(int8_t colWidth, int64_t value, uint32_t type) const
+template<typename T>
+bool TupleBPS::processOneFilterType(int8_t colWidth, T value, uint32_t type) const
 {
     const vector<SCommand>& filters = fBPP->getFilterSteps();
     uint i;
@@ -1691,9 +1703,13 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                && (!hasSegmentDirFilter || processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                && (!hasExtentIDFilter || processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                && (!hasMaxFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) : true))
+                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
+                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : true))
                && (!hasMinFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) : true))
+                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
+                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : true))
                && (!hasLBIDFilter || processLBIDFilter(emEntry))
                ;
     }
@@ -1705,9 +1721,13 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                || (hasSegmentDirFilter && processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                || (hasExtentIDFilter && processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                || (hasMaxFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) : false))
+                                    (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
+                                     processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : false))
                || (hasMinFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) : false))
+                                    (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
+                                     processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : false))
                || (hasLBIDFilter && processLBIDFilter(emEntry))
                ;
     }
@@ -3215,7 +3235,8 @@ void TupleBPS::setJoinFERG(const RowGroup& rg)
     fBPP->setJoinFERG(rg);
 }
 
-void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool isRange)
+void TupleBPS::addCPPredicates(uint32_t OID, const vector<__int128>& vals, bool isRange,
+                               bool isSmallSideWideDecimal)
 {
 
     if (fTraceFlags & CalpontSelectExecutionPlan::IGNORE_CP || fOid < 3000)
@@ -3223,6 +3244,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
 
     uint32_t i, j, k;
     int64_t min, max, seq;
+    __int128 bigMin, bigMax;
     bool isValid, intersection;
     vector<SCommand> colCmdVec = fBPP->getFilterSteps();
     ColumnCommandJL* cmd;
@@ -3246,7 +3268,9 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
 
         if (cmd != NULL && cmd->getOID() == OID)
         {
-            if (!ll.CasualPartitionDataType(cmd->getColType().colDataType, cmd->getColType().colWidth)
+            const execplan::CalpontSystemCatalog::ColType& colType = cmd->getColType();
+
+            if (!ll.CasualPartitionDataType(colType.colDataType, colType.colWidth)
                     || cmd->isDict())
                 return;
 
@@ -3273,25 +3297,73 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
                 extentsPtr = &mref;
             }
 
-            for (j = 0; j < extents.size(); j++)
+            if (colType.colWidth <= 8)
             {
-                isValid = ll.GetMinMax(&min, &max, &seq, extents[j].range.start, *extentsPtr,
-                                       cmd->getColType().colDataType);
-
-                if (isValid)
+                for (j = 0; j < extents.size(); j++)
                 {
-                    if (isRange)
-                        runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, vals[0], vals[1],
-                                            cmd->getColType().colDataType) && runtimeCPFlags[j];
-                    else
+                    isValid = ll.GetMinMax(&min, &max, &seq, extents[j].range.start, *extentsPtr,
+                                           colType.colDataType);
+
+                    if (isValid)
                     {
-                        intersection = false;
+                        if (isRange)
+                        {
+                            if (!isSmallSideWideDecimal)
+                            {
+                                runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, (int64_t) vals[0], (int64_t) vals[1],
+                                                    colType.colDataType) && runtimeCPFlags[j];
+                            }
+                            else
+                            {
+                                runtimeCPFlags[j] = ll.checkRangeOverlap((__int128) min, (__int128) max, vals[0], vals[1],
+                                                    colType.colDataType) && runtimeCPFlags[j];
+                            }
+                        }
+                        else
+                        {
+                            intersection = false;
 
-                        for (k = 0; k < vals.size(); k++)
-                            intersection = intersection ||
-                                           ll.checkSingleValue(min, max, vals[k], cmd->getColType().colDataType);
+                            for (k = 0; k < vals.size(); k++)
+                            {
+                                if (!isSmallSideWideDecimal)
+                                {
+                                    intersection = intersection ||
+                                                   ll.checkSingleValue(min, max, (int64_t) vals[k], colType.colDataType);
+                                }
+                                else
+                                {
+                                    intersection = intersection ||
+                                                   ll.checkSingleValue((__int128) min, (__int128) max, vals[k], colType.colDataType);
+                                }
+                            }
 
-                        runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                            runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (j = 0; j < extents.size(); j++)
+                {
+                    isValid = ll.GetMinMax(&bigMin, &bigMax, &seq, extents[j].range.start, *extentsPtr,
+                                           colType.colDataType);
+
+                    if (isValid)
+                    {
+                        if (isRange)
+                            runtimeCPFlags[j] = ll.checkRangeOverlap(bigMin, bigMax, vals[0], vals[1],
+                                                colType.colDataType) && runtimeCPFlags[j];
+                        else
+                        {
+                            intersection = false;
+
+                            for (k = 0; k < vals.size(); k++)
+                                intersection = intersection ||
+                                               ll.checkSingleValue(bigMin, bigMax, vals[k], colType.colDataType);
+
+                            runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                        }
                     }
                 }
             }
@@ -3348,6 +3420,23 @@ void TupleBPS::abort()
     boost::mutex::scoped_lock scoped(boost::mutex);
     abort_nolock();
 }
+
+template
+bool TupleBPS::processOneFilterType<int64_t>(int8_t colWidth, int64_t value, uint32_t type) const;
+template
+bool TupleBPS::processOneFilterType<int128_t>(int8_t colWidth, int128_t value, uint32_t type) const;
+
+template
+bool TupleBPS::processSingleFilterString<int64_t>(int8_t BOP, int8_t colWidth, int64_t val, const uint8_t* filterString,
+                                                  uint32_t filterCount) const;
+template
+bool TupleBPS::processSingleFilterString<int128_t>(int8_t BOP, int8_t colWidth, int128_t val, const uint8_t* filterString,
+                                                   uint32_t filterCount) const;
+
+template
+bool TupleBPS::compareSingleValue<int64_t>(uint8_t COP, int64_t val1, int64_t val2) const;
+template
+bool TupleBPS::compareSingleValue<int128_t>(uint8_t COP, int128_t val1, int128_t val2) const;
 
 }   //namespace
 // vim:ts=4 sw=4:

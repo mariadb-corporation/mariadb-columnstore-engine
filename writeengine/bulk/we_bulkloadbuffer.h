@@ -31,6 +31,7 @@
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
+#include "widedecimalutils.h"
 
 namespace WriteEngine
 {
@@ -66,8 +67,8 @@ public:
         {
             minBufferVal = MAX_BIGINT;
             maxBufferVal = MIN_BIGINT;
-            dataconvert::DataConvert::int128Max(bigMinBufferVal);
-            dataconvert::DataConvert::int128Min(bigMaxBufferVal);
+            utils::int128Max(bigMinBufferVal);
+            utils::int128Min(bigMaxBufferVal);
         }
     }
 };

@@ -32,6 +32,9 @@ namespace utils
     const uint8_t MAXLENGTH16BYTES = 42;
     const uint8_t MAXLENGTH8BYTES = 23;
 
+    const int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
+    const int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
+
     inline bool isWideDecimalNullValue(const int128_t& val)
     {
         const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);

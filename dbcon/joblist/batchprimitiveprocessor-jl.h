@@ -288,7 +288,7 @@ private:
     uint16_t ridCount;
     bool needStrValues;
 
-    bool hasWideDecimalType;
+    uint16_t wideColumnsWidths;
 
     std::vector<SCommand> filterSteps;
     std::vector<SCommand> projectSteps;

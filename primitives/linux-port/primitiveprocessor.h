@@ -329,6 +329,7 @@ private:
     int dict_OffsetIndex, currentOffsetIndex;		// used by p_dictionary
     int fDebugLevel;
     dbbc::Stats* fStatsPtr; // pointer for pmstats
+    // To be removed b/c always true
     bool logicalBlockMode;
 
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter;

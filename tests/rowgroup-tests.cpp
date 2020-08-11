@@ -43,6 +43,7 @@ protected:
         std::vector<decltype(precision)> precisionVec;
         std::vector<uint32_t> roids, tkeys, cscale;
         std::vector<uint32_t> widthVec;
+        std::vector<uint32_t> charSetNumVec;
         types.push_back(execplan::CalpontSystemCatalog::DECIMAL);
         types.push_back(execplan::CalpontSystemCatalog::UDECIMAL);
 
@@ -68,6 +69,7 @@ protected:
             roids.push_back(oid + i);
             tkeys.push_back(i + 1);
             cscale.push_back(0);
+            charSetNumVec.push_back(8);
         }
 
         rowgroup::RowGroup inRG(roids.size(), // column count
@@ -75,6 +77,7 @@ protected:
             roids, // column oids
             tkeys, // keys
             types, // types
+            charSetNumVec, // charset numbers
             cscale, // scale
             precisionVec, // precision
             20, // sTableThreshold
