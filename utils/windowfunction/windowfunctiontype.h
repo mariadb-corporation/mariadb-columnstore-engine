@@ -242,7 +242,7 @@ protected:
     {
         fRow.setIntField(v, i);
     }
-    void    setInt128Value(int64_t i, int128_t v)
+    void    setInt128Value(int64_t i, const int128_t& v)
     {
         fRow.setInt128Field(v, i);
     }
