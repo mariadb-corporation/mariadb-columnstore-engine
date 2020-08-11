@@ -113,4 +113,7 @@ void set_import_for_batchinsert_enclosed_by(THD* thd, ulong value);
 bool get_replication_slave(THD* thd);
 void set_replication_slave(THD* thd, bool value);
 
+bool get_cache_inserts(THD* thd);
+void set_cache_inserts(THD* thd, bool value);
+
 #endif
