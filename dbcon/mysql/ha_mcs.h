@@ -22,6 +22,7 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
+#include <vector>
 
 extern handlerton* mcs_hton;
 #define CS_WARNING_ID 9999
