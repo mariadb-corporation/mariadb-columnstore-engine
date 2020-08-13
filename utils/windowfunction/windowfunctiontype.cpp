@@ -362,6 +362,11 @@ template<> void WindowFunctionType::setValue<int128_t>(uint64_t i, int128_t& t)
     fRow.setInt128Field(t, i);
 }
 
+template<> void WindowFunctionType::setValue<uint128_t>(uint64_t i, uint128_t& t)
+{
+    fRow.setUint128Field(t, i);
+}
+
 template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
 {
     fRow.setStringField(t, i);
@@ -433,15 +438,31 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
 
             case CalpontSystemCatalog::DECIMAL:
             {
-                int128_t iv = *v;
-                setValue(i, iv);
+                if (sizeof(T) == 8)
+                {
+                    int64_t iv = *v;
+                    setValue(i, iv);
+                }
+                else
+                {
+                    int128_t iv = *v;
+                    setValue(i, iv);
+                }
                 break;
             }
 
             case CalpontSystemCatalog::UDECIMAL:
             {
-                uint128_t uv = *v;
-                setValue(i, uv);
+                if (sizeof(T) == 8)
+                {
+                    uint64_t iv = *v;
+                    setValue(i, iv);
+                }
+                else
+                {
+                    uint128_t iv = *v;
+                    setValue(i, iv);
+                }
                 break;
             }
 
@@ -480,7 +501,6 @@ template<typename T>
 void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 {
     int ct = fRow.getColType(i);
-    int64_t divisor = 1;
 
     switch (ct)
     {
@@ -557,14 +577,13 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         }
     }
 
+    T divisor = 1;
     s -= fRow.getScale(i); // we scale only the difference of scales
     datatypes::getScaleDivisor(divisor, abs(s));
     if (s > 0)
         t *= divisor;
     else if (s < 0)
         t /= divisor;
-
-
 }
 
 template<>

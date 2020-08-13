@@ -250,7 +250,7 @@ protected:
     {
         fRow.setDoubleField(v, i);
     }
-    void    setLongDoubleValue(int64_t i, long double  v)
+    void    setLongDoubleValue(int64_t i, const long double&  v)
     {
         fRow.setLongDoubleField(v, i);
     }
