@@ -81,7 +81,7 @@ local Pipeline(branch, platform, event) = {
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       // clone regression test repo
-      'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
+      // 'git clone --recurse-submodules --branch ' + branch + ' --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       'git clone --recurse-submodules --branch MCOL-4183 --depth 1 https://github.com/dhall-MariaDB/mariadb-columnstore-regression-test.git',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
