@@ -215,22 +215,9 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (!fNthNull)
             {
                 implicit2T(idx, tmp, 0);
-
-                if (tmp <= 0)
-                {
-                    ostringstream oss;
-                    oss << tmp;
-                    throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE,
-                                    oss.str()), ERR_WF_ARG_OUT_OF_RANGE);
-                }
-
-                if (tmp > e) // prevent integer overflow
-                    tmp = e + 1;
-
-                fNth = (int64_t) tmp;
+                fNth = round(tmp);
             }
         }
-
 
         bool isNull = true;
 
@@ -256,7 +243,7 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
 
                 int64_t n = k + fNth - 1;
 
-                if (n <= e)
+                if (n <= e && n >= 0)
                 {
                     fRow.setData(getPointer(fRowData->at(n)));
                     getValue(colIn, fValue);
