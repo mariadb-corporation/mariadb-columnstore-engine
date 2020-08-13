@@ -139,6 +139,7 @@ int main(int argc, char* argv[])
     sigaction(SIGSEGV, &ign, 0);
     sigaction(SIGABRT, &ign, 0);
     sigaction(SIGFPE, &ign, 0);
+    sigaction(SIGKILL, &ign, 0);
 #endif
 
     ddlprocessor::DDLProcessor ddlprocessor(1, 20);

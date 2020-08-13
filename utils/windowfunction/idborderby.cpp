@@ -610,7 +610,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
                     case datatypes::MAXDECIMALWIDTH:
                         c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
                     case datatypes::MAXLEGACYWIDTH:
-                        c = new BigIntCompare(*i);
+                        c = new BigIntCompare(*i); break;
                     case 1 :
                         c = new TinyIntCompare(*i); break;
                     case 2 :
@@ -837,8 +837,6 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UDECIMAL:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
@@ -851,6 +849,21 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             {
                 // equal compare. ignore sign and null
                 eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
+                break;
+            }
+
+            case CalpontSystemCatalog::DECIMAL:
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                // equal compare. ignore sign and null
+                if (fRow1.getColumnWidth(*i) < 16)
+                {
+                    eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
+                }
+                else
+                {
+                    eq = (fRow1.getUint128Field(*i) == fRow2.getUint128Field(*i));
+                }
                 break;
             }
 

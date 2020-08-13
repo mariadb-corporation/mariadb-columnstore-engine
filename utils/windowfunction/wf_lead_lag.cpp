@@ -53,7 +53,7 @@ namespace windowfunction
 
 
 template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -64,7 +64,6 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
             func.reset(new WF_lead_lag<int64_t>(id, name));
             break;
@@ -75,13 +74,38 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
         {
             func.reset(new WF_lead_lag<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            {
+                func.reset(new WF_lead_lag<int64_t>(id, name));
+            }
+            else
+            {
+                func.reset(new WF_lead_lag<int128_t>(id, name));
+            }
+            break;
+        }
+        
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            {
+                func.reset(new WF_lead_lag<uint64_t>(id, name));
+            }
+            else
+            {
+                func.reset(new WF_lead_lag<uint128_t>(id, name));
+            }
             break;
         }
 
@@ -167,10 +191,13 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 
     // parms[3]: respect null | ignore null
     cc = dynamic_cast<ConstantColumn*>(parms[3].get());
-    idbassert(cc != NULL);
-    bool isNull = false;  // dummy, harded coded
-    fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
+    if (cc != NULL)
+    {
+        bool isNull = false;  // dummy. Return not used
+        fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
+    }
 }
+
 
 
 template<typename T>
@@ -196,13 +223,7 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (!fOffsetNull)
             {
                 implicit2T(idx, tmp, 0);
-
-                if (tmp > e) // prevent integer overflow
-                    tmp = e + 1;
-                else if (tmp + e < 0)
-                    tmp += e - 1;
-
-                fOffset = (int64_t) tmp;
+                fOffset = round(tmp);
                 fOffset *= fLead;
             }
         }
@@ -293,10 +314,12 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_lead_lag<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_lead_lag<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 template void WF_lead_lag<int64_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<uint64_t>::parseParms(const std::vector<execplan::SRCP>&);
+template void WF_lead_lag<int128_t>::parseParms(const std::vector<execplan::SRCP>&);
+template void WF_lead_lag<uint128_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<float>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<double>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<string>::parseParms(const std::vector<execplan::SRCP>&);

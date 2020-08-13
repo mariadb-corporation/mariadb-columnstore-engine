@@ -24,6 +24,7 @@
 #include "calpontsystemcatalog.h"
 
 using int128_t = __int128;
+using uint128_t = unsigned __int128;
 using ColTypeAlias = execplan::CalpontSystemCatalog::ColType;
 using ColDataTypeAlias = execplan::CalpontSystemCatalog::ColDataType;
 
@@ -31,6 +32,45 @@ namespace execplan
 {
     struct IDB_Decimal;
 }
+
+// A class by Fabio Fernandes pulled off of stackoverflow
+// Creates a type _xxl that can be used to create 128bit constant values
+// Ex: int128_t i128 = 12345678901234567890123456789_xxl
+namespace detail_xxl
+{
+    constexpr uint8_t hexval(char c) 
+    { return c>='a' ? (10+c-'a') : c>='A' ? (10+c-'A') : c-'0'; }
+
+    template <int BASE, uint128_t V>
+    constexpr uint128_t lit_eval() { return V; }
+
+    template <int BASE, uint128_t V, char C, char... Cs>
+    constexpr uint128_t lit_eval() {
+        static_assert( BASE!=16 || sizeof...(Cs) <=  32-1, "Literal too large for BASE=16");
+        static_assert( BASE!=10 || sizeof...(Cs) <=  39-1, "Literal too large for BASE=10");
+        static_assert( BASE!=8  || sizeof...(Cs) <=  44-1, "Literal too large for BASE=8");
+        static_assert( BASE!=2  || sizeof...(Cs) <= 128-1, "Literal too large for BASE=2");
+        return lit_eval<BASE, BASE*V + hexval(C), Cs...>();
+    }
+
+    template<char... Cs > struct LitEval 
+    {static constexpr uint128_t eval() {return lit_eval<10,0,Cs...>();} };
+
+    template<char... Cs> struct LitEval<'0','x',Cs...> 
+    {static constexpr uint128_t eval() {return lit_eval<16,0,Cs...>();} };
+
+    template<char... Cs> struct LitEval<'0','b',Cs...> 
+    {static constexpr uint128_t eval() {return lit_eval<2,0,Cs...>();} };
+
+    template<char... Cs> struct LitEval<'0',Cs...> 
+    {static constexpr uint128_t eval() {return lit_eval<8,0,Cs...>();} };
+
+    template<char... Cs> 
+    constexpr uint128_t operator "" _xxl() {return LitEval<Cs...>::eval();}
+}
+
+template<char... Cs> 
+constexpr uint128_t operator "" _xxl() {return ::detail_xxl::operator "" _xxl<Cs...>();}
 
 namespace datatypes
 {
@@ -42,7 +82,7 @@ constexpr uint8_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
 
-const uint64_t mcs_pow_10[20] =
+const int64_t mcs_pow_10[19] =
 {
     1ULL,
     10ULL,
@@ -63,7 +103,29 @@ const uint64_t mcs_pow_10[20] =
     10000000000000000ULL,
     100000000000000000ULL,
     1000000000000000000ULL,
-    10000000000000000000ULL
+};
+const int128_t mcs_pow_10_128[20] =
+{
+    10000000000000000000_xxl,
+    100000000000000000000_xxl,
+    1000000000000000000000_xxl,
+    10000000000000000000000_xxl,
+    100000000000000000000000_xxl,
+    1000000000000000000000000_xxl,
+    10000000000000000000000000_xxl,
+    100000000000000000000000000_xxl,
+    1000000000000000000000000000_xxl,
+    10000000000000000000000000000_xxl,
+    100000000000000000000000000000_xxl,
+    1000000000000000000000000000000_xxl,
+    10000000000000000000000000000000_xxl,
+    100000000000000000000000000000000_xxl,
+    1000000000000000000000000000000000_xxl,
+    10000000000000000000000000000000000_xxl,
+    100000000000000000000000000000000000_xxl,
+    1000000000000000000000000000000000000_xxl,
+    10000000000000000000000000000000000000_xxl,
+    100000000000000000000000000000000000000_xxl,
 };
 
 constexpr uint32_t maxPowOf10 = sizeof(mcs_pow_10)/sizeof(mcs_pow_10[0])-1;
@@ -75,21 +137,21 @@ constexpr int128_t Decimal128Empty = (int128_t(0x8000000000000000LL) << 64) + 1;
     @brief The function to produce scale multiplier/divisor for
     wide decimals.
 */
-inline void getScaleDivisor(int128_t& divisor, const int8_t scale)
+template<typename T>
+inline void getScaleDivisor(T& divisor, const int8_t scale)
 {
-    divisor = 1;
-    switch (scale/maxPowOf10)
+    if (scale < 0)
     {
-        case 2:
-            divisor *= mcs_pow_10[maxPowOf10];
-            divisor *= mcs_pow_10[maxPowOf10];
-            break;
-        case 1:
-            divisor *= mcs_pow_10[maxPowOf10];
-        case 0:
-            divisor *= mcs_pow_10[scale%maxPowOf10];
-        default:
-            break;
+        std::string msg = "getScaleDivisor called with negative scale: " + std::to_string(scale);
+        throw std::invalid_argument(msg);
+    }
+    else if (scale < 19)
+    {
+        divisor = mcs_pow_10[scale];
+    }
+    else
+    {
+        divisor = mcs_pow_10_128[scale-19];
     }
 }
 

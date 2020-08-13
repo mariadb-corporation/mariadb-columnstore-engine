@@ -837,7 +837,21 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
 inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow,
                              ColType colType, int colWidth)
 {
-    valArray = calloc(totalRow, colWidth);
+    switch (colType)
+    {
+        case WriteEngine::WR_VARBINARY : // treat same as char for now
+        case WriteEngine::WR_CHAR:
+        case WriteEngine::WR_BLOB:
+        case WriteEngine::WR_TEXT:
+            valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
+            break;
+        case WriteEngine::WR_TOKEN:
+            valArray = (Token*) calloc(sizeof(Token), totalRow);
+            break;
+        default:
+            valArray = calloc(totalRow, colWidth);
+            break;
+    }
     // TODO MCOL-641 is commenting out the switch statement below correct?
 #if 0
     switch (colType)

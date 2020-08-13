@@ -40,7 +40,6 @@ using namespace logging;
 using namespace ordering;
 
 #include "calpontsystemcatalog.h"
-#include "dataconvert.h"                            // int64_t IDB_pow[19]
 using namespace execplan;
 
 #include "windowfunctionstep.h"
@@ -59,6 +58,7 @@ using namespace joblist;
 #include "wf_stats.h"
 #include "wf_sum_avg.h"
 #include "wf_udaf.h"
+#include "mcs_decimal.h"
 
 namespace windowfunction
 {
@@ -150,67 +150,67 @@ WindowFunctionType::makeWindowFunction(const string& name, int ct, WindowFunctio
     int functionId = windowFunctionId[algorithm::to_upper_copy(name)];
 
     // The template parameters here are dummies to execute the static makeFunction
-    // which sets the real type based on ct.
+    // which sets the real types based on ct.
     switch (functionId)
     {
         case WF__COUNT_ASTERISK:
         case WF__COUNT:
         case WF__COUNT_DISTINCT:
-            af = WF_count<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_count<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__MIN:
         case WF__MAX:
-            af = WF_min_max<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_min_max<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__SUM:
         case WF__AVG:
         case WF__SUM_DISTINCT:
         case WF__AVG_DISTINCT:
-            af = WF_sum_avg<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_sum_avg<int64_t, long double>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__STDDEV_POP:
         case WF__STDDEV_SAMP:
         case WF__VAR_POP:
         case WF__VAR_SAMP:
-            af = WF_stats<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_stats<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__ROW_NUMBER:
-            af = WF_row_number::makeFunction(functionId, name, ct);
+            af = WF_row_number::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__RANK:
         case WF__DENSE_RANK:
         case WF__PERCENT_RANK:
         case WF__CUME_DIST:
-            af = WF_ranking::makeFunction(functionId, name, ct);
+            af = WF_ranking::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__FIRST_VALUE:
         case WF__LAST_VALUE:
         case WF__NTH_VALUE:
-            af = WF_nth_value<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_nth_value<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__LEAD:
         case WF__LAG:
-            af = WF_lead_lag<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_lead_lag<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__NTILE:
-            af = WF_ntile::makeFunction(functionId, name, ct);
+            af = WF_ntile::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__PERCENTILE_CONT:
         case WF__PERCENTILE_DISC:
-            af = WF_percentile<int64_t>::makeFunction(functionId, name, ct);
+            af = WF_percentile<int64_t>::makeFunction(functionId, name, ct, wc);
             break;
 
         case WF__UDAF:
-            af = WF_udaf::makeFunction(functionId, name, ct, wc->getUDAFContext());
+            af = WF_udaf::makeFunction(functionId, name, ct, wc->getUDAFContext(), wc);
             break;
 
         case WF__REGR_SLOPE:
@@ -229,7 +229,7 @@ WindowFunctionType::makeWindowFunction(const string& name, int ct, WindowFunctio
             break;
     }
 
-    // Copy the only the constant parameter pointers
+    // Copy only the constant parameter pointers
     af->constParms(wc->functionParms());
 
     return af;
@@ -308,6 +308,26 @@ template<> void WindowFunctionType::getValue<string>(uint64_t i, string& t, CDT*
     // By not setting cdt, we let it default to the column's type
 }
 
+template<> void WindowFunctionType::getValue<int128_t>(uint64_t i, int128_t& t, CDT* cdt)
+{
+    t = fRow.getInt128Field(i);
+
+    if (cdt)
+    {
+        *cdt = execplan::CalpontSystemCatalog::DECIMAL;
+    }
+}
+
+template<> void WindowFunctionType::getValue<uint128_t>(uint64_t i, uint128_t& t, CDT* cdt)
+{
+    t = fRow.getUint128Field(i);
+
+    if (cdt)
+    {
+        *cdt = execplan::CalpontSystemCatalog::DECIMAL;
+    }
+}
+
 template<typename T> void WindowFunctionType::setValue(uint64_t i, T& t)
 {
 }
@@ -335,6 +355,16 @@ template<> void WindowFunctionType::setValue<float>(uint64_t i, float& t)
 template<> void WindowFunctionType::setValue<long double>(uint64_t i, long double& t)
 {
     fRow.setLongDoubleField(t, i);
+}
+
+template<> void WindowFunctionType::setValue<int128_t>(uint64_t i, int128_t& t)
+{
+    fRow.setInt128Field(t, i);
+}
+
+template<> void WindowFunctionType::setValue<uint128_t>(uint64_t i, uint128_t& t)
+{
+    fRow.setUint128Field(t, i);
 }
 
 template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
@@ -389,7 +419,6 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
             {
                 int64_t iv = *v;
                 setValue(i, iv);
@@ -401,10 +430,39 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
             case CalpontSystemCatalog::UMEDINT:
             case CalpontSystemCatalog::UINT:
             case CalpontSystemCatalog::UBIGINT:
-            case CalpontSystemCatalog::UDECIMAL:
             {
                 uint64_t uv = *v;
                 setValue(i, uv);
+                break;
+            }
+
+            case CalpontSystemCatalog::DECIMAL:
+            {
+                if (sizeof(T) == 8)
+                {
+                    int64_t iv = *v;
+                    setValue(i, iv);
+                }
+                else
+                {
+                    int128_t iv = *v;
+                    setValue(i, iv);
+                }
+                break;
+            }
+
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                if (sizeof(T) == 8)
+                {
+                    uint64_t iv = *v;
+                    setValue(i, iv);
+                }
+                else
+                {
+                    uint128_t iv = *v;
+                    setValue(i, iv);
+                }
                 break;
             }
 
@@ -443,7 +501,6 @@ template<typename T>
 void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 {
     int ct = fRow.getColType(i);
-    int pw = 0;
 
     switch (ct)
     {
@@ -452,16 +509,8 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
             t = (T) fRow.getIntField(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
-
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
-
             break;
         }
 
@@ -470,48 +519,48 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         {
             t = (T) fRow.getUintField(i);
-            pw = s - fRow.getScale(i); // pw is difference of scales, will be in [-18, 18]
+            break;
+        }
 
-            if (pw > 0)
-                t *= IDB_pow[pw];
-            else if (pw < 0)
-                t /= IDB_pow[-pw];
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            uint32_t w = fRow.getColumnWidth(i);
+            if (w < 16)
+                t = (T) fRow.getIntField(i);
+            else 
+                t = (T) fRow.getInt128Field(i);
+            break;
+        }
 
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            uint32_t w = fRow.getColumnWidth(i);
+            if (w < 16)
+                t = (T) fRow.getUintField(i);
+            else 
+                t = (T) fRow.getUint128Field(i);
             break;
         }
 
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {
-            if (s == 0)
-                t = (T) fRow.getDoubleField(i);
-            else
-                t = (T) (fRow.getDoubleField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getDoubleField(i);
             break;
         }
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
         {
-            if (s == 0)
-                t = (T) fRow.getFloatField(i);
-            else
-                t = (T) (fRow.getFloatField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getFloatField(i);
             break;
         }
 
         case CalpontSystemCatalog::LONGDOUBLE:
         {
-            if (s == 0)
-                t = (T) fRow.getLongDoubleField(i);
-            else
-                t = (T) (fRow.getLongDoubleField(i) * IDB_pow[s]); // s is scale, [0, 18]
-
+            t = (T) fRow.getLongDoubleField(i);
             break;
         }
 
@@ -527,6 +576,14 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
             break;
         }
     }
+
+    T divisor = 1;
+    s -= fRow.getScale(i); // we scale only the difference of scales
+    datatypes::getScaleDivisor(divisor, abs(s));
+    if (s > 0)
+        t *= divisor;
+    else if (s < 0)
+        t /= divisor;
 }
 
 template<>
@@ -550,6 +607,18 @@ template<>
 void WindowFunctionType::getConstValue<uint64_t>(ConstantColumn* cc, uint64_t& t, bool& b)
 {
     t = cc->getUintVal(fRow, b);
+}
+
+template<>
+void WindowFunctionType::getConstValue<int128_t>(ConstantColumn* cc, int128_t& t, bool& b)
+{
+    t = cc->getDecimalVal(fRow, b).s128Value;
+}
+
+template<>
+void WindowFunctionType::getConstValue<uint128_t>(ConstantColumn* cc, uint128_t& t, bool& b)
+{
+    t = cc->getDecimalVal(fRow, b).s128Value;
 }
 
 template<>
@@ -581,12 +650,16 @@ template void WindowFunctionType::implicit2T<uint64_t>(uint64_t, uint64_t&, int)
 template void WindowFunctionType::implicit2T<float>(uint64_t, float&, int);
 template void WindowFunctionType::implicit2T<double>(uint64_t, double&, int);
 template void WindowFunctionType::implicit2T<long double>(uint64_t, long double&, int);
+template void WindowFunctionType::implicit2T<int128_t>(uint64_t, int128_t&, int);
+template void WindowFunctionType::implicit2T<uint128_t>(uint64_t, uint128_t&, int);
 
 template void WindowFunctionType::setValue<int64_t>(int, int64_t, int64_t, int64_t, int64_t*);
 template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int64_t, uint64_t*);
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
 template void WindowFunctionType::setValue<long double>(int, int64_t, int64_t, int64_t, long double*);
+template void WindowFunctionType::setValue<int128_t>(int, int64_t, int64_t, int64_t, int128_t*);
+template void WindowFunctionType::setValue<uint128_t>(int, int64_t, int64_t, int64_t, uint128_t*);
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
 {
@@ -610,7 +683,8 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 //    static uint64_t char4Null     = joblist::CHAR4NULL;
 //    static uint64_t char8Null     = joblist::CHAR8NULL;
     static string stringNull("");
-
+    static int128_t int128Null; // Set at runtime;
+    
     void* v = NULL;
 
     switch (ct)
@@ -714,9 +788,18 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
                     v = &intNull;
                     break;
 
-                default:
+                case 8:
                     v = &bigIntNull;
                     break;
+
+                case 16:
+                    utils::setWideDecimalNullValue(int128Null);
+                    v = &int128Null;
+                    break;
+
+                default:
+                    break;
+                
             }
 
             break;

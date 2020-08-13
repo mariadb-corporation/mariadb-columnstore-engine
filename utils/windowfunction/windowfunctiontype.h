@@ -226,6 +226,10 @@ protected:
     {
         return fRow.getIntField(i);
     }
+    int128_t getInt128Value(uint64_t i)
+    {
+        return fRow.getInt128Field(i);
+    }
     double  getDoubleValue(uint64_t i)
     {
         return fRow.getDoubleField(i);
@@ -238,11 +242,15 @@ protected:
     {
         fRow.setIntField(v, i);
     }
+    void    setInt128Value(int64_t i, const int128_t& v)
+    {
+        fRow.setInt128Field(v, i);
+    }
     void    setDoubleValue(int64_t i, double  v)
     {
         fRow.setDoubleField(v, i);
     }
-    void    setLongDoubleValue(int64_t i, long double  v)
+    void    setLongDoubleValue(int64_t i, const long double&  v)
     {
         fRow.setLongDoubleField(v, i);
     }
