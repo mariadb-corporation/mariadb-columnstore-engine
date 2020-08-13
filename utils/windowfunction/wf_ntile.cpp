@@ -118,10 +118,7 @@ void WF_ntile::operator()(int64_t b, int64_t e, int64_t c)
                                 oss.str()), ERR_WF_ARG_OUT_OF_RANGE);
             }
 
-            if (tmp > e) // prevent integer overflow
-                tmp = e + 1;
-
-            fNtile = (int64_t) tmp;
+            fNtile = round(tmp);
         }
     }
 
