@@ -383,8 +383,9 @@ public:
     inline void setDoubleField(double val, uint32_t colIndex);
     inline void setFloatField(float val, uint32_t colIndex);
     inline void setDecimalField(double val, uint32_t colIndex) { };  // TODO: Do something here
-    inline void setLongDoubleField(long double val, uint32_t colIndex);
-    inline void setInt128Field(int128_t val, uint32_t colIndex);
+    inline void setLongDoubleField(const long double& val, uint32_t colIndex);
+    inline void setInt128Field(const int128_t& val, uint32_t colIndex);
+    inline void setUint128Field(const uint128_t& val, uint32_t colIndex);
 
     inline void setRid(uint64_t rid);
 
@@ -1131,7 +1132,7 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
         *((float*) &data[offsets[colIndex]]) = val;
 }
 
-inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
+inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 {
     uint8_t* p = &data[offsets[colIndex]];
     *((long double*)p) = val;
@@ -1142,9 +1143,14 @@ inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
     }
 }
 
-inline void Row::setInt128Field(int128_t val, uint32_t colIndex)
+inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 {
     *((int128_t*)&data[offsets[colIndex]]) = val;
+}
+
+inline void Row::setUint128Field(const uint128_t& val, uint32_t colIndex)
+{
+    *((uint128_t*)&data[offsets[colIndex]]) = val;
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)

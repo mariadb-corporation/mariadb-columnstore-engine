@@ -845,6 +845,9 @@ inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow,
         case WriteEngine::WR_TEXT:
             valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
             break;
+        case WriteEngine::WR_TOKEN:
+            valArray = (Token*) calloc(sizeof(Token), totalRow);
+            break;
         default:
             valArray = calloc(totalRow, colWidth);
             break;

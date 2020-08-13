@@ -191,10 +191,13 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 
     // parms[3]: respect null | ignore null
     cc = dynamic_cast<ConstantColumn*>(parms[3].get());
-    idbassert(cc != NULL);
-    bool isNull = false;  // dummy, harded coded
-    fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
+    if (cc != NULL)
+    {
+        bool isNull = false;  // dummy. Return not used
+        fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
+    }
 }
+
 
 
 template<typename T>
@@ -220,13 +223,7 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (!fOffsetNull)
             {
                 implicit2T(idx, tmp, 0);
-
-                if (tmp > e) // prevent integer overflow
-                    tmp = e + 1;
-                else if (tmp + e < 0)
-                    tmp += e - 1;
-
-                fOffset = (int64_t) tmp;
+                fOffset = round(tmp);
                 fOffset *= fLead;
             }
         }

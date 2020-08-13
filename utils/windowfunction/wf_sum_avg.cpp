@@ -85,8 +85,9 @@ inline void WF_sum_avg<T_IN, T_OUT>::checkSumLimit(uint128_t val, uint128_t sum)
 template<typename T_IN, typename T_OUT>
 int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(int128_t sum, uint64_t count, int scale)
 {
-    int128_t factor = pow(10.0, scale);
-    int128_t avg;
+    int128_t avg = 0;
+    int128_t factor;
+    datatypes::getScaleDivisor(factor, scale);
     if (scale > 0)
     {
         if ((sum * factor) / factor == sum)
@@ -120,8 +121,9 @@ int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(int128_t sum, uint64_t count, int
 template<typename T_IN, typename T_OUT>
 uint128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(uint128_t sum, uint64_t count, int scale)
 {
-    uint128_t factor = pow(10.0, scale);
-    uint128_t avg = sum;
+    uint128_t avg = 0;
+    uint128_t factor;
+    datatypes::getScaleDivisor(factor, scale);
     if (scale > 0)
     {
         if ((sum * factor) / factor == sum)
