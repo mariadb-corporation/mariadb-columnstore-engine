@@ -548,7 +548,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     static const static_any::any& uintTypeId = (unsigned int)1;
     static const static_any::any& ulongTypeId = (unsigned long)1;
     static const static_any::any& ullTypeId = (unsigned long long)1;
-    static const static_any::any& uint128TypeId = (int128_t)1;
+    static const static_any::any& uint128TypeId = (uint128_t)1;
     static const static_any::any& floatTypeId = (float)1;
     static const static_any::any& doubleTypeId = (double)1;
     static const std::string typeStr("");
