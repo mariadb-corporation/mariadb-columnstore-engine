@@ -92,7 +92,7 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
             {
                 if (wc->functionParms()[0]->resultType().colWidth < 16)
                 {
-                    func.reset(new WF_percentile<int128_t>(id, name));
+                    func.reset(new WF_percentile<int64_t>(id, name));
                 }
                 else
                 {
@@ -105,7 +105,7 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
             {
                 if (wc->functionParms()[0]->resultType().colWidth < 16)
                 {
-                    func.reset(new WF_percentile<uint128_t>(id, name));
+                    func.reset(new WF_percentile<uint64_t>(id, name));
                 }
                 else
                 {
