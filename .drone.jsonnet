@@ -11,9 +11,9 @@ local codebase_map = {
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO';
 
-local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel';
+local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel createrepo';
 
-local deb_build_deps = 'apt update && apt install --yes --no-install-recommends systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
+local deb_build_deps = 'apt update && apt install --yes --no-install-recommends dpkg-dev systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
@@ -57,7 +57,7 @@ local Pipeline(branch, platform, event) = {
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y git rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y git which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // set mariadb server option: plugin_maturity level. just to get working plugin when it diverges with server
@@ -89,7 +89,7 @@ local Pipeline(branch, platform, event) = {
       'docker cp /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/',
       // check storage-manager unit test binary file
       'docker exec -t regression$${DRONE_BUILD_NUMBER} ls -l /storage-manager',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y diffutils tar lz4 wget git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y tar liblz4-tool wget git rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget git which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // copy  test data for regression test suite
@@ -121,7 +121,7 @@ local Pipeline(branch, platform, event) = {
       status: ['success', 'failure'],
     },
   },
-  regressionlog: {
+  regressionlog:: {
     name: 'regressionlog',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
@@ -135,6 +135,47 @@ local Pipeline(branch, platform, event) = {
     ],
     when: {
       status: ['success', 'failure'],
+    },
+  },
+  dockerfile:: {
+    name: 'dockerfile',
+    image: 'docker:git',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-community-columnstore-docker.git',
+      'cd mariadb-community-columnstore-docker',
+      'apk add --no-cache patch',
+      'patch Dockerfile ../Dockerfile.patch',
+      'cp ../result/MariaDB-common-10* ../result/MariaDB-client-10* ../result/MariaDB-server-10* ../result/MariaDB-shared-10* ../result/MariaDB-columnstore-engine-10* ./',
+    ],
+  },
+  ecr:: {
+    name: 'ecr',
+    image: 'plugins/ecr',
+    settings: {
+      registry: '866067714787.dkr.ecr.us-east-1.amazonaws.com',
+      repo: 'columnstore/engine',
+      context: 'mariadb-community-columnstore-docker',
+      dockerfile: 'mariadb-community-columnstore-docker/Dockerfile',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key'
+      },
+    },
+  },
+  docker:: {
+    name: 'docker',
+    image: 'plugins/docker',
+    settings: {
+      repo: 'romcheck/columnstore',
+      context: '/drone/src/mariadb-community-columnstore-docker',
+      dockerfile: 'mariadb-community-columnstore-docker/Dockerfile',
+      username: 'romcheck',
+      password: {
+        from_secret: 'dockerhub_token',
+      }
     },
   },
   kind: 'pipeline',
@@ -190,20 +231,20 @@ local Pipeline(branch, platform, event) = {
                "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                "sed -i -e '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
                platformMap(branch, platform),
+               (if pkg_format == 'rpm' then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz '),
              ],
            },
            {
              name: 'list pkgs',
-             image: 'alpine',
+             image: 'docker:git',
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
                'mkdir /drone/src/result',
-               'apk add --no-cache git',
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
-               'cp ' + (if pkg_format == 'deb' then '../' else '') + '*.' + pkg_format + ' buildinfo.txt /drone/src/result/',
+               'cp -r ' + (if pkg_format == 'deb' then '../Packages.gz ../' else 'repodata ') + '*.' + pkg_format + ' buildinfo.txt /drone/src/result/',
                'ls -l /drone/src/result',
                'echo "check columnstore package:"',
                'ls -l /drone/src/result | grep columnstore',
@@ -224,11 +265,33 @@ local Pipeline(branch, platform, event) = {
                  from_secret: 'aws_secret_access_key',
                },
                source: 'result/*',
-               target: branch + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+               strip_prefix: 'result/',
+             },
+           },
+           {
+             name: 'publish rpm repodata',
+             image: 'plugins/s3',
+             when: {
+               status: ['success', 'failure'],
+             },
+             settings: {
+               bucket: 'cspkg',
+               access_key: {
+                 from_secret: 'aws_access_key_id',
+               },
+               secret_key: {
+                 from_secret: 'aws_secret_access_key',
+               },
+               source: 'result/repodata/*',
+               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
                strip_prefix: 'result/',
              },
            },
          ] +
+         (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
+         (if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
+         (if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if branch == 'develop' then [pipeline.smoke] else []) +
          (if branch == 'develop' then [pipeline.smokelog] else []) +
          (if branch == 'develop' then [pipeline.regression] else []) +
@@ -250,8 +313,28 @@ local Pipeline(branch, platform, event) = {
                  from_secret: 'aws_secret_access_key',
                },
                source: 'result/testErrorLogs.tgz',
-               target: branch + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-') + '/',
+               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
                strip_prefix: 'result/',
+             },
+           },
+           {
+             name: 'publish latest',
+             image: 'plugins/s3-sync',
+             when: {
+               status: ['success', 'failure'],
+               event: ['cron'],
+             },
+             settings: {
+               bucket: 'cspkg',
+               access_key: {
+                 from_secret: 'aws_access_key_id',
+               },
+               secret_key: {
+                 from_secret: 'aws_secret_access_key',
+               },
+               source: 'result',
+               target: branch + '/latest/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+               delete: 'true',
              },
            },
          ],
@@ -276,7 +359,7 @@ local FinalPipeline(branch, event) = {
           from_secret: 'slack_webhook',
         },
         template: '*' + event + (if event == 'pull_request' then ' <https://github.com/{{repo.owner}}/{{repo.name}}/pull/{{build.pull}}|#{{build.pull}}>' else '') +
-                  ' build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.\n\n*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>\n*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{truncate build.message.title 100 }}\n*Author*: {{ build.author }}\n*Duration*: {{since build.started}}\n*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.number}}',
+                  ' build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.\n\n*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>\n*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{truncate build.message.title 100 }}\n*Author*: {{ build.author }}\n*Duration*: {{since build.started}}\n*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.event}}/{{build.number}}',
       },
     },
   ],

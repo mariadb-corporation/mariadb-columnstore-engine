@@ -1,22 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/libexec/platform-python
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
+import time
 import configparser
+import os
 
-
-api_config_file = '/etc/columnstore/cmapi_server.conf'
+API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
+BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
 
 
 def get_key():
     cmapi_config = configparser.ConfigParser()
-    try:
-        cmapi_config.read(api_config_file)
-    except FileNotFoundError:
-        return ''
-
+    cmapi_config.read(API_CONFIG_PATH)
     if 'Authentication' not in cmapi_config.sections():
         return ''
     return cmapi_config['Authentication'].get('x-api-key', '')
@@ -31,6 +28,10 @@ def get_port():
 
 
 if __name__ == '__main__':
+    # To avoid systemd in container environment
+    use_systemd = True
+    if len(sys.argv) > 1:
+        use_systemd = not sys.argv[1] == 'no'
     sm_config = configparser.ConfigParser()
 
     sm_config.read('/etc/columnstore/storagemanager.cnf')
@@ -50,14 +51,15 @@ if __name__ == '__main__':
 
     brm_saves_current = ''
 
-    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
-        # single-node w/ s3
-        cmd = 'systemctl start mcs-storagemanager'
-        retcode = subprocess.call(cmd, shell=True)
-        if retcode < 0:
-            print('Failed to start storagemanager. \
+    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
+        # start SM using systemd
+        if use_systemd is True:
+            cmd = 'systemctl start mcs-storagemanager'
+            retcode = subprocess.call(cmd, shell=True)
+            if retcode < 0:
+                print('Failed to start storagemanager. \
 {} exits with {}.'.format(cmd, retcode))
-            sys.exit(1)
+                sys.exit(1)
 
         brm = 'data1/systemFiles/dbrm/BRM_saves_current'
         config_root.find('./Installation/DBRootStorageType').text = "StorageManager"
@@ -68,18 +70,20 @@ if __name__ == '__main__':
 
         config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
         cs_config.write('/etc/columnstore/Columnstore.xml')
+        # Delay to allow SM to start up
+        time.sleep(15)
 
+    # Single-node on S3
+    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
         try:
             brm_saves_current = subprocess.check_output(['smcat', brm])
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
             print('{} does not exist.'.format(brm), file=sys.stderr)
     else:
-        
         brm = '{}_current'.format(dbrmroot)
-
+        # Multi-node
         if pmCount > 1:
-            # load multinode dbrm
             try:
                 import requests
                 requests.packages.urllib3.disable_warnings()
@@ -91,7 +95,7 @@ Please install CMAPI first.', file=sys.stderr)
                 primary_address = config_root.find('./DBRM_Controller/IPAddr').text
                 api_key = get_key()
                 if len(api_key) == 0:
-                    print('Failed to find API key in {}.'.format(api_config_file), \
+                    print('Failed to find API key in {}.'.format(API_CONFIG_PATH), \
 file=sys.stderr)
                     sys.exit(1)
                 headers = {'x-api-key': api_key}
@@ -102,15 +106,25 @@ file=sys.stderr)
                     print("Pulling {} from the primary node.".format(e))
                     url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
 api_port, api_version, e)
-                    r = requests.get(url, verify=False, headers=headers, timeout=2)
+                    r = requests.get(url, verify=False, headers=headers, timeout=30)
                     if (r.status_code != 200):
                         raise RuntimeError("Error requesting {} from the primary \
 node.".format(e))
+
+                    # To avoid SM storing BRM files
+                    if storage.lower() == 's3' and bucket.lower() != 'some_bucket':
+                        dbrmroot = BYPASS_SM_PATH
+
+                        if not os.path.exists(dbrmroot):
+                            os.makedirs(dbrmroot)
+
                     current_name = '{}_{}'.format(dbrmroot, e)
+
                     print ("Saving {} to {}".format(e, current_name))
                     path = Path(current_name)
                     path.write_bytes(r.content)
-            except:
+            except Exception as e:
+                print(str(e))
                 print('Failed to load meta data from the primary \
 node {}.'.format(primary_address), file=sys.stderr)
                 sys.exit(1)

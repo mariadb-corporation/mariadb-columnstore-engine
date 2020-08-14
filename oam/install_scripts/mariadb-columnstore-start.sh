@@ -10,4 +10,6 @@
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
 
+dbbuilder 7
+
 exit 0
