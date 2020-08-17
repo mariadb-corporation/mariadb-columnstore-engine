@@ -1205,7 +1205,7 @@ my_bool get_status_and_flush_cache(void *param,
   {
     ha_rows num_rows = cache->num_rows_cached();
     if ((!cache->insert_command && num_rows != 0) ||
-        num_rows == CACHE_FLUSH_THRESHOLD)
+        num_rows >= CACHE_FLUSH_THRESHOLD)
     {
       if ((error= cache->flush_insert_cache()))
       {
