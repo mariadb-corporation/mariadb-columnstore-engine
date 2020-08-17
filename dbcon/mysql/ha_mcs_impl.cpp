@@ -770,22 +770,28 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     if (dl == std::numeric_limits<double>::infinity())
                         continue;
 
-                    Field_double* f2 = (Field_double*)*f;
-                    // bug 3483, reserve enough space for the longest double value
-                    // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
-                    // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                    (*f)->field_length = 310;
-
-                    // The server converts dl=-0 to dl=0 in f2->store().
-                    // This happens in the call to truncate_double().
-                    // This is an unexpected behaviour, so we directly store the
-                    // double value using the lower level float8store() function.
-                    // TODO Remove this when f2->store() handles this properly.
-                    if (dl == 0)
-                        float8store(f2->ptr,dl);
+                    if ((*f)->type() == MYSQL_TYPE_NEWDECIMAL)
+                    {
+                        char buf[310];
+                        // reserve enough space for the longest double value
+                        // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
+                        // 2.2250738585072014E-308 to 1.7976931348623157E+308.
+                        snprintf(buf, 310, "%.18g", dl);
+                        (*f)->store(buf, strlen(buf), (*f)->charset());
+                    }
                     else
-                        f2->store(dl);
-
+                    {
+                        // The server converts dl=-0 to dl=0 in f2->store().
+                        // This happens in the call to truncate_double().
+                        // This is an unexpected behaviour, so we directly store the
+                        // double value using the lower level float8store() function.
+                        // TODO Remove this when f2->store() handles this properly.
+                        (*f)->field_length = 310;
+                        if (dl == 0)
+                            float8store((*f)->ptr,dl);
+                        else
+                            (*f)->store(dl);
+                    }
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
@@ -800,39 +806,22 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         continue;
                     }
 
-                    switch((*f)->type())
+                    if ((*f)->type() == MYSQL_TYPE_NEWDECIMAL)
                     {
-                        case MYSQL_TYPE_NEWDECIMAL:
-                        {
-                            char buf[310];
-                            Field_new_decimal* f2 = (Field_new_decimal*)*f;
-                            snprintf(buf, 310, "%.20Lg", dl);
-                            f2->store(buf, strlen(buf), f2->charset());
-                            if ((*f)->null_ptr)
-                                *(*f)->null_ptr &= ~(*f)->null_bit;
-                        }
-                        break;
-                        case MYSQL_TYPE_DOUBLE:
-                        {
-                            Field_double* f2 = (Field_double*)*f;
-
-                            // bug 3483, reserve enough space for the longest double value
-                            // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
-                            // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                            (*f)->field_length = 310;
-
-                            f2->store(static_cast<double>(dl));
-                            if ((*f)->null_ptr)
-                                *(*f)->null_ptr &= ~(*f)->null_bit;
-                        }
-                        break;
-                        default:
-                        {
-                            continue;  // Shouldn't happen. Functions should not return long double to other than double or decimal return type.
-                        }
+                        char buf[310];
+                        snprintf(buf, 310, "%.20Lg", dl);
+                        (*f)->store(buf, strlen(buf), (*f)->charset());
                     }
-
-                    break;
+                    else
+                    {
+                        // reserve enough space for the longest double value
+                        // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
+                        // 2.2250738585072014E-308 to 1.7976931348623157E+308.
+                        (*f)->field_length = 310;
+                        (*f)->store(static_cast<double>(dl));
+                    }
+                    if ((*f)->null_ptr)
+                        *(*f)->null_ptr &= ~(*f)->null_bit;
                 }
 
                 case CalpontSystemCatalog::DECIMAL:
