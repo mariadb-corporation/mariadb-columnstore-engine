@@ -7800,8 +7800,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
                     gwi.orderByCols.push_back(SRCP(rc));
                 }
-
-                gwi.orderByCols.push_back(SRCP(rc));
             }
         }
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
