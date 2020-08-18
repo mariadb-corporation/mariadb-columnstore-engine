@@ -7790,10 +7790,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     }
                 }
 
-                if (ordercol->direction == ORDER::ORDER_ASC)
-                    rc->asc(true);
-                else
-                    rc->asc(false);
+                SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
+                if (!sc || sc->oid())
+                {
+                    if (ordercol->direction == ORDER::ORDER_ASC)
+                        rc->asc(true);
+                    else
+                        rc->asc(false);
+
+                    gwi.orderByCols.push_back(SRCP(rc));
+                }
 
                 gwi.orderByCols.push_back(SRCP(rc));
             }
@@ -9581,12 +9587,16 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
 
-            if (ordercol->direction == ORDER::ORDER_ASC)
-                rc->asc(true);
-            else
-                rc->asc(false);
+            SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
+            if (!sc || sc->oid())
+            {
+                if (ordercol->direction == ORDER::ORDER_ASC)
+                    rc->asc(true);
+                else
+                    rc->asc(false);
 
-            gwi.orderByCols.push_back(SRCP(rc));
+                gwi.orderByCols.push_back(SRCP(rc));
+            }
         }
 
 
