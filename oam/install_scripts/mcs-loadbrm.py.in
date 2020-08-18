@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import time
 import configparser
-
+import os
 
 API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
 BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
@@ -106,7 +106,7 @@ file=sys.stderr)
                     print("Pulling {} from the primary node.".format(e))
                     url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
 api_port, api_version, e)
-                    r = requests.get(url, verify=False, headers=headers, timeout=2)
+                    r = requests.get(url, verify=False, headers=headers, timeout=30)
                     if (r.status_code != 200):
                         raise RuntimeError("Error requesting {} from the primary \
 node.".format(e))
@@ -114,12 +114,17 @@ node.".format(e))
                     # To avoid SM storing BRM files
                     if storage.lower() == 's3' and bucket.lower() != 'some_bucket':
                         dbrmroot = BYPASS_SM_PATH
+
+                        if not os.path.exists(dbrmroot):
+                            os.makedirs(dbrmroot)
+
                     current_name = '{}_{}'.format(dbrmroot, e)
 
                     print ("Saving {} to {}".format(e, current_name))
                     path = Path(current_name)
                     path.write_bytes(r.content)
-            except:
+            except Exception as e:
+                print(str(e))
                 print('Failed to load meta data from the primary \
 node {}.'.format(primary_address), file=sys.stderr)
                 sys.exit(1)
