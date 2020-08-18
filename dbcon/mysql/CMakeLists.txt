@@ -66,6 +66,13 @@ if (TARGET columnstore)
     install(PROGRAMS install_mcs_mysql.sh
         DESTINATION ${ENGINE_SBINDIR} COMPONENT columnstore-engine)
 
-    install(FILES columnstore.cnf
-        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    if(BUILD_CONFIG STREQUAL "enterprise")
+    message(STATUS "enterprise build: columnstore.cnf renamed to x-columnstore.cnf on install")
+        install(FILES columnstore.cnf
+            RENAME x-columnstore.cnf
+            DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    else()
+        install(FILES columnstore.cnf
+            DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
+    endif()
 endif()
