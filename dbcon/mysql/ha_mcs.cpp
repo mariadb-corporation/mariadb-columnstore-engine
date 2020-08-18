@@ -32,7 +32,6 @@
 #endif
 
 #define CACHE_PREFIX "#cache#"
-#define CACHE_FLUSH_THRESHOLD 1000000
 
 handlerton* mcs_hton = NULL;
 // This is the maria handlerton that we need for the cache
@@ -1205,7 +1204,7 @@ my_bool get_status_and_flush_cache(void *param,
   {
     ha_rows num_rows = cache->num_rows_cached();
     if ((!cache->insert_command && num_rows != 0) ||
-        num_rows >= CACHE_FLUSH_THRESHOLD)
+        num_rows >= get_cache_flush_threshold(current_thd))
     {
       if ((error= cache->flush_insert_cache()))
       {
