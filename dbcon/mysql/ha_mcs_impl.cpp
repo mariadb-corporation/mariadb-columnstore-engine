@@ -822,6 +822,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     }
                     if ((*f)->null_ptr)
                         *(*f)->null_ptr &= ~(*f)->null_bit;
+                    break;
                 }
 
                 case CalpontSystemCatalog::DECIMAL:
