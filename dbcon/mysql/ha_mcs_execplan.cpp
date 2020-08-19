@@ -7790,20 +7790,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     }
                 }
 
-                // Sorting on a scaler select is wasteful and it doesn't
-                // work right now. This optimizes out scaler subqueries that
-                // are objects of a sort. All scaler subquery columns are
-                // SimpleColumns with no oid and not from a derived table.
-                SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-                if (!sc || sc->oid() || sc->derivedTable().length() > 0)
-                {
-                    if (ordercol->direction == ORDER::ORDER_ASC)
-                        rc->asc(true);
-                    else
-                        rc->asc(false);
+                if (ordercol->direction == ORDER::ORDER_ASC)
+                    rc->asc(true);
+                else
+                    rc->asc(false);
 
-                    gwi.orderByCols.push_back(SRCP(rc));
-                }
+                gwi.orderByCols.push_back(SRCP(rc));
             }
         }
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
@@ -9590,20 +9582,12 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
 
-            // Sorting on a scaler select is wasteful and it doesn't
-            // work right now. This optimizes out scaler subqueries that
-            // are objects of a sort. All scaler subquery columns are
-            // SimpleColumns with no oid and not from a derived table.
-            SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-            if (!sc || sc->oid() || sc->derivedTable().length() > 0)
-            {
-                if (ordercol->direction == ORDER::ORDER_ASC)
-                    rc->asc(true);
-                else
-                    rc->asc(false);
+            if (ordercol->direction == ORDER::ORDER_ASC)
+                rc->asc(true);
+            else
+                rc->asc(false);
 
-                gwi.orderByCols.push_back(SRCP(rc));
-            }
+            gwi.orderByCols.push_back(SRCP(rc));
         }
 
 
