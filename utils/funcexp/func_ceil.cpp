@@ -143,7 +143,12 @@ int64_t Func_ceil::getIntVal(Row& row,
 
         case CalpontSystemCatalog::DATE:
         {
-            ret = parm[0]->data()->getDateIntVal(row, isNull);
+            // For some reason, MDB doesn't return this as a date,
+            // but datetime is returned as a datetime. Expect
+            // this to change in the future.
+            Date d (parm[0]->data()->getDateIntVal(row, isNull));
+            if (!isNull)
+                ret = d.convertToMySQLint();
         }
         break;
 
