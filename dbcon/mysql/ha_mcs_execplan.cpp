@@ -7791,7 +7791,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 }
 
                 SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-                if (!sc || sc->oid())
+                if (!sc || sc->oid() || sc->derivedTable().length() > 0)
                 {
                     if (ordercol->direction == ORDER::ORDER_ASC)
                         rc->asc(true);
@@ -9587,7 +9587,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             }
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-            if (!sc || sc->oid())
+            if (!sc || sc->oid() || sc->derivedTable().length() > 0)
             {
                 if (ordercol->direction == ORDER::ORDER_ASC)
                     rc->asc(true);
