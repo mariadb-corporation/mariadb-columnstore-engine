@@ -823,7 +823,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                     if (sc == NULL)
                     {
                         const ReturnedColumn* rc = dynamic_cast<const ReturnedColumn*>(orderByCols[i].get());
-                        uint32_t eid = rc->expressionId();
+                        uint64_t eid = rc->expressionId();
                         CalpontSystemCatalog::ColType ct = rc->resultType();
                         tupleKey = getExpTupleKey(jobInfo, eid);
                         jobInfo.orderByColVec.push_back(make_pair(tupleKey, orderByCols[i]->asc()));
