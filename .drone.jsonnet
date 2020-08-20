@@ -74,6 +74,45 @@ local Pipeline(branch, platform, event) = {
       // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "insert into test.t1 values (2); select * from test.t1"',
     ],
   },
+  mtr:: {
+    name: 'mtr',
+    image: 'docker:git',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      // clone mtr repo
+      'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
+      // temporary disable insert_from_another_table test. see https://jira.mariadb.org/browse/MCOL-4247
+      'rm -f columnstore-tests/mysql-test/suite/columnstore/basic/t/mcs24_insert_from_another_table.test',
+      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --extern socket=/var/lib/mysql/mysql.sock"',
+    ],
+  },
+  mtrlog:: {
+    name: 'mtrlog',
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'echo "---------- start mariadb service logs ----------"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} journalctl -u mariadb --no-pager || echo "mariadb service failure"',
+      'echo "---------- end mariadb service logs ----------"',
+      'echo',
+      'echo "---------- start columnstore debug log ----------"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
+      'echo "---------- end columnstore debug log ----------"',
+      'echo "---------- end columnstore debug log ----------"',
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/var/log /drone/src/result/mtr-logs || echo "missing /usr/share/mysql-test/var/log"',
+      'docker stop mtr$${DRONE_BUILD_NUMBER} && docker rm mtr$${DRONE_BUILD_NUMBER} || echo "cleanup mtr failure"',
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
   regression:: {
     name: 'regression',
     image: 'docker:git',
@@ -248,59 +287,24 @@ local Pipeline(branch, platform, event) = {
                'ls -l /drone/src/result',
                'echo "check columnstore package:"',
                'ls -l /drone/src/result | grep columnstore',
+               # get rid of the annoying password policy plugin pkg (have no idea how to exclude it from build)
+               'rm -f /drone/src/result/MariaDB-cracklib-password*',
              ],
-           },
-           {
-             name: 'publish pkg',
-             image: 'plugins/s3',
-             when: {
-               status: ['success', 'failure'],
-             },
-             settings: {
-               bucket: 'cspkg',
-               access_key: {
-                 from_secret: 'aws_access_key_id',
-               },
-               secret_key: {
-                 from_secret: 'aws_secret_access_key',
-               },
-               source: 'result/*',
-               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-               strip_prefix: 'result/',
-             },
-           },
-           {
-             name: 'publish rpm repodata',
-             image: 'plugins/s3',
-             when: {
-               status: ['success', 'failure'],
-             },
-             settings: {
-               bucket: 'cspkg',
-               access_key: {
-                 from_secret: 'aws_access_key_id',
-               },
-               secret_key: {
-                 from_secret: 'aws_secret_access_key',
-               },
-               source: 'result/repodata/*',
-               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-               strip_prefix: 'result/',
-             },
            },
          ] +
          (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
          (if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
          (if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
-         (if branch == 'develop' then [pipeline.smoke] else []) +
-         (if branch == 'develop' then [pipeline.smokelog] else []) +
-         (if branch == 'develop' then [pipeline.regression] else []) +
-         (if branch == 'develop' then [pipeline.regressionlog] else []) +
+         (if (platform == 'centos:7') then [pipeline.mtr] else []) +
+         (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
+         (if platform != 'centos:7' then [pipeline.smoke] else []) +
+         (if platform != 'centos:7' then [pipeline.smokelog] else []) +
+         [pipeline.regression] +
+         [pipeline.regressionlog] +
          [
            {
-             name: 'publish regression results',
-             image: 'plugins/s3',
-             failure: 'ignore',
+             name: 'publish',
+             image: 'plugins/s3-sync',
              when: {
                status: ['success', 'failure'],
              },
@@ -312,9 +316,8 @@ local Pipeline(branch, platform, event) = {
                secret_key: {
                  from_secret: 'aws_secret_access_key',
                },
-               source: 'result/testErrorLogs.tgz',
+               source: 'result',
                target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-               strip_prefix: 'result/',
              },
            },
            {
@@ -334,7 +337,6 @@ local Pipeline(branch, platform, event) = {
                },
                source: 'result',
                target: branch + '/latest/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-               delete: 'true',
              },
            },
          ],
