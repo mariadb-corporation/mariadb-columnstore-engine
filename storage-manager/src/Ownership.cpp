@@ -106,6 +106,7 @@ bf::path Ownership::get(const bf::path &p, bool getOwnership)
     mutex.lock();
     if (ownedPrefixes.find(prefix) == ownedPrefixes.end())
     {
+        ownedPrefixes[prefix] = false;
         mutex.unlock();
         takeOwnership(prefix);
     }
@@ -199,11 +200,11 @@ void Ownership::_takeOwnership(const bf::path &p)
     DELETE(p, "REQUEST_TRANSFER");
     // TODO: need to consider errors taking ownership
     TOUCH(p, "OWNED");
+    Synchronizer::get()->newPrefix(p);
+    Cache::get()->newPrefix(p);
     mutex.lock();
     ownedPrefixes[p] = true;
     mutex.unlock();
-    Synchronizer::get()->newPrefix(p);
-    Cache::get()->newPrefix(p);
 }
 
 void Ownership::takeOwnership(const bf::path &p)
@@ -211,14 +212,6 @@ void Ownership::takeOwnership(const bf::path &p)
     // If the prefix doesn't exist, ownership isn't possible yet.
     if (!bf::is_directory(metadataPrefix/p))
         return;
-
-    boost::unique_lock<boost::mutex> s(mutex);
-    
-    auto it = ownedPrefixes.find(p);
-    if (it != ownedPrefixes.end())
-        return;
-    ownedPrefixes[p] = NULL;
-    s.unlock();
     
     bool okToTransfer = false;
     struct stat statbuf;
