@@ -24,9 +24,6 @@
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
 #include <iostream>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/random_generator.hpp>
 #include "Utilities.h"
 
 using namespace std;
@@ -157,11 +154,7 @@ void S3Storage::testConnectivityAndPerms()
 {
     boost::shared_array<uint8_t> testObj(new uint8_t[1]);
     testObj[0] = 0;
-    boost::uuids::uuid u = boost::uuids::random_generator()();
-    ostringstream oss;
-    oss << u << "connectivity_test";
-    
-    string testObjKey = oss.str();
+    string testObjKey("connectivity_test");
     
     int err = putObject(testObj, 1, testObjKey);
     if (err)
