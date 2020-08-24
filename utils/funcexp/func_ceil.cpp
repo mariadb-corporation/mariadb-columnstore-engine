@@ -143,8 +143,10 @@ int64_t Func_ceil::getIntVal(Row& row,
 
         case CalpontSystemCatalog::DATE:
         {
+            // For some reason, MDB doesn't return this as a date,
+            // but datetime is returned as a datetime. Expect
+            // this to change in the future.
             Date d (parm[0]->data()->getDateIntVal(row, isNull));
-
             if (!isNull)
                 ret = d.convertToMySQLint();
         }
@@ -152,28 +154,19 @@ int64_t Func_ceil::getIntVal(Row& row,
 
         case CalpontSystemCatalog::DATETIME:
         {
-            DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint();
+            ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
         }
         break;
 
         case CalpontSystemCatalog::TIMESTAMP:
         {
-            TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint(timeZone());
+            ret = parm[0]->data()->getTimestampIntVal(row, isNull);
         }
         break;
 
         case CalpontSystemCatalog::TIME:
         {
-            Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint();
+            ret = parm[0]->data()->getTimeIntVal(row, isNull);
         }
         break;
 
@@ -248,8 +241,10 @@ uint64_t Func_ceil::getUintVal(Row& row,
 
         case CalpontSystemCatalog::DATE:
         {
+            // For some reason, MDB doesn't return this as a date,
+            // but datetime is returned as a datetime. Expect
+            // this to change in the future.
             Date d (parm[0]->data()->getDateIntVal(row, isNull));
-
             if (!isNull)
                 ret = d.convertToMySQLint();
         }
@@ -257,28 +252,19 @@ uint64_t Func_ceil::getUintVal(Row& row,
 
         case CalpontSystemCatalog::DATETIME:
         {
-            DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint();
+            ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
         }
         break;
 
         case CalpontSystemCatalog::TIMESTAMP:
         {
-            TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint(timeZone());
+            ret = parm[0]->data()->getTimestampIntVal(row, isNull);
         }
         break;
 
         case CalpontSystemCatalog::TIME:
         {
-            Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
-
-            if (!isNull)
-                ret = dt.convertToMySQLint();
+            ret = parm[0]->data()->getTimeIntVal(row, isNull);
         }
         break;
 
