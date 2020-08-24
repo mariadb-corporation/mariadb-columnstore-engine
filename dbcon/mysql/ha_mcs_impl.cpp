@@ -3161,7 +3161,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         ci->isLoaddataInfile = true;
     }
 
-    if (is_cache_insert)
+    if (is_cache_insert && (thd->lex)->sql_command != SQLCOM_INSERT_SELECT)
     {
         ci->isCacheInsert = true;
 
@@ -3174,7 +3174,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     if ((((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_LOAD) ||
             (thd->lex)->sql_command == SQLCOM_INSERT_SELECT ||
-            is_cache_insert) && !ci->singleInsert )
+            ci->isCacheInsert) && !ci->singleInsert )
     {
         ci->useCpimport = get_use_import_for_batchinsert(thd);
 
@@ -3182,7 +3182,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             ci->useCpimport = 0;
 
         // For now, disable cpimport for cache inserts
-        if (is_cache_insert)
+        if (ci->isCacheInsert)
             ci->useCpimport = 0;
 
         // ci->useCpimport = 2 means ALWAYS use cpimport, whether it's in a
@@ -3215,6 +3215,11 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             }
 
             ci->useXbit = table->s->db_options_in_use & HA_OPTION_PACK_RECORD;
+
+            // TODO: This needs a proper fix.
+            if (is_cache_insert)
+                ci->useXbit = false;
+
             //@bug 6122 Check how many columns have not null constraint. columnn with not null constraint will not show up in header.
             unsigned int numberNotNull = 0;
 
@@ -3541,7 +3546,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     }
 
     //Save table oid for commit to use
-    if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) || is_cache_insert)
+    if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) || ci->isCacheInsert)
     {
         // query stats. only collect execution time and rows inserted for insert/load_data_infile
         ci->stats.reset();

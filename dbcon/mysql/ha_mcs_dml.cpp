@@ -77,6 +77,7 @@ using namespace joblist;
 
 namespace
 {
+#define BATCH_INSERT_GROUP_ROWS_FOR_CACHE 100000
 uint64_t fBatchInsertGroupRows = 0; // ResourceManager::instance()->getRowsPerBatch();
 // HDFS is never used nowadays, so don't bother
 bool useHdfs = false; // ResourceManager::instance()->useHdfs();
@@ -594,13 +595,17 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
     }
 
     if (fBatchInsertGroupRows == 0)
+    {
         fBatchInsertGroupRows = ResourceManager::instance()->getRowsPerBatch();
+    }
 
     //timer.stop( "buildValueList");
     if ( ci.singleInsert   // Single insert
-            || (( ci.bulkInsertRows > 0 ) && (( ( ci.rowsHaveInserted + size) >= ci.bulkInsertRows ) || ( size >= fBatchInsertGroupRows )) )
-            //Insert with mutilple value case: processed batch by batch. Last batch is sent also.
-            || (( ci.bulkInsertRows == 0 ) && ( size >= fBatchInsertGroupRows ) )  ) // Load data in file is processed batch by batch
+         || (( ci.bulkInsertRows > 0 ) && (( ( ci.rowsHaveInserted + size) >= ci.bulkInsertRows )
+             || ( (!ci.isCacheInsert && size >= fBatchInsertGroupRows) || (ci.isCacheInsert && size >= BATCH_INSERT_GROUP_ROWS_FOR_CACHE) )) )
+         //Insert with mutilple value case: processed batch by batch. Last batch is sent also.
+         || (( ci.bulkInsertRows == 0 ) && ( (!ci.isCacheInsert && size >= fBatchInsertGroupRows)
+             || (ci.isCacheInsert && size >= BATCH_INSERT_GROUP_ROWS_FOR_CACHE) ) )  ) // Load data in file is processed batch by batch
     {
         //timer.start( "DMLProc takes");
         //cout <<" sending a batch to DMLProc ... The size is " << size << "  the current bulkInsertRows = " <<  ci.bulkInsertRows << endl;
