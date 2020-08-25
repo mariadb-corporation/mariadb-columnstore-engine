@@ -125,7 +125,7 @@ rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
 #get columnstore temp file directory name
 tmpDir=/tmp/columnstore_tmp_files
 mkdir $tmpDir >/dev/null 2>&1
-chmod 664 $tmpDir
+chmod 777 $tmpDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
