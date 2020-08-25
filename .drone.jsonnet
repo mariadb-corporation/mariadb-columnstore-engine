@@ -82,7 +82,7 @@ local Pipeline(branch, platform, event) = {
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
       // temporary disable insert_from_another_table test. see https://jira.mariadb.org/browse/MCOL-4247
-      'rm -f columnstore-tests/mysql-test/suite/columnstore/basic/t/mcs24_insert_from_another_table.test',
+      #'rm -f columnstore-tests/mysql-test/suite/columnstore/basic/t/mcs24_insert_from_another_table.test',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
