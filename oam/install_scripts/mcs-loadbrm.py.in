@@ -60,6 +60,7 @@ if __name__ == '__main__':
                 print('Failed to start storagemanager. \
 {} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
+            time.sleep(1)   # allow SM time to init
 
         brm = 'data1/systemFiles/dbrm/BRM_saves_current'
         config_root.find('./Installation/DBRootStorageType').text = "StorageManager"
@@ -70,8 +71,6 @@ if __name__ == '__main__':
 
         config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
         cs_config.write('/etc/columnstore/Columnstore.xml')
-        # Delay to allow SM to start up
-        time.sleep(15)
 
     # Single-node on S3
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
