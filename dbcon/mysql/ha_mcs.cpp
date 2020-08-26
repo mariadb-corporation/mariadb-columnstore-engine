@@ -1273,10 +1273,12 @@ static my_bool cache_check_status(void *param)
 
 static ha_mcs_cache_share *cache_share_list= 0;
 static PSI_mutex_key key_LOCK_cache_share;
+#ifdef HAVE_PSI_INTERFACE
 static PSI_mutex_info all_mutexes[]=
 {
   { &key_LOCK_cache_share, "LOCK_cache_share", PSI_FLAG_GLOBAL},
 };
+#endif
 static mysql_mutex_t LOCK_cache_share;
 
 /*
@@ -1810,8 +1812,10 @@ static int columnstore_init_func(void* p)
     mcs_hton->create_select = create_columnstore_select_handler;
     mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
+#ifdef HAVE_PSI_INTERFACE
     uint count = sizeof(all_mutexes)/sizeof(all_mutexes[0]);
     mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
+#endif
     mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
 
     DBUG_RETURN(0);
