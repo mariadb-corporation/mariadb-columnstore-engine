@@ -9,7 +9,7 @@ local codebase_map = {
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_PERFSCHEMA=NO -DPLUGIN_SPHINX=NO';
+local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO';
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel createrepo';
 
@@ -81,8 +81,6 @@ local Pipeline(branch, platform, event) = {
     commands: [
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
-      // temporary disable insert_from_another_table test. see https://jira.mariadb.org/browse/MCOL-4247
-      'rm -f columnstore-tests/mysql-test/suite/columnstore/basic/t/mcs24_insert_from_another_table.test',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
@@ -116,6 +114,7 @@ local Pipeline(branch, platform, event) = {
   regression:: {
     name: 'regression',
     image: 'docker:git',
+    #failure: (if event == 'cron' then 'ignore' else ''),
     failure: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
@@ -267,8 +266,9 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
-               "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
-               "sed -i -e '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
+               "sed -i 's/-DPLUGIN_PERFSCHEMA=NO//' debian/autobake-deb.sh",
+               #"sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
+               #"sed -i -e '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
                platformMap(branch, platform),
                (if pkg_format == 'rpm' then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz '),
              ],
