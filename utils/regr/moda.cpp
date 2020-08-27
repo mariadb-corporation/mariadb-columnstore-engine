@@ -21,6 +21,7 @@
 #include "moda.h"
 #include "bytestream.h"
 #include "objectreader.h"
+#include "columnwidth.h"
 
 using namespace mcsv1sdk;
 
@@ -186,7 +187,7 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context,
         {
             context->setColWidth(8);
         }
-        else
+        else if (utils::widthByPrecision(colTypes[0].precision))
         {
             context->setColWidth(16);
         }

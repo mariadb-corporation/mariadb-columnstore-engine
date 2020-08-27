@@ -52,8 +52,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "widedecimalutils.h"
-
 #ifdef _MSC_VER
 #define strcasecmp stricmp
 #endif
@@ -389,7 +387,8 @@ void WindowFunctionColumn::adjustResultType()
 
     if (boost::iequals(fFunctionName, "SUM") ||
         boost::iequals(fFunctionName, "AVG") ||
-        boost::iequals(fFunctionName, "AVG_DISTINCT"))
+        boost::iequals(fFunctionName, "AVG_DISTINCT") ||
+        boost::iequals(fFunctionName, "PERCENTILE"))
     {
         if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
             fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
@@ -689,7 +688,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                 case 16:
                 {
                     int128_t dec = row.getInt128Field(fInputIndex);
-                    if (utils::isWideDecimalNullValue(dec))
+                    if (dec == datatypes::Decimal128Null)
                         isNull = true;
                     else
                     {
