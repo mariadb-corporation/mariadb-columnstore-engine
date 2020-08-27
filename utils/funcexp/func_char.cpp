@@ -89,7 +89,7 @@ string Func_char::getStrVal(Row& row,
                             CalpontSystemCatalog::ColType& ct)
 {
     const int BUF_SIZE = 4 * parm.size();
-    char buf[BUF_SIZE];
+    char *buf= (char*) alloca(BUF_SIZE);
     buf[0]= 0;
     char* pBuf = buf;
     CHARSET_INFO* cs = ct.getCharset();
