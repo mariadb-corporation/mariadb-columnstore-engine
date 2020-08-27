@@ -962,11 +962,15 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]);
 }
 
+// !!! Never ever try to remove inline from this f() b/c it returns
+// non-integral 16 byte DT
 inline int128_t Row::getInt128Field(uint32_t colIndex) const
 {
     return *((int128_t*) &data[offsets[colIndex]]);
 }
 
+// !!! Never ever try to remove inline from this f() b/c it returns
+// non-integral 16 byte DT
 inline uint128_t Row::getUint128Field(uint32_t colIndex) const
 {
     return *((uint128_t*) &data[offsets[colIndex]]);
