@@ -156,16 +156,6 @@ inline void getScaleDivisor(T& divisor, const int8_t scale)
     }
 }
 
-/**
-    @brief The template to generalise common math operation
-    execution path using struct from <functional>.
-*/
-template<typename BinaryOperation, typename OverflowCheck>
-void execute(const execplan::IDB_Decimal& l,
-    const execplan::IDB_Decimal& r,
-    execplan::IDB_Decimal& result,
-    BinaryOperation op,
-    OverflowCheck overflowCheck);
 
 /**
     @brief Contains subset of decimal related operations.
