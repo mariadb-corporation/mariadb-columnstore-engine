@@ -829,9 +829,8 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                     // Merge input min/max with current min/max
                     case CP_VALID:
                     {
-                        if (!isValidCPRange( !isBinaryColumn ? it->second.max : it->second.bigMax,
-                                             !isBinaryColumn ? it->second.min : it->second.bigMin,
-                                             it->second.type ))
+                        if ((!isBinaryColumn && !isValidCPRange(it->second.max, it->second.min, it->second.type)) ||
+                            (isBinaryColumn && !isValidCPRange(it->second.bigMax, it->second.bigMin, it->second.type)))
                         {
                             break;
                         }
@@ -843,10 +842,8 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                         // having all NULL values, in which case the current
                         // min/max needs to be set instead of merged.
 
-                        if (isValidCPRange(
-                                    !isBinaryColumn ? fExtentMap[i].partition.cprange.hiVal : fExtentMap[i].partition.cprange.bigHiVal,
-                                    !isBinaryColumn ? fExtentMap[i].partition.cprange.loVal : fExtentMap[i].partition.cprange.bigLoVal,
-                                    it->second.type))
+                        if ((!isBinaryColumn && isValidCPRange(fExtentMap[i].partition.cprange.hiVal, fExtentMap[i].partition.cprange.loVal, it->second.type)) ||
+                            (isBinaryColumn && isValidCPRange(fExtentMap[i].partition.cprange.bigHiVal, fExtentMap[i].partition.cprange.bigLoVal, it->second.type)))
                         {
                             // Swap byte order to do binary string comparison
                             if (isCharType(it->second.type))
@@ -981,9 +978,8 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 
                         if (it->second.newExtent)
                         {
-                            if (isValidCPRange( !isBinaryColumn ? it->second.max : it->second.bigMax,
-                                                !isBinaryColumn ? it->second.min : it->second.bigMin,
-                                                it->second.type ))
+                            if ((!isBinaryColumn && isValidCPRange(it->second.max, it->second.min, it->second.type)) ||
+                                (isBinaryColumn && isValidCPRange(it->second.bigMax, it->second.bigMin, it->second.type)))
                             {
                                 if (!isBinaryColumn)
                                 {
