@@ -23,6 +23,8 @@
 
 #include <cstdlib>
 #include <string>
+#include <mysql_version.h>
+
 using namespace std;
 
 #include "functor_str.h"
@@ -39,6 +41,7 @@ using namespace rowgroup;
 using namespace logging;
 
 #include "collation.h"
+#include <mysql_version.h>
 
 namespace
 {
@@ -172,7 +175,11 @@ string Func_char::getStrVal(Row& row,
     {
         numBytes = actualBytes;
         ostringstream os;
+#if MYSQL_VERSION_ID < 100600
         os << "Invalid character string for " << cs->csname << ": value = " <<  hex << buf + actualBytes;
+#else
+        os << "Invalid character string for " << cs->cs_name.str << ": value = " <<  hex << buf + actualBytes;
+#endif
         logging::Message::Args args;
         logging::Message message(9);
         args.add(os.str());
