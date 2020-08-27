@@ -819,11 +819,17 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                 {
                     sc = dynamic_cast<SimpleColumn*>(jobInfo.deliveredCols[sc->orderPos()].get());
 
-                    // TODO Investigate why this could be NULL
+                    // If sc is NULL it's most likely a scaler subquery
                     if (sc == NULL)
                     {
                         const ReturnedColumn* rc = dynamic_cast<const ReturnedColumn*>(orderByCols[i].get());
                         uint64_t eid = rc->expressionId();
+                        // If eid is -1, then there's no corresponding
+                        // entry in tupleKeyMap and it will assert down the line
+                        // Don't add the order by. It won't work and ordering on
+                        // a singleton is a waste anyway.
+                        if ((int64_t)eid == -1)
+                            continue;
                         CalpontSystemCatalog::ColType ct = rc->resultType();
                         tupleKey = getExpTupleKey(jobInfo, eid);
                         jobInfo.orderByColVec.push_back(make_pair(tupleKey, orderByCols[i]->asc()));
