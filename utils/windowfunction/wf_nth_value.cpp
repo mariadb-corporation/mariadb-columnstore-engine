@@ -84,31 +84,19 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
-            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            if (wc->functionParms()[0]->resultType().colWidth < datatypes::MAXDECIMALWIDTH)
             {
                 func.reset(new WF_nth_value<int64_t>(id, name));
             }
-            else
+            else if (wc->functionParms()[0]->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
                 func.reset(new WF_nth_value<int128_t>(id, name));
             }
             break;
         }
         
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (wc->functionParms()[0]->resultType().colWidth < 16)
-            {
-                func.reset(new WF_nth_value<uint64_t>(id, name));
-            }
-            else
-            {
-                func.reset(new WF_nth_value<uint128_t>(id, name));
-            }
-            break;
-        }
-
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {

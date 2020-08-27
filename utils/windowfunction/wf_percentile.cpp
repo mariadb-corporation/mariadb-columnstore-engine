@@ -46,6 +46,8 @@ using namespace ordering;
 #include "constantcolumn.h"
 using namespace execplan;
 
+#include "mcs_decimal.h"
+
 #include "windowfunctionstep.h"
 using namespace joblist;
 
@@ -89,31 +91,19 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
             }
 
             case CalpontSystemCatalog::DECIMAL:
+            case CalpontSystemCatalog::UDECIMAL:
             {
-                if (wc->functionParms()[0]->resultType().colWidth < 16)
+                if (wc->resultType().colWidth < datatypes::MAXDECIMALWIDTH)
                 {
                     func.reset(new WF_percentile<int64_t>(id, name));
                 }
-                else
+                else if (wc->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
                 {
                     func.reset(new WF_percentile<int128_t>(id, name));
                 }
                 break;
             }
             
-            case CalpontSystemCatalog::UDECIMAL:
-            {
-                if (wc->functionParms()[0]->resultType().colWidth < 16)
-                {
-                    func.reset(new WF_percentile<uint64_t>(id, name));
-                }
-                else
-                {
-                    func.reset(new WF_percentile<uint128_t>(id, name));
-                }
-                break;
-            }
-
             case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UDOUBLE:
             {
