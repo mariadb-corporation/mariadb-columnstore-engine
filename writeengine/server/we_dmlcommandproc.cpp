@@ -422,7 +422,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
     // call the write engine to write the rows
     int error = NO_ERROR;
-    // WIP
+    // MCOL-641 WIP
     fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
     cout << "inserting a row with transaction id " << txnid.id << endl;
     fWEWrapper.setIsInsert(true);
