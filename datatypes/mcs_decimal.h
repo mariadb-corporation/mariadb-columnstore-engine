@@ -82,7 +82,7 @@ constexpr uint8_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
 
-const int64_t mcs_pow_10[19] =
+const uint64_t mcs_pow_10[20] =
 {
     1ULL,
     10ULL,
@@ -103,6 +103,7 @@ const int64_t mcs_pow_10[19] =
     10000000000000000ULL,
     100000000000000000ULL,
     1000000000000000000ULL,
+    10000000000000000000ULL,
 };
 const int128_t mcs_pow_10_128[20] =
 {
