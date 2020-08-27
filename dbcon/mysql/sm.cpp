@@ -536,7 +536,8 @@ unsigned long mysql_real_escape_string(MYSQL* mysql,
                                        char* to, const char* from,
                                        unsigned long length)
 {
-    return escape_string_for_mysql(mysql->charset, to, length * 2 + 1, from, length);
+    my_bool overflow;
+    return escape_string_for_mysql(mysql->charset, to, length * 2 + 1, from, length, &overflow);
 }
 
 // Clone of sql-common/client.c cli_use_result

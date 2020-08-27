@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <string>
+
 using namespace std;
 
 #include "functor_str.h"
@@ -176,7 +177,7 @@ string Func_char::getStrVal(Row& row,
     {
         numBytes = actualBytes;
         ostringstream os;
-        os << "Invalid character string for " << cs->csname << ": value = " <<  hex << buf + actualBytes;
+        os << "Invalid character string for " << cs->cs_name.str << ": value = " <<  hex << buf + actualBytes;
         logging::Message::Args args;
         logging::Message message(9);
         args.add(os.str());

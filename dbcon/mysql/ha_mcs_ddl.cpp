@@ -2505,7 +2505,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
                     (!share->table_charset ||
                      field_cs->number != share->table_charset->number))
                 {
-                    oss << " CHARACTER SET " << field_cs->csname;
+                    oss << " CHARACTER SET " << field_cs->cs_name.str;
                 }
             }
 
@@ -2547,7 +2547,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
         if (share->table_charset)
         {
-            oss << " DEFAULT CHARSET=" << share->table_charset->csname;
+	    oss << " DEFAULT CHARSET=" << share->table_charset->cs_name.str;
         }
 
         // Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT
