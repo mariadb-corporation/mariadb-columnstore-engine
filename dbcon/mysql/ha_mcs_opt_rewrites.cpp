@@ -19,6 +19,10 @@
 
 #include "ha_mcs_opt_rewrites.h"
 
+#if MYSQL_VERSION_ID >= 100600
+#define is_fixed() fixed()
+#endif
+
 // Search simplify_joins() function in the server's code for detail
 COND *
 simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top,

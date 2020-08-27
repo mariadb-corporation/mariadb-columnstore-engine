@@ -2403,7 +2403,11 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
                     (!share->table_charset ||
                      field_cs->number != share->table_charset->number))
                 {
+#if MYSQL_VERSION_ID < 100600
                     oss << " CHARACTER SET " << field_cs->csname;
+#else
+                    oss << " CHARACTER SET " << field_cs->cs_name.str;
+#endif
                 }
             }
 
@@ -2445,7 +2449,11 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
         if (share->table_charset)
         {
+#if MYSQL_VERSION_ID < 100600
             oss << " DEFAULT CHARSET=" << share->table_charset->csname;
+#else
+	    oss << " DEFAULT CHARSET=" << share->table_charset->cs_name.str;
+#endif
         }
 
         // Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT
