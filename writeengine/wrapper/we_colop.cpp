@@ -47,6 +47,7 @@ using namespace execplan;
 using namespace idbdatafile;
 
 #include "emptyvaluemanip.h"
+#include "mcs_decimal.h"
 
 namespace WriteEngine
 {
@@ -1670,8 +1671,6 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             bDataDirty = true;
         }
 
-        // This is a awkward way to convert void* and get its element, I just don't have a good solution for that
-        // How about pVal = valArray + i*curCol.colWidth?
         switch (curCol.colType)
         {
             case WriteEngine::WR_FLOAT :
@@ -1735,7 +1734,11 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
 
             case WriteEngine::WR_BINARY:
-                if (!bDelete) pVal = &((int128_t*) valArray)[i];
+                if (!bDelete)
+                {
+                    if (curCol.colWidth == datatypes::MAXDECIMALWIDTH)
+                        pVal = &((int128_t*) valArray)[i];
+                }
                 break;
                 
             default  :

@@ -54,50 +54,60 @@ namespace windowfunction
 {
 
 template<typename T_IN, typename T_OUT>
-inline void WF_sum_avg<T_IN,T_OUT>::checkSumLimit(T_IN& val, T_OUT& sum)
+inline void WF_sum_avg<T_IN,T_OUT>::checkSumLimit(const T_IN& val,
+    const T_OUT& sum)
 { }
 
 template<>
-inline void WF_sum_avg<int128_t,int128_t>::checkSumLimit(int128_t& val, int128_t& sum)
+inline void WF_sum_avg<int128_t,int128_t>::checkSumLimit(const int128_t& val, 
+    const int128_t& sum)
 {
     datatypes::AdditionOverflowCheck ofCheckOp;
     ofCheckOp(sum, val);
 }
 
 template<>
-inline void WF_sum_avg<long double,long double>::checkSumLimit(long double& val, long double& sum)
+inline void WF_sum_avg<long double,long double>::checkSumLimit(const long double& val, 
+    const long double& sum)
 { }
 
 template<>
-inline void WF_sum_avg<float, long double>::checkSumLimit(float&, long double&)
+inline void WF_sum_avg<float, long double>::checkSumLimit(const float&,
+    const long double&)
 { }
 
 template<>
-inline void WF_sum_avg<long, long double>::checkSumLimit(long&, long double&)
+inline void WF_sum_avg<long, long double>::checkSumLimit(const long&,
+    const long double&)
 { }
 
 template<>
-inline void WF_sum_avg<unsigned long, long double>::checkSumLimit(unsigned long&, long double&)
+inline void WF_sum_avg<unsigned long, long double>::checkSumLimit(const unsigned long&,
+    const long double&)
 { }
 template<>
-inline void WF_sum_avg<double, long double>::checkSumLimit(double&, long double&)
+inline void WF_sum_avg<double, long double>::checkSumLimit(const double&,
+    const long double&)
 { }
 
 template<>
-void WF_sum_avg<int128_t,int128_t>::checkSumLimit(int128_t& val, int128_t& sum);
+void WF_sum_avg<int128_t,int128_t>::checkSumLimit(const int128_t&, const int128_t&);
 template<>
-void WF_sum_avg<long double,long double>::checkSumLimit(long double& val, long double& sum);
+void WF_sum_avg<long double,long double>::checkSumLimit(const long double& val, const long double&);
 template<>
-void WF_sum_avg<float, long double>::checkSumLimit(float&, long double&);
+void WF_sum_avg<float, long double>::checkSumLimit(const float&, const long double&);
 template<>
-void WF_sum_avg<long, long double>::checkSumLimit(long&, long double&);
+void WF_sum_avg<long, long double>::checkSumLimit(const long&, const long double&);
 template<>
-void WF_sum_avg<unsigned long, long double>::checkSumLimit(unsigned long&, long double&);
+void WF_sum_avg<unsigned long, long double>::checkSumLimit(const unsigned long&,
+    const long double&);
 template<>
-void WF_sum_avg<double, long double>::checkSumLimit(double&, long double&);
+void WF_sum_avg<double, long double>::checkSumLimit(const double&, const long double&);
 
 template<typename T_IN, typename T_OUT>
-int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(int128_t sum, uint64_t count, int scale)
+int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(const int128_t& sum,
+    const uint64_t count,
+    const int scale)
 {
     int128_t avg = 0;
     int128_t factor;
@@ -133,7 +143,9 @@ int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(int128_t sum, uint64_t count, int
 }
 
 template<typename T_IN, typename T_OUT>
-inline long double WF_sum_avg<T_IN, T_OUT>::calculateAvg(long double sum, uint64_t count, int scale)
+inline long double WF_sum_avg<T_IN, T_OUT>::calculateAvg(const long double& sum, 
+    const uint64_t count, 
+    const int scale)
 {
     return sum / count;
 }
