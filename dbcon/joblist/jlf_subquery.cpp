@@ -828,7 +828,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                         // entry in tupleKeyMap and it will assert down the line
                         // Don't add the order by. It won't work and ordering on
                         // a singleton is a waste anyway.
-                        if ((int64_t)eid == -1)
+                        if ((int32_t)eid == -1)
                             continue;
                         CalpontSystemCatalog::ColType ct = rc->resultType();
                         tupleKey = getExpTupleKey(jobInfo, eid);
