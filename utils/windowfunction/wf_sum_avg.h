@@ -56,15 +56,11 @@ protected:
     bool        fDistinct;
     std::set<T_IN> fSet;
 
-    void checkSumLimit(T_IN& val, T_OUT& sum);
+    void checkSumLimit(const T_IN& val, const T_OUT& sum);
 
-    int128_t calculateAvg(int128_t sum, uint64_t count, int scale);
-    long double calculateAvg(long double sum, uint64_t count, int scale);
+    int128_t calculateAvg(const int128_t& sum, const uint64_t count, const int scale);
+    long double calculateAvg(const long double& sum, const uint64_t count, const int scale);
 };
-
-template<>
-void WF_sum_avg<long double,long double>::checkSumLimit(long double& val, long double& sum);
-
 
 } // namespace
 

@@ -837,84 +837,22 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
 inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow,
                              ColType colType, int colWidth)
 {
+    // MCS allocates 8 bytes even for CHARs smaller then 8 bytes.
     switch (colType)
     {
         case WriteEngine::WR_VARBINARY : // treat same as char for now
         case WriteEngine::WR_CHAR:
         case WriteEngine::WR_BLOB:
         case WriteEngine::WR_TEXT:
-            valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
+            valArray = calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
             break;
         case WriteEngine::WR_TOKEN:
-            valArray = (Token*) calloc(sizeof(Token), totalRow);
+            valArray = calloc(sizeof(Token), totalRow);
             break;
         default:
             valArray = calloc(totalRow, colWidth);
             break;
     }
-    // TODO MCOL-641 is commenting out the switch statement below correct?
-#if 0
-    switch (colType)
-    {
-        case WriteEngine::WR_INT:
-        case WriteEngine::WR_MEDINT:
-            valArray = (int*) calloc(sizeof(int), totalRow);
-            break;
-
-        case WriteEngine::WR_UINT:
-        case WriteEngine::WR_UMEDINT:
-            valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow);
-            break;
-
-        case WriteEngine::WR_VARBINARY : // treat same as char for now
-        case WriteEngine::WR_CHAR:
-        case WriteEngine::WR_BLOB:
-        case WriteEngine::WR_TEXT:
-            valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
-            break;
-
-        case WriteEngine::WR_FLOAT:
-            valArray = (float*) calloc(sizeof(float), totalRow);
-            break;
-
-        case WriteEngine::WR_DOUBLE:
-            valArray = (double*) calloc(sizeof(double), totalRow);
-            break;
-
-        case WriteEngine::WR_BYTE:
-            valArray = (char*) calloc(sizeof(char), totalRow);
-            break;
-
-        case WriteEngine::WR_UBYTE:
-            valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow);
-            break;
-
-        case WriteEngine::WR_SHORT:
-            valArray = (short*) calloc(sizeof(short), totalRow);
-            break;
-
-        case WriteEngine::WR_USHORT:
-            valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow);
-            break;
-
-        case WriteEngine::WR_LONGLONG:
-            valArray = (long long*) calloc(sizeof(long long), totalRow);
-            break;
-
-        case WriteEngine::WR_ULONGLONG:
-            valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow);
-            break;
-
-        case WriteEngine::WR_TOKEN:
-            valArray = (Token*) calloc(sizeof(Token), totalRow);
-            break;
-
-        case WriteEngine::WR_BINARY:
-            valArray = calloc(totalRow, colWidth);
-            break;
-
-    }
-#endif
 }
 
 int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStructs,
