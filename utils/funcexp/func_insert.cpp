@@ -84,7 +84,7 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
     int64_t strLen = cs->numchars(pos, end);
     
     // Return the original string if start isn't within the string.
-    if ((start < 0) || start > strLen)
+    if ((start < 0) || start >= strLen)
         return src;
 
     if ((length < 0) || (length > strLen))
