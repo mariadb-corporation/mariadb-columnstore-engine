@@ -823,7 +823,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                     if (sc == NULL)
                     {
                         const ReturnedColumn* rc = dynamic_cast<const ReturnedColumn*>(orderByCols[i].get());
-                        uint64_t eid = rc->expressionId();
+                        uint32_t eid = rc->expressionId();
                         // If eid is -1, then there's no corresponding
                         // entry in tupleKeyMap and it will assert down the line
                         // Don't add the order by. It won't work and ordering on
