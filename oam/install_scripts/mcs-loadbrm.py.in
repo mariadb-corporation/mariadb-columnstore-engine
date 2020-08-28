@@ -70,7 +70,9 @@ if __name__ == '__main__':
             config_root.find('./SystemConfig').append(ET.Element("DataFilePlugin"))
 
         config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
-        cs_config.write('/etc/columnstore/Columnstore.xml')
+        
+        cs_config.write('/etc/columnstore/Columnstore.xml.loadbrm')
+        os.replace('/etc/columnstore/Columnstore.xml.loadbrm', '/etc/columnstore/Columnstore.xml')    # atomic replacement
 
     # Single-node on S3
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
@@ -124,7 +126,7 @@ node.".format(e))
                     path.write_bytes(r.content)
             except Exception as e:
                 print(str(e))
-                print('Failed to load meta data from the primary \
+                print('Failed to load BRM data from the primary \
 node {}.'.format(primary_address), file=sys.stderr)
                 sys.exit(1)
 
