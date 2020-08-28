@@ -104,7 +104,7 @@ char* copy_string(const char *str);
 
 %token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT BLOB IDB_BLOB CASCADE IDB_CHAR
 CHARACTER CHECK CLOB COLUMN
-BOOL BOOLEAN BINARY
+BOOL BOOLEAN
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
 DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
 FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
@@ -133,7 +133,6 @@ ZEROFILL
 %type <ata>                  ata_rename_table
 %type <columnType>           character_string_type
 %type <columnType>           binary_string_type
-%type <columnType>           fixed_binary_string_type
 %type <columnType>           blob_type
 %type <columnType>           text_type
 %type <str>                  check_constraint_def
@@ -752,7 +751,6 @@ opt_column_collate:
 data_type:
 	character_string_type opt_column_charset opt_column_collate
 	| binary_string_type
-	| fixed_binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
@@ -920,14 +918,6 @@ binary_string_type:
 	VARBINARY '(' ICONST ')'
 	{
 		$$ = new ColumnType(DDL_VARBINARY);
-		$$->fLength = atoi($3);
-	}
-	;
-
-fixed_binary_string_type:
-	BINARY '(' ICONST ')'
-	{
-		$$ = new ColumnType(DDL_BINARY);
 		$$->fLength = atoi($3);
 	}
 	;
