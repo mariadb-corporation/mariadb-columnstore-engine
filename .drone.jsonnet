@@ -1,10 +1,12 @@
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-1.5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local codebase_map = {
   develop: 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  'develop-1.5': 'git clone --recurse-submodules --branch 10.6 --depth 1 https://github.com/MariaDB/server .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
 
@@ -18,6 +20,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -88,7 +91,7 @@ local Pipeline(branch, platform, event) = {
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --extern socket=/var/lib/mysql/mysql.sock"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
     ],
   },
   mtrlog:: {
@@ -292,9 +295,9 @@ local Pipeline(branch, platform, event) = {
              ],
            },
          ] +
-         (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
-         (if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
-         (if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
+         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
+         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
+         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
          (if platform != 'centos:7' then [pipeline.smoke] else []) +
@@ -380,11 +383,11 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.4']
+  for b in ['develop', 'develop-1.5','develop-1.4']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
 ] + [
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.4']
+  for b in ['develop', 'develop-1.5', 'develop-1.4']
   for e in ['pull_request', 'cron', 'custom']
 ]
