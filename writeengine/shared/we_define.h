@@ -36,6 +36,8 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
+// Max column size is 16 bytes since MCOL-641. However left this value
+// for backward compatibility
 const short MAX_COLUMN_BOUNDARY     = 8;        // Max bytes for one column
 const int   MAX_SIGNATURE_SIZE      = 8000;     // Max len of dict sig val
 const int   MAX_FIELD_SIZE          = 1000;     // Max len non-dict fld val
