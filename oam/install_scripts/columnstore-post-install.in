@@ -319,7 +319,7 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
        echo "Populating the engine initial system catalog."
        systemctl start mariadb-columnstore
        sleep 5
-       dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
+       su -s /usr/bin/bash -c '/usr/bin/dbbuilder 7' mysql > $tmpDir/dbbuilder.log 2>&1
     fi
 fi
  
