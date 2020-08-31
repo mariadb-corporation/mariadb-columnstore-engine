@@ -1,6 +1,6 @@
 [Unit]
 Description=mcs-workernode
-After=network.target
+After=network.target mcs-loadbrm.service
 
 [Service]
 Type=simple
@@ -10,7 +10,6 @@ Group=mysql
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStartPre=@ENGINE_BINDIR@/mcs-loadbrm.py
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1 fg
 ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"

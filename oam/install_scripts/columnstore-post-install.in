@@ -153,6 +153,8 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /lib/systemd/system/. >/dev/null 2>&1
 
@@ -165,6 +167,7 @@ if [ $user = "root" ]; then
         systemctl enable mcs-primproc > /dev/null 2>&1
         systemctl enable mcs-workernode > /dev/null 2>&1
         systemctl enable mcs-writeengineserver > /dev/null 2>&1
+        systemctl enable mcs-loadbrm > /dev/null 2>&1
         systemctl enable mcs-storagemanager > /dev/null 2>&1
     else
         chkconfig=`which chkconfig 2>/dev/null`
