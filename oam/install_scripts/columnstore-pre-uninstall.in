@@ -109,6 +109,11 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     rm -f /lib/systemd/system/mcs-storagemanager.service
 
     systemctl daemon-reload
+    # remove flag to prevent clusters using shared storage from initializing columnstore more than once
+    IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
+    if [ -e $IFLAG ]; then
+        rm $IFLAG
+    fi
 else
     chkconfig=`which chkconfig 2>/dev/null`
     if [ -n "$chkconfig" ]; then

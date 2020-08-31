@@ -302,10 +302,17 @@ fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    echo "Populating the engine initial system catalog."
-    systemctl start mariadb-columnstore
-    sleep 5
-    dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
+    # prevent clusters using shared storage from initializing columnstore more than once
+    IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
+    mkdir -p /var/lib/columnstore/storagemanager
+
+    if [ ! -e $IFLAG ]; then
+       touch $IFLAG
+       echo "Populating the engine initial system catalog."
+       systemctl start mariadb-columnstore
+       sleep 5
+       dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
+    fi
 fi
  
 if [ $stop_mysqld -eq 1 ];then
