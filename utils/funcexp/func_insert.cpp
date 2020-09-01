@@ -68,6 +68,7 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
     start = fp[1]->data()->getIntVal(row, isNull);
     if (isNull)
         return "";
+    start--; // Because SQL syntax is 1 based and we want 0 based.
 
     length = fp[2]->data()->getIntVal(row, isNull);
     if (isNull)
@@ -83,13 +84,11 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
     int64_t strLen = cs->numchars(pos, end);
     
     // Return the original string if start isn't within the string.
-    if ((start < 1) || start >= strLen)
+    if ((start < 0) || start >= strLen)
         return src;
 
     if ((length < 0) || (length > strLen))
         length = strLen;
-
-    start--; // Because SQL syntax is 1 based and we want 0 based.
 
     // Convert start and length from characters to bytes.
     start = cs->charpos(pos, end, start);
