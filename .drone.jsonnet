@@ -8,12 +8,12 @@ local platforms = {
 local codebase_map = {
   develop: 'git clone --recurse-submodules --branch 10.6 --depth 1 https://github.com/MariaDB/server .',
   'develop-1.5': 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
-  'columnstore-1.5.4-1': 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
+  'columnstore-1.5.4-1': 'git clone --recurse-submodules --branch 10.5-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
   'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO';
+local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO';
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel createrepo';
 
@@ -56,6 +56,78 @@ local Pipeline(branch, platform, event) = {
       path: '/var/run/docker.sock',
     },
   },
+  publish_pkgs:: {
+    name: 'publish pkgs',
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: 'result',
+      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+    },
+  },
+  publish_regression:: {
+    name: 'publish regression',
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: 'result',
+      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+    },
+  },
+  publish_mtr:: {
+    name: 'publish mtr',
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: 'result',
+      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+    },
+  },
+  publish_latest:: {
+    name: 'publish latest',
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: 'result',
+      target: branch + '/latest/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+    },
+  },
   smoke:: {
     name: 'smoke',
     image: 'docker',
@@ -89,9 +161,7 @@ local Pipeline(branch, platform, event) = {
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*-columnstore-engine-10*.rpm *-test-10*.rpm',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
@@ -222,12 +292,14 @@ local Pipeline(branch, platform, event) = {
       }
     },
   },
+
   kind: 'pipeline',
   type: 'docker',
   name: std.join(' ', [branch, platform, event]),
   clone: {
     depth: 10,
   },
+
   steps: [
            {
              name: 'submodules',
@@ -243,6 +315,7 @@ local Pipeline(branch, platform, event) = {
              volumes: [pipeline._volumes.mdb],
              commands: [
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
+               'git config --global url."https://github.com/".insteadOf git@github.com:',
                codebase_map[branch],
                'git rev-parse HEAD',
                'git config cmake.update-submodules no',
@@ -266,7 +339,8 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-cracklib-password-check/,/^$/d' debian/control",
-               "sed -i -e '/Package: mariadb-plugin-gssapi-*/,/^$/d' debian/control",
+               "sed -i -e '/Package: mariadb-plugin-gssapi*/,/^$/d' debian/control",
+               "sed -i -e '/Package: mariadb-plugin-xpand*/,/^$/d' debian/control",
                "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
                "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
@@ -293,59 +367,22 @@ local Pipeline(branch, platform, event) = {
                'ls -l /drone/src/result',
                'echo "check columnstore package:"',
                'ls -l /drone/src/result | grep columnstore',
-               # get rid of the annoying password policy plugin pkg (have no idea how to exclude it from build)
-               'rm -f /drone/src/result/MariaDB-cracklib-password*',
              ],
            },
          ] +
+         [pipeline.publish_pkgs] +
          #(if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
          #(if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
          #(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
+         [pipeline.publish_mtr] +
          (if platform != 'centos:7' then [pipeline.smoke] else []) +
          (if platform != 'centos:7' then [pipeline.smokelog] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
-         [
-           {
-             name: 'publish',
-             image: 'plugins/s3-sync',
-             when: {
-               status: ['success', 'failure'],
-             },
-             settings: {
-               bucket: 'cspkg',
-               access_key: {
-                 from_secret: 'aws_access_key_id',
-               },
-               secret_key: {
-                 from_secret: 'aws_secret_access_key',
-               },
-               source: 'result',
-               target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-             },
-           },
-           {
-             name: 'publish latest',
-             image: 'plugins/s3-sync',
-             when: {
-               status: ['success', 'failure'],
-               event: ['cron'],
-             },
-             settings: {
-               bucket: 'cspkg',
-               access_key: {
-                 from_secret: 'aws_access_key_id',
-               },
-               secret_key: {
-                 from_secret: 'aws_secret_access_key',
-               },
-               source: 'result',
-               target: branch + '/latest/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-             },
-           },
-         ],
+         [pipeline.publish_regression] +
+         [pipeline.publish_latest],
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
