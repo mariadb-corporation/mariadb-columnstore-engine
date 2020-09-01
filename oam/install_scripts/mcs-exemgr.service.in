@@ -1,20 +1,11 @@
 [Unit]
 Description=mcs-exemgr
-
-# restart/start mcs-exemgr on restart/start of mcs-primproc
 PartOf=mcs-primproc.service
-After=network.target mcs-primproc.service
+After=mcs-primproc.service
 
 [Service]
 Type=simple
-
-User=mysql
-Group=mysql
-LimitNOFILE=65536
-LimitNPROC=65536
-
 ExecStartPre=/usr/bin/env bash -c "ldconfig -p | grep -m1 libjemalloc > /dev/null || echo 'Please install jemalloc to avoid ColumnStore performance degradation and unexpected service interruptions.'"
 ExecStart=/usr/bin/env bash -c "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc | awk '{print $1}') exec @ENGINE_BINDIR@/ExeMgr"
-
 Restart=on-failure
 TimeoutStopSec=2
