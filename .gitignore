@@ -145,6 +145,7 @@ oam/install_scripts/mcs-primproc.service
 oam/install_scripts/mcs-stop-controllernode.sh
 oam/install_scripts/mcs-workernode.service
 oam/install_scripts/mcs-writeengineserver.service
+oam/install_scripts/mcs-loadbrm.py
 oam/install_scripts/mcs-storagemanager.service
 oam/install_scripts/mcs_module_installer.sh
 oam/install_scripts/slave-rep-columnstore.sh
