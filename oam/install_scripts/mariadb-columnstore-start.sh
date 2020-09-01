@@ -10,6 +10,6 @@
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
 
-dbbuilder 7
+su -s /bin/sh -c 'dbbuilder 7' mysql 2> /tmp/columnstore_tmp_files/dbbuilder.log
 
 exit 0
