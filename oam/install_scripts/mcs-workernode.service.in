@@ -1,12 +1,18 @@
 [Unit]
 Description=mcs-workernode
-After=mcs-loadbrm.service
+After=network.target mcs-loadbrm.service
 
 [Service]
 Type=simple
+
+User=mysql
+Group=mysql
+LimitNOFILE=65536
+LimitNPROC=65536
+
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1 fg
-Restart=on-failure
-ExecStop=/usr/bin/env bash -c "kill -15 $MAINPID"
-ExecStopPost=-@ENGINE_BINDIR@/mcs-savebrm.py
+ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
+
+Restart=on-failure
 TimeoutStopSec=120

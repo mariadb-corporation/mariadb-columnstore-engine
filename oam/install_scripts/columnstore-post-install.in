@@ -300,6 +300,14 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
   fi  
 fi
 
+#change ownership/permissions to be able to run columnstore as non-root
+chown -R mysql:mysql /var/log/mariadb/columnstore
+chown -R mysql:mysql /etc/columnstore
+chown -R mysql:mysql /var/lib/columnstore
+chown -R mysql:mysql /tmp/columnstore_tmp_files
+chmod 777 /tmp/columnstore_tmp_files
+chmod 777 /dev/shm
+
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     # prevent clusters using shared storage from initializing columnstore more than once
@@ -310,8 +318,6 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
        touch $IFLAG
        echo "Populating the engine initial system catalog."
        systemctl start mariadb-columnstore
-       sleep 5
-       dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
     fi
 fi
  

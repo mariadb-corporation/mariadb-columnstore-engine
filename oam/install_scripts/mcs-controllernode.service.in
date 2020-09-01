@@ -1,11 +1,20 @@
 [Unit]
 Description=mcs-controllernode
+
+# restart/stop mcs-controllernode on restart/stop of mcs-workernode
 PartOf=mcs-workernode.service
-After=mcs-workernode.service
+After=network.target mcs-workernode.service
 
 [Service]
 Type=simple
+
+User=mysql
+Group=mysql
+LimitNOFILE=65536
+LimitNPROC=65536
+
 ExecStartPre=/bin/sleep 7
 ExecStart=@ENGINE_BINDIR@/controllernode fg
-Restart=on-failure
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
+
+Restart=on-failure
