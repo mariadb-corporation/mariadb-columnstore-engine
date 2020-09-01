@@ -1,6 +1,6 @@
 [Unit]
 Description=mcs-workernode
-After=network.target
+After=network.target mcs-loadbrm.service
 
 [Service]
 Type=simple
