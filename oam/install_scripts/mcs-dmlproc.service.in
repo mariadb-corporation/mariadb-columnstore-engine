@@ -1,10 +1,19 @@
 [Unit]
 Description=mcs-dmlproc
+
+# restart/stop mcs-dmlproc on restart/stop of mcs-writeengineserver
 PartOf=mcs-writeengineserver.service
-After=mcs-writeengineserver.service
+After=network.target mcs-writeengineserver.service
 
 [Service]
 Type=simple
+
+User=mysql
+Group=mysql
+LimitNOFILE=65536
+LimitNPROC=65536
+
 ExecStart=/usr/bin/env bash -c "/bin/sleep 2 && @ENGINE_BINDIR@/DMLProc"
+
 Restart=on-failure
 TimeoutStopSec=2

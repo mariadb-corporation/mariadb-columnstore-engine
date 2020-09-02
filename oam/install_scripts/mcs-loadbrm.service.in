@@ -1,7 +1,7 @@
 [Unit]
 Description=loadbrm
 PartOf=mcs-workernode.service
-After=mcs-storagemanager.service
+After=network.target mcs-storagemanager.service
 
 [Service]
 Type=oneshot
