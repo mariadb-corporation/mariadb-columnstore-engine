@@ -41,7 +41,7 @@ if (COMMAND mysql_add_plugin)
   
   FILE(COPY columnstore.cnf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/)
   if (BUILD_CONFIG STREQUAL "enterprise")
-    FILE(RENAME ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/columnstore.cnf ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf)
+    FILE(COPY ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/columnstore.cnf ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf)
     SET(CS_CNF_FILE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf")
   else ()
     SET(CS_CNF_FILE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/columnstore.cnf")
