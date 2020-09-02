@@ -82,7 +82,7 @@ constexpr uint8_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
 
-const int64_t mcs_pow_10[19] =
+const uint64_t mcs_pow_10[20] =
 {
     1ULL,
     10ULL,
@@ -103,6 +103,7 @@ const int64_t mcs_pow_10[19] =
     10000000000000000ULL,
     100000000000000000ULL,
     1000000000000000000ULL,
+    10000000000000000000ULL,
 };
 const int128_t mcs_pow_10_128[20] =
 {
@@ -155,16 +156,6 @@ inline void getScaleDivisor(T& divisor, const int8_t scale)
     }
 }
 
-/**
-    @brief The template to generalise common math operation
-    execution path using struct from <functional>.
-*/
-template<typename BinaryOperation, typename OverflowCheck>
-void execute(const execplan::IDB_Decimal& l,
-    const execplan::IDB_Decimal& r,
-    execplan::IDB_Decimal& result,
-    BinaryOperation op,
-    OverflowCheck overflowCheck);
 
 /**
     @brief Contains subset of decimal related operations.

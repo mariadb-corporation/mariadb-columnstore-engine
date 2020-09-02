@@ -125,7 +125,7 @@ rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
 #get columnstore temp file directory name
 tmpDir=/tmp/columnstore_tmp_files
 mkdir $tmpDir >/dev/null 2>&1
-chmod 664 $tmpDir
+chmod 777 $tmpDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
@@ -259,18 +259,15 @@ fi
 
 if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
   if [ -z "$MCS_S3_BUCKET" ]; then
-    echo "Environmental variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_BUCKET."
-  fi  
-  if [ -z "$MCS_S3_ENDPOINT" ]; then
-    echo "Environmental variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ENDPOINT."
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_BUCKET."
   fi  
   if [ -z "$MCS_S3_ACCESS_KEY_ID" ]; then
-    echo "Environmental variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ACCESS_KEY_ID."
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ACCESS_KEY_ID."
   fi  
   if [ -z "$MCS_S3_SECRET_ACCESS_KEY" ]; then
-    echo "Environmental variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_SECRET_ACCESS_KEY."
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_SECRET_ACCESS_KEY."
   fi  
-  if [ -z "$MCS_S3_BUCKET" ] || [ -z "$MCS_S3_ENDPOINT" ] || [ -z "$MCS_S3_ACCESS_KEY_ID" ] || [ -z "$MCS_S3_SECRET_ACCESS_KEY" ]; then 
+  if [ -z "$MCS_S3_BUCKET" ] || [ -z "$MCS_S3_ACCESS_KEY_ID" ] || [ -z "$MCS_S3_SECRET_ACCESS_KEY" ]; then 
     echo "Using local storage."
   else
       mcsSetConfig -d Installation DBRootStorageType "storagemanager"
@@ -284,6 +281,22 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
       sed -i "s|# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
       sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
       sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+      testS3Connection
+      if [ $? -ne 0 ]; then
+        sed -i "s|endpoint =.*|# endpoint = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
+        echo "There was an error validating the settings used to access S3."
+        echo "The specified user must have GET, PUT, HEAD, and DELETE permissions to the bucket."
+        echo "Verify the following environment variables are correct:"
+        echo "MCS_S3_BUCKET"
+        echo "MCS_S3_ENDPOINT"
+        echo "MCS_S3_ACCESS_KEY_ID"
+        echo "MCS_S3_SECRET_ACCESS_KEY"
+        echo "MCS_S3_REGION"
+        echo "After environment variables are fixed, run command: columnstore-post-install"
+        exit 1
+      fi
   fi  
 fi
 
@@ -291,7 +304,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     echo "Populating the engine initial system catalog."
     systemctl start mariadb-columnstore
-    sleep 1
+    sleep 5
     dbbuilder 7 > $tmpDir/dbbuilder.log 2>&1
 fi
  

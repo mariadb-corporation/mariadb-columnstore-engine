@@ -312,6 +312,27 @@ static MYSQL_THDVAR_BOOL(
     0
 );
 
+static MYSQL_THDVAR_BOOL(
+    cache_inserts,
+    PLUGIN_VAR_NOCMDARG | PLUGIN_VAR_READONLY,
+    "Perform cache-based inserts to ColumnStore",
+    NULL,
+    NULL,
+    0
+);
+
+static MYSQL_THDVAR_ULONGLONG(
+    cache_flush_threshold,
+    PLUGIN_VAR_RQCMDARG,
+    "Threshold on the number of rows in the cache to trigger a flush",
+    NULL,
+    NULL,
+    500000,
+    1,
+    1000000000,
+    1
+);
+
 st_mysql_sys_var* mcs_system_variables[] =
 {
   MYSQL_SYSVAR(compression_type),
@@ -338,6 +359,8 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(import_for_batchinsert_enclosed_by),
   MYSQL_SYSVAR(varbin_always_hex),
   MYSQL_SYSVAR(replication_slave),
+  MYSQL_SYSVAR(cache_inserts),
+  MYSQL_SYSVAR(cache_flush_threshold),
   NULL
 };
 
@@ -577,4 +600,23 @@ bool get_replication_slave(THD* thd)
 void set_replication_slave(THD* thd, bool value)
 {
     THDVAR(thd, replication_slave) = value;
+}
+
+bool get_cache_inserts(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, cache_inserts);
+}
+void set_cache_inserts(THD* thd, bool value)
+{
+    THDVAR(thd, cache_inserts) = value;
+}
+
+ulonglong get_cache_flush_threshold(THD* thd)
+{
+    return ( thd == NULL ) ? 500000 : THDVAR(thd, cache_flush_threshold);
+}
+
+void set_cache_flush_threshold(THD* thd, ulonglong value)
+{
+    THDVAR(thd, cache_flush_threshold) = value;
 }

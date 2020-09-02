@@ -39,9 +39,6 @@ public:
         WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG)
     {
         resetData();
-        utils::int128Max(fMax128);
-        utils::int128Min(fMin128);
-        utils::uint128Max(fMaxu128);
     }
 
     // pure virtual in base
@@ -58,18 +55,16 @@ protected:
     uint64_t    fCount;
     bool        fDistinct;
     std::set<T_IN> fSet;
-    int128_t    fMax128;
-    int128_t    fMin128;
-    uint128_t   fMaxu128;
 
-    void checkSumLimit(long double val, long double sum);
-    void checkSumLimit(int128_t val, int128_t sum);
-    void checkSumLimit(uint128_t val, uint128_t sum);
-    
+    void checkSumLimit(T_IN& val, T_OUT& sum);
+
     int128_t calculateAvg(int128_t sum, uint64_t count, int scale);
-    uint128_t calculateAvg(uint128_t sum, uint64_t count, int scale);
     long double calculateAvg(long double sum, uint64_t count, int scale);
 };
+
+template<>
+void WF_sum_avg<long double,long double>::checkSumLimit(long double& val, long double& sum);
+
 
 } // namespace
 

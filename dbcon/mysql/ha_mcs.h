@@ -242,16 +242,31 @@ public:
 };
 
 
+class ha_mcs_cache_share
+{
+  ha_mcs_cache_share *next;                         /* Next open share */
+  const char *name;
+  uint open_count;
+public:
+  ulonglong cached_rows;
+  THR_LOCK org_lock;
+  friend ha_mcs_cache_share *find_cache_share(const char *name,
+                                              ulonglong cached_rows);
+  void close();
+};
+
+
+
 class ha_mcs_cache :public ha_mcs
 {
   typedef ha_mcs parent;
   int original_lock_type;
-  bool insert_command;
+  bool insert_command, cache_locked;
 
 public:
-  THR_LOCK org_lock;
   uint lock_counter;
   ha_maria *cache_handler;
+  ha_mcs_cache_share *share;
 
   ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *mem_root);
   ~ha_mcs_cache();
@@ -287,10 +302,11 @@ public:
 
   /* Cache functions */
   void free_locks();
-  bool rows_cached();
+  ha_rows num_rows_cached();
   int flush_insert_cache();
   friend my_bool get_status_and_flush_cache(void *param,
                                             my_bool concurrent_insert);
+  friend my_bool cache_start_trans(void *param);
 };
 
 #endif //HA_MCS_H__

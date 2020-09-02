@@ -856,11 +856,11 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::UDECIMAL:
             {
                 // equal compare. ignore sign and null
-                if (fRow1.getColumnWidth(*i) < 16)
+                if (fRow1.getColumnWidth(*i) < datatypes::MAXDECIMALWIDTH)
                 {
                     eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
                 }
-                else
+                else if (fRow1.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH)
                 {
                     eq = (fRow1.getUint128Field(*i) == fRow2.getUint128Field(*i));
                 }
