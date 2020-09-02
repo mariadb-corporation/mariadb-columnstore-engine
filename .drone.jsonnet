@@ -293,8 +293,6 @@ local Pipeline(branch, platform, event) = {
                'ls -l /drone/src/result',
                'echo "check columnstore package:"',
                'ls -l /drone/src/result | grep columnstore',
-               # get rid of the annoying password policy plugin pkg (have no idea how to exclude it from build)
-               'rm -f /drone/src/result/MariaDB-cracklib-password*',
              ],
            },
          ] +
