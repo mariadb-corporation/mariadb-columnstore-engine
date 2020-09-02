@@ -125,7 +125,7 @@ local Pipeline(branch, platform, event) = {
         from_secret: 'aws_secret_access_key',
       },
       source: 'result',
-      target: branch + '/latest/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+      target: branch + '/latest/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
     },
   },
   smoke:: {
