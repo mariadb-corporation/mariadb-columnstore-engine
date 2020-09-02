@@ -23,7 +23,7 @@ local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
     'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
@@ -161,7 +161,7 @@ local Pipeline(branch, platform, event) = {
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*-columnstore-engine-10*.rpm *-test-10*.rpm',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*-columnstore-engine-10*.rpm *-test-10*.rpm"',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
@@ -376,7 +376,7 @@ local Pipeline(branch, platform, event) = {
          #(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
-         [pipeline.publish_mtr] +
+         (if (platform == 'centos:7') then [pipeline.publish_mtr] else []) +
          (if platform != 'centos:7' then [pipeline.smoke] else []) +
          (if platform != 'centos:7' then [pipeline.smokelog] else []) +
          [pipeline.regression] +
