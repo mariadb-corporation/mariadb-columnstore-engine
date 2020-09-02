@@ -156,6 +156,7 @@ local Pipeline(branch, platform, event) = {
     name: 'mtr',
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
+    failure: 'ignore',
     commands: [
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
