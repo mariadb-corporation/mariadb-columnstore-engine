@@ -41,7 +41,8 @@ if (COMMAND mysql_add_plugin)
   
   FILE(COPY columnstore.cnf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/)
   if (BUILD_CONFIG STREQUAL "enterprise")
-    FILE(COPY columnstore.cnf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf)
+    FILE(RENAME ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/columnstore.cnf 
+        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf)
     install(FILES columnstore.cnf
        DESTINATION ${MARIADB_MYCNFDIR} COMPONENT columnstore-engine)
     SET(CS_CNF_FILE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/x-columnstore.cnf")
