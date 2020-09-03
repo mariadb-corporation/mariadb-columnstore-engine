@@ -238,11 +238,13 @@ const static_any::any& RowAggregation::shortTypeId((short)1);
 const static_any::any& RowAggregation::intTypeId((int)1);
 const static_any::any& RowAggregation::longTypeId((long)1);
 const static_any::any& RowAggregation::llTypeId((long long)1);
+const static_any::any& RowAggregation::int128TypeId((__int128)1);
 const static_any::any& RowAggregation::ucharTypeId((unsigned char)1);
 const static_any::any& RowAggregation::ushortTypeId((unsigned short)1);
 const static_any::any& RowAggregation::uintTypeId((unsigned int)1);
 const static_any::any& RowAggregation::ulongTypeId((unsigned long)1);
 const static_any::any& RowAggregation::ullTypeId((unsigned long long)1);
+const static_any::any& RowAggregation::uint128TypeId((unsigned __int128)1);
 const static_any::any& RowAggregation::floatTypeId((float)1);
 const static_any::any& RowAggregation::doubleTypeId((double)1);
 const static_any::any& RowAggregation::longdoubleTypeId((long double)1);
@@ -1032,7 +1034,7 @@ void RowAggregation::initMapData(const Row& rowIn)
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                if (LIKELY(fRow.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+                if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
                 {
                     uint32_t colOutOffset = fRow.getOffset(colOut);
                     fRow.setBinaryField_offset(
@@ -1040,7 +1042,7 @@ void RowAggregation::initMapData(const Row& rowIn)
                         sizeof(int128_t),
                         colOutOffset);
                 }
-                else if (fRow.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+                else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
                 {
                     fRow.setIntField(rowIn.getIntField(colIn), colOut);
                 }
@@ -2024,9 +2026,25 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
+            valIn = (long double) rowIn.getIntField(colIn);
+            break;
+
         case execplan::CalpontSystemCatalog::DECIMAL:   // handle scale later
         case execplan::CalpontSystemCatalog::UDECIMAL:  // handle scale later
-            valIn = (long double) rowIn.getIntField(colIn);
+            if (LIKELY(fRowGroupIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+            {
+                int128_t* val128InPtr = rowIn.getBinaryField<int128_t>(colIn);
+                valIn = (long double)
+                    datatypes::Decimal::getLongDoubleFromWideDecimal(*val128InPtr);
+            }
+            else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+            {
+                valIn = (long double) rowIn.getIntField(colIn);
+            }
+            else
+            {
+                idbassert(false);
+            }
             break;
 
         case execplan::CalpontSystemCatalog::UTINYINT:
@@ -2138,7 +2156,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
-
                     break;
                 }
 
@@ -2155,7 +2172,19 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     }
                     else
                     {
-                        datum.columnData = rowIn.getIntField(colIn);
+                        if (LIKELY(fRowGroupIn.getColumnWidth(colIn)
+                            == datatypes::MAXDECIMALWIDTH))
+                        {
+                            datum.columnData = rowIn.getInt128Field(colIn);
+                        }
+                        else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+                        {
+                            datum.columnData = rowIn.getIntField(colIn);
+                        }
+                        else
+                        {
+                            idbassert(false);
+                        }
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
@@ -2756,11 +2785,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
         return;
     }
 
-    int64_t intOut = 0;
-    uint64_t uintOut = 0;
-    float floatOut = 0.0;
-    double doubleOut = 0.0;
-    long double longdoubleOut = 0.0;
+    int64_t intOut;
+    uint64_t uintOut;
+    float floatOut;
+    double doubleOut;
+    long double longdoubleOut;
     ostringstream oss;
     std::string strOut;
 
@@ -2825,6 +2854,12 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             {
                 intOut = valOut.cast<long long>();
                 fRow.setIntField<8>(intOut, colOut);
+                bSetSuccess = true;
+            }
+            else if (valOut.compatible(int128TypeId))
+            {
+                int128_t int128Out = valOut.cast<int128_t>();
+                fRow.setInt128Field(int128Out, colOut);
                 bSetSuccess = true;
             }
 
@@ -2950,6 +2985,8 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
     if (!bSetSuccess)
     {
+        // This means the return from the UDAF doesn't match the field
+        // This handles the mismatch
         SetUDAFAnyValue(valOut, colOut);
     }
 }
@@ -2962,104 +2999,102 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
     // that they didn't set in mcsv1_UDAF::init(), but this
     // handles whatever return type is given and casts
     // it to whatever they said to return.
-    // TODO: Save cpu cycles here.
+    // TODO: Save cpu cycles here. For one, we don't need to initialize these
+
     int64_t intOut = 0;
     uint64_t uintOut = 0;
-    float floatOut = 0.0;
     double doubleOut = 0.0;
     long double longdoubleOut = 0.0;
+    int128_t int128Out = 0;
     ostringstream oss;
     std::string strOut;
 
     if (valOut.compatible(charTypeId))
     {
-        uintOut = intOut  = valOut.cast<char>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut  = valOut.cast<char>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(scharTypeId))
     {
-        uintOut = intOut = valOut.cast<signed char>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<signed char>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(shortTypeId))
     {
-        uintOut = intOut = valOut.cast<short>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<short>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(intTypeId))
     {
-        uintOut = intOut = valOut.cast<int>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<int>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(longTypeId))
     {
-        uintOut = intOut = valOut.cast<long>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<long>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(llTypeId))
     {
-        uintOut = intOut = valOut.cast<long long>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<long long>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(ucharTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned char>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned char>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ushortTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned short>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned short>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(uintTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned int>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned int>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ulongTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned long>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned long>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ullTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned long long>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned long long>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
-    else if (valOut.compatible(floatTypeId))
+    else if (valOut.compatible(int128TypeId))
     {
-        floatOut = valOut.cast<float>();
-        doubleOut = floatOut;
-        longdoubleOut = doubleOut;
-        intOut = uintOut = floatOut;
-        oss << floatOut;
+        intOut = uintOut = int128Out = valOut.cast<int128_t>();
+        doubleOut = uintOut;
+        oss << uintOut;
     }
-    else if (valOut.compatible(doubleTypeId))
+    else if (valOut.compatible(floatTypeId) || valOut.compatible(doubleTypeId))
     {
-        doubleOut = valOut.cast<double>();
-        longdoubleOut = doubleOut;
-        floatOut = (float)doubleOut;
-        uintOut = (uint64_t)doubleOut;
-        intOut = (int64_t)doubleOut;
+        // Should look at scale for decimal and adjust
+        doubleOut = valOut.cast<float>();
+        int128Out = doubleOut;
+        intOut = uintOut = doubleOut;
         oss << doubleOut;
     }
-
     else if (valOut.compatible(longdoubleTypeId))
     {
+        // Should look at scale for decimal and adjust
         longdoubleOut = valOut.cast<long double>();
+        int128Out = longdoubleOut;
         doubleOut = (double)longdoubleOut;
-        floatOut = (float)doubleOut;
         uintOut = (uint64_t)doubleOut;
         intOut = (int64_t)doubleOut;
         oss << doubleOut;
@@ -3073,7 +3108,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
         uintOut = strtoul(strOut.c_str(), NULL, 10);
         doubleOut = strtod(strOut.c_str(), NULL);
         longdoubleOut = strtold(strOut.c_str(), NULL);
-        floatOut = (float)doubleOut;
+        int128Out = longdoubleOut;
     }
     else
     {
@@ -3097,10 +3132,19 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
             fRow.setIntField<8>(intOut, colOut);
             break;
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            if (width == datatypes::MAXDECIMALWIDTH)
+                fRow.setInt128Field(int128Out, colOut);
+            else
+                fRow.setIntField<8>(intOut, colOut);
+            break;
+        }
 
         case execplan::CalpontSystemCatalog::UTINYINT:
             fRow.setUintField<1>(uintOut, colOut);
@@ -3133,8 +3177,11 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
+        {
+            float floatOut = (float)doubleOut;
             fRow.setFloatField(floatOut, colOut);
             break;
+        }
 
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
@@ -3405,10 +3452,22 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
                 case execplan::CalpontSystemCatalog::MEDINT:
                 case execplan::CalpontSystemCatalog::INT:
                 case execplan::CalpontSystemCatalog::BIGINT:
+                {
+                    fRow.setIntField(getIntNullValue(colDataType), colOut);
+                }
+                break;
+
                 case execplan::CalpontSystemCatalog::DECIMAL:
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
-                    fRow.setIntField(getIntNullValue(colDataType), colOut);
+                    if (fRow.getColumnWidth(colOut) == datatypes::MAXDECIMALWIDTH)
+                    {
+                        fRow.setInt128Field(datatypes::Decimal128Null, colOut);
+                    }
+                    else
+                    {
+                        fRow.setIntField(getIntNullValue(colDataType), colOut);
+                    }
                 }
                 break;
 
@@ -3590,7 +3649,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 {
                     fRow.setIntField(strtol(aggData.fConstValue.c_str(), 0, 10), colOut);
                 }
-                break;
+                break;                    
 
                 // AVG should not be uint32_t result type.
                 case execplan::CalpontSystemCatalog::UTINYINT:
@@ -3608,7 +3667,14 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 {
                     double dbl = strtod(aggData.fConstValue.c_str(), 0);
                     double scale = pow(10.0, (double) fRowGroupOut->getScale()[i]);
-                    fRow.setIntField((int64_t)(scale * dbl), colOut);
+                    if (fRow.getColumnWidth(colOut) == datatypes::MAXDECIMALWIDTH)
+                    {
+                        fRow.setInt128Field((int128_t)(scale * dbl), colOut);
+                    }
+                    else
+                    {
+                        fRow.setIntField((int64_t)(scale * dbl), colOut);
+                    }
                 }
                 break;
 
@@ -3721,7 +3787,20 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                             (dbl < 0 && dbl < (double) numeric_limits<int64_t>::min()))
                         throw logging::QueryDataExcept(overflowMsg, logging::aggregateDataErr);
 
-                    fRow.setIntField((int64_t) dbl, colOut);
+                    if (fRow.getColumnWidth(colOut) == datatypes::MAXDECIMALWIDTH)
+                    {
+                        if ((dbl > 0 && dbl > (double) numeric_limits<int128_t>::max()) ||
+                                (dbl < 0 && dbl < (double) numeric_limits<int128_t>::min()))
+                            throw logging::QueryDataExcept(overflowMsg, logging::aggregateDataErr);
+                        fRow.setInt128Field((int128_t)dbl, colOut);
+                    }
+                    else
+                    {
+                        if ((dbl > 0 && dbl > (double) numeric_limits<int64_t>::max()) ||
+                                (dbl < 0 && dbl < (double) numeric_limits<int64_t>::min()))
+                            throw logging::QueryDataExcept(overflowMsg, logging::aggregateDataErr);
+                        fRow.setIntField((int64_t) dbl, colOut);
+                    }
                 }
                 break;
 
