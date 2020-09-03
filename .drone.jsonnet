@@ -157,7 +157,6 @@ local Pipeline(branch, platform, event) = {
     name: 'mtr',
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    failure: 'ignore',
     commands: [
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
@@ -166,6 +165,7 @@ local Pipeline(branch, platform, event) = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname patch && yum install -y /result/*.rpm"',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb --socket=/var/lib/mysql/mysql.sock -e "create database if not exists test;"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
     ],
   },
