@@ -115,6 +115,7 @@ local Pipeline(branch, platform, event) = {
     image: 'plugins/s3-sync',
     when: {
       status: ['success', 'failure'],
+      event: ['cron'],
     },
     settings: {
       bucket: 'cspkg',
@@ -162,7 +163,7 @@ local Pipeline(branch, platform, event) = {
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.rpm"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname patch && yum install -y /result/*.rpm"',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
