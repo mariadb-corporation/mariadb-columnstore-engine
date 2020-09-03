@@ -139,7 +139,7 @@ static int columnstore_init_func(void* p)
             tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
             tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-    fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
+    fprintf(stderr, "Columnstore: Started; Version: %s\n", columnstore_version.c_str());
 
     strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version));
     cs_version[sizeof(cs_version) - 1] = 0;
