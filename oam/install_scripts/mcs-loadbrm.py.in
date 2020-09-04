@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
     pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
-    loadbrm = '/usr/bin/load_brm'
+    loadbrm = '@ENGINE_BINDIR@/load_brm'
 
     brm_saves_current = ''
 
