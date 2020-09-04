@@ -2,9 +2,9 @@
 
 [ObjectStorage]
 # 'service' is the module that SM will use for cloud IO.  
-# Current options are “LocalStorage” and “S3”.
-# ‘LocalStorage’ will use a directory on the local filesystem as if it 
-# were cloud storage.  ‘S3’ is the module that uses real cloud storage.
+# Current options are "LocalStorage" and "S3".
+# "LocalStorage" will use a directory on the local filesystem as if it 
+# were cloud storage.  "S3" is the module that uses real cloud storage.
 # Both modules have their own sections below.
 #
 # Note, changing this after running postConfigure will leave you with an
