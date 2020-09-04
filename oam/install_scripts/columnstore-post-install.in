@@ -313,6 +313,7 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     # prevent clusters using shared storage from initializing columnstore more than once
     IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
     mkdir -p /var/lib/columnstore/storagemanager
+    chown -R mysql:mysql /var/lib/columnstore/storagemanager
 
     if [ ! -e $IFLAG ]; then
        touch $IFLAG
