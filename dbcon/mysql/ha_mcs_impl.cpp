@@ -2348,8 +2348,19 @@ int ha_mcs_impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
         return 0;
     }
 
-    //Update and delete code
-    if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    /*
+      Update and delete code.
+      Note, we may be updating/deleting a different table,
+      and the current one is only needed for reading,
+      e.g. cstab1 is needed for reading in this example:
+
+      UPDATE innotab1 SET a=100 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=1);
+    */
+    if (!ci->isReadOnly() && // make sure the current table is being modified
+        (thd->lex->sql_command == SQLCOM_UPDATE ||
+         thd->lex->sql_command == SQLCOM_DELETE ||
+         thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+         thd->lex->sql_command == SQLCOM_UPDATE_MULTI))
         return doUpdateDelete(thd, gwi, condStack);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
@@ -4079,6 +4090,7 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
         return 0;
     }
 
+    ci->lock_type= lock_type;
 
     CalTableMap::iterator mapiter = ci->tableMap.find(table);
     // make sure this is a release lock (2nd) call called in
