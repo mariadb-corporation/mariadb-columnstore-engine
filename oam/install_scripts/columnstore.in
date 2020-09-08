@@ -37,22 +37,22 @@ fi
 mt=`module_type`
 mid=`module_id`
 
-has_um=`mcsGetConfig SystemModuleConfig ModuleCount2`
+has_um=`@ENGINE_BINDIR@/mcsGetConfig SystemModuleConfig ModuleCount2`
 if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-lockdir=`mcsGetConfig Installation LockFileDirectory`
+lockdir=`@ENGINE_BINDIR@/mcsGetConfig Installation LockFileDirectory`
 
 #get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
+tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
 mkdir $tmpDir >/dev/null 2>&1
 if [ $USER == "root" ]; then
 	chmod 777 $tmpDir
 fi
 
 checkInstallSetup() {
-	InitialInstallFlag=`mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
+	InitialInstallFlag=`@ENGINE_BINDIR@/mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
@@ -76,7 +76,7 @@ start() {
 
 	#checkInstallSetup
 
-	CoreFileFlag=`mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation CoreFileFlag`
+	CoreFileFlag=`@ENGINE_BINDIR@/mcsGetConfig -c @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
     #columnstore core files
 		ulimit -c unlimited  > /dev/null 2>&1

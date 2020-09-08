@@ -36,7 +36,7 @@ if __name__ == '__main__':
         storage = sm_config.get('ObjectStorage', 'service')
 
     default_addr = '127.0.0.1'   
-    savebrm = 'save_brm'
+    savebrm = '@ENGINE_BINDIR@/save_brm'
     is_primary = False
 
     # For multi-node with local storage or default installations
