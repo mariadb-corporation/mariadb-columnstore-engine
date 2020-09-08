@@ -6,9 +6,13 @@ from pathlib import Path
 import time
 import configparser
 import os
+import glob
+import shutil
 
 API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
 BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
+USER = 'mysql'
+GROUP = 'mysql'
 
 
 def get_key():
@@ -47,7 +51,7 @@ if __name__ == '__main__':
 
     dbrmroot = config_root.find('./SystemConfig/DBRMRoot').text
     pmCount = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
-    loadbrm = '/usr/bin/load_brm'
+    loadbrm = '@ENGINE_BINDIR@/load_brm'
 
     brm_saves_current = ''
 
@@ -147,5 +151,7 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
             if retcode < 0:
                 print('{} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
+            for shm_file in glob.glob('/dev/shm/*'):
+                shutil.chown(shm_file, USER, GROUP)
         except OSError as e:
             sys.exit(1)

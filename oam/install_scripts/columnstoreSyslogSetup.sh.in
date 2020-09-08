@@ -50,7 +50,7 @@ columnstoreSyslogFile=@ENGINE_SUPPORTDIR@/columnstoreSyslog
 columnstoreSyslogFile7=@ENGINE_SUPPORTDIR@/columnstoreSyslog7
 
 #get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
+tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
 
 checkSyslog() {
 #check which syslog daemon is being used
@@ -176,7 +176,7 @@ install() {
 makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	mcsSetConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
+	@ENGINE_BINDIR@/mcsSetConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ $non_root_user == "yes" ]; then
 		chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml*
 	fi
