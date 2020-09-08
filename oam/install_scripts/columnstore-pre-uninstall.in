@@ -53,7 +53,7 @@ rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
 rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 
 #get temp directory
-tmpDir=`mcsGetConfig SystemConfig SystemTempFileDir`
+tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
 if [[ $tmpDir = *"tmp" ]]; then
 	# delete tmp files
 	rm -rf $tmpDir/*
@@ -66,7 +66,7 @@ rm -f /var/lib/columnstore/local/moveDbrootTransactionLog
 rm -rf /var/log/mariadb/columnstore/
 rm -rf /tmp/columnstore_tmp_files
 
-lockdir=`mcsGetConfig Installation LockFileDirectory`
+lockdir=`@ENGINE_BINDIR@/mcsGetConfig Installation LockFileDirectory`
 rm -f $lockdir/columnstore
 
 #uninstall MariaDB Columnstore system logging

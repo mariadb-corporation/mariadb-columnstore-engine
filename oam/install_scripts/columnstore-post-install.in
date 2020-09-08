@@ -218,7 +218,7 @@ fi
 # Lock directory for root user
 lockdir='/var/lock/subsys'
 
-mcsSetConfig -d Installation LockFileDirectory $lockdir
+@ENGINE_BINDIR@/mcsSetConfig -d Installation LockFileDirectory $lockdir
 
 mkdir $lockdir >/dev/null 2>&1
 
@@ -270,9 +270,9 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
   if [ -z "$MCS_S3_BUCKET" ] || [ -z "$MCS_S3_ACCESS_KEY_ID" ] || [ -z "$MCS_S3_SECRET_ACCESS_KEY" ]; then 
     echo "Using local storage."
   else
-      mcsSetConfig -d Installation DBRootStorageType "storagemanager"
-      mcsSetConfig -d StorageManager Enabled "Y" 
-      mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
+      @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
+      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y" 
+      @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
       sed -i "s|service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
       if [ ! -z "$MCS_S3_REGION" ]; then
           sed -i "s|region =.*|region = $MCS_S3_REGION|" /etc/columnstore/storagemanager.cnf

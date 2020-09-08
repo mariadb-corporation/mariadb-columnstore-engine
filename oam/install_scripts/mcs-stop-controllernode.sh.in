@@ -1,7 +1,7 @@
 #!/bin/bash
 
 /bin/kill -15 "$1"
-timeout=$(mcsGetConfig SystemConfig DBRMTimeout)
+timeout=$(@ENGINE_BINDIR@/mcsGetConfig SystemConfig DBRMTimeout)
 
 while [ -n "$(pgrep -x controllernode)" ] && [ $timeout -gt 0 ]
 do
