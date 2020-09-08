@@ -7082,7 +7082,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                             return -1;
                         }
                     }
-                    else if ( !gwi.fatalParseError )
+                    else
                     {
                         Message::Args args;
                         args.add(ifp->func_name());
