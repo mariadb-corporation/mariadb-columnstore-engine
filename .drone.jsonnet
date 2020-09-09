@@ -216,7 +216,7 @@ local Pipeline(branch, platform, event) = {
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       // run regression test000 on pull request and manual build events. on other events run all tests
-      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} ./go.sh --sm_unit_test_dir=/storage-manager' + (if event == 'pull_request' || event == 'manual' then ' --tests=test000.sh' else ''),
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} ./go.sh --sm_unit_test_dir=/storage-manager' + (if event == 'pull_request' || event == 'custom' then ' --tests=test000.sh' else ''),
     ],
   },
   smokelog:: {
