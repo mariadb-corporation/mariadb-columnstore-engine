@@ -13,7 +13,7 @@ Group=mysql
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStart=/usr/bin/env bash -c "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc | awk '{print $1}') exec @ENGINE_BINDIR@/WriteEngineServer"
+ExecStart=/usr/bin/env bash -c "LD_PRELOAD=@ENGINE_DATADIR@/libjemalloc.so.2 exec @ENGINE_BINDIR@/WriteEngineServer"
 
 Restart=on-failure
 TimeoutStopSec=20
