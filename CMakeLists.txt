@@ -358,6 +358,8 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
+INSTALL(FILES utils/jemalloc/libjemalloc.so.2 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these
     ADD_DEPENDENCIES(udf_mysql GenError)
