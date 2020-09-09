@@ -308,6 +308,8 @@ chown -R mysql:mysql /tmp/columnstore_tmp_files
 chmod 777 /tmp/columnstore_tmp_files
 chmod 777 /dev/shm
 
+ldconfig
+
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     # prevent clusters using shared storage from initializing columnstore more than once
