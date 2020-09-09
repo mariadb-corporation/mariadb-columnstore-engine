@@ -124,6 +124,7 @@ node.".format(e))
                     print ("Saving {} to {}".format(e, current_name))
                     path = Path(current_name)
                     path.write_bytes(r.content)
+                    shutil.chown(current_name, USER, GROUP)
             except Exception as e:
                 print(str(e))
                 print('Failed to load BRM data from the primary \
