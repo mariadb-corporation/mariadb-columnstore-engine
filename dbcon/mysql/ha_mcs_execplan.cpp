@@ -4364,7 +4364,8 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     bool isInformationSchema = false;
 
     // @bug5523
-    if (ifp->cached_table && strcmp(ifp->cached_table->db.str, "information_schema") == 0)
+    if (ifp->cached_table && ifp->cached_table->db.length > 0
+        && strcmp(ifp->cached_table->db.str, "information_schema") == 0)
         isInformationSchema = true;
 
     // support FRPM subquery. columns from the derived table has no definition
