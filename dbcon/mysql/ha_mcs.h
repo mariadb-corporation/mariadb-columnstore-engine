@@ -51,6 +51,10 @@ class ha_mcs: public handler
     // as apparently there is a linker error on the std::stack<COND*>::pop()
     // call on Ubuntu18.
     std::vector<COND*> condStack;
+    int m_lock_type;
+
+    int impl_external_lock(THD* thd, TABLE* table, int lock_type);
+    int impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack);
 
 public:
     ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
@@ -239,6 +243,11 @@ public:
 
     int repair(THD* thd, HA_CHECK_OPT* check_opt);
     bool is_crashed() const;
+
+    bool isReadOnly() const
+    {
+      return m_lock_type == F_RDLCK;
+    }
 };
 
 
