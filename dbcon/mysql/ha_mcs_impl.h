@@ -29,7 +29,6 @@ extern int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO
 extern int ha_mcs_impl_delete_table(const char* name);
 extern int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked);
 extern int ha_mcs_impl_close(void);
-extern int ha_mcs_impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack);
 extern int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table);
 extern int ha_mcs_impl_rnd_end(TABLE* table, bool is_derived_hand = false);
 extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed);
@@ -40,7 +39,6 @@ extern int ha_mcs_impl_commit (handlerton* hton, THD* thd, bool all);
 extern int ha_mcs_impl_rollback (handlerton* hton, THD* thd, bool all);
 extern int ha_mcs_impl_close_connection (handlerton* hton, THD* thd);
 extern COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>&);
-extern int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type);
 extern int ha_mcs_impl_update_row();
 extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, const std::vector<COND*>& condStack);
 extern int ha_mcs_impl_delete_row();
