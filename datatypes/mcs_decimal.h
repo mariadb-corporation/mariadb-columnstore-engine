@@ -81,6 +81,10 @@ constexpr uint8_t INT128MAXPRECISION = 38U;
 constexpr uint8_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
+constexpr uint8_t MAXLENGTH16BYTES = 42;
+constexpr uint8_t MAXLENGTH8BYTES = 23;
+
+
 
 const uint64_t mcs_pow_10[20] =
 {
@@ -219,6 +223,11 @@ class Decimal
         */
         static std::string toString(execplan::IDB_Decimal& value);
         static std::string toString(const execplan::IDB_Decimal& value);
+
+        /**
+            @brief Convenience method to get int128 from a std::string.
+        */
+        static int128_t int128FromString(const std::string& value, ColTypeAlias& colType);
 
         /**
             @brief The method detects whether decimal type is wide
