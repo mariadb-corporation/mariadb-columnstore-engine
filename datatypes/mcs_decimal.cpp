@@ -208,6 +208,21 @@ namespace datatypes
         return toString(const_cast<execplan::IDB_Decimal&>(value));
     }
 
+    // Compare perf with f(string&, ColTypeAlias&, int128_t&)
+    int128_t Decimal::int128FromString(const std::string& value,
+                                       ColTypeAlias& colType)
+    {
+        int128_t result = 0;
+        bool pushWarning = false;
+        bool noRoundup = false;
+        dataconvert::number_int_value<int128_t>(value,
+                                      colType,
+                                      pushWarning,
+                                      noRoundup,
+                                      result);
+        return result;
+    }
+
     int Decimal::compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r)
     {
         int128_t divisorL, divisorR;
