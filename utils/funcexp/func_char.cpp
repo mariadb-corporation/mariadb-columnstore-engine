@@ -95,7 +95,7 @@ string Func_char::getStrVal(Row& row,
     buf[0]= 0;
     char* pBuf = buf;
     CHARSET_INFO* cs = ct.getCharset();
-    int32_t value;
+    int32_t value = 0;
     int32_t numBytes = 0;
     for (uint32_t i = 0; i < parm.size(); ++i)
     {
