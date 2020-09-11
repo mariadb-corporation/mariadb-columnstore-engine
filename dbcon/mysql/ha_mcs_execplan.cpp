@@ -6369,8 +6369,13 @@ int processWhere(SELECT_LEX &select_lex,
     Item_cond* icp = 0;
     bool isUpdateDelete = false;
 
-    if (join != 0)
+    // Flag to indicate if this is a prepared statement
+    bool isPS = gwi.thd->stmt_arena && gwi.thd->stmt_arena->is_stmt_execute();
+
+    if (join != 0 && !isPS)
         icp = reinterpret_cast<Item_cond*>(join->conds);
+    else if (isPS && select_lex.prep_where)
+        icp = (Item_cond*)(select_lex.prep_where);
 
     // if icp is null, try to find the where clause other where
     if (!join && gwi.thd->lex->derived_tables)

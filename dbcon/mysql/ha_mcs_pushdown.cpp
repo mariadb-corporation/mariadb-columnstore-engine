@@ -476,6 +476,10 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
         return handler;
     }
 
+    // Disable derived handler for prepared statements
+    if (thd->stmt_arena && thd->stmt_arena->is_stmt_execute())
+        return handler;
+
     SELECT_LEX_UNIT *unit= derived->derived;
     SELECT_LEX *sl= unit->first_select();
 
@@ -748,11 +752,15 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
+    // Flag to indicate if this is a prepared statement
+    bool isPS = thd->stmt_arena && thd->stmt_arena->is_stmt_execute();
+
     // Disable processing of select_result_interceptor classes
     // which intercept and transform result set rows. E.g.:
     // select a,b into @a1, @a2 from t1;
     if (((thd->lex)->result &&
-         !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()))
+        !((select_dumpvar *)(thd->lex)->result)->var_list.is_empty()) &&
+        (!isPS))
     {
         return handler;
     }
@@ -800,8 +808,34 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         COND *conds = nullptr;
         if (!unsupported_feature)
         {
-            conds= simplify_joins_mcs(join, select_lex->join_list,
-                join->conds, TRUE, FALSE);
+            SELECT_LEX *sel= select_lex;
+            // Rewrite once for PS
+	    // Refer to JOIN::optimize_inner() in sql/sql_select.cc
+	    // for details on the optimizations performed in this block.
+            if (sel->first_cond_optimization)
+            {
+                create_explain_query_if_not_exists(thd->lex, thd->mem_root);
+                Query_arena *arena, backup;
+                arena= thd->activate_stmt_arena_if_needed(&backup);
+                sel->first_cond_optimization= false;
+
+                conds= simplify_joins_mcs(join, select_lex->join_list,
+                    join->conds, TRUE, FALSE);
+
+                build_bitmap_for_nested_joins_mcs(select_lex->join_list, 0);
+                sel->where= conds;
+
+                if (isPS)
+                    sel->prep_where= conds;
+
+                select_lex->update_used_tables();
+
+                if (arena)
+                    thd->restore_active_arena(arena, &backup);
+
+                // Unset SL::first_cond_optimization
+                opt_flag_unset_PS(sel);
+            }
         }
 
         if (!unsupported_feature && conds)
@@ -825,7 +859,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 
     // We shouldn't raise error now so set an error to raise it later in init_SH.
     handler->rewrite_error= unsupported_feature;
-
     // Return SH even if init fails b/c CS changed SELECT_LEX structures
     // with simplify_joins_mcs()
     return handler;
