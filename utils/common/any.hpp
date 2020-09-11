@@ -9,7 +9,7 @@
  * http://www.boost.org/LICENSE_1_0.txt
  */
 
-#include  <stdint.h>
+#include <stdint.h>
 #include <stdexcept>
 #include <cstring>
 
@@ -123,7 +123,14 @@ namespace anyimpl
         typedef void type;
     };
 
-    /// Specializations for small types.
+    /// Specializations for big types.
+#define BIG_POLICY(TYPE) template<> struct \
+   choose_policy<TYPE> { typedef big_any_policy<TYPE> type; };
+
+   BIG_POLICY(__int128);
+   BIG_POLICY(unsigned __int128);
+   
+   /// Specializations for small types.
 #define SMALL_POLICY(TYPE) template<> struct \
    choose_policy<TYPE> { typedef small_any_policy<TYPE> type; };
 

@@ -106,17 +106,14 @@ struct cmpTuple
                     return true;
                 if (pUDAFa == pUDAFb)
                 {
-                    if (pUDAFa == NULL)
-                        return false;
                     std::vector<uint32_t>* paramKeysa = boost::get<3>(a);
                     std::vector<uint32_t>* paramKeysb = boost::get<3>(b);
-
+                    if (paramKeysa == NULL || paramKeysb == NULL)
+                        return false;
                     if (paramKeysa->size() < paramKeysb->size())
                         return true;
                     if (paramKeysa->size() == paramKeysb->size())
                     {
-                        if (paramKeysa == NULL)
-                            return false;
                         for (uint64_t i = 0; i < paramKeysa->size(); ++i)
                         {
                             if ((*paramKeysa)[i] < (*paramKeysb)[i])
@@ -1495,7 +1492,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         // find if this func is a duplicate
         AGG_MAP::iterator iter = aggFuncMap.find(boost::make_tuple(key, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL));
 
-        if (iter != aggFuncMap.end())
+        if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM && iter != aggFuncMap.end())
         {
             if (funct->fAggFunction == ROWAGG_AVG)
                 funct->fAggFunction = ROWAGG_DUP_AVG;
@@ -1537,7 +1534,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
     }
 
     // there is avg(k), but no count(k) in the select list
-    uint64_t lastCol = returnedColVec.size();
+    uint64_t lastCol = outIdx;
 
     for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
     {
@@ -1879,8 +1876,12 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
+            }
 
             functionVec1.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAgg));
@@ -3158,9 +3159,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
-
+            }
+            
             functionVecPm.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
 
@@ -4034,8 +4039,12 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
+            }
 
             functionVecPm.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm-multiParm));

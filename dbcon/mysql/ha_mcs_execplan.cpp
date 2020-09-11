@@ -4661,6 +4661,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
     bool bIsConst = false;
+    unsigned int constValPrecision = 0;
+    unsigned int constValScale = 0;
+    bool hasDecimalConst = false;
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4844,6 +4847,13 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                                 parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
                                 ac->constCol(parm);
                                 bIsConst = true;
+                                if (sfitemp->cmp_type() == DECIMAL_RESULT)
+                                {
+                                    hasDecimalConst = true;
+                                    Item_decimal* idp = (Item_decimal*)sfitemp;
+                                    constValPrecision = idp->decimal_precision();
+                                    constValScale = idp->decimal_scale();
+                                }
                                 break;
                             }
                             default:
@@ -4965,6 +4975,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             }
         }
 
+        bool isAvg = (isp->sum_func() == Item_sum::AVG_FUNC ||
+                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC);
+
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
         if (!bIsConst && ac->aggParms().size() > 0)
@@ -4973,10 +4986,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             // use the first parm for result type.
             parm = ac->aggParms()[0];
 
-            bool isAvg = (isp->sum_func() == Item_sum::AVG_FUNC ||
-                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC);
             if (isAvg || isp->sum_func() == Item_sum::SUM_FUNC ||
-                     isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
+                isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
                 if (datatypes::Decimal::isWideDecimalType(ct))
@@ -5043,6 +5054,17 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 // UDAF result type will be set below.
                 ac->resultType(parm->resultType());
             }
+        }
+        else if (bIsConst && hasDecimalConst && isAvg)
+        {
+            CalpontSystemCatalog::ColType ct = parm->resultType();
+            if (datatypes::Decimal::isWideDecimalType(constValPrecision))
+            {
+                ct.precision = constValPrecision;
+                ct.scale = constValScale;
+                ct.colWidth = datatypes::MAXDECIMALWIDTH;
+            }
+            ac->resultType(ct);
         }
         else
         {

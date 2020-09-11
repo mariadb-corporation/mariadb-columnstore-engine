@@ -645,6 +645,7 @@ protected:
     }
 
     void resetUDAF(RowUDAFFunctionCol* rowUDAF);
+    void resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColIdx);
 
     inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
     inline void makeAggFieldsNull(Row& row);
@@ -710,6 +711,7 @@ protected:
 
     // We need a separate copy for each thread.
     mcsv1sdk::mcsv1Context fRGContext;
+    std::vector<mcsv1sdk::mcsv1Context> fRGContextColl;
     
     // These are handy for testing the actual type of static_any for UDAF
     static const static_any::any& charTypeId;
@@ -718,10 +720,12 @@ protected:
     static const static_any::any& intTypeId;
     static const static_any::any& longTypeId;
     static const static_any::any& llTypeId;
+    static const static_any::any& int128TypeId;
     static const static_any::any& ucharTypeId;
     static const static_any::any& ushortTypeId;
     static const static_any::any& uintTypeId;
     static const static_any::any& ulongTypeId;
+    static const static_any::any& uint128TypeId;
     static const static_any::any& ullTypeId;
     static const static_any::any& floatTypeId;
     static const static_any::any& doubleTypeId;

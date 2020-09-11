@@ -48,7 +48,6 @@ using namespace BRM;
 
 #include "dataconvert.h"
 using namespace dataconvert;
-#include "widedecimalutils.h"
 #include "ddlpkg.h"
 #include "sqlparser.h"
 using namespace ddlpackage;
@@ -66,6 +65,7 @@ using namespace logging;
 
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost;
+#include "mcs_decimal.h"
 
 namespace
 {
@@ -238,12 +238,12 @@ struct PartitionInfo
     int64_t max;
     union
     {
-        __int128 bigMin;
+        int128_t int128Min;
         int64_t min_;
     };
     union
     {
-        __int128 bigMax;
+        int128_t int128Max;
         int64_t max_;
     };
     uint64_t status;
@@ -251,8 +251,8 @@ struct PartitionInfo
         max((uint64_t) - 0x8000000000000001LL),
         status(0)
     {
-        utils::int128Min(bigMin);
-        utils::int128Max(bigMax);
+        int128Min = datatypes::Decimal::minInt128;
+        int128Max = datatypes::Decimal::maxInt128;
     };
 };
 
@@ -312,8 +312,8 @@ const string format(T v, CalpontSystemCatalog::ColType& ct)
             }
             else
             {
-                char buf[utils::MAXLENGTH16BYTES];
-                DataConvert::decimalToString((__int128*)&v, (unsigned)ct.scale, buf, sizeof(buf), ct.colDataType);
+                char buf[datatypes::MAXLENGTH16BYTES];
+                DataConvert::decimalToString((int128_t*)&v, (unsigned)ct.scale, buf, sizeof(buf), ct.colDataType);
                 oss << buf;
             }
 
@@ -657,8 +657,8 @@ void partitionByValue_common(UDF_ARGS* args,								// input
     int32_t seqNum;
     string schema, table, column;
     CalpontSystemCatalog::ColType ct;
-    int64_t startVal, endVal;
-    int128_t bigStartVal, bigEndVal;
+    int64_t startVal = 0, endVal = 0;
+    int128_t int128StartVal = 0, int128EndVal = 0;
     uint8_t rfMin = 0, rfMax = 0;
 
     if (args->arg_count == 5)
@@ -741,11 +741,11 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 {
                     if (isUnsigned(ct.colDataType))
                     {
-                        bigStartVal = 0;
+                        int128StartVal = 0;
                     }
                     else
                     {
-                        utils::int128Min(bigStartVal);
+                        int128StartVal = datatypes::Decimal::minInt128;
                     }
                 }
             }
@@ -754,7 +754,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     startVal = IDB_format<int64_t>((char*) args->args[2], ct, rfMin);
                 else
-                    bigStartVal = IDB_format<int128_t>((char*) args->args[2], ct, rfMin);
+                    int128StartVal = IDB_format<int128_t>((char*) args->args[2], ct, rfMin);
             }
 
             if (!args->args[3])
@@ -774,11 +774,11 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 {
                     if (isUnsigned(ct.colDataType))
                     {
-                        bigEndVal = -1;
+                        int128EndVal = -1;
                     }
                     else
                     {
-                        utils::int128Max(bigEndVal);
+                        int128EndVal = datatypes::Decimal::maxInt128;
                     }
                 }
             }
@@ -787,7 +787,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     endVal = IDB_format<int64_t>((char*) args->args[3], ct, rfMax);
                 else
-                    bigEndVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMax);
+                    int128EndVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMax);
             }
         }
         else
@@ -809,11 +809,11 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 {
                     if (isUnsigned(ct.colDataType))
                     {
-                        bigStartVal = 0;
+                        int128StartVal = 0;
                     }
                     else
                     {
-                        utils::int128Min(bigStartVal);
+                        int128StartVal = datatypes::Decimal::minInt128;
                     }
                 }
             }
@@ -822,7 +822,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     startVal = IDB_format<int64_t>((char*) args->args[3], ct, rfMin);
                 else
-                    bigStartVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMin);
+                    int128StartVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMin);
             }
 
             if (!args->args[4])
@@ -842,11 +842,11 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 {
                     if (isUnsigned(ct.colDataType))
                     {
-                        bigEndVal = -1;
+                        int128EndVal = -1;
                     }
                     else
                     {
-                        utils::int128Max(bigEndVal);
+                        int128EndVal = datatypes::Decimal::maxInt128;
                     }
                 }
             }
@@ -855,7 +855,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     endVal = IDB_format<int64_t>((char*) args->args[4], ct, rfMax);
                 else
-                    bigEndVal = IDB_format<int128_t>((char*) args->args[4], ct, rfMax);
+                    int128EndVal = IDB_format<int128_t>((char*) args->args[4], ct, rfMax);
             }
         }
 
@@ -882,7 +882,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
                 else
-                    state = em.getExtentMaxMin(iter->range.start, partInfo.bigMax, partInfo.bigMin, seqNum);
+                    state = em.getExtentMaxMin(iter->range.start, partInfo.int128Max, partInfo.int128Min, seqNum);
 
                 // char column order swap
                 if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -921,18 +921,8 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                     }
                     else
                     {
-                        if (isUnsigned(ct.colDataType))
-                        {
-                            mapit->second.bigMin =
-                                (static_cast<uint128_t>(partInfo.bigMin) < static_cast<uint128_t>(mapit->second.bigMin) ? partInfo.bigMin : mapit->second.bigMin);
-                            mapit->second.bigMax =
-                                (static_cast<uint128_t>(partInfo.bigMax) > static_cast<uint128_t>(mapit->second.bigMax) ? partInfo.bigMax : mapit->second.bigMax);
-                        }
-                        else
-                        {
-                            mapit->second.bigMin = (partInfo.bigMin < mapit->second.bigMin ? partInfo.bigMin : mapit->second.bigMin);
-                            mapit->second.bigMax = (partInfo.bigMax > mapit->second.bigMax ? partInfo.bigMax : mapit->second.bigMax);
-                        }
+                        mapit->second.int128Min = (partInfo.int128Min < mapit->second.int128Min ? partInfo.int128Min : mapit->second.int128Min);
+                        mapit->second.int128Max = (partInfo.int128Max > mapit->second.int128Max ? partInfo.int128Max : mapit->second.int128Max);
                     }
                 }
             }
@@ -977,36 +967,16 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                 }
                 else
                 {
-                    if (isUnsigned(ct.colDataType))
+                    if (!(mapit->second.status & CPINVALID) && mapit->second.int128Min >= int128StartVal && mapit->second.int128Max <= int128EndVal &&
+                            !(mapit->second.int128Min == datatypes::Decimal::maxInt128 && mapit->second.int128Max == datatypes::Decimal::minInt128))
                     {
-                        if (!(mapit->second.status & CPINVALID) &&
-                                static_cast<uint128_t>(mapit->second.bigMin) >= static_cast<uint128_t>(bigStartVal) &&
-                                static_cast<uint128_t>(mapit->second.bigMax) <= static_cast<uint128_t>(bigEndVal) &&
-                                !(static_cast<uint128_t>(mapit->second.bigMin) == static_cast<uint128_t>(-1) &&
-                                  static_cast<uint128_t>(mapit->second.bigMax == 0)))
-                        {
-                            if (rfMin == ROUND_POS && mapit->second.bigMin == bigStartVal)
-                                continue;
+                        if (rfMin == ROUND_POS && mapit->second.int128Min == int128StartVal)
+                            continue;
 
-                            if (rfMax == ROUND_NEG && mapit->second.bigMax == bigEndVal)
-                                continue;
+                        if (rfMax == ROUND_NEG && mapit->second.int128Max == int128EndVal)
+                            continue;
 
-                            partSet.insert(mapit->first);
-                        }
-                    }
-                    else
-                    {
-                        if (!(mapit->second.status & CPINVALID) && mapit->second.bigMin >= bigStartVal && mapit->second.bigMax <= bigEndVal &&
-                                !(mapit->second.bigMin == utils::maxInt128 && mapit->second.bigMax == utils::minInt128))
-                        {
-                            if (rfMin == ROUND_POS && mapit->second.bigMin == bigStartVal)
-                                continue;
-
-                            if (rfMax == ROUND_NEG && mapit->second.bigMax == bigEndVal)
-                                continue;
-
-                            partSet.insert(mapit->first);
-                        }
+                        partSet.insert(mapit->first);
                     }
                 }
             }
@@ -1226,7 +1196,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
                     else
-                        state = em.getExtentMaxMin(iter->range.start, partInfo.bigMax, partInfo.bigMin, seqNum);
+                        state = em.getExtentMaxMin(iter->range.start, partInfo.int128Max, partInfo.int128Min, seqNum);
 
                     // char column order swap for compare
                     if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -1255,8 +1225,8 @@ extern "C"
                         }
                         else
                         {
-                            mapit->second.bigMin = (partInfo.bigMin < mapit->second.bigMin ? partInfo.bigMin : mapit->second.bigMin);
-                            mapit->second.bigMax = (partInfo.bigMax > mapit->second.bigMax ? partInfo.bigMax : mapit->second.bigMax);
+                            mapit->second.int128Min = (partInfo.int128Min < mapit->second.int128Min ? partInfo.int128Min : mapit->second.int128Min);
+                            mapit->second.int128Max = (partInfo.int128Max > mapit->second.int128Max ? partInfo.int128Max : mapit->second.int128Max);
                         }
                     }
                 }
@@ -1286,19 +1256,16 @@ extern "C"
         else
         {
             output << setw(10) << "Part#"
-                   << setw(utils::MAXLENGTH16BYTES) << "Min"
-                   << setw(utils::MAXLENGTH16BYTES) << "Max" << "Status";
+                   << setw(datatypes::MAXLENGTH16BYTES) << "Min"
+                   << setw(datatypes::MAXLENGTH16BYTES) << "Max" << "Status";
         }
 
         int64_t maxLimit = numeric_limits<int64_t>::max();
         int64_t minLimit = numeric_limits<int64_t>::min();
 
-        __int128 bigMaxLimit, bigMinLimit;
-        utils::int128Max(bigMaxLimit);
-        utils::int128Min(bigMinLimit);
-        unsigned __int128 ubigMaxLimit, ubigMinLimit;
-        utils::uint128Max(ubigMaxLimit);
-        ubigMinLimit = 0;
+        int128_t int128MaxLimit, int128MinLimit;
+        int128MaxLimit = datatypes::Decimal::maxInt128;
+        int128MinLimit = datatypes::Decimal::minInt128;
 
         // char column order swap for compare in subsequent loop
         if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -1321,7 +1288,7 @@ extern "C"
                 if (!datatypes::Decimal::isWideDecimalType(ct))
                     output << setw(30) << "N/A" << setw(30) << "N/A";
                 else
-                    output << setw(utils::MAXLENGTH16BYTES) << "N/A" << setw(utils::MAXLENGTH16BYTES) << "N/A";
+                    output << setw(datatypes::MAXLENGTH16BYTES) << "N/A" << setw(datatypes::MAXLENGTH16BYTES) << "N/A";
             }
             else
             {
@@ -1337,11 +1304,11 @@ extern "C"
                     }
                     else
                     {
-                        if (static_cast<unsigned __int128>(partIt->second.bigMin) == ubigMaxLimit
-                                &&  static_cast<uint64_t>(partIt->second.bigMax) == ubigMinLimit)
-                            output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
+                        if (partIt->second.int128Min == int128MaxLimit
+                                &&  partIt->second.int128Max == int128MinLimit)
+                            output << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null" << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null";
                         else
-                            output << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMax, ct);
+                            output << setw(datatypes::MAXLENGTH16BYTES) << format(partIt->second.int128Min, ct) << setw(datatypes::MAXLENGTH16BYTES) << format(partIt->second.int128Max, ct);
                     }
                 }
                 else
@@ -1355,10 +1322,10 @@ extern "C"
                     }
                     else
                     {
-                        if (partIt->second.bigMin == bigMaxLimit && partIt->second.bigMax == bigMinLimit)
-                            output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
+                        if (partIt->second.int128Min == int128MaxLimit && partIt->second.int128Max == int128MinLimit)
+                            output << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null" << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null";
                         else
-                            output << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(partIt->second.bigMax, ct);
+                            output << setw(datatypes::MAXLENGTH16BYTES) << format(partIt->second.int128Min, ct) << setw(datatypes::MAXLENGTH16BYTES) << format(partIt->second.int128Max, ct);
                     }
                 }
             }
@@ -1921,8 +1888,8 @@ extern "C"
         string schema, table, column;
         CalpontSystemCatalog::ColType ct;
         string errMsg;
-        int64_t startVal, endVal;
-        int128_t bigStartVal, bigEndVal;
+        int64_t startVal = 0, endVal = 0;
+        int128_t int128StartVal = 0, int128EndVal = 0;
         uint8_t rfMin = 0, rfMax = 0;
 
         try
@@ -1989,11 +1956,11 @@ extern "C"
                     {
                         if (isUnsigned(ct.colDataType))
                         {
-                            bigStartVal = 0;
+                            int128StartVal = 0;
                         }
                         else
                         {
-                            utils::int128Min(bigStartVal);
+                            int128StartVal = datatypes::Decimal::minInt128;
                         }
                     }
                 }
@@ -2002,7 +1969,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         startVal = IDB_format<int64_t>((char*) args->args[2], ct, rfMin);
                     else
-                        bigStartVal = IDB_format<int128_t>((char*) args->args[2], ct, rfMin);
+                        int128StartVal = IDB_format<int128_t>((char*) args->args[2], ct, rfMin);
                 }
 
                 if (!args->args[3])
@@ -2022,11 +1989,11 @@ extern "C"
                     {
                         if (isUnsigned(ct.colDataType))
                         {
-                            bigEndVal = -1;
+                            int128EndVal = -1;
                         }
                         else
                         {
-                            utils::int128Max(bigEndVal);
+                            int128EndVal = datatypes::Decimal::maxInt128;
                         }
                     }
                 }
@@ -2035,7 +2002,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         endVal = IDB_format<int64_t>((char*) args->args[3], ct, rfMax);
                     else
-                        bigEndVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMax);
+                        int128EndVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMax);
                 }
             }
             else
@@ -2057,11 +2024,11 @@ extern "C"
                     {
                         if (isUnsigned(ct.colDataType))
                         {
-                            bigStartVal = 0;
+                            int128StartVal = 0;
                         }
                         else
                         {
-                            utils::int128Min(bigStartVal);
+                            int128StartVal = datatypes::Decimal::minInt128;
                         }
                     }
                 }
@@ -2070,7 +2037,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         startVal = IDB_format<int64_t>((char*) args->args[3], ct, rfMin);
                     else
-                        bigStartVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMin);
+                        int128StartVal = IDB_format<int128_t>((char*) args->args[3], ct, rfMin);
                 }
 
                 if (!args->args[4])
@@ -2090,11 +2057,11 @@ extern "C"
                     {
                         if (isUnsigned(ct.colDataType))
                         {
-                            bigEndVal = -1;
+                            int128EndVal = -1;
                         }
                         else
                         {
-                            utils::int128Max(bigEndVal);
+                            int128EndVal = datatypes::Decimal::maxInt128;
                         }
                     }
                 }
@@ -2103,7 +2070,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         endVal = IDB_format<int64_t>((char*) args->args[4], ct, rfMax);
                     else
-                        bigEndVal = IDB_format<int128_t>((char*) args->args[4], ct, rfMax);
+                        int128EndVal = IDB_format<int128_t>((char*) args->args[4], ct, rfMax);
                 }
             }
 
@@ -2132,7 +2099,7 @@ extern "C"
                     if (!datatypes::Decimal::isWideDecimalType(ct))
                         state = em.getExtentMaxMin(iter->range.start, partInfo.max, partInfo.min, seqNum);
                     else
-                        state = em.getExtentMaxMin(iter->range.start, partInfo.bigMax, partInfo.bigMin, seqNum);
+                        state = em.getExtentMaxMin(iter->range.start, partInfo.int128Max, partInfo.int128Min, seqNum);
 
                     // char column order swap
                     if ((ct.colDataType == CalpontSystemCatalog::CHAR && ct.colWidth <= 8) ||
@@ -2171,18 +2138,8 @@ extern "C"
                         }
                         else
                         {
-                            if (isUnsigned(ct.colDataType))
-                            {
-                                mapit->second.bigMin =
-                                    (static_cast<uint128_t>(partInfo.bigMin) < static_cast<uint128_t>(mapit->second.bigMin) ? partInfo.bigMin : mapit->second.bigMin);
-                                mapit->second.bigMax =
-                                    (static_cast<uint128_t>(partInfo.bigMax) > static_cast<uint128_t>(mapit->second.bigMax) ? partInfo.bigMax : mapit->second.bigMax);
-                            }
-                            else
-                            {
-                                mapit->second.bigMin = (partInfo.bigMin < mapit->second.bigMin ? partInfo.bigMin : mapit->second.bigMin);
-                                mapit->second.bigMax = (partInfo.bigMax > mapit->second.bigMax ? partInfo.bigMax : mapit->second.bigMax);
-                            }
+                            mapit->second.int128Min = (partInfo.int128Min < mapit->second.int128Min ? partInfo.int128Min : mapit->second.int128Min);
+                            mapit->second.int128Max = (partInfo.int128Max > mapit->second.int128Max ? partInfo.int128Max : mapit->second.int128Max);
                         }
                     }
                 }
@@ -2274,13 +2231,13 @@ extern "C"
             }
             else
             {
-                if (!(mapit->second.status & CPINVALID) && mapit->second.bigMin >= bigStartVal && mapit->second.bigMax <= bigEndVal &&
-                        !(mapit->second.bigMin == utils::maxInt128 && mapit->second.bigMax == utils::minInt128))
+                if (!(mapit->second.status & CPINVALID) && mapit->second.int128Min >= int128StartVal && mapit->second.int128Max <= int128EndVal &&
+                        !(mapit->second.int128Min == datatypes::Decimal::maxInt128 && mapit->second.int128Max == datatypes::Decimal::minInt128))
                 {
-                    if (rfMin == ROUND_POS && mapit->second.bigMin == bigStartVal)
+                    if (rfMin == ROUND_POS && mapit->second.int128Min == int128StartVal)
                         continue;
 
-                    if (rfMax == ROUND_NEG && mapit->second.bigMax == bigEndVal)
+                    if (rfMax == ROUND_NEG && mapit->second.int128Max == int128EndVal)
                         continue;
 
                     // print header
@@ -2288,8 +2245,8 @@ extern "C"
                     {
                         output.setf(ios::left, ios::adjustfield);
                         output << setw(10) << "Part#"
-                               << setw(utils::MAXLENGTH16BYTES) << "Min"
-                               << setw(utils::MAXLENGTH16BYTES) << "Max" << "Status";
+                               << setw(datatypes::MAXLENGTH16BYTES) << "Min"
+                               << setw(datatypes::MAXLENGTH16BYTES) << "Max" << "Status";
                     }
 
                     noPartFound = false;
@@ -2301,24 +2258,14 @@ extern "C"
 
                     if (mapit->second.status & CPINVALID)
                     {
-                        output << setw(utils::MAXLENGTH16BYTES) << "N/A" << setw(utils::MAXLENGTH16BYTES) << "N/A";
+                        output << setw(datatypes::MAXLENGTH16BYTES) << "N/A" << setw(datatypes::MAXLENGTH16BYTES) << "N/A";
                     }
                     else
                     {
-                        if ((isUnsigned(ct.colDataType)))
-                        {
-                            if (static_cast<uint128_t>(mapit->second.bigMin) > static_cast<uint128_t>(mapit->second.bigMax))
-                                output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
-                            else
-                                output << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMax, ct);
-                        }
+                        if (mapit->second.int128Min > mapit->second.int128Max)
+                            output << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null" << setw(datatypes::MAXLENGTH16BYTES) << "Empty/Null";
                         else
-                        {
-                            if (mapit->second.bigMin > mapit->second.bigMax)
-                                output << setw(utils::MAXLENGTH16BYTES) << "Empty/Null" << setw(utils::MAXLENGTH16BYTES) << "Empty/Null";
-                            else
-                                output << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMin, ct) << setw(utils::MAXLENGTH16BYTES) << format(mapit->second.bigMax, ct);
-                        }
+                            output << setw(datatypes::MAXLENGTH16BYTES) << format(mapit->second.int128Min, ct) << setw(datatypes::MAXLENGTH16BYTES) << format(mapit->second.int128Max, ct);
                     }
 
                     if (mapit->second.status & ET_DISABLED)
