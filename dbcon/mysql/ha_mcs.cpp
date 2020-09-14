@@ -167,7 +167,8 @@ ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg) :
     int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
                     HA_TABLE_SCAN_ON_INDEX |
                     HA_CAN_TABLE_CONDITION_PUSHDOWN |
-                    HA_CAN_DIRECT_UPDATE_AND_DELETE)
+                    HA_CAN_DIRECT_UPDATE_AND_DELETE),
+    m_lock_type(F_UNLCK)
 { }
 
 
@@ -578,7 +579,7 @@ int ha_mcs::rnd_init(bool scan)
     {
         try
         {
-            rc = ha_mcs_impl_rnd_init(table, condStack);
+            rc = impl_rnd_init(table, condStack);
         }
         catch (std::runtime_error& e)
         {
@@ -861,7 +862,7 @@ int ha_mcs::external_lock(THD* thd, int lock_type)
         if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
             trans_register_ha( thd, true, mcs_hton, 0);
 
-        rc = ha_mcs_impl_external_lock(thd, table, lock_type);
+        rc = impl_external_lock(thd, table, lock_type);
     }
     catch (std::runtime_error& e)
     {

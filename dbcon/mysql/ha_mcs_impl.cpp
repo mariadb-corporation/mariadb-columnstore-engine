@@ -2286,7 +2286,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, 
     return rc;
 }
 
-int ha_mcs_impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
+int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 {
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
@@ -2356,7 +2356,7 @@ int ha_mcs_impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 
       UPDATE innotab1 SET a=100 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=1);
     */
-    if (!ci->isReadOnly() && // make sure the current table is being modified
+    if (!isReadOnly() && // make sure the current table is being modified
         (thd->lex->sql_command == SQLCOM_UPDATE ||
          thd->lex->sql_command == SQLCOM_DELETE ||
          thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
@@ -4061,7 +4061,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     return cond;
 }
 
-int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
+int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
 {
     // @bug 3014. Error out locking table command. IDB does not support it now.
     if (thd->lex->sql_command == SQLCOM_LOCK_TABLES)
@@ -4090,7 +4090,7 @@ int ha_mcs_impl_external_lock(THD* thd, TABLE* table, int lock_type)
         return 0;
     }
 
-    ci->lock_type= lock_type;
+    m_lock_type= lock_type;
 
     CalTableMap::iterator mapiter = ci->tableMap.find(table);
     // make sure this is a release lock (2nd) call called in
