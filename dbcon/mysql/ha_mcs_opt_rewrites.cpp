@@ -299,26 +299,61 @@ void in_subselect_rewrite_walk(const Item* item_arg, void* arg)
     }
 }
 
-/*@brief  in_subselect_rewrite - Rewrites Item_in_subselect*/
+/* @brief  opt_flag_unset_PS() - Unsets first_cond_optimization */
 /************************************************************
 * DESCRIPTION:
-* It traverses TABLE_LISTs running in_subselect_rewrite_walk
+* This function traverses derived tables to unset
+* SELECT_LEX::first_cond_optimization: a marker to control
+* optimizations executing PS. If set it allows to apply
+* optimizations. If unset, it disables optimizations.
 * PARAMETERS:
-*   select_lex
+*    select_lex - SELECT_LEX* that describes the query.
+***********************************************************/
+void opt_flag_unset_PS(SELECT_LEX *select_lex)
+{
+    TABLE_LIST *tbl;
+    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
+
+    while ((tbl= li++))
+    {
+        if (tbl->is_view_or_derived())
+        {
+            SELECT_LEX_UNIT *unit= tbl->get_unit();
+
+            for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
+                opt_flag_unset_PS(sl);
+        }
+    }
+
+    if (select_lex->first_cond_optimization)
+    {
+        select_lex->first_cond_optimization= false;
+    }
+}
+
+/* @brief  in_subselect_rewrite - Rewrites Item_in_subselect */
+/************************************************************
+* DESCRIPTION:
+* This function traverses TABLE_LISTs running in_subselect_rewrite_walk
+* PARAMETERS:
+*    select_lex - SELECT_LEX* that describes the query.
 * RETURN:
-*   bool to to indicate predicate injection failures.
+*    bool to indicate predicate injection failures.
 ***********************************************************/
 bool in_subselect_rewrite(SELECT_LEX *select_lex)
 {
     bool result = false;
     TABLE_LIST *tbl;
     List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
-    while (!result && (tbl= li++))
+
+    while (!result && (tbl = li++))
     {
         if (tbl->is_view_or_derived())
         {
-            SELECT_LEX *dsl = tbl->derived->first_select();
-            result = in_subselect_rewrite(dsl);
+            SELECT_LEX_UNIT *unit= tbl->get_unit();
+
+            for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
+                result = in_subselect_rewrite(sl);
         }
     }
 
@@ -329,4 +364,28 @@ bool in_subselect_rewrite(SELECT_LEX *select_lex)
     }
 
     return result;
+}
+
+uint build_bitmap_for_nested_joins_mcs(List<TABLE_LIST> *join_list,
+                                       uint first_unused)
+{
+  List_iterator<TABLE_LIST> li(*join_list);
+  TABLE_LIST *table;
+  DBUG_ENTER("build_bitmap_for_nested_joins_mcs");
+  while ((table= li++))
+  {
+    NESTED_JOIN *nested_join;
+    if ((nested_join= table->nested_join))
+    {
+     if (nested_join->n_tables != 1)
+      {
+        /* Don't assign bits to sj-nests */
+        if (table->on_expr)
+          nested_join->nj_map= (nested_join_map) 1 << first_unused++;
+        first_unused= build_bitmap_for_nested_joins_mcs(&nested_join->join_list,
+                                                    first_unused);
+      }
+    }
+  }
+  DBUG_RETURN(first_unused);
 }

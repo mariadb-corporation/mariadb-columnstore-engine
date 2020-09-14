@@ -262,8 +262,7 @@ struct cal_connection_info
         utf8(false),
         useCpimport(1),
         delimiter('\7'),
-        affectedRows(0),
-        lock_type(F_UNLCK)
+        affectedRows(0)
     {
         // check if this is a slave mysql daemon
         isSlaveNode = checkSlave();
@@ -284,11 +283,6 @@ struct cal_connection_info
             return false;
 
         return true;
-    }
-
-    bool isReadOnly() const
-    {
-        return lock_type == F_RDLCK;
     }
 
     sm::cpsm_conhdl_t* cal_conn_hndl;
@@ -341,7 +335,6 @@ struct cal_connection_info
     // MCOL-1101 remove compilation unit variable rmParms
     std::vector <execplan::RMParam> rmParms;
     long long affectedRows;
-    int lock_type;
 };
 
 const std::string infinidb_err_msg = "\nThe query includes syntax that is not supported by MariaDB Columnstore. Use 'show warnings;' to get more information. Review the MariaDB Columnstore Syntax guide for additional information on supported distributed syntax or consider changing the MariaDB Columnstore Operating Mode (infinidb_vtable_mode).";
