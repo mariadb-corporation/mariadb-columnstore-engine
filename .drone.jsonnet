@@ -2,14 +2,12 @@ local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'columnstore-1.5.4-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-1.4': ['centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
-local codebase_map = {
-  develop: 'git clone --recurse-submodules --branch 10.6 --depth 1 https://github.com/MariaDB/server .',
-  'develop-1.5': 'git clone --recurse-submodules --branch 10.5 --depth 1 https://github.com/MariaDB/server .',
-  'columnstore-1.5.4-1': 'git clone --recurse-submodules --branch 10.5-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
-  'develop-1.4': 'git clone --recurse-submodules --branch 10.4-enterprise --depth 1 https://github.com/mariadb-corporation/MariaDBEnterprise .',
+local server_ref_map = {
+  develop: '10.6 https://github.com/MariaDB/server',
+  'develop-1.5': '10.5 https://github.com/MariaDB/server',
+  'columnstore-1.5.4-1': '10.5-enterprise https://github.com/mariadb-corporation/MariaDBEnterprise',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -24,7 +22,6 @@ local platformMap(branch, platform) =
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
-    'develop-1.4': ' -DBUILD_CONFIG=enterprise',
   };
 
   local platform_map = {
@@ -44,8 +41,28 @@ local Pipeline(branch, platform, event) = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'opensuse/leap') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
+  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-1.5',
 
   local pipeline = self,
+
+  publish(step_prefix='pkg'):: {
+    name: 'publish ' + step_prefix,
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: 'result',
+      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+    },
+  },
   _volumes:: {
     mdb: {
       name: 'mdb',
@@ -56,79 +73,6 @@ local Pipeline(branch, platform, event) = {
       path: '/var/run/docker.sock',
     },
   },
-  publish_pkgs:: {
-    name: 'publish pkgs',
-    image: 'plugins/s3-sync',
-    when: {
-      status: ['success', 'failure'],
-    },
-    settings: {
-      bucket: 'cspkg',
-      access_key: {
-        from_secret: 'aws_access_key_id',
-      },
-      secret_key: {
-        from_secret: 'aws_secret_access_key',
-      },
-      source: 'result',
-      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-    },
-  },
-  publish_regression:: {
-    name: 'publish regression',
-    image: 'plugins/s3-sync',
-    when: {
-      status: ['success', 'failure'],
-    },
-    settings: {
-      bucket: 'cspkg',
-      access_key: {
-        from_secret: 'aws_access_key_id',
-      },
-      secret_key: {
-        from_secret: 'aws_secret_access_key',
-      },
-      source: 'result',
-      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-    },
-  },
-  publish_mtr:: {
-    name: 'publish mtr',
-    image: 'plugins/s3-sync',
-    when: {
-      status: ['success', 'failure'],
-    },
-    settings: {
-      bucket: 'cspkg',
-      access_key: {
-        from_secret: 'aws_access_key_id',
-      },
-      secret_key: {
-        from_secret: 'aws_secret_access_key',
-      },
-      source: 'result',
-      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-    },
-  },
-  publish_latest:: {
-    name: 'publish latest',
-    image: 'plugins/s3-sync',
-    when: {
-      status: ['success', 'failure'],
-      event: ['cron'],
-    },
-    settings: {
-      bucket: 'cspkg',
-      access_key: {
-        from_secret: 'aws_access_key_id',
-      },
-      secret_key: {
-        from_secret: 'aws_secret_access_key',
-      },
-      source: 'result',
-      target: branch + '/latest/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
-    },
-  },
   smoke:: {
     name: 'smoke',
     image: 'docker',
@@ -136,36 +80,35 @@ local Pipeline(branch, platform, event) = {
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y git rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y git which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      // set mariadb server option: plugin_maturity level. just to get working plugin when it diverges with server
-      // "docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i '/\\[mariadb\\]/a plugin_maturity=gamma' /etc/" + (if pkg_format == 'deb' then 'mysql/mariadb.conf.d/50-' else 'my.cnf.d/') + 'server.cnf',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
-      // restart mariadb and mariadb-columnstore services and run simple query again. temporary disabled b/c of the issue:
-      // ERROR 1815 (HY000) at line 1: Internal error: CAL0001: dmlprocessor.cpp PackageHandler::run() package type 0 IDB-2006: 'test.t1' does not exist in Columnstore 
-      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
-      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
-      // 'sleep 10',
-      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "insert into test.t1 values (2); select * from test.t1"',
+      // restart mariadb and mariadb-columnstore services and run simple query again
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
+      'sleep 10',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "insert into test.t1 values (2); select * from test.t1"',
     ],
   },
   mtr:: {
     name: 'mtr',
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    failure: 'ignore',
     commands: [
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname patch && yum install -y /result/*.rpm"',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb --socket=/var/lib/mysql/mysql.sock -e "create database if not exists test;"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
     ],
   },
@@ -192,12 +135,15 @@ local Pipeline(branch, platform, event) = {
   regression:: {
     name: 'regression',
     image: 'docker:git',
-    #failure: (if event == 'cron' then 'ignore' else ''),
-    failure: 'ignore',
+    failure: if (event == 'cron') then 'ignore' else '',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    environment: {
+      REGRESSION_TESTS: if (event == 'cron') then '' else 'test000.sh',
+      REGRESSION_REF: regression_ref,
+    },
     commands: [
       // clone regression test repo
-      'git clone --recurse-submodules --branch develop-1.5 --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
+      'git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
       'docker cp result regression$${DRONE_BUILD_NUMBER}:/',
@@ -205,18 +151,18 @@ local Pipeline(branch, platform, event) = {
       'docker cp /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/',
       // check storage-manager unit test binary file
       'docker exec -t regression$${DRONE_BUILD_NUMBER} ls -l /storage-manager',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget git which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y tar liblz4-tool wget git rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget git which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      // copy  test data for regression test suite
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y tar liblz4-tool wget rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      // copy test data for regression test suite
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"',
       // set mariadb lower_case_table_names=1 config option
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" /etc/' + (if pkg_format == 'deb' then 'mysql/mariadb.conf.d/50-' else 'my.cnf.d/') + 'server.cnf',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" /etc/' + (if (pkg_format == 'deb') then 'mysql/mariadb.conf.d/50-' else 'my.cnf.d/') + 'server.cnf',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
-      // run regression test000 on pull request and manual build events. on other events run all tests
-      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} ./go.sh --sm_unit_test_dir=/storage-manager' + (if event == 'pull_request' || event == 'manual' then ' --tests=test000.sh' else ''),
+      // run regression test000 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
   },
   smokelog:: {
@@ -277,7 +223,7 @@ local Pipeline(branch, platform, event) = {
         from_secret: 'aws_access_key_id',
       },
       secret_key: {
-        from_secret: 'aws_secret_access_key'
+        from_secret: 'aws_secret_access_key',
       },
     },
   },
@@ -291,7 +237,7 @@ local Pipeline(branch, platform, event) = {
       username: 'romcheck',
       password: {
         from_secret: 'dockerhub_token',
-      }
+      },
     },
   },
 
@@ -315,10 +261,13 @@ local Pipeline(branch, platform, event) = {
              name: 'clone-mdb',
              image: 'alpine/git',
              volumes: [pipeline._volumes.mdb],
+             environment: {
+               SERVER_REF: server_ref_map[branch],
+             },
              commands: [
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               codebase_map[branch],
+               'git clone --recurse-submodules --depth 1 --branch $$SERVER_REF .',
                'git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
@@ -348,11 +297,12 @@ local Pipeline(branch, platform, event) = {
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
-               "sed -i 's/-DPLUGIN_PERFSCHEMA=NO//' debian/autobake-deb.sh",
-               #"sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
-               #"sed -i -e '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
+               // change plugin_maturity level
+               // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
+               // remove a file from deb packaging
+               // "sed -i '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
                platformMap(branch, platform),
-               (if pkg_format == 'rpm' then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz '),
+               if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz ',
              ],
            },
            {
@@ -365,26 +315,28 @@ local Pipeline(branch, platform, event) = {
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
-               'cp -r ' + (if pkg_format == 'deb' then '../Packages.gz ../' else 'repodata ') + '*.' + pkg_format + ' buildinfo.txt /drone/src/result/',
+               'cp -r ' + (if (pkg_format == 'deb') then '../Packages.gz ../' else 'repodata ') + '*.' + pkg_format + ' buildinfo.txt /drone/src/result/',
                'ls -l /drone/src/result',
                'echo "check columnstore package:"',
                'ls -l /drone/src/result | grep columnstore',
              ],
            },
          ] +
-         [pipeline.publish_pkgs] +
-         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
-         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
-         #(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
+         [pipeline.publish()] +
+         (if (event == 'cron') then [pipeline.publish('pkg latest')] else []) +
+         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
+         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
+         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtr] else []) +
          (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
-         (if (platform == 'centos:7') then [pipeline.publish_mtr] else []) +
-         (if platform != 'centos:7' then [pipeline.smoke] else []) +
-         (if platform != 'centos:7' then [pipeline.smokelog] else []) +
+         (if (platform == 'centos:7') then [pipeline.publish('mtr')] else []) +
+         (if (event == 'cron') then [pipeline.publish('mtr latest')] else []) +
+         [pipeline.smoke] +
+         [pipeline.smokelog] +
          [pipeline.regression] +
          [pipeline.regressionlog] +
-         [pipeline.publish_regression] +
-         [pipeline.publish_latest],
+         [pipeline.publish('regression')] +
+         (if (event == 'cron') then [pipeline.publish('regression latest')] else []),
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
@@ -425,11 +377,23 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.5', 'develop-1.4', 'columnstore-1.5.4-1']
+  for b in ['develop', 'develop-1.5']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
-] + [
+] +
+[
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.5', 'develop-1.4', 'columnstore-1.5.4-1']
+  for b in ['develop', 'develop-1.5']
   for e in ['pull_request', 'cron', 'custom']
+] +
+[
+  Pipeline(b, p, e)
+  for b in ['columnstore-1.5.4-1']
+  for p in platforms[b]
+  for e in ['pull_request', 'cron', 'custom', 'push']
+] +
+[
+  FinalPipeline(b, e)
+  for b in ['columnstore-1.5.4-1']
+  for e in ['pull_request', 'cron', 'custom', 'push']
 ]

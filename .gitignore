@@ -165,3 +165,4 @@ storage-manager/testS3Connection
 storage-manager/unit_tests
 .drone.yml
 result/
+mariadb-columnstore-regression-test/
