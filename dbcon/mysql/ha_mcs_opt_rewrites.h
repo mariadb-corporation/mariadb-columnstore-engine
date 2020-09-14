@@ -20,8 +20,11 @@
 
 #include "idb_mysql.h"
 
-COND *simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool top, bool in_sj);
 bool in_subselect_rewrite(SELECT_LEX *select_lex);
+void opt_flag_unset_PS(SELECT_LEX *select_lex);
+COND *simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list,
+                         COND *conds, bool top, bool in_sj);
+uint build_bitmap_for_nested_joins_mcs(List<TABLE_LIST> *join_list,
+                                       uint first_unused);
 
 #endif
-
