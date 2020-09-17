@@ -310,16 +310,17 @@ chmod 777 /dev/shm
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    # prevent clusters using shared storage from initializing columnstore more than once
-    IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
+    # prevent nodes using shared storage manager from stepping on each other during initializing
+    IFLAG=/var/lib/columnstore/storagemanager/columnstore-init-flag
     mkdir -p /var/lib/columnstore/storagemanager
     chown -R mysql:mysql /var/lib/columnstore/storagemanager
 
-    if [ ! -e $IFLAG ]; then
-       touch $IFLAG
-       echo "Populating the engine initial system catalog."
-       systemctl start mariadb-columnstore
-    fi
+    # prevent nodes using shared storage manager from stepping on each other during initializing
+    exec 200>$IFLAG
+    flock -n 200
+    echo "Populating the engine initial system catalog."
+    systemctl start mariadb-columnstore
+    flock -u 200
 fi
  
 if [ $stop_mysqld -eq 1 ];then
