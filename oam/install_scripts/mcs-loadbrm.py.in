@@ -120,9 +120,6 @@ node.".format(e))
                     if storage.lower() == 's3' and bucket.lower() != 'some_bucket':
                         dbrmroot = BYPASS_SM_PATH
 
-                        if not os.path.exists(dbrmroot):
-                            os.makedirs(dbrmroot)
-
                     current_name = '{}_{}'.format(dbrmroot, e)
 
                     print ("Saving {} to {}".format(e, current_name))
