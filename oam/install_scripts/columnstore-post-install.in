@@ -317,6 +317,7 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
 
     # prevent nodes using shared storage manager from stepping on each other when initializing
     flock /var/lib/columnstore/storagemanager -c "systemctl start mariadb-columnstore"
+    systemctl stop mariadb-columnstore # shutdown after initialization
 fi
  
 if [ $stop_mysqld -eq 1 ];then
