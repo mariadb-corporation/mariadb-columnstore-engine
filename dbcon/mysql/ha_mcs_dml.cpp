@@ -1877,6 +1877,11 @@ std::string  ha_mcs_impl_viewtablelock( cal_impl_if::cal_connection_info& ci, ex
     std::string dmlStatement( "VIEWTABLELOCK" );
     VendorDMLStatement cmdStmt(dmlStatement, DML_COMMAND, sessionID);
     pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tablename.schema);
+        boost::algorithm::to_lower(tablename.table);
+    }
     pDMLPackage->set_SchemaName (tablename.schema);
     pDMLPackage->set_TableName (tablename.table);
 

@@ -478,7 +478,9 @@ extern "C"
             tableName.table = args->args[0];
 
             if (thd->db.length)
+            {
                 tableName.schema = thd->db.str;
+            }
             else
             {
               std::string msg("No schema information provided");
@@ -486,6 +488,11 @@ extern "C"
                 *length = msg.length();
                 return result;
             }
+        }
+        if (lower_case_table_names)
+        {
+            boost::algorithm::to_lower(tableName.schema);
+            boost::algorithm::to_lower(tableName.table);
         }
 
         if ( !ci->dmlProc )
@@ -619,6 +626,11 @@ extern "C"
             {
                 return -1;
             }
+        }
+        if (lower_case_table_names)
+        {
+            boost::algorithm::to_lower(tableName.schema);
+            boost::algorithm::to_lower(tableName.table);
         }
 
         boost::shared_ptr<execplan::CalpontSystemCatalog> csc =

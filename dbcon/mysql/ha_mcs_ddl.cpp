@@ -421,10 +421,14 @@ bool anyRowInTable(string& schema, string& tableName, int sessionID)
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(execplan::CalpontSystemCatalog::FE);
     CalpontSystemCatalog::TableName aTableName;
-    algorithm::to_lower(schema);
-    algorithm::to_lower(tableName);
+    if (lower_case_table_names)
+    {
+        algorithm::to_lower(schema);
+        algorithm::to_lower(tableName);
+    }
     aTableName.schema = schema;
     aTableName.table = tableName;
+    
     CalpontSystemCatalog::RIDList ridList = csc->columnRIDs(aTableName, true);
     CalpontSystemCatalog::TableColName tableColName =  csc->colName(ridList[0].objnum);
 
@@ -558,8 +562,11 @@ bool anyTimestampColumn(string& schema, string& tableName, int sessionID)
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(execplan::CalpontSystemCatalog::FE);
     CalpontSystemCatalog::TableName aTableName;
-    algorithm::to_lower(schema);
-    algorithm::to_lower(tableName);
+    if (lower_case_table_names)
+    {
+        algorithm::to_lower(schema);
+        algorithm::to_lower(tableName);
+    }
 
     // select columnname from calpontsys.syscolumn
     // where schema = schema and tablename = tableName
@@ -729,8 +736,11 @@ bool anyNullInTheColumn (THD* thd, string& schema, string& table, string& column
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
     CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
     CalpontSelectExecutionPlan::ColumnMap colMap;
-    algorithm::to_lower(schema);
-    algorithm::to_lower(table);
+    if (lower_case_table_names)
+    {
+        algorithm::to_lower(schema);
+        algorithm::to_lower(table);
+    }
     algorithm::to_lower(columnName);
 
     SessionManager sm;
@@ -912,6 +922,11 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         if ( typeid ( stmt ) == typeid ( CreateTableStatement ) )
         {
             CreateTableStatement* createTable = dynamic_cast <CreateTableStatement*> ( &stmt );
+            if (lower_case_table_names)
+            {
+                algorithm::to_lower(createTable->fTableDef->fQualifiedName->fSchema);
+                algorithm::to_lower(createTable->fTableDef->fQualifiedName->fName);
+            }
 
             bool matchedCol = false;
             bool isFirstTimestamp = true;
@@ -1215,6 +1230,11 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         else if ( typeid ( stmt ) == typeid ( AlterTableStatement ) )
         {
             AlterTableStatement* alterTable = dynamic_cast <AlterTableStatement*> ( &stmt );
+            if (lower_case_table_names)
+            {
+                algorithm::to_lower(alterTable->fTableName->fSchema);
+                algorithm::to_lower(alterTable->fTableName->fName);
+            }
 
             alterTable->fTimeZone.assign(thd->variables.time_zone->get_name()->ptr());
 

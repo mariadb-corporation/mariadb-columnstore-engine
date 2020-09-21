@@ -965,8 +965,6 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(execplan::CalpontSystemCatalog::FE);
     CalpontSystemCatalog::TableName aTableName;
-    boost::algorithm::to_lower(schema);
-    boost::algorithm::to_lower(tableName);
 
     // select columnname from calpontsys.syscolumn
     // where schema = schema and tablename = tableName
@@ -1304,11 +1302,18 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             else
                 aliasName = item->table_name.str;
 
+            if (lower_case_table_names)
+            {
+                boost::algorithm::to_lower(aliasName);
+                boost::algorithm::to_lower(tableName);
+                boost::algorithm::to_lower(tmpTableName);
+            }
+
             if (strcasecmp(tableName.c_str(), "") == 0)
             {
                 tableName = tmpTableName;
             }
-            else if (strcasecmp(tableName.c_str(), tmpTableName.c_str()) != 0)
+            else if (strcmp(tableName.c_str(), tmpTableName.c_str()) != 0)
             {
                 //@ Bug3326 error out for multi table update
                 string emsg(IDBErrorInfo::instance()->errorMsg(ERR_UPDATE_NOT_SUPPORT_FEATURE));
@@ -1332,8 +1337,13 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 }
             }
             else
+            {
                 schemaName = string(item->db_name.str);
-
+                if (lower_case_table_names)
+                {
+                    boost::algorithm::to_lower(schemaName);
+                }
+            }
             columnAssignmentPtr = new ColumnAssignment(item->name.str, "=", "");
             if (item->field_type() == MYSQL_TYPE_TIMESTAMP ||
                 item->field_type() == MYSQL_TYPE_TIMESTAMP2)
@@ -1567,6 +1577,11 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         aTableName.schema = first_table->table->s->db.str;
         aTableName.table = first_table->table->s->table_name.str;
     }
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
 
     CalpontDMLPackage* pDMLPackage = 0;
 //	dmlStmt += ";";
@@ -1604,6 +1619,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 schemaName = first_table->db.str;
                 tableName = first_table->table_name.str;
                 aliasName = first_table->alias.str;
+                if (lower_case_table_names)
+                {
+                    boost::algorithm::to_lower(schemaName);
+                    boost::algorithm::to_lower(tableName);
+                    boost::algorithm::to_lower(aliasName);
+                }
                 qualifiedTablName->fName = tableName;
                 qualifiedTablName->fSchema = schemaName;
                 pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1623,6 +1644,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             schemaName = first_table->table->s->db.str;
             tableName = first_table->table->s->table_name.str;
             aliasName = first_table->alias.str;
+            if (lower_case_table_names)
+            {
+                boost::algorithm::to_lower(schemaName);
+                boost::algorithm::to_lower(tableName);
+                boost::algorithm::to_lower(aliasName);
+            }
             qualifiedTablName->fName = tableName;
             qualifiedTablName->fSchema = schemaName;
             pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1634,6 +1661,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         schemaName = first_table->table->s->db.str;
         tableName = first_table->table->s->table_name.str;
         aliasName = first_table->alias.str;
+        if (lower_case_table_names)
+        {
+            boost::algorithm::to_lower(schemaName);
+            boost::algorithm::to_lower(tableName);
+            boost::algorithm::to_lower(aliasName);
+        }
         qualifiedTablName->fName = tableName;
         qualifiedTablName->fSchema = schemaName;
         pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1821,7 +1854,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
             try
             {
-                colrids = csc->columnRIDs(deleteTableName);
+                colrids = csc->columnRIDs(deleteTableName, false, lower_case_table_names);
             }
             catch (IDBExcept& ie)
             {
@@ -1916,7 +1949,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     CalpontSystemCatalog::ROPair roPair;
     try
     {
-        roPair = csc->tableRID( aTableName );
+        roPair = csc->tableRID(aTableName);
     }
     catch (IDBExcept& ie)
     {
@@ -2238,7 +2271,7 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
 
     try
     {
-        const CalpontSystemCatalog::OID oid = csc->lookupTableOID(make_table(schema, name));
+        const CalpontSystemCatalog::OID oid = csc->lookupTableOID(make_table(schema, name, lower_case_table_names));
 
         if (oid)
             return 1;
@@ -2438,7 +2471,7 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
             ti.csep->sessionID(sessionID);
 
             if (thd->db.length)
-                ti.csep->schemaName(thd->db.str);
+                ti.csep->schemaName(thd->db.str, lower_case_table_names);
 
             ti.csep->traceFlags(ci->traceFlags);
             ti.msTablePtr = table;
@@ -2629,7 +2662,7 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 
         // populate coltypes here for table mode because tableband gives treeoid for dictionary column
         {
-            CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
+            CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str, lower_case_table_names), true);
 
             if (oidlist.size() != num_attr)
             {
@@ -3185,7 +3218,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
             try
             {
-                colrids = csc->columnRIDs(tableName);
+                colrids = csc->columnRIDs(tableName, false, lower_case_table_names);
             }
             catch (IDBExcept& ie)
             {
@@ -3596,7 +3629,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
         try
         {
-            CalpontSystemCatalog::ROPair roPair = csc->tableRID( tableName );
+            CalpontSystemCatalog::ROPair roPair = csc->tableRID(tableName, lower_case_table_names);
             ci->tableOid = roPair.objnum;
         }
         catch (IDBExcept& ie)
@@ -4336,7 +4369,7 @@ int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
         csep->sessionID(sessionID);
 
         if (group_hand->table_list->db.length)
-            csep->schemaName(group_hand->table_list->db.str);
+            csep->schemaName(group_hand->table_list->db.str, lower_case_table_names);
 
         csep->traceFlags(ci->traceFlags);
 
@@ -5096,7 +5129,7 @@ int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
             csep->sessionID(sessionID);
 
             if (thd->db.length)
-                csep->schemaName(thd->db.str);
+                csep->schemaName(thd->db.str, lower_case_table_names);
 
             csep->traceFlags(ci->traceFlags);
 
