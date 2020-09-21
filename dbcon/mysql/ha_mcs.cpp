@@ -63,6 +63,7 @@ static HASH mcs_open_tables;
 pthread_mutex_t mcs_mutex;
 #endif
 
+#if 0
 #ifdef DEBUG_ENTER
 #undef DEBUG_ENTER
 #endif
@@ -70,7 +71,7 @@ pthread_mutex_t mcs_mutex;
 #undef DEBUG_ENTER
 #endif
 #define DEBUG_RETURN return
-
+#endif
 /**
   @brief
   Function we use in the creation of our hash to get key.

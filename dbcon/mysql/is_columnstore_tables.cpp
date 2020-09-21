@@ -131,7 +131,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
             }
         }
 
-        execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
+        execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second, lower_case_table_names);
         std::string create_date = dataconvert::DataConvert::dateToString((*it).second.create_date);
         table->field[0]->store((*it).second.schema.c_str(), (*it).second.schema.length(), cs);
         table->field[1]->store((*it).second.table.c_str(), (*it).second.table.length(), cs);
@@ -142,7 +142,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         if (tb_info.tablewithautoincr)
         {
             table->field[5]->set_notnull();
-            table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second));
+            table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second), lower_case_table_names);
         }
         else
         {

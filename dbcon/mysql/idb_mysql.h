@@ -28,6 +28,9 @@ template <class T> bool isnan(T);
 #endif
 #endif
 
+#define INFINIDB_DEBUG
+#define DEBUG_WALK_COND
+
 #define MYSQL_SERVER 1 //needed for definition of struct THD in mysql_priv.h
 #define USE_CALPONT_REGEX
 
@@ -45,7 +48,7 @@ template <class T> bool isnan(T);
 #ifndef ENABLED_DEBUG_SYNC
 #define ENABLED_DEBUG_SYNC
 #endif
-//#define INFINIDB_DEBUG
+
 #define DBUG_ON 1
 #undef  DBUG_OFF
 #else
@@ -73,6 +76,7 @@ template <class T> bool isnan(T);
 #include "derived_handler.h"
 #include "select_handler.h"
 #include "rpl_rli.h"
+#include "my_dbug.h"
 
 // Now clean up the pollution as best we can...
 #undef min

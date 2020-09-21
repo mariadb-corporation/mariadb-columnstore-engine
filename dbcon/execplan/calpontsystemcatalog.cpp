@@ -249,30 +249,36 @@ CalpontSystemCatalog::NJLSysDataList::~NJLSysDataList()
         delete *it;
 }
 
-const CalpontSystemCatalog::TableColName make_tcn(const string& s, const string& t, const string& c)
+const CalpontSystemCatalog::TableColName make_tcn(const string& s, const string& t, const string& c, int lower_case_table_names)
 {
     CalpontSystemCatalog::TableColName tcns;
 
     tcns.schema = s;
     tcns.table = t;
     tcns.column = c;
-    transform (tcns.schema.begin(), tcns.schema.end(), tcns.schema.begin(), to_lower());
-    transform (tcns.table.begin(), tcns.table.end(), tcns.table.begin(), to_lower());
-    transform (tcns.column.begin(), tcns.column.end(), tcns.column.begin(), to_lower());
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tcns.schema);
+        boost::algorithm::to_lower(tcns.table);
+    }
+    boost::algorithm::to_lower(tcns.column);
     return tcns;
 }
 
-const CalpontSystemCatalog::TableName make_table(const string& s, const string& t)
+const CalpontSystemCatalog::TableName make_table(const string& s, const string& t, int lower_case_table_names)
 {
     CalpontSystemCatalog::TableName tn;
     tn.schema = s;
     tn.table = t;
-    transform (tn.schema.begin(), tn.schema.end(), tn.schema.begin(), to_lower());
-    transform (tn.table.begin(), tn.table.end(), tn.table.begin(), to_lower());
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tn.schema);
+        boost::algorithm::to_lower(tn.table);
+    }
     return tn;
 }
 
-const CalpontSystemCatalog::TableAliasName make_aliastable(const string& s, const string& t, const string& a, const bool isColumnStore)
+const CalpontSystemCatalog::TableAliasName make_aliastable(const string& s, const string& t, const string& a, const bool isColumnStore, int lower_case_table_names)
 {
     CalpontSystemCatalog::TableAliasName tn;
     tn.schema = s;
@@ -280,13 +286,16 @@ const CalpontSystemCatalog::TableAliasName make_aliastable(const string& s, cons
     tn.alias = a;
     tn.view = "";
     tn.fisColumnStore = isColumnStore;
-    transform (tn.schema.begin(), tn.schema.end(), tn.schema.begin(), to_lower());
-    transform (tn.table.begin(), tn.table.end(), tn.table.begin(), to_lower());
-    transform (tn.alias.begin(), tn.alias.end(), tn.alias.begin(), to_lower());
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tn.schema);
+        boost::algorithm::to_lower(tn.table);
+        boost::algorithm::to_lower(tn.alias);
+    }
     return tn;
 }
 
-const CalpontSystemCatalog::TableAliasName make_aliasview(const string& s, const string& t, const string& a, const string& v, const bool isColumnStore)
+const CalpontSystemCatalog::TableAliasName make_aliasview(const string& s, const string& t, const string& a, const string& v, const bool isColumnStore, int lower_case_table_names)
 {
     CalpontSystemCatalog::TableAliasName tn;
     tn.schema = s;
@@ -294,10 +303,13 @@ const CalpontSystemCatalog::TableAliasName make_aliasview(const string& s, const
     tn.alias = a;
     tn.view = v;
     tn.fisColumnStore = isColumnStore;
-    transform (tn.schema.begin(), tn.schema.end(), tn.schema.begin(), to_lower());
-    transform (tn.table.begin(), tn.table.end(), tn.table.begin(), to_lower());
-    transform (tn.alias.begin(), tn.alias.end(), tn.alias.begin(), to_lower());
-    transform (tn.view.begin(), tn.view.end(), tn.view.begin(), to_lower());
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tn.schema);
+        boost::algorithm::to_lower(tn.table);
+        boost::algorithm::to_lower(tn.alias);
+        boost::algorithm::to_lower(tn.view);
+    }
     return tn;
 }
 
@@ -418,13 +430,16 @@ CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/
 uint32_t CalpontSystemCatalog::fModuleID = numeric_limits<uint32_t>::max();
 
-CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& tablename)
+CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& tablename, int lower_case_table_names)
 {
     TableName aTableName;
     aTableName.schema = tablename.schema;
     aTableName.table = tablename.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter tableInfo: " << tablename.schema << "|" << tablename.table << endl;
@@ -511,7 +526,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& 
     return (OID)0;
 }
 
-CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& tableColName)
+CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& tableColName, int lower_case_table_names)
 {
     if (tableColName.schema.length() == 0 || tableColName.table.length() == 0 || tableColName.column.length() == 0)
         return -1;
@@ -520,9 +535,12 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableColName.schema);
+        boost::algorithm::to_lower(aTableColName.table);
+    }
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter lookupOID: " << tableColName.schema << "|" << tableColName.table
@@ -1583,16 +1601,13 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
 
     return tableColName;
 }
-uint64_t CalpontSystemCatalog::nextAutoIncrValue ( TableName aTableName)
+uint64_t CalpontSystemCatalog::nextAutoIncrValue (TableName aTableName, int lower_case_table_names)
 {
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
-
     TableInfo tbInfo;
 
     try
     {
-        tbInfo = tableInfo (aTableName);
+        tbInfo = tableInfo(aTableName, lower_case_table_names);
     }
     catch (runtime_error& /*ex*/)
     {
@@ -1691,16 +1706,13 @@ uint64_t CalpontSystemCatalog::nextAutoIncrValue ( TableName aTableName)
 
 }
 
-int32_t CalpontSystemCatalog::autoColumOid ( TableName aTableName)
+int32_t CalpontSystemCatalog::autoColumOid (TableName aTableName, int lower_case_table_names)
 {
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
-
     TableInfo tbInfo;
 
     try
     {
-        tbInfo = tableInfo (aTableName);
+        tbInfo = tableInfo (aTableName, lower_case_table_names);
     }
     catch (runtime_error& /*ex*/)
     {
@@ -2018,8 +2030,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexRIDs(const TableN
     TableColName aTableName;
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
@@ -2097,8 +2107,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRIDs(const Tab
     TableName aTableColName;
     aTableColName.schema = tableName.schema;
     aTableColName.table = tableName.table;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter indexColRIDs: " << tableName.schema << "|"
@@ -2175,9 +2183,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRIDs(const Ind
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter indexColRIDs: " << aIndexName.schema << "|"
@@ -2249,8 +2254,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintRIDs(const T
     TableColName aTableName;
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter constraintRIDs: " << tableName.schema << "|" << tableName.table << endl;
@@ -2325,9 +2328,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
 #if BOOST_VERSION < 104000
     boost::mutex::scoped_lock lk1(fColIndexListmapLock, false);
@@ -2435,7 +2436,6 @@ const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintRID(const std::s
      */
     RID rid = std::numeric_limits<RID>::max();
     string aConstraintName = constraintName;
-    transform( aConstraintName.begin(), aConstraintName.end(), aConstraintName.begin(), to_lower() );
 
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -2489,7 +2489,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintColRID(const
      */
     RIDList ridlist;
     string aConstraintName = constraintName;
-    transform( aConstraintName.begin(), aConstraintName.end(), aConstraintName.begin(), to_lower() );
+    boost::algorithm::to_lower(aConstraintName);
 
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -2550,9 +2550,7 @@ const std::string CalpontSystemCatalog::colValueSysconstraintCol (const TableCol
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter colValueSysconstraintCol: " << tableColName.schema << "|"
@@ -2631,8 +2629,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::constraintColRIDs(cons
     TableColName aTableColName;
     aTableColName.schema = tableName.schema;
     aTableColName.table = tableName.table;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter constraintColRIDs: " << tableName.schema << "|"
@@ -2709,9 +2705,7 @@ const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintColRID(const Tab
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter constraintColRID: " << tableColName.schema << "|"
@@ -2783,11 +2777,14 @@ const CalpontSystemCatalog::RID CalpontSystemCatalog::constraintColRID(const Tab
 }
 #endif
 
-const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> > CalpontSystemCatalog::getTables (const std::string schema)
+const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> > CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_names)
 {
     string schemaname = schema;
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(schemaname);
+    }
     vector < pair<OID, TableName> > tables;
-    transform( schemaname.begin(), schemaname.end(), schemaname.begin(), to_lower() );
 
     if (schemaname == CALPONT_SCHEMA)
     {
@@ -2936,16 +2933,19 @@ int CalpontSystemCatalog::getTableCount ()
 }
 /* SQL statement: select objectid from syscolumn where schema=tableColName.schema and
  * tablename=tableColName.table and columnname=tableColName.column;*/
-const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableColName& tableColName)
+const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableColName& tableColName, int lower_case_table_names)
 {
     ROPair rp;
     TableColName aTableColName;
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableColName.schema);
+        boost::algorithm::to_lower(aTableColName.table);
+    }
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter columnRID: " << tableColName.schema << "|" << tableColName.table
@@ -2972,11 +2972,9 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableCo
 
 }
 
-const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const TableName& tableName, bool useCache)
+const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const TableName& tableName, bool useCache, int lower_case_table_names)
 {
     TableName aTableName(tableName);
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.empty() || aTableName.table.empty())
         throw runtime_error("ColumnRIDs: Invalid table name");
@@ -2990,6 +2988,12 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     if ( aTableName.schema != CALPONT_SCHEMA)
     {
         checkSysCatVer();
+    }
+
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
     }
 
     boost::mutex::scoped_lock lk1(fTableInfoMapLock);
@@ -3491,13 +3495,16 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
 }
 
 
-const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableName& tableName)
+const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableName& tableName, int lower_case_table_names)
 {
     TableName aTableName;
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter tableRID: " << tableName.schema << "|" << tableName.table << endl;
@@ -3642,8 +3649,6 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::indexNames(const
     TableName aTableName;
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     /* SQL statement: select indexname from sysindex where schema=indexName.schema and
      * tablename=indexName.table and indexname=indexName.index;
@@ -3748,9 +3753,7 @@ const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::indexColNames
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     /* SQL statement: select columnname, columnposition from sysindexcol where schema=indexname.schema and
      * tablename=indexName.table and indexname=indexName.index;
@@ -3858,7 +3861,7 @@ const CalpontSystemCatalog::TableColNameList CalpontSystemCatalog::constraintCol
 
     std::string aConstraintName( constraintName );
 
-    transform( aConstraintName.begin(), aConstraintName.end(), aConstraintName.begin(), to_lower() );
+    boost::algorithm::to_lower(aConstraintName);
 
     /* SQL statement: select columnname from sysconstraintcol where constraintname = aConstraintName
      */
@@ -3961,9 +3964,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexRID(const IndexNam
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     /* SQL statement: select indexname from sysindex where schema=indexName.schema and indexname=indexName.index;
      */
@@ -4020,11 +4021,11 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexRID(const IndexNam
 }
 #endif
 
-int CalpontSystemCatalog::colNumbers(const TableName& tableName)
+int CalpontSystemCatalog::colNumbers(const TableName& tableName, int lower_case_table_names)
 {
     DEBUG << "Enter colNumbers: " << tableName.schema << "|" << tableName.table << endl;
 
-    TableInfo ti = tableInfo(tableName);
+    TableInfo ti = tableInfo(tableName, lower_case_table_names);
 
     return ti.numOfCols;
 }
@@ -4037,9 +4038,7 @@ const std::string CalpontSystemCatalog::colValueSysindex (const TableColName& ta
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter colValueSysindex: " << tableColName.schema << "|"
@@ -4131,9 +4130,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::indexColRID(const Inde
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter indexColRID: " << aIndexName.schema << "|"
@@ -4211,9 +4208,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::indexColRID(const Table
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter indexColRID: " << tableColName.schema << "|"
@@ -4295,9 +4290,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysindex
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     return indexNameList;  //so colxml can run when indexes are not made
 
@@ -4382,8 +4375,7 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::lookupTableForIndex(
     //select tablename from sysindex where indexname = indexName and schema = schema;
     std::string aIndexName( indexName );
     std::string aSchema ( schema);
-    transform( aIndexName.begin(), aIndexName.end(), aIndexName.begin(), to_lower() );
-    transform( aSchema.begin(), aSchema.end(), aSchema.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName);
     tablename.schema = aSchema;
 
     CalpontSelectExecutionPlan csep;
@@ -4449,9 +4441,7 @@ const CalpontSystemCatalog::IndexOID CalpontSystemCatalog::lookupIndexNbr(const 
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter lookupIndexNbr: " << indexName.schema << "|" << indexName.table
@@ -4562,9 +4552,7 @@ const CalpontSystemCatalog::IndexOID CalpontSystemCatalog::lookupIndexNbr(const 
     aTableColName.schema = tableColName.schema;
     aTableColName.table = tableColName.table;
     aTableColName.column = tableColName.column;
-    transform( aTableColName.schema.begin(), aTableColName.schema.end(), aTableColName.schema.begin(), to_lower() );
-    transform( aTableColName.table.begin(), aTableColName.table.end(), aTableColName.table.begin(), to_lower() );
-    transform( aTableColName.column.begin(), aTableColName.column.end(), aTableColName.column.begin(), to_lower() );
+    boost::algorithm::to_lower(aTableColName.column);
 
     if (aTableColName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter lookupIndexNbr: " << tableColName.schema << "|" << tableColName.table
@@ -4655,8 +4643,6 @@ const CalpontSystemCatalog::IndexOIDList CalpontSystemCatalog::indexOIDs( const 
 
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter indexOIDs: " << tableName.schema << "|" << tableName.table << endl;
@@ -4756,7 +4742,7 @@ const CalpontSystemCatalog::IndexOIDList CalpontSystemCatalog::indexOIDs( const 
 }
 #endif
 
-const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs( const TableName& tableName )
+const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs(const TableName& tableName, int lower_case_table_names)
 {
     /* SQL statement: select dictobjectid, listobjectid, treeobjectid from syscolumn where
       * schema=tableName.schema and table=tableName.table;*/
@@ -4766,8 +4752,11 @@ const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs( const Ta
 
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter dictOIDs: " << tableName.schema << "|" << tableName.table << endl;
@@ -4872,7 +4861,6 @@ const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs( const Ta
 
     return dictOIDList;
 }
-
 #if 0 //Not implemented
 void CalpontSystemCatalog::storeColOID(void)
 {
@@ -4898,13 +4886,16 @@ int CalpontSystemCatalog::colPosition (const OID& oid)
     return col.colPosition;
 }
 
-const CalpontSystemCatalog::TableInfo CalpontSystemCatalog::tableInfo (const TableName& tb)
+const CalpontSystemCatalog::TableInfo CalpontSystemCatalog::tableInfo(const TableName& tb, int lower_case_table_names)
 {
     TableName aTableName;
     aTableName.schema = tb.schema;
     aTableName.table = tb.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
 
     if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter tableInfo: " << tb.schema << "|" << tb.table << endl;
@@ -4953,9 +4944,7 @@ const CalpontSystemCatalog::ConstraintInfo CalpontSystemCatalog::constraintInfo 
     aIndexName.schema = indexName.schema;
     aIndexName.table = indexName.table;
     aIndexName.index = indexName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter constraintInfo: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
@@ -5109,9 +5098,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::referenceConstra
     aIndexName.schema = referencePKName.schema;
     aIndexName.table = referencePKName.table;
     aIndexName.index = referencePKName.index;
-    transform( aIndexName.schema.begin(), aIndexName.schema.end(), aIndexName.schema.begin(), to_lower() );
-    transform( aIndexName.table.begin(), aIndexName.table.end(), aIndexName.table.begin(), to_lower() );
-    transform( aIndexName.index.begin(), aIndexName.index.end(), aIndexName.index.begin(), to_lower() );
+    boost::algorithm::to_lower(aIndexName.index);
 
     if (aIndexName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter referenceConstraints: " << aIndexName.schema << "|" << aIndexName.table << aIndexName.index << endl;
@@ -5231,8 +5218,6 @@ const string CalpontSystemCatalog::primaryKeyName (const TableName& tableName )
     TableName aTableName;
     aTableName.schema = tableName.schema;
     aTableName.table = tableName.table;
-    transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
-    transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
 
     if (tableName.schema.compare(CALPONT_SCHEMA) != 0)
         DEBUG << "Enter primaryKeyName: " << tableName.schema << "|" << tableName.table << endl;
@@ -5301,11 +5286,13 @@ const string CalpontSystemCatalog::primaryKeyName (const TableName& tableName )
 }
 #endif
 
-void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
+void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case_table_names)
 {
     string schema = in_schema;
-    transform( schema.begin(), schema.end(), schema.begin(), to_lower() );
-
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(schema);
+    }
     if (schema == CALPONT_SCHEMA)
         return;
     else
