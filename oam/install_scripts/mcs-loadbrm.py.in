@@ -81,7 +81,8 @@ if __name__ == '__main__':
     # Single-node on S3
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
         try:
-            brm_saves_current = subprocess.check_output(['smcat', brm])
+            args = ['su', '-s', '/bin/sh', '-c', f'smcat {brm}', 'mysql']
+            brm_saves_current = subprocess.check_output(args)
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
             print('{} does not exist.'.format(brm), file=sys.stderr)
@@ -142,7 +143,7 @@ node {}.'.format(primary_address), file=sys.stderr)
                 print('{} does not exist.'.format(brm), file=sys.stderr)
 
     if brm_saves_current:
-        cmd = '{} {}{}'.format(loadbrm, dbrmroot, \
+        cmd = 'su -s /bin/sh -c "{} {}{}" mysql'.format(loadbrm, dbrmroot, \
 brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
         try:
             retcode = subprocess.call(cmd, shell=True)
