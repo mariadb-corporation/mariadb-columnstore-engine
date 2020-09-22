@@ -1204,8 +1204,13 @@ my_bool get_status_and_flush_cache(void *param,
   if (!cache->lock_counter++)
   {
     ha_rows num_rows = cache->num_rows_cached();
-    if ((!cache->insert_command && num_rows != 0) ||
-        num_rows >= get_cache_flush_threshold(current_thd))
+    if (((!cache->insert_command && num_rows != 0) ||
+        num_rows >= get_cache_flush_threshold(current_thd)) &&
+        // In replication, LDI on a master comes as sql_command = SQLCOM_END
+        // on the slave, if binlog_format != STATEMENT. See mysql_load
+        // function in sql/sql_load.cc to know why. If this is the case,
+        // make sure we don't flush the cache.
+        (!current_thd->slave_thread || sql_command != SQLCOM_END))
     {
       if ((error= cache->flush_insert_cache()))
       {
@@ -1740,7 +1745,7 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
       bzero(&cache_handler->copy_info, sizeof(cache_handler->copy_info));
       return cache_handler->start_bulk_insert(rows, flags);
     }
-    return parent::start_bulk_insert_from_cache(rows, flags);
+    return parent::start_bulk_insert(rows, flags);
   }
   else
   {
