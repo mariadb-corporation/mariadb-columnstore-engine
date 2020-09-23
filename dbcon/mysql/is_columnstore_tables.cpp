@@ -142,7 +142,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         if (tb_info.tablewithautoincr)
         {
             table->field[5]->set_notnull();
-            table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second), lower_case_table_names);
+            table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second, lower_case_table_names), lower_case_table_names);
         }
         else
         {

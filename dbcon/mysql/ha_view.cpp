@@ -115,7 +115,7 @@ void View::transform()
             else if (table_ptr->view)
             {
                 // for nested view, the view name is vout.vin... format
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, lower_case_table_names);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, true, lower_case_table_names);
                 gwi.viewName = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, viewName, true, lower_case_table_names);
                 View* view = new View(*table_ptr->view->first_select_lex(), &gwi);
                 view->viewName(gwi.viewName);
