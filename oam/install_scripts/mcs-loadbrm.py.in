@@ -81,7 +81,12 @@ if __name__ == '__main__':
     # Single-node on S3
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
         try:
-            brm_saves_current = subprocess.check_output(['smcat', brm])
+            if use_systemd:
+                args = ['su', '-s', '/bin/sh', '-c', f'smcat {brm}', 'mysql']
+            else:
+                args = ['smcat', brm]
+
+            brm_saves_current = subprocess.check_output(args)
         except subprocess.CalledProcessError as e:
             # will happen when brm file does not exist
             print('{} does not exist.'.format(brm), file=sys.stderr)
@@ -122,6 +127,8 @@ node.".format(e))
 
                         if not os.path.exists(dbrmroot):
                             os.makedirs(dbrmroot)
+                            if use_systemd:
+                                shutil.chown(dbrmroot, USER, GROUP)
 
                     current_name = '{}_{}'.format(dbrmroot, e)
 
@@ -145,7 +152,11 @@ node {}.'.format(primary_address), file=sys.stderr)
                 print('{} does not exist.'.format(brm), file=sys.stderr)
 
     if brm_saves_current:
-        cmd = '{} {}{}'.format(loadbrm, dbrmroot, \
+        if use_systemd:
+            cmd = 'su -s /bin/sh -c "{} {}{}" mysql'.format(loadbrm, dbrmroot, \
+brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
+        else:
+            cmd = '{} {}{}'.format(loadbrm, dbrmroot, \
 brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
         try:
             retcode = subprocess.call(cmd, shell=True)
@@ -153,6 +164,7 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
                 print('{} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
             for shm_file in glob.glob('/dev/shm/*'):
-                shutil.chown(shm_file, USER, GROUP)
+                if use_systemd:
+                    shutil.chown(shm_file, USER, GROUP)
         except OSError as e:
             sys.exit(1)

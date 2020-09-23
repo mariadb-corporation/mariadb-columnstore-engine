@@ -301,25 +301,26 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
 fi
 
 #change ownership/permissions to be able to run columnstore as non-root
-chown -R mysql:mysql /var/log/mariadb/columnstore
-chown -R mysql:mysql /etc/columnstore
-chown -R mysql:mysql /var/lib/columnstore
-chown -R mysql:mysql /tmp/columnstore_tmp_files
-chmod 777 /tmp/columnstore_tmp_files
-chmod 777 /dev/shm
+# TODO: Remove conditional once container dispatcher uses non-root by default
+if [ $(running_systemd) -eq 0 ]; then
+    chown -R mysql:mysql /var/log/mariadb/columnstore
+    chown -R mysql:mysql /etc/columnstore
+    chown -R mysql:mysql /var/lib/columnstore
+    chown -R mysql:mysql /tmp/columnstore_tmp_files
+    chmod 777 /tmp/columnstore_tmp_files
+    chmod 777 /dev/shm
+fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    # prevent clusters using shared storage from initializing columnstore more than once
-    IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
     mkdir -p /var/lib/columnstore/storagemanager
     chown -R mysql:mysql /var/lib/columnstore/storagemanager
 
-    if [ ! -e $IFLAG ]; then
-       touch $IFLAG
-       echo "Populating the engine initial system catalog."
-       systemctl start mariadb-columnstore
-    fi
+    echo "Populating the engine initial system catalog."
+
+    # prevent nodes using shared storage manager from stepping on each other when initializing
+    flock /var/lib/columnstore/storagemanager -c "systemctl start mariadb-columnstore"
+    systemctl stop mariadb-columnstore # shutdown after initialization
 fi
  
 if [ $stop_mysqld -eq 1 ];then
