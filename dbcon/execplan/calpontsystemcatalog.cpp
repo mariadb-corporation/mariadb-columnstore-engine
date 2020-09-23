@@ -1605,9 +1605,16 @@ uint64_t CalpontSystemCatalog::nextAutoIncrValue (TableName aTableName, int lowe
 {
     TableInfo tbInfo;
 
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableColName.schema);
+        boost::algorithm::to_lower(aTableColName.table);
+    }
+    boost::algorithm::to_lower(aTableColName.column);
+
     try
     {
-        tbInfo = tableInfo(aTableName, lower_case_table_names);
+        tbInfo = tableInfo(aTableName);
     }
     catch (runtime_error& /*ex*/)
     {
@@ -1710,9 +1717,16 @@ int32_t CalpontSystemCatalog::autoColumOid (TableName aTableName, int lower_case
 {
     TableInfo tbInfo;
 
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableColName.schema);
+        boost::algorithm::to_lower(aTableColName.table);
+    }
+    boost::algorithm::to_lower(aTableColName.column);
+
     try
     {
-        tbInfo = tableInfo (aTableName, lower_case_table_names);
+        tbInfo = tableInfo (aTableName);
     }
     catch (runtime_error& /*ex*/)
     {
@@ -2976,6 +2990,12 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 {
     TableName aTableName(tableName);
 
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(aTableName.schema);
+        boost::algorithm::to_lower(aTableName.table);
+    }
+
     if (aTableName.schema.empty() || aTableName.table.empty())
         throw runtime_error("ColumnRIDs: Invalid table name");
 
@@ -2988,12 +3008,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     if ( aTableName.schema != CALPONT_SCHEMA)
     {
         checkSysCatVer();
-    }
-
-    if (lower_case_table_names)
-    {
-        boost::algorithm::to_lower(aTableName.schema);
-        boost::algorithm::to_lower(aTableName.table);
     }
 
     boost::mutex::scoped_lock lk1(fTableInfoMapLock);
