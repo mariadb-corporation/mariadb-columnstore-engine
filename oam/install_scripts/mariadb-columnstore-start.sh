@@ -9,6 +9,7 @@
 /bin/systemctl start mcs-exemgr
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
+sleep 2
 
 su -s /bin/sh -c 'dbbuilder 7' mysql 2> /tmp/columnstore_tmp_files/dbbuilder.log
 
