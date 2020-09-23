@@ -163,8 +163,8 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
             if retcode < 0:
                 print('{} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
-            for shm_file in glob.glob('/dev/shm/*'):
-                if use_systemd:
+            if use_systemd:
+                for shm_file in glob.glob('/dev/shm/*'):                
                     shutil.chown(shm_file, USER, GROUP)
         except OSError as e:
             sys.exit(1)
