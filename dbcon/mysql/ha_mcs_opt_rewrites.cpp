@@ -276,6 +276,8 @@ void in_subselect_rewrite_walk(const Item* item_arg, void* arg)
         *result= sub->create_in_to_exists_cond(join);
         *result= (*result) ? *result :
             sub->inject_in_to_exists_cond(join);
+        sub->unit->first_select()->prep_where=
+            join->conds ? join->conds->copy_andor_structure(current_thd) : 0;
     }
     else if (typeid(*item) == typeid(Item_singlerow_subselect))
     {
