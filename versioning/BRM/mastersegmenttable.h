@@ -64,7 +64,9 @@ struct MSTEntry
 class MasterSegmentTableImpl
 {
 public:
-    static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
+    static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key,
+                                                              int size,
+                                                              bool reread=false);
 
     boost::interprocess::shared_memory_object fShmobj;
     boost::interprocess::mapped_region fMapreg;
@@ -89,8 +91,7 @@ public:
     /** @brief Constructor.
      * @note Throws runtime_error on a semaphore-related error.
      */
-    EXPORT MasterSegmentTable();
-    //MasterSegmentTable(const MasterSegmentTable& mst);
+    EXPORT MasterSegmentTable(bool reread=false);
     EXPORT ~MasterSegmentTable();
 
     /// specifies the Extent Map table
@@ -195,7 +196,7 @@ private:
     /// indexed by EMTable, EMFreeList, and VBBMTable
     MSTEntry* fShmDescriptors;
 
-    void makeMSTSegment();
+    void makeMSTSegment(bool reread=false);
     void initMSTData();
     ShmKeys fShmKeys;
     MasterSegmentTableImpl* fPImpl;

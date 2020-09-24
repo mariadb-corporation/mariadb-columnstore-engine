@@ -207,9 +207,12 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
 static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    BRM::DBRM* emp = new BRM::DBRM();
     BRM::OID_t cond_oid = 0;
     TABLE* table = tables->table;
+
+    bool noBRMInit = false;
+    bool reReadMasterSegmentTable = true;
+    BRM::DBRM* emp = new BRM::DBRM(noBRMInit, reReadMasterSegmentTable);
 
     if (!emp || !emp->isDBRMReady())
     {

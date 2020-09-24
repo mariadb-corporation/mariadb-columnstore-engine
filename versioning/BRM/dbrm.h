@@ -104,7 +104,7 @@ class DBRM
 public:
     // The param noBRMFcns suppresses init of the ExtentMap, VSS, VBBM, and CopyLocks.
     // It can speed up init if the caller only needs the other structures.
-    EXPORT DBRM(bool noBRMFcns = false) throw();
+    EXPORT DBRM(bool noBRMFcns = false, bool reread = false);
     EXPORT ~DBRM() throw();
 
     // @bug 1055+ - Added functions below for multiple files per OID enhancement.
@@ -495,7 +495,7 @@ public:
      */
     EXPORT int getExtents(int OID, std::vector<struct EMEntry>& entries,
                           bool sorted = true, bool notFoundErr = true,
-                          bool incOutOfService = false) throw();
+                          bool incOutOfService = false);
 
     /** @brief Gets the extents of a given OID under specified dbroot
      *
@@ -1015,6 +1015,7 @@ public:
     */
     EXPORT void invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid,
             std::vector<LBID_t>* plbidList = NULL);
+    
 private:
     DBRM(const DBRM& brm);
     DBRM& operator=(const DBRM& brm);

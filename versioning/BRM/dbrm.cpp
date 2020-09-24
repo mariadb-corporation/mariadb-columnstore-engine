@@ -70,11 +70,11 @@ using namespace oam;
 namespace BRM
 {
 
-DBRM::DBRM(bool noBRMinit) throw() : fDebug(false)
+DBRM::DBRM(bool noBRMinit, bool reread): fDebug(false)
 {
     if (!noBRMinit)
     {
-        mst.reset(new MasterSegmentTable());
+        mst.reset(new MasterSegmentTable(reread));
         em.reset(new ExtentMap());
         vss.reset(new VSS());
         vbbm.reset(new VBBM());
@@ -1751,7 +1751,7 @@ unsigned DBRM::getExtentRows() throw()
 }
 
 int DBRM::getExtents(int OID, std::vector<struct EMEntry>& entries,
-                     bool sorted, bool notFoundErr, bool incOutOfService) throw()
+                     bool sorted, bool notFoundErr, bool incOutOfService)
 {
 #ifdef BRM_INFO
 
