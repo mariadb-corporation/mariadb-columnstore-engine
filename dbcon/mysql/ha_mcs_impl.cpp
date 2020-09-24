@@ -2702,7 +2702,6 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
         force_close_fep_conn(thd, ci);
@@ -2804,11 +2803,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     }
 
-    // @bug 3078. Also session limit variable works the same as ctrl+c
-    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD ||
-            ((thd->lex)->sql_command != SQLCOM_INSERT &&
-             (thd->lex)->sql_command != SQLCOM_INSERT_SELECT &&
-             thd->variables.select_limit != (uint64_t) - 1))
+    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
         force_close_fep_conn(thd, ci);
         // clear querystats because no query stats available for cancelled query
@@ -4672,7 +4667,6 @@ int ha_mcs_impl_group_by_next(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
         force_close_fep_conn(thd, ci);
@@ -4767,11 +4761,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     }
 
-    // @bug 3078. Also session limit variable works the same as ctrl+c
-    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD ||
-            ((thd->lex)->sql_command != SQLCOM_INSERT &&
-             (thd->lex)->sql_command != SQLCOM_INSERT_SELECT &&
-             thd->variables.select_limit != (uint64_t) - 1))
+    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
         force_close_fep_conn(thd, ci);
         // clear querystats because no query stats available for cancelled query
@@ -4912,7 +4902,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
  * RETURN:
  *    rc as int
  ***********************************************************/
-int ha_cs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
+int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
 {
     IDEBUG( cout << "pushdown_init for table " << endl );
     THD* thd = current_thd;
@@ -5364,7 +5354,7 @@ internal_error:
     return ER_INTERNAL_ERROR;
 }
 
-int ha_cs_impl_select_next(uchar* buf, TABLE* table)
+int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
 {
     int rc = HA_ERR_END_OF_FILE;
     THD* thd = current_thd;
@@ -5394,7 +5384,6 @@ int ha_cs_impl_select_next(uchar* buf, TABLE* table)
     //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
     //        return HA_ERR_END_OF_FILE;
 
-        // @bug 3078
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
         force_close_fep_conn(thd, ci);
