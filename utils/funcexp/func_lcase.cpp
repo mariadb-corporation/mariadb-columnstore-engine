@@ -37,15 +37,6 @@ using namespace joblist;
 
 #include "collation.h"
 
-class to_lower
-{
-public:
-    char operator() (char c) const            // notice the return type
-    {
-        return tolower(c);
-    }
-};
-
 namespace funcexp
 {
 

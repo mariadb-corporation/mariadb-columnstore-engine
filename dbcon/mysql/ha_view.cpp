@@ -88,14 +88,21 @@ void View::transform()
                 continue;
 
             string viewName = getViewName(table_ptr);
+            if (lower_case_table_names)
+            {
+                boost::algorithm::to_lower(viewName);
+            }
 
             if (table_ptr->derived)
             {
                 SELECT_LEX* select_cursor = table_ptr->derived->first_select();
                 FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
                 string alias(table_ptr->alias.str);
-                gwi.viewName = make_aliasview("", alias, table_ptr->belong_to_view->alias.str, "");
-                algorithm::to_lower(alias);
+                if (lower_case_table_names)
+                {
+                    boost::algorithm::to_lower(alias);
+                }
+                gwi.viewName = make_aliasview("", alias, table_ptr->belong_to_view->alias.str, "", true, lower_case_table_names);
                 fromSub->alias(alias);
                 gwi.derivedTbList.push_back(SCSEP(fromSub->transform()));
                 // set alias to both table name and alias name of the derived table
@@ -108,8 +115,8 @@ void View::transform()
             else if (table_ptr->view)
             {
                 // for nested view, the view name is vout.vin... format
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName);
-                gwi.viewName = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, viewName);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, true, lower_case_table_names);
+                gwi.viewName = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, viewName, true, lower_case_table_names);
                 View* view = new View(*table_ptr->view->first_select_lex(), &gwi);
                 view->viewName(gwi.viewName);
                 gwi.viewList.push_back(view);
@@ -122,9 +129,9 @@ void View::transform()
 
                 // trigger system catalog cache
                 if (columnStore)
-                    csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
+                    csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str, lower_case_table_names), true);
 
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, columnStore);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, columnStore, lower_case_table_names);
                 gwi.tbList.push_back(tn);
                 gwi.tableMap[tn] = make_pair(0, table_ptr);
                 fParentGwip->tableMap[tn] = make_pair(0, table_ptr);

@@ -450,8 +450,10 @@ void parsePartitionString(UDF_ARGS* args,
                           string& errMsg,
                           execplan::CalpontSystemCatalog::TableName tableName)
 {
-    //@Bug 4695
-    algorithm::to_lower(tableName.schema);
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(tableName.schema);
+    }
 
     if (tableName.schema == "calpontsys")
     {
@@ -654,12 +656,17 @@ void partitionByValue_common(UDF_ARGS* args,								// input
         column = (char*)(args->args[1]);
     }
 
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(schema);
+        boost::algorithm::to_lower(table);
+    }
+    boost::algorithm::to_lower(column);
+
     tableName.schema = schema;
     tableName.table = table;
 
     //@Bug 4695
-    algorithm::to_lower(tableName.schema);
-
     if (tableName.schema == "calpontsys")
     {
         errMsg = IDBErrorInfo::instance()->errorMsg(SYSTABLE_PARTITION);
@@ -670,7 +677,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
     {
         boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(tid2sid(current_thd->thread_id));
         csc->identity(execplan::CalpontSystemCatalog::FE);
-        CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column);
+        CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column, lower_case_table_names);
         csc->identity(CalpontSystemCatalog::FE);
         OID_t oid = csc->lookupOID(tcn);
         ct = csc->colType(oid);
@@ -1029,10 +1036,16 @@ extern "C"
                 table = (char*)(args->args[0]);
                 column = (char*)(args->args[1]);
             }
+            if (lower_case_table_names)
+            {
+                boost::algorithm::to_lower(schema);
+                boost::algorithm::to_lower(table);
+            }
+            boost::algorithm::to_lower(column);
 
             boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(tid2sid(current_thd->thread_id));
             csc->identity(CalpontSystemCatalog::FE);
-            CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column);
+            CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column, lower_case_table_names);
             OID_t oid = csc->lookupOID(tcn);
             ct = csc->colType(oid);
 
@@ -1735,9 +1748,16 @@ extern "C"
                 column = (char*)(args->args[1]);
             }
 
+            if (lower_case_table_names)
+            {
+                boost::algorithm::to_lower(schema);
+                boost::algorithm::to_lower(table);
+            }
+            boost::algorithm::to_lower(column);
+
             boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(tid2sid(current_thd->thread_id));
             csc->identity(CalpontSystemCatalog::FE);
-            CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column);
+            CalpontSystemCatalog::TableColName tcn = make_tcn(schema, table, column, lower_case_table_names);
             OID_t oid = csc->lookupOID(tcn);
             ct = csc->colType(oid);
 

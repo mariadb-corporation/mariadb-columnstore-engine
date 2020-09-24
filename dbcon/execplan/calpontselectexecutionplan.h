@@ -37,6 +37,7 @@
 #include "expressionparser.h"
 #include "calpontsystemcatalog.h"
 #include "brmtypes.h"
+#include <boost/algorithm/string/case_conv.hpp>
 
 #ifndef __GNUC__
 #  ifndef __attribute__
@@ -293,9 +294,11 @@ public:
     {
         return fTableAlias;
     }
-    void tableAlias (const std::string& tableAlias)
+    void tableAlias (const std::string& tableAlias, int lower_case_table_names)
     {
         fTableAlias = tableAlias;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fTableAlias);
     }
 
     /**
@@ -424,18 +427,22 @@ public:
     {
         return fSchemaName;
     }
-    inline void schemaName(const std::string& schemaName)
+    inline void schemaName(const std::string& schemaName, int lower_case_table_names)
     {
         fSchemaName = schemaName;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fSchemaName);
     }
 
     inline std::string& tableName()
     {
         return fTableName;
     }
-    inline void tableName(const std::string& tableName)
+    inline void tableName(const std::string& tableName, int lower_case_table_names)
     {
         fTableName = tableName;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fTableName);
     }
 
     inline void traceOn(bool traceOn) __attribute__((deprecated))
@@ -539,16 +546,23 @@ public:
         return fSubType;
     }
 
-    void derivedTbAlias(const std::string derivedTbAlias)
+    void derivedTbAlias(const std::string derivedTbAlias, int lower_case_table_names=0)
     {
         fDerivedTbAlias = derivedTbAlias;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fDerivedTbAlias);
     }
     const std::string derivedTbAlias() const
     {
         return fDerivedTbAlias;
     }
 
-    void derivedTbView(const std::string derivedTbView) { fDerivedTbView = derivedTbView; }
+    void derivedTbView(const std::string derivedTbView, int lower_case_table_names) 
+    { 
+        fDerivedTbView = derivedTbView;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fDerivedTbView);
+    }
     const std::string derivedTbView() const { return fDerivedTbView; }
 
 
