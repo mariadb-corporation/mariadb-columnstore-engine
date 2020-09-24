@@ -603,7 +603,7 @@ int ha_columnstore_derived_handler::init_scan()
 
     mcs_handler_info mhi = mcs_handler_info(reinterpret_cast<void*>(this), DERIVED);
     // this::table is the place for the result set
-    int rc = ha_cs_impl_pushdown_init(&mhi, table);
+    int rc = ha_mcs_impl_pushdown_init(&mhi, table);
 
     DBUG_RETURN(rc);
 }
@@ -910,7 +910,7 @@ int ha_columnstore_select_handler::init_scan()
         {
             mcs_handler_info mhi= mcs_handler_info(
                 reinterpret_cast<void*>(this), SELECT);
-            rc= ha_cs_impl_pushdown_init(&mhi, this->table);
+            rc= ha_mcs_impl_pushdown_init(&mhi, this->table);
         }
     }
     else
@@ -937,7 +937,7 @@ int ha_columnstore_select_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_select_handler::next_row");
 
-    int rc= ha_cs_impl_select_next(table->record[0], table);
+    int rc= ha_mcs_impl_select_next(table->record[0], table);
 
     DBUG_RETURN(rc);
 }
