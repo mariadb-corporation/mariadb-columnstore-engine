@@ -7,7 +7,8 @@ SET(S3_SOURCES ${S3API_DIR}/src/debug.c
     ${S3API_DIR}/src/response.c
     ${S3API_DIR}/src/sha256.c
     ${S3API_DIR}/src/sha256-internal.c
-    ${S3API_DIR}/src/xml.c)
+    ${S3API_DIR}/src/xml.c
+    ${S3API_DIR}/src/assumeRole.c)
 
 ADD_LIBRARY(marias3 SHARED ${S3_SOURCES})
 
