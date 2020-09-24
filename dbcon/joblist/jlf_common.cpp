@@ -313,7 +313,7 @@ string UniqId::toString() const
 //------------------------------------------------------------------------------
 string extractTableAlias(const SimpleColumn* sc)
 {
-    return  ba::to_lower_copy(sc->tableAlias());
+    return sc->tableAlias();
 }
 
 
@@ -322,7 +322,7 @@ string extractTableAlias(const SimpleColumn* sc)
 //------------------------------------------------------------------------------
 string extractTableAlias(const SSC& sc)
 {
-    return  ba::to_lower_copy(sc->tableAlias());
+    return sc->tableAlias();
 }
 
 

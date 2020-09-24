@@ -33,6 +33,7 @@
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
 #include "calpontselectexecutionplan.h"
+#include <boost/algorithm/string/case_conv.hpp>
 
 namespace messageqcpp
 {
@@ -66,12 +67,14 @@ public:
     SimpleColumn(const std::string& schema,
                  const std::string& table,
                  const std::string& col,
-                 const uint32_t sessionID = 0);
+                 const uint32_t sessionID = 0, 
+                 const int lower_case_table_names = 0);
     SimpleColumn(const std::string& schema,
                  const std::string& table,
                  const std::string& col,
                  const bool isColumnStore,
-                 const uint32_t sessionID = 0);
+                 const uint32_t sessionID = 0,
+                 const int lower_case_table_names = 0);
     SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
     /**
@@ -87,9 +90,11 @@ public:
         return fSchemaName;
     }
 
-    inline void schemaName(const std::string& schemaName)
+    inline void schemaName(const std::string& schemaName, int lower_case_table_names = 0)
     {
         fSchemaName = schemaName;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fSchemaName);
     }
 
     inline const std::string& tableName() const
@@ -97,9 +102,11 @@ public:
         return fTableName;
     }
 
-    inline void tableName(const std::string& tableName)
+    inline void tableName(const std::string& tableName, int lower_case_table_names = 0)
     {
         fTableName = tableName;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fTableName);
     }
 
     inline const std::string& columnName() const
@@ -132,9 +139,11 @@ public:
     {
         return fTableAlias;
     }
-    inline void tableAlias(const std::string& tableAlias)
+    inline void tableAlias(const std::string& tableAlias, int lower_case_table_names = 0)
     {
         fTableAlias = tableAlias;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fTableAlias);
     }
     inline const std::string& indexName() const
     {
@@ -148,9 +157,11 @@ public:
     {
         return fViewName;
     }
-    inline void viewName(const std::string& viewName)
+    inline void viewName(const std::string& viewName, int lower_case_table_names = 0)
     {
         fViewName = viewName;
+        if (lower_case_table_names)
+            boost::algorithm::to_lower(fViewName);
     }
     inline const std::string& timeZone() const
     {

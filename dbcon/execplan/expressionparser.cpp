@@ -31,6 +31,7 @@ using namespace std;
 #include "constantcolumn.h"
 #include "operator.h"
 #include "treenode.h"
+#include <boost/algorithm/string/case_conv.hpp>
 
 namespace execplan
 {
@@ -98,7 +99,7 @@ int ExpressionParser::positions(Token t)
             return expression::close | expression::function_close;
 
         default:
-            transform (oper.begin(), oper.end(), oper.begin(), to_lower());
+            boost::algorithm::to_lower(oper);
 
             if (oper.compare ("and") == 0 || oper.compare ("or") == 0 )
                 return expression::infix;
@@ -143,7 +144,7 @@ int ExpressionParser::position(TreeNode* op)
             return expression::function_close;
 
         default:
-            transform (oper.begin(), oper.end(), oper.begin(), to_lower());
+            boost::algorithm::to_lower(oper);
 
             if (oper.compare ("and") == 0 || oper.compare ("or") == 0 )
                 return expression::infix;
@@ -200,7 +201,7 @@ TreeNode* ExpressionParser::as_operator(Token t, int pos)
             }
 
         default:
-            transform (oper.begin(), oper.end(), oper.begin(), to_lower());
+            boost::algorithm::to_lower(oper);
 
             if (oper.compare ("and") == 0 || oper.compare ("or") == 0 )
                 return t.value;
@@ -295,7 +296,7 @@ ParseTree* ExpressionParser::reduce(ParseTree* a, TreeNode* b,
     string content = value->data()->data();
     ParseTree* root;
 
-    transform (functionName.begin(), functionName.end(), functionName.begin(), to_lower());
+    boost::algorithm::to_lower(functionName);
 
     if (functionName.compare("sum") == 0 ||
             functionName.compare("avg") == 0 ||
@@ -346,7 +347,7 @@ int ExpressionParser::precnum(TreeNode* op)
             return 7;
 
         default:
-            transform (oper.begin(), oper.end(), oper.begin(), to_lower());
+            boost::algorithm::to_lower(oper);
 
             if (oper.compare("or") == 0)
                 return 1;
@@ -372,7 +373,7 @@ expression::associativity ExpressionParser::assoc(TreeNode* op)
             return expression::left_associative;
 
         default:
-            transform (oper.begin(), oper.end(), oper.begin(), to_lower());
+            boost::algorithm::to_lower(oper);
 
             if (oper.compare("or") == 0 || oper.compare("and") == 0)
                 return expression::left_associative;

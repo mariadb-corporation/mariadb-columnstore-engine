@@ -63,7 +63,7 @@ SubQueryTransformer::SubQueryTransformer(JobInfo* jobInfo, SErrorInfo& err,
         const string& view) :
     fOutJobInfo(jobInfo), fSubJobInfo(NULL), fErrorInfo(err)
 {
-    fVtable.view(algorithm::to_lower_copy(view));
+    fVtable.view(view);
 }
 
 
@@ -72,8 +72,8 @@ SubQueryTransformer::SubQueryTransformer(JobInfo* jobInfo, SErrorInfo& err,
         const string& view) :
     fOutJobInfo(jobInfo), fSubJobInfo(NULL), fErrorInfo(err)
 {
-    fVtable.alias(algorithm::to_lower_copy(alias));
-    fVtable.view(algorithm::to_lower_copy(view));
+    fVtable.alias(alias);
+    fVtable.view(view);
 }
 
 

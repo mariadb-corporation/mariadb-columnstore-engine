@@ -158,7 +158,8 @@ SimpleColumn::SimpleColumn(const string& token, const uint32_t sessionID):
 SimpleColumn::SimpleColumn(const string& schemaName,
                            const string& tableName,
                            const string& columnName,
-                           const uint32_t sessionID):
+                           const uint32_t sessionID, 
+                           const int lower_case_table_names) :
     ReturnedColumn(sessionID),
     fSchemaName (schemaName),
     fTableName (tableName),
@@ -167,13 +168,20 @@ SimpleColumn::SimpleColumn(const string& schemaName,
 {
     setOID();
     fDistinct = false;
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(fSchemaName);
+        boost::algorithm::to_lower(fTableName);
+    }
+    boost::algorithm::to_lower(fColumnName);
 }
 
 SimpleColumn::SimpleColumn(const string& schemaName,
                            const string& tableName,
                            const string& columnName,
                            const bool isColumnStore,
-                           const uint32_t sessionID):
+                           const uint32_t sessionID,
+                           const int lower_case_table_names) :
     ReturnedColumn(sessionID),
     fSchemaName (schemaName),
     fTableName (tableName),
@@ -182,8 +190,13 @@ SimpleColumn::SimpleColumn(const string& schemaName,
 {
     if (isColumnStore)
         setOID();
-
     fDistinct = false;
+    if (lower_case_table_names)
+    {
+        boost::algorithm::to_lower(fSchemaName);
+        boost::algorithm::to_lower(fTableName);
+    }
+    boost::algorithm::to_lower(fColumnName);
 }
 
 SimpleColumn::SimpleColumn (const SimpleColumn& rhs, const uint32_t sessionID):

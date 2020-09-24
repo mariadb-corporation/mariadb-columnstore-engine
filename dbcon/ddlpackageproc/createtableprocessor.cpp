@@ -76,7 +76,6 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     DETAIL_INFO(createTableStmt);
     ddlpackage::TableDef& tableDef = *createTableStmt.fTableDef;
     //If schema = CALPONTSYS, do not create table
-    boost::algorithm::to_lower(tableDef.fQualifiedName->fSchema);
 
     if (tableDef.fQualifiedName->fSchema == CALPONT_SCHEMA)
     {

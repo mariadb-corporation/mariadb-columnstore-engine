@@ -194,25 +194,21 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
             while ( sysCons_iterator != sysConsColumns.end() )
             {
                 column = *sysCons_iterator;
-                boost::algorithm::to_lower(column.tableColName.column);
                 isNull = false;
 
                 if (CONSTRAINTNAME_COL == column.tableColName.column)
                 {
                     idxData = createIndexStmt.fIndexName->fName;
-                    boost::algorithm::to_lower(idxData);
                     colTuple.data = idxData;
                 }
                 else if (SCHEMA_COL == column.tableColName.column)
                 {
                     idxData = (createIndexStmt.fTableName)->fSchema;
-                    boost::algorithm::to_lower(idxData);
                     colTuple.data = idxData;
                 }
                 else if (TABLENAME_COL == column.tableColName.column)
                 {
                     idxData = (createIndexStmt.fTableName)->fName;
-                    boost::algorithm::to_lower(idxData);
                     colTuple.data = idxData;
                 }
                 else if (CONSTRAINTTYPE_COL == column.tableColName.column)
@@ -235,7 +231,6 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
                 else if (INDEXNAME_COL == column.tableColName.column)
                 {
                     idxData = createIndexStmt.fIndexName->fName;
-                    boost::algorithm::to_lower(idxData);
                     colTuple.data = idxData;
                 }
                 else
@@ -315,33 +310,28 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
             while ( sysConsCol_iterator != sysConsColColumns.end() )
             {
                 column = *sysConsCol_iterator;
-                boost::algorithm::to_lower(column.tableColName.column);
 
                 isNull = false;
 
                 if (SCHEMA_COL == column.tableColName.column)
                 {
                     colData = (createIndexStmt.fTableName)->fSchema;
-                    boost::algorithm::to_lower(colData);
                     colTupleCol.data = colData;
                 }
                 else if (TABLENAME_COL == column.tableColName.column)
                 {
                     colData = (createIndexStmt.fTableName)->fName;
-                    boost::algorithm::to_lower(colData);
                     colTupleCol.data = colData;
                 }
                 else if (COLNAME_COL == column.tableColName.column)
                 {
                     colData = createIndexStmt.fColumnNames[0];
-                    boost::algorithm::to_lower(colData);
                     colTupleCol.data = colData;
 
                 }
                 else if (CONSTRAINTNAME_COL == column.tableColName.column)
                 {
                     colData = createIndexStmt.fIndexName->fName;
-                    boost::algorithm::to_lower(colData);
                     colTupleCol.data = colData;
                 }
                 else

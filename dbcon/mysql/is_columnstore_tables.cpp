@@ -131,28 +131,35 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
             }
         }
 
-        execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
-        std::string create_date = dataconvert::DataConvert::dateToString((*it).second.create_date);
-        table->field[0]->store((*it).second.schema.c_str(), (*it).second.schema.length(), cs);
-        table->field[1]->store((*it).second.table.c_str(), (*it).second.table.length(), cs);
-        table->field[2]->store((*it).first);
-        table->field[3]->store(create_date.c_str(), create_date.length(), cs);
-        table->field[4]->store(tb_info.numOfCols);
-
-        if (tb_info.tablewithautoincr)
+        try
         {
-            table->field[5]->set_notnull();
-            table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second));
+            execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
+            std::string create_date = dataconvert::DataConvert::dateToString((*it).second.create_date);
+            table->field[0]->store((*it).second.schema.c_str(), (*it).second.schema.length(), cs);
+            table->field[1]->store((*it).second.table.c_str(), (*it).second.table.length(), cs);
+            table->field[2]->store((*it).first);
+            table->field[3]->store(create_date.c_str(), create_date.length(), cs);
+            table->field[4]->store(tb_info.numOfCols);
+
+            if (tb_info.tablewithautoincr)
+            {
+                table->field[5]->set_notnull();
+                table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second));
+            }
+            else
+            {
+                table->field[5]->set_null();
+            }
+
+            table->field[5]->store(tb_info.tablewithautoincr);
+
+            if (schema_table_store_record(thd, table))
+                return 1;
         }
-        else
+        catch (std::runtime_error& e)
         {
-            table->field[5]->set_null();
+            std::cerr << e.what() << std::endl;
         }
-
-        table->field[5]->store(tb_info.tablewithautoincr);
-
-        if (schema_table_store_record(thd, table))
-            return 1;
     }
 
     return 0;

@@ -550,13 +550,13 @@ public:
      *
      * For a unique table_name return the internal OID
      */
-    OID lookupTableOID(const TableName& tableName);
+    OID lookupTableOID(const TableName& tableName, int lower_case_table_names=0);
 
     /** looks up a column's OID in the System Catalog
      *
      * For a unique table_name.column_name return the internal OID
      */
-    OID lookupOID(const TableColName& tableColName);
+    OID lookupOID(const TableColName& tableColName, int lower_case_table_names=0);
 
     /** returns the column type attribute(s) for a column
      *
@@ -588,19 +588,19 @@ public:
      * 0: Autoincrement does not exist for this table
      * Throws runtime_error if no such table found
      */
-    uint64_t nextAutoIncrValue ( TableName tableName);
+    uint64_t nextAutoIncrValue(TableName tableName, int lower_case_table_names=0);
 
     /** returns the rid of next autoincrement value for the table oid
      *
      * return the rid of next value of autoincrement for a given table:
      */
-    const ROPair nextAutoIncrRid ( const OID& oid);
+    const ROPair nextAutoIncrRid(const OID& oid);
 
     /** returns the oid of autoincrement column for the table
      *
      * return the oid of autoincrement column for a given table:
      */
-    int32_t autoColumOid(TableName tableName);
+    int32_t autoColumOid(TableName tableName, int lower_case_table_names=0);
 
     /** returns the columns bitmap file object number
      *
@@ -618,31 +618,31 @@ public:
      *
      * returns a list of the RID's of the indexes for a table
      */
-    const RIDList indexRIDs(const TableName& tableName);
+    const RIDList indexRIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the total number of columns for a table
      *
      * returns the total number of columns for a table
      */
-    int colNumbers(const TableName& tableName);
+    int colNumbers(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the RID's of the colindexes for a table
      *
      * returns a list of the RID's of the colindexes for a table
      */
-    const RIDList indexColRIDs(const TableName& tableName);
+    const RIDList indexColRIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the RID's of the index columns (SYSINDEXCOL) for a index
      *
      * returns a list of the RID's of the colindexes for a index
      */
-    const RIDList indexColRIDs(const IndexName& indexName);
+    const RIDList indexColRIDs(const IndexName& indexName, int lower_case_table_names=0);
 
     /** return the RID's of the constraints for a table
      *
      * returns a list of the RID's of the constraints for a table
      */
-    const RIDList constraintRIDs(const TableName& tableName);
+    const RIDList constraintRIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the RID of the constraint for a ConstrainName
      *
@@ -660,19 +660,19 @@ public:
      *
      * returns a list of the RID's of the colconstraints for a table
      */
-    const RIDList constraintColRIDs(const TableName& tableName);
+    const RIDList constraintColRIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the RID of the colconstraint for a column
     *
     * returns the RID of the colconstraints for a column
     */
-    RID constraintColRID(const TableColName& tableColName);
+    RID constraintColRID(const TableColName& tableColName, int lower_case_table_names=0);
 
     /** return the value for the given RID and column name from table SYSCONSTRAINTCOL
      *
      * returns the column value for the given RID a column name fron table SYSCONSTRAINTCOL
      */
-    const std::string colValueSysconstraintCol (const TableColName& colName);
+    const std::string colValueSysconstraintCol (const TableColName& colName, int lower_case_table_names=0);
 
     /** return the RID of the constraint for a ConstrainName
      *
@@ -686,19 +686,19 @@ public:
      * return OID. Therefore it's duplicate to lookupOID function. This function is to be
      * deprecated.
      */
-    const ROPair columnRID(const TableColName& tableColName);
+    const ROPair columnRID(const TableColName& tableColName, int lower_case_table_names=0);
 
     /** return the RID's of the columns for a table
      *
      * returns a list of the RID's of the columns for a table
      */
-    const RIDList columnRIDs(const TableName& tableName, bool useCache = false);
+    const RIDList columnRIDs(const TableName& tableName, bool useCache = false, int lower_case_table_names=0);
 
     /** return the RID of the table
      *
      * returns the RID of the table
      */
-    const ROPair tableRID(const TableName& tableName);
+    const ROPair tableRID(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the RID of the index for a table
      *
@@ -709,7 +709,7 @@ public:
     *
     * returns the index name list for a table
     */
-    const IndexNameList indexNames(const TableName& tableName);
+    const IndexNameList indexNames(const TableName& tableName, int lower_case_table_names=0);
     /** return the column names for a index
     *
     * returns the column name list for a index
@@ -726,7 +726,7 @@ public:
      *
      * returns the column value for the given RID a column name fron table SYSINDEX
      */
-    const std::string colValueSysindex (const TableColName& colName);
+    const std::string colValueSysindex (const TableColName& colName, int lower_case_table_names=0);
 
     /** return the RID of the colindexe for a table
      *
@@ -738,13 +738,13 @@ public:
      *
      * returns the RID's of the colindexe for a table
      */
-    const ROPair indexColRID(const TableColName& tableColName);
+    const ROPair indexColRID(const TableColName& tableColName, int lower_case_table_names=0);
 
     /** return the value for the given RID and column name from table SYSINDEX
      *
      * returns the column value for the given RID a column name fron table SYSINDEX
      */
-    const IndexNameList colValueSysindexCol (const TableColName& colName);
+    const IndexNameList colValueSysindexCol (const TableColName& colName, int lower_case_table_names=0);
 
     /** looks up a Table Name for a Index in the System Catalog
      *
@@ -765,19 +765,19 @@ public:
      * for now, assume one column belongs to just one index. In the future getPlan
      * should give index name therefore this function will be deprecated.
      */
-    const IndexOID lookupIndexNbr(const TableColName& tableColName);
+    const IndexOID lookupIndexNbr(const TableColName& tableColName, int lower_case_table_names=0);
 
     /** return the list of Index OIDs for the given table
       *
       * returns the list of Index OIDs for a table
       */
-    const IndexOIDList indexOIDs(const TableName& tableName);
+    const IndexOIDList indexOIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** return the list of Dictionary OIDs for the given table
       *
       * returns the list of Dictionary OIDs for a table
       */
-    const DictOIDList dictOIDs(const TableName& tableName);
+    const DictOIDList dictOIDs(const TableName& tableName, int lower_case_table_names=0);
 
     /** Update column OID. This is for testing DDL and DML only
       * and will go away once READ works
@@ -838,16 +838,16 @@ public:
      */
     int colPosition (const OID& oid);
     /** return primary key name for the given table */
-    const std::string primaryKeyName (const TableName& tableName );
+    const std::string primaryKeyName (const TableName& tableName, int lower_case_table_names=0);
     /** return the table info
      *
      *  return the table info for a given TableName
      */
-    const TableInfo tableInfo (const TableName& tb);
+    const TableInfo tableInfo (const TableName& tb, int lower_case_table_names=0);
     /** return the table name for a give table oid */
     const TableName tableName (const OID& oid);
     /** return the list of tables for a given schema */
-    const std::vector< std::pair<OID, TableName> > getTables (const std::string schema = "");
+    const std::vector< std::pair<OID, TableName> > getTables(const std::string schema = "", int lower_case_table_names=0);
     /** return the number of tables in the whole database */
     int getTableCount ();
     /** return the constraint info for a given constraint */
@@ -856,7 +856,7 @@ public:
     const IndexNameList referenceConstraints (const IndexName& referencePKName);
 
     // @bug 682
-    void getSchemaInfo(const std::string& schema);
+    void getSchemaInfo(const std::string& schema, int lower_case_table_names=0);
 
     typedef std::map<uint32_t, long long> OIDNextvalMap;
     void updateColinfoCache(OIDNextvalMap& oidNextvalMap);
@@ -951,14 +951,15 @@ private:
 
 /** convenience function to make a TableColName from 3 strings
  */
-const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const std::string& t, const std::string& c);
+const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const std::string& t, const std::string& c, int lower_case_table_names=0);
 
 /** convenience function to make a TableName from 2 strings
  */
-const CalpontSystemCatalog::TableName make_table(const std::string& s, const std::string& t);
+const CalpontSystemCatalog::TableName make_table(const std::string& s, const std::string& t, int lower_case_table_names=0);
 const CalpontSystemCatalog::TableAliasName make_aliastable(const std::string& s, const std::string& t, const std::string& a,
-        const bool fisColumnStore = true);
-const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v, const bool fisColumnStore = true);
+                                                           const bool fisColumnStore = true, int lower_case_table_names=0);
+const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v,
+                                                          const bool fisColumnStore = true, int lower_case_table_names=0);
 
 /** convenience function to determine if column type is a char
  *  type
