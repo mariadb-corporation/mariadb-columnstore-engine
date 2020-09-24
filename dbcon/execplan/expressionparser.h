@@ -46,17 +46,6 @@ namespace execplan
 typedef std::stack<ParseTree*> OperandStack;
 typedef std::stack<TreeNode*> OperatorStack;
 
-/**@brief util struct for converting string to lower case
- *
- */
-struct to_lower
-{
-    char operator() (char c) const
-    {
-        return tolower(c);
-    }
-};
-
 /**@brief a structure to respent a token accepted by the parser
  *
  * token structure

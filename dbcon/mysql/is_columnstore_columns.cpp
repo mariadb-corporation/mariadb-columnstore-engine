@@ -151,7 +151,7 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         // So simply ignore the dropped table.
         try
         {
-            column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
+            column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true, lower_case_table_names);
         }
         catch (IDBExcept& ex)
         {
