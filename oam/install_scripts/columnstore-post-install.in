@@ -318,10 +318,8 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     chown -R mysql:mysql /var/lib/columnstore/storagemanager
 
     echo "Populating the engine initial system catalog."
-
-    # prevent nodes using shared storage manager from stepping on each other when initializing
-    flock /var/lib/columnstore/storagemanager -c "systemctl start mariadb-columnstore"
-    systemctl stop mariadb-columnstore # shutdown after initialization
+    systemctl start mariadb-columnstore
+    systemctl stop mariadb-columnstore
 fi
  
 if [ $stop_mysqld -eq 1 ];then
