@@ -40,10 +40,15 @@ if __name__ == '__main__':
     is_primary = False
 
     # For multi-node with local storage or default installations
-    if (storage.lower() != 's3' and master_addr != default_addr) or \
-master_addr == default_addr:
+    multi_with_local_storage = storage.lower() != 's3' and master_addr != default_addr
+    if multi_with_local_storage is True or master_addr == default_addr:
+        # This might be not a primary in a multi-node cluster but we are safe 
+        # to save BRM locally
         is_primary = True
-        print('Multi-node with local-storage detected.')
+        if multi_with_local_storage is True:
+            print('This is a multi-node installation with a local-storage.')
+        else:
+            print(' This is a single-node installation.')
     else:
         has_requests = False
         try:
