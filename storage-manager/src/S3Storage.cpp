@@ -527,9 +527,9 @@ ms3_st * S3Storage::getConnection()
             if (res)
             {
                 // Something is wrong with the assume role so abort as if the ms3_init failed
-                logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_init_assume_role returned error. Check iam_role_name = %s is correct.",IAMrole.c_str());
+                logger->log(LOG_ERR, "S3Storage::getConnection(): ERROR: ms3_init_assume_role. Verify iam_role_name = %s, aws_access_key_id, and aws_secret_access_key values.",IAMrole.c_str());
                 if (ms3_server_error(ret))
-                    logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_errror: server says '%s'.  role name = %s", ms3_server_error(ret), IAMrole.c_str());
+                    logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_error: server says '%s'.  role name = %s", ms3_server_error(ret), IAMrole.c_str());
                 ms3_deinit(ret);
                 ret = NULL;
             }
