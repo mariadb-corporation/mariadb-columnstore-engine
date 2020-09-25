@@ -138,6 +138,20 @@ public:
     */
     int open(const char* name, int mode, uint32_t test_if_locked);    // required
 
+    // MCOL-4282 This function is called by open_tables in sql_base.cc.
+    // We mutate the optimizer flags here for prepared statements as this
+    // handler function is called before JOIN::prepare, and we need to
+    // disable the default optimizer flags before JOIN::prepare (which is
+    // called during "PREPARE stmt FROM ..." SQL) is called.
+    // Sequence of SQL statements that will lead to this execution path
+    // for prepared statements:
+    //   CREATE TABLE t1 (a int, b int) engine=columnstore;
+    //   INSERT INTO t1 VALUES (1, 2), (2, 4), (3, 1);
+    //   PREPARE stmt1 FROM "SELECT * FROM t1";
+    //   EXECUTE stmt1;
+
+    int discover_check_version() override;
+
     /** @brief
       We implement this in ha_example.cc; it's a required method.
     */
