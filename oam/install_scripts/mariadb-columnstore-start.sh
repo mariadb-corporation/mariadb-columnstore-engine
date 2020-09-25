@@ -5,7 +5,7 @@
 # prevent nodes using shared storage manager from stepping on each other when initializing
 # flock will open up an exclusive file lock to run atomic operations
 exec {fd_lock}>/var/lib/columnstore/storagemanager/storagemanager-lock
-flock -x "$fd_lock"
+flock -n "$fd_lock" || exit 0
 
 /bin/systemctl start mcs-workernode
 /bin/systemctl start mcs-controllernode
