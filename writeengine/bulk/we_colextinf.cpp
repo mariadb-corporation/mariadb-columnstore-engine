@@ -98,7 +98,7 @@ void ColExtInf::addOrUpdateEntry( RID     lastInputRow,
         }
         else                // Update the range
         {
-            if (isUnsigned(colDataType))
+            if (isUnsigned(colDataType) || isCharType(colDataType))
             {
                 if (static_cast<uint64_t>(minVal)
                         < static_cast<uint64_t>(iter->second.fMinVal))

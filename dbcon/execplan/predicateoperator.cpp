@@ -36,20 +36,6 @@ using namespace oam;
 
 using namespace std;
 
-namespace
-{
-
-/**@brief util struct for converting string to lower case */
-struct to_lower
-{
-    char operator() (char c) const
-    {
-        return tolower(c);
-    }
-};
-
-}
-
 namespace execplan
 {
 

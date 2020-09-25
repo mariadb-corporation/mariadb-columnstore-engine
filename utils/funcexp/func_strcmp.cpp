@@ -45,16 +45,6 @@ using namespace funcexp;
 struct charset_info_st;
 typedef const struct charset_info_st CHARSET_INFO;
 
-class to_lower
-{
-public:
-    char operator() (char c) const			// notice the return type
-    {
-        return tolower(c);
-    }
-};
-
-
 namespace funcexp
 {
 

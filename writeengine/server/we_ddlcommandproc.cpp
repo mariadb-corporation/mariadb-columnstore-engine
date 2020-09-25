@@ -182,14 +182,12 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
             if (TABLENAME_COL == column.tableColName.column)
             {
                 std::string tablename = tableDef.fQualifiedName->fName;
-                boost::to_lower(tablename);
                 colTuple.data = tablename;
                 tmpStr = tablename;
             }
             else if (SCHEMA_COL == column.tableColName.column)
             {
                 std::string schema =  tableDef.fQualifiedName->fSchema;
-                boost::to_lower(schema);
                 colTuple.data = schema;
                 tmpStr = schema;
             }
@@ -519,13 +517,11 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
 
                 if (SCHEMA_COL == column.tableColName.column)
                 {
-                    boost::to_lower(qualifiedName.fSchema);
                     colTuple.data = qualifiedName.fSchema;
                     tmpStr = qualifiedName.fSchema;
                 }
                 else if (TABLENAME_COL == column.tableColName.column)
                 {
-                    boost::to_lower(qualifiedName.fName);
                     colTuple.data = qualifiedName.fName;
                     tmpStr = qualifiedName.fName;
                 }
@@ -916,13 +912,11 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
 
             if (SCHEMA_COL == column.tableColName.column)
             {
-                boost::to_lower(schema);
                 colTuple.data = schema;
                 tmpStr = schema;
             }
             else if (TABLENAME_COL == column.tableColName.column)
             {
-                boost::to_lower(tablename);
                 colTuple.data = tablename;
                 tmpStr = tablename;
             }
