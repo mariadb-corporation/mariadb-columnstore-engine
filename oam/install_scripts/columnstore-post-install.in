@@ -319,7 +319,6 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
 
     echo "Populating the engine initial system catalog."
     systemctl start mariadb-columnstore
-    systemctl stop mariadb-columnstore
 fi
  
 if [ $stop_mysqld -eq 1 ];then
