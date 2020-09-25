@@ -47,10 +47,16 @@ void mutate_optimizer_flags(THD *thd_)
     // MCOL-2178 Disable all optimizer flags as it was in the fork.
     // CS restores it later in SH::scan_end() and in case of an error
     // in SH::scan_init()
-    set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
-    thd_->variables.optimizer_switch = OPTIMIZER_SWITCH_IN_TO_EXISTS |
+
+    ulonglong flags_to_set = OPTIMIZER_SWITCH_IN_TO_EXISTS |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FROM_HAVING;
+
+    if (thd_->variables.optimizer_switch == flags_to_set)
+        return;
+
+    set_original_optimizer_flags(thd_->variables.optimizer_switch, thd_);
+    thd_->variables.optimizer_switch = flags_to_set;
 }
 
 void restore_optimizer_flags(THD *thd_)

@@ -220,6 +220,20 @@ int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
 {
     DBUG_ENTER("ha_mcs::open");
 
+    bool isPS = current_thd->stmt_arena &&
+        (current_thd->stmt_arena->is_stmt_prepare() ||
+         current_thd->stmt_arena->is_stmt_execute());
+
+    // MCOL-4282 See the description for discover_check_version() in ha_mcs.h
+    // for why we need to mutate optimizer flags here. Sequence of SQL
+    // statements that will lead to this execution path for prepared
+    // statements:
+    //   CREATE TABLE t1 (a int, b int) engine=columnstore;
+    //   PREPARE stmt1 FROM "SELECT * FROM t1";
+    //   EXECUTE stmt1;
+    if (isPS)
+        mutate_optimizer_flags(current_thd);
+
     int rc;
     try
     {
@@ -234,6 +248,17 @@ int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
     DBUG_RETURN(rc);
 }
 
+int ha_mcs::discover_check_version()
+{
+    bool isPS = current_thd->stmt_arena &&
+        (current_thd->stmt_arena->is_stmt_prepare() ||
+         current_thd->stmt_arena->is_stmt_execute());
+
+    if (isPS)
+        mutate_optimizer_flags(current_thd);
+
+    return 0;
+}
 
 /**
   @brief
@@ -1095,6 +1120,10 @@ int ha_mcs::reset()
     {
         condStack.clear();
     }
+
+    // Restore the optimizer flags which were mutated earlier in
+    // ha_mcs::open/ha_mcs::discover_check_version
+    restore_optimizer_flags(current_thd);
 
     DBUG_RETURN(0);
 }
