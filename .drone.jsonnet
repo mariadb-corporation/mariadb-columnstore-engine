@@ -303,6 +303,7 @@ local Pipeline(branch, platform, event) = {
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // remove a file from deb packaging
                // "sed -i '/mcs-start-storagemanager.py/d' debian/mariadb-plugin-columnstore.install",
+               "sed -i '/x-columnstore.cnf/d' debian/mariadb-plugin-columnstore.install",
                platformMap(branch, platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz ',
              ],
