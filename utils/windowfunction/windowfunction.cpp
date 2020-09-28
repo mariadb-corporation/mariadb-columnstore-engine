@@ -25,7 +25,6 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-using namespace boost;
 
 #include "loggingid.h"
 #include "errorcodes.h"
@@ -272,8 +271,8 @@ void WindowFunction::sort(std::vector<RowPosition>::iterator v, uint64_t n)
         }
     }
 
-    sort(v, distance(v, h) + 1);
-    sort(l, distance(l, v) + n);
+    sort(v, std::distance(v, h) + 1);
+    sort(l, std::distance(l, v) + n);
 }
 
 
