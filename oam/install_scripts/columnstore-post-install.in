@@ -81,6 +81,12 @@ if [ -z "$(pgrep -x mariadbd)" ];then
 fi
 sleep 2
 
+# One time remove x-columnstore.cnf if it exists.
+# x-columnstore.cnf was a kludge for using when plugin-maturity=gamma
+if [ -f @MARIADB_MYCNFDIR@/x-columnstore.cnf]; then
+    /bin/rm -f @MARIADB_MYCNFDIR@/x-columnstore.cnf
+fi
+
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.new
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf
