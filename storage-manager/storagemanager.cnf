@@ -113,13 +113,13 @@ bucket = some_bucket
 # The value for the IAM role that will provide the temporary credentials
 # via AssumeRole. Assumes the role has been created and permissions are
 # defined correctly prior to operation. 
-# iam_role_name should contain any prefix paths. Example:
-# iam_role_name = application_abc/component_xyz/example_role
-# iam_role name = 
+# iam_role_name should contain any prefix paths. 
+# Example: application_abc/component_xyz/example_role
+# iam_role_name = 
 
 # Specify the endpoint to connect to for AWS Security Token Service
 # Default of sts.amazonaws.com used if iam_role_name set.
-# sts_endpoint = sts.amazonaws.com
+# sts_endpoint =
 
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.
