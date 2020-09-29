@@ -297,7 +297,7 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
         sed -i "s|aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
         sed -i "s|aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
         echo "There was an error validating the settings used to access S3."
-        echo "The specified user must have GET, PUT, HEAD, and DELETE permissions to the bucket."
+        echo "The specified user or role must have GET, PUT, HEAD, and DELETE permissions to the bucket."
         echo "Verify the following environment variables are correct:"
         echo "MCS_S3_BUCKET"
         echo "MCS_S3_ENDPOINT"

@@ -113,7 +113,7 @@ bucket = some_bucket
 # The value for the IAM role that will provide the temporary credentials
 # via AssumeRole. Assumes the role has been created and permissions are
 # defined correctly prior to operation. 
-# iam_role_name should contain any prefix paths. 
+# iam_role_name should contain all prefix paths. 
 # Example: application_abc/component_xyz/example_role
 # iam_role_name = 
 
