@@ -55,6 +55,8 @@ class S3Storage : public CloudStorage
         std::string key;
         std::string secret;
         std::string endpoint;
+        std::string IAMrole;
+        std::string STSendpoint;
         
         struct Connection
         {
