@@ -59,11 +59,13 @@ boost::mutex MasterSegmentTableImpl::fInstanceMutex;
 MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;
 
 /*static*/
-MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, int size)
+MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, 
+                                                                           int size,
+                                                                           bool reread)
 {
     boost::mutex::scoped_lock lk(fInstanceMutex);
 
-    if (fInstance)
+    if (!reread && fInstance)
         return fInstance;
 
     fInstance = new MasterSegmentTableImpl(key, size);
@@ -115,7 +117,7 @@ MSTEntry::MSTEntry() :
 {
 }
 
-MasterSegmentTable::MasterSegmentTable()
+MasterSegmentTable::MasterSegmentTable(bool reread)
 {
 #ifdef _MSC_VER
     const char* envp = getenv("SystemRoot");
@@ -159,7 +161,7 @@ MasterSegmentTable::MasterSegmentTable()
     for (i = 1; i < nTables; i++)
         rwlock[i].reset(new RWLock(RWLockKeys[i]));
 
-    makeMSTSegment();
+    makeMSTSegment(reread);
 
     if (initializer)
     {
@@ -181,9 +183,11 @@ MasterSegmentTable::~MasterSegmentTable()
 //		delete rwlock[i];
 }
 
-void MasterSegmentTable::makeMSTSegment()
+void MasterSegmentTable::makeMSTSegment(bool reread)
 {
-    fPImpl = MasterSegmentTableImpl::makeMasterSegmentTableImpl(fShmKeys.MST_SYSVKEY, MSTshmsize);
+    fPImpl = MasterSegmentTableImpl::makeMasterSegmentTableImpl(fShmKeys.MST_SYSVKEY, 
+                                                                MSTshmsize,
+                                                                reread);
     fShmDescriptors = static_cast<MSTEntry*>(fPImpl->fMapreg.get_address());
 }
 
