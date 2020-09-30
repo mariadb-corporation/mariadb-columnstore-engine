@@ -40,12 +40,14 @@ local platformMap(branch, platform) =
 local Pipeline(branch, platform, event) = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'opensuse/leap') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
+  local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
+  local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-1.5',
 
   local pipeline = self,
 
-  publish(step_prefix='pkg'):: {
+  publish(step_prefix='pkg', eventp=event):: {
     name: 'publish ' + step_prefix,
     image: 'plugins/s3-sync',
     when: {
@@ -60,7 +62,7 @@ local Pipeline(branch, platform, event) = {
         from_secret: 'aws_secret_access_key',
       },
       source: 'result',
-      target: branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+      target: branch + '/' + eventp + '/${DRONE_BUILD_NUMBER}/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
       delete: 'true',
     },
   },
@@ -102,15 +104,15 @@ local Pipeline(branch, platform, event) = {
     commands: [
       // clone mtr repo
       'git clone --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/suite/',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb --socket=/var/lib/mysql/mysql.sock -e "create database if not exists test;"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd /usr/share/mysql-test && ./mtr --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def --extern socket=/var/lib/mysql/mysql.sock"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def"',
     ],
   },
   mtrlog:: {
@@ -126,7 +128,7 @@ local Pipeline(branch, platform, event) = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
-      'docker cp mtr$${DRONE_BUILD_NUMBER}:/usr/share/mysql-test/var/log /drone/src/result/mtr-logs || echo "missing /usr/share/mysql-test/var/log"',
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/result/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
       'docker stop mtr$${DRONE_BUILD_NUMBER} && docker rm mtr$${DRONE_BUILD_NUMBER} || echo "cleanup mtr failure"',
     ],
     when: {
@@ -299,6 +301,8 @@ local Pipeline(branch, platform, event) = {
                "sed -i '/columnstore/Id' debian/autobake-deb.sh",
                "sed -i 's/.*flex.*/echo/' debian/autobake-deb.sh",
                "sed -i 's/-DPLUGIN_PERFSCHEMA=NO//' debian/autobake-deb.sh",
+               "sed -i '/(mariadb|mysql)-test/d' debian/autobake-deb.sh",
+               "sed -i '/-test/d' debian/autobake-deb.sh",
                // change plugin_maturity level
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // remove a file from deb packaging
@@ -326,20 +330,16 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          [pipeline.publish()] +
-         (if (event == 'cron') then [pipeline.publish('pkg latest')] else []) +
-         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] else []) +
-         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.docker] else []) +
-         //(if (platform == 'centos:8' && event == 'cron') then [pipeline.ecr] else []) +
-         (if (platform == 'centos:7') then [pipeline.mtr] else []) +
-         (if (platform == 'centos:7') then [pipeline.mtrlog] else []) +
-         (if (platform == 'centos:7') then [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron') then [pipeline.publish('mtr latest')] else []) +
+         (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
+         // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
+         (if (pkg_format == 'rpm') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         (if (event == 'cron') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regression')] +
-         (if (event == 'cron') then [pipeline.publish('regression latest')] else []),
+         (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
