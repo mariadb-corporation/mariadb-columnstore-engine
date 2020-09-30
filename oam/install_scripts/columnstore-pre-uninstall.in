@@ -110,7 +110,7 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
 
     systemctl daemon-reload
     # remove flag to prevent clusters using shared storage from initializing columnstore more than once
-    IFLAG=/var/lib/columnstore/storagemanager/cs-initialized
+    IFLAG=/var/lib/columnstore/storagemanager/storagemanager-lock
     if [ -e $IFLAG ]; then
         rm $IFLAG
     fi

@@ -327,9 +327,14 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     mkdir -p /var/lib/columnstore/storagemanager
     chown -R mysql:mysql /var/lib/columnstore/storagemanager
+    IFLAG=/var/lib/columnstore/storagemanager/storagemanager-lock
 
-    echo "Populating the engine initial system catalog."
-    systemctl start mariadb-columnstore
+    # prevent nodes using shared storage manager from stepping on each other when initializing
+    # if storagemanager-lock already exists, we have already initialized
+    if [ ! -e $IFLAG ]; then
+        echo "Populating the engine initial system catalog."
+        systemctl start mariadb-columnstore
+    fi
 fi
  
 if [ $stop_mysqld -eq 1 ];then
