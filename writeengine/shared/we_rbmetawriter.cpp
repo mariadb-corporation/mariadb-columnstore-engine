@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/convenience.hpp>
+#include <pwd.h>
 
 #include "we_config.h"
 #include "we_convertor.h"
@@ -102,7 +103,7 @@ bool RBChunkInfoCompare::operator()
 //------------------------------------------------------------------------------
 RBMetaWriter::RBMetaWriter (
     const std::string& appDesc,
-    Log* logger ) : fMetaDataFile(NULL), fAppDesc(appDesc), fLog(logger), fCreatedSubDir(false)
+    Log* logger ) : fMetaDataFile(NULL), fAppDesc(appDesc), fLog(logger), fCreatedSubDir(false), fUid((uid_t)-1), fGid((gid_t)-1)
 {
 }
 
@@ -450,6 +451,20 @@ std::string RBMetaWriter::openMetaFile ( uint16_t dbRoot )
         oss << "Error opening bulk rollback file " <<
             tmpMetaFileName << "; " << eMsg;
         throw WeException( oss.str(), ERR_FILE_OPEN );
+    }
+
+    if (fUid != (uid_t)-1)
+    {
+        std::ostringstream oss;
+        errno = 0;
+        if (chown(tmpMetaFileName.c_str(), fUid, fGid) == -1 ||
+            chown(bulkRollbackPath.c_str(), fUid, fGid) == -1)
+        {
+             oss << "Error calling chown() with uid " << fUid
+                 << " and gid " << fGid << " with the file "
+                 << tmpMetaFileName << " with errno " << errno;
+            throw WeException(oss.str(), ERR_FILE_CHOWN);
+        }
     }
 
     fMetaDataStream <<
@@ -1196,6 +1211,7 @@ int RBMetaWriter::writeHWMChunk(
     std::ostringstream ossFile;
     ossFile << "/" << columnOID << ".p" << partition << ".s" << segment;
     std::string fileName;
+    std::string dirPath;
     int rc = getSubDirPath( dbRoot, fileName );
 
     if (rc != NO_ERROR)
@@ -1206,6 +1222,8 @@ int RBMetaWriter::writeHWMChunk(
         errMsg = oss.str();
         return ERR_METADATABKUP_COMP_OPEN_BULK_BKUP;
     }
+
+    dirPath = fileName;
 
     fileName += ossFile.str();
 
@@ -1323,6 +1341,20 @@ int RBMetaWriter::writeHWMChunk(
         fs.remove( fileNameTmp.c_str() );
         fs.remove( fileName.c_str() );
         return ERR_METADATABKUP_COMP_RENAME;
+    }
+
+    if (fUid != (uid_t)-1)
+    {
+        errno = 0;
+        if (chown(fileName.c_str(), fUid, fGid) == -1 ||
+            chown(dirPath.c_str(), fUid, fGid) == -1)
+        {
+            std::ostringstream oss;
+            oss << "Error calling chown() with uid " << fUid
+                << " and gid " << fGid << " with the file "
+                << fileName << " with errno " << errno;
+            throw WeException(oss.str(), ERR_FILE_CHOWN);
+        }
     }
 
     return NO_ERROR;

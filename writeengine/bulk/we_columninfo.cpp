@@ -160,7 +160,9 @@ ColumnInfo::ColumnInfo(Log*             logger,
     fDbRootExtTrk(pDBRootExtTrk),
     fColWidthFactor(1),
     fDelayedFileCreation(INITIAL_DBFILE_STAT_FILE_EXISTS),
-    fRowsPerExtent(0)
+    fRowsPerExtent(0),
+    uID((uid_t)-1),
+    gID((gid_t)-1)
 {
     column = columnIn;
 
@@ -458,6 +460,10 @@ int ColumnInfo::createDelayedFileIfNeeded( const std::string& tableName )
         }
 
         boost::scoped_ptr<Dctnry> refDctnry(tempD);
+        // MCOL-4328 Define a file owner uid and gid
+        if (uID != (uid_t)-1)
+            refDctnry->setUIDGID(uID, gID);
+
         rc = tempD->createDctnry(
                  column.dctnry.dctnryOid,
                  column.dctnryWidth,
@@ -1681,6 +1687,7 @@ int ColumnInfo::openDctnryStore( bool bMustExist )
 
     fStore->setLogger(fLog);
     fStore->setColWidth( column.dctnryWidth );
+    fStore->setUIDGID(uID, gID);
 
     if (column.fWithDefault)
         fStore->setDefault( column.fDefaultChr );

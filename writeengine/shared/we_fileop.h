@@ -27,6 +27,7 @@
 #include <vector>
 #include <map>
 #include <boost/thread.hpp>
+#include <pwd.h>
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -501,6 +502,7 @@ public:
                                           bool     bExpandExtent,
                                           bool     bAbbrevExtent,
                                           bool     bOptExtension=false );
+    void                setUIDGID(const uid_t uid, const gid_t gid);
 
 protected:
     EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);
@@ -549,11 +551,19 @@ private:
     static boost::mutex               m_mkdirMutex;
 
     char*       m_buffer;             // buffer used with setvbuf()
+    uid_t       m_uid;                // owner uid
+    gid_t       m_gid;                // owner gid
 };
 
 //------------------------------------------------------------------------------
 // Inline functions
 //------------------------------------------------------------------------------
+inline void FileOp::setUIDGID(const uid_t uid, const gid_t gid)
+{
+    m_uid = uid;
+    m_gid = gid;
+}
+
 inline void FileOp::compressionType(int t)
 {
     m_compressionType = t;

@@ -105,7 +105,8 @@ void printUsage()
          "    [-c readBufSize] [-e maxErrs] [-B libBufSize] [-n NullOption] " << endl <<
          "    [-E encloseChar] [-C escapeChar] [-I binaryOpt] [-S] "
          "[-d debugLevel] [-i] " << endl <<
-         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl;
+         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl <<
+         "    [-U username]" << endl << endl;
 
     cout << endl << "Traditional usage without positional parameters "
          "(XML job file required):" << endl <<
@@ -115,7 +116,8 @@ void printUsage()
          "    [-E encloseChar] [-C escapeChar] [-I binaryOpt] [-S] "
          "[-d debugLevel] [-i] " << endl <<
          "    [-p path] [-l loadFile]" << endl <<
-         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl << endl;
+         "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl <<
+         "    [-U username]" << endl << endl;
 
     cout << "    Positional parameters:" << endl <<
          "        dbName    Name of database to load" << endl <<
@@ -171,7 +173,8 @@ void printUsage()
          "        -K S3 Authentication Secret (for S3 imports)" << endl <<
          "        -t S3 Bucket (for S3 imports)" << endl <<
          "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl <<
-         "        -g S3 Regions (for S3 imports)" << endl;
+         "        -g S3 Regions (for S3 imports)" << endl <<
+         "        -U username of new data files owner. Default is mysql" << endl;
 
     cout << "    Example1:" << endl <<
          "        cpimport.bin -j 1234" << endl <<
@@ -322,7 +325,7 @@ void parseCmdLineArgs(
     std::string jobUUID;
 
     while ( (option = getopt(
-                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:y:K:t:H:g:")) != EOF )
+                          argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:y:K:t:H:g:U:")) != EOF )
     {
         switch (option)
         {
@@ -743,6 +746,11 @@ void parseCmdLineArgs(
                 break;
             }
 
+            case 'U':
+            {
+                curJob.setUsername(optarg);
+                break;
+            }
 
             default :
             {

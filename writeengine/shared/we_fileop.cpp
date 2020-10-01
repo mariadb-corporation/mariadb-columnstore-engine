@@ -27,6 +27,7 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <pwd.h>
 #if defined(__FreeBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
@@ -70,7 +71,8 @@ namespace WriteEngine
  * Constructor
  */
 FileOp::FileOp(bool doAlloc) : m_compressionType(0),
-    m_transId((TxnID)INVALID_NUM), m_buffer(0)
+    m_transId((TxnID)INVALID_NUM), m_buffer(0), m_uid((uid_t)-1),
+    m_gid((gid_t)-1)
 {
     if (doAlloc)
     {
@@ -785,10 +787,28 @@ int FileOp::extendFile(
 
         // if obsolete file exists, "w+b" will truncate and write over
         pFile = openFile( fileName, "w+b" );//new file
-
         if (pFile == 0)
             return ERR_FILE_CREATE;
 
+        // We presume the path will contain /
+        std::string filePath(fileName);
+        std::string fileDirPath = filePath.substr(0, filePath.find_last_of('/'));
+        if (m_uid != (uid_t)-1)
+        {
+            errno = 0;
+            if (chown(fileName, m_uid, m_gid) == -1 ||
+                chown(fileDirPath.c_str(), m_uid, m_gid) == -1)
+            {
+                std::ostringstream oss;
+                oss << "Error calling chown() for uid " << m_uid
+                    << " and gid " << m_gid
+                    << " with the file " << fileName
+                    << " with errno " << errno;
+                getLogger()->logMsg(oss.str(), MSGLVL_ERROR);
+
+                return ERR_FILE_CHOWN;
+            } 
+        }
         newFile = true;
 
         if ( isDebug(DEBUG_1) && getLogger() )

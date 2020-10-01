@@ -31,6 +31,7 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
+#include <pwd.h>
 
 #include "we_dbfileop.h"
 #include "we_type.h"
@@ -248,6 +249,11 @@ public:
         return createDctnryFile(name, width, mode, ioBuffSize);
     }
 
+    inline void setUIDGID(const uid_t uid, const gid_t gid)
+    {
+        m_uid = uid;
+        m_gid = gid;
+    }
 
 //------------------------------------------------------------------------------
 // Protected members
@@ -342,6 +348,8 @@ protected:
     int          m_colWidth;         // width of this dictionary column
     std::string  m_defVal;           // optional default string value
     ImportDataMode m_importDataMode; // Import data in text or binary mode
+    uid_t        m_uid;              // new dict files belongs to this uid
+    gid_t        m_gid;              // new dict files belongs to this gid
 
 };//end of class
 

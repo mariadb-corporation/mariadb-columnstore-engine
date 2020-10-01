@@ -93,7 +93,9 @@ Dctnry::Dctnry() :
     m_freeSpace(0),
     m_curOp(0),
     m_colWidth(0),
-    m_importDataMode(IMPORT_DATA_TEXT)
+    m_importDataMode(IMPORT_DATA_TEXT),
+    m_uid((uid_t)-1),
+    m_gid((gid_t)-1)
 {
     memset( m_dctnryHeader, 0, sizeof(m_dctnryHeader));
     memset( m_curBlock.data, 0, sizeof(m_curBlock.data));
@@ -215,6 +217,31 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
 
         // if obsolete file exists, "w+b" will truncate and write over
         m_dFile = createDctnryFile(fileName, colWidth, "w+b", DEFAULT_BUFSIZ);
+
+        // We presume the path will contain /
+        std::string filePath(fileName);
+        std::string fileDirPath = filePath.substr(0, filePath.find_last_of('/'));
+        if (m_uid != (uid_t)-1)
+        {
+            errno = 0;
+            if (chown(fileName, m_uid, m_gid) == -1 ||
+                chown(fileDirPath.c_str(), m_uid, m_gid) == -1)
+            {
+                std::ostringstream oss;
+                oss << "Error calling chown() for uid " << m_uid
+                    << " and gid " << m_gid
+                    << " with the file " << fileName
+                    << " with errno " << errno;
+                logging::Message::Args args;
+                logging::Message message(1);
+                args.add(oss.str());
+                message.format(args);
+                logging::LoggingID lid(SUBSYSTEM_ID_WE_BULK);
+                logging::MessageLog ml(lid);
+                ml.logErrorMessage( message );
+                return ERR_FILE_CHOWN;
+            }
+        }
     }
     else
     {
