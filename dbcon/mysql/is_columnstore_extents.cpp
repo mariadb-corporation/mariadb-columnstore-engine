@@ -187,8 +187,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     BRM::OID_t cond_oid = 0;
     TABLE* table = tables->table;
 
-    bool noBRMInit = false;
-    BRM::DBRM* emp = new BRM::DBRM(noBRMInit);
+    BRM::DBRM* emp = new BRM::DBRM();
 
     if (!emp || !emp->isDBRMReady())
     {
@@ -283,7 +282,7 @@ int is_columnstore_extents_plugin_init(void* p)
     ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_extents_fields;
     schema->fill_table = is_columnstore_extents_fill;
-    BRM::DBRM* dbrm = new BRM::DBRM(false);
+    BRM::DBRM* dbrm = new BRM::DBRM();
     dbrm->refreshShm();
     return 0;
 }

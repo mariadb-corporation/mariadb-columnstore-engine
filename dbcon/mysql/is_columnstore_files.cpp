@@ -210,8 +210,7 @@ static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     BRM::OID_t cond_oid = 0;
     TABLE* table = tables->table;
 
-    bool noBRMInit = false;
-    BRM::DBRM* emp = new BRM::DBRM(noBRMInit);
+    BRM::DBRM* emp = new BRM::DBRM();
 
     if (!emp || !emp->isDBRMReady())
     {
