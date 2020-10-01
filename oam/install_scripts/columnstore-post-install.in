@@ -256,6 +256,7 @@ if [ -z "$MCS_USE_S3_STORAGE" ]; then
   MCS_S3_SECRET_ACCESS_KEY="$(find_env_var "MCS_S3_SECRET_ACCESS_KEY")"
   MCS_S3_REGION="$(find_env_var "MCS_S3_REGION")"
   MCS_S3_ROLE_NAME="$(find_env_var "MCS_S3_ROLE_NAME")"
+  MCS_S3_STS_REGION="$(find_env_var "MCS_S3_STS_REGION")"
   MCS_S3_STS_ENDPOINT="$(find_env_var "MCS_S3_STS_ENDPOINT")"
 fi
 
@@ -275,27 +276,31 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
       @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
       @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y" 
       @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
-      sed -i "s|service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
       if [ ! -z "$MCS_S3_REGION" ]; then
-          sed -i "s|region =.*|region = $MCS_S3_REGION|" /etc/columnstore/storagemanager.cnf
+          sed -i "s|^region =.*|region = $MCS_S3_REGION|" /etc/columnstore/storagemanager.cnf
       fi
       if [ ! -z "$MCS_S3_ROLE_NAME" ]; then
-          sed -i "s|# iam_role_name =.*|iam_role_name = $MCS_S3_ROLE_NAME|" /etc/columnstore/storagemanager.cnf
+          sed -i "s|^# iam_role_name =.*|iam_role_name = $MCS_S3_ROLE_NAME|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_STS_REGION" ]; then
+          sed -i "s|^# sts_region =.*|sts_region = $MCS_S3_STS_REGION|" /etc/columnstore/storagemanager.cnf
       fi
       if [ ! -z "$MCS_S3_STS_ENDPOINT" ]; then
-          sed -i "s|# sts_endpoint =.*|sts_endpoint = $MCS_S3_STS_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+          sed -i "s|^# sts_endpoint =.*|sts_endpoint = $MCS_S3_STS_ENDPOINT|" /etc/columnstore/storagemanager.cnf
       fi
-      sed -i "s|bucket =.*|bucket = $MCS_S3_BUCKET|" /etc/columnstore/storagemanager.cnf
-      sed -i "s|# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
-      sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
-      sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^bucket =.*|bucket = $MCS_S3_BUCKET|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
       testS3Connection
       if [ $? -ne 0 ]; then
-        sed -i "s|iam_role_name =.*|# iam_role_name = |" /etc/columnstore/storagemanager.cnf
-        sed -i "s|sts_endpoint =.*|# sts_endpoint = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^iam_role_name =.*|# iam_role_name = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^sts_region =.*|# sts_region = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^sts_endpoint =.*|# sts_endpoint = |" /etc/columnstore/storagemanager.cnf
         sed -i "s|^endpoint =.*|# endpoint = |" /etc/columnstore/storagemanager.cnf
-        sed -i "s|aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
-        sed -i "s|aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
         echo "There was an error validating the settings used to access S3."
         echo "The specified user or role must have GET, PUT, HEAD, and DELETE permissions to the bucket."
         echo "Verify the following environment variables are correct:"
@@ -305,6 +310,7 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
         echo "MCS_S3_SECRET_ACCESS_KEY"
         echo "MCS_S3_REGION"
         echo "MCS_S3_ROLE_NAME"
+        echo "MCS_S3_STS_REGION"
         echo "MCS_S3_STS_ENDPOINT"
         echo "After environment variables are fixed, run command: columnstore-post-install"
         exit 1
