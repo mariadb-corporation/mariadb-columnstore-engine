@@ -83,7 +83,7 @@ sleep 2
 
 # One time remove x-columnstore.cnf if it exists.
 # x-columnstore.cnf was a kludge for using when plugin-maturity=gamma
-if [ -f @MARIADB_MYCNFDIR@/x-columnstore.cnf]; then
+if [ -f @MARIADB_MYCNFDIR@/x-columnstore.cnf ]; then
     /bin/mv -f @MARIADB_MYCNFDIR@/x-columnstore.cnf @MARIADB_MYCNFDIR@/x-columnstore.cnf.rpmsave
 fi
 
