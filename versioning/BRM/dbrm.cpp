@@ -70,7 +70,7 @@ using namespace oam;
 namespace BRM
 {
 
-DBRM::DBRM(bool noBRMinit) throw() : fDebug(false)
+DBRM::DBRM(bool noBRMinit) : fDebug(false)
 {
     if (!noBRMinit)
     {
@@ -102,6 +102,18 @@ DBRM::~DBRM() throw()
 {
     if (msgClient != NULL)
         MessageQueueClientPool::releaseInstance(msgClient);
+}
+
+void DBRM::refreshShm()
+{
+    if (mst.get())
+    {
+        mst->refreshShm();
+    }
+    if (em.get())
+    {
+        em->refreshShm();
+    }
 }
 
 DBRM& DBRM::operator=(const DBRM& brm)
@@ -1751,7 +1763,7 @@ unsigned DBRM::getExtentRows() throw()
 }
 
 int DBRM::getExtents(int OID, std::vector<struct EMEntry>& entries,
-                     bool sorted, bool notFoundErr, bool incOutOfService) throw()
+                     bool sorted, bool notFoundErr, bool incOutOfService)
 {
 #ifdef BRM_INFO
 

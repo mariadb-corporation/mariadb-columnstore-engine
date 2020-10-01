@@ -161,6 +161,8 @@ struct ExtentSorter
 class ExtentMapImpl
 {
 public:
+    ~ExtentMapImpl(){};
+
     static ExtentMapImpl* makeExtentMapImpl(unsigned key, off_t size, bool readOnly = false);
 
     inline void grow(unsigned key, off_t size)
@@ -174,6 +176,14 @@ public:
         idbassert(rc == 0);
     }
 #endif
+    inline void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
     inline void makeReadOnly()
     {
         fExtMap.setReadOnly();
@@ -199,7 +209,6 @@ public:
 
 private:
     ExtentMapImpl(unsigned key, off_t size, bool readOnly = false);
-    ~ExtentMapImpl();
     ExtentMapImpl(const ExtentMapImpl& rhs);
     ExtentMapImpl& operator=(const ExtentMapImpl& rhs);
 
@@ -212,6 +221,8 @@ private:
 class FreeListImpl
 {
 public:
+    ~FreeListImpl(){};
+
     static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
 
     inline void grow(unsigned key, off_t size)
@@ -225,6 +236,14 @@ public:
         idbassert(rc == 0);
     }
 #endif
+    inline void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
     inline void makeReadOnly()
     {
         fFreeList.setReadOnly();
@@ -250,7 +269,6 @@ public:
 
 private:
     FreeListImpl(unsigned key, off_t size, bool readOnly = false);
-    ~FreeListImpl();
     FreeListImpl(const FreeListImpl& rhs);
     FreeListImpl& operator=(const FreeListImpl& rhs);
 
@@ -273,6 +291,14 @@ class ExtentMap : public Undoable
 public:
     EXPORT ExtentMap();
     EXPORT ~ExtentMap();
+
+    EXPORT void refreshShm()
+    {
+        if (fPExtMapImpl)
+            fPExtMapImpl->refreshShm();
+        if (fPFreeListImpl)
+            fPFreeListImpl->refreshShm();
+    }
 
     /** @brief Loads the ExtentMap entries from a file
      *
