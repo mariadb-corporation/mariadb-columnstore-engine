@@ -104,6 +104,7 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
     secret = config->getValue("S3", "aws_secret_access_key");
     IAMrole = config->getValue("S3", "iam_role_name");
     STSendpoint = config->getValue("S3", "sts_endpoint");
+    STSregion = config->getValue("S3", "sts_region");
     if (key.empty())
     {
         char *_key_id = getenv("AWS_ACCESS_KEY_ID");
@@ -502,7 +503,6 @@ ms3_st * S3Storage::getConnection()
         Connection &back = freeConns.back();
         if (back.idleSince.tv_sec + maxIdleSecs <= now.tv_sec)
         {
-            logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_deinit");
             ms3_deinit(back.conn);
             //connMutexes.erase(back.conn);
             back.conn = NULL;
@@ -523,13 +523,14 @@ ms3_st * S3Storage::getConnection()
         if(!IAMrole.empty())
         {
             res = ms3_init_assume_role(ret, (IAMrole.empty() ? NULL : IAMrole.c_str()),
-                                            (STSendpoint.empty() ? NULL : STSendpoint.c_str()));
+                                            (STSendpoint.empty() ? NULL : STSendpoint.c_str()),
+                                            (STSregion.empty() ? NULL : STSregion.c_str()));
             if (res)
             {
                 // Something is wrong with the assume role so abort as if the ms3_init failed
-                logger->log(LOG_ERR, "S3Storage::getConnection(): ERROR: ms3_init_assume_role. Verify iam_role_name = %s, aws_access_key_id, and aws_secret_access_key values.",IAMrole.c_str());
+                logger->log(LOG_ERR, "S3Storage::getConnection(): ERROR: ms3_init_assume_role. Verify iam_role_name = %s, aws_access_key_id, aws_secret_access_key values. Also check sts_region and sts_endpoint if configured.",IAMrole.c_str());
                 if (ms3_server_error(ret))
-                    logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_error: server says '%s'.  role name = %s", ms3_server_error(ret), IAMrole.c_str());
+                    logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_error: server says '%s'  role name = %s", ms3_server_error(ret), IAMrole.c_str());
                 ms3_deinit(ret);
                 ret = NULL;
             }
