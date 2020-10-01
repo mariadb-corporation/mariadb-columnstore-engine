@@ -104,9 +104,11 @@ class DBRM
 public:
     // The param noBRMFcns suppresses init of the ExtentMap, VSS, VBBM, and CopyLocks.
     // It can speed up init if the caller only needs the other structures.
-    EXPORT DBRM(bool noBRMFcns = false, bool reread = false);
+    EXPORT DBRM(bool noBRMFcns = false);
     EXPORT ~DBRM() throw();
 
+    EXPORT void refreshShm();
+    
     // @bug 1055+ - Added functions below for multiple files per OID enhancement.
 
     /** @brief Get the OID, offset, db root, partition, and segment of a logical block ID.

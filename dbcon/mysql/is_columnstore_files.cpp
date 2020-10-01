@@ -211,8 +211,7 @@ static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     TABLE* table = tables->table;
 
     bool noBRMInit = false;
-    bool reReadMasterSegmentTable = true;
-    BRM::DBRM* emp = new BRM::DBRM(noBRMInit, reReadMasterSegmentTable);
+    BRM::DBRM* emp = new BRM::DBRM(noBRMInit);
 
     if (!emp || !emp->isDBRMReady())
     {

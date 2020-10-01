@@ -70,11 +70,11 @@ using namespace oam;
 namespace BRM
 {
 
-DBRM::DBRM(bool noBRMinit, bool reread): fDebug(false)
+DBRM::DBRM(bool noBRMinit): fDebug(false)
 {
     if (!noBRMinit)
     {
-        mst.reset(new MasterSegmentTable(reread));
+        mst.reset(new MasterSegmentTable());
         em.reset(new ExtentMap());
         vss.reset(new VSS());
         vbbm.reset(new VBBM());
@@ -102,6 +102,18 @@ DBRM::~DBRM() throw()
 {
     if (msgClient != NULL)
         MessageQueueClientPool::releaseInstance(msgClient);
+}
+
+void DBRM::refreshShm()
+{
+    if (mst.get())
+    {
+        mst->refreshShm();
+    }
+    if (em.get())
+    {
+        em->refreshShm();
+    }
 }
 
 DBRM& DBRM::operator=(const DBRM& brm)
