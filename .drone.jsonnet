@@ -254,7 +254,7 @@ local Pipeline(branch, platform, event) = {
              name: 'submodules',
              image: 'alpine/git',
              commands: [
-               'git submodule update --init --recursive --remote',
+               'git submodule update --init --recursive',
                'git config cmake.update-submodules no',
              ],
            },

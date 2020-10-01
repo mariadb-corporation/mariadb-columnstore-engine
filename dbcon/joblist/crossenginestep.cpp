@@ -545,7 +545,6 @@ void CrossEngineStep::execute()
                     setField(i, rowIn[i], mysql->getFieldLength(i), mysql->getField(i), rowFe3);
 
                 fFeInstance->evaluate(rowFe3, fFeSelects);
-                fFeInstance->evaluate(rowFe3, fFeSelects);
 
                 applyMapping(fFeMapping3, rowFe3, &fRowDelivered);
 
