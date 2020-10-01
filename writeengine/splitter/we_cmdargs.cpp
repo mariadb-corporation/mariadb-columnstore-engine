@@ -144,6 +144,9 @@ std::string WECmdArgs::getCpImportCmdLine()
         else if (0 == fLocFile.length()) //No filename given, from job file
             aSS << " -f " << fPmFilePath;
     }
+    
+    if (fUsername.length() > 0)
+        aSS << " -U " << fUsername;
 
     if (fJobId.length() > 0)
         aSS << " -j " << fJobId;
@@ -502,7 +505,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-r readers] [-j JobID] [-e maxErrs] [-B libBufSize] [-w parsers]\n";
     cout << "\t\t [-s c] [-E enclosedChar] [-C escapeChar] [-n NullOption]\n";
     cout << "\t\t [-q batchQty] [-p jobPath] [-P list of PMs] [-S] [-i] [-v verbose]\n";
-    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone] [-U username]\n";
 
 
     cout << "Traditional usage without positional parameters (XML job file required):\n";
@@ -511,7 +514,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-b readBufs] [-p path] [-c readBufSize] [-e maxErrs] [-B libBufSize]\n";
     cout << "\t\t [-n NullOption] [-E encloseChar] [-C escapeChar] [-i] [-v verbose]\n";
     cout << "\t\t [-d debugLevel] [-q batchQty] [-l loadFile] [-P list of PMs] [-S]\n";
-    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone] [-U username]\n";
 
     cout << "\n\nPositional parameters:\n";
     cout << "\tdbName     Name of the database to load\n";
@@ -563,7 +566,8 @@ void WECmdArgs::usage()
          << "\t-K\tS3 Authentication Secret (for S3 imports)\n"
          << "\t-t\tS3 Bucket (for S3 imports)\n"
          << "\t-H\tS3 Hostname (for S3 imports, Amazon's S3 default)\n"
-         << "\t-g\tS3 Region (for S3 imports)\n";
+         << "\t-g\tS3 Region (for S3 imports)\n"
+         << "\t-U\tusername of the data files owner. Default is mysql\n";
 
     cout << "\nExample1: Traditional usage\n"
          << "\tcpimport -j 1234";
@@ -597,19 +601,14 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (argc > 0)
         fPrgmName = "cpimport.bin"; //argv[0] is splitter but we need cpimport
 
-    //Just for testing cpimport invoking in UM
-    //if(argc>0)
-    //	fPrgmName = "/home/bpaul/genii/export/bin/cpimport";
-
     while ((aCh = getopt(argc, argv,
-                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:"))
+                         "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:"))
             != EOF)
     {
         switch (aCh)
         {
             case 'm':
             {
-                //fMode = atoi(optarg);
                 fArgMode = atoi(optarg);
 
                 //cout << "Mode level set to " << fMode << endl;
@@ -934,6 +933,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             case 'g': //-g S3 Region
             {
                 fS3Region = optarg;
+                break;
+            }
+
+            case 'U': //-U username of the files owner
+            {
+                fUsername = optarg;
                 break;
             }
 

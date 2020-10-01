@@ -26,6 +26,7 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <pwd.h>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -171,6 +172,9 @@ private:
     oam::OamCache* fOamCachePtr;	// OamCache: ptr is copyable
     boost::uuids::uuid fJobUUID;        // Job UUID
     std::vector<BRM::LBID_t> fDictFlushBlks;//dict blks to be flushed from cache
+    uid_t         fUid;                 // UID of the files owner
+    gid_t         fGid;                 // GID of the files owner
+
 
     //--------------------------------------------------------------------------
     // Private Functions
@@ -478,6 +482,8 @@ public:
 
     void setJobUUID(const boost::uuids::uuid& jobUUID);
 
+    void setUIDGID(const uid_t uid, const gid_t gid);
+
 public:
     friend class BulkLoad;
     friend struct ColumnInfo;
@@ -488,6 +494,11 @@ public:
 //------------------------------------------------------------------------------
 // Inline functions
 //------------------------------------------------------------------------------
+inline void TableInfo::setUIDGID(const uid_t uid, const gid_t gid)
+{
+    fUid = uid;
+    fGid = gid;
+}
 inline int TableInfo::getCurrentParseBuffer() const
 {
     return fCurrentParseBuffer;

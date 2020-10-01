@@ -229,6 +229,8 @@ public:
 
     /** @brief Verify that specified record type is a DStore2 record */
     static bool verifyDStore2Rec(const char* recType);
+    
+    void setUIDGID(const uid_t uid, const gid_t);
 
 private:
     // disable copy constructor and assignment operator
@@ -372,7 +374,15 @@ private:
     boost::mutex           fRBChunkDctnryMutex;//Mutex lock for RBChunkSet
     OID                    fTableOID;         // OID of relevant table
     std::string            fTableName;        // Name of relevant table
+    uid_t                  fUid;              // files owner
+    gid_t                  fGid;              // files owner
 };
+
+inline void RBMetaWriter::setUIDGID(const uid_t uid, const gid_t gid)
+{
+    fUid = uid;
+    fGid = gid;
+}
 
 } //end of namespace
 

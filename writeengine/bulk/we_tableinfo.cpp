@@ -2428,6 +2428,8 @@ int TableInfo::saveBulkRollbackMetaData( Job& job,
 
     }   // end of loop through columns
 
+    if (fUid != (uid_t)-1)
+        fRBMetaWriter.setUIDGID(fUid, fGid);
     try
     {
         fRBMetaWriter.saveBulkRollbackMetaData(

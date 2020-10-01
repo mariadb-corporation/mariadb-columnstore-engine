@@ -180,6 +180,8 @@ public:
     {
         fbTruncationAsError = bTruncationAsError;
     }
+    void setUsername(const std::string& username);
+    
     bool isJobLogOnly() const
     {
         return fJobLogOnly;
@@ -262,11 +264,11 @@ public:
     {
         return fS3Secret;
     }
-    std::string getS3Region() const 
+    std::string getS3Region() const
     {
         return fS3Region;
     }
-
+    std::string& getUsername();
     std::string PrepMode2ListOfFiles(std::string& FileName); // Bug 4342
     void getColumnList( std::set<std::string>& columnList ) const;
 
@@ -325,9 +327,19 @@ private:	// variables for SplitterApp
     bool fbTruncationAsError; // Treat string truncation as error
     boost::uuids::uuid fUUID;
     bool fConsoleOutput;    // If false, no output to console.
-    std::string fTimeZone;      // Timezone to use for TIMESTAMP datatype
+    std::string fTimeZone;  // Timezone to use for TIMESTAMP datatype
+    std::string fUsername;  // Username of the data files owner
 };
 //----------------------------------------------------------------------
+
+inline void WECmdArgs::setUsername(const std::string& username)
+{
+    fUsername = username;
+}
+inline std::string& WECmdArgs::getUsername()
+{
+    return fUsername;
+}
 
 
 }

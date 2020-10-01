@@ -38,6 +38,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <sys/time.h>
 #include <vector>
+#include <pwd.h>
 
 #include "atomicops.h"
 
@@ -397,6 +398,8 @@ struct ColumnInfo
      */
     unsigned rowsPerExtent( );
 
+    void setUIDGID(uid_t uid, gid_t gid);
+
 protected:
 
     //--------------------------------------------------------------------------
@@ -502,11 +505,23 @@ protected:
     // to be created after preprocessing
 
     unsigned     fRowsPerExtent;            // Number of rows per column extent
+    /** @brief uid of the owner of segment and dict files */
+    uid_t uID;
+
+    /** @brief gid of the owner of segment and dict files */
+    gid_t gID;
 };
 
 //------------------------------------------------------------------------------
 // Inline functions
 //------------------------------------------------------------------------------
+inline void ColumnInfo::setUIDGID(uid_t uid, gid_t gid)
+{
+    uID = uid; gID = gid;
+    if (colOp)
+        colOp->setUIDGID(uid, gid);
+}
+
 inline boost::mutex& ColumnInfo::colMutex()
 {
     return fColMutex;
