@@ -69,9 +69,17 @@ public:
     boost::interprocess::shared_memory_object fShmobj;
     boost::interprocess::mapped_region fMapreg;
 
+    inline void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
+    
 private:
     MasterSegmentTableImpl(int key, int size);
-    ~MasterSegmentTableImpl();
     MasterSegmentTableImpl(const MasterSegmentTableImpl& rhs);
     MasterSegmentTableImpl& operator=(const MasterSegmentTableImpl& rhs);
 
@@ -90,7 +98,6 @@ public:
      * @note Throws runtime_error on a semaphore-related error.
      */
     EXPORT MasterSegmentTable();
-    //MasterSegmentTable(const MasterSegmentTable& mst);
     EXPORT ~MasterSegmentTable();
 
     /// specifies the Extent Map table
@@ -106,6 +113,11 @@ public:
     /// the number of tables currently defined
     static const int nTables = 5;
 
+    EXPORT void refreshShm()
+    {
+        if (fPImpl)
+            fPImpl->refreshShm();
+    }
     /** @brief This function gets the specified table.
      *
      * This function gets the specified table and grabs the

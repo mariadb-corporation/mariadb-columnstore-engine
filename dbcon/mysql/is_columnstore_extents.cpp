@@ -59,7 +59,6 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
     std::vector<struct BRM::EMEntry>::iterator iter;
     std::vector<struct BRM::EMEntry>::iterator end;
 
-
     emp->getExtents(oid, entries, false, false, true);
 
     if (entries.size() == 0)
@@ -283,5 +282,7 @@ int is_columnstore_extents_plugin_init(void* p)
     ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_extents_fields;
     schema->fill_table = is_columnstore_extents_fill;
+    BRM::DBRM* dbrm = new BRM::DBRM();
+    dbrm->refreshShm();
     return 0;
 }
