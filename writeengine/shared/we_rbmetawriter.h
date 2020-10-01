@@ -136,7 +136,7 @@ typedef std::set< RBChunkInfo, RBChunkInfoCompare > RBChunkSet;
  * parallel by several threads for different dictionary columns.
  */
 //------------------------------------------------------------------------------
-class RBMetaWriter
+class RBMetaWriter: public WeUIDGID
 {
 public:
 
@@ -229,7 +229,7 @@ public:
 
     /** @brief Verify that specified record type is a DStore2 record */
     static bool verifyDStore2Rec(const char* recType);
-
+    
 private:
     // disable copy constructor and assignment operator
     RBMetaWriter(const RBMetaWriter&);
