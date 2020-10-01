@@ -123,8 +123,9 @@ struct LockInfo
 
 /** @brief Maintains information about a DB column.
  */
-struct ColumnInfo
+class ColumnInfo: public WeUIDGID
 {
+public:
     //--------------------------------------------------------------------------
     // Public Data Members
     //--------------------------------------------------------------------------
@@ -397,6 +398,8 @@ struct ColumnInfo
      */
     unsigned rowsPerExtent( );
 
+    void setUIDGID(const uid_t uid, const gid_t gid) override;
+
 protected:
 
     //--------------------------------------------------------------------------
@@ -507,6 +510,13 @@ protected:
 //------------------------------------------------------------------------------
 // Inline functions
 //------------------------------------------------------------------------------
+inline void ColumnInfo::setUIDGID(const uid_t p_uid, const gid_t p_gid)
+{
+    WeUIDGID::setUIDGID(p_uid, p_gid);
+    if (colOp)
+        colOp->setUIDGID(this);
+}
+
 inline boost::mutex& ColumnInfo::colMutex()
 {
     return fColMutex;

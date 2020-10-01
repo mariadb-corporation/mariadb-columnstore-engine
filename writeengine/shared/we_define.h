@@ -153,6 +153,7 @@ const int   ERR_VB_FILE_NOT_EXIST   = ERR_FILEBASE + 17;// Version buffer file n
 const int   ERR_FILE_FLUSH          = ERR_FILEBASE + 18;// Error flushing file
 const int   ERR_FILE_GLOBBING       = ERR_FILEBASE + 19;// Error globbing a file name
 const int   ERR_FILE_EOF            = ERR_FILEBASE + 20;// EOF
+const int   ERR_FILE_CHOWN          = ERR_FILEBASE + 21;// EOF
 
 //--------------------------------------------------------------------------
 // XML level error

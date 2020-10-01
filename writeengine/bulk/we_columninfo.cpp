@@ -458,6 +458,9 @@ int ColumnInfo::createDelayedFileIfNeeded( const std::string& tableName )
         }
 
         boost::scoped_ptr<Dctnry> refDctnry(tempD);
+        // MCOL-4328 Define a file owner uid and gid
+        refDctnry->setUIDGID(this);
+
         rc = tempD->createDctnry(
                  column.dctnry.dctnryOid,
                  column.dctnryWidth,
@@ -1681,6 +1684,7 @@ int ColumnInfo::openDctnryStore( bool bMustExist )
 
     fStore->setLogger(fLog);
     fStore->setColWidth( column.dctnryWidth );
+    fStore->setUIDGID(this);
 
     if (column.fWithDefault)
         fStore->setDefault( column.fDefaultChr );

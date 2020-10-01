@@ -2428,6 +2428,8 @@ int TableInfo::saveBulkRollbackMetaData( Job& job,
 
     }   // end of loop through columns
 
+    fRBMetaWriter.setUIDGID(this);
+
     try
     {
         fRBMetaWriter.saveBulkRollbackMetaData(

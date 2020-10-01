@@ -38,6 +38,7 @@
 #include <boost/filesystem/convenience.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <pwd.h>
 
 #include "we_bulkstatus.h"
 #include "we_rbmetawriter.h"
@@ -157,7 +158,8 @@ BulkLoad::BulkLoad() :
     fbContinue(false),
     fDisableTimeOut(false),
     fUUID(boost::uuids::nil_generator()()),
-    fTimeZone("SYSTEM")
+    fTimeZone("SYSTEM"),
+    fUsername("mysql") // MCOL-4328 default file owner
 {
     fTableInfo.clear();
     setDebugLevel( DEBUG_0 );
@@ -484,6 +486,23 @@ int BulkLoad::preProcess( Job& job, int tableNo,
     tableInfo->setTimeZone(fTimeZone);
     tableInfo->setJobUUID(fUUID);
 
+    // MCOL-4328 Get username gid and uid if they are set
+    // We inject uid and gid into TableInfo and All ColumnInfo-s later.
+    struct passwd* pwd = nullptr;
+    errno = 0;
+    if (fUsername.length() && (pwd = getpwnam(fUsername.c_str())) == nullptr)
+    {
+        std::ostringstream oss;
+        oss << "Error getting pwd for " << fUsername
+            << " with errno "
+            << errno;
+        fLog.logMsg( oss.str(), MSGLVL_ERROR );
+        return ERR_FILE_CHOWN;
+    }
+
+    if (pwd)
+        tableInfo->setUIDGID(pwd->pw_uid, pwd->pw_gid);
+
     if (fMaxErrors != -1)
         tableInfo->setMaxErrorRows(fMaxErrors);
     else
@@ -684,6 +703,9 @@ int BulkLoad::preProcess( Job& job, int tableNo,
                                   job.jobTableList[tableNo].colList[i],
                                   pDBRootExtentTracker,
                                   tableInfo);
+
+        if (pwd)
+            info->setUIDGID(pwd->pw_uid, pwd->pw_gid);
 
         // For auto increment column, we need to get the starting value
         if (info->column.autoIncFlag)
@@ -921,7 +943,7 @@ int BulkLoad::preProcessHwmLbid(
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // DESCRIPTION:
 //    NO_ERROR if success
