@@ -161,7 +161,17 @@ struct ExtentSorter
 class ExtentMapImpl
 {
 public:
+    ~ExtentMapImpl(){};
+
     static ExtentMapImpl* makeExtentMapImpl(unsigned key, off_t size, bool readOnly = false);
+    static void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
 
     inline void grow(unsigned key, off_t size)
 #ifdef NDEBUG
@@ -199,7 +209,6 @@ public:
 
 private:
     ExtentMapImpl(unsigned key, off_t size, bool readOnly = false);
-    ~ExtentMapImpl();
     ExtentMapImpl(const ExtentMapImpl& rhs);
     ExtentMapImpl& operator=(const ExtentMapImpl& rhs);
 
@@ -212,7 +221,17 @@ private:
 class FreeListImpl
 {
 public:
+    ~FreeListImpl(){};
+
     static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
+    static void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
 
     inline void grow(unsigned key, off_t size)
 #ifdef NDEBUG
@@ -250,7 +269,6 @@ public:
 
 private:
     FreeListImpl(unsigned key, off_t size, bool readOnly = false);
-    ~FreeListImpl();
     FreeListImpl(const FreeListImpl& rhs);
     FreeListImpl& operator=(const FreeListImpl& rhs);
 
