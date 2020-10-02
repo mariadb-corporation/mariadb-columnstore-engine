@@ -1378,9 +1378,16 @@ void ha_mcs_cache_share::close()
 static plugin_ref plugin_maria = NULL;
 
 ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *mem_root)
-  :ha_mcs(mcs_hton, table_arg)
+  :ha_mcs(mcs_hton, table_arg), isSysCatTable(false)
 {
-  if (get_cache_inserts(current_thd))
+  if (table_arg && table_arg->db.str &&
+      !strcasecmp(table_arg->db.str, "calpontsys") &&
+      table_arg->table_name.str &&
+      (!strcasecmp(table_arg->table_name.str, "syscolumn") ||
+       !strcasecmp(table_arg->table_name.str, "systable")))
+    isSysCatTable = true;
+
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     if (!plugin_maria)
     {
@@ -1405,7 +1412,7 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
 
 ha_mcs_cache::~ha_mcs_cache()
 {
-  if (get_cache_inserts(current_thd) && cache_handler)
+  if (get_cache_inserts(current_thd) && !isSysCatTable && cache_handler)
   {
     delete cache_handler;
     cache_handler= NULL;
@@ -1424,7 +1431,7 @@ int ha_mcs_cache::create(const char *name, TABLE *table_arg,
   char cache_name[FN_REFLEN+8];
   DBUG_ENTER("ha_mcs_cache::create");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     create_cache_name(cache_name, name);
     {
@@ -1444,7 +1451,7 @@ int ha_mcs_cache::create(const char *name, TABLE *table_arg,
   /* Create the real table in ColumnStore */
   if ((error= parent::create(name, table_arg, ha_create_info)))
   {
-    if (get_cache_inserts(current_thd))
+    if (get_cache_inserts(current_thd) && !isSysCatTable)
       cache_handler->delete_table(cache_name);
     DBUG_RETURN(error);
   }
@@ -1458,7 +1465,7 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
   int error;
   DBUG_ENTER("ha_mcs_cache::open");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     /* Copy table object to cache_handler */
     cache_handler->change_table_ptr(table, table->s);
@@ -1509,7 +1516,7 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
 
   if ((error= parent::open(name, mode, open_flags)))
   {
-    if (get_cache_inserts(current_thd))
+    if (get_cache_inserts(current_thd) && !isSysCatTable)
       cache_handler->close();
     DBUG_RETURN(error);
   }
@@ -1524,7 +1531,7 @@ int ha_mcs_cache::close()
 
   DBUG_ENTER("ha_mcs_cache::close()");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     error= cache_handler->close();
     if ((error2= parent::close()))
@@ -1553,7 +1560,7 @@ uint ha_mcs_cache::lock_count(void) const
     If we are doing an insert or if we want to flush the cache, we have to lock
     both the Aria table and normal table.
   */
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
     return 2;
   else
     return 1;
@@ -1567,7 +1574,7 @@ THR_LOCK_DATA **ha_mcs_cache::store_lock(THD *thd,
                                          THR_LOCK_DATA **to,
                                          enum thr_lock_type lock_type)
 {
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
     to= cache_handler->store_lock(thd, to, TL_WRITE);
   return parent::store_lock(thd, to, lock_type);
 }
@@ -1582,7 +1589,7 @@ int ha_mcs_cache::external_lock(THD *thd, int lock_type)
   int error= 0;
   DBUG_ENTER("ha_mcs_cache::external_lock");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     /*
       Reset lock_counter. This is ok as external_lock() is guaranteed to be
@@ -1632,7 +1639,7 @@ int ha_mcs_cache::delete_table(const char *name)
 
   DBUG_ENTER("ha_mcs_cache::delete_table");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     char cache_name[FN_REFLEN+8];
     create_cache_name(cache_name, name);
@@ -1652,7 +1659,7 @@ int ha_mcs_cache::rename_table(const char *from, const char *to)
 
   DBUG_ENTER("ha_mcs_cache::rename_table");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     char cache_from[FN_REFLEN+8], cache_to[FN_REFLEN+8];
     create_cache_name(cache_from, from);
@@ -1681,7 +1688,7 @@ int ha_mcs_cache::delete_all_rows(void)
 
   DBUG_ENTER("ha_mcs_cache::delete_all_rows");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     error= cache_handler->delete_all_rows();
     share->cached_rows= 0;
@@ -1693,7 +1700,7 @@ int ha_mcs_cache::delete_all_rows(void)
 
 bool ha_mcs_cache::is_crashed() const
 {
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
     return (cache_handler->is_crashed() ||
             parent::is_crashed());
   else
@@ -1725,7 +1732,7 @@ int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
   int something_crashed= is_crashed();
   DBUG_ENTER("ha_mcs_cache::repair");
 
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     if (cache_handler->is_crashed() || !something_crashed)
     {
@@ -1755,7 +1762,7 @@ int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
 */
 int ha_mcs_cache::write_row(const uchar *buf)
 {
-  if (get_cache_inserts(current_thd) && insert_command)
+  if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
   {
     DBUG_ASSERT(share->cached_rows == cache_handler->file->state->records);
     share->cached_rows++;
@@ -1767,7 +1774,7 @@ int ha_mcs_cache::write_row(const uchar *buf)
 
 void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
 {
-  if (get_cache_inserts(current_thd))
+  if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     if (insert_command)
     {
@@ -1785,7 +1792,7 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
 
 int ha_mcs_cache::end_bulk_insert()
 {
-  if (get_cache_inserts(current_thd) && insert_command)
+  if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
     return cache_handler->end_bulk_insert();
   return parent::end_bulk_insert();
 }
