@@ -286,6 +286,10 @@ class ha_mcs_cache :public ha_mcs
   int original_lock_type;
   bool insert_command, cache_locked;
 
+  // True if this handler belongs to either calpontsys.systable or
+  // calpontsys.syscolumn system catalog tables
+  bool isSysCatTable;
+
 public:
   uint lock_counter;
   ha_maria *cache_handler;
