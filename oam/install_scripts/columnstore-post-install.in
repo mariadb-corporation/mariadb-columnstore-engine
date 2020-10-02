@@ -341,12 +341,21 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     chown -R mysql:mysql /var/lib/columnstore/storagemanager
     IFLAG=/var/lib/columnstore/storagemanager/storagemanager-lock
 
-    # prevent nodes using shared storage manager from stepping on each other when initializing
+    # shared dbroot1 synchronization
+    # prevents dbbuilder from processing simultaneously on two or more nodes
+    exec {fd_lock}>/var/lib/columnstore/data1/dbroot1-lock
+    flock -x "$fd_lock"
+
+    # shared storagemanager data corruption prevention
+    # intially, a node is in a single node setting and takes ownership of storagemanager
+    # prevent nodes using shared storage manager from stepping on each other
     # if storagemanager-lock already exists, we have already initialized
     if [ ! -e $IFLAG ]; then
         echo "Populating the engine initial system catalog."
         systemctl start mariadb-columnstore
     fi
+
+    flock -u "$fd_lock"
 fi
  
 if [ $stop_mysqld -eq 1 ];then
