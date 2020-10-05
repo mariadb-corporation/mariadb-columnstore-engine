@@ -520,13 +520,6 @@ void WESplitterApp::updateWithJobFile(int aIdx)
 int main(int argc, char** argv)
 {
     std::string err;
-    // Why do we need this if we don't care about f()'s rc ?
-    // @BUG4343
-    if( setuid( 0 ) < 0 )
-    {
-        std::cerr << " we_splitterapp: couldn't set uid " << std::endl;
-    }
-
     std::cin.sync_with_stdio(false);
 
     try
