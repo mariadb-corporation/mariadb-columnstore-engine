@@ -226,7 +226,7 @@ rm -f $lockdir/columnstore
 
 # This was the last place of postConfigure. RIP
 
-/usr/sbin/install_mcs_mysql.sh --tmpdir=$tmpDir
+@ENGINE_BINDIR@/install_mcs_mysql.sh --tmpdir=$tmpDir
 
 # Restart MDB to enable plugin
 systemctl cat mariadb.service > /dev/null 2>&1
