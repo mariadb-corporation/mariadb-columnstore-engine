@@ -45,10 +45,6 @@ int main(int argc, char** argv)
 {
     const int DEBUG_LVL_TO_DUMP_SYSCAT_RPT = 4;
     // set effective ID to root
-    if( setuid( 0 ) < 0 )
-    {
-        std::cerr << " colxml: couldn't set uid " << std::endl;
-    }
     setlocale(LC_ALL, "");
     setlocale(LC_NUMERIC, "C");
     WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings

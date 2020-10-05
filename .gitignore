@@ -134,6 +134,7 @@ oam/install_scripts/columnstoreSyslogSetup.sh
 oam/install_scripts/columnstore_module_installer.sh
 oam/install_scripts/disable-rep-columnstore.sh
 oam/install_scripts/mariadb-columnstore.service
+oam/install_scripts/mariadb-columnstore-start.sh
 oam/install_scripts/mariadb-command-line.sh
 oam/install_scripts/master-rep-columnstore.sh
 oam/install_scripts/mcs-controllernode.service

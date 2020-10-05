@@ -160,6 +160,7 @@ public:
     void                setS3Bucket          ( const std::string& bucket );
     void                setS3Host            ( const std::string& host );
     void                setS3Region          ( const std::string& region );
+    void                setUsername          ( const std::string& username );
     // Timer functions
     void                startTimer           ( );
     void                stopTimer            ( );
@@ -244,6 +245,7 @@ private:
     std::string fS3Host;                   // S3 Host
     std::string fS3Bucket;                 // S3 Bucket
     std::string fS3Region;                 // S3 Region
+    std::string fUsername;                 // data files owner name mysql by default 
 
     //--------------------------------------------------------------------------
     // Private Functions
@@ -534,6 +536,11 @@ inline void BulkLoad::setS3Host( const std::string& host )
 inline void BulkLoad::setS3Region( const std::string& region )
 {
     fS3Region = region;
+}
+
+inline void BulkLoad::setUsername( const std::string& username )
+{
+    fUsername = username;
 }
 
 inline void BulkLoad::startTimer( )
