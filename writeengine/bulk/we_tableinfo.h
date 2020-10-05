@@ -55,7 +55,7 @@ namespace WriteEngine
 
 /* @brief Class which maintains the information for a table.
  */
-class TableInfo
+class TableInfo : public WeUIDGID
 {
 private:
 

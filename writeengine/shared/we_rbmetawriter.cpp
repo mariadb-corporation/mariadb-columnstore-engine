@@ -452,6 +452,12 @@ std::string RBMetaWriter::openMetaFile ( uint16_t dbRoot )
         throw WeException( oss.str(), ERR_FILE_OPEN );
     }
 
+    { 
+        std::ostringstream ossChown;
+        if (chownFileDir(ossChown, tmpMetaFileName, bulkRollbackPath))
+            throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+    }
+
     fMetaDataStream <<
                     "# VERSION: 4"             << std::endl <<
                     "# APPLICATION: " << fAppDesc << std::endl <<
@@ -1196,6 +1202,7 @@ int RBMetaWriter::writeHWMChunk(
     std::ostringstream ossFile;
     ossFile << "/" << columnOID << ".p" << partition << ".s" << segment;
     std::string fileName;
+    std::string dirPath;
     int rc = getSubDirPath( dbRoot, fileName );
 
     if (rc != NO_ERROR)
@@ -1206,6 +1213,8 @@ int RBMetaWriter::writeHWMChunk(
         errMsg = oss.str();
         return ERR_METADATABKUP_COMP_OPEN_BULK_BKUP;
     }
+
+    dirPath = fileName;
 
     fileName += ossFile.str();
 
@@ -1325,9 +1334,14 @@ int RBMetaWriter::writeHWMChunk(
         return ERR_METADATABKUP_COMP_RENAME;
     }
 
+    { 
+        std::ostringstream ossChown;
+        if (chownFileDir(ossChown, fileName, dirPath))
+            throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+    }
+
     return NO_ERROR;
 }
-
 //------------------------------------------------------------------------------
 // Returns the directory path to be used for storing any backup data files.
 //
