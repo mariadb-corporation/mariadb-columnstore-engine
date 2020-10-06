@@ -19,7 +19,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
+    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF -DCMAKE_INSTALL_PREFIX=/opt/mariadb-10.5-cs',
     'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
   };
