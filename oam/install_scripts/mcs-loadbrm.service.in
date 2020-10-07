@@ -1,6 +1,6 @@
 [Unit]
 Description=loadbrm
-PartOf=mcs-workernode.service
+PartOf=mcs-workernode@.service
 After=network.target mcs-storagemanager.service
 
 [Service]
@@ -8,4 +8,4 @@ Type=oneshot
 ExecStart=/usr/bin/env bash -c "@ENGINE_BINDIR@/mcs-loadbrm.py && sleep 2" 
 
 [Install]
-WantedBy=mcs-workernode.service
+WantedBy=mcs-workernode@.service
