@@ -69,6 +69,7 @@
 #include "liboamcpp.h"
 #include "crashtrace.h"
 #include "utils_utf8.h"
+#include "service.h"
 
 #include <mutex>
 #include <thread>
@@ -77,6 +78,79 @@
 #include "dbrm.h"
 
 #include "collation.h"
+
+
+class Opt
+{
+public:
+    int m_debug;
+    bool m_e;
+    bool m_fg;
+    Opt(int argc, char *argv[])
+     :m_debug(0),
+      m_e(false),
+      m_fg(false)
+    {
+        int c;
+        while ((c = getopt(argc, argv, "edf")) != EOF)
+        {
+            switch (c)
+            {
+                case 'd':
+                    m_debug++;
+                    break;
+
+                case 'e':
+                    m_e= true;
+                    break;
+
+                case 'f':
+                    m_fg= true;
+                    break;
+
+                case '?':
+                default:
+                    break;
+            }
+        }
+    }
+};
+
+
+class ServiceExeMgr: public Service, public Opt
+{
+protected:
+
+    void log(logging::LOG_TYPE type, const std::string &str)
+    {
+        logging::LoggingID logid(16);
+        logging::Message::Args args;
+        logging::Message message(8);
+        args.add(strerror(errno));
+        message.format(args);
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(type, message, logid);
+    }
+
+public:
+    ServiceExeMgr(const Opt &opt)
+     :Service("ExeMgr"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        log(logging::LOG_TYPE_CRITICAL, std::string(strerror(errno)));
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        log(logging::LOG_TYPE_INFO, str);
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
 
 namespace
 {
@@ -1435,38 +1509,10 @@ void cleanTempDir()
 }
 
 
-int main(int argc, char* argv[])
+int ServiceExeMgr::Child()
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
 
-    // This is unset due to the way we start it
-    program_invocation_short_name = const_cast<char*>("ExeMgr");
-
-    gDebug = 0;
-    bool eFlg = false;
-    int c;
-
-    opterr = 0;
-
-    while ((c = getopt(argc, argv, "ed")) != EOF)
-        switch (c)
-        {
-            case 'd':
-                gDebug++;
-                break;
-
-            case 'e':
-                eFlg = true;
-                break;
-
-            case '?':
-            default:
-                break;
-        }
+    gDebug= m_debug;
 
     //set BUSY_INIT state
     {
@@ -1486,13 +1532,13 @@ int main(int argc, char* argv[])
 #else
 
     // Make sure CSC thinks it's on a UM or else bucket reuse stuff below will stall
-    if (!eFlg)
+    if (!m_e)
         setenv("CALPONT_CSC_IDENT", "um", 1);
 
 #endif
     setupSignalHandlers();
     int err = 0;
-    if (!gDebug)
+    if (!m_debug)
         err = setupResources();
     std::string errMsg;
 
@@ -1538,6 +1584,7 @@ int main(int argc, char* argv[])
         {
         }
 
+        NotifyServiceInitializationFailed();
         return 2;
     }
 
@@ -1633,6 +1680,8 @@ int main(int argc, char* argv[])
         }
     }
 
+    NotifyServiceStarted();
+
     std::cout << "Starting ExeMgr: st = " << serverThreads <<
          ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
          rm->getConfig()->configFile() << std::endl;
@@ -1676,4 +1725,24 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+
+int main(int argc, char* argv[])
+{
+    opterr = 0;
+    Opt opt(argc, argv);
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("ExeMgr");
+
+    // Initialize the charset library
+    my_init();
+
+    return ServiceExeMgr(opt).Run();
+}
+
 // vim:ts=4 sw=4:

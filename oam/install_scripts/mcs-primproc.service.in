@@ -7,7 +7,7 @@ PartOf=mcs-controllernode.service
 After=network.target mcs-workernode@1.service mcs-workernode@2.service mcs-controllernode.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@

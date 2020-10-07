@@ -41,6 +41,8 @@
 #include "blockrequestprocessor.h"
 #include "batchprimitiveprocessor.h"
 
+#include "service.h"
+
 //#define PRIMPROC_STOPWATCH
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"
@@ -140,7 +142,7 @@ public:
     /** @brief start the primitive server
     *
     */
-    void start();
+    void start(Service *p);
 
     /** @brief get a pointer the shared processor thread pool
      */

@@ -3,14 +3,14 @@ Description=mcs-workernode
 After=network.target mcs-loadbrm.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i fg
+ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i
 ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
 
