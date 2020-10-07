@@ -149,8 +149,8 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-exemgr.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-workernode@.service /usr/lib/systemd/system/. >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-workernode@.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /usr/lib/systemd/system/. >/dev/null 2>&1
@@ -165,7 +165,7 @@ if [ $user = "root" ]; then
         systemctl enable mcs-dmlproc > /dev/null 2>&1
         systemctl enable mcs-exemgr > /dev/null 2>&1
         systemctl enable mcs-primproc > /dev/null 2>&1
-        systemctl enable mcs-workernode > /dev/null 2>&1
+        systemctl enable mcs-workernode@ > /dev/null 2>&1
         systemctl enable mcs-writeengineserver > /dev/null 2>&1
         systemctl enable mcs-loadbrm > /dev/null 2>&1
         systemctl enable mcs-storagemanager > /dev/null 2>&1

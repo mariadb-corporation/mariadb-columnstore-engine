@@ -82,7 +82,7 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     systemctl disable mcs-dmlproc > /dev/null 2>&1
     systemctl disable mcs-exemgr > /dev/null 2>&1
     systemctl disable mcs-primproc > /dev/null 2>&1
-    systemctl disable mcs-workernode > /dev/null 2>&1
+    systemctl disable mcs-workernode@.service > /dev/null 2>&1
     systemctl disable mcs-writeengineserver > /dev/null 2>&1
     systemctl disable mcs-loadbrm > /dev/null 2>&1
     systemctl disable mcs-storagemanager > /dev/null 2>&1
@@ -99,8 +99,8 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     rm -f /lib/systemd/system/mcs-exemgr.service
     rm -f /usr/lib/systemd/system/mcs-primproc.service
     rm -f /lib/systemd/system/mcs-primproc.service
-    rm -f /usr/lib/systemd/system/mcs-workernode.service
-    rm -f /lib/systemd/system/mcs-workernode.service
+    rm -f /usr/lib/systemd/system/mcs-workernode@.service
+    rm -f /lib/systemd/system/mcs-workernode@.service
     rm -f /usr/lib/systemd/system/mcs-writeengineserver.service
     rm -f /lib/systemd/system/mcs-writeengineserver.service
     rm -f /usr/lib/systemd/system/mcs-loadbrm.service
