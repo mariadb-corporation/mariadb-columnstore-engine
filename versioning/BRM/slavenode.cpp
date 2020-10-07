@@ -39,12 +39,14 @@
 #include "IDBPolicy.h"
 
 #include "crashtrace.h"
+#include "service.h"
+#include "jobstep.h"
 
 using namespace BRM;
 using namespace std;
 
 SlaveComm* comm;
-bool die;
+bool die= false;
 boost::thread_group monitorThreads;
 
 void fail()
@@ -60,6 +62,49 @@ void fail()
         cerr << "failed to notify OAM of server failure" << endl;
     }
 }
+
+
+class Opt
+{
+protected:
+    const char *m_progname;
+    const char *m_nodename;
+    bool m_fg;
+public:
+  Opt(int argc, char **argv)
+   :m_progname(argv[0]),
+    m_nodename(argc > 1 ? argv[1] : nullptr),
+    m_fg(argc > 2 && string(argv[2]) == "fg")
+  { }
+};
+
+
+class ServiceWorkerNode: public Service, public Opt
+{
+protected:
+    void setupChildSignalHandlers();
+
+public:
+    ServiceWorkerNode(const Opt &opt)
+     :Service("WorkerNode"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        perror(m_progname);
+        log_errno(std::string(m_progname));
+        fail();
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        log(str, logging::LOG_TYPE_INFO);
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
 
 void stop(int sig)
 {
@@ -77,7 +122,7 @@ void reset(int sig)
 }
 
 
-static void setupSignalHandlers()
+void ServiceWorkerNode::setupChildSignalHandlers()
 {
 #ifdef SIGHUP
     signal(SIGHUP, reset);
@@ -97,16 +142,17 @@ static void setupSignalHandlers()
 }
 
 
-static int child(const string& nodeName)
+int ServiceWorkerNode::Child()
 {
-    setupSignalHandlers();
+    setupChildSignalHandlers();
 
     SlaveDBRMNode slave;
     ShmKeys keys;
 
     try
     {
-        comm = new SlaveComm(nodeName, &slave);
+        comm = new SlaveComm(std::string(m_nodename), &slave);
+        NotifyServiceStarted();
     }
     catch (exception& e)
     {
@@ -115,7 +161,8 @@ static int child(const string& nodeName)
         cerr << os.str() << endl;
         log(os.str());
         fail();
-        exit(1);
+        NotifyServiceInitializationFailed();
+        return 1;
     }
 
     /* Start 4 threads to monitor write lock state */
@@ -161,14 +208,19 @@ static int child(const string& nodeName)
 
 int main(int argc, char** argv)
 {
+    Opt opt(argc, argv);
+
     // Set locale language
     setlocale(LC_ALL, "");
     setlocale(LC_NUMERIC, "C");
 
     BRM::logInit ( BRM::SubSystemLogId_workerNode );
 
-    string arg;
-    int err = 0;
+    /*
+      Need to shutdown TheadPool before fork(),
+      otherwise it would get stuck when trying to join fPruneThread.
+    */
+    joblist::JobStep::jobstepThreadPool.stop();
 
     if (argc < 2)
     {
@@ -180,21 +232,8 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    // TODO: this should move to child() probably, like in masternode.cpp
     idbdatafile::IDBPolicy::configIDBPolicy();
 
-    if (!(argc >= 3 && (arg = argv[2]) == "fg"))
-        err = fork();
-
-    if (err == 0)
-    {
-        return child(argv[1]);
-    }
-    else if (err < 0)
-    {
-        perror(argv[0]);
-        log_errno(string(argv[0]));
-        fail();
-    }
-
-    exit(0);
+    return ServiceWorkerNode(opt).Run();
 }

@@ -2493,7 +2493,7 @@ PrimitiveServer::~PrimitiveServer()
 {
 }
 
-void PrimitiveServer::start()
+void PrimitiveServer::start(Service *service)
 {
     // start all the server threads
     for ( int i = 1; i <= fServerThreads; i++)
@@ -2514,6 +2514,8 @@ void PrimitiveServer::start()
         }
         catch (...) {}
     }
+
+    service->NotifyServiceStarted();
 
     fServerpool.wait();
 

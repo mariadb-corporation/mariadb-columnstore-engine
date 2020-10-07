@@ -6,7 +6,7 @@ PartOf=mcs-exemgr.service
 After=network.target mcs-exemgr.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
