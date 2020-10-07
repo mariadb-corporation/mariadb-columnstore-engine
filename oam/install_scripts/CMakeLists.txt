@@ -13,7 +13,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/disable-rep-columnstore.sh.in" "${CM
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mariadb-command-line.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/slave-rep-columnstore.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs_module_installer.sh" @ONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode@.service" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-controllernode.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-controllernode.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-primproc.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-primproc.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-exemgr.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-exemgr.service" @ONLY)
@@ -62,7 +62,7 @@ install(FILES mariadb-columnstore.service
               columnstoreLogRotate
               myCnf-include-args.text
               myCnf-exclude-args.text
-              mcs-workernode@.service
+              mcs-workernode.service
               mcs-controllernode.service
               mcs-primproc.service
               mcs-exemgr.service
