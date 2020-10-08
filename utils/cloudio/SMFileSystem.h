@@ -45,7 +45,8 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         int copyFile(const char* srcPath, const char* destPath) const;
         bool filesystemIsUp() const;
         bool filesystemSync() const;
-
+        int chown(IDBDataFile* file, uid_t uid, gid_t gid) const {return 0;};
+        int chown(const char* filename, uid_t uid, gid_t gid) const {return 0;};
 };
 
 }

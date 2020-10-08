@@ -502,10 +502,6 @@ public:
                                           bool     bAbbrevExtent,
                                           bool     bOptExtension=false );
 
-    // Calls a chown and logs an error message
-    bool                chownDataFileDir(std::ostringstream& error, 
-                                         const std::string& fileName);
-
 protected:
     EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);
     EXPORT virtual int         updateDctnryExtent(IDBDataFile* pFile, int nBlocks);

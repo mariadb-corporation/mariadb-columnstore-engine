@@ -306,4 +306,19 @@ int PosixFileSystem::copyFile(const char* srcPath, const char* destPath) const
     return ret;
 }
 
+int PosixFileSystem::chown(IDBDataFile* file, uid_t uid, gid_t gid) const
+{
+    return chown(file->name().c_str(), uid, gid);
+}
+
+int PosixFileSystem::chown(const char* filename, uid_t uid, gid_t gid) const
+{
+    int ret = 0;
+    if (uid >= 0)
+    {
+        ret = ::chown(filename, uid, gid);
+    }
+    return ret;
+}
+
 }

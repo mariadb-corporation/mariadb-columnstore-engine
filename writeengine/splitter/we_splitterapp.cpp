@@ -38,6 +38,7 @@ using namespace std;
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <sys/capability.h>
 
 #include "batchloader.h"
 using namespace batchloader;
@@ -521,7 +522,46 @@ int main(int argc, char** argv)
 {
     std::string err;
     std::cin.sync_with_stdio(false);
+#if 0
+    // **********************************************************************
+    // If we're priv, Change our UID and GID to that of what WriteEngineServer
+    // is running with. This ensures that any files created will match user and group.
+    // Currently, we can't run except as root or the mysql user
+    #define BUF_LENGTH 128
+    int e1=-1, e2=-1;
+    char line[BUF_LENGTH];
+    char cmd[BUF_LENGTH];
 
+    // Get WriteEngineServer's pid
+    FILE* command = popen("pidof WriteEngineServer","r");
+    fgets(line,BUF_LENGTH,command);
+    pid_t pid = strtoul(line,NULL,10);
+    pclose(command);
+    
+    // get WriteEngineServer's uid
+    sprintf(cmd, "awk '/^Uid:/{print $2}' /proc/%u/status", pid);
+    command = popen(cmd, "r");
+    fgets(line,BUF_LENGTH,command);
+    uid_t uid = strtoul(line,NULL,10);
+    pclose(command);
+
+    // get WriteEngineServer's gid
+    sprintf(cmd, "awk '/^Gid:/{print $2}' /proc/%u/status", pid);
+    command = popen(cmd, "r");
+    fgets(line,BUF_LENGTH,command);
+    gid_t gid = strtoul(line,NULL,10);
+    pclose(command);
+
+    e1 = setuid(uid);
+    e2 = setgid(gid);
+    
+    if (uid != getuid() && (e1 == -1 || e2 == -1))
+    {
+        cerr << "Can't set uid. cpimport must be called as the mysql user or as root" << endl;
+        return 1;
+    }
+    // **********************************************************************
+#endif
     try
     {
         WriteEngine::WECmdArgs aWeCmdArgs(argc, argv);

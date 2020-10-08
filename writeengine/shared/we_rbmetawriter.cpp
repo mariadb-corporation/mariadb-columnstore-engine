@@ -451,11 +451,15 @@ std::string RBMetaWriter::openMetaFile ( uint16_t dbRoot )
             tmpMetaFileName << "; " << eMsg;
         throw WeException( oss.str(), ERR_FILE_OPEN );
     }
-
-    { 
-        std::ostringstream ossChown;
-        if (chownFileDir(ossChown, tmpMetaFileName, bulkRollbackPath))
-            throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+    IDBFileSystem& fs = IDBPolicy::getFs( tmpMetaFileName.c_str() );
+    std::cout << fs.typeName() << std::endl;
+    if (fs.chown(tmpMetaFileName.c_str(), getUID(), getGID()) == -1)
+    {
+        std::ostringstream error;
+        error << "Error calling chown() with uid " << getUID()
+             << " and gid " << getGID() << " with the file "
+             << tmpMetaFileName << " with errno " << errno;
+        throw WeException(error.str(), ERR_FILE_CHOWN);
     }
 
     fMetaDataStream <<
@@ -1334,10 +1338,14 @@ int RBMetaWriter::writeHWMChunk(
         return ERR_METADATABKUP_COMP_RENAME;
     }
 
-    { 
-        std::ostringstream ossChown;
-        if (chownFileDir(ossChown, fileName, dirPath))
-            throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+    std::cout << fs.typeName() << std::endl;
+    if (fs.chown(fileName.c_str(), getUID(), getGID()) == -1)
+    {
+        std::ostringstream error;
+        error << "Error calling chown() with uid " << getUID()
+             << " and gid " << getGID() << " with the file "
+             << fileName << " with errno " << errno;
+        throw WeException(error.str(), ERR_FILE_CHOWN);
     }
 
     return NO_ERROR;

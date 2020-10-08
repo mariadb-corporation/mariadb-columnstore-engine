@@ -38,6 +38,8 @@ public:
     /* virtual */ int listDirectory(const char* pathname, std::list<std::string>& contents) const;
     /* virtual */ bool isDir(const char* pathname) const;
     /* virtual */ int copyFile(const char* srcPath, const char* destPath) const;
+    /* virtual */ int chown(IDBDataFile* file, uid_t uid, gid_t gid) const;
+    /* virtual */ int chown(const char* filename, uid_t uid, gid_t gid) const;
 };
 
 }

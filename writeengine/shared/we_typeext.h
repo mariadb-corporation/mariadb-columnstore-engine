@@ -67,10 +67,10 @@ public:
     virtual ~WeUIDGID() {};
     virtual void setUIDGID(const uid_t uid, const gid_t gid);
     void setUIDGID(const WeUIDGID* id);
-    bool chownFileDir(std::ostringstream& error,
-        const std::string& fileName, const std::string& dirName) const;
-;
 
+    uid_t getUID() const {return uid;};
+    uid_t getGID() const {return gid;};
+    
 private:
     uid_t uid;
     gid_t gid;
@@ -85,24 +85,6 @@ inline void WeUIDGID::setUIDGID(const WeUIDGID* id)
 {
     if (id->uid != UID_NONE)
         *this = *id;
-}
-
-inline bool WeUIDGID::chownFileDir(std::ostringstream& error,
-    const std::string& fileName, const std::string& dirName) const
-{
-    if (uid != UID_NONE)
-    {
-        errno = 0;
-        if (chown(fileName.c_str(), uid, gid) == -1 ||
-            chown(dirName.c_str(), uid, gid) == -1)
-        {
-            error << "Error calling chown() with uid " << uid
-                 << " and gid " << gid << " with the file "
-                 << fileName << " with errno " << errno;
-            return true;
-        }
-    }
-    return false;
 }
 
 } //end of namespace

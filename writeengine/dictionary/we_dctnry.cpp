@@ -216,14 +216,24 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
         // if obsolete file exists, "w+b" will truncate and write over
         m_dFile = createDctnryFile(fileName, colWidth, "w+b", DEFAULT_BUFSIZ);
 
-        {
             // We presume the path will contain /
-            std::string filePath(fileName);
-            std::ostringstream ossChown;
-            if (chownDataFileDir(ossChown, filePath))
-            {
-                return ERR_FILE_CHOWN;
-            }
+        IDBFileSystem& fs = IDBPolicy::getFs( fileName );
+        if (fs.chown(fileName, getUID(), getGID()) == -1)
+        {
+            std::ostringstream error;
+            error << "Error calling chown() with uid " << getUID()
+                 << " and gid " << getGID() << " with the file "
+                 << fileName << " with errno " << errno;
+
+            logging::Message::Args args;
+            logging::Message message(1);
+            args.add(error.str());
+            message.format(args);
+            logging::LoggingID lid(SUBSYSTEM_ID_WE_BULK);
+            logging::MessageLog ml(lid);
+            ml.logErrorMessage( message );
+
+            return ERR_FILE_CHOWN;
         }
     }
     else
