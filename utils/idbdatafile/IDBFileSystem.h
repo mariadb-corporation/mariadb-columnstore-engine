@@ -134,6 +134,19 @@ public:
         return true;
     }
 
+    /**
+     * chown() changes the owner of the object on the FS
+     * Returns 0 on success.  -1 on error.
+     */
+    virtual int chown(const char* objectName,
+                      const uid_t p_uid,
+                      const gid_t p_pid,
+                      int& funcErrno) const
+    {
+        return 0;
+    }
+
+
 protected:
     IDBFileSystem( Types type );
 

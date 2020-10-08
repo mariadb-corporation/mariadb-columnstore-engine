@@ -454,8 +454,12 @@ std::string RBMetaWriter::openMetaFile ( uint16_t dbRoot )
 
     { 
         std::ostringstream ossChown;
-        if (chownFileDir(ossChown, tmpMetaFileName, bulkRollbackPath))
+        idbdatafile::IDBFileSystem& fs = IDBPolicy::getFs(tmpMetaFileName.c_str());
+        if (chownPath(ossChown, tmpMetaFileName, fs)
+            || chownPath(ossChown, bulkRollbackPath, fs))
+        {
             throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+        }
     }
 
     fMetaDataStream <<
@@ -1336,8 +1340,12 @@ int RBMetaWriter::writeHWMChunk(
 
     { 
         std::ostringstream ossChown;
-        if (chownFileDir(ossChown, fileName, dirPath))
+        idbdatafile::IDBFileSystem& fs = IDBPolicy::getFs(fileName.c_str());
+        if (chownPath(ossChown, fileName, fs)
+            || chownPath(ossChown, dirPath, fs))
+        {
             throw WeException(ossChown.str(), ERR_FILE_CHOWN);
+        }
     }
 
     return NO_ERROR;
