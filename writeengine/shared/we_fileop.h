@@ -58,6 +58,8 @@
 namespace WriteEngine
 {
 
+constexpr size_t MaxDirLevels = 5;
+
 /** Class FileOp */
 class FileOp : public BlockOp, public WeUIDGID
 {
@@ -503,8 +505,7 @@ public:
                                           bool     bOptExtension=false );
 
     // Calls a chown and logs an error message
-    bool                chownDataFileDir(std::ostringstream& error, 
-                                         const std::string& fileName);
+    bool                chownDataPath(const std::string& fileName) const;
 
 protected:
     EXPORT virtual int         updateColumnExtent(IDBDataFile* pFile, int nBlocks);

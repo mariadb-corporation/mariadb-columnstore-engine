@@ -505,7 +505,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-r readers] [-j JobID] [-e maxErrs] [-B libBufSize] [-w parsers]\n";
     cout << "\t\t [-s c] [-E enclosedChar] [-C escapeChar] [-n NullOption]\n";
     cout << "\t\t [-q batchQty] [-p jobPath] [-P list of PMs] [-S] [-i] [-v verbose]\n";
-    cout << "\t\t [-I binaryOpt] [-T timeZone] [-U username]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
 
 
     cout << "Traditional usage without positional parameters (XML job file required):\n";
@@ -514,7 +514,7 @@ void WECmdArgs::usage()
     cout << "\t\t [-b readBufs] [-p path] [-c readBufSize] [-e maxErrs] [-B libBufSize]\n";
     cout << "\t\t [-n NullOption] [-E encloseChar] [-C escapeChar] [-i] [-v verbose]\n";
     cout << "\t\t [-d debugLevel] [-q batchQty] [-l loadFile] [-P list of PMs] [-S]\n";
-    cout << "\t\t [-I binaryOpt] [-T timeZone] [-U username]\n";
+    cout << "\t\t [-I binaryOpt] [-T timeZone]\n";
 
     cout << "\n\nPositional parameters:\n";
     cout << "\tdbName     Name of the database to load\n";
@@ -566,8 +566,7 @@ void WECmdArgs::usage()
          << "\t-K\tS3 Authentication Secret (for S3 imports)\n"
          << "\t-t\tS3 Bucket (for S3 imports)\n"
          << "\t-H\tS3 Hostname (for S3 imports, Amazon's S3 default)\n"
-         << "\t-g\tS3 Region (for S3 imports)\n"
-         << "\t-U\tusername of the data files owner. Default is mysql\n";
+         << "\t-g\tS3 Region (for S3 imports)\n";
 
     cout << "\nExample1: Traditional usage\n"
          << "\tcpimport -j 1234";
@@ -580,7 +579,7 @@ void WECmdArgs::usage()
     cout << "\nExample4: Import a nation table to only PM1 and PM2 in Mode 1\n"
          << "\tcpimport -m 1 -P 1,2 tpch nation nation.tbl";
     cout << "\nExample5: Import nation.tbl from PMs to nation table in Mode 2\n"
-         << "\tcpimport -m 2 tpch nation -l nation.tbl";
+         << "\tcpimport -m 2 tpch nation -f /var/lib/columnstore/data/bulk/data/import/ -l nation.tbl";
     cout << "\nExample6: Import nation.tbl in mode 3\n"
          << "\tcpimport -m 3 tpch nation nation.tbl\n\n";
 
@@ -958,6 +957,9 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     std::string bulkRootPath = getBulkRootDir();
 
     checkForBulkLogDir(bulkRootPath);
+
+    if (2 == fArgMode && fPmFilePath.empty())
+        throw runtime_error("-f option is mandatory with mode 2.");
 
     if (aJobType)
     {
