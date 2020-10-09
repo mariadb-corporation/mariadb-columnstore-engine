@@ -82,7 +82,7 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     systemctl disable mcs-dmlproc > /dev/null 2>&1
     systemctl disable mcs-exemgr > /dev/null 2>&1
     systemctl disable mcs-primproc > /dev/null 2>&1
-    systemctl disable mcs-workernode@.service > /dev/null 2>&1
+    systemctl disable mcs-workernode@1 > /dev/null 2>&1
     systemctl disable mcs-writeengineserver > /dev/null 2>&1
     systemctl disable mcs-loadbrm > /dev/null 2>&1
     systemctl disable mcs-storagemanager > /dev/null 2>&1

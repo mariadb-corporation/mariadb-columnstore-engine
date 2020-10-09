@@ -8,7 +8,7 @@
 /bin/systemctl stop mcs-writeengineserver
 /bin/systemctl stop mcs-primproc
 /bin/systemctl stop mcs-controllernode
-/bin/systemctl stop mcs-workernode@1.service mcs-workenrode@2.service
+/bin/systemctl stop mcs-workernode@1.service
 /bin/systemctl stop mcs-storagemanager
 
 exit 0
