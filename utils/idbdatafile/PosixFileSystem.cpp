@@ -306,4 +306,16 @@ int PosixFileSystem::copyFile(const char* srcPath, const char* destPath) const
     return ret;
 }
 
+int PosixFileSystem::chown(const char* objectName,
+                           const uid_t p_uid,
+                           const gid_t p_gid,
+                           int& funcErrno) const
+{
+    int ret = 0;
+    errno = 0;
+    if ((ret = ::chown(objectName, p_uid, p_gid)))
+        funcErrno = errno;
+    return ret;
+}
+
 }

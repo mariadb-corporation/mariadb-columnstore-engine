@@ -219,8 +219,7 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
         {
             // We presume the path will contain /
             std::string filePath(fileName);
-            std::ostringstream ossChown;
-            if (chownDataFileDir(ossChown, filePath))
+            if (chownDataPath(filePath))
             {
                 return ERR_FILE_CHOWN;
             }
