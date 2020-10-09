@@ -791,8 +791,7 @@ int FileOp::extendFile(
         { 
             // We presume the path will contain /
             std::string filePath(fileName);
-            std::ostringstream ossChown;
-            if (chownDataFileDir(ossChown, filePath))
+            if (chownDataPath(filePath))
                 return ERR_FILE_CHOWN;
         }
 
@@ -2365,57 +2364,27 @@ int FileOp::oid2FileName( FID fid,
         return ERR_FILE_NOT_EXIST;
     }
 
-    /*
-    char dirName[FILE_NAME_SIZE];
-
-    sprintf( dirName, "%s/%s", Config::getDBRootByNum(dbRoot).c_str(),
-        dbDir[0] );
-    if( !isDir( dirName ) )
-        RETURN_ON_ERROR( createDir( dirName ));
-
-    sprintf( dirName, "%s/%s", dirName, dbDir[1] );
-    if( !isDir( dirName ) )
-        RETURN_ON_ERROR( createDir( dirName ));
-
-    sprintf( dirName, "%s/%s", dirName, dbDir[2] );
-    if( !isDir( dirName ) )
-        RETURN_ON_ERROR( createDir( dirName ));
-
-    sprintf( dirName, "%s/%s", dirName, dbDir[3] );
-    if( !isDir( dirName ) )
-        RETURN_ON_ERROR( createDir( dirName ));
-
-    sprintf( dirName, "%s/%s", dirName, dbDir[4] );
-    if( !isDir( dirName ) )
-        RETURN_ON_ERROR( createDir( dirName ));
-    */
-
     std::stringstream aDirName;
+    for (size_t i = 0; i < MaxDirLevels; i++)
+    {
+        if (i == 0)
+        {
+            aDirName << Config::getDBRootByNum(dbRoot).c_str()
+                     << "/" << dbDir[i];
+        }
+        else
+        {
+            aDirName << "/" << dbDir[i];
+        }
+        if (!isDir(aDirName.str().c_str()))
+            RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
 
-    aDirName << Config::getDBRootByNum(dbRoot).c_str() << "/" << dbDir[0];
-
-    if (!isDir((aDirName.str()).c_str()))
-        RETURN_ON_ERROR( createDir((aDirName.str()).c_str()) );
-
-    aDirName << "/" << dbDir[1];
-
-    if (!isDir(aDirName.str().c_str()))
-        RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
-
-    aDirName << "/" << dbDir[2];
-
-    if (!isDir(aDirName.str().c_str()))
-        RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
-
-    aDirName << "/" << dbDir[3];
-
-    if (!isDir(aDirName.str().c_str()))
-        RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
-
-    aDirName << "/" << dbDir[4];
-
-    if (!isDir(aDirName.str().c_str()))
-        RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
+        {
+            std::ostringstream ossChown;
+            if (chownDataPath(aDirName.str()))
+                return ERR_FILE_CHOWN;
+        }
+    }
 
     return NO_ERROR;
 }
@@ -2932,11 +2901,13 @@ void FileOp::setFixFlag(bool isFix)
     m_isFix = isFix;
 }
 
-bool FileOp::chownDataFileDir(std::ostringstream& error,
-    const std::string& fileName)
+// Small note. We call chownFileDir in couple places to chown of the
+// target file and call in oid2Filename() chowns directories created
+bool FileOp::chownDataPath(const std::string& fileName) const
 {
-    std::string dirName = fileName.substr(0, fileName.find_last_of('/'));
-    if (chownFileDir(error, fileName, dirName))
+    std::ostringstream error;
+    idbdatafile::IDBFileSystem& fs = IDBPolicy::getFs(fileName);
+    if (chownPath(error, fileName, fs))
     {
         logging::Message::Args args;
         logging::Message message(1);

@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <sstream>
+#include "IDBFileSystem.h"
+
 
 /** Namespace WriteEngine */
 namespace WriteEngine
@@ -67,8 +69,9 @@ public:
     virtual ~WeUIDGID() {};
     virtual void setUIDGID(const uid_t uid, const gid_t gid);
     void setUIDGID(const WeUIDGID* id);
-    bool chownFileDir(std::ostringstream& error,
-        const std::string& fileName, const std::string& dirName) const;
+    bool chownPath(std::ostringstream& error,
+        const std::string& fileName,
+        const idbdatafile::IDBFileSystem& fs) const;
 ;
 
 private:
@@ -87,18 +90,18 @@ inline void WeUIDGID::setUIDGID(const WeUIDGID* id)
         *this = *id;
 }
 
-inline bool WeUIDGID::chownFileDir(std::ostringstream& error,
-    const std::string& fileName, const std::string& dirName) const
+inline bool WeUIDGID::chownPath(std::ostringstream& error,
+    const std::string& fileName,
+    const idbdatafile::IDBFileSystem& fs) const
 {
     if (uid != UID_NONE)
     {
-        errno = 0;
-        if (chown(fileName.c_str(), uid, gid) == -1 ||
-            chown(dirName.c_str(), uid, gid) == -1)
+        int funcErrno = 0;
+        if (fs.chown(fileName.c_str(), uid, gid, funcErrno) == -1)
         {
             error << "Error calling chown() with uid " << uid
                  << " and gid " << gid << " with the file "
-                 << fileName << " with errno " << errno;
+                 << fileName << " with errno " << funcErrno;
             return true;
         }
     }

@@ -27,17 +27,21 @@ class PosixFileSystem : public IDBFileSystem
 {
 public:
     PosixFileSystem();
-    /* virtual */  ~PosixFileSystem();
+      ~PosixFileSystem();
 
-    /* virtual */ int mkdir(const char* pathname);
-    /* virtual */ off64_t size(const char* path) const;
-    /* virtual */ off64_t compressedSize(const char* path) const;
-    /* virtual */ int remove(const char* pathname);
-    /* virtual */ int rename(const char* oldpath, const char* newpath);
-    /* virtual */ bool exists(const char* pathname) const;
-    /* virtual */ int listDirectory(const char* pathname, std::list<std::string>& contents) const;
-    /* virtual */ bool isDir(const char* pathname) const;
-    /* virtual */ int copyFile(const char* srcPath, const char* destPath) const;
+    int mkdir(const char* pathname) override;
+    off64_t size(const char* path) const override;
+    off64_t compressedSize(const char* path) const override;
+    int remove(const char* pathname) override;
+    int rename(const char* oldpath, const char* newpath) override;
+    bool exists(const char* pathname) const override;
+    int listDirectory(const char* pathname, std::list<std::string>& contents) const override;
+    bool isDir(const char* pathname) const override;
+    int copyFile(const char* srcPath, const char* destPath) const override;
+    int chown(const char* objectName,
+              const uid_t p_uid,
+              const gid_t p_pid,
+              int& funcErrno) const override;
 };
 
 }
