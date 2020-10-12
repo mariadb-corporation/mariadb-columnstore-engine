@@ -6,6 +6,7 @@ After=network.target mcs-storagemanager.service
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/env bash -c "@ENGINE_BINDIR@/mcs-loadbrm.py && sleep 2" 
+EnvironmentFile=-/etc/columnstore/systemd.env
 
 [Install]
 WantedBy=mcs-workernode@1.service mcs-workernode@2.service
