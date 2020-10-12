@@ -16,3 +16,5 @@ ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
 
 Restart=on-failure
 TimeoutStopSec=120
+
+EnvironmentFile=-/etc/columnstore/systemd.env
