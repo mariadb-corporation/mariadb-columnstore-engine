@@ -330,16 +330,16 @@ local Pipeline(branch, platform, event) = {
            },
          ] +
          [pipeline.publish()] +
-         (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
+         (if (event == 'cron') || (event == 'push') then [pipeline.publish('pkg latest', 'latest')] else []) +
          // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
          (if (pkg_format == 'rpm') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (event == 'cron') || (event == 'push') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regression')] +
-         (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
+         (if (event == 'cron') || (event == 'push') then [pipeline.publish('regression latest', 'latest')] else []),
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
