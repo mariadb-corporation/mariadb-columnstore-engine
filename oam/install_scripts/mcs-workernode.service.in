@@ -10,7 +10,7 @@ Group=mysql
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker1 fg
+ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i fg
 ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
 
