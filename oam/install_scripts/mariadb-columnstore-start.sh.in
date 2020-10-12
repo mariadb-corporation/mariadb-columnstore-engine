@@ -7,7 +7,8 @@
 exec {fd_lock}>/var/lib/columnstore/storagemanager/storagemanager-lock
 flock -n "$fd_lock" || exit 0
 
-/bin/systemctl start mcs-workernode
+# pass in arg of 1 to start DBRM_Worker1
+/bin/systemctl start mcs-workernode@1.service
 /bin/systemctl start mcs-controllernode
 /bin/systemctl start mcs-primproc
 /bin/systemctl start mcs-writeengineserver
