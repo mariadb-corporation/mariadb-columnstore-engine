@@ -16,21 +16,24 @@ if(GIT_FOUND AND EXISTS ${ENGINE_SRC_DIR}/.git)
     endif()
 endif()
 
-include(ExternalProject)
-ExternalProject_Add(ms3
-    SOURCE_DIR ${S3API_DIR}
-    CONFIGURE_COMMAND autoreconf -fi ${S3API_DIR} && ${S3API_DIR}/configure --enable-shared --disable-static --prefix=${CMAKE_BINARY_DIR} ${S3_CONFIGURE_OPT}
-    BUILD_COMMAND make
-    BUILD_IN_SOURCE 0
-    EXCLUDE_FROM_ALL TRUE
-)
+SET(S3_SOURCES ${S3API_DIR}/src/debug.c
+    ${S3API_DIR}/src/error.c
+    ${S3API_DIR}/src/marias3.c
+    ${S3API_DIR}/src/request.c
+    ${S3API_DIR}/src/response.c
+    ${S3API_DIR}/src/sha256.c
+    ${S3API_DIR}/src/sha256-internal.c
+    ${S3API_DIR}/src/xml.c)
 
-set(S3API_DEPS marias3 curl xml2 CACHE INTERNAL "S3API_DEPS")
+ADD_LIBRARY(marias3 SHARED ${S3_SOURCES})
 
-install(PROGRAMS
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3.1.2
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so.3
-    ${CMAKE_BINARY_DIR}/lib/libmarias3.so
+FIND_PACKAGE(CURL REQUIRED)
+TARGET_LINK_LIBRARIES(marias3 curl)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${S3API_DIR})
+
+set(S3API_DEPS marias3 curl CACHE INTERNAL "S3API_DEPS")
+
+install(TARGETS marias3
     DESTINATION ${ENGINE_LIBDIR}
     COMPONENT columnstore-platform
 )

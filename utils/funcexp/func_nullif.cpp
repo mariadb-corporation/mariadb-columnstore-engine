@@ -904,6 +904,7 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row,
             exp2.value = value;
             exp2.scale = 0;
         }
+        /* fall through */
 
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:

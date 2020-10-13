@@ -53,6 +53,7 @@ pthread_mutex_t THREAD_LOCK;
 extern string cloud;
 extern bool amazon;
 extern bool runStandby;
+extern bool MsgThreadActive;
 extern string iface_name;
 extern string PMInstanceType;
 extern string UMInstanceType;
@@ -919,8 +920,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                                 status = processManager.disableModule(moduleName, true);
                                 log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
-
-								processManager.recycleProcess(moduleName);
 
                                 //check for SIMPLEX Processes on mate might need to be started
                                 processManager.checkSimplexModule(moduleName);
@@ -3806,8 +3805,6 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 	//set Columnstore.xml enable state
     setEnableState( target, SnewState);
 
-    log.writeLog(__LINE__, "disableModule - setEnableState", LOG_TYPE_DEBUG);
-
     //sleep a bit to give time for the state change to apply
     sleep(1);
 
@@ -3816,8 +3813,6 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     {
         if ( updatePMSconfig() != API_SUCCESS )
             return API_FAILURE;
-
-        log.writeLog(__LINE__, "disableModule - Updated PM server Count", LOG_TYPE_DEBUG);
     }
 
     //Update DBRM section of Columnstore.xml
@@ -3825,17 +3820,34 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     {
         return API_FAILURE;
     }
-	processManager.recycleProcess(target);
-
-	//check for SIMPLEX Processes on mate might need to be started
-	processManager.checkSimplexModule(target);
 
     //distribute config file
     distributeConfigFile("system");
 
+	processManager.reinitProcesses();
+
     log.writeLog(__LINE__, "disableModule successfully complete for " + target, LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
+}
+
+
+void ProcessManager::reinitProcesses(std::string skipModule)
+{
+    Oam oam;
+
+    log.writeLog(__LINE__, "reinitProcesses... ", LOG_TYPE_DEBUG);
+
+    reinitProcessType("DBRMWorkerNode");
+    restartProcessType("WriteEngineServer");
+    restartProcessType("ExeMgr",skipModule);
+    sleep(1);
+    restartProcessType("DDLProc",skipModule);
+    sleep(1);
+    restartProcessType("DMLProc",skipModule);
+    sleep(3);
+
+    log.writeLog(__LINE__, "reinitProcesses complete", LOG_TYPE_DEBUG);
 }
 
 /******************************************************************************************
@@ -3895,7 +3907,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 
 	startProcessType("mysqld");
 
-    return;
+	return;
 }
 
 /******************************************************************************************
@@ -4886,6 +4898,7 @@ int ProcessManager::reinitProcessType( std::string processName )
                 if ( systemprocessstatus.processstatus[i].ProcessName == "ServerMonitor" )
                 {
                     // found one, request reinit of it
+                    log.writeLog(__LINE__, "reinitProcessType: cpimport" + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
                     retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module,
                                 "cpimport");
                     log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
@@ -6514,12 +6527,12 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
                 catch (SocketClosed& ex)
                 {
                     string error = ex.what();
-//					log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read, module " + module + " : " + error, LOG_TYPE_ERROR);
+                    log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read, module " + module + " : " + error, LOG_TYPE_ERROR);
                     return returnStatus;
                 }
                 catch (...)
                 {
-//					log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read: Caught unknown exception! module " + module, LOG_TYPE_ERROR);
+                    log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read: Caught unknown exception! module " + module, LOG_TYPE_ERROR);
                     return returnStatus;
                 }
 
@@ -6567,11 +6580,11 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
     catch (exception& ex)
     {
         string error = ex.what();
-//		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
     }
     catch (...)
     {
-//		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
     }
 
     return returnStatus;
@@ -6733,8 +6746,6 @@ void ProcessManager::setQuerySystemState(bool set)
 {
     Oam oam;
     BRM::DBRM dbrm;
-
-	log.writeLog(__LINE__, "setQuerySystemState called = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
     try
     {
@@ -8005,8 +8016,6 @@ int ProcessManager::updatePMSconfig( bool check )
     vector<string> IpAddrs;
     vector<int> nicIDs;
 
-    log.writeLog(__LINE__, "updatePMSconfig Started", LOG_TYPE_DEBUG);
-
     pthread_mutex_lock(&THREAD_LOCK);
 
     ModuleTypeConfig moduletypeconfig;
@@ -8166,8 +8175,6 @@ int ProcessManager::updatePMSconfig( bool check )
             sysConfig1->write();
             pthread_mutex_unlock(&THREAD_LOCK);
 
-            log.writeLog(__LINE__, "updatePMSconfig completed", LOG_TYPE_DEBUG);
-
             return API_SUCCESS;
         }
         catch (...)
@@ -8194,8 +8201,6 @@ int ProcessManager::updateWorkerNodeconfig()
     Oam oam;
     vector <string> module;
     vector <string> ipadr;
-
-    log.writeLog(__LINE__, "updateWorkerNodeconfig Started", LOG_TYPE_DEBUG);
 
     pthread_mutex_lock(&THREAD_LOCK);
 
@@ -8308,8 +8313,6 @@ int ProcessManager::updateWorkerNodeconfig()
         {
             sysConfig3->write();
             pthread_mutex_unlock(&THREAD_LOCK);
-
-            log.writeLog(__LINE__, "updateWorkerNodeconfig completed", LOG_TYPE_DEBUG);
 
             return API_SUCCESS;
 
@@ -8511,8 +8514,6 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
     Oam oam;
     ModuleConfig moduleconfig;
 
-    log.writeLog(__LINE__, "setPMProcIPs called for " + moduleName, LOG_TYPE_DEBUG);
-
     pthread_mutex_lock(&THREAD_LOCK);
 
     if ( processName == oam::UnassignedName || processName == "DDLProc")
@@ -8630,8 +8631,6 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
     ByteStream::byte requestID = UPDATECONFIGFILE;
     Oam oam;
     int returnStatus = oam::API_SUCCESS;
-
-    log.writeLog(__LINE__, "distributeConfigFile called for " + name + " file = " + file, LOG_TYPE_DEBUG);
 
     string dirName = std::string(MCSSYSCONFDIR) + "/columnstore/";
     string fileName = dirName + file;
@@ -8817,7 +8816,6 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
     // StorageManager:  Need to make these existence checks use an idbfilesystem op if we
     // decide to put the BRM-managed files in cloud storage
     string currentDbrmFile;
-    log.writeLog(__LINE__, "I declare that I am ProcMgr, and I am running getDBRMData!", LOG_TYPE_DEBUG);
     IDBFileSystem &fs = IDBPolicy::getFs(currentFileName.c_str());
     boost::scoped_ptr<IDBDataFile> oldFile(IDBDataFile::open(IDBPolicy::getType(currentFileName.c_str(),
                                                          IDBPolicy::WRITEENG),
@@ -9198,6 +9196,14 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
     //clear run standby flag;
     runStandby = false;
+    int retryCount = 0;
+    //sleep, give time for message thread to startup
+    while (!MsgThreadActive && retryCount < 10)
+    {
+       log.writeLog(__LINE__, "Waiting for Message Thread...", LOG_TYPE_DEBUG);
+       sleep(5);
+       ++retryCount;
+    }
 
     int moduleID = atoi(newActiveModuleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
 
@@ -9883,9 +9889,6 @@ int ProcessManager::OAMParentModuleChange()
     log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
     log.writeLog(__LINE__, "*** OAMParentModule outage, OAM Parent Module change-over started ***", LOG_TYPE_DEBUG);
 
-    //run save.brm script
-    processManager.saveBRM(true, false);
-
     gdownActiveOAMModule = downOAMParentName;
 
     // update Columnstore.xml entries
@@ -9933,10 +9936,19 @@ int ProcessManager::OAMParentModuleChange()
 
         //clear run standby flag;
         runStandby = false;
-
+        int retryCount = 0;
         //sleep, give time for message thread to startup
-        sleep(5);
+        while (!MsgThreadActive && retryCount < 10)
+        {
+           log.writeLog(__LINE__, "Waiting for Message Thread...", LOG_TYPE_DEBUG);
+           sleep(5);
+           ++retryCount;
+        }
 
+        //run save.brm script
+        //Nope turns out this has to be done first...
+
+        processManager.saveBRM(false);
         try
         {
             oam.autoMovePmDbroot(downOAMParentName);
@@ -10032,19 +10044,23 @@ int ProcessManager::OAMParentModuleChange()
     //do it here to get current processes active faster to process queries faster
     processManager.setProcessStates(downOAMParentName, oam::AUTO_OFFLINE);
 
-    //set other down modules to disable state
+    //set OTHER down modules to disable state
     vector<string>::iterator pt1 = downModuleList.begin();
 
     for ( ; pt1 != downModuleList.end() ; pt1++)
     {
-        disableModule(*pt1, false);
-        processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
+        // Don't do this again for downOAMParentName we just did it 3 lines ago
+        if (*pt1 != downOAMParentName)
+        {
+            disableModule(*pt1, false);
+            processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
+        }
     }
 
     //distribute config file
     distributeConfigFile("system");
 
-    //restart local module
+    //restart local module WHY??
     processManager.stopModule(config.moduleName(), oam::FORCEFUL, true);
 
     string localModule = config.moduleName();
@@ -10060,8 +10076,11 @@ int ProcessManager::OAMParentModuleChange()
         status = startsystemthreadStatus;
     }
 
+    reinitProcessType("cpimport");
+
     // waiting until dml are ACTIVE
-    while (true)
+    int retry = 0;
+    while (retry < 30)
     {
         ProcessStatus DMLprocessstatus;
 
@@ -10085,25 +10104,18 @@ int ProcessManager::OAMParentModuleChange()
 
         // wait some more
         sleep(2);
+        ++retry;
     }
 
-    //set recycle process
-    processManager.recycleProcess(downOAMParentName);
 
     //restart/reinit processes to force their release of the controller node port
     if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
             ( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
     {
-		status = 0;
+        // Do Nothing
     }
     else
     {
-//		processManager.restartProcessType("mysql", localModule);
-//		processManager.restartProcessType("ExeMgr", localModule);
-//		processManager.restartProcessType("WriteEngineServer", localModule);
-
-//		processManager.reinitProcessType("DBRMWorkerNode");
-
         //send message to start new Standby Process-Manager, if needed
         newStandbyModule = getStandbyModule();
 
@@ -10184,15 +10196,6 @@ int ProcessManager::OAMParentModuleChange()
         }
     }
 
-    //restart DDLProc/DMLProc to perform any rollbacks, if needed
-    //dont rollback in amazon, wait until down pm recovers
-//	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  )
-//		&& !amazon ) {
-//		processManager.restartProcessType("DDLProc", config.moduleName());
-//		sleep(1);
-//		processManager.restartProcessType("DMLProc", config.moduleName());
-//	}
-
     if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM  )
     {
         //change master MySQL Replication setup
@@ -10201,8 +10204,38 @@ int ProcessManager::OAMParentModuleChange()
         processManager.setMySQLReplication(devicenetworklist, config.moduleName());
     }
 
-    //set query system state not ready
-    processManager.setQuerySystemState(true);
+    processManager.restartProcessType("DBRMControllerNode");
+
+    processManager.reinitProcesses();
+
+    // waiting until dml are ACTIVE
+    retry = 0;
+    while (retry < 30)
+    {
+        ProcessStatus DMLprocessstatus;
+
+        try
+        {
+            oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+        }
+        catch (exception& ex)
+        {}
+        catch (...)
+        {}
+
+        if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+            log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_DEBUG);
+
+        if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+            break;
+
+        if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+            break;
+
+        // wait some more
+        sleep(2);
+        ++retry;
+    }
 
     // clear alarm
     aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
@@ -10301,10 +10334,28 @@ std::string ProcessManager::getStandbyModule()
     string backupStandbyModule = "NONE";
     string newStandbyModule = "NONE";
 
-    log.writeLog(__LINE__, "getStandbyModule called", LOG_TYPE_DEBUG);
-
     //check if gluster, if so then find PMs that have copies of DBROOT #1
     string pmList = "";
+
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
+                    systemprocessstatus.processstatus[i].ProcessOpState == oam::STANDBY )
+                //already have a hot-standby
+                return "";
+        }
+    }
+    catch (exception& ex)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + string(ex.what()), LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
 
     if (DataRedundancyConfig == "y")
     {
@@ -10313,8 +10364,6 @@ std::string ProcessManager::getStandbyModule()
         {
             string errmsg;
             oam.glusterctl(oam::GLUSTER_WHOHAS, "1", pmList, errmsg);
-
-            log.writeLog(__LINE__, "GLUSTER_WHOHAS called:" + pmList, LOG_TYPE_DEBUG);
 
             boost::char_separator<char> sep(" ");
             boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
@@ -10357,8 +10406,6 @@ std::string ProcessManager::getStandbyModule()
     //not gluster, check by status
     try
     {
-        oam.getProcessStatus(systemprocessstatus);
-
         for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
         {
             if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
@@ -10431,8 +10478,6 @@ bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 {
     Oam oam;
 
-    log.writeLog(__LINE__, "setStandbyModule called", LOG_TYPE_DEBUG);
-
     if ( newStandbyModule.empty() )
         return true;
 
@@ -10501,8 +10546,6 @@ bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 bool ProcessManager::clearStandbyModule()
 {
     Oam oam;
-
-    log.writeLog(__LINE__, "clearStandbyModule called", LOG_TYPE_DEBUG);
 
     pthread_mutex_lock(&THREAD_LOCK);
 
@@ -10792,8 +10835,6 @@ void ProcessManager::flushInodeCache()
 int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule, bool distributeDB, std::string password, bool enable, bool addModule)
 {
     Oam oam;
-
-    log.writeLog(__LINE__, "setMySQLReplication called", LOG_TYPE_DEBUG);
 
     string MySQLRep;
 
@@ -11121,7 +11162,15 @@ int ProcessManager::glusterAssign(std::string moduleName, std::string dbroot)
     msg << dbroot;
 
     int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
-
+    int retry = 0;
+    // Try this for a minute because in failover the node returning to service may not be listening yet
+    while(returnStatus != API_SUCCESS && retry < 60)
+    {
+        log.writeLog(__LINE__, "glusterAssign retrying...", LOG_TYPE_DEBUG);
+        returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+        sleep(1);
+        ++retry;
+    }
     if ( returnStatus == API_SUCCESS)
     {
         //log the success event
@@ -11151,7 +11200,15 @@ int ProcessManager::glusterUnassign(std::string moduleName, std::string dbroot)
     msg << dbroot;
 
     int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
-
+    int retry = 0;
+    // Try this for a minute because in failover the node returning to service may not be listening yet
+    while(returnStatus != API_SUCCESS && retry < 60)
+    {
+        log.writeLog(__LINE__, "glusterUnassign retrying...", LOG_TYPE_DEBUG);
+        returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+        sleep(1);
+        ++retry;
+    }
     if ( returnStatus == API_SUCCESS)
     {
         //log the success event

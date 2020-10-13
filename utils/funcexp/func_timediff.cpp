@@ -129,6 +129,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
             isTime1 = true;
+            /* fall through */
         case execplan::CalpontSystemCatalog::DATETIME:
              // Diff between time and datetime returns NULL in MariaDB
             if ((type2 == execplan::CalpontSystemCatalog::TIME ||
@@ -229,6 +230,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
             isTime2 = true;
+            /* fall through */
         case execplan::CalpontSystemCatalog::DATETIME:
             val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
             break;

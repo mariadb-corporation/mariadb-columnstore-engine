@@ -32,7 +32,6 @@ if [ ! -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml ]; then
 fi
 
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
-    /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.new
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf
 fi
 

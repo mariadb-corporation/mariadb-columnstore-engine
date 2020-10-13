@@ -85,8 +85,8 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const strin
                 *cc = new ConstantColumn(oss.str(), row.getIntField(i));
                 break;
             }
-
-        // else > 0; fall through
+            /* fall through */
+            /* else > 0 */
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
@@ -192,7 +192,10 @@ void ssfInHaving(ParseTree* pt, void* obj)
             pt->right(parseTree->right());
             pt->data(parseTree->data());
 
+            jobInfo->dynamicParseTreeVec.push_back(parseTree);
             // don't delete the parseTree, it has been placed in the plan.
+            // Instead, we use the dynamicParseTreeVec above for deletion
+            // in ~csep() or csep.unserialize().
             // delete parseTree;
         }
         else
@@ -627,7 +630,10 @@ void doSimpleScalarFilter(ParseTree* p, JobInfo& jobInfo)
         // create job steps for each simple filter
         JLF_ExecPlanToJobList::walkTree(parseTree, jobInfo);
 
+        jobInfo.dynamicParseTreeVec.push_back(parseTree);
         // don't delete the parseTree, it has been placed in the plan.
+        // Instead, we use the dynamicParseTreeVec above for deletion
+        // in ~csep() or csep.unserialize().
         // delete parseTree;
     }
     else
@@ -811,11 +817,17 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                 {
                     sc = dynamic_cast<SimpleColumn*>(jobInfo.deliveredCols[sc->orderPos()].get());
 
-                    // TODO Investigate why this could be NULL
+                    // If sc is NULL it's most likely a scaler subquery
                     if (sc == NULL)
                     {
                         const ReturnedColumn* rc = dynamic_cast<const ReturnedColumn*>(orderByCols[i].get());
-                        uint64_t eid = rc->expressionId();
+                        uint32_t eid = rc->expressionId();
+                        // If eid is -1, then there's no corresponding
+                        // entry in tupleKeyMap and will assert
+                        // Don't add the order by. It won't work and ordering on
+                        // a singleton is a waste anyway.
+                        if ((int32_t)eid == -1)
+                            continue;
                         CalpontSystemCatalog::ColType ct = rc->resultType();
                         tupleKey = getExpTupleKey(jobInfo, eid);
                         jobInfo.orderByColVec.push_back(make_pair(tupleKey, orderByCols[i]->asc()));

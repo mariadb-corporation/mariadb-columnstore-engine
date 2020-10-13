@@ -3210,6 +3210,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
             oam::DeviceNetworkConfig devicenetworkconfig;
             oam::DeviceNetworkList devicenetworklist;
             string value;
+            MonitorConfig currentConfig;
 
             *msg >> moduleCount;
 
@@ -3223,7 +3224,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
             log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Add Module");
 
             string moduleType = devicenetworkconfig.DeviceName.substr(0, MAX_MODULE_TYPE_SIZE);
-            string OAMParentModuleType = config.OAMParentName().substr(0, 2);
+            string OAMParentModuleType = currentConfig.OAMParentName().substr(0, 2);
 
             // add to module status shared memory
             DeviceNetworkList::iterator pt = devicenetworklist.begin();

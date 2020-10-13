@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
     }
 
     //my.cnf.rpmsave file
-    string mycnfsaveFile = "/etc/my.cnf/columnstore.cnf.rpmsave";
+    string mycnfsaveFile = std::string(MCSMYCNFDIR) + "/columnstore.cnf.rpmsave";
     ifstream mycnfsavefile (mycnfsaveFile.c_str());
 
     if (!mycnfsavefile)

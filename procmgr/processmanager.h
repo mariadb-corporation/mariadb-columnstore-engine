@@ -300,6 +300,10 @@ public:
     int disableModule(std::string target, bool manualFlag);
 
     /**
+    *@brief reinit Processes trying to replace recycleProcess
+    */
+    void reinitProcesses(std::string skipModule = "none");
+    /**
     *@brief recycle Processes
     */
     void recycleProcess(std::string module, bool enableModule = false);

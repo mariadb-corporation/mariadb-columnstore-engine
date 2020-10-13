@@ -75,9 +75,9 @@ endif ()
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "MariaDB-columnstore-libs")
 
 
-set( CPACK_DEBIAN_LIBS_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/prerm;" )
-set( CPACK_DEBIAN_PLATFORM_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/platform/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/platform/prerm;" )
-set( CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/prerm;" )
+set(CPACK_DEBIAN_COLUMNSTORE-LIBS_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/libs/prerm;")
+set(CPACK_DEBIAN_COLUMNSTORE-PLATFORM_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/platform/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/platform/prerm;")
+set(CPACK_DEBIAN_COLUMNSTORE-ENGINE_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/prerm;")
 
 INCLUDE (CPack)
 

@@ -1278,7 +1278,7 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket* sock)
 
     for (i = 0; i < (int) slaves.size(); i++)
     {
-        MessageQueueClientPool::releaseInstance(slaves[i]);
+        MessageQueueClientPool::deleteInstance(slaves[i]);
         slaves[i] = NULL;
     }
 

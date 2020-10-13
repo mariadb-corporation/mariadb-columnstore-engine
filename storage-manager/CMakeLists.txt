@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(storagemanager)
 
-include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_UTILS_COMMON_INCLUDE})
+include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_UTILS_COMMON_INCLUDE} ${S3API_DIR})
 
 set(storagemanager_SRCS 
     src/AppendTask.cpp
@@ -75,6 +75,11 @@ target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(unit_tests storagemanager)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 11)
 
+add_executable(testS3Connection src/testS3Connection.cpp)
+target_compile_definitions(testS3Connection PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
+target_link_libraries(testS3Connection storagemanager)
+set_property(TARGET testS3Connection PROPERTY CXX_STANDARD 11)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
 add_custom_command(
@@ -129,13 +134,19 @@ install(TARGETS storagemanager
     COMPONENT columnstore-platform
 )
 
-install(TARGETS StorageManager smcat smput smls smrm
+install(TARGETS StorageManager smcat smput smls smrm testS3Connection
     RUNTIME DESTINATION ${ENGINE_BINDIR}
     COMPONENT columnstore-platform
 )
 
-
 install(FILES storagemanager.cnf 
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT columnstore-platform)
+    COMPONENT columnstore-platform
+)
+
+install(FILES storagemanager.cnf 
+    RENAME storagemanager.cnf.example
+    DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
+    COMPONENT columnstore-platform
+)
 

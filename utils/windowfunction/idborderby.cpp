@@ -691,6 +691,24 @@ OrderByData::OrderByData(const std::vector<IdbSortSpec>& spec, const rowgroup::R
 }
 
 
+// OrderByData class dtor
+OrderByData::~OrderByData()
+{
+    // delete compare objects
+    vector<Compare*>::iterator i = fRule.fCompares.begin();
+
+    while (i != fRule.fCompares.end())
+    {
+        if (*i)
+        {
+            delete *i;
+            *i = NULL;
+        }
+        i++;
+    }
+}
+
+
 // IdbOrderBy class implementation
 IdbOrderBy::IdbOrderBy() :
     fDistinct(false), fMemSize(0), fRowsPerRG(rowgroup::rgCommonSize),

@@ -12,8 +12,6 @@ add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
 
 install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 
-
-
 set(udf_mysql_LIB_SRCS udfmysql.cpp)
 
 add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})

@@ -1303,7 +1303,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
         // View is already processed in view::transform
         // @bug5319. view is sometimes treated as derived table and
         // fromSub::transform does not build outer join filters.
-        if (!table_ptr->derived && table_ptr->view)
+        if (!table_ptr->derived && table_ptr->view && !gwi.subQuery)
             continue;
 
         CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
@@ -2448,11 +2448,11 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
                     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
                     if (!viewName.empty())
                     {
-                            sc->viewName(viewName);
+                            sc->viewName(lower(viewName));
                     }
                     else
                     {
-                            sc->viewName(csep->derivedTbView());
+                            sc->viewName(lower(csep->derivedTbView()));
                     }
                     sc->resultType(cols[j]->resultType());
                     sc->hasAggregate(cols[j]->hasAggregate());
@@ -3320,6 +3320,7 @@ ReturnedColumn* buildReturnedColumn(
                     break;
             }
         }
+        /* fall through */
 
         case Item::NULL_ITEM:
         {
@@ -4363,7 +4364,8 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     bool isInformationSchema = false;
 
     // @bug5523
-    if (ifp->cached_table && strcmp(ifp->cached_table->db.str, "information_schema") == 0)
+    if (ifp->cached_table && ifp->cached_table->db.length > 0
+        && strcmp(ifp->cached_table->db.str, "information_schema") == 0)
         isInformationSchema = true;
 
     // support FRPM subquery. columns from the derived table has no definition
@@ -4820,6 +4822,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                             break;
                         }
                     }
+                    /* fall through */
 
                     default:
                     {
@@ -6335,10 +6338,12 @@ int processFrom(bool &isUnion,
 int processWhere(SELECT_LEX &select_lex,
     gp_walk_info &gwi,
     SCSEP &csep,
-    List<Item> &on_expr_list)
+    List<Item> &on_expr_list,
+    const std::vector<COND*>& condStack)
 {
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
+    bool isUpdateDelete = false;
 
     if (join != 0)
         icp = reinterpret_cast<Item_cond*>(join->conds);
@@ -6356,7 +6361,7 @@ int processWhere(SELECT_LEX &select_lex,
                         ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
                         ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
     {
-        icp = reinterpret_cast<Item_cond*>(select_lex.where);
+        isUpdateDelete = true;
     }
 
     if (icp)
@@ -6393,6 +6398,51 @@ int processWhere(SELECT_LEX &select_lex,
 
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_INTERNAL_ERROR;
+        }
+    }
+    else if (isUpdateDelete)
+    {
+        // MCOL-4023 For updates/deletes, we iterate over the pushed down condStack
+        if (!condStack.empty())
+        {
+            std::vector<COND*>::const_iterator condStackIter = condStack.begin();
+
+            while (condStackIter != condStack.end())
+            {
+                COND* cond = *condStackIter++;
+
+                cond->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+                if (gwi.fatalParseError)
+                {
+                    if (gwi.thd->derived_tables_processing)
+                    {
+                        gwi.cs_vtable_is_update_with_derive = true;
+                        return -1;
+                    }
+
+                    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+                    return ER_INTERNAL_ERROR;
+                }
+            }
+        }
+        // if condStack is empty(), check the select_lex for where conditions
+        // as a last resort
+        else if ((icp = reinterpret_cast<Item_cond*>(select_lex.where)) != 0)
+        {
+            icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+            if (gwi.fatalParseError)
+            {
+                if (gwi.thd->derived_tables_processing)
+                {
+                    gwi.cs_vtable_is_update_with_derive = true;
+                    return -1;
+                }
+
+                setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+                return ER_INTERNAL_ERROR;
+            }
         }
     }
     else if (join && join->zero_result_cause)
@@ -6667,7 +6717,8 @@ int processLimitAndOffset(
     }
 
     // We don't currently support limit with correlated subquery
-    if (gwi.subQuery && !gwi.correlatedTbNameVec.empty() && csep->hasOrderBy())
+    if (csep->limitNum() != (uint64_t) - 1 &&
+            gwi.subQuery && !gwi.correlatedTbNameVec.empty())
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
@@ -6713,7 +6764,8 @@ int processLimitAndOffset(
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     SCSEP& csep,
     bool isUnion,
-    bool isSelectHandlerTop)
+    bool isSelectHandlerTop,
+    const std::vector<COND*>& condStack)
 {
 #ifdef DEBUG_WALK_COND
     cerr << "getSelectPlan()" << endl;
@@ -6749,7 +6801,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
     gwi.clauseType = WHERE;
-    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list)))
+    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list, condStack)))
     {
         return rc;
     }
@@ -7030,7 +7082,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                             return -1;
                         }
                     }
-                    else
+                    else if ( !gwi.fatalParseError )
                     {
                         Message::Args args;
                         args.add(ifp->func_name());
@@ -7625,14 +7677,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
         if (nonSupportItem)
         {
-            Message::Args args;
-
-            if (nonSupportItem->name.length)
-                args.add("'" + string(nonSupportItem->name.str) + "'");
-            else
-                args.add("");
-
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
+            if (gwi.parseErrorText.length() == 0)
+            {
+                Message::Args args;
+                if (nonSupportItem->name.length)
+                    args.add("'" + string(nonSupportItem->name.str) + "'");
+                else
+                    args.add("");
+                gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
+            }
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }

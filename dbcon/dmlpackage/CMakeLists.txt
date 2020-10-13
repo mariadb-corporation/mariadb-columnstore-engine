@@ -1,19 +1,20 @@
 
 INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
-#TODO: put generated files in binary folder
-ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
-    COMMAND /bin/sh ./dml-gram.sh ${BISON_EXECUTABLE}
-    COMMAND /bin/sh ./dml-scan.sh ${LEX_EXECUTABLE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS dml.y dml.l
-)
+FIND_PACKAGE(BISON REQUIRED)
+BISON_TARGET(dml_gram dml.y ${CMAKE_CURRENT_BINARY_DIR}/dml-gram.cpp
+  DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/dml-gram.h
+  COMPILE_FLAGS "-l -p dml --defines=${CMAKE_CURRENT_BINARY_DIR}/dml-gram.h")
+
+FIND_PACKAGE(FLEX REQUIRED)
+FLEX_TARGET(dml_scan dml.l ${CMAKE_CURRENT_BINARY_DIR}/dml-scan.cpp COMPILE_FLAGS "-i -L -Pdml")
+ADD_FLEX_BISON_DEPENDENCY(dml_scan dml_gram)
 
 set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 ########### next target ###############
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})  # to pick up flex/bison output
 ADD_LIBRARY(dmlpackage SHARED
     dml-scan.cpp
     dml-gram.cpp
@@ -32,9 +33,9 @@ ADD_LIBRARY(dmlpackage SHARED
     commanddmlpackage.cpp
     dmlpkg.cpp
     dmlparser.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
-	)
+    ${BISON_dml_gram_OUTPUTS}
+    ${FLEX_dml_scan_OUTPUTS}
+)
 
 
 INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)

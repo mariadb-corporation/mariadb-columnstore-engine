@@ -40,7 +40,7 @@
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <readline.h>
-#include <history.h>
+#include <readline/history.h>
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>

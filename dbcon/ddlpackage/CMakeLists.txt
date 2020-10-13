@@ -1,18 +1,19 @@
 INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
-#TODO: put generated files in the binary directory
-ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
-    COMMAND /bin/sh ./ddl-gram.sh ${BISON_EXECUTABLE}
-    COMMAND /bin/sh ./ddl-scan.sh ${LEX_EXECUTABLE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ddl.y ddl.l
-)
+FIND_PACKAGE(BISON REQUIRED)
+BISON_TARGET(ddl_gram ddl.y ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.cpp
+  DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.h
+  COMPILE_FLAGS "-l -p ddl --defines=${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.h")
+
+FIND_PACKAGE(FLEX REQUIRED)
+FLEX_TARGET(ddl_scan ddl.l ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp COMPILE_FLAGS "-i -L -Pddl")
+ADD_FLEX_BISON_DEPENDENCY(ddl_scan ddl_gram)
 
 set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS -Wno-sign-compare)
 
 ########### next target ###############
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR}) # to pick up flex/bison output
 ADD_LIBRARY(ddlpackage SHARED
     serialize.cpp
     ddl-scan.cpp
@@ -31,9 +32,9 @@ ADD_LIBRARY(ddlpackage SHARED
     markpartition.cpp
     restorepartition.cpp
     droppartition.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
-    )
+    ${BISON_ddl_gram_OUTPUTS}
+    ${FLEX_ddl_scan_OUTPUTS}
+)
 
 INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-libs)
 

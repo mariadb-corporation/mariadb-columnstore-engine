@@ -102,6 +102,8 @@ void AutoincrementManager::resetSequence(uint32_t oid, uint64_t value)
     it->second.value = value;
 }
 
+const uint32_t AutoincrementManager::lockTime = 30;
+
 void AutoincrementManager::getLock(uint32_t oid)
 {
     boost::mutex::scoped_lock lk(lock);

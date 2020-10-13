@@ -33,6 +33,13 @@ enum mcs_compression_type_t {
     SNAPPY = 2
 };
 
+// use_import_for_batchinsert
+enum mcs_use_import_for_batchinsert_t {
+    OFF = 0,
+    ON = 1,
+    ALWAYS = 2
+};
+
 // simple setters/getters
 const char* get_original_query(THD* thd);
 void set_original_query(THD* thd, char* query);
@@ -94,8 +101,8 @@ void set_double_for_decimal_math(THD* thd, bool value);
 ulong get_local_query(THD* thd);
 void set_local_query(THD* thd, ulong value);
 
-bool get_use_import_for_batchinsert(THD* thd);
-void set_use_import_for_batchinsert(THD* thd, bool value);
+mcs_use_import_for_batchinsert_t get_use_import_for_batchinsert(THD* thd);
+void set_use_import_for_batchinsert(THD* thd, ulong value);
 
 ulong get_import_for_batchinsert_delimiter(THD* thd);
 void set_import_for_batchinsert_delimiter(THD* thd, ulong value);

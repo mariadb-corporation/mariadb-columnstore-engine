@@ -3,8 +3,6 @@
 # $Id: genErrId.pl 3048 2012-04-04 15:33:45Z rdempsey $
 #
 
-open FH, "< ./ErrorMessage.txt" or die;
-
 $frontmatter = <<'EOD';
 /* Copyright (C) 2014 InfiniDB, Inc.
 
@@ -46,7 +44,7 @@ EOD
 
 print $frontmatter;
 
-while (<FH>)
+while (<>)
 {
 	chomp;
 	next if (/^$/);
@@ -56,6 +54,3 @@ while (<FH>)
 }
 
 print $backmatter;
-
-close FH;
-

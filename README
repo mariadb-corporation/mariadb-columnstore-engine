@@ -3,10 +3,7 @@ MariaDB ColumnStore 1.4 is the GA version of MariaDB ColumnStore.
 It is built by porting InfiniDB 4.6.7 on MariaDB and adding entirely 
 new features not found anywhere else.
 
-MariaDB ColumnStore 1.4 is a Alpha.
-
 Additional features will be pushed in future releases. 
 A few things to notice:
 - Do not use pre-releases on production systems.
 - The building of the ColumnStore engine needs a special build environment. We're working on making it available for everyone to build.
-

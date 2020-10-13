@@ -64,7 +64,8 @@
 #include <net/if.h>
 
 #include <readline.h>
-#include <history.h>
+#include <readline/history.h>
+#include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/tokenizer.hpp>
@@ -190,6 +191,8 @@ string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
 string systemName;
 
+
+
 bool noPrompting = false;
 bool rootUser = true;
 string USER = "root";
@@ -221,6 +224,42 @@ typedef struct _thread_data_t
     std::string command;
 } thread_data_t;
 
+bool configureS3 = false;
+string s3Bucket, s3Region, s3Endpoint, s3Key, s3Secret, s3CacheSize, s3Location;
+
+void modifySMConfigFile()
+{
+    string smConfigFile = string(MCSSYSCONFDIR) + "/columnstore/storagemanager.cnf";
+    boost::property_tree::ptree smConfig;
+    boost::property_tree::ini_parser::read_ini(smConfigFile, smConfig);
+    
+    smConfig.put<string>("ObjectStorage.service", "S3");
+    if (!s3Bucket.empty())
+        smConfig.put<string>("S3.bucket", s3Bucket);
+    if (!s3Region.empty())
+        smConfig.put<string>("S3.region", s3Region);
+    if (!s3Endpoint.empty())
+        smConfig.put<string>("S3.endpoint", s3Endpoint);
+    if (!s3Key.empty())
+        smConfig.put<string>("S3.aws_access_key_id", s3Key);
+    if (!s3Secret.empty())
+        smConfig.put<string>("S3.aws_secret_access_key", s3Secret);
+    if (!s3CacheSize.empty())
+        smConfig.put<string>("Cache.cache_size", s3CacheSize);
+    if (!s3Location.empty())
+    {
+        boost::filesystem::path tmp;   // used to normalize the text of the path
+        tmp = s3Location + "/storagemanager/metadata";
+        smConfig.put<string>("ObjectStorage.metadata_path", tmp.normalize().string());
+        tmp = s3Location + "/storagemanager/journal";
+        smConfig.put<string>("ObjectStorage.journal_path", tmp.normalize().string());
+        tmp = s3Location + "/storagemanager/path";
+        smConfig.put<string>("LocalStorage.path", tmp.normalize().string());
+        tmp = s3Location + "/storagemanager/cache";
+        smConfig.put<string>("Cache.path", tmp.normalize().string());
+    }
+    boost::property_tree::ini_parser::write_ini(smConfigFile, smConfig);
+}
 
 int main(int argc, char* argv[])
 {
@@ -277,7 +316,7 @@ int main(int argc, char* argv[])
 
     for ( int i = 1; i < argc; i++ )
     {
-		if( string("-h") == argv[i] )
+		if( string("-h") == argv[i] || string("--help") == argv[i] )
 		{
             cout << endl;
             cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -292,11 +331,16 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn]" << endl;
+            cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
+            cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
+            cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
             cout << "   -h  Help" << endl;
-            cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
-            cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
-            cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
+            cout << "   -c  Config File to use to extract configuration data, default is " << endl;
+            cout << "       Columnstore.xml.rpmsave" << endl;
+            cout << "   -u  Upgrade, Install using the Config File from -c, default is " << endl;
+            cout << "       Columnstore.xml.rpmsave.  If ssh-keys aren't setup, you should provide " << endl;
+            cout << "       passwords as command line arguments" << endl;
             cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -qs Quick Install - Single Server" << endl;
 			cout << "   -qm Quick Install - Multi Server" << endl;
@@ -305,12 +349,95 @@ int main(int argc, char* argv[])
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
-            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in combination with -x" << endl;
+            cout << "   -xr Resolve host names into their reverse DNS host names. Only applied in " << endl;
+            cout << "       combination with -x" << endl;
             cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
-            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
-            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
-            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
+            cout << "       (percentages of the total memory need to be stated without suffix," << endl;
+            cout << "       explicit values with suffixes M or G)" << endl;
+            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate" << endl;
+            cout << "       results and set operations on the UM.  (percentages of the total memory" << endl;
+            cout << "       need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
+            cout << endl;
+            cout << "    S3-compat storage quick-configure options:" << endl;
+            cout << "    (See /etc/columnstore/storagemanager.cnf.example for more information)" << endl;
+            cout << "       -sm-bucket bucket  The bucket to use." << endl;
+            cout << "       -sm-region region  The region to use." << endl;
+            cout << "       -sm-id id          The ID to use; equivalent to AWS_ACCESS_KEY_ID in AWS" << endl;
+            cout << "       -sm-secret secret  The secret; equivalent to AWS_SECRET_ACCESS_KEY in AWS" << endl;
+            cout << "       -sm-endpoint host  The host to connect to" << endl;
+            cout << "       -sm-cache size     The amount of disk space to use as a local cache" << endl;
+            cout << "       -sm-prefix prefix  Where storagemanager will store its files" << endl;
             exit (0);
+        }
+        else if (strcmp("-sm-bucket", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager bucket not provided" << endl;
+                exit(1);
+            }
+            s3Bucket = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-region", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager region not provided" << endl;
+                exit(1);
+            }
+            s3Region = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-id", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager ID not provided" << endl;
+                exit(1);
+            }
+            s3Key = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-secret", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager secret not provided" << endl;
+                exit(1);
+            }
+            s3Secret = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-endpoint", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager endpoint not provided" << endl;
+                exit(1);
+            }
+            s3Endpoint = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-cache", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager cache size not provided" << endl;
+                exit(1);
+            }
+            s3CacheSize = argv[i];
+            configureS3 = true;
+        }
+        else if (strcmp("-sm-prefix", argv[i]) == 0)
+        {
+            if (++i == argc)
+            {
+                cout << "   ERROR: StorageManager prefix not provided" << endl;
+                exit(1);
+            }
+            s3Location = argv[i];
+            configureS3 = true;
         }
         else if (string("-x") == argv[i])
         {
@@ -469,7 +596,10 @@ int main(int argc, char* argv[])
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr][-numBlocksPct][-totalUmMemory]" << endl;
+            cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-sn]" << endl;
+            cout << "       [-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-x][-xr]" << endl;
+            cout << "       [-numBlocksPct][-totalUmMemory][-sm-bucket][-sm-region][-sm-id]" << endl;
+            cout << "       [-sm-secret][-sm-endpoint][-sm-cache][-sm-prefix]" << endl;
 			exit (1);
 		}
 	}
@@ -1291,13 +1421,16 @@ int main(int argc, char* argv[])
             mysqlRep = true;
 
         string answer = "y";
+        // MCOL-3888: default 'y', if its something other than 'n' leave it 'y'
+        if ( MySQLRep == "n" )
+            answer = "n";
 
         while (true)
         {
             if ( mysqlRep )
                 prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
             else
-                prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
+                prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (" + MySQLRep + ") > ";
 
             pcommand = callReadline(prompt.c_str());
 
@@ -4899,6 +5032,20 @@ bool storageSetup(bool amazonInstall)
     }
     storageManagerInstalled = boost::filesystem::exists(storageManagerLocation);
 
+    if (configureS3)
+    {
+        try
+        {
+            modifySMConfigFile();
+        }
+        catch (exception &e)
+        {
+            cerr << "There was an error processing the StorageManager command-line options." << endl;
+            cerr << "Got: " << e.what() << endl;
+            exit(1);
+        }
+    }
+        
     //
     // get Backend Data storage type
     //
@@ -4937,54 +5084,6 @@ bool storageSetup(bool amazonInstall)
     cout << "]" << endl;
 
     prompt = "Select the type of data storage (" + storageType + ") > ";
-
-    #if 0
-    // pre-storagemanager version
-    if (( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
-    {
-        cout << "There are 2 options when configuring the storage: internal or external" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external] (" + storageType + ") > ";
-    }
-
-    if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "n" )
-    {
-        cout << "There are 3 options when configuring the storage: internal, external, or DataRedundancy" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy] (" + storageType + ") > ";
-    }
-
-    if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "y" )
-    {
-        cout << "There are 3 options when configuring the storage: internal, external, or hdfs" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 4=hdfs] (" + storageType + ") > ";
-    }
-
-    if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
-    {
-        cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
-        prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
-    }
-
-    cout << "  'internal' -    This is specified when a local disk is used for the DBRoot storage." << endl;
-    cout << "                  High Availability Server Failover is not Supported in this mode" << endl << endl;
-    cout << "  'external' -    This is specified when the DBRoot directories are mounted." << endl;
-    cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
-
-    if ( glusterInstalled == "y" && singleServerInstall != "1")
-    {
-        cout << "  'DataRedundancy' - This is specified when gluster is installed and you want" << endl;
-        cout << "                  the DBRoot directories to be controlled by ColumnStore Data Redundancy." << endl;
-        cout << "                  High Availability Server Failover is Supported in this mode." << endl;
-        cout << "                  NOTE: glusterd service must be running and enabled on all PMs." << endl << endl;
-
-    }
-
-    if ( hadoopInstalled == "y" )
-    {
-        cout << "  'hdfs' -        This is specified when hadoop is installed and you want the DBRoot" << endl;
-        cout << "                  directories to be controlled by the Hadoop Distributed File System (HDFS)." << endl;
-        cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
-    }
-    #endif
 
     while (true)
     {
@@ -5346,6 +5445,12 @@ bool storageSetup(bool amazonInstall)
         hdfs = false;
         sysConfig->setConfig("StorageManager", "Enabled", "Y");
         sysConfig->setConfig("SystemConfig", "DataFilePlugin", "libcloudio.so");
+        // Verify S3 Configuration settings
+        if (system("testS3Connection"))
+        {
+            cout << "ERROR: S3Storage Configuration check failed. Verify storagemanager.cnf settings and rerun postConfigure." << endl;
+            return false;
+        }
     }
     else
     {

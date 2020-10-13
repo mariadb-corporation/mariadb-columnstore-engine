@@ -2195,7 +2195,7 @@ int SlaveComm::replayJournal(string prefix)
         fName = prefix + "_journal";
     }
 
-    const char* filename = journalName.c_str();
+    const char* filename = fName.c_str();
 
     IDBDataFile* journalf = IDBDataFile::open(
                                 IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0);

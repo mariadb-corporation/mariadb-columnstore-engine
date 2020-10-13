@@ -5996,12 +5996,12 @@ bool Oam::autoMovePmDbroot(std::string residePM)
 
                     if ( ret != 0 )
                     {
-                        writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                        writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) +" ret: " + itoa(ret), LOG_TYPE_ERROR );
                     }
                 }
                 catch (...)
                 {
-                    writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                    writeLog("EXCEPTION FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 }
 
                 // check if a copy is available when residePM returns
@@ -7448,15 +7448,15 @@ void Oam::removeDbroot(DBRootConfigList& dbrootlist)
             catch (exception& e)
             {
                 cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
-                cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
-					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) << endl;
+                writeLog("FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 exceptionControl("removeDbroot", API_FAILURE);
             }
             catch (...)
             {
                 cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
-                cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
-					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+                cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) << endl;
+                writeLog("FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
                 exceptionControl("removeDbroot", API_FAILURE);
             }
         }
@@ -7798,6 +7798,10 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     int no_systemd = -1;
 
+    ProcessStatus procstat;
+    getProcessStatus("mysqld", moduleName, procstat);
+    int state = procstat.ProcessOpState;
+    pid_t pidStatus = procstat.ProcessID;
     // This is here because calling system() is problematic with ProcMon
     //  which has its own signalHandler for SIGCHLD. Therefore since this
     //  is only needed when doing non MYSQL_STATUS commands, only check
@@ -7846,7 +7850,28 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill mysqld");
+                kill(pidStatus,SIGTERM);
+                // Loop check because we mysqld may not stop immediately
+                for (int i=0; i < 10; i++)
+                {
+                    if (kill(pidStatus,0) == -1)
+                    {
+                        if (errno == ESRCH)
+                        {
+                            writeLog("***mysqld shutdown complete", LOG_TYPE_DEBUG);
+                            break;
+                        }
+                        else
+                        {
+                            writeLog("***mysqld errno = " + string(strerror(errno)), LOG_TYPE_DEBUG);
+                        }
+                    }
+                    else
+                    {
+                        writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
+                    }
+                    sleep(2);
+                }
             }
             command = "stop";
 
@@ -7865,7 +7890,28 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         {
             if (no_systemd)
             {
-                system("pkill mysqld");
+                kill(pidStatus,SIGTERM);
+                // Loop check because we mysqld may not stop immediately
+                for (int i=0; i < 10; i++)
+                {
+                    if (kill(pidStatus,0) == -1)
+                    {
+                        if (errno == ESRCH)
+                        {
+                            writeLog("***mysqld shutdown complete", LOG_TYPE_DEBUG);
+                            break;
+                        }
+                        else
+                        {
+                            writeLog("***mysqld errno = " + string(strerror(errno)), LOG_TYPE_DEBUG);
+                        }
+                    }
+                    else
+                    {
+                        writeLog("***mysqld waiting for shutdown complete", LOG_TYPE_DEBUG);
+                    }
+                    sleep(2);
+                }
                 system("/usr/bin/mysqld_safe &");
             }
             command = "restart";
@@ -7955,10 +8001,6 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     if (action == MYSQL_STATUS )
     {
-        ProcessStatus procstat;
-        getProcessStatus("mysqld", moduleName, procstat);
-        int state = procstat.ProcessOpState;
-        pid_t pidStatus = procstat.ProcessID;
         pid_t pid = 0;
         if ( state != ACTIVE )
         {
@@ -9151,7 +9193,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     string dbr = sysConfig->getConfig("SystemModuleConfig", ModuleDBRootID);
                     string command = "" + DataRedundancyConfigs[pm].pmIpAddr +
                                      ":/dbroot" + dbr + " /var/lib/columnstore/data" + dbr +
-                                     " glusterfs defaults,direct-io-mode=enable 00";
+                                     " glusterfs defaults,direct-io-mode=enable 0 0";
                     string toPM = "pm" + itoa(pm + 1);
                     distributeFstabUpdates(command, toPM);
                 }
