@@ -240,7 +240,12 @@ ByteStream& ByteStream::operator<<(const uint128_t& o)
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
 
-    *((uint128_t*) fCurInPtr) = o;
+    __asm__ volatile("movups %1,%0;"
+        :"=m" ( *fCurInPtr ) // output
+        :"v"( o ) // input
+        : "memory" // clobbered
+    );
+ 
     fCurInPtr += 16;
 
     return *this;
@@ -251,7 +256,11 @@ ByteStream& ByteStream::operator<<(const int128_t& o)
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
 
-    *((int128_t*) fCurInPtr) = o;
+    __asm__ volatile("movups %1,%0;"
+        :"=m" ( *fCurInPtr ) // output
+        :"v"( o ) // input
+        : "memory" // clobbered
+    );
     fCurInPtr += 16;
 
     return *this;
@@ -441,7 +450,16 @@ void ByteStream::peek(uint128_t& o) const
     if (length() < 16)
         throw underflow_error("ByteStream>uint128_t: not enough data in stream to fill datatype");
 
-    o = *((uint128_t*) fCurOutPtr);
+    __asm__ volatile("movdqu %0,%%xmm0;"
+        : 
+        :"m"( *fCurOutPtr ) // input
+        :"xmm0" // clobbered
+    );
+    __asm__ volatile("movups %%xmm0,%0;"
+        : "=m" (o)// output
+        : // input
+        : "memory", "xmm0" // clobbered
+    );
 }
 
 void ByteStream::peek(int128_t& o) const
@@ -450,7 +468,16 @@ void ByteStream::peek(int128_t& o) const
     if (length() < 16)
         throw underflow_error("ByteStream>int128_t: not enough data in stream to fill datatype");
 
-    o = *((int128_t*) fCurOutPtr);
+    __asm__ volatile("movdqu %0,%%xmm0;"
+        : 
+        :"m"( *fCurOutPtr ) // input
+        :"xmm0" // clobbered
+    );
+    __asm__ volatile("movups %%xmm0,%0;"
+        : "=m" (o)// output
+        : // input
+        : "memory", "xmm0" // clobbered
+    );
 }
 
 void ByteStream::peek(string& s) const

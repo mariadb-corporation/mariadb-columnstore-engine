@@ -231,7 +231,11 @@ void ColumnCommand::loadData()
                 {
                     ByteStream::hexbyte h;
                     utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&h);
-                    hPtr[idx] = h;
+                    __asm__ volatile("movups %1,%0"
+                        :"=m" ( hPtr[idx] ) // output
+                        :"v"( h ) // input
+                        : "memory" // clobbered
+                    );
                 }
             }
 
@@ -328,7 +332,18 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
-                wide128Values[i] = *((int128_t*) &bpp->outputMsg[pos]);
+                int128_t* int128Ptr = reinterpret_cast<int128_t*>(&bpp->outputMsg[pos]);
+                __asm__ volatile("movdqu %0,%%xmm0;"
+                    : 
+                    :"m"( *int128Ptr ) // input
+                    :"xmm0" // clobbered
+                );
+                __asm__ volatile("movups %%xmm0,%0;"
+                    : "=m" (wide128Values[i])// output
+                    : // input
+                    : "memory", "xmm0" // clobbered
+                );
+ 
                 pos += 16;
             }
 
