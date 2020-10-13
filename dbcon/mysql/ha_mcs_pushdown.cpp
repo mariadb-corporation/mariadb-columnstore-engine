@@ -747,13 +747,8 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
 
     // Check the session variable value to enable/disable use of
     // select_handler
-    if (!get_select_handler(thd))
-    {
-        return handler;
-    }
-
-    // Disable SP support in the select_handler for now.
-    if ((thd->lex)->sphead)
+    if (!get_select_handler(thd) ||
+        ((thd->lex)->sphead && !get_select_handler_in_stored_procedures(thd)))
     {
         return handler;
     }

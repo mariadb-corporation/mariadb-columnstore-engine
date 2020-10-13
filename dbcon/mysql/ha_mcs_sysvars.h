@@ -62,6 +62,9 @@ void set_derived_handler(THD* thd, bool value);
 bool get_group_by_handler(THD* thd);
 void set_group_by_handler(THD* thd, bool value);
 
+bool get_select_handler_in_stored_procedures(THD* thd);
+void set_select_handler_in_stored_procedures(THD* thd, bool value);
+
 uint get_orderby_threads(THD* thd);
 void set_orderby_threads(THD* thd, uint value);
 
