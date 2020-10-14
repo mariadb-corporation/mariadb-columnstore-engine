@@ -231,6 +231,12 @@ int S3Storage::getObject(const string &_sourceKey, boost::shared_array<uint8_t> 
     string sourceKey = prefix + _sourceKey;
     
     ms3_st *creds = getConnection();
+    if (!creds)
+    {
+        logger->log(LOG_ERR, "S3Storage::getObject(): failed to GET, S3Storage::getConnection() returned NULL on init");
+        errno = EINVAL;
+        return -1;
+    }
     ScopedConnection sc(this, creds);
     
     do {
@@ -325,6 +331,12 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
     string destKey = prefix + _destKey;
     uint8_t s3err;
     ms3_st *creds = getConnection();
+    if (!creds)
+    {
+        logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, S3Storage::getConnection() returned NULL on init");
+        errno = EINVAL;
+        return -1;
+    }
     ScopedConnection sc(this, creds);
     
     do {
@@ -363,6 +375,12 @@ int S3Storage::deleteObject(const string &_key)
     uint8_t s3err;
     string key = prefix + _key;
     ms3_st *creds = getConnection();
+    if (!creds)
+    {
+        logger->log(LOG_ERR, "S3Storage::deleteObject(): failed to DELETE, S3Storage::getConnection() returned NULL on init");
+        errno = EINVAL;
+        return -1;
+    }
     ScopedConnection sc(this, creds);
 
     do {
@@ -401,6 +419,12 @@ int S3Storage::copyObject(const string &_sourceKey, const string &_destKey)
     string sourceKey = prefix + _sourceKey, destKey = prefix + _destKey;
     uint8_t s3err;
     ms3_st *creds = getConnection();
+    if (!creds)
+    {
+        logger->log(LOG_ERR, "S3Storage::copyObject(): failed to copy, S3Storage::getConnection() returned NULL on init");
+        errno = EINVAL;
+        return -1;
+    }
     ScopedConnection sc(this, creds);
     
     do 
@@ -455,6 +479,12 @@ int S3Storage::exists(const string &_key, bool *out)
     uint8_t s3err;
     ms3_status_st status;
     ms3_st *creds = getConnection();
+    if (!creds)
+    {
+        logger->log(LOG_ERR, "S3Storage::exists(): failed to HEAD, S3Storage::getConnection() returned NULL on init");
+        errno = EINVAL;
+        return -1;
+    }
     ScopedConnection sc(this, creds);
     
     do {
