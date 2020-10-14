@@ -471,16 +471,15 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
                 else
                 {
                     int64_t intVal = row.getIntField(*i);
+
                     if (scale == 0)
                     {
                         oss << intVal;
                     }
                     else
                     {
-                        char buf[utils::MAXLENGTH8BYTES];
-                        dataconvert::DataConvert::decimalToString(intVal,
-                             scale, buf, sizeof(buf), types[*i]);
-                        oss << fixed << buf;
+                        long double dblVal = intVal / pow(10.0, (double)scale);
+                        oss << fixed << setprecision(scale) << dblVal;
                     }
                 }
 
