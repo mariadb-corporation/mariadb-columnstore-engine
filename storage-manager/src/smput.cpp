@@ -57,42 +57,48 @@ void putOffline(const char *fname, int prefixlen)
     uint8_t data[8192];
     int read_err, write_err;
     ssize_t count, offset = 0;
-    
-    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
-    struct stat _stat;
-    read_err = ioc->open(fname, O_CREAT | O_TRUNC | O_WRONLY, &_stat);
-    if (read_err < 0)
+    try
     {
-        int l_errno = errno;
-        cerr << "Failed to open/create " << &fname[prefixlen] << ": " << 
-            strerror_r(l_errno, (char *) data, 8192) << endl;
-        exit(1);
-    }
-    
-    do
-    {
-        read_err = ::read(STDIN_FILENO, data, 8192);
+        boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
+        struct stat _stat;
+        read_err = ioc->open(fname, O_CREAT | O_TRUNC | O_WRONLY, &_stat);
         if (read_err < 0)
         {
             int l_errno = errno;
-            cerr << "Error reading stdin: " << strerror_r(l_errno, (char *) data, 8192) << endl;
+            cerr << "Failed to open/create " << &fname[prefixlen] << ": " <<
+                strerror_r(l_errno, (char *) data, 8192) << endl;
             exit(1);
         }
-        count = 0;
-        while (count < read_err)
+
+        do
         {
-            write_err = ioc->write(fname, &data[count], offset + count, read_err - count);
-            if (write_err < 0)
+            read_err = ::read(STDIN_FILENO, data, 8192);
+            if (read_err < 0)
             {
                 int l_errno = errno;
-                cerr << "Error writing to " << &fname[prefixlen] << ": " << 
-                    strerror_r(l_errno, (char *) data, 8192) << endl;
+                cerr << "Error reading stdin: " << strerror_r(l_errno, (char *) data, 8192) << endl;
                 exit(1);
             }
-            count += write_err;
-        }
-        offset += read_err;
-    } while (read_err > 0);
+            count = 0;
+            while (count < read_err)
+            {
+                write_err = ioc->write(fname, &data[count], offset + count, read_err - count);
+                if (write_err < 0)
+                {
+                    int l_errno = errno;
+                    cerr << "Error writing to " << &fname[prefixlen] << ": " <<
+                        strerror_r(l_errno, (char *) data, 8192) << endl;
+                    exit(1);
+                }
+                count += write_err;
+            }
+            offset += read_err;
+        } while (read_err > 0);
+    }
+    catch (exception &e)
+    {
+        cerr << "smput putOffline FAIL: " << e.what() << endl;
+    }
 }
 
 void putOnline(const char *fname, int prefixlen)

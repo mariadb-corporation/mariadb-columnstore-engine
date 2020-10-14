@@ -54,14 +54,21 @@ bool SMOnline()
 
 void rmOffline(int argCount, const char **args, const char *prefix, uint prefixlen)
 {
-    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
-    char buf[16384];
-    strncpy(buf, prefix, prefixlen);
-    
-    for (int i = 1; i < argCount; i++)
+    try
     {
-        memcpy(&buf[prefixlen], args[i], min(16383 - prefixlen, strlen(args[i])) + 1);
-        ioc->unlink(buf);
+        boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
+        char buf[16384];
+        strncpy(buf, prefix, prefixlen);
+
+        for (int i = 1; i < argCount; i++)
+        {
+            memcpy(&buf[prefixlen], args[i], min(16383 - prefixlen, strlen(args[i])) + 1);
+            ioc->unlink(buf);
+        }
+    }
+    catch (exception &e)
+    {
+        cerr << "smrm rmOffline FAIL: " << e.what() << endl;
     }
 }
 
