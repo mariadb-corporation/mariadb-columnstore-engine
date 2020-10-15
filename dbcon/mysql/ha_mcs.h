@@ -285,6 +285,7 @@ class ha_mcs_cache :public ha_mcs
   typedef ha_mcs parent;
   int original_lock_type;
   bool insert_command, cache_locked;
+  enum_sql_command sql_command;
 
   // True if this handler belongs to either calpontsys.systable or
   // calpontsys.syscolumn system catalog tables
