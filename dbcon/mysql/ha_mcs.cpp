@@ -1219,6 +1219,8 @@ my_bool get_status_and_flush_cache(void *param,
   int error;
   enum_sql_command sql_command= cache->table->in_use->lex->sql_command;
 
+  cache->sql_command= sql_command;
+
   cache->insert_command= (sql_command == SQLCOM_INSERT ||
                           sql_command == SQLCOM_LOAD);
   /*
@@ -1781,7 +1783,16 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
       bzero(&cache_handler->copy_info, sizeof(cache_handler->copy_info));
       return cache_handler->start_bulk_insert(rows, flags);
     }
-    return parent::start_bulk_insert(rows, flags);
+    else if (sql_command == SQLCOM_INSERT_SELECT)
+    {
+      return parent::start_bulk_insert_from_cache(rows, flags);
+    }
+    // sql_command == SQLCOM_END:
+    // See the comment in get_status_and_flush_cache
+    else
+    {
+      return parent::start_bulk_insert(rows, flags);
+    }
   }
   else
   {
