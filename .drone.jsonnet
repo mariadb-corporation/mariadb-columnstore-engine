@@ -7,7 +7,7 @@ local platforms = {
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-1.5': '10.5 https://github.com/MariaDB/server',
-  'columnstore-1.5.4-1': '10.5.5-3 https://github.com/mariadb-corporation/MariaDBEnterprise',
+  'columnstore-1.5.4-1': '10.5.6-4 https://github.com/mariadb-corporation/MariaDBEnterprise',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
