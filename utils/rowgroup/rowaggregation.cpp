@@ -772,6 +772,9 @@ void RowAggregation::initialize()
     // save the original output rowgroup data as primary row data
     fPrimaryRowData = fRowGroupOut->getRGData();
 
+    // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
+    fRGContextColl.resize(fFunctionCols.size());
+
     // Need map only if groupby list is not empty.
     if (!fGroupByCols.empty())
     {
@@ -784,8 +787,6 @@ void RowAggregation::initialize()
     {
         fRowGroupOut->setRowCount(1);
         attachGroupConcatAg();
-        // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
-        fRGContextColl.resize(fFunctionCols.size());
         // For UDAF, reset the data
         for (uint64_t i = 0; i < fFunctionCols.size(); i++)
         {
@@ -867,7 +868,8 @@ void RowAggregationUM::aggReset()
 }
 
 
-void RowAggregationUM::aggregateRowWithRemap(Row& row)
+void RowAggregationUM::aggregateRowWithRemap(Row& row,
+                                             std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     pair<ExtKeyMap_t::iterator, bool> inserted;
     RowPosition pos(RowPosition::MSB, 0);
@@ -930,7 +932,8 @@ void RowAggregationUM::aggregateRowWithRemap(Row& row)
 
 
 
-void RowAggregationUM::aggregateRow(Row& row)
+void RowAggregationUM::aggregateRow(Row& row,
+                                    std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     if (UNLIKELY(fKeyOnHeap))
         aggregateRowWithRemap(row);
@@ -938,7 +941,8 @@ void RowAggregationUM::aggregateRow(Row& row)
         RowAggregation::aggregateRow(row);
 }
 
-void RowAggregation::aggregateRow(Row& row)
+void RowAggregation::aggregateRow(Row& row,
+                                  std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
@@ -1804,8 +1808,10 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
 // NULL values are recognized and ignored for all agg functions except for
 // COUNT(*), which counts all rows regardless of value.
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregation::updateEntry(const Row& rowIn)
+void RowAggregation::updateEntry(const Row& rowIn,
+                                 std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -2087,8 +2093,12 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
     fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
 }
 
-void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
-                            int64_t colAux, uint64_t& funcColsIdx)
+void RowAggregation::doUDAF(const Row& rowIn,
+                            int64_t colIn,
+                            int64_t colOut,
+                            int64_t colAux,
+                            uint64_t& funcColsIdx,
+                            std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     uint32_t paramCount = fRGContextColl[funcColsIdx].getParameterCount();
     // doUDAF changes funcColsIdx to skip UDAF arguments so the real UDAF
@@ -2626,8 +2636,10 @@ void RowAggregationUM::attachGroupConcatAg()
 // Update the aggregation totals in the internal hashmap for the specified row.
 // NULL values are recognized and ignored for all agg functions except for count
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationUM::updateEntry(const Row& rowIn)
+void RowAggregationUM::updateEntry(const Row& rowIn,
+                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -3232,7 +3244,6 @@ void RowAggregationUM::calculateUDAFColumns()
 {
     RowUDAFFunctionCol* rowUDAF = NULL;
     static_any::any valOut;
-
 
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -4277,8 +4288,10 @@ RowAggregationUMP2::~RowAggregationUMP2()
 // Update the aggregation totals in the internal hashmap for the specified row.
 // NULL values are recognized and ignored for all agg functions except for count
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::updateEntry(const Row& rowIn)
+void RowAggregationUMP2::updateEntry(const Row& rowIn,
+                                     std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -4556,9 +4569,14 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 // colOut(in)   - column in the output row group
 // colAux(in)   - Where the UDAF userdata resides
 // rowUDAF(in)  - pointer to the RowUDAFFunctionCol for this UDAF instance
+// rgContextColl(in) - ptr to a vector that brings UDAF contextx in
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
-                                int64_t colAux, uint64_t& funcColsIdx)
+void RowAggregationUMP2::doUDAF(const Row& rowIn,
+                                int64_t colIn,
+                                int64_t colOut,
+                                int64_t colAux,
+                                uint64_t& funcColsIdx,
+                                std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     static_any::any valOut;
 
@@ -4708,8 +4726,10 @@ void RowAggregationDistinct::doDistinctAggregation_rowVec(vector<Row::Pointer>& 
 // Update the aggregation totals in the internal hashmap for the specified row.
 // for non-DISTINCT columns works partially aggregated results
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationDistinct::updateEntry(const Row& rowIn)
+void RowAggregationDistinct::updateEntry(const Row& rowIn,
+                                         std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -5079,6 +5099,7 @@ void RowAggregationMultiDistinct::doDistinctAggregation()
     {
         fFunctionCols = fSubFunctions[i];
         fRowGroupIn = fSubRowGroups[i];
+        auto* rgContextColl = fSubAggregators[i]->rgContextColl();
         Row rowIn;
         fRowGroupIn.initRow(&rowIn);
 
@@ -5095,13 +5116,14 @@ void RowAggregationMultiDistinct::doDistinctAggregation()
             for (uint64_t j = 0; j < fRowGroupIn.getRowCount(); ++j, rowIn.nextRow())
             {
                 aggregateRow(rowIn);
+                aggregateRow(rowIn, rgContextColl);
             }
         }
     }
 
     // restore the function column vector
     fFunctionCols = origFunctionCols;
-    fOrigFunctionCols = NULL;
+    fOrigFunctionCols = nullptr;
 }
 
 
@@ -5116,20 +5138,21 @@ void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(vector<vector<Row
     {
         fFunctionCols = fSubFunctions[i];
         fRowGroupIn = fSubRowGroups[i];
+        auto* rgContextColl = fSubAggregators[i]->rgContextColl();
         Row rowIn;
         fRowGroupIn.initRow(&rowIn);
 
         for (uint64_t j = 0; j < inRows[i].size(); ++j)
         {
             rowIn.setData(inRows[i][j]);
-            aggregateRow(rowIn);
+            aggregateRow(rowIn, rgContextColl);
         }
 
         inRows[i].clear();
     }
     // restore the function column vector
     fFunctionCols = origFunctionCols;
-    fOrigFunctionCols = NULL;
+    fOrigFunctionCols = nullptr;
 }
 
 
