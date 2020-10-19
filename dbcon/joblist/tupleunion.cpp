@@ -276,13 +276,11 @@ void TupleUnion::readInput(uint32_t which)
     }
     catch (...)
     {
-        if (status() == 0)
-        {
-            errorMessage("Union step caught an unknown exception.");
-            status(logging::unionStepErr);
-            fLogger->logMessage(logging::LOG_TYPE_CRITICAL, "Union step caught an unknown exception.");
-        }
-
+        handleException(std::current_exception(),
+                        logging::unionStepErr,
+                        logging::ERR_UNION_TOO_BIG,
+                        "TupleUnion::readInput()");
+        status(logging::unionStepErr);
         abort();
     }
 

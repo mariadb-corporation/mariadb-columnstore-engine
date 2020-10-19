@@ -58,7 +58,10 @@ Logger::Logger() : fLogId(5),
     fImpl->msgMap(msgMap);
 }
 
-void catchHandler(const string& ex, int c, SErrorInfo& ei, unsigned sid, logging::LOG_TYPE level)
+void catchHandler(const string& ex,
+                  int c, SErrorInfo& ei,
+                  unsigned sid, 
+                  logging::LOG_TYPE level)
 {
     boost::mutex::scoped_lock lk(logMutex);
 

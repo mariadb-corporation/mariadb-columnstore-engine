@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2016-2020 MariaDB
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -533,7 +534,7 @@ const string pDictionaryStep::toString() const
 
 #ifdef FIFO_SINK
 
-    if (fOid < 3000))
+    if (fOid < 3000)
         oss << " (sink)";
 
 #endif

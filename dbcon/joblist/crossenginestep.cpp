@@ -615,18 +615,12 @@ void CrossEngineStep::execute()
         fOutputDL->insert(rgDataDelivered);
         fRowsRetrieved = mysql->getRowCount();
     }
-    catch (IDBExcept& iex)
-    {
-        catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId);
-    }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_CROSS_ENGINE_CONNECT, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("CrossEngineStep execute caught an unknown exception",
-                     ERR_CROSS_ENGINE_CONNECT, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_CROSS_ENGINE_CONNECT,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "CrossEngineStep::execute()");
     }
 
     sts.msg_type = StepTeleStats::ST_SUMMARY;
@@ -792,20 +786,12 @@ uint32_t CrossEngineStep::nextBand(messageqcpp::ByteStream& bs)
             fEndOfResult = true;
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
-        while (more)
-            more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("CrossEngineStep next band caught an unknown exception",
-                     ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
+        handleException(std::current_exception(),
+                        logging::ERR_IN_DELIVERY,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "CrossEngineStep::nextBand()");
         while (more)
             more = fOutputDL->next(fOutputIterator, &rgDataOut);
 

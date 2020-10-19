@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporation
+   Copyright (C) 2019-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -449,7 +449,6 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
     scoped_array<RowBucketVec> rowBucketVecs(new RowBucketVec[fNumOfBuckets]);
     scoped_array<bool> bucketDone(new bool[fNumOfBuckets]);
     uint32_t hashlen = fAggregator->aggMapKeyLength();
-    bool caughtException = false;
 
     try
     {
@@ -561,26 +560,15 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         }
 
     } // try
-    catch (IDBExcept& iex)
-    {
-        catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                     (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-        caughtException = true;
-    }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
-        caughtException = true;
-    }
     catch (...)
     {
-        catchHandler("doThreadedSecondPhaseAggregate() caught an unknown exception",
-                     tupleAggregateStepErr, fErrorInfo, fSessionId);
-        caughtException = true;
+        handleException(std::current_exception(),
+                        logging::tupleAggregateStepErr,
+                        logging::ERR_AGGREGATION_TOO_BIG,
+                        "TupleAggregateStep::doThreadedSecondPhaseAggregate()");
+        fEndOfResult = true;
     }
 
-    if (caughtException)
-        fEndOfResult = true;
 
     fDoneAggregate = true;
 
@@ -630,24 +618,12 @@ uint32_t TupleAggregateStep::nextBand_singleThread(messageqcpp::ByteStream& bs)
             }
         }
     } // try
-    catch (IDBExcept& iex)
-    {
-        catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                     (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-
-        fEndOfResult = true;
-    }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("TupleAggregateStep next band caught an unknown exception",
-                     tupleAggregateStepErr, fErrorInfo, fSessionId);
-
+        handleException(std::current_exception(),
+                        logging::tupleAggregateStepErr,
+                        logging::ERR_AGGREGATION_TOO_BIG,
+                        "TupleAggregateStep::doThreadedSecondPhaseAggregate()");
         fEndOfResult = true;
     }
 
@@ -5194,21 +5170,12 @@ void TupleAggregateStep::aggregateRowGroups()
                 }
             }
         } // try
-        catch (IDBExcept& iex)
-        {
-            catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                         (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-            fEndOfResult = true;
-        }
-        catch (const std::exception& ex)
-        {
-            catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
-            fEndOfResult = true;
-        }
         catch (...)
         {
-            catchHandler("TupleAggregateStep::aggregateRowGroups() caught an unknown exception",
-                         tupleAggregateStepErr, fErrorInfo, fSessionId);
+            handleException(std::current_exception(),
+                            logging::tupleAggregateStepErr,
+                            logging::ERR_AGGREGATION_TOO_BIG,
+                            "TupleAggregateStep::aggregateRowGroups()");
             fEndOfResult = true;
         }
     }
@@ -5484,29 +5451,15 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                 }
             }
         } // try
-        catch (IDBExcept& iex)
-        {
-            catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                         (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-            caughtException = true;
-        }
-        catch (const std::exception& ex)
-        {
-            catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
-            caughtException = true;
-        }
         catch (...)
         {
-            catchHandler("threadedAggregateRowGroups() caught an unknown exception",
-                         tupleAggregateStepErr, fErrorInfo, fSessionId);
-            caughtException = true;
+            handleException(std::current_exception(),
+                            logging::tupleAggregateStepErr,
+                            logging::ERR_AGGREGATION_TOO_BIG,
+                            "TupleAggregateStep::threadedAggregateRowGroups()");
+            fEndOfResult = true;
+            fDoneAggregate = true;
         }
-    }
-
-    if (caughtException)
-    {
-        fEndOfResult = true;
-        fDoneAggregate = true;
     }
 
     if (!locked) fMutex.lock();
@@ -5558,19 +5511,12 @@ void TupleAggregateStep::doAggregate_singleThread()
             }
         }
     } // try
-    catch (IDBExcept& iex)
-    {
-        catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                     (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-    }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAggregateStep next band caught an unknown exception",
-                     tupleAggregateStepErr, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::tupleAggregateStepErr,
+                        logging::ERR_AGGREGATION_TOO_BIG,
+                        "TupleAggregateStep::doAggregate_singleThread()");
     }
 
     if (traceOn())
@@ -5770,16 +5716,13 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
                 fEndOfResult = true;
             }
         }
-    }
-    catch (IDBExcept& iex)
+    } //try
+    catch (...)
     {
-        catchHandler(iex.what(), iex.errorCode(), fErrorInfo, fSessionId,
-                     (iex.errorCode() == ERR_AGGREGATION_TOO_BIG ? LOG_TYPE_INFO : LOG_TYPE_CRITICAL));
-        fEndOfResult = true;
-    }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleAggregateStepErr, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::tupleAggregateStepErr,
+                        logging::ERR_AGGREGATION_TOO_BIG,
+                        "TupleAggregateStep::doThreadedAggregate()");
         fEndOfResult = true;
     }
 

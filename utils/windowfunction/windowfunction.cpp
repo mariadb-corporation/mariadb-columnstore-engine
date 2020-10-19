@@ -212,17 +212,12 @@ void WindowFunction::operator()()
             }
         }
     }
-    catch (IDBExcept& iex)
-    {
-        fStep->handleException(iex.what(), iex.errorCode());
-    }
-    catch (const std::exception& ex)
-    {
-        fStep->handleException(ex.what(), logging::ERR_EXECUTE_WINDOW_FUNCTION);
-    }
     catch (...)
     {
-        fStep->handleException("unknown exception", logging::ERR_EXECUTE_WINDOW_FUNCTION);
+        fStep->handleException(std::current_exception(),
+                        logging::ERR_EXECUTE_WINDOW_FUNCTION,
+                        logging::ERR_WF_DATA_SET_TOO_BIG,
+                        "WindowFunction::operator()");
     }
 }
 
