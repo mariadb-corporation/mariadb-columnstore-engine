@@ -328,20 +328,12 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
             fEndOfResult = true;
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
-        while (more)
-            more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep next band caught an unknown exception",
-                     ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
+        handleException(std::current_exception(),
+                        logging::ERR_IN_DELIVERY,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::nextBand()");
         while (more)
             more = fOutputDL->next(fOutputIterator, &rgDataOut);
 
@@ -464,14 +456,12 @@ void TupleAnnexStep::executeNoOrderBy()
             more = fInputDL->next(fInputIterator, &rgDataIn);
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep execute caught an unknown exception",
-                     ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::executeNoOrderBy()");
     }
 
     while (more)
@@ -566,14 +556,12 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
             fOutputDL->insert(rgDataOut);
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep execute caught an unknown exception",
-                     ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::executeNoOrderByWithDistinct()");
     }
 
     while (more)
@@ -662,14 +650,12 @@ void TupleAnnexStep::executeWithOrderBy()
             }
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep execute caught an unknown exception",
-                     ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::executeWithOrderBy()");
     }
 
     while (more)
@@ -736,15 +722,12 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
             }
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(),ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep::finalizeParallelOrderByDistinct execute\
-                         caught an unknown exception 1",
-                         ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::finalizeParallelOrderByDistinct()");
     }
 
     // OFFSET processing
@@ -938,15 +921,12 @@ void TupleAnnexStep::finalizeParallelOrderBy()
             }
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(),ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep::finalizeParallelOrderBy execute\
-                         caught an unknown exception 1",
-                         ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::finalizeParallelOrderBy()");
     }
 
     // OFFSET processing
@@ -1149,14 +1129,12 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
             if(more) dlOffset++;
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_PROCESS, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleAnnexStep::executeParallelOrderBy execute caught an unknown exception",
-                     ERR_IN_PROCESS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_IN_PROCESS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::executeParallelOrderBy()");
     }
 
     // read out the input DL

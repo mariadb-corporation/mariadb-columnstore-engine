@@ -25,34 +25,6 @@ using namespace rowgroup;
 using namespace joiner;
 using namespace logging;
 
-// a couple space-savers...
-
-#define LOG(x) {\
-	logging::Logger logger(16); \
-	LoggingID id(16, fSessionId); \
-	logger.logMessage(LOG_TYPE_ERROR, x, id); \
-}
-
-#define CATCH_AND_LOG \
-	catch(IDBExcept &e) { \
-		if (!status()) { \
-			errorMessage(e.what()); \
-			status(e.errorCode()); \
-			LOG(string(e.what())); \
-		} \
-		abort(); \
-	} \
-	catch(exception &e) { \
-		if (!status()) { \
-			ostringstream os; \
-			os << "Disk join caught an error: " << e.what(); \
-			errorMessage(os.str().c_str()); \
-			LOG(os.str()); \
-			status(ERR_DBJ_UNKNOWN_ERROR); \
-		} \
-		abort(); \
-	}
-
 namespace joblist
 {
 
@@ -231,9 +203,16 @@ void DiskJoinStep::smallReader()
                 abort();
             }
         }
+    } // try
+    catch (...)
+    {
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "DiskJoinStep::smallReader()");
+        status(logging::ERR_EXEMGR_MALFUNCTION);
+        abort();
     }
-
-    CATCH_AND_LOG;
 
     while (more)
         more = smallDL->next(0, &rgData);
@@ -272,8 +251,15 @@ void DiskJoinStep::largeReader()
         if (!more)
             lastLargeIteration = true;
     }
-
-    CATCH_AND_LOG;
+    catch (...)
+    {
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "DiskJoinStep::largeReader()");
+        status(logging::ERR_EXEMGR_MALFUNCTION);
+        abort();
+    }
 
     if (cancelled())
         while (more)
@@ -301,8 +287,15 @@ void DiskJoinStep::loadFcn()
         }
         while (ret && !cancelled());
     }
-
-    CATCH_AND_LOG;
+    catch (...)
+    {
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "DiskJoinStep::loadFcn()");
+        status(logging::ERR_EXEMGR_MALFUNCTION);
+        abort();
+    }
 
     loadFIFO->endOfInput();
 }
@@ -509,8 +502,15 @@ void DiskJoinStep::joinFcn()
             }
         }
     }  // the try stmt above; need to reformat.
-
-    CATCH_AND_LOG;
+    catch (...)
+    {
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "DiskJoinStep::joinFcn()");
+        status(logging::ERR_EXEMGR_MALFUNCTION);
+        abort();
+    }
 
 out:
 
@@ -559,8 +559,15 @@ void DiskJoinStep::mainRunner()
             jobstepThreadPool.join(thrds);
         }
     }
-
-    CATCH_AND_LOG;
+    catch (...)
+    {
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "DiskJoinStep::mainRunner()");
+        status(logging::ERR_EXEMGR_MALFUNCTION);
+        abort();
+    }
 
     // make sure all inputs were drained & output closed
     if (cancelled())

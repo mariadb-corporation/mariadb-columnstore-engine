@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2019-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1204,18 +1205,12 @@ void TupleBPS::run()
         fProducerThreads.reserve(fMaxNumThreads);
         startAggregationThread();
     }
-    catch (const std::exception& e)
-    {
-        // log the exception
-        cerr << "tuple-bps::run() caught: " << e.what() << endl;
-        catchHandler(e.what(), ERR_TUPLE_BPS, fErrorInfo, fSessionId);
-        fOutputJobStepAssociation.outAt(0)->rowGroupDL()->endOfInput();
-    }
     catch (...)
     {
-        cerr << "tuple-bps::run() caught unknown exception" << endl;
-        catchHandler("tuple-bps::run() caught unknown exception",
-                     ERR_TUPLE_BPS, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_TUPLE_BPS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleBPS::run()");
         fOutputJobStepAssociation.outAt(0)->rowGroupDL()->endOfInput();
     }
 }
@@ -1254,17 +1249,12 @@ void TupleBPS::join()
             {
                 fDec->write(uniqueID, bs);
             }
-            catch (const std::exception& e)
-            {
-                // log the exception
-                cerr << "tuple-bps::join() write(bs) caught: " << e.what() << endl;
-                catchHandler(e.what(), ERR_TUPLE_BPS, fErrorInfo, fSessionId);
-            }
             catch (...)
             {
-                cerr << "tuple-bps::join() write(bs) caught unknown exception" << endl;
-                catchHandler("tuple-bps::join() write(bs) caught unknown exception",
-                             ERR_TUPLE_BPS, fErrorInfo, fSessionId);
+                handleException(std::current_exception(),
+                                logging::ERR_TUPLE_BPS,
+                                logging::ERR_ALWAYS_CRITICAL,
+                                "TupleBPS::join()");
             }
 
             BPPIsAllocated = false;
@@ -1848,20 +1838,15 @@ void TupleBPS::sendPrimitiveMessages()
         interleaveJobs(&jobs);
         sendJobs(jobs);
     }
-    catch (const IDBExcept& e)
-    {
-        sendError(e.errorCode());
-        processError(e.what(), e.errorCode(), "TupleBPS::sendPrimitiveMessages()");
-    }
-    catch (const std::exception& ex)
-    {
-        sendError(ERR_TUPLE_BPS);
-        processError(ex.what(), ERR_TUPLE_BPS, "TupleBPS::sendPrimitiveMessages()");
-    }
     catch (...)
     {
-        sendError(ERR_TUPLE_BPS);
-        processError("unknown", ERR_TUPLE_BPS, "TupleBPS::sendPrimitiveMessages()");
+        sendError(logging::ERR_TUPLE_BPS);
+        handleException(std::current_exception(),
+                        logging::ERR_TUPLE_BPS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "st: " + std::to_string(fStepId) +
+                            " TupleBPS::sendPrimitiveMessages()");
+        abort_nolock();
     }
 
 abort:
@@ -2389,13 +2374,14 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
         } // done reading
 
     }//try
-    catch (const std::exception& ex)
-    {
-        processError(ex.what(), ERR_TUPLE_BPS, "TupleBPS::receiveMultiPrimitiveMessages()");
-    }
     catch (...)
     {
-        processError("unknown", ERR_TUPLE_BPS, "TupleBPS::receiveMultiPrimitiveMessages()");
+        handleException(std::current_exception(),
+                        logging::ERR_TUPLE_BPS,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "st: " + std::to_string(fStepId) +
+                            " TupleBPS::receiveMultiPrimitiveMessages()");
+        abort_nolock();
     }
 
 out:
@@ -2641,15 +2627,6 @@ out:
     // Bug 3136, let mini stats to be formatted if traceOn.
     if (lastThread && !didEOF)
         dlp->endOfInput();
-}
-
-void TupleBPS::processError(const string& ex, uint16_t err, const string& src)
-{
-    ostringstream oss;
-    oss << "st: " << fStepId << " " << src << " caught an exception: " << ex << endl;
-    catchHandler(oss.str(), err, fErrorInfo, fSessionId);
-    abort_nolock();
-    cerr << oss.str();
 }
 
 const string TupleBPS::toString() const

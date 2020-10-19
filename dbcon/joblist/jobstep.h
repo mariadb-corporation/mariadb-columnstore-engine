@@ -430,6 +430,11 @@ public:
         return fTimeZone;
     }
 
+    void handleException(std::exception_ptr e,
+                         const int errorCode,
+                         const unsigned infoErrorCode,
+                         const std::string& methodName);
+
     static threadpool::ThreadPool jobstepThreadPool;
 protected:
 

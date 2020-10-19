@@ -227,21 +227,13 @@ uint32_t TupleHavingStep::nextBand(messageqcpp::ByteStream& bs)
             fEndOfResult = true;
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleHavingStepErr, fErrorInfo, fSessionId);
-
-        while (more)
-            more = fInputDL->next(fInputIterator, &rgDataIn);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("TupleHavingStep next band caught an unknown exception",
-                     tupleHavingStepErr, fErrorInfo, fSessionId);
-
-        while (more)
+        handleException(std::current_exception(),
+                        logging::tupleHavingStepErr,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleHavingStep::nextBand()");
+         while (more)
             more = fInputDL->next(fInputIterator, &rgDataIn);
 
         fEndOfResult = true;
@@ -310,14 +302,12 @@ void TupleHavingStep::execute()
             }
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleHavingStepErr, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleHavingStep execute caught an unknown exception",
-                     tupleHavingStepErr, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::tupleHavingStepErr,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleHavingStep::nextBand()");
     }
 
     while (more)

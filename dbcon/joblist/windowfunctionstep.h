@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2016-2020 MariaDB
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -108,8 +109,6 @@ public:
     {
         return fRows;
     }
-    void handleException(std::string, int);
-
     // for string table
     rowgroup::Row::Pointer getPointer(RowPosition& pos)
     {
