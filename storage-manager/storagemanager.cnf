@@ -110,6 +110,20 @@ bucket = some_bucket
 # aws_access_key_id =
 # aws_secret_access_key = 
 
+# If you want StorageManager to assume an IAM role to use for its S3
+# accesses, specify the name of the role in iam_role_name.  The name
+# should be only the name, rather than the full path.
+#
+# The specified role must already exist and have permission to get, put, 
+# delete, and 'head' on the specified S3 bucket.
+# iam_role_name = 
+
+# If an IAM role is specified, sts_endpoint and sts_region are used to specify
+# which STS server & region to use to assume the role.  The default for
+# sts_endpoint is 'sts.amazonaws.com', and the default for sts_region is
+# 'us-east-1'.
+# sts_region = 
+# sts_endpoint =
 
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.

@@ -58,41 +58,48 @@ bool SMOnline()
 
 void lsOffline(const char *path)
 {
-    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
-    vector<string> listing;
-    
-    int err = ioc->listDirectory(path, &listing);
-    if (err)
-        exit(1);
-    
-    struct stat _stat;
-    boost::filesystem::path base(path);
-    boost::filesystem::path p;
-    cout.fill(' ');
-    for (auto &entry : listing)
+    try
     {
-        p = base / entry;
-        err = ioc->stat(p.string().c_str(), &_stat);
-        if (!err)
+        boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
+        vector<string> listing;
+
+        int err = ioc->listDirectory(path, &listing);
+        if (err)
+            exit(1);
+
+        struct stat _stat;
+        boost::filesystem::path base(path);
+        boost::filesystem::path p;
+        cout.fill(' ');
+        for (auto &entry : listing)
         {
-            if (_stat.st_mode & S_IFDIR)
+            p = base / entry;
+            err = ioc->stat(p.string().c_str(), &_stat);
+            if (!err)
             {
-                cout << "d";
-                cout.width(14);
+                if (_stat.st_mode & S_IFDIR)
+                {
+                    cout << "d";
+                    cout.width(14);
+                }
+                else
+                    cout.width(15);
+
+                struct tm *my_tm = localtime(&_stat.st_mtim.tv_sec);
+                char date[100];
+                strftime(date, 100, "%b %e %H:%M", my_tm);
+                cout << right << _stat.st_size << left << " " << date << left << " " << entry << endl;
             }
             else
+            {
                 cout.width(15);
-
-            struct tm *my_tm = localtime(&_stat.st_mtim.tv_sec);
-            char date[100];
-            strftime(date, 100, "%b %e %H:%M", my_tm);
-            cout << right << _stat.st_size << left << " " << date << left << " " << entry << endl;
+                cout << right << "error" << left <<  " " << entry << endl;
+            }
         }
-        else
-        {
-            cout.width(15);
-            cout << right << "error" << left <<  " " << entry << endl;
-        }
+    }
+    catch (exception &e)
+    {
+        cerr << "smls lsOffline FAIL: " << e.what() << endl;
     }
 }
 
