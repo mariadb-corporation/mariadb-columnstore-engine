@@ -486,7 +486,7 @@ void TupleHashJoinStep::forwardCPData()
                 continue;
 
             bool isSmallSideWideDecimal =
-                datatypes::Decimal::isWideDecimalType(smallRGs[i].getColType(idx), smallRGs[i].getColumnWidth(idx));
+                datatypes::isWideDecimalType(smallRGs[i].getColType(idx), smallRGs[i].getColumnWidth(idx));
 
             largeBPS->addCPPredicates(largeRG.getOIDs()[joiners[i]->getLargeKeyColumns()[col]],
                                       joiners[i]->getCPData()[col], !joiners[i]->discreteCPValues()[col],

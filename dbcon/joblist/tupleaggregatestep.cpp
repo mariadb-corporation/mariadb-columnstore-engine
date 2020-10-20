@@ -352,7 +352,7 @@ void wideDecimalOrLongDouble(const uint64_t colProj,
 {
     if ((type == CalpontSystemCatalog::DECIMAL
         || type == CalpontSystemCatalog::UDECIMAL)
-        && datatypes::Decimal::isWideDecimalType(precisionProj[colProj]))
+        && datatypes::Decimal::isWideDecimalTypeByPrecision(precisionProj[colProj]))
     {
         typeAgg.push_back(type);
         scaleAgg.push_back(scaleProj[colProj]);
@@ -758,7 +758,7 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
         {
             const auto& colType = jobInfo.nonConstCols[i]->resultType();
 
-            if (datatypes::Decimal::isWideDecimalType(colType))
+            if (colType.isWideDecimalType())
             {
                 *scaleIter = colType.scale;
                 *precisionIter = colType.precision;
@@ -776,7 +776,7 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
         {
             const auto& colType = jobInfo.nonConstDelCols[i]->resultType();
 
-            if (datatypes::Decimal::isWideDecimalType(colType))
+            if (colType.isWideDecimalType())
             {
                 *scaleIter = colType.scale;
                 *precisionIter = colType.precision;

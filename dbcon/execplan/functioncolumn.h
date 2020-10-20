@@ -253,7 +253,7 @@ public:
         if (LIKELY(fResultType.colWidth == datatypes::MAXDECIMALWIDTH))
         {
             decimal.s128Value =
-                (datatypes::Decimal::isWideDecimalType(decimal.precision)) ?
+                (datatypes::Decimal::isWideDecimalTypeByPrecision(decimal.precision)) ?
                     decimal.s128Value : decimal.value;
 
             int128_t scaleMultiplier;

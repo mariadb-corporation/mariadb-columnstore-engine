@@ -65,9 +65,6 @@ namespace ba = boost::algorithm;
 #include "simplescalarfilter.h"
 using namespace execplan;
 
-#include "dataconvert.h"
-using namespace dataconvert;
-
 #include "configcpp.h"
 using namespace config;
 
@@ -135,7 +132,7 @@ void valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZon
 {
     T& n = val;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, "", pushWarning, timeZone, true, false, false);
+    boost::any anyVal = ct.convertColumnData("", pushWarning, timeZone, true, false, false);
 
     switch (ct.colDataType)
     {
@@ -324,7 +321,7 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
     v = 0;
     rf = 0;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, timeZone, false, true, false);
+    boost::any anyVal = ct.convertColumnData(str, pushWarning, timeZone, false, true, false);
 
     switch (ct.colDataType)
     {
@@ -1896,7 +1893,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             // WIP MCOL-641 width check must be a f() not a literal
             // make a template from convertValueNum to avoid extra if
             // this condition doesn't support UDECIMAL
-            if (datatypes::Decimal::isWideDecimalType(ct))
+            if (ct.isWideDecimalType())
                 convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
             else
                 convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
@@ -1933,7 +1930,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
                 if (sc->isColumnStore())
                 {
-                    if (datatypes::Decimal::isWideDecimalType(ct))
+                    if (ct.isWideDecimalType())
                         pcs->addFilter(cop, value128, rf);
                     else
                         pcs->addFilter(cop, value, rf);
@@ -3011,7 +3008,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     uint8_t rf = 0;
                     bool isNull = ConstantColumn::NULLDATA == cc->type();
 
-                    if (datatypes::Decimal::isWideDecimalType(ct))
+                    if (ct.isWideDecimalType())
                         convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
                     else
                         convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
@@ -3031,7 +3028,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    if (datatypes::Decimal::isWideDecimalType(ct))
+                    if (ct.isWideDecimalType())
                         pcs->addFilter(cop, value128, rf);
                     else
                         pcs->addFilter(cop, value, rf);

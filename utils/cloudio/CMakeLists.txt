@@ -1,6 +1,6 @@
 include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/storage-manager/include)
 
-set(cloudio_LIB_SRCS SMComm.cpp SMDataFile.cpp SMFileFactory.cpp SMFileSystem.cpp SocketPool.cpp cloud_plugin.cpp)
+set(cloudio_LIB_SRCS SMComm.cpp SMDataFile.cpp SMFileFactory.cpp SMFileSystem.cpp SocketPool.cpp cloud_plugin.cpp ../../datatypes/mcs_datatype.cpp)
 
 add_library(cloudio SHARED ${cloudio_LIB_SRCS})
 

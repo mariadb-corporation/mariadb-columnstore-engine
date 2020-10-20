@@ -28,7 +28,6 @@
 #include "objectidmanager.h"
 #include "is_columnstore.h"
 #include "mcs_decimal.h"
-#include "widedecimalutils.h"
 #include "dataconvert.h"
 
 // Required declaration as it isn't in a MairaDB include
@@ -114,10 +113,10 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 {
                     table->field[4]->set_notnull();
 
-                    char buf[utils::MAXLENGTH16BYTES];
+                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                     dataconvert::DataConvert::decimalToString(
                         &iter->partition.cprange.bigLoVal,
-                        0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                        0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
                     table->field[4]->store(buf, strlen(buf), table->field[4]->charset());
                 }
 
@@ -129,10 +128,10 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 {
                     table->field[5]->set_notnull();
 
-                    char buf[utils::MAXLENGTH16BYTES];
+                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                     dataconvert::DataConvert::decimalToString(
                         &iter->partition.cprange.bigHiVal,
-                        0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                        0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
                     table->field[5]->store(buf, strlen(buf), table->field[5]->charset());
                 }
             }

@@ -381,7 +381,7 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
             {
                 fRow.setLongDoubleField(row.getLongDoubleField(mapping[i]), i);
             }
-            else if (datatypes::Decimal::isWideDecimalType(fRow.getColType(i), fRow.getColumnWidth(i)))
+            else if (datatypes::isWideDecimalType(fRow.getColType(i), fRow.getColumnWidth(i)))
             {
                 row.copyBinaryField<int128_t>(fRow, i, mapping[i]);
             }
@@ -460,12 +460,12 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
                 if (LIKELY(row.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH))
                 {
-                    char buf[utils::MAXLENGTH16BYTES];
+                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
 
                     int128_t* dec = row.getBinaryField<int128_t>(*i);
                     dataconvert::DataConvert::decimalToString(dec,
                         static_cast<uint32_t>(scale), buf,
-                        sizeof(buf), types[*i]);
+                        (uint8_t) sizeof(buf), types[*i]);
                     oss << fixed << buf;
                 }
                 else

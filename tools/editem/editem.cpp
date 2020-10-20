@@ -44,7 +44,6 @@ using namespace config;
 #include "dataconvert.h"
 using namespace dataconvert;
 
-#include "widedecimalutils.h"
 #include "mcs_decimal.h"
 
 #include "liboamcpp.h"
@@ -192,12 +191,12 @@ const string fmt(T v)
         }
         else
         {
-            char buf[utils::MAXLENGTH16BYTES];
+            char buf[datatypes::Decimal::MAXLENGTH16BYTES];
 
             int128_t tmp = v;
 
             dataconvert::DataConvert::decimalToString(
-                &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
 
             oss << buf;
         }
@@ -219,12 +218,12 @@ const string fmt(T v)
             }
             else
             {
-                char buf[utils::MAXLENGTH16BYTES];
+                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
 
                 int128_t tmp = static_cast<uint128_t>(v);
 
                 dataconvert::DataConvert::decimalToString(
-                    &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                    &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
 
                 oss << buf;
             }
@@ -248,12 +247,12 @@ const string fmt(T v)
             }
             else
             {
-                char buf[utils::MAXLENGTH16BYTES];
+                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
 
                 int128_t tmp = v;
 
                 dataconvert::DataConvert::decimalToString(
-                    &tmp, 0, buf, sizeof(buf), execplan::CalpontSystemCatalog::DECIMAL);
+                    &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
 
                 oss << buf;
             }

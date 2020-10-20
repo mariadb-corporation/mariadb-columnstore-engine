@@ -53,7 +53,6 @@ using namespace boost;
 #include "blockcacheclient.h"
 #include "MonitorProcMem.h"
 #include "threadnaming.h"
-#include "widedecimalutils.h"
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL

@@ -653,12 +653,12 @@ inline uint32_t Row::getCharsetNumber(uint32_t col) const
 
 inline bool Row::isCharType(uint32_t colIndex) const
 {
-    return execplan::isCharType(types[colIndex]);
+    return datatypes::isCharType(types[colIndex]);
 }
 
 inline bool Row::isUnsigned(uint32_t colIndex) const
 {
-    return execplan::isUnsigned(types[colIndex]);
+    return datatypes::isUnsigned(types[colIndex]);
 }
 
 inline bool Row::isShortString(uint32_t colIndex) const
@@ -1277,7 +1277,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     {
         out.setLongDoubleField(getLongDoubleField(srcIndex), destIndex);
     }
-    else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
+    else if (UNLIKELY(datatypes::isWideDecimalType(
         types[srcIndex], colWidths[srcIndex])))
     {
         copyBinaryField<int128_t>(out, destIndex, srcIndex);
@@ -1724,12 +1724,12 @@ inline uint64_t RowGroup::getSizeWithStrings() const
 
 inline bool RowGroup::isCharType(uint32_t colIndex) const
 {
-    return execplan::isCharType(types[colIndex]);
+    return datatypes::isCharType(types[colIndex]);
 }
 
 inline bool RowGroup::isUnsigned(uint32_t colIndex) const
 {
-    return execplan::isUnsigned(types[colIndex]);
+    return datatypes::isUnsigned(types[colIndex]);
 }
 
 inline bool RowGroup::isShortString(uint32_t colIndex) const
@@ -1931,7 +1931,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
         {
             out->setLongDoubleField(in.getLongDoubleField(i), i);
         }
-        else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(
+        else if (UNLIKELY(datatypes::isWideDecimalType(
             in.getColType(i), in.getColumnWidth(i))))
         {
             in.copyBinaryField<int128_t>(*out, i, i);

@@ -34,10 +34,8 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 using namespace boost::algorithm;
 #include <boost/tokenizer.hpp>
-#include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "columnresult.h"
-using namespace execplan;
 
 #include "joblisttypes.h"
 
@@ -109,7 +107,8 @@ namespace dataconvert
 
 template <typename T>
 void number_int_value(const string& data,
-                      const CalpontSystemCatalog::ColType& ct,
+                      cscDataType typeCode,
+                      const datatypes::SystemCatalog::TypeAttributesStd& ct,
                       bool& pushwarning,
                       bool noRoundup,
                       T& intVal)
@@ -298,9 +297,9 @@ void number_int_value(const string& data,
     if (frnVal != 0)
         pushwarning = true;
 
-    switch (ct.colDataType)
+    switch (typeCode)
     {
-        case CalpontSystemCatalog::TINYINT:
+        case datatypes::SystemCatalog::TINYINT:
             if (intVal < MIN_TINYINT)
             {
                 intVal = MIN_TINYINT;
@@ -314,7 +313,7 @@ void number_int_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::SMALLINT:
+        case datatypes::SystemCatalog::SMALLINT:
             if (intVal < MIN_SMALLINT)
             {
                 intVal = MIN_SMALLINT;
@@ -328,7 +327,7 @@ void number_int_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::MEDINT:
+        case datatypes::SystemCatalog::MEDINT:
             if (intVal < MIN_MEDINT)
             {
                 intVal = MIN_MEDINT;
@@ -342,7 +341,7 @@ void number_int_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::INT:
+        case datatypes::SystemCatalog::INT:
             if (intVal < MIN_INT)
             {
                 intVal = MIN_INT;
@@ -356,7 +355,7 @@ void number_int_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::BIGINT:
+        case datatypes::SystemCatalog::BIGINT:
             if (intVal < MIN_BIGINT)
             {
                 intVal = MIN_BIGINT;
@@ -365,8 +364,8 @@ void number_int_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
+        case datatypes::SystemCatalog::DECIMAL:
+        case datatypes::SystemCatalog::UDECIMAL:
             if (LIKELY(ct.colWidth == 16))
             {
                 int128_t tmp;
@@ -432,8 +431,8 @@ void number_int_value(const string& data,
     }
 
     // @ bug 3285 make sure the value is in precision range for decimal data type
-    if ( (ct.colDataType == CalpontSystemCatalog::DECIMAL) ||
-            (ct.colDataType == CalpontSystemCatalog::UDECIMAL) ||
+    if ( (typeCode == datatypes::SystemCatalog::DECIMAL) ||
+            (typeCode == datatypes::SystemCatalog::UDECIMAL) ||
             (ct.scale > 0))
     {
         T rangeUp, rangeLow;
@@ -467,20 +466,23 @@ void number_int_value(const string& data,
 // Explicit template instantiation
 template
 void number_int_value<int64_t>(const std::string& data,
-                               const execplan::CalpontSystemCatalog::ColType& ct,
+                               cscDataType typeCode,
+                               const datatypes::SystemCatalog::TypeAttributesStd& ct,
                                bool& pushwarning,
                                bool noRoundup,
                                int64_t& intVal);
 
 template
 void number_int_value<int128_t>(const std::string& data,
-                                const execplan::CalpontSystemCatalog::ColType& ct,
+                                cscDataType typeCode,
+                                const datatypes::SystemCatalog::TypeAttributesStd& ct,
                                 bool& pushwarning,
                                 bool noRoundup,
                                 int128_t& intVal);
 
 uint64_t number_uint_value(const string& data,
-                           const CalpontSystemCatalog::ColType& ct,
+                           cscDataType typeCode,
+                           const datatypes::SystemCatalog::TypeAttributesStd& ct,
                            bool& pushwarning,
                            bool  noRoundup)
 {
@@ -585,9 +587,9 @@ uint64_t number_uint_value(const string& data,
     if (frnVal != 0)
         pushwarning = true;
 
-    switch (ct.colDataType)
+    switch (typeCode)
     {
-        case CalpontSystemCatalog::UTINYINT:
+        case datatypes::SystemCatalog::UTINYINT:
             if (uintVal > MAX_UTINYINT)
             {
                 uintVal = MAX_UTINYINT;
@@ -596,7 +598,7 @@ uint64_t number_uint_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::USMALLINT:
+        case datatypes::SystemCatalog::USMALLINT:
             if (uintVal > MAX_USMALLINT)
             {
                 uintVal = MAX_USMALLINT;
@@ -605,7 +607,7 @@ uint64_t number_uint_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::UMEDINT:
+        case datatypes::SystemCatalog::UMEDINT:
             if (uintVal > MAX_UMEDINT)
             {
                 uintVal = MAX_UMEDINT;
@@ -614,7 +616,7 @@ uint64_t number_uint_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::UINT:
+        case datatypes::SystemCatalog::UINT:
             if (uintVal > MAX_UINT)
             {
                 uintVal = MAX_UINT;
@@ -623,7 +625,7 @@ uint64_t number_uint_value(const string& data,
 
             break;
 
-        case CalpontSystemCatalog::UBIGINT:
+        case datatypes::SystemCatalog::UBIGINT:
             if (uintVal > MAX_UBIGINT)
             {
                 uintVal = MAX_UBIGINT;
@@ -1338,7 +1340,8 @@ void DataConvert::decimalToString(int128_t* dec,
     char* original_p = p;
     size_t written = 0;
     // Raise exception on NULL and EMPTY value
-    if (utils::isWideDecimalNullValue(*dec) || utils::isWideDecimalEmptyValue(*dec))
+    if (datatypes::Decimal::isWideDecimalNullValue(*dec) ||
+        datatypes::Decimal::isWideDecimalEmptyValue(*dec))
     {
         throw QueryDataExcept("toString() char buffer overflow.", formatErr);
     }
@@ -1370,7 +1373,8 @@ void DataConvert::decimalToString(int128_t* dec,
 }
 
 boost::any
-DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
+DataConvert::convertColumnData(cscDataType typeCode,
+                                const datatypes::SystemCatalog::TypeAttributesStd& colType,
                                 const std::string& dataOrig, bool& pushWarning,
                                 const std::string& timeZone, bool nulFlag,
                                 bool noRoundup, bool isUpdate)
@@ -1380,14 +1384,13 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
     // WIP
     std::string data( dataOrig );
     pushWarning = false;
-    cscDataType type = colType.colDataType;
 
     //if ( !data.empty() )
     if (!nulFlag)
     {
-        switch (type)
+        switch (typeCode)
         {
-            case CalpontSystemCatalog::BIT:
+            case datatypes::SystemCatalog::BIT:
             {
                 unsigned int x = data.find("(");
 
@@ -1405,7 +1408,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                 int64_t tmp = 0;
 
-                number_int_value (data, colType, pushWarning, noRoundup, tmp);
+                number_int_value (data, typeCode, colType, pushWarning, noRoundup, tmp);
 
                 if (tmp)
                 {
@@ -1423,52 +1426,52 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::TINYINT:
-                number_int_value(data, colType, pushWarning, noRoundup, val64);
+            case datatypes::SystemCatalog::TINYINT:
+                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                 value = (char) val64;
                 break;
 
-            case CalpontSystemCatalog::SMALLINT:
-                number_int_value(data, colType, pushWarning, noRoundup, val64);
+            case datatypes::SystemCatalog::SMALLINT:
+                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                 value = (short) val64;
                 break;
 
-            case CalpontSystemCatalog::MEDINT:
-            case CalpontSystemCatalog::INT:
-                number_int_value(data, colType, pushWarning, noRoundup, val64);
+            case datatypes::SystemCatalog::MEDINT:
+            case datatypes::SystemCatalog::INT:
+                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                 value = (int) val64;
                 break;
 
-            case CalpontSystemCatalog::BIGINT:
-                number_int_value(data, colType, pushWarning, noRoundup, val64);
+            case datatypes::SystemCatalog::BIGINT:
+                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                 value = (long long) val64;
                 break;
 
-            case CalpontSystemCatalog::DECIMAL:
+            case datatypes::SystemCatalog::DECIMAL:
                 if (LIKELY(colType.colWidth == 16))
                 {
                     int128_t val128;
-                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val128);
                     value = (int128_t) val128;
                 }
                 else if (colType.colWidth == 8)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     value = (long long) val64;
                 }
                 else if (colType.colWidth == 4)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     value = (int) val64;
                 }
                 else if (colType.colWidth == 2)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     value = (short) val64;
                 }
                 else if (colType.colWidth == 1)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     value = (char) val64;
                 }
                 //else if (colType.colWidth == 32)
@@ -1476,17 +1479,17 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                 break;
 
-            case CalpontSystemCatalog::UDECIMAL:
+            case datatypes::SystemCatalog::UDECIMAL:
 
                 // UDECIMAL numbers may not be negative
                 if (LIKELY(colType.colWidth == 16))
                 {
                     int128_t val128;
-                    number_int_value(data, colType, pushWarning, noRoundup, val128);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val128);
 
                     if (val128 < 0 &&
-                        !utils::isWideDecimalNullValue(val128) &&
-                        !utils::isWideDecimalEmptyValue(val128))
+                        !datatypes::Decimal::isWideDecimalNullValue(val128) &&
+                        !datatypes::Decimal::isWideDecimalEmptyValue(val128))
                     {
                         val128 = 0;
                         pushWarning = true;
@@ -1496,7 +1499,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 8)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     long long ival = static_cast<long long>(val64);
 
                     if (ival < 0 &&
@@ -1511,7 +1514,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 4)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     int ival = static_cast<int>(val64);
 
                     if (ival < 0 &&
@@ -1526,7 +1529,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 2)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     short ival = (short) val64;
 
                     if (ival < 0 &&
@@ -1541,7 +1544,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 }
                 else if (colType.colWidth == 1)
                 {
-                    number_int_value(data, colType, pushWarning, noRoundup, val64);
+                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
                     char ival = (char) val64;
 
                     if (ival < 0 &&
@@ -1557,8 +1560,8 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                 break;
 
-            case CalpontSystemCatalog::FLOAT:
-            case CalpontSystemCatalog::UFLOAT:
+            case datatypes::SystemCatalog::FLOAT:
+            case datatypes::SystemCatalog::UFLOAT:
             {
                 string::size_type x = data.find('(');
 
@@ -1615,8 +1618,10 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                             floatvalue = 0;
                     }
 
-                    if (floatvalue < 0.0 && type == CalpontSystemCatalog::UFLOAT &&
-                            floatvalue != joblist::FLOATEMPTYROW && floatvalue != joblist::FLOATNULL)
+                    if (floatvalue < 0.0 &&
+                            typeCode == datatypes::SystemCatalog::UFLOAT &&
+                            floatvalue != joblist::FLOATEMPTYROW &&
+                            floatvalue != joblist::FLOATNULL)
                     {
                         value = 0.0;
                         pushWarning = true;
@@ -1629,8 +1634,8 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::DOUBLE:
-            case CalpontSystemCatalog::UDOUBLE:
+            case datatypes::SystemCatalog::DOUBLE:
+            case datatypes::SystemCatalog::UDOUBLE:
             {
                 string::size_type x = data.find('(');
 
@@ -1669,8 +1674,10 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                     else
                         value = doublevalue;
 
-                    if (doublevalue < 0.0 && type == CalpontSystemCatalog::UDOUBLE &&
-                            doublevalue != joblist::DOUBLEEMPTYROW && doublevalue != joblist::DOUBLENULL)
+                    if (doublevalue < 0.0 &&
+                            typeCode == datatypes::SystemCatalog::UDOUBLE &&
+                            doublevalue != joblist::DOUBLEEMPTYROW &&
+                            doublevalue != joblist::DOUBLENULL)
                     {
                         doublevalue = 0.0;
                         pushWarning = true;
@@ -1683,26 +1690,26 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::UTINYINT:
-                value = (uint8_t)number_uint_value(data, colType, pushWarning, noRoundup);
+            case datatypes::SystemCatalog::UTINYINT:
+                value = (uint8_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
                 break;
 
-            case CalpontSystemCatalog::USMALLINT:
-                value = (uint16_t)number_uint_value(data, colType, pushWarning, noRoundup);
+            case datatypes::SystemCatalog::USMALLINT:
+                value = (uint16_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
                 break;
 
-            case CalpontSystemCatalog::UMEDINT:
-            case CalpontSystemCatalog::UINT:
-                value = (uint32_t)number_uint_value(data, colType, pushWarning, noRoundup);
+            case datatypes::SystemCatalog::UMEDINT:
+            case datatypes::SystemCatalog::UINT:
+                value = (uint32_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
                 break;
 
-            case CalpontSystemCatalog::UBIGINT:
-                value = (uint64_t)number_uint_value(data, colType, pushWarning, noRoundup);
+            case datatypes::SystemCatalog::UBIGINT:
+                value = (uint64_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
                 break;
 
-            case CalpontSystemCatalog::CHAR:
-            case CalpontSystemCatalog::VARCHAR:
-            case CalpontSystemCatalog::TEXT:
+            case datatypes::SystemCatalog::CHAR:
+            case datatypes::SystemCatalog::VARCHAR:
+            case datatypes::SystemCatalog::TEXT:
             {
                 //check data length
                 if ( data.length() > (unsigned int)colType.colWidth )
@@ -1723,7 +1730,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::DATE:
+            case datatypes::SystemCatalog::DATE:
             {
                 Date aDay;
 
@@ -1739,7 +1746,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::DATETIME:
+            case datatypes::SystemCatalog::DATETIME:
             {
                 DateTime aDatetime;
 
@@ -1755,7 +1762,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::TIME:
+            case datatypes::SystemCatalog::TIME:
             {
                 Time aTime;
 
@@ -1768,7 +1775,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::TIMESTAMP:
+            case datatypes::SystemCatalog::TIMESTAMP:
             {
                 TimeStamp aTimestamp;
 
@@ -1781,16 +1788,16 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
-            case CalpontSystemCatalog::BLOB:
-            case CalpontSystemCatalog::CLOB:
+            case datatypes::SystemCatalog::BLOB:
+            case datatypes::SystemCatalog::CLOB:
                 value = data;
                 break;
 
-            case CalpontSystemCatalog::VARBINARY:
+            case datatypes::SystemCatalog::VARBINARY:
                 value = data;
                 break;
 
-            case CalpontSystemCatalog::BINARY:
+            case datatypes::SystemCatalog::BINARY:
                 value = data;
                 break;
 
@@ -1801,241 +1808,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
     }
     else									//null
     {
-        switch (type)
-        {
-            case CalpontSystemCatalog::BIT:
-            {
-                //TODO: How to communicate with write engine?
-            }
-            break;
-
-            case CalpontSystemCatalog::TINYINT:
-            {
-                char tinyintvalue = joblist::TINYINTNULL;
-                value = tinyintvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::SMALLINT:
-            {
-                short smallintvalue = joblist::SMALLINTNULL;
-                value = smallintvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::MEDINT:
-            case CalpontSystemCatalog::INT:
-            {
-                int intvalue = joblist::INTNULL;
-                value = intvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::BIGINT:
-            {
-                long long bigint = joblist::BIGINTNULL;
-                value = bigint;
-            }
-            break;
-
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UDECIMAL:
-            {
-                if (LIKELY(colType.colWidth == 16))
-                {
-                    int128_t val;
-                    utils::setWideDecimalNullValue(val);
-                    value = val;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::EIGHT_BYTE)
-                {
-                    long long eightbyte = joblist::BIGINTNULL;
-                    value = eightbyte;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::FOUR_BYTE)
-                {
-                    int intvalue = joblist::INTNULL;
-                    value = intvalue;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::TWO_BYTE)
-                {
-                    short smallintvalue = joblist::SMALLINTNULL;
-                    value = smallintvalue;
-                }
-                else if (colType.colWidth == CalpontSystemCatalog::ONE_BYTE)
-                {
-                    char tinyintvalue = joblist::TINYINTNULL;
-                    value = tinyintvalue;
-                }
-                else
-                {
-                    WriteEngine::Token nullToken;
-                    value = nullToken;
-                }
-            }
-            break;
-
-            case CalpontSystemCatalog::FLOAT:
-            case CalpontSystemCatalog::UFLOAT:
-            {
-                uint32_t tmp = joblist::FLOATNULL;
-                float* floatvalue = (float*)&tmp;
-                value = *floatvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::DOUBLE:
-            case CalpontSystemCatalog::UDOUBLE:
-            {
-                uint64_t tmp = joblist::DOUBLENULL;
-                double* doublevalue = (double*)&tmp;
-                value = *doublevalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::DATE:
-            {
-                uint32_t d = joblist::DATENULL;
-                value = d;
-            }
-            break;
-
-            case CalpontSystemCatalog::DATETIME:
-            {
-                uint64_t d = joblist::DATETIMENULL;
-                value = d;
-            }
-            break;
-
-            case CalpontSystemCatalog::TIMESTAMP:
-            {
-                uint64_t d = joblist::TIMESTAMPNULL;
-                value = d;
-            }
-            break;
-
-            case CalpontSystemCatalog::TIME:
-            {
-                uint64_t d = joblist::TIMENULL;
-                value = d;
-            }
-            break;
-
-            case CalpontSystemCatalog::CHAR:
-            {
-                std::string charnull;
-
-                if (colType.colWidth == 1)
-                {
-                    //charnull = joblist::CHAR1NULL;
-                    charnull = '\376';
-                    value = charnull;
-                }
-                else if (colType.colWidth == 2)
-                {
-                    //charnull = joblist::CHAR2NULL;
-                    charnull = "\377\376";
-                    value = charnull;
-                }
-                else if (( colType.colWidth < 5 ) && ( colType.colWidth > 2 ))
-                {
-                    //charnull = joblist::CHAR4NULL;
-                    charnull = "\377\377\377\376";
-                    value = charnull;
-                }
-                else if (( colType.colWidth < 9 ) && ( colType.colWidth > 4 ))
-                {
-                    //charnull = joblist::CHAR8NULL;
-                    charnull = "\377\377\377\377\377\377\377\376";
-                    value = charnull;
-                }
-                else
-                {
-                    WriteEngine::Token nullToken;
-                    value = nullToken;
-                }
-            }
-            break;
-
-            case CalpontSystemCatalog::VARCHAR:
-            case CalpontSystemCatalog::TEXT:
-            {
-                std::string charnull;
-
-                if (colType.colWidth == 1 )
-                {
-                    //charnull = joblist::CHAR2NULL;
-                    charnull = "\377\376";
-                    value = charnull;
-                }
-                else if ((colType.colWidth < 4)  && (colType.colWidth > 1))
-                {
-                    //charnull = joblist::CHAR4NULL;
-                    charnull = "\377\377\377\376";
-                    value = charnull;
-                }
-                else if ((colType.colWidth < 8)  && (colType.colWidth > 3))
-                {
-                    //charnull = joblist::CHAR8NULL;
-                    charnull = "\377\377\377\377\377\377\377\376";
-                    value = charnull;
-                }
-                else if ( colType.colWidth > 7 )
-                {
-                    WriteEngine::Token nullToken;
-                    value = nullToken;
-                }
-            }
-            break;
-
-            case CalpontSystemCatalog::VARBINARY:
-            case CalpontSystemCatalog::BLOB:
-            {
-                WriteEngine::Token nullToken;
-                value = nullToken;
-            }
-            break;
-
-            case CalpontSystemCatalog::BINARY:
-            {
-                value = data;
-            }
-            break;
-            
-            case CalpontSystemCatalog::UTINYINT:
-            {
-                uint8_t utinyintvalue = joblist::UTINYINTNULL;
-                value = utinyintvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::USMALLINT:
-            {
-                uint16_t usmallintvalue = joblist::USMALLINTNULL;
-                value = usmallintvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::UMEDINT:
-            case CalpontSystemCatalog::UINT:
-            {
-                uint32_t uintvalue = joblist::UINTNULL;
-                value = uintvalue;
-            }
-            break;
-
-            case CalpontSystemCatalog::UBIGINT:
-            {
-                uint64_t ubigint = joblist::UBIGINTNULL;
-                value = ubigint;
-            }
-            break;
-
-            default:
-                throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
-                break;
-
-        }
+        const datatypes::TypeHandler *h= datatypes::TypeHandler::find(typeCode, colType);
+        if (!h)
+            throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
+        else
+            return h->getNullValueForType(colType);
     }
 
     return value;
@@ -3349,441 +3126,435 @@ int64_t DataConvert::stringToTime(const string& data)
     return *(reinterpret_cast<int64_t*>(&atime));
 }
 
-CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSystemCatalog::ColType>& types)
+
+void
+DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unionedType,
+                    const datatypes::SystemCatalog::TypeHolderStd &type)
 {
-    idbassert(types.size());
-
-    CalpontSystemCatalog::ColType unionedType = types[0];
-
-    for (uint64_t i = 1; i < types.size(); i++)
+    // limited support for VARBINARY, no implicit conversion.
+    if (type.colDataType == datatypes::SystemCatalog::VARBINARY ||
+            unionedType.colDataType == datatypes::SystemCatalog::VARBINARY)
     {
-        // limited support for VARBINARY, no implicit conversion.
-        if (types[i].colDataType == CalpontSystemCatalog::VARBINARY ||
-                unionedType.colDataType == CalpontSystemCatalog::VARBINARY)
+        if (type.colDataType != unionedType.colDataType ||
+                type.colWidth != unionedType.colWidth)
+            throw runtime_error("VARBINARY in UNION must be the same width.");
+    }
+
+    switch (type.colDataType)
+    {
+        case datatypes::SystemCatalog::TINYINT:
+        case datatypes::SystemCatalog::SMALLINT:
+        case datatypes::SystemCatalog::MEDINT:
+        case datatypes::SystemCatalog::INT:
+        case datatypes::SystemCatalog::BIGINT:
+        case datatypes::SystemCatalog::DECIMAL:
+        case datatypes::SystemCatalog::UTINYINT:
+        case datatypes::SystemCatalog::USMALLINT:
+        case datatypes::SystemCatalog::UMEDINT:
+        case datatypes::SystemCatalog::UINT:
+        case datatypes::SystemCatalog::UBIGINT:
+        case datatypes::SystemCatalog::UDECIMAL:
         {
-            if (types[i].colDataType != unionedType.colDataType ||
-                    types[i].colWidth != unionedType.colWidth)
-                throw runtime_error("VARBINARY in UNION must be the same width.");
+            switch (unionedType.colDataType)
+            {
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                    if (type.colWidth > unionedType.colWidth)
+                    {
+                        unionedType.colDataType = type.colDataType;
+                        unionedType.colWidth = type.colWidth;
+                    }
+
+                    // If same size and result is signed but source is unsigned...
+                    if (type.colWidth == unionedType.colWidth && !isUnsigned(unionedType.colDataType) && isUnsigned(type.colDataType))
+                    {
+                        unionedType.colDataType = type.colDataType;
+                    }
+
+                    if (type.colDataType == datatypes::SystemCatalog::DECIMAL || type.colDataType == datatypes::SystemCatalog::UDECIMAL)
+                    {
+                        unionedType.colDataType = datatypes::SystemCatalog::DECIMAL;
+                    }
+
+                    unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
+                    break;
+
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.colWidth = 20;
+                    break;
+
+                case datatypes::SystemCatalog::TIME:
+                case datatypes::SystemCatalog::DATETIME:
+                case datatypes::SystemCatalog::TIMESTAMP:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.colWidth = 26;
+                    break;
+
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 20)
+                        unionedType.colWidth = 20;
+
+                    break;
+
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 21)
+                        unionedType.colWidth = 21;
+
+                    break;
+
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::LONGDOUBLE:
+                default:
+                    break;
+            }
+
+            break;
         }
 
-        switch (types[i].colDataType)
+        case datatypes::SystemCatalog::DATE:
         {
-            case CalpontSystemCatalog::TINYINT:
-            case CalpontSystemCatalog::SMALLINT:
-            case CalpontSystemCatalog::MEDINT:
-            case CalpontSystemCatalog::INT:
-            case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UTINYINT:
-            case CalpontSystemCatalog::USMALLINT:
-            case CalpontSystemCatalog::UMEDINT:
-            case CalpontSystemCatalog::UINT:
-            case CalpontSystemCatalog::UBIGINT:
-            case CalpontSystemCatalog::UDECIMAL:
+            switch (unionedType.colDataType)
             {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                        if (types[i].colWidth > unionedType.colWidth)
-                        {
-                            unionedType.colDataType = types[i].colDataType;
-                            unionedType.colWidth = types[i].colWidth;
-                        }
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::LONGDOUBLE:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 20;
+                    break;
 
-                        // If same size and result is signed but source is unsigned...
-                        if (types[i].colWidth == unionedType.colWidth && !isUnsigned(unionedType.colDataType) && isUnsigned(types[i].colDataType))
-                        {
-                            unionedType.colDataType = types[i].colDataType;
-                        }
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 10)
+                        unionedType.colWidth = 10;
 
-                        if (types[i].colDataType == CalpontSystemCatalog::DECIMAL || types[i].colDataType == CalpontSystemCatalog::UDECIMAL)
-                        {
-                            unionedType.colDataType = CalpontSystemCatalog::DECIMAL;
-                        }
+                    break;
 
-                        unionedType.scale = (types[i].scale > unionedType.scale) ? types[i].scale : unionedType.scale;
-                        break;
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 11)
+                        unionedType.colWidth = 11;
 
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
+                    break;
+
+                case datatypes::SystemCatalog::DATE:
+                case datatypes::SystemCatalog::DATETIME:
+                case datatypes::SystemCatalog::TIMESTAMP:
+                case datatypes::SystemCatalog::TIME:
+                default:
+                    break;
+            }
+
+            break;
+        }
+
+        case datatypes::SystemCatalog::DATETIME:
+        {
+            switch (unionedType.colDataType)
+            {
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::TIME:
+                case datatypes::SystemCatalog::LONGDOUBLE:
+                case datatypes::SystemCatalog::TIMESTAMP:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 26;
+                    break;
+
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colDataType = datatypes::SystemCatalog::DATETIME;
+                    unionedType.colWidth = type.colWidth;
+                    break;
+
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 26)
+                        unionedType.colWidth = 26;
+
+                    break;
+
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 27)
+                        unionedType.colWidth = 27;
+
+                    break;
+
+                case datatypes::SystemCatalog::DATETIME:
+                default:
+                    break;
+            }
+
+            break;
+        }
+
+        case datatypes::SystemCatalog::TIMESTAMP:
+        {
+            switch (unionedType.colDataType)
+            {
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::TIME:
+                case datatypes::SystemCatalog::DATETIME:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 26;
+                    break;
+
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colDataType = datatypes::SystemCatalog::TIMESTAMP;
+                    unionedType.colWidth = type.colWidth;
+                    break;
+
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 26)
+                        unionedType.colWidth = 26;
+
+                    break;
+
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 27)
+                        unionedType.colWidth = 27;
+
+                    break;
+
+                case datatypes::SystemCatalog::TIMESTAMP:
+                default:
+                    break;
+            }
+
+            break;
+        }
+
+        case datatypes::SystemCatalog::FLOAT:
+        case datatypes::SystemCatalog::DOUBLE:
+        case datatypes::SystemCatalog::UFLOAT:
+        case datatypes::SystemCatalog::UDOUBLE:
+        {
+            switch (unionedType.colDataType)
+            {
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 20;
+                    break;
+
+                case datatypes::SystemCatalog::DATETIME:
+                case datatypes::SystemCatalog::TIMESTAMP:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 26;
+                    break;
+
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 20)
                         unionedType.colWidth = 20;
-                        break;
 
-                    case CalpontSystemCatalog::TIME:
-                    case CalpontSystemCatalog::DATETIME:
-                    case CalpontSystemCatalog::TIMESTAMP:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.colWidth = 26;
-                        break;
+                    break;
 
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 20)
-                            unionedType.colWidth = 20;
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 21)
+                        unionedType.colWidth = 21;
 
-                        break;
+                    break;
 
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 21)
-                            unionedType.colWidth = 21;
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                    unionedType.colDataType = datatypes::SystemCatalog::DOUBLE;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = sizeof(double);
+                    break;
 
-                        break;
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::LONGDOUBLE:
-                    default:
-                        break;
-                }
-
-                break;
+                default:
+                    break;
             }
 
-            case CalpontSystemCatalog::DATE:
+            break;
+        }
+
+        case datatypes::SystemCatalog::LONGDOUBLE:
+        {
+            switch (unionedType.colDataType)
             {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::LONGDOUBLE:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 20;
+                    break;
+
+                case datatypes::SystemCatalog::DATETIME:
+                    unionedType.colDataType = datatypes::SystemCatalog::CHAR;
+                    unionedType.scale = 0;
+                    unionedType.colWidth = 26;
+                    break;
+
+                case datatypes::SystemCatalog::CHAR:
+                    if (unionedType.colWidth < 20)
                         unionedType.colWidth = 20;
-                        break;
 
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 10)
-                            unionedType.colWidth = 10;
+                    break;
 
-                        break;
+                case datatypes::SystemCatalog::VARCHAR:
+                    if (unionedType.colWidth < 21)
+                        unionedType.colWidth = 21;
 
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 11)
-                            unionedType.colWidth = 11;
+                    break;
 
-                        break;
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::LONGDOUBLE:
+                    unionedType.colDataType = datatypes::SystemCatalog::LONGDOUBLE;
+                    unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
+                    unionedType.colWidth = sizeof(long double);
+                    unionedType.precision = -1;
+                    break;
 
-                    case CalpontSystemCatalog::DATE:
-                    case CalpontSystemCatalog::DATETIME:
-                    case CalpontSystemCatalog::TIMESTAMP:
-                    case CalpontSystemCatalog::TIME:
-                    default:
-                        break;
-                }
-
-                break;
+                default:
+                    break;
             }
 
-            case CalpontSystemCatalog::DATETIME:
+            break;
+        }
+
+        case datatypes::SystemCatalog::CHAR:
+        case datatypes::SystemCatalog::VARCHAR:
+        {
+            switch (unionedType.colDataType)
             {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::TIME:
-                    case CalpontSystemCatalog::LONGDOUBLE:
-                    case CalpontSystemCatalog::TIMESTAMP:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 26;
-                        break;
+                case datatypes::SystemCatalog::TINYINT:
+                case datatypes::SystemCatalog::SMALLINT:
+                case datatypes::SystemCatalog::MEDINT:
+                case datatypes::SystemCatalog::INT:
+                case datatypes::SystemCatalog::BIGINT:
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::FLOAT:
+                case datatypes::SystemCatalog::DOUBLE:
+                case datatypes::SystemCatalog::UTINYINT:
+                case datatypes::SystemCatalog::USMALLINT:
+                case datatypes::SystemCatalog::UMEDINT:
+                case datatypes::SystemCatalog::UINT:
+                case datatypes::SystemCatalog::UBIGINT:
+                case datatypes::SystemCatalog::UDECIMAL:
+                case datatypes::SystemCatalog::UFLOAT:
+                case datatypes::SystemCatalog::UDOUBLE:
+                case datatypes::SystemCatalog::LONGDOUBLE:
+                    unionedType.scale = 0;
+                    unionedType.colWidth = (type.colWidth > 20) ? type.colWidth : 20;
+                    break;
 
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colDataType = CalpontSystemCatalog::DATETIME;
-                        unionedType.colWidth = types[i].colWidth;
-                        break;
+                case datatypes::SystemCatalog::DATE:
+                    unionedType.colWidth = (type.colWidth > 10) ? type.colWidth : 10;
+                    break;
 
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 26)
-                            unionedType.colWidth = 26;
+                case datatypes::SystemCatalog::DATETIME:
+                case datatypes::SystemCatalog::TIMESTAMP:
+                    unionedType.colWidth = (type.colWidth > 26) ? type.colWidth : 26;
+                    break;
 
-                        break;
+                case datatypes::SystemCatalog::CHAR:
+                case datatypes::SystemCatalog::VARCHAR:
 
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 27)
-                            unionedType.colWidth = 27;
+                    // VARCHAR will fit in CHAR of the same width
+                    if (unionedType.colWidth < type.colWidth)
+                        unionedType.colWidth = type.colWidth;
 
-                        break;
+                    break;
 
-                    case CalpontSystemCatalog::DATETIME:
-                    default:
-                        break;
-                }
-
-                break;
+                default:
+                    break;
             }
 
-            case CalpontSystemCatalog::TIMESTAMP:
-            {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::TIME:
-                    case CalpontSystemCatalog::DATETIME:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 26;
-                        break;
+            // MariaDB bug 651. Setting to CHAR broke union in subquery
+            unionedType.colDataType = datatypes::SystemCatalog::VARCHAR;
+            break;
+        }
 
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colDataType = CalpontSystemCatalog::TIMESTAMP;
-                        unionedType.colWidth = types[i].colWidth;
-                        break;
-
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 26)
-                            unionedType.colWidth = 26;
-
-                        break;
-
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 27)
-                            unionedType.colWidth = 27;
-
-                        break;
-
-                    case CalpontSystemCatalog::TIMESTAMP:
-                    default:
-                        break;
-                }
-
-                break;
-            }
-
-            case CalpontSystemCatalog::FLOAT:
-            case CalpontSystemCatalog::DOUBLE:
-            case CalpontSystemCatalog::UFLOAT:
-            case CalpontSystemCatalog::UDOUBLE:
-            {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 20;
-                        break;
-
-                    case CalpontSystemCatalog::DATETIME:
-                    case CalpontSystemCatalog::TIMESTAMP:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 26;
-                        break;
-
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 20)
-                            unionedType.colWidth = 20;
-
-                        break;
-
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 21)
-                            unionedType.colWidth = 21;
-
-                        break;
-
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        unionedType.colDataType = CalpontSystemCatalog::DOUBLE;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = sizeof(double);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                break;
-            }
-
-            case CalpontSystemCatalog::LONGDOUBLE:
-            {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 20;
-                        break;
-
-                    case CalpontSystemCatalog::DATETIME:
-                        unionedType.colDataType = CalpontSystemCatalog::CHAR;
-                        unionedType.scale = 0;
-                        unionedType.colWidth = 26;
-                        break;
-
-                    case CalpontSystemCatalog::CHAR:
-                        if (unionedType.colWidth < 20)
-                            unionedType.colWidth = 20;
-
-                        break;
-
-                    case CalpontSystemCatalog::VARCHAR:
-                        if (unionedType.colWidth < 21)
-                            unionedType.colWidth = 21;
-
-                        break;
-
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::LONGDOUBLE:
-                        unionedType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                        unionedType.scale = (types[i].scale > unionedType.scale) ? types[i].scale : unionedType.scale;
-                        unionedType.colWidth = sizeof(long double);
-                        unionedType.precision = -1;
-                        break;
-
-                    default:
-                        break;
-                }
-
-                break;
-            }
-
-            case CalpontSystemCatalog::CHAR:
-            case CalpontSystemCatalog::VARCHAR:
-            {
-                switch (unionedType.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::UDOUBLE:
-                    case CalpontSystemCatalog::LONGDOUBLE:
-                        unionedType.scale = 0;
-                        unionedType.colWidth = (types[i].colWidth > 20) ? types[i].colWidth : 20;
-                        break;
-
-                    case CalpontSystemCatalog::DATE:
-                        unionedType.colWidth = (types[i].colWidth > 10) ? types[i].colWidth : 10;
-                        break;
-
-                    case CalpontSystemCatalog::DATETIME:
-                    case CalpontSystemCatalog::TIMESTAMP:
-                        unionedType.colWidth = (types[i].colWidth > 26) ? types[i].colWidth : 26;
-                        break;
-
-                    case CalpontSystemCatalog::CHAR:
-                    case CalpontSystemCatalog::VARCHAR:
-
-                        // VARCHAR will fit in CHAR of the same width
-                        if (unionedType.colWidth < types[i].colWidth)
-                            unionedType.colWidth = types[i].colWidth;
-
-                        break;
-
-                    default:
-                        break;
-                }
-
-                // MariaDB bug 651. Setting to CHAR broke union in subquery
-                unionedType.colDataType = CalpontSystemCatalog::VARCHAR;
-                break;
-            }
-
-            default:
-            {
-                break;
-            }
-        } // switch
-    } // for
-
-    return unionedType;
+        default:
+        {
+            break;
+        }
+    } // switch
 }
 
 } // namespace dataconvert

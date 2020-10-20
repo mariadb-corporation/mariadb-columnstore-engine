@@ -46,7 +46,7 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
 {
     if (function == PSEUDO_EXTENTMAX)
     {
-        if (!datatypes::Decimal::isWideDecimalType(colType))
+        if (!colType.isWideDecimalType())
         {
             int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
             int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
@@ -66,14 +66,14 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
             else
             {
                 int128_t int128Null;
-                utils::setWideDecimalNullValue(int128Null);
+                datatypes::Decimal::setWideDecimalNullValue(int128Null);
                 bs << (uint128_t) int128Null;
             }
         }
     }
     else if (function == PSEUDO_EXTENTMIN)
     {
-        if (!datatypes::Decimal::isWideDecimalType(colType))
+        if (!colType.isWideDecimalType())
         {
             int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
             int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
@@ -93,7 +93,7 @@ void PseudoCCJL::runCommand(ByteStream& bs) const
             else
             {
                 int128_t int128Null;
-                utils::setWideDecimalNullValue(int128Null);
+                datatypes::Decimal::setWideDecimalNullValue(int128Null);
                 bs << (uint128_t) int128Null;
             }
         }

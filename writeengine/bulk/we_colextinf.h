@@ -41,7 +41,6 @@
 #include "brmtypes.h"
 #include "we_type.h"
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 
 namespace WriteEngine
 {

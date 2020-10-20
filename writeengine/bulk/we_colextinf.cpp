@@ -27,7 +27,6 @@
 
 #include "we_colextinf.h"
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 
 #include <iostream>
 #include <sstream>

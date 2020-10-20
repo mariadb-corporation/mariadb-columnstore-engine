@@ -250,7 +250,7 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
     leftColType = left;
     rightColType = right;
 
-    if (datatypes::Decimal::isWideDecimalType(left) || datatypes::Decimal::isWideDecimalType(right))
+    if (left.isWideDecimalType() || right.isWideDecimalType())
         hasWideColumns = true;
 }
 
@@ -280,7 +280,7 @@ void FilterCommand::doFilter()
             if ((this->*compareFunc)(i, j) == true)
             {
                 bpp->relRids[bpp->ridCount] = bpp->fFiltCmdRids[0][i];
-                if (datatypes::Decimal::isWideDecimalType(leftColType))
+                if (leftColType.isWideDecimalType())
                     bpp->wide128Values[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
                 else
                     bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
@@ -342,7 +342,7 @@ bool FilterCommand::binaryCompare(uint64_t i, uint64_t j)
     // not int128_t
     int128_t leftVal, rightVal;
 
-    if (datatypes::Decimal::isWideDecimalType(leftColType))
+    if (leftColType.isWideDecimalType())
     {
         if (execplan::isNull(bpp->fFiltCmdBinaryValues[0][i], leftColType))
             return false;
@@ -355,7 +355,7 @@ bool FilterCommand::binaryCompare(uint64_t i, uint64_t j)
         leftVal = bpp->fFiltCmdValues[0][i];
     }
 
-    if (datatypes::Decimal::isWideDecimalType(rightColType))
+    if (rightColType.isWideDecimalType())
     {
         if (execplan::isNull(bpp->fFiltCmdBinaryValues[1][j], rightColType))
             return false;
