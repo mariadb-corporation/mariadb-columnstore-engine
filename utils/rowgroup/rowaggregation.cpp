@@ -53,7 +53,6 @@
 #include "vlarray.h"
 
 #include "collation.h"
-#include "widedecimalutils.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
@@ -2752,7 +2751,7 @@ void RowAggregationUM::calculateAvgColumns()
 
                 uint32_t precision = fRow.getPrecision(colOut);
                 bool isWideDecimal =
-                    datatypes::Decimal::isWideDecimalType(precision);
+                    datatypes::Decimal::isWideDecimalTypeByPrecision(precision);
 
                 if (LIKELY(!isWideDecimal))
                 {
@@ -3687,12 +3686,12 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                     auto width = fRow.getColumnWidth(colOut);
                     if (width == datatypes::MAXDECIMALWIDTH)
                     {
-                        ColTypeAlias colType;
+                        execplan::CalpontSystemCatalog::TypeHolderStd colType;
                         colType.colWidth = width;
                         colType.precision = fRow.getPrecision(i);
                         colType.scale = fRow.getScale(i);
                         colType.colDataType =  colDataType;
-                        fRow.setInt128Field(Dec::int128FromString(aggData.fConstValue, colType), colOut);
+                        fRow.setInt128Field(colType.decimal128FromString(aggData.fConstValue), colOut);
                     }
                     else if (width <= datatypes::MAXLEGACYWIDTH)
                     {
@@ -3812,13 +3811,12 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                     auto width = fRow.getColumnWidth(colOut);
                     if (width == datatypes::MAXDECIMALWIDTH)
                     {
-                        ColTypeAlias colType;
+                        execplan::CalpontSystemCatalog::TypeHolderStd colType;
                         colType.colWidth = width;
                         colType.precision = fRow.getPrecision(i);
                         colType.scale = fRow.getScale(i);
                         colType.colDataType =  colDataType;
-                        int128_t constValue = Dec::int128FromString(aggData.fConstValue,
-                                                             colType);
+                        int128_t constValue = colType.decimal128FromString(aggData.fConstValue);
                         int128_t sum;
 
                         datatypes::MultiplicationOverflowCheck multOp;

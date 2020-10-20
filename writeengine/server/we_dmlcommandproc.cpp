@@ -370,7 +370,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
+                                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -1245,7 +1245,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
+                                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -2996,12 +2996,12 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
                                 int128_t* dec;
-                                char buf[utils::MAXLENGTH16BYTES];
+                                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                                 dec = row.getBinaryField<int128_t>(fetchColPos);
 
                                 dataconvert::DataConvert::decimalToString(dec,
                                     (unsigned)fetchColScales[fetchColPos], buf,
-                                    sizeof(buf), fetchColTypes[fetchColPos]);
+                                    (uint8_t) sizeof(buf), fetchColTypes[fetchColPos]);
 
                                 value.assign(buf);
 
@@ -3362,12 +3362,12 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                 {
                                     // WIP MCOL-641
                                     int128_t* dec;
-                                    char buf[utils::MAXLENGTH16BYTES];
+                                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                                     dec = row.getBinaryField<int128_t>(fetchColPos);
 
                                     dataconvert::DataConvert::decimalToString(dec,
                                         (unsigned)fetchColScales[fetchColPos], buf,
-                                        sizeof(buf), fetchColTypes[fetchColPos]);
+                                        (uint8_t) sizeof(buf), fetchColTypes[fetchColPos]);
 
                                     value = buf;
 
@@ -3527,7 +3527,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3559,7 +3559,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, value, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(value, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3656,7 +3656,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3702,7 +3702,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3735,7 +3735,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 {
                     try
                     {
-                        datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, true);
+                        datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, true);
                     }
                     catch (exception& ex)
                     {

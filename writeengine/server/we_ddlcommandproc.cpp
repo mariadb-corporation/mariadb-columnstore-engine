@@ -213,12 +213,12 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
             else if (INIT_COL == column.tableColName.column)
             {
 
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
             else if (NEXT_COL == column.tableColName.column)
             {
 
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
             else if (AUTOINC_COL == column.tableColName.column)
             {
@@ -226,7 +226,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
             }
             else
             {
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
 
             colStruct.dataOid = column.oid;
@@ -588,7 +588,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                     else
                     {
                         tmpStr = "";
-                        //colTuple.data = getNullValueForType(column.colType);
+                        //colTuple.data = column.colType.getNullValueForType();
                     }
 
                 }
@@ -629,16 +629,16 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                     }
                     else
                     {
-                        colTuple.data = getNullValueForType(column.colType);
+                        colTuple.data = column.colType.getNullValueForType();
                     }
                 }
                 else if (LISTOBJID_COL == column.tableColName.column)
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                 }
                 else if (TREEOBJID_COL == column.tableColName.column)
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                 }
                 else if (MINVAL_COL == column.tableColName.column)
                 {
@@ -664,7 +664,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                 }
                 else
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                 }
 
                 colStruct.dataOid = column.oid;
@@ -982,7 +982,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
                 else
                 {
                     tmpStr = "";
-                    //colTuple.data = getNullValueForType(column.colType);
+                    //colTuple.data = column.colType.getNullValueForType();
                 }
 
             }
@@ -1023,16 +1023,16 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
                 }
                 else
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                 }
             }
             else if (LISTOBJID_COL == column.tableColName.column)
             {
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
             else if (TREEOBJID_COL == column.tableColName.column)
             {
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
             else if (MINVAL_COL == column.tableColName.column)
             {
@@ -1058,7 +1058,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
             }
             else
             {
-                colTuple.data = getNullValueForType(column.colType);
+                colTuple.data = column.colType.getNullValueForType();
             }
 
             colStruct.dataOid = column.oid;
@@ -3646,7 +3646,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     colType.scale = scale;
     colType.precision = precision;
     bool pushWarning = false;
-    defaultVal.data = DataConvert::convertColumnData(colType, defaultValStr, pushWarning, timeZone, isNULL, false, false);
+    defaultVal.data = colType.convertColumnData(defaultValStr, pushWarning, timeZone, isNULL, false, false);
     fWEWrapper.setTransId(txnID);
     fWEWrapper.setIsInsert(true);
     fWEWrapper.setBulkFlag(true);

@@ -44,7 +44,6 @@ using namespace execplan;
 #include "rowgroup.h"
 #include "dataconvert.h"
 #include "columnwidth.h"
-#include "widedecimalutils.h"
 
 #include "collation.h"
 
@@ -641,7 +640,7 @@ string Row::toString() const
                 case CalpontSystemCatalog::UDECIMAL:
                     if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
                     {
-                        unsigned int buflen = utils::MAXLENGTH16BYTES;
+                        unsigned int buflen = datatypes::Decimal::MAXLENGTH16BYTES;
                         char *buf = (char*)alloca(buflen);
                         // empty the buffer
                         dataconvert::DataConvert::decimalToString(getBinaryField<int128_t>(i),
@@ -851,7 +850,7 @@ void Row::initToNull()
                         break;
 
                     case 16 :
-                        utils::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
+                        datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
                         break;
                     default:
                         *((int64_t*) &data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL);
@@ -879,7 +878,7 @@ void Row::initToNull()
                 break;
             case CalpontSystemCatalog::BINARY:
                 {
-                    utils::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
+                    datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
                 }
                 break;
 
@@ -924,7 +923,7 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
     uint32_t offset) const
 {
     const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
-    return  utils::isWideDecimalNullValue (*intPtr);
+    return  datatypes::Decimal::isWideDecimalNullValue (*intPtr);
 }
 
 template<>
@@ -933,7 +932,7 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
     uint32_t offset) const
 {
     const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
-    return  utils::isWideDecimalNullValue (*intPtr);
+    return  datatypes::Decimal::isWideDecimalNullValue (*intPtr);
 }
 
 template<>
@@ -1203,7 +1202,7 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
-            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(columnType, colWidths[col])))
+            else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
             {
                 if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
                     return false;
@@ -1262,7 +1261,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
-            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(columnType, colWidths[col])))
+            else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
             {
                 if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
                     return false;
@@ -1652,7 +1651,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
             // WIP this doesn't look right b/c we can pushdown colType
             // Migrate to offset based methods here
             // code precision 2 width convertor
-            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(in.getColTypes()[i],
+            else if (UNLIKELY(datatypes::isWideDecimalType(in.getColTypes()[i],
                                   in.getColumnWidth(i))))
                     out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16,
                         out->getOffset(mapping[i]));

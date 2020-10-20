@@ -151,7 +151,7 @@ const std::string mcsv1Context::toString() const
     std::ostringstream output;
     output << "mcsv1Context: " << getName() << std::endl;
     output << "  RunFlags=" << fRunFlags << " ContextFlags=" << fContextFlags << std::endl;
-    output << "  UserDataSize=" << fUserDataSize << " ResultType=" << colDataTypeToString(fResultType) << std::endl;
+    output << "  UserDataSize=" << fUserDataSize << " ResultType=" << execplan::colDataTypeToString(fResultType) << std::endl;
     output << "  Resultscale=" << fResultscale << " ResultPrecision=" << fResultPrecision << std::endl;
     output << "  ErrorMsg=" << errorMsg << std::endl;
     output << "  bInterrupted=" << bInterrupted << std::endl;

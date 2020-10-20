@@ -20,17 +20,16 @@
 
 #include <cstdint>
 #include <cfloat>
-
-#include "calpontsystemcatalog.h"
+#include <limits>
+#include "exceptclasses.h"
+#include "widedecimalutils.h"
 
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
-using ColTypeAlias = execplan::CalpontSystemCatalog::ColType;
-using ColDataTypeAlias = execplan::CalpontSystemCatalog::ColDataType;
 
-namespace execplan
+namespace datatypes
 {
-    struct IDB_Decimal;
+    struct VDecimal;
 }
 
 // A class by Fabio Fernandes pulled off of stackoverflow
@@ -81,8 +80,6 @@ constexpr uint8_t INT128MAXPRECISION = 38U;
 constexpr uint8_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
-constexpr uint8_t MAXLENGTH16BYTES = 42;
-constexpr uint8_t MAXLENGTH8BYTES = 23;
 
 
 
@@ -175,152 +172,107 @@ class Decimal
         Decimal() { };
         ~Decimal() { };
 
+        static constexpr uint8_t MAXLENGTH16BYTES = 42;
+        static constexpr uint8_t MAXLENGTH8BYTES = 23;
+
+        static inline bool isWideDecimalNullValue(const int128_t& val)
+        {
+            const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
+            return (ptr[0] == utils::BINARYNULLVALUELOW && ptr[1] == utils::BINARYNULLVALUEHIGH);
+        }
+
+        static inline bool isWideDecimalEmptyValue(const int128_t& val)
+        {
+            const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
+            return (ptr[0] == utils::BINARYEMPTYVALUELOW && ptr[1] == utils::BINARYEMPTYVALUEHIGH);
+        }
+
+        static inline void setWideDecimalNullValue(int128_t& val)
+        {
+            uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
+            ptr[0] = utils::BINARYNULLVALUELOW;
+            ptr[1] = utils::BINARYNULLVALUEHIGH;
+        }
+
+        static inline void setWideDecimalEmptyValue(int128_t& val)
+        {
+            uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
+            ptr[0] = utils::BINARYEMPTYVALUELOW;
+            ptr[1] = utils::BINARYEMPTYVALUEHIGH;
+        }
+
+        static inline void setWideDecimalNullValue(int128_t* val)
+        {
+            uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
+            ptr[0] = utils::BINARYNULLVALUELOW;
+            ptr[1] = utils::BINARYNULLVALUEHIGH;
+        }
+
+        static inline void setWideDecimalEmptyValue(int128_t* val)
+        {
+            uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
+            ptr[0] = utils::BINARYEMPTYVALUELOW;
+            ptr[1] = utils::BINARYEMPTYVALUEHIGH;
+        }
+
+
         static constexpr int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
         static constexpr int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
 
         /**
-            @brief Compares two IDB_Decimal taking scale into account. 
+            @brief Compares two VDecimal taking scale into account. 
         */
-        static int compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r); 
+        static int compare(const VDecimal& l, const VDecimal& r); 
         /**
             @brief Addition template that supports overflow check and
             two internal representations of decimal.
         */
         template<typename T, bool overflow>
-        static void addition(const execplan::IDB_Decimal& l,
-            const execplan::IDB_Decimal& r,
-            execplan::IDB_Decimal& result);
+        static void addition(const VDecimal& l,
+            const VDecimal& r,
+            VDecimal& result);
 
         /**
             @brief Subtraction template that supports overflow check and
             two internal representations of decimal.
         */
         template<typename T, bool overflow>
-        static void subtraction(const execplan::IDB_Decimal& l,
-            const execplan::IDB_Decimal& r,
-            execplan::IDB_Decimal& result);
+        static void subtraction(const VDecimal& l,
+            const VDecimal& r,
+            VDecimal& result);
 
         /**
             @brief Division template that supports overflow check and
             two internal representations of decimal.
         */
         template<typename T, bool overflow>
-        static void division(const execplan::IDB_Decimal& l,
-            const execplan::IDB_Decimal& r,
-            execplan::IDB_Decimal& result);
+        static void division(const VDecimal& l,
+            const VDecimal& r,
+            VDecimal& result);
 
         /**
             @brief Multiplication template that supports overflow check and
             two internal representations of decimal.
         */
         template<typename T, bool overflow>
-        static void multiplication(const execplan::IDB_Decimal& l,
-            const execplan::IDB_Decimal& r,
-            execplan::IDB_Decimal& result);
+        static void multiplication(const VDecimal& l,
+            const VDecimal& r,
+            VDecimal& result);
 
         /**
             @brief Convenience method to put decimal into a std::string.
         */
-        static std::string toString(execplan::IDB_Decimal& value);
-        static std::string toString(const execplan::IDB_Decimal& value);
-
-        /**
-            @brief Convenience method to get int128 from a std::string.
-        */
-        static int128_t int128FromString(const std::string& value, ColTypeAlias& colType);
-
-        /**
-            @brief The method detects whether decimal type is wide
-            using csc colType.
-        */
-        static constexpr inline bool isWideDecimalType(const ColTypeAlias& ct)
-        {
-            return ((ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-                ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
-                ct.colWidth == MAXDECIMALWIDTH);
-        }
+        static std::string toString(VDecimal& value);
+        static std::string toString(const VDecimal& value);
 
         /**
             @brief The method detects whether decimal type is wide
             using precision.
         */
-        static constexpr inline bool isWideDecimalType(const int32_t precision)
+        static constexpr inline bool isWideDecimalTypeByPrecision(const int32_t precision)
         {
             return precision > INT64MAXPRECISION
                 && precision <= INT128MAXPRECISION;
-        }
-
-        /**
-            @brief The method detects whether decimal type is wide
-            using datatype and width.
-        */
-        static constexpr inline bool isWideDecimalType(const ColDataTypeAlias dt,
-            const int32_t width)
-        {
-            return (width == MAXDECIMALWIDTH &&
-                (dt == execplan::CalpontSystemCatalog::DECIMAL ||
-                 dt == execplan::CalpontSystemCatalog::UDECIMAL));
-        }
-
-        /**
-            @brief The method sets the legacy scale and precision of a wide decimal
-            column which is the result of an arithmetic operation.
-        */
-        static inline void setDecimalScalePrecisionLegacy(ColTypeAlias& ct,
-            unsigned int precision, unsigned int scale)
-        {
-            ct.scale = scale;
-
-            if (ct.scale == 0)
-                ct.precision = precision - 1;
-            else
-                ct.precision = precision - scale;
-        }
-
-        /**
-            @brief The method sets the scale and precision of a wide decimal
-            column which is the result of an arithmetic operation.
-        */
-        static inline void setDecimalScalePrecision(ColTypeAlias& ct,
-            unsigned int precision, unsigned int scale)
-        {
-            ct.colWidth = (precision > INT64MAXPRECISION)
-                ? MAXDECIMALWIDTH : MAXLEGACYWIDTH;
-
-            ct.precision = (precision > INT128MAXPRECISION)
-                ? INT128MAXPRECISION : precision;
-
-            ct.scale = scale;
-        }
-
-        /**
-            @brief The method sets the scale and precision of a wide decimal
-            column which is the result of an arithmetic operation, based on a heuristic.
-        */
-        static inline void setDecimalScalePrecisionHeuristic(ColTypeAlias& ct,
-            unsigned int precision, unsigned int scale)
-        {
-            unsigned int diff = 0;
-
-            if (precision > INT128MAXPRECISION)
-            {
-                ct.precision = INT128MAXPRECISION;
-                diff = precision - INT128MAXPRECISION;
-            }
-            else
-            {
-                ct.precision = precision;
-            }
-
-            ct.scale = scale;
-
-            if (diff != 0)
-            {
-                ct.scale = scale - (int)(diff * (38.0/65.0));
-
-                if (ct.scale < 0)
-                    ct.scale = 0;
-            }
         }
 
         /**
@@ -470,21 +422,6 @@ class Decimal
             scale += (scaleAvailable >= MAXSCALEINC4AVG) ? MAXSCALEINC4AVG : scaleAvailable;
             precision += (precisionAvailable >= MAXSCALEINC4AVG) ? MAXSCALEINC4AVG : precisionAvailable;
         }
-
-        /**
-            @brief Returns true if all arguments have a DECIMAL/UDECIMAL type
-        */
-        static inline bool isDecimalOperands(const ColDataTypeAlias resultDataType,
-            const ColDataTypeAlias leftColDataType,
-            const ColDataTypeAlias rightColDataType)
-        {
-            return ((resultDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-                     resultDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
-                    (leftColDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-                     leftColDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
-                    (rightColDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-                     rightColDataType == execplan::CalpontSystemCatalog::UDECIMAL));
-        }
 };
 
 /**
@@ -625,6 +562,292 @@ struct NoOverflowCheck {
     {
         return;
     }
+};
+
+
+/**
+ * @brief VDecimal type
+ *
+ */
+struct VDecimal
+{
+    VDecimal(): s128Value(0), value(0), scale(0), precision(0)
+    {
+    }
+
+    VDecimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
+        s128Value(val128),
+        value(val),
+        scale(s),
+        precision(p)
+    {
+    }
+
+    int decimalComp(const VDecimal& d) const
+    {
+        lldiv_t d1 = lldiv(value, static_cast<int64_t>(mcs_pow_10[scale]));
+        lldiv_t d2 = lldiv(d.value, static_cast<int64_t>(mcs_pow_10[d.scale]));
+
+        int ret = 0;
+
+        if (d1.quot > d2.quot)
+        {
+            ret = 1;
+        }
+        else if (d1.quot < d2.quot)
+        {
+            ret = -1;
+        }
+        else
+        {
+            // rem carries the value's sign, but needs to be normalized.
+            int64_t s = scale - d.scale;
+
+            if (s < 0)
+            {
+                if ((d1.rem * static_cast<int64_t>(mcs_pow_10[-s])) > d2.rem)
+                    ret = 1;
+                else if ((d1.rem * static_cast<int64_t>(mcs_pow_10[-s])) < d2.rem)
+                    ret = -1;
+            }
+            else
+            {
+                if (d1.rem > (d2.rem * static_cast<int64_t>(mcs_pow_10[s])))
+                    ret = 1;
+                else if (d1.rem < (d2.rem * static_cast<int64_t>(mcs_pow_10[s])))
+                    ret = -1;
+            }
+        }
+
+        return ret;
+    }
+
+    bool operator==(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value == rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) == 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            const_cast<VDecimal&>(rhs).s128Value = rhs.value;
+
+            if (scale == rhs.scale)
+                return s128Value == rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) == 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value == rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) == 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value == rhs.value;
+            else
+                return (decimalComp(rhs) == 0);
+        }
+    }
+
+    bool operator>(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value > rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) > 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value > rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) > 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value > rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) > 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value > rhs.value;
+            else
+                return (decimalComp(rhs) > 0);
+        }
+    }
+
+    bool operator<(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value < rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) < 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value < rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) < 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value < rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) < 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value < rhs.value;
+            else
+                return (decimalComp(rhs) < 0);
+        }
+    }
+
+    bool operator>=(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value >= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) >= 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value >= rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) >= 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value >= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) >= 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value >= rhs.value;
+            else
+                return (decimalComp(rhs) >= 0);
+        }
+    }
+
+    bool operator<=(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value <= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) <= 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value <= rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) <= 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value <= rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) <= 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value <= rhs.value;
+            else
+                return (decimalComp(rhs) <= 0);
+        }
+    }
+
+    bool operator!=(const VDecimal& rhs) const
+    {
+        if (precision > datatypes::INT64MAXPRECISION &&
+            rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return s128Value != rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhs) != 0);
+        }
+        else if (precision > datatypes::INT64MAXPRECISION &&
+                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        {
+            VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+
+            if (scale == rhstmp.scale)
+                return s128Value != rhstmp.s128Value;
+            else
+                return (datatypes::Decimal::compare(*this, rhstmp) != 0);
+        }
+        else if (precision <= datatypes::INT64MAXPRECISION &&
+                 rhs.precision > datatypes::INT64MAXPRECISION)
+        {
+            if (scale == rhs.scale)
+                return (int128_t) value != rhs.s128Value;
+            else
+                return (datatypes::Decimal::compare(VDecimal(0, scale, precision, (int128_t) value), rhs) != 0);
+        }
+        else
+        {
+            if (scale == rhs.scale)
+                return value != rhs.value;
+            else
+                return (decimalComp(rhs) != 0);
+        }
+    }
+
+    int128_t s128Value;
+    int64_t value;
+    int8_t  scale;	  // 0~38
+    uint8_t precision;  // 1~38
 };
 
 } //end of namespace

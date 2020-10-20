@@ -220,12 +220,12 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
                 }
                 else if (CONSTRAINTPRIM_COL == column.tableColName.column)
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data =column.colType.getNullValueForType();
                     isNull = true;
                 }
                 else if (CONSTRAINTTEXT_COL == column.tableColName.column)
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                     isNull = true;
                 }
                 else if (INDEXNAME_COL == column.tableColName.column)
@@ -235,7 +235,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
                 }
                 else
                 {
-                    colTuple.data = getNullValueForType(column.colType);
+                    colTuple.data = column.colType.getNullValueForType();
                     isNull = true;
                 }
 
@@ -336,7 +336,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(ddlpackage:
                 }
                 else
                 {
-                    colTupleCol.data = getNullValueForType(column.colType);
+                    colTupleCol.data = column.colType.getNullValueForType();
                     isNull = true;
                 }
 

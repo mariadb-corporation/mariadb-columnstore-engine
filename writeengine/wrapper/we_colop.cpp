@@ -40,7 +40,6 @@ using namespace std;
 using namespace execplan;
 
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 

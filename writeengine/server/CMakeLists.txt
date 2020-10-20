@@ -15,7 +15,8 @@ set(WriteEngineServer_SRCS
     we_cleartablelockcmd.cpp
     we_cpifeederthread.cpp
     we_getfilesizes.cpp
-    ../../utils/common/crashtrace.cpp)
+    ../../utils/common/crashtrace.cpp
+    ../../datatypes/mcs_datatype.cpp)
 
 add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 

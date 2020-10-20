@@ -20,7 +20,6 @@
 
 #include "rowgroup.h"
 #include "columnwidth.h"
-#include "widedecimalutils.h"
 #include "joblisttypes.h"
 #include "dataconvert.h"
 
@@ -98,7 +97,7 @@ protected:
         int128_t nullValue = 0;
         int128_t bigValue = 0;
 
-        utils::setWideDecimalNullValue(nullValue);
+        datatypes::Decimal::setWideDecimalNullValue(nullValue);
         bigValue = -static_cast<int128_t>(0xFFFFFFFF)*0xFFFFFFFFFFFFFFFF;
 
         sValueVector.push_back(nullValue);

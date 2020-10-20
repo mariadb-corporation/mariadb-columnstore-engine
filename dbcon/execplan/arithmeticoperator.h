@@ -400,8 +400,8 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
         case OP_DIV:
             if (fOperationType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                if ((datatypes::Decimal::isWideDecimalType(op2.precision) && op2.s128Value == 0)
-                    || (!datatypes::Decimal::isWideDecimalType(op2.precision) && op2.value == 0))
+                if ((datatypes::Decimal::isWideDecimalTypeByPrecision(op2.precision) && op2.s128Value == 0)
+                    || (!datatypes::Decimal::isWideDecimalTypeByPrecision(op2.precision) && op2.value == 0))
                 {
                     isNull = true;
                     break;

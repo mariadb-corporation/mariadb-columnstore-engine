@@ -288,7 +288,7 @@ void ColumnCommand::issuePrimitive()
         bpp->lbidForCP = lbid;
         if (UNLIKELY(utils::isWide(colType.colWidth)))
         {
-            if (datatypes::Decimal::isWideDecimalType(colType))
+            if (colType.isWideDecimalType())
             {
                 bpp->hasWideColumnOut = true;
                 // colWidth is int32 and wideColumnWidthOut's
