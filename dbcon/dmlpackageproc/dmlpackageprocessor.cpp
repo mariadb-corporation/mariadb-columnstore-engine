@@ -52,7 +52,6 @@ using namespace joblist;
 using namespace messageqcpp;
 #include "tablelockdata.h"
 #include "exceptclasses.h"
-#include "widedecimalutils.h"
 
 namespace
 {

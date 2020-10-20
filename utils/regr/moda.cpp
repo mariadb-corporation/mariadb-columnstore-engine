@@ -158,7 +158,7 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    if (!(execplan::isNumeric(colTypes[0].dataType)))
+    if (!(datatypes::isNumeric(colTypes[0].dataType)))
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "

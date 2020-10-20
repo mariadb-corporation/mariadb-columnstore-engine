@@ -288,7 +288,7 @@ string ColumnCommandJL::toString()
 
     if (isDict())
         ret << " (tokens)";
-    else if (execplan::isCharType(colType.colDataType))
+    else if (datatypes::isCharType(colType.colDataType))
         ret << " (is char)";
 
     return ret.str();

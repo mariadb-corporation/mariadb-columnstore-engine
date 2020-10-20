@@ -34,7 +34,6 @@
 #include "we_log.h"
 #include "cacheutils.h"
 #include "IDBPolicy.h"
-#include "widedecimalutils.h"
 #include "mcs_decimal.h"
 #include "dataconvert.h"
 
@@ -301,7 +300,7 @@ void BRMReporter::sendCPToFile( )
 {
     if (fCPInfo.size() > 0)
     {
-        char buf[utils::MAXLENGTH16BYTES];
+        char buf[datatypes::Decimal::MAXLENGTH16BYTES];
         std::ostringstream oss;
         oss << "Writing " << fCPInfo.size() << " CP updates for table " <<
             fTableName << " to report file " << fRptFileName;
@@ -309,7 +308,7 @@ void BRMReporter::sendCPToFile( )
 
         for (unsigned int i = 0; i < fCPInfo.size(); i++)
         {
-            if (!datatypes::Decimal::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
+            if (!datatypes::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
             {
                 fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
                          fCPInfo[i].max       << ' ' <<
@@ -322,10 +321,10 @@ void BRMReporter::sendCPToFile( )
             {
                 std::string bigMin, bigMax;
 
-                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMin, 0, buf, utils::MAXLENGTH16BYTES, fCPInfo[i].type);
+                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMin, 0, buf, (uint8_t) sizeof(buf), fCPInfo[i].type);
                 bigMin = buf;
 
-                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMax, 0, buf, utils::MAXLENGTH16BYTES, fCPInfo[i].type);
+                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMax, 0, buf, (uint8_t) sizeof(buf), fCPInfo[i].type);
                 bigMax = buf;
 
                 fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<

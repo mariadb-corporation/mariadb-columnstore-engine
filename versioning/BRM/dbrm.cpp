@@ -31,7 +31,6 @@
 #include <cassert>
 
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 #include "oamcache.h"
 #include "rwlock.h"
 #include "mastersegmenttable.h"
@@ -4541,7 +4540,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             aInfo.isBinaryColumn = isBinaryColumn;
             if (!isBinaryColumn)
             {
-                if (execplan::isUnsigned(colType.colDataType))
+                if (datatypes::isUnsigned(colType.colDataType))
                 {
                     aInfo.max = 0;
                     aInfo.min = numeric_limits<uint64_t>::max();
@@ -4554,7 +4553,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             }
             else
             {
-                if (execplan::isUnsigned(colType.colDataType))
+                if (datatypes::isUnsigned(colType.colDataType))
                 {
                     aInfo.bigMax = 0;
                     aInfo.bigMin = -1;

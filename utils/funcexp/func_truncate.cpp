@@ -119,7 +119,7 @@ int64_t Func_truncate::getIntVal(Row& row,
 {
     IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
 
-    if (!datatypes::Decimal::isWideDecimalType(op_ct))
+    if (!op_ct.isWideDecimalType())
     {
         if (x.scale > 0)
         {
@@ -230,7 +230,7 @@ double Func_truncate::getDoubleVal(Row& row,
 
     double d;
 
-    if (!datatypes::Decimal::isWideDecimalType(op_ct))
+    if (!op_ct.isWideDecimalType())
         d = x.value;
     else
         d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
@@ -290,7 +290,7 @@ long double Func_truncate::getLongDoubleVal(Row& row,
 
     double d;
 
-    if (!datatypes::Decimal::isWideDecimalType(op_ct))
+    if (!op_ct.isWideDecimalType())
         d = x.value;
     else
         d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
@@ -334,7 +334,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row,
             int64_t d = 0;
             decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-            if (!datatypes::Decimal::isWideDecimalType(op_ct))
+            if (!op_ct.isWideDecimalType())
             {
                 //@Bug 3101 - GCC 4.5.1 optimizes too aggressively here. Mark as volatile.
                 volatile int64_t p = 1;
@@ -739,12 +739,12 @@ string Func_truncate::getStrVal(Row& row,
             break;
     }
 
-    if (!datatypes::Decimal::isWideDecimalType(op_ct))
+    if (!op_ct.isWideDecimalType())
         return dataconvert::DataConvert::decimalToString(x.value, x.scale, op_ct.colDataType);
     else
     {
-        char buf[utils::MAXLENGTH16BYTES];
-        dataconvert::DataConvert::decimalToString( &x.s128Value, x.scale, buf, utils::MAXLENGTH16BYTES, op_ct.colDataType);
+        char buf[datatypes::Decimal::MAXLENGTH16BYTES];
+        dataconvert::DataConvert::decimalToString( &x.s128Value, x.scale, buf, (uint8_t) sizeof(buf), op_ct.colDataType);
         return string(buf);
     }
 }

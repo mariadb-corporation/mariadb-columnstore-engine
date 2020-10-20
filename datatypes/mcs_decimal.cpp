@@ -18,9 +18,10 @@
 #include <functional>
 #include <string>
 
+#include "utils/common/branchpred.h"
 #include "mcs_decimal.h"
-#include "treenode.h"
 #include "exceptclasses.h"
+#include "dataconvert.h"
 
 namespace datatypes
 {
@@ -48,16 +49,16 @@ namespace datatypes
     template<typename BinaryOperation,
         typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void addSubtractExecute(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r,
-        execplan::IDB_Decimal& result,
+    void addSubtractExecute(const VDecimal& l,
+        const VDecimal& r,
+        VDecimal& result,
         BinaryOperation op,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
     {
-        int128_t lValue = Decimal::isWideDecimalType(l.precision)
+        int128_t lValue = Decimal::isWideDecimalTypeByPrecision(l.precision)
             ? l.s128Value : l.value;
-        int128_t rValue = Decimal::isWideDecimalType(r.precision)
+        int128_t rValue = Decimal::isWideDecimalTypeByPrecision(r.precision)
             ? r.s128Value : r.value;
 
         if (result.scale == l.scale && result.scale == r.scale)
@@ -108,15 +109,15 @@ namespace datatypes
 
     template<typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void divisionExecute(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r,
-        execplan::IDB_Decimal& result,
+    void divisionExecute(const VDecimal& l,
+        const VDecimal& r,
+        VDecimal& result,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
     {
-        int128_t lValue = Decimal::isWideDecimalType(l.precision)
+        int128_t lValue = Decimal::isWideDecimalTypeByPrecision(l.precision)
             ? l.s128Value : l.value;
-        int128_t rValue = Decimal::isWideDecimalType(r.precision)
+        int128_t rValue = Decimal::isWideDecimalTypeByPrecision(r.precision)
             ? r.s128Value : r.value;
 
         opOverflowCheck(lValue, rValue);
@@ -147,15 +148,15 @@ namespace datatypes
 
     template<typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void multiplicationExecute(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r,
-        execplan::IDB_Decimal& result,
+    void multiplicationExecute(const VDecimal& l,
+        const VDecimal& r,
+        VDecimal& result,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
     {
-        int128_t lValue = Decimal::isWideDecimalType(l.precision)
+        int128_t lValue = Decimal::isWideDecimalTypeByPrecision(l.precision)
             ? l.s128Value : l.value;
-        int128_t rValue = Decimal::isWideDecimalType(r.precision)
+        int128_t rValue = Decimal::isWideDecimalTypeByPrecision(r.precision)
             ? r.s128Value : r.value;
 
         if (lValue == 0 || rValue == 0)
@@ -194,36 +195,21 @@ namespace datatypes
         }
     }
 
-    std::string Decimal::toString(execplan::IDB_Decimal& value)
+    std::string Decimal::toString(VDecimal& value)
     {
-        char buf[utils::MAXLENGTH16BYTES];
+        char buf[Decimal::MAXLENGTH16BYTES];
         dataconvert::DataConvert::decimalToString(&value.s128Value,
-            value.scale, buf, sizeof(buf),
-            execplan::CalpontSystemCatalog::DECIMAL);
+            value.scale, buf, (uint8_t) sizeof(buf),
+            datatypes::SystemCatalog::DECIMAL);
         return std::string(buf);
     }
 
-    std::string Decimal::toString(const execplan::IDB_Decimal& value)
+    std::string Decimal::toString(const VDecimal& value)
     {
-        return toString(const_cast<execplan::IDB_Decimal&>(value));
+        return toString(const_cast<VDecimal&>(value));
     }
 
-    // Compare perf with f(string&, ColTypeAlias&, int128_t&)
-    int128_t Decimal::int128FromString(const std::string& value,
-                                       ColTypeAlias& colType)
-    {
-        int128_t result = 0;
-        bool pushWarning = false;
-        bool noRoundup = false;
-        dataconvert::number_int_value<int128_t>(value,
-                                      colType,
-                                      pushWarning,
-                                      noRoundup,
-                                      result);
-        return result;
-    }
-
-    int Decimal::compare(const execplan::IDB_Decimal& l, const execplan::IDB_Decimal& r)
+    int Decimal::compare(const VDecimal& l, const VDecimal& r)
     {
         int128_t divisorL, divisorR;
         getScaleDivisor(divisorL, l.scale);
@@ -270,8 +256,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::addition<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::addition<int128_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         std::plus<int128_t> add;
         NoOverflowCheck noOverflowCheck;
@@ -280,8 +266,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::addition<int128_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::addition<int128_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         std::plus<int128_t> add;
         AdditionOverflowCheck overflowCheck;
@@ -291,8 +277,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::addition<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::addition<int64_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         if (result.scale == l.scale && result.scale == r.scale)
         {
@@ -321,8 +307,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::addition<int64_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::addition<int64_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         AdditionOverflowCheck additionOverflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -356,8 +342,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::subtraction<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::subtraction<int128_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         std::minus<int128_t> subtract;
         NoOverflowCheck noOverflowCheck;
@@ -366,8 +352,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::subtraction<int128_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::subtraction<int128_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         std::minus<int128_t> subtract;
         SubtractionOverflowCheck overflowCheck;
@@ -377,8 +363,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::subtraction<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::subtraction<int64_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         if (result.scale == l.scale && result.scale == r.scale)
         {
@@ -407,8 +393,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::subtraction<int64_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::subtraction<int64_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         SubtractionOverflowCheck subtractionOverflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -442,8 +428,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::division<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::division<int128_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         NoOverflowCheck noOverflowCheck;
         divisionExecute(l, r, result, noOverflowCheck, noOverflowCheck);
@@ -451,8 +437,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::division<int128_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::division<int128_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         DivisionOverflowCheck overflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -462,8 +448,8 @@ namespace datatypes
     // no overflow check
     // We rely on the zero check from ArithmeticOperator::execute
     template<>
-    void Decimal::division<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::division<int64_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         if (result.scale >= l.scale - r.scale)
             result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
@@ -477,8 +463,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::division<int64_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::division<int64_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         DivisionOverflowCheck divisionOverflowCheck;
 
@@ -497,8 +483,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::multiplication<int128_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::multiplication<int128_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         MultiplicationNoOverflowCheck noOverflowCheck;
         multiplicationExecute(l, r, result, noOverflowCheck, noOverflowCheck);
@@ -506,8 +492,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::multiplication<int128_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::multiplication<int128_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         MultiplicationOverflowCheck mulOverflowCheck;
         multiplicationExecute(l, r, result, mulOverflowCheck, mulOverflowCheck);
@@ -515,8 +501,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::multiplication<int64_t, false>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::multiplication<int64_t, false>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         if (result.scale >= l.scale + r.scale)
             result.value = l.value * r.value * mcs_pow_10[result.scale - (l.scale + r.scale)];
@@ -528,8 +514,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::multiplication<int64_t, true>(const execplan::IDB_Decimal& l,
-        const execplan::IDB_Decimal& r, execplan::IDB_Decimal& result)
+    void Decimal::multiplication<int64_t, true>(const VDecimal& l,
+        const VDecimal& r, VDecimal& result)
     {
         MultiplicationOverflowCheck mulOverflowCheck;
 

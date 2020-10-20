@@ -29,51 +29,9 @@ namespace utils
     const uint64_t BINARYNULLVALUEHIGH = 0x8000000000000000ULL;
     const uint64_t BINARYEMPTYVALUELOW = 1ULL;
     const uint64_t BINARYEMPTYVALUEHIGH = 0x8000000000000000ULL;
-    const uint8_t MAXLENGTH16BYTES = 42;
-    const uint8_t MAXLENGTH8BYTES = 23;
 
     const int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
     const int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
-
-    inline bool isWideDecimalNullValue(const int128_t& val)
-    {
-        const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
-        return (ptr[0] == BINARYNULLVALUELOW && ptr[1] == BINARYNULLVALUEHIGH);
-    }
-
-    inline bool isWideDecimalEmptyValue(const int128_t& val)
-    {
-        const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
-        return (ptr[0] == BINARYEMPTYVALUELOW && ptr[1] == BINARYEMPTYVALUEHIGH);
-    }
-
-    inline void setWideDecimalNullValue(int128_t& val)
-    {
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
-        ptr[0] = BINARYNULLVALUELOW;
-        ptr[1] = BINARYNULLVALUEHIGH;
-    }
-
-    inline void setWideDecimalEmptyValue(int128_t& val)
-    {
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
-        ptr[0] = BINARYEMPTYVALUELOW;
-        ptr[1] = BINARYEMPTYVALUEHIGH;
-    }
-
-    inline void setWideDecimalNullValue(int128_t* val)
-    {
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
-        ptr[0] = BINARYNULLVALUELOW;
-        ptr[1] = BINARYNULLVALUEHIGH;
-    }
-
-    inline void setWideDecimalEmptyValue(int128_t* val)
-    {
-        uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
-        ptr[0] = BINARYEMPTYVALUELOW;
-        ptr[1] = BINARYEMPTYVALUEHIGH;
-    }
 
     inline void int128Max(int128_t& val)
     {

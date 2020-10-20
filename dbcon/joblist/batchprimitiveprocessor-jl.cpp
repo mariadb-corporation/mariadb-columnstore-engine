@@ -773,7 +773,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
             if (UNLIKELY(*hasWideColumn))
             {
                 idbassert(colType.colWidth > utils::MAXLEGACYWIDTH);
-                if (LIKELY(datatypes::Decimal::isWideDecimalType(colType)))
+                if (LIKELY(colType.isWideDecimalType()))
                 {
                     in >> tmp128;
                     *min = tmp128;

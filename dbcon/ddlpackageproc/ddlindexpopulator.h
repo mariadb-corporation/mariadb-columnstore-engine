@@ -291,7 +291,7 @@ private:
             : DDLPackageProcessor(), fType(ctype) {}
         boost::any operator()(execplan::CalpontSystemCatalog::ColType& ctype)
         {
-            return getNullValueForType(fType);
+            return ctype.getNullValueForType();
         }
         const execplan::CalpontSystemCatalog::ColType& fType;
     };

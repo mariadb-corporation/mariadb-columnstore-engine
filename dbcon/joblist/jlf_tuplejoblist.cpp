@@ -4072,7 +4072,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
     // get unioned column types
     for (uint64_t j = 0; j < colCount; ++j)
     {
-        CalpontSystemCatalog::ColType colType = DataConvert::convertUnionColType(queryColTypes[j]);
+        CalpontSystemCatalog::ColType colType = CalpontSystemCatalog::ColType::convertUnionColType(queryColTypes[j]);
         types.push_back(colType.colDataType);
         csNums.push_back(colType.charsetNumber);
         scale.push_back(colType.scale);
