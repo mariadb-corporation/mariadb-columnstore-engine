@@ -395,25 +395,15 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
 
         if (regex)
         {
-#ifdef POSIX_REGEX
-            bool ret = regexec(regex.get(), v.c_str(), 0, NULL, 0) == 0;
-#else
-            bool ret = boost::regex_match(v.c_str(), *regex);
-#endif
+            bool ret = regex->isLike(v.c_str());
             return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
         }
         else
         {
-#ifdef POSIX_REGEX
-            regex_t regex;
             std::string str = dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull));
-            regcomp(&regex, str.c_str(), REG_NOSUB | REG_EXTENDED);
-            bool ret = regexec(&regex, v.c_str(), 0, NULL, 0) == 0;
-            regfree(&regex);
-#else
-            boost::regex regex(dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull)));
-            bool ret = boost::regex_match(v.c_str(), regex);
-#endif
+	    IDB_Regex regex;
+	    regex.compile(str.c_str());
+	    bool ret = regex.isLike(v.c_str());
             return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
         }
     }

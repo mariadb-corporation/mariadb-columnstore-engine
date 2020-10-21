@@ -25,12 +25,7 @@
 #include <string>
 using namespace std;
 
-#ifdef __linux__
-#include <regex.h>
-#else
-#include <boost/regex.hpp>
-using namespace boost;
-#endif
+#include "regex-port.h"
 
 #include "functor_bool.h"
 #include "functioncolumn.h"
@@ -136,6 +131,19 @@ inline bool getBool(rowgroup::Row& row,
         }
     }
 
+    if (pm[1]->data()->isConstant())
+    {
+        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(pm[1]->data());
+        if (cc) {
+            if (!cc->directRegex())
+	    {
+                cc->constructRegex();
+	    }
+            return cc->directRegex()->matchSubstring(expr.c_str());
+	}
+    }
+    // XXX Pattern is often constant, and we should prefer plans where
+    //     pattern changes less often than expression.
     switch (pm[1]->data()->resultType().colDataType)
     {
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -214,25 +222,14 @@ inline bool getBool(rowgroup::Row& row,
         }
     }
 
-
-#ifdef __linux__
-    regex_t    re;
-
-    regcomp(&re, pattern.c_str(), REG_EXTENDED | REG_NOSUB );
-
-    int res = regexec(&re, expr.c_str(), 0, NULL, 0);
-    regfree(&re);
-
-    if (res == 0)
-        return true;
-    else
-        return false;
-
-#else
-    regex pat(pattern.c_str());
-    return regex_search(expr.c_str(), pat);
-#endif
-
+    // XXX This thing does regex compilation on every call, even for constant patterns.
+    //     This means that for "SELECT ... WHERE a RLiKE b" or "SELECT ... WHERE REGEXP(a, b)"
+    //     we add non-negligible overhead of regex compilation.
+    //     It is especially pronounced for Google's re2 library. For POSIX regexes the overhead is
+    //     100%, approximately: "a RLIKE 'bubu'" executes about three times slower than "a LIKE '%bubu%'".
+    utils::mcs_regex_t re;
+    re.compile(pattern.c_str());
+    return re.matchSubstring(expr.c_str());
 
 }
 

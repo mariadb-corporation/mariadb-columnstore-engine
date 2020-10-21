@@ -172,20 +172,16 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
     }
 }
 
-bool isLike(const char* val, const idb_regex_t* regex)
+bool isLike(const char* val, const mcs_regex_t* regex)
 {
     if (!regex)
         throw runtime_error("PrimitiveProcessor::isLike: Missing regular expression for LIKE operator");
 
-#ifdef POSIX_REGEX
-    return (regexec(&regex->regex, val, 0, NULL, 0) == 0);
-#else
-    return regex_match(val, regex->regex);
-#endif
+    return regex->isLike(val);
 }
 
 //@bug 1828  Like must be a string compare.
-inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, const idb_regex_t* regex)
+inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, const mcs_regex_t* regex)
 {
     switch (COP)
     {
@@ -229,7 +225,7 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
 }
 
 #if 0
-inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, const idb_regex_t* regex)
+inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, const mcs_regex_t* regex)
 {
     switch (COP)
     {
@@ -636,7 +632,7 @@ inline string fixChar(int64_t intval)
     return string(chval);
 }
 
-inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const mcs_regex_t& regex, bool isNull = false)
 {
     if (COMPARE_NIL == COP) return false;
 
@@ -662,7 +658,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR ||
                type == CalpontSystemCatalog::TEXT) && !isNull )
     {
-        if (!regex.used && !rf)
+        if (regex.notInitialized() && !rf)
         {
             // MCOL-1246 Trim trailing whitespace for matching, but not for
             // regex
@@ -699,7 +695,7 @@ inline bool colCompare(int128_t val1, int128_t val2, uint8_t COP, uint8_t rf, in
         return false;
 }
 
-inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const mcs_regex_t& regex, bool isNull = false)
 {
     // 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
 
@@ -1229,9 +1225,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
     uint16_t* ridArray = 0;
     uint8_t* in8 = reinterpret_cast<uint8_t*>(in);
     const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
-    idb_regex_t placeholderRegex;
-
-    placeholderRegex.used = false;
+    mcs_regex_t placeholderRegex;
 
     if (in->NVALS > 0)
         ridArray = reinterpret_cast<uint16_t*>(&in8[sizeof(NewColRequestHeader) +
@@ -1288,14 +1282,14 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
     uint8_t* cops = NULL;
     uint8_t* rfs = NULL;
 
-    scoped_array<idb_regex_t> std_regex;
-    idb_regex_t* regex = NULL;
+    scoped_array<mcs_regex_t> std_regex;
+    mcs_regex_t* regex = NULL;
     uint8_t likeOps = 0;
 
     // no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL)
     {
-        std_regex.reset(new idb_regex_t[in->NOPS]);
+        std_regex.reset(new mcs_regex_t[in->NOPS]);
         regex = &(std_regex[0]);
 
         if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
@@ -1329,8 +1323,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                         uargVals[argIndex] = *reinterpret_cast<const uint64_t*>(args->val);
                         break;
                 }
-
-                regex[argIndex].used = false;
             }
         }
         else
@@ -1390,8 +1382,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
                     ++likeOps;
                 }
-                else
-                    regex[argIndex].used = false;
             }
         }
     }
@@ -1878,7 +1868,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
         ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
     ret->prestored_rfs.reset(new uint8_t[filterCount]);
-    ret->prestored_regex.reset(new idb_regex_t[filterCount]);
+    ret->prestored_regex.reset(new mcs_regex_t[filterCount]);
 
     /*
     for (unsigned ii = 0; ii < filterCount; ii++)
@@ -1995,7 +1985,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
         }
         else
         {
-            ret->prestored_regex[argIndex].used = false;
+            ret->prestored_regex[argIndex].reset();
         }
 
     }

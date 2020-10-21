@@ -152,6 +152,12 @@ public:
         return new ConstantColumn (*this);
     }
 
+
+    virtual bool isConstant() const
+    {
+        return true;
+    }
+
     /*
      * The serialization interface
      */

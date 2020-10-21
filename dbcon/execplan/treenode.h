@@ -78,11 +78,8 @@ typedef IDB_Decimal CNX_Decimal;
  * @brief IDB_Regex struct
  *
  */
-#ifdef POSIX_REGEX
-typedef regex_t IDB_Regex;
-#else
-typedef boost::regex IDB_Regex;
-#endif
+#include <regex-port.h>
+typedef utils::mcs_regex_t IDB_Regex;
 
 typedef IDB_Regex CNX_Regex;
 
@@ -183,6 +180,15 @@ public:
     virtual void data(const std::string data) = 0;
     virtual const std::string toString() const = 0;
     virtual TreeNode* clone() const = 0;
+
+    /** @brief Tell the world we are constant.
+     *
+     * Right now it allows to detect ConstantColumn to use with Func_regexp. But might be used more widely.
+     */
+    virtual bool isConstant() const
+    {
+        return false;
+    }
 
     /**
      * Interface for serialization
@@ -370,6 +376,16 @@ public:
         return fRegex;
     }
 
+    // direct regex mutator and accessor
+    virtual void directRegex(SP_IDB_Regex regex)
+    {
+        fDirectRegex = regex;
+    }
+    virtual SP_IDB_Regex directRegex() const
+    {
+        return fDirectRegex;
+    }
+
     uint32_t charsetNumber() const
     {
         return fResultType.charsetNumber;
@@ -385,6 +401,7 @@ protected:
     execplan::CalpontSystemCatalog::ColType fResultType; // mapped from mysql data type
     execplan::CalpontSystemCatalog::ColType fOperationType; // operator type, could be different from the result type
     SP_IDB_Regex fRegex;
+    SP_IDB_Regex fDirectRegex;
 
     // double's range is +/-1.7E308 with at least 15 digits of precision
     char tmp[312]; // for conversion use

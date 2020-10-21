@@ -33,15 +33,6 @@
 #include <unordered_set>
 #endif
 
-#ifdef __linux__
-#define POSIX_REGEX
-#endif
-
-#ifdef POSIX_REGEX
-#include <regex.h>
-#else
-#include <boost/regex.hpp>
-#endif
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -51,11 +42,14 @@
 #include "stats.h"
 #include "primproc.h"
 #include "hasher.h"
+#include "regex-port.h"
 
 class PrimTest;
 
 namespace primitives
 {
+
+typedef utils::mcs_regex_t mcs_regex_t;
 
 enum ColumnFilterMode
 {
@@ -104,26 +98,6 @@ typedef std::tr1::unordered_set<int64_t, pcfHasher, pcfEqual> prestored_set_t;
 typedef std::tr1::unordered_set<int128_t, pcfHasher128, pcfEqual128> prestored_set_t_128;
 typedef std::tr1::unordered_set<std::string, utils::Hasher> DictEqualityFilter;
 
-struct idb_regex_t
-{
-#ifdef POSIX_REGEX
-    regex_t regex;
-#else
-    boost::regex regex;
-#endif
-    bool used;
-    idb_regex_t() : used(false) { }
-    ~idb_regex_t()
-    {
-#ifdef POSIX_REGEX
-
-        if (used)
-            regfree(&regex);
-
-#endif
-    }
-};
-
 struct ParsedColumnFilter
 {
     ColumnFilterMode columnFilterMode;
@@ -133,7 +107,7 @@ struct ParsedColumnFilter
     boost::shared_array<uint8_t> prestored_rfs;
     boost::shared_ptr<prestored_set_t> prestored_set;
     boost::shared_ptr<prestored_set_t_128> prestored_set_128;
-    boost::shared_array<idb_regex_t> prestored_regex;
+    boost::shared_array<mcs_regex_t> prestored_regex;
     uint8_t  likeOps;
 
     ParsedColumnFilter();
@@ -297,10 +271,10 @@ public:
 
 
 
-    static int convertToRegexp(idb_regex_t* regex, const p_DataValue* str);
+    static int convertToRegexp(mcs_regex_t* regex, const p_DataValue* str);
     inline static bool isEscapedChar(char c);
-    boost::shared_array<idb_regex_t> makeLikeFilter(const DictFilterElement* inputMsg, uint32_t count);
-    void setLikeFilter(boost::shared_array<idb_regex_t> filter)
+    boost::shared_array<mcs_regex_t> makeLikeFilter(const DictFilterElement* inputMsg, uint32_t count);
+    void setLikeFilter(boost::shared_array<mcs_regex_t> filter)
     {
         parsedLikeFilter = filter;
     }
@@ -320,7 +294,7 @@ private:
 
     void nextSig(int NVALS, const PrimToken* tokens, p_DataValue* ret,
                  uint8_t outputFlags = 0, bool oldGetSigBehavior = false, bool skipNulls = false) throw();
-    bool isLike(const p_DataValue* dict, const idb_regex_t* arg) throw();
+    bool isLike(const p_DataValue* dict, const mcs_regex_t* arg) throw();
 
 //	void do_sum8(NewColAggResultHeader *out, int64_t val);
 //    void do_unsignedsum8(NewColAggResultHeader *out, int64_t val);
@@ -333,7 +307,7 @@ private:
     bool logicalBlockMode;
 
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter;
-    boost::shared_array<idb_regex_t> parsedLikeFilter;
+    boost::shared_array<mcs_regex_t> parsedLikeFilter;
 
     friend class ::PrimTest;
 };

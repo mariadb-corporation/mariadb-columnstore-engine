@@ -17,5 +17,9 @@ add_library(common SHARED ${common_LIB_SRCS})
 
 add_dependencies(common loggingcpp)
 
+if(USE_LIBRE2)
+    add_dependencies(common libre2)
+endif()
+
 install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

@@ -146,7 +146,7 @@ private:
     
     bool hasEqFilter;
     boost::shared_ptr<primitives::DictEqualityFilter> eqFilter;
-    boost::shared_array<primitives::idb_regex_t> likeFilter;
+    boost::shared_array<utils::mcs_regex_t> likeFilter;
     uint8_t eqOp;   // COMPARE_EQ or COMPARE_NE
 
     friend class RTSCommand;

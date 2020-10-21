@@ -110,6 +110,8 @@ ENDIF()
 check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
 check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
 
+INCLUDE(libre2)
+
 SET (PACKAGE columnstore)
 SET (PACKAGE_NAME columnstore)
 SET (PACKAGE_TARNAME columnstore)
@@ -201,7 +203,11 @@ ENDIF()
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${ENGINE_DT_LIB})
+IF(USE_LIBRE2)
+	SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${LIBRE2_LIB} ${ENGINE_DT_LIB})
+ELSE()
+	SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${ENGINE_DT_LIB})
+ENDIF()
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
@@ -369,6 +375,13 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_
 IF (RPM)
     INSTALL(FILES utils/jemalloc/libjemalloc.so.2 DESTINATION ${ENGINE_DATADIR} COMPONENT columnstore-engine)
 ENDIF ()
+
+IF (USE_LIBRE2)
+    # XXX hacky XXX
+    INSTALL(FILES lib/libre2-mcs.so
+	    PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+	    DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+ENDIF()
 
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these

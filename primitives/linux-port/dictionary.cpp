@@ -118,7 +118,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     int rdvOffset;
     uint8_t* niceRet;			// ret cast to a byte-indexed type
 
-    boost::scoped_array<idb_regex_t> regex;
+    boost::scoped_array<mcs_regex_t> regex;
 
     // set up pointers to fields within each structure
 
@@ -151,7 +151,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     if ((h->NVALS > 0 && h->COP1 & COMPARE_LIKE) ||
             (h->NVALS == 2 && h->COP2 & COMPARE_LIKE))
     {
-        regex.reset(new idb_regex_t[h->NVALS]);
+        regex.reset(new mcs_regex_t[h->NVALS]);
 
         for (i = 0, argsOffset = sizeof(TokenByScanRequestHeader); i < h->NVALS; i++)
         {
@@ -513,7 +513,7 @@ inline bool PrimitiveProcessor::isEscapedChar(char c)
 }
 
 //FIXME: copy/pasted to dataconvert.h: refactor
-int PrimitiveProcessor::convertToRegexp(idb_regex_t* regex, const p_DataValue* str)
+int PrimitiveProcessor::convertToRegexp(mcs_regex_t* regex, const p_DataValue* str)
 {
     //In the worst case, every char is quadrupled, plus some leading/trailing cruft...
     char* cBuf = new char[(4 * str->len) + 3];
@@ -591,36 +591,20 @@ int PrimitiveProcessor::convertToRegexp(idb_regex_t* regex, const p_DataValue* s
     cerr << "regexified string is " << cBuf << endl;
 #endif
 
-#ifdef POSIX_REGEX
-    regcomp(&regex->regex, cBuf, REG_NOSUB | REG_EXTENDED);
-#else
-    regex->regex = cBuf;
-#endif
-    regex->used = true;
+    regex->compile(cBuf);
     delete [] cBuf;
     return 0;
 }
 
-bool PrimitiveProcessor::isLike(const p_DataValue* dict, const idb_regex_t* regex) throw()
+bool PrimitiveProcessor::isLike(const p_DataValue* dict, const mcs_regex_t* regex) throw()
 {
-#ifdef POSIX_REGEX
-    char* cBuf = new char[dict->len + 1];
-    memcpy(cBuf, dict->data, dict->len);
-    cBuf[dict->len] = '\0';
-
-    bool ret = (regexec(&regex->regex, cBuf, 0, NULL, 0) == 0);
-    delete [] cBuf;
-    return ret;
-#else
-    /* Note, the passed-in pointers are effectively begin() and end() iterators */
-    return regex_match(dict->data, dict->data + dict->len, regex->regex);
-#endif
+    return regex->isLikeWithLength(dict->data, dict->len);
 }
 
-boost::shared_array<idb_regex_t>
+boost::shared_array<mcs_regex_t>
 PrimitiveProcessor::makeLikeFilter (const DictFilterElement* filterString, uint32_t count)
 {
-    boost::shared_array<idb_regex_t> ret;
+    boost::shared_array<mcs_regex_t> ret;
     uint32_t filterIndex, filterOffset;
     uint8_t* in8 = (uint8_t*) filterString;
     const DictFilterElement* filter;
@@ -633,7 +617,7 @@ PrimitiveProcessor::makeLikeFilter (const DictFilterElement* filterString, uint3
         if (filter->COP & COMPARE_LIKE)
         {
             if (!ret)
-                ret.reset(new idb_regex_t[count]);
+                ret.reset(new mcs_regex_t[count]);
 
             filterptr.len = filter->len;
             filterptr.data = filter->data;
