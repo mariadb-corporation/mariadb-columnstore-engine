@@ -461,6 +461,21 @@ class Decimal
             scale += (scaleAvailable >= MAXSCALEINC4AVG) ? MAXSCALEINC4AVG : scaleAvailable;
             precision += (precisionAvailable >= MAXSCALEINC4AVG) ? MAXSCALEINC4AVG : precisionAvailable;
         }
+
+        /**
+            @brief Returns true if all arguments have a DECIMAL/UDECIMAL type
+        */
+        static inline bool isDecimalOperands(const ColDataTypeAlias resultDataType,
+            const ColDataTypeAlias leftColDataType,
+            const ColDataTypeAlias rightColDataType)
+        {
+            return ((resultDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+                     resultDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
+                    (leftColDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+                     leftColDataType == execplan::CalpontSystemCatalog::UDECIMAL) &&
+                    (rightColDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+                     rightColDataType == execplan::CalpontSystemCatalog::UDECIMAL));
+        }
 };
 
 /**
