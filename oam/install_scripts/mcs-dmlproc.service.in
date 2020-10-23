@@ -8,7 +8,7 @@ After=network.target mcs-writeengineserver.service
 [Service]
 Type=simple
 
-User@DEFAULT_USER@
+User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
