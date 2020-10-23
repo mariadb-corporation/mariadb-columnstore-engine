@@ -76,7 +76,8 @@ if __name__ == '__main__':
         config_root.find('./SystemConfig/DataFilePlugin').text = "libcloudio.so"
         
         cs_config.write('/etc/columnstore/Columnstore.xml.loadbrm')
-        os.replace('/etc/columnstore/Columnstore.xml.loadbrm', '/etc/columnstore/Columnstore.xml')    # atomic replacement
+        os.replace('/etc/columnstore/Columnstore.xml.loadbrm',
+                   '/etc/columnstore/Columnstore.xml')    # atomic replacement
 
     # Single-node on S3
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:

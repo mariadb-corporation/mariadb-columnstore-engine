@@ -77,11 +77,25 @@ void coreSM(int sig)
 int main(int argc, char** argv)
 {
 
+    SMLogging* logger = SMLogging::get();
+    IOCoordinator* ioc = NULL;
+    Cache* cache = NULL;
+    Synchronizer* sync = NULL;
+    Replicator* rep = NULL;
+
     /* Instantiate objects to have them verify config settings before continuing */
-    IOCoordinator* ioc = IOCoordinator::get();
-    Cache* cache = Cache::get();
-    Synchronizer* sync = Synchronizer::get();
-    Replicator* rep = Replicator::get();
+    try
+    {
+        ioc = IOCoordinator::get();
+        cache = Cache::get();
+        sync = Synchronizer::get();
+        rep = Replicator::get();
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_INFO, "StorageManager init FAIL: %s", e.what());
+        return -1;
+    }
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -111,8 +125,6 @@ int main(int argc, char** argv)
     sigaction(SIGUSR2, &sa, NULL);
     
     int ret = 0;
-
-    SMLogging* logger = SMLogging::get();
 
     logger->log(LOG_NOTICE,"StorageManager started.");
 

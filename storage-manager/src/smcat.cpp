@@ -55,30 +55,37 @@ void catFileOffline(const char *filename, int prefixlen)
     uint8_t data[8192];
     off_t offset = 0;
     int read_err, write_err, count;
-    boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
-    
-    do {
-        count = 0;
-        read_err = ioc->read(filename, data, offset, 8192);
-        if (read_err < 0)
-        {
-            int l_errno = errno;
-            cerr << "Error reading " << &filename[prefixlen] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
-        }
+    try
+    {
+        boost::scoped_ptr<IOCoordinator> ioc(IOCoordinator::get());
 
-        while (count < read_err)
-        {
-            write_err = write(STDOUT_FILENO, &data[count], read_err - count);
-            if (write_err < 0)
+        do {
+            count = 0;
+            read_err = ioc->read(filename, data, offset, 8192);
+            if (read_err < 0)
             {
                 int l_errno = errno;
-                cerr << "Error writing to stdout: " << strerror_r(l_errno, (char *) data, 8192) << endl;
-                exit(1);
+                cerr << "Error reading " << &filename[prefixlen] << ": " << strerror_r(l_errno, (char *) data, 8192) << endl;
             }
-            count += write_err;
-        }
-        offset += read_err;
-    } while (read_err > 0);
+
+            while (count < read_err)
+            {
+                write_err = write(STDOUT_FILENO, &data[count], read_err - count);
+                if (write_err < 0)
+                {
+                    int l_errno = errno;
+                    cerr << "Error writing to stdout: " << strerror_r(l_errno, (char *) data, 8192) << endl;
+                    exit(1);
+                }
+                count += write_err;
+            }
+            offset += read_err;
+        } while (read_err > 0);
+    }
+    catch (exception &e)
+    {
+        cerr << "smcat catFileOffline FAIL: " << e.what() << endl;
+    }
 }
 
 void catFileOnline(const char *filename, int prefixlen)
