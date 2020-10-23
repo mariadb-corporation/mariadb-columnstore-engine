@@ -8,8 +8,8 @@ After=network.target mcs-dmlproc.service
 [Service]
 Type=simple
 
-User=mysql
-Group=mysql
+User=@DEFAULT_USER@
+Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 

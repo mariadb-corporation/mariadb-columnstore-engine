@@ -1,0 +1,8 @@
+# MariaDB Columnstore Database Platform Logging
+$FileOwner @DEFAULT_USER@
+$FileGroup @DEFAULT_GROUP@
+local1.=crit -/var/log/mariadb/columnstore/crit.log
+local1.=err -/var/log/mariadb/columnstore/err.log
+local1.=warning -/var/log/mariadb/columnstore/warning.log
+local1.=info -/var/log/mariadb/columnstore/info.log
+local1.=debug -/var/log/mariadb/columnstore/debug.log

@@ -320,10 +320,10 @@ fi
 #change ownership/permissions to be able to run columnstore as non-root
 # TODO: Remove conditional once container dispatcher uses non-root by default
 if [ $(running_systemd) -eq 0 ]; then
-    chown -R mysql:mysql /var/log/mariadb/columnstore
-    chown -R mysql:mysql /etc/columnstore
-    chown -R mysql:mysql /var/lib/columnstore
-    chown -R mysql:mysql /tmp/columnstore_tmp_files
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /var/log/mariadb/columnstore
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /etc/columnstore
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /var/lib/columnstore
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /tmp/columnstore_tmp_files
     chmod 777 /tmp/columnstore_tmp_files
     chmod 777 /dev/shm
 fi
