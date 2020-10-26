@@ -3208,7 +3208,6 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             tableName.schema = table->s->db.str;
             tableName.table = table->s->table_name.str;
             ci->useXbit = false;
-            ci->utf8 = false;
             CalpontSystemCatalog::RIDList colrids;
 
             try
@@ -3252,11 +3251,6 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                 ci->headerLength = (1 + colrids.size() + 7 - 1 - numberNotNull) / 8; //xbit is used
             else
                 ci->headerLength = (1 + colrids.size() + 7 - numberNotNull) / 8;
-
-            if ((strncmp(table->s->table_charset->comment, "UTF-8", 5) == 0) || (strncmp(table->s->table_charset->comment, "utf-8", 5) == 0))
-            {
-                ci->utf8 = true;
-            }
 
             //Log the statement to debug.log
             {
