@@ -37,6 +37,7 @@ using namespace boost;
 #define BYTESTREAM_DLLEXPORT
 #include "bytestream.h"
 #undef BYTESTREAM_DLLEXPORT
+#include "simd_asm.h"
 
 #define DEBUG_DUMP_STRINGS_LESS_THAN 0
 
@@ -239,15 +240,8 @@ ByteStream& ByteStream::operator<<(const uint128_t& o)
 {
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
-
-    __asm__ volatile("movups %1,%0;"
-        :"=m" ( *fCurInPtr ) // output
-        :"v"( o ) // input
-        : "memory" // clobbered
-    );
- 
+    MACRO_VALUE_PTR_128(fCurInPtr, "=m", o, "x", "memory")
     fCurInPtr += 16;
-
     return *this;
 }
 
@@ -255,14 +249,8 @@ ByteStream& ByteStream::operator<<(const int128_t& o)
 {
     if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
         growBuf(fMaxLen + BlockSize);
-
-    __asm__ volatile("movups %1,%0;"
-        :"=m" ( *fCurInPtr ) // output
-        :"v"( o ) // input
-        : "memory" // clobbered
-    );
+    MACRO_VALUE_PTR_128(fCurInPtr, "=m", o, "x", "memory")
     fCurInPtr += 16;
-
     return *this;
 }
 
@@ -449,17 +437,8 @@ void ByteStream::peek(uint128_t& o) const
 
     if (length() < 16)
         throw underflow_error("ByteStream>uint128_t: not enough data in stream to fill datatype");
+    MACRO_PTR_PTR_128(fCurOutPtr, "=m", &o, "m", "xmm0")
 
-    __asm__ volatile("movdqu %0,%%xmm0;"
-        : 
-        :"m"( *fCurOutPtr ) // input
-        :"xmm0" // clobbered
-    );
-    __asm__ volatile("movups %%xmm0,%0;"
-        : "=m" (o)// output
-        : // input
-        : "memory", "xmm0" // clobbered
-    );
 }
 
 void ByteStream::peek(int128_t& o) const
@@ -467,17 +446,7 @@ void ByteStream::peek(int128_t& o) const
 
     if (length() < 16)
         throw underflow_error("ByteStream>int128_t: not enough data in stream to fill datatype");
-
-    __asm__ volatile("movdqu %0,%%xmm0;"
-        : 
-        :"m"( *fCurOutPtr ) // input
-        :"xmm0" // clobbered
-    );
-    __asm__ volatile("movups %%xmm0,%0;"
-        : "=m" (o)// output
-        : // input
-        : "memory", "xmm0" // clobbered
-    );
+    MACRO_PTR_PTR_128(fCurOutPtr, "=m", &o, "m", "xmm0")
 }
 
 void ByteStream::peek(string& s) const

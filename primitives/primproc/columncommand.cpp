@@ -40,6 +40,7 @@ using namespace std;
 #include "primitiveserver.h"
 #include "primproc.h"
 #include "stats.h"
+#include "simd_asm.h"
 
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -231,11 +232,7 @@ void ColumnCommand::loadData()
                 {
                     ByteStream::hexbyte h;
                     utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&h);
-                    __asm__ volatile("movups %1,%0"
-                        :"=m" ( hPtr[idx] ) // output
-                        :"v"( h ) // input
-                        : "memory" // clobbered
-                    );
+                    MACRO_VALUE_PTR_128(hPtr + idx, "=m", h, "x", "memory")
                 }
             }
 
@@ -333,17 +330,11 @@ void ColumnCommand::process_OT_BOTH()
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
                 int128_t* int128Ptr = reinterpret_cast<int128_t*>(&bpp->outputMsg[pos]);
-                __asm__ volatile("movdqu %0,%%xmm0;"
-                    : 
-                    :"m"( *int128Ptr ) // input
-                    :"xmm0" // clobbered
-                );
-                __asm__ volatile("movups %%xmm0,%0;"
-                    : "=m" (wide128Values[i])// output
-                    : // input
-                    : "memory", "xmm0" // clobbered
-                );
- 
+                MACRO_PTR_PTR_128(wide128Values + i,
+                                    "=m",
+                                    int128Ptr,
+                                    "m",
+                                    "xmm0")
                 pos += 16;
             }
 

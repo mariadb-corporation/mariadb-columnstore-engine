@@ -55,6 +55,7 @@
 #include "mcsv1_udaf.h"
 
 #include "branchpred.h"
+#include "simd_asm.h"
 
 #include "../winport/winport.h"
 
@@ -816,16 +817,7 @@ template<>
 inline void Row::setBinaryField_offset<int128_t>(int128_t* value, uint32_t width, uint32_t offset)
 {
     int128_t *dst128Ptr = reinterpret_cast<int128_t*>(&data[offset]);
-    __asm__ volatile("movdqu %0,%%xmm0;"
-        : 
-        :"m"( *value ) // input
-        :"xmm0" // clobbered
-    );
-    __asm__ volatile("movups %%xmm0,%0;"
-        : "=m" (*dst128Ptr)// output
-        : // input
-        : "memory", "xmm0" // clobbered
-    );
+    MACRO_PTR_PTR_128(dst128Ptr, "=m", value, "m", "xmm0")
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
