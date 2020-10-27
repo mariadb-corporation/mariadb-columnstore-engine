@@ -9,8 +9,8 @@ After=network.target mcs-workernode@1.service mcs-workernode@2.service mcs-contr
 [Service]
 Type=simple
 
-User=mysql
-Group=mysql
+User=@DEFAULT_USER@
+Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 

@@ -11,8 +11,8 @@ import shutil
 
 API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
 BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
-USER = 'mysql'
-GROUP = 'mysql'
+USER = '@DEFAULT_USER@'
+GROUP = '@DEFAULT_GROUP@'
 
 
 def get_key():
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
         try:
             if use_systemd:
-                args = ['su', '-s', '/bin/sh', '-c', 'smcat {}'.format(brm), 'mysql']
+                args = ['su', '-s', '/bin/sh', '-c', 'smcat {}'.format(brm), USER]
             else:
                 args = ['smcat', brm]
 
@@ -154,8 +154,8 @@ node {}.'.format(primary_address), file=sys.stderr)
 
     if brm_saves_current:
         if use_systemd:
-            cmd = 'su -s /bin/sh -c "{} {}{}" mysql'.format(loadbrm, dbrmroot, \
-brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
+            cmd = 'su -s /bin/sh -c "{} {}{}" {}'.format(loadbrm, dbrmroot, \
+brm_saves_current.decode("utf-8").replace("BRM_saves", ""), USER)
         else:
             cmd = '{} {}{}'.format(loadbrm, dbrmroot, \
 brm_saves_current.decode("utf-8").replace("BRM_saves", ""))

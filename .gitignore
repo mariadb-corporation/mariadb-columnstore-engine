@@ -130,6 +130,7 @@ oam/etc/ProcessConfig.xml
 oam/install_scripts/columnstore-post-install
 oam/install_scripts/columnstore-pre-uninstall
 oam/install_scripts/columnstore.service
+oam/install_scripts/columnstoreSyslog
 oam/install_scripts/columnstoreSyslogSetup.sh
 oam/install_scripts/columnstore_module_installer.sh
 oam/install_scripts/disable-rep-columnstore.sh
