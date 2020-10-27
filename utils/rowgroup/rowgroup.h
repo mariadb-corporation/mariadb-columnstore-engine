@@ -66,21 +66,58 @@ namespace rowgroup
 const int16_t rgCommonSize = 8192;
 
 /*
-	The format of the data RowGroup points to is currently ...
+    The RowGroup family of classes encapsulate the data moved through the 
+    system.
+    
+     - RowGroup specifies the format of the data primarily (+ some other metadata),
+     - RGData (aka RowGroup Data) encapsulates the data,
+     - Row is used to extract fields from the data and iterate.
+    
+    JobListFactory instantiates the RowGroups to be used by each stage of processing.
+    RGDatas are passed between stages, and their RowGroup instances are used 
+    to interpret them.
+    
+    Historically, row data was just a chunk of contiguous memory, a uint8_t *.
+    Every field had a fixed width, which allowed for quick offset 
+    calculation when assigning or retrieving individual fields.  That worked
+    well for a few years, but at some point it became common to declare
+    all strings as max-length, and to manipulate them in queries.
+    
+    Having fixed-width fields, even for strings, required an unreasonable 
+    amount of memory.  RGData & StringStore were introduced to handle strings 
+    more efficiently, at least with respect to memory.  The row data would
+    still be a uint8_t *, and columns would be fixed-width, but string fields 
+    above a certain width would contain a 'Pointer' that referenced a string in 
+    StringStore.  Strings are stored efficiently in StringStore, so there is 
+    no longer wasted space.
+    
+    StringStore comes with a different inefficiency however.  When a value 
+    is overwritten, the original string cannot be freed independently of the 
+    others, so it continues to use space.  If values are only set once, as is 
+    the typical case, then StringStore is efficient.  When it is necessary 
+    to overwrite string fields, it is possible to configure these classes 
+    to use the original data format so that old string fields do not accumulate 
+    in memory.  Of course, be careful, because blobs and text fields in CS are 
+    declared as 2GB strings!
+    
+    A single RGData contains up to one 'logical block' worth of data,
+    which is 8192 rows.  One RGData is usually treated as one unit of work by
+    PrimProc and the JobSteps, but the rows an RGData contains and how many are 
+    treated as a work unit depend on the operation being done.
+    
+    For example, PrimProc works in units of 8192 contiguous rows 
+    that come from disk.  If half of the rows were filtered out, then the 
+    RGData it passes to the next stage would only contain 4096 rows.
 
-	32-bit - Row Count
-	64-bit - Base Rid
-	16-bit - Status
-	Row*
-
-	where
-	Row =	16-bit rid # relative to the base rid
-			field1
-			field2
-			...
-
-	RowGroup.getRow() points a Row instance to the specified row within the
-	RowGroup data
+    Others build results incrementally before passing them along, such as 
+    group-by.  If one group contains 11111 values, then group-by will 
+    return 2 RGDatas for that group, one with 8192 rows, and one with 2919.
+    
+    Note: There is no synchronization in any of these classes for obvious
+    performance reasons.  Likewise, although it's technically safe for many 
+    readers to access an RGData simultaneously, that would not be an 
+    efficient thing to do.  Try to stick to designs where a single RGData 
+    is used by a single thread at a time.
 */
 
 // VS'08 carps that struct MemChunk is not default copyable because of the zero-length array.
@@ -283,7 +320,6 @@ public:
         inline Pointer() : data(NULL), strings(NULL), userDataStore(NULL) { }
 
         // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
-        // make it explicit to identify things that still might need to be changed
         inline Pointer(uint8_t* d) : data(d), strings(NULL), userDataStore(NULL) { }
         inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s), userDataStore(NULL) { }
         inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) :
@@ -455,7 +491,7 @@ private:
     uint32_t columnCount;
     uint64_t baseRid;
 
-    // the next 6 point to memory owned by RowGroup
+    // Note, the mem behind these pointer fields is owned by RowGroup not Row
     uint32_t* oldOffsets;
     uint32_t* stOffsets;
     uint32_t* offsets;
@@ -1241,8 +1277,8 @@ inline bool Row::equals(const Row& r2) const
 
 /** @brief RowGroup is a lightweight interface for processing packed row data
 
-	A RowGroup is an interface for parsing and/or modifying blocks of data formatted as described at the top of
-	this file.  Its lifecycle can be tied to a producer or consumer's lifecycle.
+	A RowGroup is an interface for parsing and/or modifying row data as described at the top
+	of this file.  Its lifecycle can be tied to a producer or consumer's lifecycle.
 	Only one instance is required to process any number of blocks with a
 	given column configuration.  The column configuration is specified in the
 	constructor, and the block data to process is specified through the
@@ -1413,8 +1449,11 @@ private:
     // Used to map the projected column and rowgroup index
     std::vector<uint32_t> keys;
     std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
-
-    // DECIMAL support.  For non-decimal fields, the values are 0.
+    // For string collation
+    std::vector<uint32_t> charsetNumbers;
+    std::vector<CHARSET_INFO*> charsets;
+    
+    // DECIMAL support.  For non-decimal fields, the valutypeses are 0.
     std::vector<uint32_t> scale;
     std::vector<uint32_t> precision;
 
@@ -1669,9 +1708,6 @@ inline boost::shared_array<bool>& RowGroup::getForceInline()
     return forceInline;
 }
 
-// These type defs look stupid at first, yes.  I want to see compiler errors
-// if/when we change the widths of these parms b/c this fcn will have to be
-// reevaluated.
 inline uint64_t convertToRid(const uint32_t& partitionNum,
                              const uint16_t& segmentNum, const uint8_t& exNum, const uint16_t& blNum)
 {
