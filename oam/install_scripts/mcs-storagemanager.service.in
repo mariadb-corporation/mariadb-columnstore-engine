@@ -4,8 +4,8 @@ Description=storagemanager
 [Service]
 Type=simple
 
-User=mysql
-Group=mysql
+User=@DEFAULT_USER@
+Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 
