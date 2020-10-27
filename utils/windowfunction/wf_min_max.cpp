@@ -83,27 +83,21 @@ boost::shared_ptr<WindowFunctionType> WF_min_max<T>::makeFunction(int id, const 
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
-            if (wc->functionParms()[0]->resultType().colWidth < 16)
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+
+            if (width < datatypes::MAXDECIMALWIDTH)
             {
-                func.reset(new WF_min_max<int64_t>(id, name));
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_min_max<uint64_t>(id, name));
+                else
+                    func.reset(new WF_min_max<int64_t>(id, name));
             }
             else
             {
                 func.reset(new WF_min_max<int128_t>(id, name));
-            }
-            break;
-        }
-        
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (wc->functionParms()[0]->resultType().colWidth < 16)
-            {
-                func.reset(new WF_min_max<uint64_t>(id, name));
-            }
-            else
-            {
-                func.reset(new WF_min_max<uint128_t>(id, name));
             }
             break;
         }

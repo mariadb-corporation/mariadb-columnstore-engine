@@ -329,12 +329,7 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
-                int128_t* int128Ptr = reinterpret_cast<int128_t*>(&bpp->outputMsg[pos]);
-                MACRO_PTR_PTR_128(wide128Values + i,
-                                    "=m",
-                                    int128Ptr,
-                                    "m",
-                                    "xmm0")
+                common::assign128BitPtrPtr(wide128Values + i, &bpp->outputMsg[pos]);
                 pos += 16;
             }
 

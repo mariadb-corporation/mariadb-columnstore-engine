@@ -354,8 +354,7 @@ public:
         return 0.0;   // TODO: Do something here
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
-    inline int128_t getInt128Field(uint32_t colIndex) const;
-    inline uint128_t getUint128Field(uint32_t colIndex) const;
+    inline void getInt128Field(uint32_t colIndex, int128_t& x) const;
 
     inline uint64_t getBaseRid() const;
     inline uint64_t getRid() const;
@@ -386,7 +385,6 @@ public:
     inline void setDecimalField(double val, uint32_t colIndex) { };  // TODO: Do something here
     inline void setLongDoubleField(const long double& val, uint32_t colIndex);
     inline void setInt128Field(const int128_t& val, uint32_t colIndex);
-    inline void setUint128Field(const uint128_t& val, uint32_t colIndex);
 
     inline void setRid(uint64_t rid);
 
@@ -800,6 +798,13 @@ inline void Row::setBinaryField(T* value, uint32_t colIndex)
     *reinterpret_cast<T*>(&data[offsets[colIndex]]) = *value;
 }
 
+template<>
+inline void Row::setBinaryField<int128_t>(int128_t* value, uint32_t colIndex)
+{
+    common::assign128BitPtrPtr(&data[offsets[colIndex]], value);
+}
+
+
 // This method !cannot! be applied to uint8_t* buffers.
 template<typename T>
 inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
@@ -816,8 +821,7 @@ inline void Row::setBinaryField_offset<uint8_t>(uint8_t* value, uint32_t width, 
 template<>
 inline void Row::setBinaryField_offset<int128_t>(int128_t* value, uint32_t width, uint32_t offset)
 {
-    int128_t *dst128Ptr = reinterpret_cast<int128_t*>(&data[offset]);
-    MACRO_PTR_PTR_128(dst128Ptr, "=m", value, "m", "xmm0")
+    common::assign128BitPtrPtr(&data[offset], value);
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
@@ -934,18 +938,9 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]);
 }
 
-// !!! Never ever try to remove inline from this f() b/c it returns
-// non-integral 16 byte DT
-inline int128_t Row::getInt128Field(uint32_t colIndex) const
+inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 {
-    return *((int128_t*) &data[offsets[colIndex]]);
-}
-
-// !!! Never ever try to remove inline from this f() b/c it returns
-// non-integral 16 byte DT
-inline uint128_t Row::getUint128Field(uint32_t colIndex) const
-{
-    return *((uint128_t*) &data[offsets[colIndex]]);
+    common::assign128BitPtrPtr(&x, &data[offsets[colIndex]]);
 }
 
 inline uint64_t Row::getRid() const
@@ -1157,12 +1152,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 {
-    *((int128_t*)&data[offsets[colIndex]]) = val;
-}
-
-inline void Row::setUint128Field(const uint128_t& val, uint32_t colIndex)
-{
-    *((uint128_t*)&data[offsets[colIndex]]) = val;
+    setBinaryField<int128_t>(&(const_cast<int128_t&>(val)), colIndex);
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)

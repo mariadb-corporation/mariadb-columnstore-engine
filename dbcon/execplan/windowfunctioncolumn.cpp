@@ -687,7 +687,8 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 
                 case 16:
                 {
-                    int128_t dec = row.getInt128Field(fInputIndex);
+                    int128_t dec;
+                    row.getInt128Field(fInputIndex, dec);
                     if (dec == datatypes::Decimal128Null)
                         isNull = true;
                     else

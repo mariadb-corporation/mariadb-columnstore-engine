@@ -84,31 +84,23 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
-            if (wc->functionParms()[0]->resultType().colWidth < datatypes::MAXDECIMALWIDTH)
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+            if (width < datatypes::MAXDECIMALWIDTH)
             {
-                func.reset(new WF_lead_lag<int64_t>(id, name));
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_lead_lag<uint64_t>(id, name));
+                else 
+                    func.reset(new WF_lead_lag<int64_t>(id, name));
             }
-            else if (wc->functionParms()[0]->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            else if (width == datatypes::MAXDECIMALWIDTH)
             {
                 func.reset(new WF_lead_lag<int128_t>(id, name));
             }
             break;
         }
-        
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (wc->functionParms()[0]->resultType().colWidth < 16)
-            {
-                func.reset(new WF_lead_lag<uint64_t>(id, name));
-            }
-            else
-            {
-                func.reset(new WF_lead_lag<uint128_t>(id, name));
-            }
-            break;
-        }
-
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {
@@ -319,7 +311,6 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<int64_t>::makeFunction(int, co
 template void WF_lead_lag<int64_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<uint64_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<int128_t>::parseParms(const std::vector<execplan::SRCP>&);
-template void WF_lead_lag<uint128_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<float>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<double>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<string>::parseParms(const std::vector<execplan::SRCP>&);

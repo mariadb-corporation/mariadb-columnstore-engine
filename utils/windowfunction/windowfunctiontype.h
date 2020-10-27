@@ -33,6 +33,7 @@
 #include "rowgroup.h"
 #include "windowframe.h"
 #include "constantcolumn.h"
+#include "mcs_decimal.h"
 
 namespace ordering
 {
@@ -222,13 +223,15 @@ protected:
 
     virtual void* getNullValueByType(int, int);
 
+    // There are two types of getters for integral types and for
+    // DTs wider then 8 bytes.
+    void    getInt128Value(uint64_t i, int128_t& x)
+    {
+        return fRow.getInt128Field(i, x);
+    }
     int64_t getIntValue(uint64_t i)
     {
         return fRow.getIntField(i);
-    }
-    int128_t getInt128Value(uint64_t i)
-    {
-        return fRow.getInt128Field(i);
     }
     double  getDoubleValue(uint64_t i)
     {

@@ -437,7 +437,7 @@ void ByteStream::peek(uint128_t& o) const
 
     if (length() < 16)
         throw underflow_error("ByteStream>uint128_t: not enough data in stream to fill datatype");
-    MACRO_PTR_PTR_128(fCurOutPtr, "=m", &o, "m", "xmm0")
+    common::assign128BitPtrPtr(&o, fCurOutPtr);
 
 }
 
@@ -446,7 +446,7 @@ void ByteStream::peek(int128_t& o) const
 
     if (length() < 16)
         throw underflow_error("ByteStream>int128_t: not enough data in stream to fill datatype");
-    MACRO_PTR_PTR_128(fCurOutPtr, "=m", &o, "m", "xmm0")
+    common::assign128BitPtrPtr(&o, fCurOutPtr);
 }
 
 void ByteStream::peek(string& s) const

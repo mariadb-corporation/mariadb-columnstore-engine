@@ -57,5 +57,21 @@
         );
 
 #endif
+namespace common
+{
+
+template <typename D, typename S>
+inline void assign128BitPtrPtr(D* dst, S* src)
+{
+     MACRO_PTR_PTR_128(dst, "=m", src, "m", "xmm0")
+}
+
+template <typename D, typename S>
+inline void assign128BitPtrPtr(D* dst, const S* src)
+{
+    MACRO_PTR_PTR_128(dst, "=m", src, "m", "xmm0")
+} 
+
+}
 
 #endif

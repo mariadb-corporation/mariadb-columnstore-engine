@@ -260,10 +260,11 @@ class Decimal
             VDecimal& result);
 
         /**
-            @brief Convenience method to put decimal into a std::string.
+            @brief Convenience methods to put decimal into a std::string.
         */
         static std::string toString(VDecimal& value);
         static std::string toString(const VDecimal& value);
+        static std::string toString(const int128_t& value);
 
         /**
             @brief The method detects whether decimal type is wide
