@@ -1343,7 +1343,6 @@ public:
 
 protected:
     void sendError(uint16_t status);
-    void processError(const std::string& ex, uint16_t err, const std::string& src);
 
 private:
     void formatMiniStats();

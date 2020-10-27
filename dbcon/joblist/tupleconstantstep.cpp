@@ -360,20 +360,12 @@ uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
             fEndOfResult = true;
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleConstantStepErr, fErrorInfo, fSessionId);
-
-        while (more)
-            more = fInputDL->next(fInputIterator, &rgDataIn);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("TupleConstantStep next band caught an unknown exception",
-                     tupleConstantStepErr, fErrorInfo, fSessionId);
-
+        handleException(std::current_exception(),
+                        logging::tupleConstantStepErr,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleConstantStep::nextBand()");
         while (more)
             more = fInputDL->next(fInputIterator, &rgDataIn);
 
@@ -445,17 +437,14 @@ void TupleConstantStep::execute()
             }
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), tupleConstantStepErr, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("TupleConstantStep execute caught an unknown exception",
-                     tupleConstantStepErr, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::tupleConstantStepErr,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "TupleConstantStep::execute()");
     }
 
-//	if (!fEndOfResult)
     while (more)
         more = fInputDL->next(fInputIterator, &rgDataIn);
 
@@ -717,8 +706,10 @@ void TupleConstantOnlyStep::run()
         }
         catch (...)
         {
-            catchHandler("TupleConstantOnlyStep run caught an unknown exception",
-                         tupleConstantStepErr, fErrorInfo, fSessionId);
+            handleException(std::current_exception(),
+                            logging::tupleConstantStepErr,
+                            logging::ERR_ALWAYS_CRITICAL,
+                            "TupleConstantOnlyStep::run()");
         }
 
         if (traceOn())
@@ -756,14 +747,12 @@ uint32_t TupleConstantOnlyStep::nextBand(messageqcpp::ByteStream& bs)
             fRowGroupOut.serializeRGData(bs);
             rowCount = fRowGroupOut.getRowCount();
         }
-        catch (const std::exception& ex)
-        {
-            catchHandler(ex.what(), tupleConstantStepErr, fErrorInfo, fSessionId);
-        }
         catch (...)
         {
-            catchHandler("TupleConstantStep next band caught an unknown exception",
-                         tupleConstantStepErr, fErrorInfo, fSessionId);
+            handleException(std::current_exception(),
+                            logging::tupleConstantStepErr,
+                            logging::ERR_ALWAYS_CRITICAL,
+                            "TupleConstantOnlyStep::nextBand()");
         }
 
         fEndOfResult = true;

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2016-2020 MariaDB
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -235,23 +236,14 @@ uint32_t SubAdapterStep::nextBand(messageqcpp::ByteStream& bs)
             rowCount = fRowGroupDeliver.getRowCount();
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
-        while (more)
-            more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        catchHandler("SubAdapterStep next band caught an unknown exception",
-                     ERR_IN_DELIVERY, fErrorInfo, fSessionId);
-
+        handleException(std::current_exception(),
+                        logging::ERR_IN_DELIVERY,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "SubAdapterStep::nextBand()");
         while (more)
             more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
         fEndOfResult = true;
     }
 
@@ -441,14 +433,12 @@ void SubAdapterStep::execute()
             more = fInputDL->next(fInputIterator, &rgDataIn);
         }
     }
-    catch (const std::exception& ex)
-    {
-        catchHandler(ex.what(), ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
-    }
     catch (...)
     {
-        catchHandler("SubAdapterStep execute caught an unknown exception",
-                     ERR_EXEMGR_MALFUNCTION, fErrorInfo, fSessionId);
+        handleException(std::current_exception(),
+                        logging::ERR_EXEMGR_MALFUNCTION,
+                        logging::ERR_ALWAYS_CRITICAL,
+                        "SubAdapterStep::execute()");
     }
 
     if (cancelled())
