@@ -81,6 +81,8 @@ namespace BRM
  * \endcode
  */
 
+constexpr size_t connectTimeoutStep = 50000;
+
 class MasterDBRMNode
 {
 public:
@@ -140,6 +142,13 @@ public:
     {
         return readOnly;
     }
+    /** @brief Connects to the all workers */
+    void connectToWorkers(const size_t connectTimeoutSecs);
+
+    /** @brief Extracts number of workers and connection timeout from the config */
+    void getNumWorkersAndTimeout(size_t& connectTimeoutSecs,
+                                 const std::string& methodName,
+                                 config::Config* config);
 
 private:
 
