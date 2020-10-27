@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2016-2020 MariaDB
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -207,6 +208,60 @@ void JobStep::syslogProcessingTimes (
 bool JobStep::traceOn() const
 {
     return fTraceFlags & execplan::CalpontSelectExecutionPlan::TRACE_LOG;
+}
+
+//////////////////////////////////////////////////////////////////////
+// DESCRIPTION:
+//  The m() rethrows a query runtime exception and handles it across
+//  all steps in a uniform
+//  way.
+// PARAMETERS:
+//  e                   ptr to the exception raised
+//  errorCode           error code to log
+//  critErrorCode       is this a crit IDBExcept or not
+//  methodName          method name to log
+//////////////////////////////////////////////////////////////////////
+void JobStep::handleException(std::exception_ptr e,
+                     const int errorCode,
+                     const unsigned infoErrorCode,
+                     const std::string& methodName)
+{
+    try
+    {
+        std::rethrow_exception(e);
+    }
+    catch (const IDBExcept& iex)
+    {
+        std::cerr << methodName << " caught a internal exception. "
+                  << std::endl;
+
+        catchHandler(methodName + " " + iex.what(), iex.errorCode(),
+                     fErrorInfo, fSessionId, (iex.errorCode() == infoErrorCode
+                                                ? LOG_TYPE_INFO
+                                                : LOG_TYPE_CRITICAL));
+    }
+    catch (boost::exception& e)
+    {
+        std::cerr << methodName << " caught a boost::exception. "
+                  << std::endl;
+        catchHandler(methodName + " caught " + boost::diagnostic_information(e),
+                     errorCode, fErrorInfo, fSessionId);
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << methodName << " caught an exception. " << std::endl;
+        catchHandler(methodName + " caught " + ex.what(), errorCode,
+                     fErrorInfo, fSessionId);
+    }
+    catch (...)
+    {
+        std::ostringstream oss;
+
+        std::cerr << methodName << " caught an unknown exception."
+                  << std::endl;
+        catchHandler(methodName + " caught an unknown exception ",
+                     errorCode, fErrorInfo, fSessionId);
+    }
 }
 
 } //namespace joblist

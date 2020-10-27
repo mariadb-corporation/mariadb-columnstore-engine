@@ -14,6 +14,9 @@
 # The tokens should be separated by one tab character. The error message text may contain
 # any character(s) except tab. The line must end with a single '\n'.
 
+# The id to treat all messages as CRITICAL
+444     ERR_ALWAYS_CRITICAL
+
 # Non support errors 1000 ~ 2000. 
 # The query will go through the optimizer again with some optimization turned off
 1000	ERR_MISS_JOIN	%1% not joined.

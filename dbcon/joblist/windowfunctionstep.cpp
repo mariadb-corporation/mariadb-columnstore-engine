@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (c) 2016-2020 MariaDB
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -228,31 +229,14 @@ uint32_t WindowFunctionStep::nextBand(messageqcpp::ByteStream& bs)
             fEndOfResult = true;
         }
     }
-    catch (IDBExcept& iex)
-    {
-        handleException(iex.what(), iex.errorCode());
-
-        while (more)
-            more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-        fEndOfResult = true;
-    }
-    catch (const std::exception& ex)
-    {
-        handleException(ex.what(), ERR_IN_DELIVERY);
-
-        while (more)
-            more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-        fEndOfResult = true;
-    }
     catch (...)
     {
-        handleException("WindowFunctionStep caught an unknown exception", ERR_IN_DELIVERY);
-
+        handleException(std::current_exception(),
+                        logging::ERR_IN_DELIVERY,
+                        logging::ERR_WF_DATA_SET_TOO_BIG,
+                        "WindowFunctionStep::nextBand()");
         while (more)
             more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
         fEndOfResult = true;
     }
 
@@ -961,17 +945,12 @@ void WindowFunctionStep::execute()
             more = fInputDL->next(fInputIterator, &rgData);
         }
     } // try
-    catch (const IDBExcept& idb)
-    {
-        handleException(idb.what(), idb.errorCode());
-    }
-    catch (const std::exception& ex)
-    {
-        handleException(ex.what(), ERR_READ_INPUT_DATALIST);
-    }
     catch (...)
     {
-        handleException("WindowFunctionStep caught an unknown exception", ERR_READ_INPUT_DATALIST);
+        handleException(std::current_exception(),
+                        logging::ERR_READ_INPUT_DATALIST,
+                        logging::ERR_WF_DATA_SET_TOO_BIG,
+                        "WindowFunctionStep::execute()");
     }
 
     if (traceOn())
@@ -1030,14 +1009,12 @@ void WindowFunctionStep::execute()
         }
 
     }
-    catch (const std::exception& ex)
-    {
-        handleException(ex.what(), ERR_EXECUTE_WINDOW_FUNCTION);
-    }
     catch (...)
     {
-        handleException("WindowFunctionStep caught an unknown exception",
-                        ERR_EXECUTE_WINDOW_FUNCTION);
+        handleException(std::current_exception(),
+                        logging::ERR_EXECUTE_WINDOW_FUNCTION,
+                        logging::ERR_WF_DATA_SET_TOO_BIG,
+                        "WindowFunctionStep::execute()");
     }
 
     fOutputDL->endOfInput();
@@ -1084,20 +1061,14 @@ void WindowFunctionStep::doFunction()
             (*fFunctions[i].get())();
         }
     }
-    catch (IDBExcept& iex)
-    {
-        handleException(iex.what(), iex.errorCode());
-    }
-    catch (const std::exception& ex)
-    {
-        handleException(ex.what(), ERR_EXECUTE_WINDOW_FUNCTION);
-    }
     catch (...)
     {
-        handleException("doFunction caught an unknown exception", ERR_EXECUTE_WINDOW_FUNCTION);
+        handleException(std::current_exception(),
+                        logging::ERR_EXECUTE_WINDOW_FUNCTION,
+                        logging::ERR_WF_DATA_SET_TOO_BIG,
+                        "WindowFunctionStep::doFunction()");
     }
 }
-
 
 void WindowFunctionStep::doPostProcessForSelect()
 {
@@ -1194,13 +1165,6 @@ void WindowFunctionStep::doPostProcessForDml()
 
         fOutputDL->insert(rgData);
     }
-}
-
-
-void WindowFunctionStep::handleException(string errStr, int errCode)
-{
-    cerr << "Exception: " << errStr << endl;
-    catchHandler(errStr, errCode, fErrorInfo, fSessionId);
 }
 
 
