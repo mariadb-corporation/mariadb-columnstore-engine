@@ -343,12 +343,8 @@ namespace joblist
 void wideDecimalOrLongDouble(const uint64_t colProj,
     const CalpontSystemCatalog::ColDataType type,
     const vector<uint32_t>& precisionProj,
-    const vector<uint32_t>& oidsProj,
-    const uint32_t aggKey,
     const vector<uint32_t>& scaleProj,
     const vector<uint32_t>& width,
-    vector<uint32_t>& oidsAgg,
-    vector<uint32_t>& keysAgg,
     vector<CalpontSystemCatalog::ColDataType>& typeAgg,
     vector<uint32_t>& scaleAgg,
     vector<uint32_t>& precisionAgg,
@@ -358,8 +354,6 @@ void wideDecimalOrLongDouble(const uint64_t colProj,
         || type == CalpontSystemCatalog::UDECIMAL)
         && datatypes::Decimal::isWideDecimalType(precisionProj[colProj]))
     {
-        oidsAgg.push_back(oidsProj[colProj]);
-        keysAgg.push_back(aggKey);
         typeAgg.push_back(type);
         scaleAgg.push_back(scaleProj[colProj]);
         precisionAgg.push_back(precisionProj[colProj]);
@@ -367,8 +361,6 @@ void wideDecimalOrLongDouble(const uint64_t colProj,
     }
     else
     {
-        oidsAgg.push_back(oidsProj[colProj]);
-        keysAgg.push_back(aggKey);
         typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
         scaleAgg.push_back(0);
         precisionAgg.push_back(-1);
@@ -782,29 +774,38 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
     if (jobInfo.havingStep)
     {
         retColCount = jobInfo.returnedColVec.size();
+
         idbassert(jobInfo.returnedColVec.size() == jobInfo.nonConstCols.size());
-        for (auto& rc : jobInfo.nonConstCols)
+
+        for (size_t i = 0; i < jobInfo.nonConstCols.size() &&
+             scaleIter != scale.end(); i++)
         {
-            auto& colType = rc->resultType();
+            const auto& colType = jobInfo.nonConstCols[i]->resultType();
+
             if (datatypes::Decimal::isWideDecimalType(colType))
             {
                 *scaleIter = colType.scale;
                 *precisionIter = colType.precision;
             }
+
             scaleIter++; precisionIter++;
         }
     }
     else
     {
         retColCount = jobInfo.nonConstDelCols.size();
-        for (auto& rc : jobInfo.nonConstDelCols)
+
+        for (size_t i = 0; i < jobInfo.nonConstDelCols.size() &&
+             scaleIter != scale.end(); i++)
         {
-            auto& colType = rc->resultType();
+            const auto& colType = jobInfo.nonConstDelCols[i]->resultType();
+
             if (datatypes::Decimal::isWideDecimalType(colType))
             {
                 *scaleIter = colType.scale;
                 *precisionIter = colType.precision;
             }
+
             scaleIter++; precisionIter++;
         }
     }
@@ -1380,10 +1381,13 @@ void TupleAggregateStep::prep1PhaseAggregate(
                     cerr << "prep1PhaseAggregate: " << emsg << endl;
                     throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                 }
+
                 wideDecimalOrLongDouble(colProj, typeProj[colProj],
-                    precisionProj, oidsProj, key, scaleProj, width,
-                    oidsAgg, keysAgg, typeAgg, scaleAgg,
-                    precisionAgg, widthAgg);
+                    precisionProj, scaleProj, width,
+                    typeAgg, scaleAgg, precisionAgg, widthAgg);
+
+                oidsAgg.push_back(oidsProj[colProj]);
+                keysAgg.push_back(key);
                 csNumAgg.push_back(csNumProj[colProj]);
             }
             break;
@@ -3205,10 +3209,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         cerr << "prep2PhasesAggregate: " << emsg << endl;
                         throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                     }
+
                     wideDecimalOrLongDouble(colProj, typeProj[colProj],
-                        precisionProj, oidsProj, aggKey, scaleProj, width,
-                        oidsAggPm, keysAggPm, typeAggPm, scaleAggPm,
-                        precisionAggPm, widthAggPm);
+                        precisionProj, scaleProj, width,
+                        typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+
+                    oidsAggPm.push_back(oidsProj[colProj]);
+                    keysAggPm.push_back(aggKey);
                     csNumAggPm.push_back(8);
                     colAggPm++;
                 }
@@ -3493,9 +3500,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         if (aggOp == ROWAGG_SUM)
                         {
                             wideDecimalOrLongDouble(colPm, typeProj[colPm],
-                                precisionProj, oidsProj, retKey, scaleProj, widthAggPm,
-                                oidsAggUm, keysAggUm, typeAggUm, scaleAggUm,
-                                precisionAggUm, widthAggUm);
+                                precisionProj, scaleProj, widthAggPm,
+                                typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+
+                            oidsAggUm.push_back(oidsProj[colPm]);
+                            keysAggUm.push_back(retKey);
                             csNumAggUm.push_back(8);
                         }
                         else
