@@ -259,7 +259,6 @@ struct cal_connection_info
         filePtr(0),
         headerLength(0),
         useXbit(false),
-        utf8(false),
         useCpimport(1),
         delimiter('\7'),
         affectedRows(0)
@@ -327,7 +326,6 @@ struct cal_connection_info
     FILE* filePtr;
     uint8_t headerLength;
     bool useXbit;
-    bool utf8;
     uint8_t useCpimport;
     char delimiter;
     char enclosed_by;
