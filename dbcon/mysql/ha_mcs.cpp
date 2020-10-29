@@ -28,7 +28,7 @@
 #include "ha_mcs_version.h"
 
 #ifndef COLUMNSTORE_MATURITY
-#define COLUMNSTORE_MATURITY MariaDB_PLUGIN_MATURITY_GAMMA
+#define COLUMNSTORE_MATURITY MariaDB_PLUGIN_MATURITY_STABLE
 #endif
 
 #define CACHE_PREFIX "#cache#"
