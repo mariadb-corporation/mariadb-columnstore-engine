@@ -544,8 +544,9 @@ Row::Row(const Row& r) : columnCount(r.columnCount), baseRid(r.baseRid),
     offsets(r.offsets), colWidths(r.colWidths), types(r.types), 
     charsetNumbers(r.charsetNumbers), charsets(r.charsets),
     data(r.data), scale(r.scale), precision(r.precision), strings(r.strings),
-    useStringTable(r.useStringTable), hasCollation(r.hasCollation), hasLongStringField(r.hasLongStringField),
-    sTableThreshold(r.sTableThreshold), forceInline(r.forceInline), userDataStore(NULL)
+    useStringTable(r.useStringTable), hasCollation(r.hasCollation),
+    hasLongStringField(r.hasLongStringField), sTableThreshold(r.sTableThreshold),
+    forceInline(r.forceInline), userDataStore(NULL)
 { }
 
 Row::~Row() { }
@@ -1149,7 +1150,7 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
 }
 
 RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
-    useStringTable(true), hasLongStringField(false), sTableThreshold(20)
+    useStringTable(true), hasCollation(false), hasLongStringField(false), sTableThreshold(20)
 {
     // 1024 is too generous to waste.
     oldOffsets.reserve(10);
@@ -1191,6 +1192,7 @@ RowGroup::RowGroup(uint32_t colCount,
     stOffsets.resize(columnCount + 1);
     stOffsets[0] = 2;  // 2-byte rid
     hasLongStringField = false;
+    hasCollation = false;
 
     for (i = 0; i < columnCount; i++)
     {
@@ -1226,8 +1228,8 @@ RowGroup::RowGroup(const RowGroup& r) :
     oids(r.oids), keys(r.keys), types(r.types), charsetNumbers(r.charsetNumbers), 
     charsets(r.charsets), scale(r.scale), precision(r.precision),
     rgData(r.rgData), strings(r.strings), useStringTable(r.useStringTable),
-    hasLongStringField(r.hasLongStringField), sTableThreshold(r.sTableThreshold),
-    forceInline(r.forceInline)
+    hasCollation(r.hasCollation), hasLongStringField(r.hasLongStringField),
+    sTableThreshold(r.sTableThreshold), forceInline(r.forceInline)
 {
     //stOffsets and oldOffsets are sometimes empty...
     //offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
@@ -1299,6 +1301,7 @@ void RowGroup::serialize(ByteStream& bs) const
     serializeInlineVector<uint32_t>(bs, scale);
     serializeInlineVector<uint32_t>(bs, precision);
     bs << (uint8_t) useStringTable;
+    bs << (uint8_t) hasCollation;
     bs << (uint8_t) hasLongStringField;
     bs << sTableThreshold;
     bs.append((uint8_t*) &forceInline[0], sizeof(bool) * columnCount);
@@ -1320,6 +1323,8 @@ void RowGroup::deserialize(ByteStream& bs)
     deserializeInlineVector<uint32_t>(bs, precision);
     bs >> tmp8;
     useStringTable = (bool) tmp8;
+    bs >> tmp8;
+    hasCollation = (bool) tmp8;
     bs >> tmp8;
     hasLongStringField = (bool) tmp8;
     bs >> sTableThreshold;
@@ -1551,6 +1556,7 @@ RowGroup& RowGroup::operator+=(const RowGroup& rhs)
 
     hasLongStringField = rhs.hasLongStringField || hasLongStringField;
     useStringTable = rhs.useStringTable || useStringTable;
+    hasCollation = rhs.hasCollation || hasCollation;
     offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
 
     return *this;
@@ -1791,13 +1797,22 @@ RowGroup RowGroup::truncate(uint32_t cols)
     memcpy(ret.forceInline.get(), forceInline.get(), cols * sizeof(bool));
 
     ret.hasLongStringField = false;
+    ret.hasCollation = false;
 
-    for (uint32_t i = 0; i < columnCount; i++)
+    for (uint32_t i = 0; i < columnCount &&
+         (!ret.hasLongStringField || !ret.hasCollation); i++)
     {
         if (colWidths[i] >= sTableThreshold && !forceInline[i])
         {
             ret.hasLongStringField = true;
-            break;
+        }
+
+        execplan::CalpontSystemCatalog::ColDataType type = types[i];
+        if ((type == execplan::CalpontSystemCatalog::CHAR && (colWidths[i] > 1)) ||
+            type == execplan::CalpontSystemCatalog::VARCHAR ||
+            type == execplan::CalpontSystemCatalog::TEXT)
+        {
+            ret.hasCollation = true;
         }
     }
 
