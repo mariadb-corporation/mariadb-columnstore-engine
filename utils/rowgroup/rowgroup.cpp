@@ -1202,9 +1202,9 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
-            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(columnType, colWidths[col])))
             {
-                if (getBinaryField<int128_t>(col) != r2.getBinaryField<int128_t>(col))
+                if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
                     return false;
             }
             else if (getUintField(col) != r2.getUintField(col))
@@ -1216,6 +1216,7 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
 
     return true;
 }
+
 bool Row::equals(const Row& r2, uint32_t lastCol) const
 {
     // This check fires with empty r2 only.
@@ -1260,9 +1261,9 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
-            else if (UNLIKELY(execplan::isDecimal(columnType)))
+            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(columnType, colWidths[col])))
             {
-                if (getBinaryField<int128_t>(col) != r2.getBinaryField<int128_t>(col))
+                if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
                     return false;
             }
             else if (getUintField(col) != r2.getUintField(col))
@@ -1646,8 +1647,8 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
             // WIP this doesn't look right b/c we can pushdown colType
             // Migrate to offset based methods here
             // code precision 2 width convertor
-            else if (UNLIKELY(execplan::isDecimal(in.getColTypes()[i])
-                && in.getColumnWidth(i) == 16))
+            else if (UNLIKELY(datatypes::Decimal::isWideDecimalType(in.getColTypes()[i],
+                                  in.getColumnWidth(i))))
                     out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16,
                         out->getOffset(mapping[i]));
             else if (in.isUnsigned(i))
