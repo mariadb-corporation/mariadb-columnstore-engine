@@ -30,7 +30,6 @@
 #include "lbidlist.h"
 #include "spinlock.h"
 
-#include "widedecimalutils.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -109,7 +108,7 @@ TupleJoiner::TupleJoiner(
 
     if (smallRG.isUnsigned(smallKeyColumns[0]))
     {
-        if (datatypes::Decimal::isWideDecimalType(
+        if (datatypes::isWideDecimalType(
             smallRG.getColType(smallKeyColumns[0]),
             smallRG.getColumnWidth(smallKeyColumns[0])))
         {
@@ -124,7 +123,7 @@ TupleJoiner::TupleJoiner(
     }
     else
     {
-        if (datatypes::Decimal::isWideDecimalType(
+        if (datatypes::isWideDecimalType(
             smallRG.getColType(smallKeyColumns[0]),
             smallRG.getColumnWidth(smallKeyColumns[0])))
         {
@@ -224,7 +223,7 @@ TupleJoiner::TupleJoiner(
         discreteValues[i] = false;
         if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
-            if (datatypes::Decimal::isWideDecimalType(
+            if (datatypes::isWideDecimalType(
                 smallRG.getColType(smallKeyColumns[i]),
                 smallRG.getColumnWidth(smallKeyColumns[i])))
             {
@@ -239,7 +238,7 @@ TupleJoiner::TupleJoiner(
         }
         else
         {
-            if (datatypes::Decimal::isWideDecimalType(
+            if (datatypes::isWideDecimalType(
                 smallRG.getColType(smallKeyColumns[i]),
                 smallRG.getColumnWidth(smallKeyColumns[i])))
             {
@@ -801,7 +800,7 @@ void TupleJoiner::doneInserting()
                     }
                 }
             }
-            else if (datatypes::Decimal::isWideDecimalType(
+            else if (datatypes::isWideDecimalType(
                      smallRow.getColType(smallKeyColumns[col]),
                      smallRow.getColumnWidth(smallKeyColumns[col])))
             {
@@ -1164,7 +1163,7 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
-            else if (datatypes::Decimal::isWideDecimalType(
+            else if (datatypes::isWideDecimalType(
                      r.getColType(colIdx),
                      r.getColumnWidth(colIdx)))
             {
@@ -1204,7 +1203,7 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
-            else if (datatypes::Decimal::isWideDecimalType(
+            else if (datatypes::isWideDecimalType(
                      r.getColType(colIdx),
                      r.getColumnWidth(colIdx)))
             {
@@ -1744,7 +1743,7 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
         ret->discreteValues[i] = false;
         if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
-            if (datatypes::Decimal::isWideDecimalType(
+            if (datatypes::isWideDecimalType(
                 smallRG.getColType(smallKeyColumns[i]),
                 smallRG.getColumnWidth(smallKeyColumns[i])))
             {
@@ -1759,7 +1758,7 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
         }
         else
         {
-            if (datatypes::Decimal::isWideDecimalType(
+            if (datatypes::isWideDecimalType(
                 smallRG.getColType(smallKeyColumns[i]),
                 smallRG.getColumnWidth(smallKeyColumns[i])))
             {

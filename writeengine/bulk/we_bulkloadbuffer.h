@@ -31,7 +31,6 @@
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 
 namespace WriteEngine
 {

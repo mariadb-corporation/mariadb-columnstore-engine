@@ -47,12 +47,11 @@
 #include <boost/regex.hpp>
 #endif
 
-#include "calpontsystemcatalog.h"
+#include "mcs_datatype.h"
 #include "columnresult.h"
 #include "exceptclasses.h"
 #include "common/branchpred.h"
 
-#include "widedecimalutils.h"
 
 // remove this block if the htonll is defined in library
 #ifdef __linux__
@@ -87,7 +86,7 @@ inline uint64_t uint64ToStr(uint64_t n)
     return htonll(n);
 }
 
-using cscDataType = execplan::CalpontSystemCatalog::ColDataType;
+using cscDataType = datatypes::SystemCatalog::ColDataType;
 
 #if defined(_MSC_VER) && defined(xxxDATACONVERT_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -883,7 +882,8 @@ uint64_t string_to_ull( const std::string& data, bool& bSaturate )
 
 template <typename T>
 void number_int_value(const std::string& data,
-                      const execplan::CalpontSystemCatalog::ColType& ct,
+                      cscDataType typeCode,
+                      const datatypes::SystemCatalog::TypeAttributesStd &ct,
                       bool& pushwarning,
                       bool noRoundup,
                       T& intVal);
@@ -901,7 +901,9 @@ public:
      * @param type the columns data type
      * @param data the columns string representation of it's data
      */
-    EXPORT static boost::any convertColumnData( const execplan::CalpontSystemCatalog::ColType& colType,
+    EXPORT static boost::any convertColumnData(
+            cscDataType typecode,
+            const datatypes::SystemCatalog::TypeAttributesStd& attr,
             const std::string& dataOrig, bool& bSaturate, const std::string& timeZone,
             bool nulFlag = false, bool noRoundup = false, bool isUpdate = false);
 
@@ -1046,7 +1048,6 @@ public:
     EXPORT static bool      isColumnTimeValid( int64_t time );
     EXPORT static bool      isColumnTimeStampValid( int64_t timeStamp );
 
-    EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, cscDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
 
@@ -1083,7 +1084,8 @@ public:
     EXPORT static int64_t timeToInt(const std::string& time);
     EXPORT static int64_t stringToTime (const std::string& data);
     // bug4388, union type conversion
-    EXPORT static execplan::CalpontSystemCatalog::ColType convertUnionColType(std::vector<execplan::CalpontSystemCatalog::ColType>&);
+    EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unionedType,
+                                           const datatypes::SystemCatalog::TypeHolderStd &type);
 };
 
 inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int buflen)

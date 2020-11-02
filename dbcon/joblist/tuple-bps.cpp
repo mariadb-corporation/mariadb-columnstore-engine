@@ -1703,11 +1703,11 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                && (!hasSegmentDirFilter || processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                && (!hasExtentIDFilter || processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                && (!hasMaxFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                     (!fColType.isWideDecimalType() ?
                                       processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
                                       processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : true))
                && (!hasMinFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                     (!fColType.isWideDecimalType() ?
                                       processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
                                       processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : true))
                && (!hasLBIDFilter || processLBIDFilter(emEntry))
@@ -1721,11 +1721,11 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                || (hasSegmentDirFilter && processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                || (hasExtentIDFilter && processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                || (hasMaxFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                    (!fColType.isWideDecimalType() ?
                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : false))
                || (hasMinFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    (!datatypes::Decimal::isWideDecimalType(fColType) ?
+                                    (!fColType.isWideDecimalType() ?
                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : false))
                || (hasLBIDFilter && processLBIDFilter(emEntry))

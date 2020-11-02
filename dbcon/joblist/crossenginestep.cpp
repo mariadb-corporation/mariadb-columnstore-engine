@@ -46,9 +46,6 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "dataconvert.h"
-using namespace dataconvert;
-
 #include "querytele.h"
 using namespace querytele;
 
@@ -247,7 +244,7 @@ int64_t CrossEngineStep::convertValueNum(
     //                   bool nulFlag,
     //                   bool noRoundup )
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, fTimeZone, false, true, false);
+    boost::any anyVal = ct.convertColumnData(str, pushWarning, fTimeZone, false, true, false);
 
     // Out of range values are treated as NULL as discussed during design review.
     if (pushWarning)

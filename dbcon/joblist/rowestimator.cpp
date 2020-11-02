@@ -224,7 +224,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NGE:
             if (cpStatus == BRM::CP_VALID)
             {
-                if (!datatypes::Decimal::isWideDecimalType(ct))
+                if (!ct.isWideDecimalType())
                     factor = (1.0 * value - min) / (max - min + 1);
                 else
                     factor = ((__float128) value - min) / (max - min + 1);
@@ -236,7 +236,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NGT:
             if (cpStatus == BRM::CP_VALID)
             {
-                if (!datatypes::Decimal::isWideDecimalType(ct))
+                if (!ct.isWideDecimalType())
                     factor = (1.0 * value - min + 1) / (max - min + 1);
                 else
                     factor = ((__float128) value - min + 1) / (max - min + 1);
@@ -248,7 +248,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
         case COMPARE_NLE:
             if (cpStatus == BRM::CP_VALID)
             {
-                if (!datatypes::Decimal::isWideDecimalType(ct))
+                if (!ct.isWideDecimalType())
                     factor = (1.0 * max - value) / (1.0 * max - min + 1);
                 else
                     factor = ((__float128) max - value) / (max - min + 1);
@@ -261,7 +261,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
             if (cpStatus == BRM::CP_VALID)
             {
                 // TODO:  Best way to convert to floating point arithmetic?
-                if (!datatypes::Decimal::isWideDecimalType(ct))
+                if (!ct.isWideDecimalType())
                     factor = (1.0 * max - value + 1) / (max - min + 1);
                 else
                     factor = ((__float128) max - value + 1) / (max - min + 1);
@@ -299,7 +299,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         const uint8_t BOP,
         const uint32_t& rowsInExtent)
 {
-    bool bIsUnsigned = execplan::isUnsigned(ct.colDataType);
+    bool bIsUnsigned = datatypes::isUnsigned(ct.colDataType);
     float factor = 1.0;
     float tempFactor = 1.0;
 
@@ -308,7 +308,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     uint32_t distinctValuesEstimate;
 
     // Adjust values based on column type and estimate the
-    if (!datatypes::Decimal::isWideDecimalType(ct))
+    if (!ct.isWideDecimalType())
     {
         adjustedMin = adjustValue(ct, emEntry.partition.cprange.loVal);
         adjustedMax = adjustValue(ct, emEntry.partition.cprange.hiVal);
@@ -460,7 +460,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         // Get the factor for the individual operation.
         if (bIsUnsigned)
         {
-            if (!datatypes::Decimal::isWideDecimalType(ct))
+            if (!ct.isWideDecimalType())
             {
                 tempFactor = estimateOpFactor<uint64_t>(
                                  adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,
@@ -475,7 +475,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         }
         else
         {
-            if (!datatypes::Decimal::isWideDecimalType(ct))
+            if (!ct.isWideDecimalType())
             {
                 tempFactor = estimateOpFactor<int64_t>(
                                  adjustedMin, adjustedMax, adjustValue(ct, value), op, lcf,

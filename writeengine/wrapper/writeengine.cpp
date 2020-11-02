@@ -58,7 +58,6 @@ using namespace execplan;
 #include "MonitorProcMem.h"
 using namespace idbdatafile;
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 
 #ifdef _MSC_VER
 #define isnan _isnan
@@ -3898,9 +3897,9 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
                 else if (curTuple.data.type() == typeid(int128_t))
                 {
                     // WIP replace with a single call
-                    char buf[utils::MAXLENGTH16BYTES];
+                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                     int128_t val = boost::any_cast<int128_t>(curTuple.data);
-                    dataconvert::DataConvert::decimalToString(&val, 0, buf, utils::MAXLENGTH16BYTES, curColStruct.colDataType);
+                    dataconvert::DataConvert::decimalToString(&val, 0, buf, (uint8_t) sizeof(buf), curColStruct.colDataType);
                     curStr.assign(buf);
                 }
                 else if (curTuple.data.type() == typeid(double))

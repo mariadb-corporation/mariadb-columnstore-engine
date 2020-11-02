@@ -40,7 +40,6 @@
 #include "dataconvert.h"
 #include "exceptclasses.h"
 #include "mcs_decimal.h"
-#include "widedecimalutils.h"
 
 #include "joblisttypes.h"
 

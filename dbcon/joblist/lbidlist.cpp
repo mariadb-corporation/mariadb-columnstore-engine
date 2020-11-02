@@ -28,7 +28,6 @@
 #include "brm.h"
 #include "brmtypes.h"
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 #include "mcs_decimal.h"
 
 #define IS_VERBOSE (fDebug >= 4)
@@ -415,7 +414,7 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
 
             if (mmp->isValid == BRM::CP_INVALID)
             {
-                if (execplan::isCharType(type))
+                if (datatypes::isCharType(type))
                 {
                     if (order_swap(min) < order_swap(mmp->min) ||
                             mmp->min == numeric_limits<int64_t>::max())
@@ -425,7 +424,7 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
                             mmp->max == numeric_limits<int64_t>::min())
                         mmp->max = max;
                 }
-                else if (execplan::isUnsigned(type))
+                else if (datatypes::isUnsigned(type))
                 {
                     if (typeid(T) == typeid(__int128))
                     {
@@ -757,8 +756,8 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     bool scan = true;
     int64_t value = 0;
     __int128 bigValue = 0;
-    bool bIsUnsigned = execplan::isUnsigned(ct.colDataType);
-    bool bIsChar = execplan::isCharType(ct.colDataType);
+    bool bIsUnsigned = datatypes::isUnsigned(ct.colDataType);
+    bool bIsChar = datatypes::isCharType(ct.colDataType);
 
     for (int i = 0; i < NOPS; i++)
     {
@@ -859,7 +858,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
 
         // Should we also check for empty here?
         // TODO MCOL-641
-        if (datatypes::Decimal::isWideDecimalType(ct))
+        if (ct.isWideDecimalType())
         {
             if (isNull(bigValue, ct))
                 continue;

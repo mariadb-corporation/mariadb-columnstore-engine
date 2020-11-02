@@ -55,7 +55,6 @@ namespace bi = boost::interprocess;
 #include "mastersegmenttable.h"
 #include "blocksize.h"
 #include "dataconvert.h"
-#include "widedecimalutils.h"
 #include "mcs_decimal.h"
 #include "oamcache.h"
 #include "IDBDataFile.h"

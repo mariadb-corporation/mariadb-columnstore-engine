@@ -20,8 +20,6 @@ using namespace std;
 
 #include "gtest/gtest.h"
 
-#include "calpontsystemcatalog.h"
-using namespace execplan;
 #include "dataconvert.h"
 using namespace dataconvert;
 #include "joblisttypes.h"
@@ -143,7 +141,8 @@ TEST(DataConvertTest, Strtoll128)
 
 TEST(DataConvertTest, NumberIntValue)
 {
-    CalpontSystemCatalog::ColType ct;
+    datatypes::SystemCatalog::TypeAttributesStd ct;
+
     int128_t res, valMax;
     string data;
     bool noRoundup = false;
@@ -153,7 +152,7 @@ TEST(DataConvertTest, NumberIntValue)
     // tests for signed decimal
     // behaviour of number_int_value for unsigned decimal
     // is similar to the signed case.
-    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType typecode = datatypes::SystemCatalog::DECIMAL;
     // test with decimal(38,0)
     ct.precision = 38;
     ct.scale = 0;
@@ -161,39 +160,39 @@ TEST(DataConvertTest, NumberIntValue)
     //data = "";
     data = "0";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 0);
     EXPECT_FALSE(pushWarning);
     data = "1234";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 1234);
     EXPECT_FALSE(pushWarning);
     data = "12.0";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 12);
     EXPECT_FALSE(pushWarning);
     data = "12.34";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 12);
     EXPECT_TRUE(pushWarning);
     data = "-1234";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -1234);
     EXPECT_FALSE(pushWarning);
     data = "-12.34";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -12);
     EXPECT_TRUE(pushWarning);
     // test max
     data = "99999999999999999999999999999999999999";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -206,7 +205,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -217,12 +216,12 @@ TEST(DataConvertTest, NumberIntValue)
     // test rounding
     data = "12.56";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 13);
     EXPECT_TRUE(pushWarning);
     data = "-12.56";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -13);
     EXPECT_TRUE(pushWarning);
     // test saturation
@@ -230,7 +229,7 @@ TEST(DataConvertTest, NumberIntValue)
     // valMax has 38 9's
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -243,7 +242,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -255,7 +254,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "1.23e37";
     valMax = ((((((((int128_t)123000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 100) + 0;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -266,7 +265,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "1.23e38";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -279,39 +278,39 @@ TEST(DataConvertTest, NumberIntValue)
     ct.scale = 10;
     data = "0";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 0);
     EXPECT_FALSE(pushWarning);
     data = "1234";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 12340000000000);
     EXPECT_FALSE(pushWarning);
     data = "12.0";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 120000000000);
     EXPECT_FALSE(pushWarning);
     data = "12.34";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 123400000000);
     EXPECT_FALSE(pushWarning);
     data = "-1234";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -12340000000000);
     EXPECT_FALSE(pushWarning);
     data = "-12.34";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -123400000000);
     EXPECT_FALSE(pushWarning);
     // test max
     data = "9999999999999999999999999999.9999999999";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -324,7 +323,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -335,12 +334,12 @@ TEST(DataConvertTest, NumberIntValue)
     // test rounding
     data = "12.11111111119";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 121111111112);
     EXPECT_TRUE(pushWarning);
     data = "-12.11111111119";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, -121111111112);
     EXPECT_TRUE(pushWarning);
     // test saturation
@@ -348,7 +347,7 @@ TEST(DataConvertTest, NumberIntValue)
     // valMax has 38 9's
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -361,7 +360,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -373,7 +372,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "1.23e9";
     valMax = ((((int128_t)123000000 * 1000000000) + 0) * 100);
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -384,7 +383,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "1.23e28";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -396,13 +395,13 @@ TEST(DataConvertTest, NumberIntValue)
     ct.scale = 38;
     data = "0";
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     EXPECT_EQ(res, 0);
     EXPECT_FALSE(pushWarning);
     data = "1.234";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -413,7 +412,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "0.123";
     valMax = ((((((((int128_t)123000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 100) + 0;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -425,7 +424,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -437,7 +436,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)123000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 100) + 0;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -449,7 +448,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "0.99999999999999999999999999999999999999";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -462,7 +461,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -474,7 +473,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "0.199999999999999999999999999999999999999";
     valMax = ((((((((int128_t)200000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 100) + 0;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -486,7 +485,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)200000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 100) + 0;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -499,7 +498,7 @@ TEST(DataConvertTest, NumberIntValue)
     // valMax has 38 9's
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -512,7 +511,7 @@ TEST(DataConvertTest, NumberIntValue)
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     valMax = -valMax;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -524,7 +523,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "123e-4";
     valMax = ((((((((int128_t)123000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000 ) + 0) * 10) + 0;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -535,7 +534,7 @@ TEST(DataConvertTest, NumberIntValue)
     data = "123e-2";
     valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
     pushWarning = false;
-    number_int_value(data, ct, pushWarning, noRoundup, res);
+    number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
     b1 = *(reinterpret_cast<const uint64_t*>(&res));
     b2 = *(reinterpret_cast<const uint64_t*>(&res) + 1);
     b3 = *(reinterpret_cast<const uint64_t*>(&valMax));
@@ -547,8 +546,8 @@ TEST(DataConvertTest, NumberIntValue)
 
 TEST(DataConvertTest, DecimalToStringCheckScale0)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::TypeHolderStd ct;
+    ct.colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     string input, expected;
     ct.precision = 38;
@@ -599,8 +598,8 @@ TEST(DataConvertTest, DecimalToStringCheckScale0)
 }
 TEST(DataConvertTest, DecimalToStringCheckScale10)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::TypeHolderStd ct;
+    ct.colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     string input, expected;
     ct.precision = 38;
@@ -670,8 +669,8 @@ TEST(DataConvertTest, DecimalToStringCheckScale10)
 
 TEST(DataConvertTest, DecimalToStringCheckScale38)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::TypeHolderStd ct;
+    ct.colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     string input, expected;
     ct.precision = 38;
@@ -731,8 +730,8 @@ TEST(DataConvertTest, DecimalToStringCheckScale38)
 
 TEST(DataConvertTest, DecimalToStringCheckScale37)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::TypeHolderStd ct;
+    ct.colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     string expected;
     ct.precision = 38;

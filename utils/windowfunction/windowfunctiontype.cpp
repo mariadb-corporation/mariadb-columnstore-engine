@@ -793,7 +793,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
                     break;
 
                 case 16:
-                    utils::setWideDecimalNullValue(int128Null);
+                    datatypes::Decimal::setWideDecimalNullValue(int128Null);
                     v = &int128Null;
                     break;
 

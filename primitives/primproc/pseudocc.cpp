@@ -58,7 +58,7 @@ void PseudoCC::resetCommand(messageqcpp::ByteStream& bs)
 {
     if (function == PSEUDO_EXTENTMAX || function == PSEUDO_EXTENTMIN)
     {
-        if (!datatypes::Decimal::isWideDecimalType(colType))
+        if (!colType.isWideDecimalType())
             bs >> valueFromUM;
         else
             bs >> bigValueFromUM;
@@ -67,7 +67,7 @@ void PseudoCC::resetCommand(messageqcpp::ByteStream& bs)
     {
         bs >> valueFromUM;
 
-        if (datatypes::Decimal::isWideDecimalType(colType))
+        if (colType.isWideDecimalType())
             bigValueFromUM = valueFromUM;
     }
 

@@ -138,6 +138,8 @@ using namespace funcexp;
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
 
+#include "ha_mcs_datatype.h"
+
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
@@ -249,108 +251,6 @@ void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc 
     ci->cal_conn_hndl = 0;
 }
 
-void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& ct)
-{
-    // unset null bit first
-    if ((*f)->null_ptr)
-        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-    // For unsigned, use the ColType returned in the row rather than the
-    // unsigned_flag set by mysql. This is because mysql gets it wrong for SUM()
-    // Hopefully, in all other cases we get it right.
-    switch ((*f)->type())
-    {
-        case MYSQL_TYPE_NEWDECIMAL:
-        {
-            // @bug4388 stick to InfiniDB's scale in case mysql gives wrong scale due
-            // to create vtable limitation.
-            //if (f2->dec < ct.scale)
-            //    f2->dec = ct.scale;
-
-            // WIP MCOL-641
-            // This is too much
-            char buf[256];
-            dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, buf, 256, ct.colDataType);
-            (*f)->store(buf, strlen(buf), (*f)->charset());
-            break;
-        }
-
-        case MYSQL_TYPE_TINY: //TINYINT type
-        {
-            Field_tiny* f2 = (Field_tiny*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_SHORT: //SMALLINT type
-        {
-            Field_short* f2 = (Field_short*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_INT24: //MEDINT type
-        {
-            Field_medium* f2 = (Field_medium*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_LONG: //INT type
-        {
-            Field_long* f2 = (Field_long*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_LONGLONG: //BIGINT type
-        {
-            Field_longlong* f2 = (Field_longlong*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_FLOAT: // FLOAT type
-        {
-            float float_val = *(float*)(&value);
-            (*f)->store(float_val);
-            break;
-        }
-
-        case MYSQL_TYPE_DOUBLE: // DOUBLE type
-        {
-            double double_val = *(double*)(&value);
-            (*f)->store(double_val);
-            break;
-        }
-
-        case MYSQL_TYPE_VARCHAR:
-        {
-            char tmp[25];
-            if (ct.colDataType == CalpontSystemCatalog::DECIMAL)
-                dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, tmp, 25, ct.colDataType);
-            else
-                snprintf(tmp, 25, "%lld", (long long)value);
-
-            (*f)->store(tmp, strlen(tmp), (*f)->charset());
-            break;
-        }
-
-        default:
-        {
-            Field_longlong* f2 = (Field_longlong*)*f;
-            longlong int_val = (longlong)value;
-            (*f)->store(int_val, f2->unsigned_flag);
-            break;
-        }
-    }
-}
-
 //
 // @bug 2244. Log exception related to lost connection to ExeMgr.
 // Log exception error from calls to sm::tpl_scan_fetch in fetchNextRow()
@@ -391,19 +291,6 @@ void tpl_scan_fetch_LogException( cal_table_info& ti, cal_connection_info* ci, s
              sesID << "; " << connHndl << "; rowsReturned: " << rowsRet << endl;
 }
 
-const char hexdig[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', };
-
-int vbin2hex(const uint8_t* p, const unsigned l, char* o)
-{
-    for (unsigned i = 0; i < l; i++, p++)
-    {
-        *o++ = hexdig[*p >> 4];
-        *o++ = hexdig[*p & 0xf];
-    }
-
-    return 0;
-}
-
 // Table Map is used by both cond_push and table mode processing
 // Entries made by cond_push don't have csep though.
 // When
@@ -420,6 +307,7 @@ bool onlyOneTableinTM(cal_impl_if::cal_connection_info* ci)
 
     return true;
 }
+
 
 int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool handler_flag = false)
 {
@@ -473,9 +361,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
         }
 
         std::vector<CalpontSystemCatalog::ColType>& colTypes = ti.tpl_scan_ctx->ctp;
-        int64_t intColVal = 0;
-        uint64_t uintColVal = 0;
-        char tmp[256];
 
         RowGroup* rowGroup = ti.tpl_scan_ctx->rowGroup;
 
@@ -548,319 +433,25 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         colType.colDataType == CalpontSystemCatalog::VARCHAR ||
                         colType.colDataType == CalpontSystemCatalog::VARBINARY)
                 {
-                    (*f)->store(tmp, 0, (*f)->charset());
+                    (*f)->store("", 0, (*f)->charset());
                 }
 
                 continue;
             }
 
-            // fetch and store data
-            switch (colType.colDataType)
+            const datatypes::TypeHandler *h= colType.typeHandler();
+            if (!h)
             {
-                case CalpontSystemCatalog::DATE:
-                {
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    intColVal = row.getUintField<4>(s);
-                    DataConvert::dateToString(intColVal, tmp, 255);
-                    (*f)->store(tmp, strlen(tmp), (*f)->charset());
-                    break;
-                }
-
-                case CalpontSystemCatalog::DATETIME:
-                {
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    intColVal = row.getUintField<8>(s);
-                    DataConvert::datetimeToString(intColVal, tmp, 255, colType.precision);
-                    (*f)->store(tmp, strlen(tmp), (*f)->charset());
-                    break;
-                }
-
-                case CalpontSystemCatalog::TIME:
-                {
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    intColVal = row.getUintField<8>(s);
-                    DataConvert::timeToString(intColVal, tmp, 255, colType.precision);
-                    (*f)->store(tmp, strlen(tmp), (*f)->charset());
-                    break;
-                }
-
-                case CalpontSystemCatalog::TIMESTAMP:
-                {
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    intColVal = row.getUintField<8>(s);
-                    DataConvert::timestampToString(intColVal, tmp, 255, current_thd->variables.time_zone->get_name()->ptr(), colType.precision);
-                    (*f)->store(tmp, strlen(tmp), (*f)->charset());
-                    break;
-                }
-
-                case CalpontSystemCatalog::CHAR:
-                case CalpontSystemCatalog::VARCHAR:
-                {
-                    switch (colType.colWidth)
-                    {
-                        case 1:
-                            intColVal = row.getUintField<1>(s);
-                            (*f)->store((char*)(&intColVal), strlen((char*)(&intColVal)), (*f)->charset());
-                            break;
-
-                        case 2:
-                            intColVal = row.getUintField<2>(s);
-                            (*f)->store((char*)(&intColVal), strlen((char*)(&intColVal)), (*f)->charset());
-                            break;
-
-                        case 4:
-                            intColVal = row.getUintField<4>(s);
-                            (*f)->store((char*)(&intColVal), strlen((char*)(&intColVal)), (*f)->charset());
-                            break;
-
-                        case 8:
-                            //make sure we don't send strlen off into the weeds...
-                            intColVal = row.getUintField<8>(s);
-                            memcpy(tmp, &intColVal, 8);
-                            tmp[8] = 0;
-                            (*f)->store(tmp, strlen(tmp), (*f)->charset());
-                            break;
-
-                        default:
-                            (*f)->store((const char*)row.getStringPointer(s), row.getStringLength(s), (*f)->charset());
-                    }
-
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    break;
-                }
-
-                case CalpontSystemCatalog::VARBINARY:
-                {
-                    if (get_varbin_always_hex(current_thd))
-                    {
-                        uint32_t l;
-                        const uint8_t* p = row.getVarBinaryField(l, s);
-                        uint32_t ll = l * 2;
-                        boost::scoped_array<char> sca(new char[ll]);
-                        vbin2hex(p, l, sca.get());
-                        (*f)->store(sca.get(), ll, (*f)->charset());
-                    }
-                    else
-                        (*f)->store((const char*)row.getVarBinaryField(s), row.getVarBinaryLength(s), (*f)->charset());
-
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    break;
-                }
-
-                case CalpontSystemCatalog::BIGINT:
-                {
-                    intColVal = row.getIntField<8>(s);
-                    storeNumericField(f, intColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::UBIGINT:
-                {
-                    uintColVal = row.getUintField<8>(s);
-                    storeNumericField(f, uintColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::INT:
-                case CalpontSystemCatalog::MEDINT:
-                {
-                    intColVal = row.getIntField<4>(s);
-                    storeNumericField(f, intColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::UINT:
-                case CalpontSystemCatalog::UMEDINT:
-                {
-                    uintColVal = row.getUintField<4>(s);
-                    storeNumericField(f, uintColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::SMALLINT:
-                {
-                    intColVal = row.getIntField<2>(s);
-                    storeNumericField(f, intColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::USMALLINT:
-                {
-                    uintColVal = row.getUintField<2>(s);
-                    storeNumericField(f, uintColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::TINYINT:
-                {
-                    intColVal = row.getIntField<1>(s);
-                    storeNumericField(f, intColVal, colType);
-                    break;
-                }
-
-                case CalpontSystemCatalog::UTINYINT:
-                {
-                    uintColVal = row.getUintField<1>(s);
-                    storeNumericField(f, uintColVal, colType);
-                    break;
-                }
-
-                //In this case, we're trying to load a double output column with float data. This is the
-                // case when you do sum(floatcol), e.g.
-                case CalpontSystemCatalog::FLOAT:
-                case CalpontSystemCatalog::UFLOAT:
-                {
-                    float dl = row.getFloatField(s);
-
-                    if (dl == std::numeric_limits<float>::infinity())
-                        continue;
-
-                    // bug 3485, reserve enough space for the longest float value
-                    // -3.402823466E+38 to -1.175494351E-38, 0, and
-                    // 1.175494351E-38 to 3.402823466E+38.
-                    (*f)->field_length = 40;
-                    (*f)->store(dl);
-
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    break;
-                }
-
-                case CalpontSystemCatalog::DOUBLE:
-                case CalpontSystemCatalog::UDOUBLE:
-                {
-                    double dl = row.getDoubleField(s);
-
-                    if (dl == std::numeric_limits<double>::infinity())
-                        continue;
-
-                    if ((*f)->type() == MYSQL_TYPE_NEWDECIMAL)
-                    {
-                        char buf[310];
-                        // reserve enough space for the longest double value
-                        // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
-                        // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                        snprintf(buf, 310, "%.18g", dl);
-                        (*f)->store(buf, strlen(buf), (*f)->charset());
-                    }
-                    else
-                    {
-                        // The server converts dl=-0 to dl=0 in (*f)->store().
-                        // This happens in the call to truncate_double().
-                        // This is an unexpected behaviour, so we directly store the
-                        // double value using the lower level float8store() function.
-                        // TODO Remove this when (*f)->store() handles this properly.
-                        (*f)->field_length = 310;
-                        if (dl == 0)
-                            float8store((*f)->ptr,dl);
-                        else
-                            (*f)->store(dl);
-                    }
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    break;
-                }
-
-                case CalpontSystemCatalog::LONGDOUBLE:
-                {
-                    long double dl = row.getLongDoubleField(s);
-                    if (dl == std::numeric_limits<long double>::infinity())
-                    {
-                        continue;
-                    }
-
-                    if ((*f)->type() == MYSQL_TYPE_NEWDECIMAL)
-                    {
-                        char buf[310];
-                        snprintf(buf, 310, "%.20Lg", dl);
-                        (*f)->store(buf, strlen(buf), (*f)->charset());
-                    }
-                    else
-                    {
-                        // reserve enough space for the longest double value
-                        // -1.7976931348623157E+308 to -2.2250738585072014E-308, 0, and
-                        // 2.2250738585072014E-308 to 1.7976931348623157E+308.
-                        (*f)->field_length = 310;
-                        (*f)->store(static_cast<double>(dl));
-                    }
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-                    break;
-                }
-
-                case CalpontSystemCatalog::DECIMAL:
-                case CalpontSystemCatalog::UDECIMAL:
-                {
-                    if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
-                    {
-                        // unset null bit first
-                        // Might be redundant
-                        if ((*f)->null_ptr)
-                            *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                        int128_t* dec;
-                        // We won't have more than [+-][0][.] + up to 38 digits
-                        char buf[utils::MAXLENGTH16BYTES];
- 
-                        dec = row.getBinaryField<int128_t>(s);
-                        dataconvert::DataConvert::decimalToString(dec,
-                            (unsigned)colType.scale, buf,
-                            sizeof(buf), colType.colDataType);
-
-                        Field_new_decimal* f2 = (Field_new_decimal*)*f;
-                        f2->store(buf, strlen(buf), f2->charset());
-                    }
-                    else
-                    {
-                        intColVal = row.getIntField(s);
-                        storeNumericField(f, intColVal, colType);
-                    }
-                    break;
-                }
-
-                case CalpontSystemCatalog::BLOB:
-                case CalpontSystemCatalog::TEXT:
-                {
-                    Field_blob* f2 = (Field_blob*)*f;
-                    f2->set_ptr(row.getVarBinaryLength(s), (unsigned char*)row.getVarBinaryField(s));
-
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-                    break;
-                }
-                case CalpontSystemCatalog::BINARY:
-                {
-                    Field_varstring* f2 = (Field_varstring*)*f;
-                    // WIP MCOL-641 Binary representation could contain \0.
-                    char* binaryString = row.getBinaryField<char>(s);
-                    f2->store(binaryString, colType.colWidth, f2->charset());
-
-                    if ((*f)->null_ptr)
-                        *(*f)->null_ptr &= ~(*f)->null_bit;
-                    
-                    break;
-                }
-                default:	// treat as int64
-                {
-                    intColVal = row.getUintField<8>(s);
-                    storeNumericField(f, intColVal, colType);
-                    break;
-                }
+              idbassert(0);
+              (*f)->reset();
+              (*f)->set_null();
+            }
+            else
+            {
+              // fetch and store data
+              (*f)->set_notnull();
+              datatypes::StoreFieldMariaDB mf(*f, colType);
+              h->storeValueToField(row, s, &mf);
             }
         }
 

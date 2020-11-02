@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "widedecimalutils.h"
 #include "emptyvaluemanip.h"
 
 namespace utils
@@ -81,7 +80,7 @@ void getEmptyRowValue(const execplan::CalpontSystemCatalog::ColDataType colDataT
             else if (width <= 8)
                 *(uint64_t*)emptyVal = joblist::BIGINTEMPTYROW;
             else
-                setWideDecimalEmptyValue(*(reinterpret_cast<int128_t*>(emptyVal)));
+                datatypes::Decimal::setWideDecimalEmptyValue(*(reinterpret_cast<int128_t*>(emptyVal)));
             break;
 
         //case CalpontSystemCatalog::BINARY:

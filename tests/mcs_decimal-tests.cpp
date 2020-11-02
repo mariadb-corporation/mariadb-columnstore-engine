@@ -21,9 +21,7 @@
 
 #include "treenode.h"
 #include "mcs_decimal.h"
-#include "widedecimalutils.h"
 #include "dataconvert.h"
-#include "calpontsystemcatalog.h"
 
 TEST(Decimal, compareCheck)
 {
@@ -86,8 +84,7 @@ TEST(Decimal, compareCheck)
 
 TEST(Decimal, additionNoOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     // Addition w/o overflow check
     execplan::IDB_Decimal l, r, result;
@@ -146,7 +143,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000042000000000000000000000042", std::string(buf));
 
     // same precision, L scale > R scale, both negative values
@@ -155,7 +152,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000042000000000000000000000042", std::string(buf));
 
     // same precision, L scale > R scale, +- values
@@ -164,7 +161,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000041999999999999999999999958", std::string(buf));
 
     // same precision, L scale > R scale, both 0
@@ -189,7 +186,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000004200000000000000000000420", std::string(buf));
 
     // same precision, L scale < R scale, both negative values
@@ -198,7 +195,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000004200000000000000000000420", std::string(buf));
 
     // same precision, L scale < R scale, +- values
@@ -207,7 +204,7 @@ TEST(Decimal, additionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::addition<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000004199999999999999999999580", std::string(buf));
 
     // same precision, L scale < R scale, both 0
@@ -223,8 +220,7 @@ TEST(Decimal, divisionNoOverflowCheck)
 {
     // DIVISION
     // same precision, same scale, both positive values
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     execplan::IDB_Decimal l, r, result;
 
@@ -241,7 +237,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("9.7674418605", std::string(buf));
 
     // same precision, same scale, both negative values
@@ -250,7 +246,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("9.7674418605", std::string(buf));
 
     // same precision, same scale, +- values
@@ -259,7 +255,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-1157.8947368421", std::string(buf));
 
     // same precision, same scale, l = 0
@@ -282,7 +278,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("115789473684210526315789.4736842105", std::string(buf));
 
     // same precision, L scale > R scale, both negative values
@@ -291,7 +287,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("86363636363636363636363.6363636364", std::string(buf));
 
     // same precision, L scale > R scale, +- values
@@ -300,7 +296,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-115789473684210526315789.4736842105", std::string(buf));
 
     // same precision, L scale > R scale, R = 0
@@ -317,7 +313,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("100000000000000000000000.0000000000", std::string(buf));
 
     // same precision, L scale > R scale, both MIN negative values
@@ -326,7 +322,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("100000000000000000000000.0000000000", std::string(buf));
 
     // same precision, L scale < R scale, both positive values
@@ -343,7 +339,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000001000000000000000", std::string(buf));
 
     // same precision, L scale < R scale, both negative values
@@ -352,7 +348,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000000863636363636364", std::string(buf));
 
     // same precision, L scale < R scale, +- values
@@ -361,7 +357,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000000000000000863636363636364", std::string(buf));
 
     // same precision, L scale < R scale, R = 0
@@ -379,7 +375,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000001000000000000000", std::string(buf));
 
     // same precision, L scale < R scale, both MIN negative values
@@ -388,7 +384,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000001000000000000000", std::string(buf));
 
     // same precision, L scale < R scale, result.scale < (r.scale-l.scale)
@@ -406,7 +402,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("1", std::string(buf));
 
     // same precision, L scale < R scale, result.scale < (r.scale-l.scale)
@@ -416,7 +412,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("9", std::string(buf));
 
     // same precision, L scale < R scale, result.scale < (r.scale-l.scale)
@@ -426,7 +422,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-9", std::string(buf));
 
     // same precision, L scale < R scale, result.scale < (r.scale-l.scale)
@@ -445,7 +441,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0", std::string(buf));
 
     // same precision, L scale < R scale, result.scale < (r.scale-l.scale)
@@ -455,7 +451,7 @@ TEST(Decimal, divisionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::division<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0", std::string(buf));
 }
 
@@ -468,8 +464,7 @@ void doDiv(const execplan::IDB_Decimal& l,
 
 TEST(Decimal, divisionWithOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     // Divide min int128 by -1
     execplan::IDB_Decimal l, r, result;
@@ -508,7 +503,7 @@ TEST(Decimal, divisionWithOverflowCheck)
     result.s128Value = 0;
 
     EXPECT_NO_THROW(doDiv(l, r, result));
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("9223372036854775809", std::string(buf));
 }
 
@@ -521,8 +516,7 @@ void doAdd(const execplan::IDB_Decimal& l,
 
 TEST(Decimal, additionWithOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     // Add two max ints
     execplan::IDB_Decimal l, r, result;
@@ -561,14 +555,13 @@ TEST(Decimal, additionWithOverflowCheck)
     result.s128Value = 0;
 
     EXPECT_NO_THROW(doAdd(l, r, result));
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-170141183460469231713240559642174554113", std::string(buf));
 }
 
 TEST(Decimal, subtractionNoOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     // Subtractio w/o overflow check
     execplan::IDB_Decimal l, r, result;
@@ -586,7 +579,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000000000000000000000000000378", std::string(buf));
 
     // same precision, same scale, both negative values
@@ -595,7 +588,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000000000000000000378", std::string(buf));
 
     // same precision, same scale, +- values
@@ -604,7 +597,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000000000000000000000000000462", std::string(buf));
 
     // same precision, same scale, both 0
@@ -630,7 +623,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000041999999999999999999999958", std::string(buf));
 
     // same precision, L scale > R scale, both negative values
@@ -639,7 +632,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000041999999999999999999999958", std::string(buf));
 
     // same precision, L scale > R scale, +- values
@@ -648,7 +641,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000042000000000000000000000042", std::string(buf));
 
     // same precision, L scale > R scale, both 0
@@ -673,7 +666,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000004199999999999999999999580", std::string(buf));
 
     // same precision, L scale < R scale, both negative values
@@ -682,7 +675,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.00000000000004199999999999999999999580", std::string(buf));
 
     // same precision, L scale < R scale, +- values
@@ -691,7 +684,7 @@ TEST(Decimal, subtractionNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::subtraction<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.00000000000004200000000000000000000420", std::string(buf));
 
     // same precision, L scale < R scale, both 0
@@ -712,8 +705,7 @@ void doSubtract(const execplan::IDB_Decimal& l,
 
 TEST(Decimal, subtractionWithOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     // Subtract a max int from a min int
     execplan::IDB_Decimal l, r, result;
@@ -752,7 +744,7 @@ TEST(Decimal, subtractionWithOverflowCheck)
     result.s128Value = 0;
 
     EXPECT_NO_THROW(doSubtract(l, r, result));
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("170141183460469231713240559642174554112", std::string(buf));
 }
 
@@ -760,8 +752,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
 {
     // Multiplication
     // same precision, l.scale + r.scale = result.scale, both positive values
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     execplan::IDB_Decimal l, r, result;
 
@@ -778,7 +769,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.85070591730234615861231965839514664960", std::string(buf));
 
     // same precision, l.scale + r.scale = result.scale, both negative values
@@ -788,7 +779,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.85070591730234615861231965839514664960", std::string(buf));
 
     // same precision, l.scale + r.scale = result.scale, +- values
@@ -797,7 +788,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.85070591730234615861231965839514664960", std::string(buf));
 
     // same precision, l.scale + r.scale = result.scale, l = 0
@@ -822,7 +813,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.66461399789245793645190353014017228800", std::string(buf));
 
     // same precision, l.scale + r.scale < result.scale, both negative values
@@ -832,7 +823,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.66461399789245793645190353014017228800", std::string(buf));
 
     // same precision, l.scale + r.scale < result.scale, +- values
@@ -841,7 +832,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.66461399789245793645190353014017228800", std::string(buf));
 
     // same precision, l.scale + r.scale < result.scale, l = 0
@@ -868,7 +859,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.01524157875323883675019051998750190521", std::string(buf));
 
     // same precision, l.scale + r.scale > result.scale, both negative values
@@ -877,7 +868,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(r, l, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("0.01524157875323883675019051998750190521", std::string(buf));
 
     // same precision, l.scale + r.scale > result.scale, +- values
@@ -885,7 +876,7 @@ TEST(Decimal, multiplicationNoOverflowCheck)
     result.s128Value = 0;
 
     datatypes::Decimal::multiplication<int128_t, false>(l, r, result);
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("-0.01524157875323883675019051998750190521", std::string(buf));
 
     // same precision, l.scale + r.scale > result.scale, l = 0
@@ -905,8 +896,7 @@ void doMultiply(const execplan::IDB_Decimal& l,
 
 TEST(Decimal, multiplicationWithOverflowCheck)
 {
-    execplan::CalpontSystemCatalog::ColType ct;
-    ct.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
+    datatypes::SystemCatalog::ColDataType colDataType = datatypes::SystemCatalog::DECIMAL;
     char buf[42];
     execplan::IDB_Decimal l, r, result;
     // result.scale >= l.scale + r.scale
@@ -950,6 +940,6 @@ TEST(Decimal, multiplicationWithOverflowCheck)
     result.s128Value = 0;
 
     EXPECT_NO_THROW(doMultiply(l, r, result));
-    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, ct.colDataType);
+    dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("21267647932558653966460912964485513216", std::string(buf));
 }
