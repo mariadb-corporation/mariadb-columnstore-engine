@@ -136,7 +136,22 @@ uint64_t Func_round::getUintVal(Row& row,
                                 bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-    return parm[0]->data()->getUintVal(row, isNull);
+//    return parm[0]->data()->getUintVal(row, isNull);
+
+    IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
+
+    if (x.scale > 0)
+    {
+        while (x.scale-- > 0)
+            x.value /= 10;
+    }
+    else
+    {
+        while (x.scale++ < 0)
+            x.value *= 10;
+    }
+
+    return x.value;
 }
 
 
