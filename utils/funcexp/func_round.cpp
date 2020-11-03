@@ -136,7 +136,18 @@ uint64_t Func_round::getUintVal(Row& row,
                                 bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-    return parm[0]->data()->getUintVal(row, isNull);
+    uint64_t x;
+    if (UNLIKELY(op_ct.colDataType == execplan::CalpontSystemCatalog::DATE))
+    {
+        IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
+        x = static_cast<uint64_t>(d.value);
+    }
+    else
+    {
+        x = parm[0]->data()->getUintVal(row, isNull);
+    }
+
+    return x;
 }
 
 
@@ -432,15 +443,9 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
             {
                 s = parm[1]->data()->getIntVal(row, isNull);
 
-                if ( s > 11 )
-                    s = 0;
-
                 if ( s > 0 )
                 {
-                    for ( int i = 0 ; i < s ; i++)
-                    {
-                        value = value + "0";
-                    }
+                    s = 0; // Dates don't have digits after int part
                 }
                 else
                 {
