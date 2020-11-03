@@ -136,22 +136,18 @@ uint64_t Func_round::getUintVal(Row& row,
                                 bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-//    return parm[0]->data()->getUintVal(row, isNull);
-
-    IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
-
-    if (x.scale > 0)
+    uint64_t x;
+    if (UNLIKELY(op_ct.colDataType == execplan::CalpontSystemCatalog::DATE))
     {
-        while (x.scale-- > 0)
-            x.value /= 10;
+        IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
+        x = d.value;
     }
     else
     {
-        while (x.scale++ < 0)
-            x.value *= 10;
+        x = parm[0]->data()->getUintVal(row, isNull);
     }
 
-    return x.value;
+    return x;
 }
 
 
