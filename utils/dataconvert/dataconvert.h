@@ -884,24 +884,17 @@ void number_int_value(const std::string& data,
                       bool noRoundup,
                       T& intVal);
 
+uint64_t number_uint_value(const string& data,
+                           cscDataType typeCode,
+                           const datatypes::SystemCatalog::TypeAttributesStd& ct,
+                           bool& pushwarning,
+                           bool  noRoundup);
+
 /** @brief DataConvert is a component for converting string data to Calpont format
   */
 class DataConvert
 {
 public:
-
-    /**
-     * @brief convert a columns data, represnted as a string, to it's native
-     * format
-     *
-     * @param type the columns data type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static boost::any convertColumnData(
-            cscDataType typecode,
-            const datatypes::SystemCatalog::TypeAttributesStd& attr,
-            const std::string& dataOrig, bool& bSaturate, const std::string& timeZone,
-            bool nulFlag = false, bool noRoundup = false, bool isUpdate = false);
 
     /**
       * @brief convert a columns data from native format to a string
@@ -1082,6 +1075,47 @@ public:
     // bug4388, union type conversion
     EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unionedType,
                                            const datatypes::SystemCatalog::TypeHolderStd &type);
+
+    static boost::any StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                  const datatypes::ConvertFromStringParam &prm,
+                                  const std::string& dataOrig,
+                                  bool& pushWarning);
+
+    static boost::any StringToSDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                       const datatypes::ConvertFromStringParam &prm,
+                                       const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                       const datatypes::ConvertFromStringParam &prm,
+                                       const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToFloat(cscDataType typeCode,
+                                    const std::string& dataOrig,
+                                    bool& pushWarning);
+
+    static boost::any StringToDouble(cscDataType typeCode,
+                                     const std::string& dataOrig,
+                                     bool& pushWarning);
+
+    static boost::any StringToString(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                     const std::string& dataOrig,
+                                     bool& pushWarning);
+
+    static boost::any StringToDate(const std::string& data,
+                                   bool& pushWarning);
+
+    static boost::any StringToDatetime(const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                   const std::string& data,
+                                   bool& pushWarning);
+
+    static boost::any StringToTimestamp(const datatypes::ConvertFromStringParam &prm,
+                                        const std::string& data,
+                                        bool& pushWarning);
 };
 
 inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int buflen)
