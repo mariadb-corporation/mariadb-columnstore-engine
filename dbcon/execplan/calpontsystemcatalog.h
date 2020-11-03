@@ -242,7 +242,17 @@ public:
             b >> charsetNumber;
         }
 
-        boost::any convertColumnData(const std::string& dataOrig,
+        /**
+         * @brief convert a columns data, represnted as a string,
+         * to its native format
+         * @param       data       - the string representation
+         * @param [OUT] bSaturate  - the value was truncated/adjusted
+         * @param       timeZone   - the time zone name, for TIMESTAMP conversion
+         * @param       nullFlag   - SQL NULL flag
+         * @param       nRoundtrip
+         * @param       isUpdate
+         */
+        boost::any convertColumnData(const std::string& data,
                                      bool& bSaturate,
                                      const std::string& timeZone,
                                      bool nulFlag = false,

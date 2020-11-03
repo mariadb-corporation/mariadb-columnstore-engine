@@ -1045,13 +1045,12 @@ class SimpleConverter: public boost::any
   bool m_pushWarning;
 public:
   SimpleConverter(const SessionParam &sp,
-                  SystemCatalog::ColDataType typeCode,
+                  const TypeHandler *h,
                   const SystemCatalog::TypeAttributesStd &attr,
                   const char *str)
-   :boost::any(DataConvert::convertColumnData(typeCode, attr,
-                                              str, initPushWarning(),
-                                              sp.tzname(),
-                                              false, true, false))
+   :boost::any(h->convertFromString(attr,
+                                    ConvertFromStringParam(sp.tzname(), true, false),
+                                    str, initPushWarning()))
   { }
   round_style_t roundStyle() const
   {
@@ -1084,11 +1083,11 @@ class SimpleConverterSNumeric: public SimpleConverter
 {
 public:
   SimpleConverterSNumeric(const SessionParam &sp,
-                          SystemCatalog::ColDataType typeCode,
+                          const TypeHandler *h,
                           const SystemCatalog::TypeAttributesStd &attr,
                           const char *str,
                           round_style_t &rf)
-   :SimpleConverter(sp, typeCode, attr, str)
+   :SimpleConverter(sp, h, attr, str)
   {
     rf = roundStyle(str);
   }
@@ -1098,12 +1097,12 @@ public:
 template<typename T>
 SimpleValue
 toSimpleValueSInt(const SessionParam &sp,
-                  SystemCatalog::ColDataType typeCode,
+                  const TypeHandler *h,
                   const SystemCatalog::TypeAttributesStd &attr,
                   const char *str, round_style_t & rf)
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverterSNumeric anyVal(sp, typeCode, attr, str, rf);
+  SimpleConverterSNumeric anyVal(sp, h, attr, str, rf);
   return SimpleValueSInt64(static_cast<int64_t>(boost::any_cast<T>(anyVal)));
 }
 
@@ -1113,7 +1112,7 @@ TypeHandlerSInt8::toSimpleValue(const SessionParam &sp,
                                 const SystemCatalog::TypeAttributesStd &attr,
                                 const char *str, round_style_t & rf) const
 {
-  return toSimpleValueSInt<char>(sp, SystemCatalog::TINYINT, attr, str, rf);
+  return toSimpleValueSInt<char>(sp, this, attr, str, rf);
 }
 
 
@@ -1122,7 +1121,7 @@ TypeHandlerSInt16::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueSInt<int16_t>(sp, SystemCatalog::SMALLINT, attr, str, rf);
+  return toSimpleValueSInt<int16_t>(sp, this, attr, str, rf);
 }
 
 
@@ -1131,7 +1130,7 @@ TypeHandlerSInt24::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueSInt<mcs_sint32_t>(sp, SystemCatalog::MEDINT, attr, str, rf);
+  return toSimpleValueSInt<mcs_sint32_t>(sp, this, attr, str, rf);
 }
 
 
@@ -1140,7 +1139,7 @@ TypeHandlerSInt32::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueSInt<mcs_sint32_t>(sp, SystemCatalog::INT, attr, str, rf);
+  return toSimpleValueSInt<mcs_sint32_t>(sp, this, attr, str, rf);
 }
 
 
@@ -1149,18 +1148,18 @@ TypeHandlerSInt64::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueSInt<long long>(sp, SystemCatalog::BIGINT, attr, str, rf);
+  return toSimpleValueSInt<long long>(sp, this, attr, str, rf);
 }
 
 
 template<typename T>
 SimpleValue toSimpleValueUInt(const SessionParam &sp,
-                                 SystemCatalog::ColDataType typeCode,
+                                 const TypeHandler *h,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str)
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverter anyVal(sp, typeCode, attr, str);
+  SimpleConverter anyVal(sp, h, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(boost::any_cast<T>(anyVal)));
 }
 
@@ -1170,7 +1169,7 @@ TypeHandlerUInt8::toSimpleValue(const SessionParam &sp,
                                 const SystemCatalog::TypeAttributesStd &attr,
                                 const char *str, round_style_t & rf) const
 {
-  return toSimpleValueUInt<uint8_t>(sp, SystemCatalog::UTINYINT, attr, str);
+  return toSimpleValueUInt<uint8_t>(sp, this, attr, str);
 }
 
 
@@ -1179,7 +1178,7 @@ TypeHandlerUInt16::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueUInt<uint16_t>(sp, SystemCatalog::USMALLINT, attr, str);
+  return toSimpleValueUInt<uint16_t>(sp, this, attr, str);
 }
 
 
@@ -1188,7 +1187,7 @@ TypeHandlerUInt24::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueUInt<uint32_t>(sp, SystemCatalog::UMEDINT, attr, str);
+  return toSimpleValueUInt<uint32_t>(sp, this, attr, str);
 }
 
 
@@ -1197,7 +1196,7 @@ TypeHandlerUInt32::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueUInt<uint32_t>(sp, SystemCatalog::UINT, attr, str);
+  return toSimpleValueUInt<uint32_t>(sp, this, attr, str);
 }
 
 
@@ -1206,7 +1205,7 @@ TypeHandlerUInt64::toSimpleValue(const SessionParam &sp,
                                  const SystemCatalog::TypeAttributesStd &attr,
                                  const char *str, round_style_t & rf) const
 {
-  return toSimpleValueUInt<uint64_t>(sp, SystemCatalog::UBIGINT, attr, str);
+  return toSimpleValueUInt<uint64_t>(sp, this, attr, str);
 }
 
 
@@ -1216,7 +1215,7 @@ TypeHandlerDate::toSimpleValue(const SessionParam &sp,
                                const char *str, round_style_t & rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverter anyVal(sp, SystemCatalog::DATE, attr, str);
+  SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(anyVal.to_uint32()));
 }
 
@@ -1227,7 +1226,7 @@ TypeHandlerDatetime::toSimpleValue(const SessionParam &sp,
                                    const char *str, round_style_t & rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverter anyVal(sp, SystemCatalog::DATETIME, attr, str);
+  SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(anyVal.to_uint64()));
 }
 
@@ -1238,7 +1237,7 @@ TypeHandlerTimestamp::toSimpleValue(const SessionParam &sp,
                                     const char *str, round_style_t & rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverter anyVal(sp, SystemCatalog::TIMESTAMP, attr, str);
+  SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueTimestamp(anyVal.to_uint64(), sp.tzname());
 }
 
@@ -1249,7 +1248,7 @@ TypeHandlerTime::toSimpleValue(const SessionParam &sp,
                                const char *str, round_style_t & rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
-  SimpleConverter anyVal(sp, SystemCatalog::TIME, attr, str);
+  SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(anyVal.to_sint64());
 }
 
@@ -1261,7 +1260,7 @@ TypeHandlerXDecimal::toSimpleValue(const SessionParam &sp,
 {
   if (attr.colWidth <= SystemCatalog::EIGHT_BYTE)
   {
-    SimpleConverterSNumeric anyVal(sp, code(), attr, str, rf);
+    SimpleConverterSNumeric anyVal(sp, this, attr, str, rf);
     int64_t v;
     if (attr.colWidth == SystemCatalog::ONE_BYTE)
       v = boost::any_cast<char>(anyVal);
@@ -1281,7 +1280,7 @@ TypeHandlerXDecimal::toSimpleValue(const SessionParam &sp,
   else
   {
     idbassert(attr.colWidth == datatypes::MAXDECIMALWIDTH);
-    SimpleConverterSNumeric anyVal(sp, code(), attr, str, rf);
+    SimpleConverterSNumeric anyVal(sp, this, attr, str, rf);
     return SimpleValueSInt128(anyVal.to_sint128());
   }
 }
@@ -1292,7 +1291,7 @@ TypeHandlerStr::toSimpleValue(const SessionParam &sp,
                               const SystemCatalog::TypeAttributesStd &attr,
                               const char *str, round_style_t & rf) const
 {
-  SimpleConverter anyVal(sp, code(), attr, str);
+  SimpleConverter anyVal(sp, this, attr, str);
   rf= anyVal.roundStyle();
   string i = boost::any_cast<string>(anyVal);
   // bug 1932, pad nulls up to the size of v
@@ -1757,6 +1756,321 @@ TypeHandlerVarbinary::getNullValueForType(const SystemCatalog::TypeAttributesStd
   boost::any value = nullToken;
   return value;
 }
+
+/****************************************************************************/
+
+boost::any
+TypeHandlerBit::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                  const ConvertFromStringParam& prm,
+                                  const std::string& data,
+                                  bool& pushWarning) const
+{
+   return dataconvert::DataConvert::StringToBit(colType, prm, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerSInt8::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                    const ConvertFromStringParam& prm,
+                                    const std::string& data,
+                                    bool& pushWarning) const
+{
+  int64_t val64;
+  dataconvert::number_int_value(data, SystemCatalog::TINYINT, colType, pushWarning, prm.noRoundup(), val64);
+  boost::any value = (char) val64;
+  return value;
+}
+
+
+boost::any
+TypeHandlerSInt16::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  int64_t val64;
+  dataconvert::number_int_value(data, SystemCatalog::SMALLINT, colType, pushWarning, prm.noRoundup(), val64);
+  boost::any value = (short) val64;
+  return value;
+}
+
+
+boost::any
+TypeHandlerSInt24::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  int64_t val64;
+  dataconvert::number_int_value(data, SystemCatalog::MEDINT, colType, pushWarning, prm.noRoundup(), val64);
+  boost::any value = (int) val64;
+  return value;
+}
+
+
+boost::any
+TypeHandlerSInt32::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  int64_t val64;
+  dataconvert::number_int_value(data, SystemCatalog::INT, colType, pushWarning, prm.noRoundup(), val64);
+  boost::any value = (int) val64;
+  return value;
+}
+
+
+boost::any
+TypeHandlerSInt64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  int64_t val64;
+  dataconvert::number_int_value(data, SystemCatalog::BIGINT, colType, pushWarning, prm.noRoundup(), val64);
+  boost::any value = (long long) val64;
+  return value;
+}
+
+
+boost::any
+TypeHandlerUInt8::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                    const ConvertFromStringParam& prm,
+                                    const std::string& data,
+                                    bool& pushWarning) const
+
+{
+  boost::any value = (uint8_t)dataconvert::number_uint_value(data, SystemCatalog::UTINYINT, colType, pushWarning, prm.noRoundup());
+  return value;
+}
+
+
+boost::any
+TypeHandlerUInt16::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  boost::any value = (uint16_t)dataconvert::number_uint_value(data, SystemCatalog::USMALLINT, colType, pushWarning, prm.noRoundup());
+  return value;
+}
+
+
+boost::any
+TypeHandlerUInt24::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  boost::any value = (uint32_t)dataconvert::number_uint_value(data, SystemCatalog::UMEDINT, colType, pushWarning, prm.noRoundup());
+  return value;
+}
+
+
+boost::any
+TypeHandlerUInt32::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  boost::any value = (uint32_t)dataconvert::number_uint_value(data, SystemCatalog::UINT, colType, pushWarning, prm.noRoundup());
+  return value;
+}
+
+
+boost::any
+TypeHandlerUInt64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  boost::any value = (uint64_t)dataconvert::number_uint_value(data, SystemCatalog::UBIGINT, colType, pushWarning, prm.noRoundup());
+  return value;
+}
+
+
+boost::any
+TypeHandlerSFloat::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToFloat(SystemCatalog::FLOAT, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerUFloat::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                     const ConvertFromStringParam& prm,
+                                     const std::string& data,
+                                     bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToFloat(SystemCatalog::UFLOAT, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerSDouble::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                      const ConvertFromStringParam& prm,
+                                      const std::string& data,
+                                      bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToDouble(SystemCatalog::DOUBLE, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerUDouble::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                      const ConvertFromStringParam& prm,
+                                      const std::string& data,
+                                      bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToDouble(SystemCatalog::UDOUBLE, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerDate::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToDate(data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerDatetime::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                       const ConvertFromStringParam& prm,
+                                       const std::string& data,
+                                       bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToDatetime(data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerTime::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToTime(colType, data, pushWarning);
+}
+
+boost::any
+TypeHandlerTimestamp::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                        const ConvertFromStringParam& prm,
+                                        const std::string& data,
+                                        bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToTimestamp(prm, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerChar::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerVarchar::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                      const ConvertFromStringParam& prm,
+                                      const std::string& data,
+                                      bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerText::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerClob::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  boost::any value = data;
+  return value;
+}
+
+
+boost::any
+TypeHandlerBlob::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                   const ConvertFromStringParam& prm,
+                                   const std::string& data,
+                                   bool& pushWarning) const
+{
+  boost::any value = data;
+  return value;
+}
+
+
+boost::any
+TypeHandlerVarbinary::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                        const ConvertFromStringParam& prm,
+                                        const std::string& data,
+                                        bool& pushWarning) const
+{
+  boost::any value = data;
+  return value;
+}
+
+
+boost::any
+TypeHandlerSDecimal64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                         const ConvertFromStringParam& prm,
+                                         const std::string& data,
+                                         bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToSDecimal(colType, prm, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerUDecimal64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                         const ConvertFromStringParam& prm,
+                                         const std::string& data,
+                                         bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToUDecimal(colType, prm, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerSDecimal128::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                          const ConvertFromStringParam& prm,
+                                          const std::string& data,
+                                          bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToSDecimal(colType, prm, data, pushWarning);
+}
+
+
+boost::any
+TypeHandlerUDecimal128::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                                          const ConvertFromStringParam& prm,
+                                          const std::string& data,
+                                          bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToUDecimal(colType, prm, data, pushWarning);
+}
+
 
 /****************************************************************************/
 

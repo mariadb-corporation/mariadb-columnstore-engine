@@ -6147,16 +6147,23 @@ const string CalpontSystemCatalog::ColType::toString() const
 
 
 boost::any
-CalpontSystemCatalog::ColType::convertColumnData(const std::string& dataOrig,
-                                                 bool& bSaturate,
+CalpontSystemCatalog::ColType::convertColumnData(const std::string& data,
+                                                 bool& pushWarning,
                                                  const std::string& timeZone,
                                                  bool nulFlag,
                                                  bool noRoundup,
                                                  bool isUpdate) const
 {
-  return dataconvert::DataConvert::convertColumnData(colDataType, *this,
-                                                     dataOrig, bSaturate, timeZone,
-                                                     nulFlag, noRoundup, isUpdate);
+    pushWarning = false;
+    const datatypes::TypeHandler *h= typeHandler();
+    if (!h)
+        throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
+
+    if (nulFlag)
+        return h->getNullValueForType(*this);
+
+    const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
+    return h->convertFromString(*this, prm, data, pushWarning);
 }
 
 
