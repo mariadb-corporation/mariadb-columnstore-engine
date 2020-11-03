@@ -139,9 +139,8 @@ uint64_t Func_round::getUintVal(Row& row,
     uint64_t x;
     if (UNLIKELY(op_ct.colDataType == execplan::CalpontSystemCatalog::DATE))
     {
-        x = parm[0]->data()->getDateIntVal(row, isNull);
-        string value = dataconvert::DataConvert::dateToString1(x);
-        x = atoll(value.c_str());
+        IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
+        x = d.value;
     }
     else
     {
