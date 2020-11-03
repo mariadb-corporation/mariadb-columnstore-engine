@@ -393,8 +393,8 @@ public:
    :m_str(str), m_length(length)
   { }
   const char *str() const { return m_str; }
-  const size_t length() const { return m_length; }
   const char *end() const { return m_str + m_length; }
+  size_t length() const { return m_length; }
   void bin2hex(char *o)
   {
     static const char hexdig[] = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -532,8 +532,8 @@ public:
   }
   void widenUInt64(const MinMaxInfo &partInfo)
   {
-    min = static_cast<uint64_t>(partInfo.min < static_cast<uint64_t>(min) ? partInfo.min : min);
-    max = static_cast<uint64_t>(partInfo.max > static_cast<uint64_t>(max) ? partInfo.max : max);
+    min = static_cast<uint64_t>(static_cast<uint64_t>(partInfo.min) < static_cast<uint64_t>(min) ? partInfo.min : min);
+    max = static_cast<uint64_t>(static_cast<uint64_t>(partInfo.max) > static_cast<uint64_t>(max) ? partInfo.max : max);
   }
   void widenSInt128(const MinMaxInfo &partInfo)
   {
@@ -578,8 +578,8 @@ public:
   { };
   MinMaxPartitionInfo(const BRM::EMEntry &entry);
   void set_invalid() { m_status|= CPINVALID; }
-  const bool is_invalid() const { return m_status & CPINVALID; }
-  const bool is_disabled() const { return m_status & ET_DISABLED; }
+  bool is_invalid() const { return m_status & CPINVALID; }
+  bool is_disabled() const { return m_status & ET_DISABLED; }
 
   bool isSuitableSInt64(const SimpleValue &startVal,
                         round_style_t rfMin,
@@ -703,6 +703,7 @@ public:
 class StoreField
 {
 public:
+  virtual ~StoreField() {}
   virtual int32_t colWidth() const = 0;
   virtual int32_t precision() const = 0;
   virtual int store_date(int64_t val) = 0;
@@ -724,6 +725,7 @@ public:
 class WriteBatchField
 {
 public:
+  virtual ~WriteBatchField() { }
   virtual size_t ColWriteBatchDate(const unsigned char *buf, bool nullVal, ColBatchWriter &ci) = 0;
   virtual size_t ColWriteBatchDatetime(const unsigned char *buf, bool nullVal, ColBatchWriter &ci) = 0;
   virtual size_t ColWriteBatchTime(const unsigned char *buf, bool nullVal, ColBatchWriter &ci) = 0;
