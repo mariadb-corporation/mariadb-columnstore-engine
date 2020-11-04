@@ -40,7 +40,7 @@ using namespace std;
 #include "primitiveserver.h"
 #include "primproc.h"
 #include "stats.h"
-#include "simd_asm.h"
+#include "datatypes/mcs_int128.h"
 
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -232,7 +232,7 @@ void ColumnCommand::loadData()
                 {
                     ByteStream::hexbyte h;
                     utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&h);
-                    MACRO_VALUE_PTR_128(hPtr + idx, "=m", h, "x", "memory")
+                    datatypes::TSInt128::store(hPtr + idx, h);
                 }
             }
 
@@ -329,7 +329,7 @@ void ColumnCommand::process_OT_BOTH()
 
                 bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
                 pos += 2;
-                common::assign128BitPtrPtr(wide128Values + i, &bpp->outputMsg[pos]);
+                datatypes::TSInt128::assignInt128PtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
                 pos += 16;
             }
 

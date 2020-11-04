@@ -55,7 +55,7 @@
 #include "mcsv1_udaf.h"
 
 #include "branchpred.h"
-#include "simd_asm.h"
+#include "datatypes/mcs_int128.h"
 
 #include "../winport/winport.h"
 
@@ -395,11 +395,11 @@ public:
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField(T* strdata, uint32_t width, uint32_t colIndex);
+    inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField(T* strdata, uint32_t colIndex);
+    inline void setBinaryField(const T* value, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField_offset(T* strdata, uint32_t width, uint32_t colIndex);
+    inline void setBinaryField_offset(const T* value, uint32_t width, uint32_t colIndex);
     // support VARBINARY
     // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
     // treated the same, could use one of the length bit to distinguish these two cases.
@@ -787,41 +787,41 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
 }
 
 template<typename T>
-inline void Row::setBinaryField(T* value, uint32_t width, uint32_t colIndex)
+inline void Row::setBinaryField(const T* value, uint32_t width, uint32_t colIndex)
 {
     memcpy(&data[offsets[colIndex]], value, width);
 }
 
 template<typename T>
-inline void Row::setBinaryField(T* value, uint32_t colIndex)
+inline void Row::setBinaryField(const T* value, uint32_t colIndex)
 {
     *reinterpret_cast<T*>(&data[offsets[colIndex]]) = *value;
 }
 
 template<>
-inline void Row::setBinaryField<int128_t>(int128_t* value, uint32_t colIndex)
+inline void Row::setBinaryField<int128_t>(const int128_t* value, uint32_t colIndex)
 {
-    common::assign128BitPtrPtr(&data[offsets[colIndex]], value);
+    datatypes::TSInt128::assignInt128PtrPtr(&data[offsets[colIndex]], value);
 }
 
 
 // This method !cannot! be applied to uint8_t* buffers.
 template<typename T>
-inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset(const T* value, uint32_t width, uint32_t offset)
 {
     *reinterpret_cast<T*>(&data[offset]) = *value;
 }
 
 template<>
-inline void Row::setBinaryField_offset<uint8_t>(uint8_t* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset<uint8_t>(const uint8_t* value, uint32_t width, uint32_t offset)
 {
    memcpy(&data[offset], value, width);
 }
 
 template<>
-inline void Row::setBinaryField_offset<int128_t>(int128_t* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t width, uint32_t offset)
 {
-    common::assign128BitPtrPtr(&data[offset], value);
+     datatypes::TSInt128::assignInt128PtrPtr(&data[offset], value);
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
@@ -940,7 +940,7 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
 
 inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 {
-    common::assign128BitPtrPtr(&x, &data[offsets[colIndex]]);
+    datatypes::TSInt128::assignInt128PtrPtr(&x, &data[offsets[colIndex]]);
 }
 
 inline uint64_t Row::getRid() const
@@ -1152,7 +1152,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 {
-    setBinaryField<int128_t>(&(const_cast<int128_t&>(val)), colIndex);
+    setBinaryField<int128_t>(&val, colIndex);
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)

@@ -299,26 +299,23 @@ void FrameBoundExpressionRange<T>::validate()
             }
 
             case execplan::CalpontSystemCatalog::DECIMAL:
-            case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 if (UNLIKELY(this->fRow.getColumnWidth(this->fIndex[1])
                                 < datatypes::MAXDECIMALWIDTH))
                 {
-                    uint64_t tmp = this->fRow.getIntField(this->fIndex[1]);
+                    int64_t tmp = this->fRow.getIntField(this->fIndex[1]);
                     this->fIsZero = (tmp == 0);
 
-                    bool isSigned = (this->fRow.getColType(this->fIndex[1])
-                                     == execplan::CalpontSystemCatalog::DECIMAL);
-                    if (isSigned && tmp > std::numeric_limits<int>::max())
+                    if (tmp < 0)
                     {
                         invalid = true;
-                        oss << "<negative>";
+                        oss << tmp;
                     }
                 }
                 else
                 {
-                    int128_t tmp;
-                    this->fRow.getInt128Field(this->fIndex[1], tmp);
+                    int128_t tmp = 0;
+                    this->fRow.getInt128Field(this->fIndex[1], tmp); 
                     this->fIsZero = (tmp == 0);
 
                     if (tmp < 0)
@@ -326,6 +323,23 @@ void FrameBoundExpressionRange<T>::validate()
                         invalid = true;
                         oss << "<negative>";
                     }
+                }
+                break;
+            }
+
+            case execplan::CalpontSystemCatalog::UDECIMAL:
+            {
+                if (UNLIKELY(this->fRow.getColumnWidth(this->fIndex[1])
+                                < datatypes::MAXDECIMALWIDTH))
+                {
+                    uint64_t tmp = this->fRow.getUintField(this->fIndex[1]);
+                    this->fIsZero = (tmp == 0);
+                }
+                else
+                {
+                    int128_t tmp = 0;
+                    this->fRow.getInt128Field(this->fIndex[1], tmp); 
+                    this->fIsZero = (tmp == 0);
                 }
                 break;
             }

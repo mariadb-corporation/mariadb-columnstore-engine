@@ -2185,9 +2185,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         {
                             // We can't control boost::any asignment
                             // so let's get an aligned memory
-                            int128_t val;
-                            rowIn.getInt128Field(colIn, val);
-                            datum.columnData = val;
+                            datatypes::TSInt128 val(rowIn.getBinaryField<int128_t>(colIn));
+                            datum.columnData = val.s128Value;
                         }
                         else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
                         {

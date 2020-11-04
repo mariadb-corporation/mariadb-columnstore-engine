@@ -42,7 +42,6 @@ using namespace boost;
 #include "primproc.h"
 #include "dataconvert.h"
 #include "mcs_decimal.h"
-#include "simd_asm.h"
 
 using namespace logging;
 using namespace dbbc;
@@ -1971,9 +1970,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
 
                 case 16:
                 {
-                    const int128_t* int128Ptr = reinterpret_cast<const int128_t*>(args->val);
-                    common::assign128BitPtrPtr(&(ret->prestored_argVals128[argIndex]),
-                                               int128Ptr);
+                    datatypes::TSInt128::assignInt128PtrPtr(&(ret->prestored_argVals128[argIndex]),
+                                                            args->val);
                     break;
                 }
             }

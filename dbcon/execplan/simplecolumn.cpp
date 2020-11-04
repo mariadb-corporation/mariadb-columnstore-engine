@@ -635,8 +635,8 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             {
                 case 16:
                 {
-                    common::assign128BitPtrPtr(&fResult.decimalVal.s128Value,
-                                               row.getBinaryField_offset<int128_t>(fInputOffset));
+                    datatypes::TSInt128::assignInt128PtrPtr(&fResult.decimalVal.s128Value,
+                                                            row.getBinaryField_offset<int128_t>(fInputOffset));
                     break;
                 }
                 case 1:
