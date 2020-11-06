@@ -509,6 +509,27 @@ int8_t setupCwd()
 }
 }	// Namewspace
 
+
+static void setupSignalHandlers()
+{
+#ifndef _MSC_VER
+    /* set up some signal handlers */
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = added_a_pm;
+    sigaction(SIGHUP, &ign, 0);
+    ign.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &ign, 0);
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
+#endif
+}
+
+
 int main(int argc, char* argv[])
 {
     BRM::DBRM dbrm;
@@ -694,21 +715,7 @@ int main(int argc, char* argv[])
 
     Dec = DistributedEngineComm::instance(rm);
 
-#ifndef _MSC_VER
-    /* set up some signal handlers */
-    struct sigaction ign;
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = added_a_pm;
-    sigaction(SIGHUP, &ign, 0);
-    ign.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &ign, 0);
-
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &ign, 0);
-    sigaction(SIGABRT, &ign, 0);
-    sigaction(SIGFPE, &ign, 0);
-#endif
+    setupSignalHandlers();
 
     dmlserver.start();
 
