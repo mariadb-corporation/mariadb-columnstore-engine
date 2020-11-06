@@ -76,6 +76,27 @@ void reset(int sig)
     comm->reset();
 }
 
+
+static void setupSignalHandlers()
+{
+#ifdef SIGHUP
+    signal(SIGHUP, reset);
+#endif
+    signal(SIGINT, stop);
+    signal(SIGTERM, stop);
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
+
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
+}
+
+
 int main(int argc, char** argv)
 {
     // Set locale language
@@ -118,21 +139,7 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-#ifdef SIGHUP
-    signal(SIGHUP, reset);
-#endif
-    signal(SIGINT, stop);
-    signal(SIGTERM, stop);
-#ifdef SIGPIPE
-    signal(SIGPIPE, SIG_IGN);
-#endif
-
-    struct sigaction ign;
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &ign, 0);
-    sigaction(SIGABRT, &ign, 0);
-    sigaction(SIGFPE, &ign, 0);
+    setupSignalHandlers();
 
     if (!(argc >= 3 && (arg = argv[2]) == "fg"))
         err = fork();

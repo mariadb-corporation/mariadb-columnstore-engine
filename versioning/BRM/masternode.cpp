@@ -100,6 +100,28 @@ void reload(int num)
 }
 */
 
+
+static void setupSignalHandlers()
+{
+    /* XXXPAT: we might want to install signal handlers for every signal */
+
+    signal(SIGINT, stop);
+    signal(SIGTERM, stop);
+#ifndef _MSC_VER
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGUSR1, restart);
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    struct sigaction ign;
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
+}
+
+
 int main(int argc, char** argv)
 {
     // Set locale language
@@ -130,22 +152,7 @@ int main(int argc, char** argv)
 
     (void)config::Config::makeConfig();
 
-    /* XXXPAT: we might want to install signal handlers for every signal */
-
-    signal(SIGINT, stop);
-    signal(SIGTERM, stop);
-#ifndef _MSC_VER
-    signal(SIGHUP, SIG_IGN);
-    signal(SIGUSR1, restart);
-    signal(SIGPIPE, SIG_IGN);
-#endif
-    struct sigaction ign;
-
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &ign, 0);
-    sigaction(SIGABRT, &ign, 0);
-    sigaction(SIGFPE, &ign, 0);
+    setupSignalHandlers();
 
     idbdatafile::IDBPolicy::configIDBPolicy();
 
