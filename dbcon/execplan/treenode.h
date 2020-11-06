@@ -61,6 +61,12 @@ class IDB_Decimal: public datatypes::VDecimal
 {
 public:
   using datatypes::VDecimal::VDecimal;
+
+  inline void operator=(const datatypes::TSInt128& rhs)
+  {
+    value = 0; scale = 0; precision = 0;
+    datatypes::TSInt128::operator=(rhs);
+  }
 };
 
 

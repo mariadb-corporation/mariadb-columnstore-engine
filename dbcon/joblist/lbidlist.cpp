@@ -236,23 +236,15 @@ bool LBIDList::GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
 
                 if (isUnsigned(colDataType))
                 {
-                    if (typeid(T) == typeid(int128_t))
-                    {
-                        mmp->bigMax = 0;
-                        mmp->bigMin = -1;
-                    }
-                    else
-                    {
-                        mmp->max = 0;
-                        mmp->min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-                    }
+                    mmp->max = 0;
+                    mmp->min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
                 }
                 else
                 {
                     if (typeid(T) == typeid(int128_t))
                     {
-                        utils::int128Min(mmp->bigMax);
-                        utils::int128Max(mmp->bigMin);
+                        mmp->bigMax = datatypes::Decimal::minInt128;
+                        mmp->bigMin = datatypes::Decimal::maxInt128;
                     }
                     else
                     {
@@ -296,23 +288,15 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
 
         if (isUnsigned(colDataType))
         {
-            if (typeid(T) == typeid(int128_t))
-            {
-                mmp->bigMax = 0;
-                mmp->bigMin = -1;
-            }
-            else
-            {
-                mmp->max = 0;
-                mmp->min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            }
+            mmp->max = 0;
+            mmp->min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
         }
         else
         {
             if (typeid(T) == typeid(int128_t))
             {
-                utils::int128Min(mmp->bigMax);
-                utils::int128Max(mmp->bigMin);
+                mmp->bigMax = datatypes::Decimal::minInt128;
+                mmp->bigMin = datatypes::Decimal::maxInt128;
             }
             else
             {
@@ -327,6 +311,7 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
         return false;
     }
 
+    // *DRRTUY min/max should be 16 aligned here
     if (typeid(T) == typeid(int128_t))
     {
         *min = entry.partition.cprange.bigLoVal;
@@ -356,6 +341,7 @@ int LBIDList::getMinMaxFromEntries(T& min, T& max, int32_t& seq,
 
         if (lbid >= EMEntries[i].range.start && lbid <= lastLBID)
         {
+            // *DRRTUY min/max should be 16 aligned here
             if (typeid(T) == typeid(int128_t))
             {
                 min = EMEntries[i].partition.cprange.bigLoVal;
@@ -426,32 +412,25 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
                 }
                 else if (datatypes::isUnsigned(type))
                 {
-                    if (typeid(T) == typeid(int128_t))
-                    {
-                        if (static_cast<uint128_t>(min) < static_cast<uint128_t>(mmp->bigMin))
-                            mmp->bigMin = min;
+                    if (static_cast<uint64_t>(min) < static_cast<uint64_t>(mmp->min))
+                        mmp->min = min;
 
-                        if (static_cast<uint128_t>(max) > static_cast<uint128_t>(mmp->bigMax))
-                            mmp->bigMax = max;
-                    }
-                    else
-                    {
-                        if (static_cast<uint64_t>(min) < static_cast<uint64_t>(mmp->min))
-                            mmp->min = min;
-
-                        if (static_cast<uint64_t>(max) > static_cast<uint64_t>(mmp->max))
-                            mmp->max = max;
-                    }
+                    if (static_cast<uint64_t>(max) > static_cast<uint64_t>(mmp->max))
+                        mmp->max = max;
                 }
                 else
                 {
                     if (typeid(T) == typeid(int128_t))
                     {
                         if (min < mmp->bigMin)
+                        {
                             mmp->bigMin = min;
+                        }
 
                         if (max > mmp->bigMax)
+                        {
                             mmp->bigMax = max;
+                        }
                     }
                     else
                     {
@@ -694,16 +673,8 @@ bool LBIDList::checkSingleValue(T min, T max, T value,
     }
     else if (isUnsigned(type))
     {
-        if (typeid(T) == typeid(int128_t))
-        {
-            return (static_cast<uint128_t>(value) >= static_cast<uint128_t>(min) &&
-                    static_cast<uint128_t>(value) <= static_cast<uint128_t>(max));
-        }
-        else
-        {
-            return (static_cast<uint64_t>(value) >= static_cast<uint64_t>(min) &&
-                    static_cast<uint64_t>(value) <= static_cast<uint64_t>(max));
-        }
+        return (static_cast<uint64_t>(value) >= static_cast<uint64_t>(min) &&
+                static_cast<uint64_t>(value) <= static_cast<uint64_t>(max));
     }
     else
     {
@@ -727,16 +698,8 @@ bool LBIDList::checkRangeOverlap(T min, T max, T tmin, T tmax,
     }
     else if (isUnsigned(type))
     {
-        if (typeid(T) == typeid(int128_t))
-        {
-            return (static_cast<uint128_t>(tmin) <= static_cast<uint128_t>(max) &&
-                    static_cast<uint128_t>(tmax) >= static_cast<uint128_t>(min));
-        }
-        else
-        {
-            return (static_cast<uint64_t>(tmin) <= static_cast<uint64_t>(max) &&
-                    static_cast<uint64_t>(tmax) >= static_cast<uint64_t>(min));
-        }
+        return (static_cast<uint64_t>(tmin) <= static_cast<uint64_t>(max) &&
+                static_cast<uint64_t>(tmax) >= static_cast<uint64_t>(min));
     }
     else
     {
@@ -806,13 +769,6 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                     value = static_cast<int64_t>(val);
                     break;
                 }
-
-                case 16:
-                {
-                    uint128_t val = *(int128_t*)MsgDataPtr;
-                    bigValue = static_cast<int128_t>(val);
-                    break;
-                }
             }
         }
         else
@@ -849,21 +805,17 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
 
                 case 16:
                 {
-                    int128_t val = *(int128_t*)MsgDataPtr;
-                    bigValue = val;
+                    datatypes::TSInt128::assignPtrPtr(&bigValue, MsgDataPtr);
                     break;
                 }
             }
         }
 
-        // Should we also check for empty here?
-        // TODO MCOL-641
-        if (ct.isWideDecimalType())
+        if (ct.isWideDecimalType() && execplan::isNull(bigValue, ct))
         {
-            if (isNull(bigValue, ct))
                 continue;
         }
-        else if (isNull(value, ct)) // This will work even if the data column is unsigned.
+        else if (execplan::isNull(value, ct)) // This will work even if the data column is unsigned.
         {
             continue;
         }
@@ -885,14 +837,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
         }
         else if (bIsUnsigned)
         {
-            if (ct.colWidth != datatypes::MAXDECIMALWIDTH)
-            {
-                scan = compareVal(static_cast<uint64_t>(cpRange.loVal), static_cast<uint64_t>(cpRange.hiVal), static_cast<uint64_t>(value), op, lcf);
-            }
-            else
-            {
-                scan = compareVal(static_cast<uint128_t>(cpRange.bigLoVal), static_cast<uint128_t>(cpRange.bigHiVal), static_cast<uint128_t>(bigValue), op, lcf);
-            }
+            scan = compareVal(static_cast<uint64_t>(cpRange.loVal), static_cast<uint64_t>(cpRange.hiVal), static_cast<uint64_t>(value), op, lcf);
         }
         else
         {

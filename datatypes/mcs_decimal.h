@@ -24,11 +24,12 @@
 #include "mcs_basic_types.h"
 #include "exceptclasses.h"
 #include "widedecimalutils.h"
+#include "mcs_int128.h"
 
 
 namespace datatypes
 {
-    struct VDecimal;
+    class VDecimal;
 }
 
 // A class by Fabio Fernandes pulled off of stackoverflow
@@ -259,10 +260,11 @@ class Decimal
             VDecimal& result);
 
         /**
-            @brief Convenience method to put decimal into a std::string.
+            @brief Convenience methods to put decimal into a std::string.
         */
         static std::string toString(VDecimal& value);
         static std::string toString(const VDecimal& value);
+        static std::string toString(const int128_t& value);
 
         /**
             @brief The method detects whether decimal type is wide
@@ -339,20 +341,7 @@ class Decimal
             return static_cast<uint64_t>(value);
         }
 
-        /**
-            @brief The method converts a __float128 value to a double.
-        */
-        static inline double getDoubleFromFloat128(const __float128& value)
-        {
-            if (value > static_cast<__float128>(DBL_MAX))
-                return DBL_MAX;
-            else if (value < -static_cast<__float128>(DBL_MAX))
-                return -DBL_MAX;
-
-            return static_cast<double>(value);
-        }
-
-        /**
+         /**
             @brief The method converts a wide decimal value to a double.
         */
         static inline double getDoubleFromWideDecimal(const int128_t& value, int8_t scale)
@@ -372,19 +361,6 @@ class Decimal
         static inline double getDoubleFromWideDecimal(const int128_t& value)
         {
             return getDoubleFromFloat128(static_cast<__float128>(value));
-        }
-
-        /**
-            @brief The method converts a __float128 value to a long double.
-        */
-        static inline long double getLongDoubleFromFloat128(const __float128& value)
-        {
-            if (value > static_cast<__float128>(LDBL_MAX))
-                return LDBL_MAX;
-            else if (value < -static_cast<__float128>(LDBL_MAX))
-                return -LDBL_MAX;
-
-            return static_cast<long double>(value);
         }
 
         /**
@@ -568,19 +544,19 @@ struct NoOverflowCheck {
  * @brief VDecimal type
  *
  */
-struct VDecimal
+class VDecimal: public TSInt128
 {
-    VDecimal(): s128Value(0), value(0), scale(0), precision(0)
+    public:
+    VDecimal(): value(0), scale(0), precision(0)
     {
     }
 
     VDecimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
-        s128Value(val128),
+        TSInt128(val128),
         value(val),
         scale(s),
         precision(p)
-    {
-    }
+    { }
 
     int decimalComp(const VDecimal& d) const
     {
@@ -843,7 +819,6 @@ struct VDecimal
         }
     }
 
-    int128_t s128Value;
     int64_t value;
     int8_t  scale;	  // 0~38
     uint8_t precision;  // 1~38
