@@ -97,33 +97,12 @@ static void setupSignalHandlers()
 }
 
 
-int main(int argc, char** argv)
+static int child(const string& nodeName)
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
+    setupSignalHandlers();
 
-    BRM::logInit ( BRM::SubSystemLogId_workerNode );
-
-    string nodeName;
     SlaveDBRMNode slave;
-    string arg;
-    int err = 0;
     ShmKeys keys;
-
-    if (argc < 2)
-    {
-        ostringstream os;
-        os << "Usage: " << argv[0] << " DBRM_WorkerN";
-        cerr << os.str() << endl;
-        log(os.str());
-        fail();
-        exit(1);
-    }
-
-    idbdatafile::IDBPolicy::configIDBPolicy();
-
-    nodeName = argv[1];
 
     try
     {
@@ -139,51 +118,76 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    setupSignalHandlers();
+    /* Start 4 threads to monitor write lock state */
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
+
+    try
+    {
+        oam::Oam oam;
+
+        oam.processInitComplete("DBRMWorkerNode");
+    }
+    catch (exception& e)
+    {
+        ostringstream os;
+        os << "failed to notify OAM: " << e.what();
+        os << " continuing anyway";
+        cerr << os.str() << endl;
+        log(os.str(), logging::LOG_TYPE_WARNING);
+    }
+
+    try
+    {
+        comm->run();
+    }
+    catch (exception& e)
+    {
+        ostringstream os;
+        os << "An error occurred: " << e.what();
+        cerr << os.str() << endl;
+        log(os.str());
+        return 1;
+    }
+    return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+
+    BRM::logInit ( BRM::SubSystemLogId_workerNode );
+
+    string arg;
+    int err = 0;
+
+    if (argc < 2)
+    {
+        ostringstream os;
+        os << "Usage: " << argv[0] << " DBRM_WorkerN";
+        cerr << os.str() << endl;
+        log(os.str());
+        fail();
+        exit(1);
+    }
+
+    idbdatafile::IDBPolicy::configIDBPolicy();
 
     if (!(argc >= 3 && (arg = argv[2]) == "fg"))
         err = fork();
 
     if (err == 0)
     {
-
-        /* Start 4 threads to monitor write lock state */
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
-
-        try
-        {
-            oam::Oam oam;
-
-            oam.processInitComplete("DBRMWorkerNode");
-        }
-        catch (exception& e)
-        {
-            ostringstream os;
-            os << "failed to notify OAM: " << e.what();
-            os << " continuing anyway";
-            cerr << os.str() << endl;
-            log(os.str(), logging::LOG_TYPE_WARNING);
-        }
-
-        try
-        {
-            comm->run();
-        }
-        catch (exception& e)
-        {
-            ostringstream os;
-            os << "An error occurred: " << e.what();
-            cerr << os.str() << endl;
-            log(os.str());
-            exit(1);
-        }
+        return child(argv[1]);
     }
     else if (err < 0)
     {
