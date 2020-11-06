@@ -24,6 +24,7 @@
 #define FUNCTOR_STR_H
 
 #include "functor.h"
+#include "sql_crypt.h"
 
 namespace funcexp
 {
@@ -880,6 +881,64 @@ public:
                           FunctionParm& fp,
                           bool& isNull,
                           execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+/** @brief Func_encode class
+  */
+
+class Func_encode : public Func_Str
+{
+public:
+    Func_encode() : Func_Str("encode") , fSeeded(false) , fSeeds{0,0}  {}
+    virtual ~Func_encode() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    void resetSeed()
+    {
+        fSeeded = false;
+        fSeeds[0] = 0;
+        fSeeds[1] = 0;
+    }
+private:
+    void hash_password(ulong *result, const char *password, uint password_len);
+    bool fSeeded;
+    SQL_CRYPT sql_crypt;
+    ulong fSeeds[2];
+};
+
+/** @brief Func_encode class
+  */
+
+class Func_decode : public Func_Str
+{
+public:
+    Func_decode() : Func_Str("decode") , fSeeded(false) , fSeeds{0,0} {}
+    virtual ~Func_decode() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    void resetSeed()
+    {
+        fSeeded = false;
+        fSeeds[0] = 0;
+        fSeeds[1] = 0;
+    }
+private:
+  void hash_password(ulong *result, const char *password, uint password_len);
+  bool fSeeded;
+  SQL_CRYPT sql_crypt;
+  ulong fSeeds[2];
 };
 
 }

@@ -314,6 +314,7 @@ public:
 private:
     funcexp::FunctionParm fFunctionParms;
     funcexp::Func* fFunctor;   /// functor to execute this function
+    funcexp::Func* fDynamicFunctor = NULL; // for rand encode decode
 };
 
 /**
