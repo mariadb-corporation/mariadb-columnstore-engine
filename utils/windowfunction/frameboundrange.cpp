@@ -300,7 +300,8 @@ void FrameBoundExpressionRange<T>::validate()
 
             case execplan::CalpontSystemCatalog::DECIMAL:
             {
-                if (this->fRow.getColumnWidth(this->fIndex[1]) < 16)
+                if (UNLIKELY(this->fRow.getColumnWidth(this->fIndex[1])
+                                < datatypes::MAXDECIMALWIDTH))
                 {
                     int64_t tmp = this->fRow.getIntField(this->fIndex[1]);
                     this->fIsZero = (tmp == 0);
@@ -313,7 +314,7 @@ void FrameBoundExpressionRange<T>::validate()
                 }
                 else
                 {
-                    int128_t tmp = this->fRow.getInt128Field(this->fIndex[1]);
+                    datatypes::TSInt128 tmp = this->fRow.getTSInt128Field(this->fIndex[1]);
                     this->fIsZero = (tmp == 0);
 
                     if (tmp < 0)
@@ -321,6 +322,22 @@ void FrameBoundExpressionRange<T>::validate()
                         invalid = true;
                         oss << "<negative>";
                     }
+                }
+                break;
+            }
+
+            case execplan::CalpontSystemCatalog::UDECIMAL:
+            {
+                if (UNLIKELY(this->fRow.getColumnWidth(this->fIndex[1])
+                                < datatypes::MAXDECIMALWIDTH))
+                {
+                    uint64_t tmp = this->fRow.getUintField(this->fIndex[1]);
+                    this->fIsZero = (tmp == 0);
+                }
+                else
+                {
+                    datatypes::TSInt128 tmp = this->fRow.getTSInt128Field(this->fIndex[1]);
+                    this->fIsZero = (tmp == 0);
                 }
                 break;
             }
@@ -367,22 +384,6 @@ void FrameBoundExpressionRange<T>::validate()
                 }
 
                 break;
-            }
-
-            case execplan::CalpontSystemCatalog::UDECIMAL:
-            {
-                if (this->fRow.getColumnWidth(this->fIndex[1]) < 16)
-                {
-                    uint64_t tmp = this->fRow.getUintField(this->fIndex[1]);
-                    this->fIsZero = (tmp == 0);
-                    break;
-                }
-                else
-                {
-                    uint128_t tmp = this->fRow.getUint128Field(this->fIndex[1]);
-                    this->fIsZero = (tmp == 0);
-                    break;
-                }
             }
 
             case execplan::CalpontSystemCatalog::UTINYINT:

@@ -687,12 +687,12 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 
                 case 16:
                 {
-                    int128_t dec = row.getInt128Field(fInputIndex);
+                    datatypes::TSInt128 dec(row.getBinaryField<int128_t>(fInputIndex));
                     if (dec == datatypes::Decimal128Null)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.s128Value = dec;
+                        fResult.decimalVal = dec;
                         fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     }
 

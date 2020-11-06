@@ -181,11 +181,17 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T_IN, T_OUT>::makeFunction(int 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            if (wc->functionParms()[0]->resultType().colWidth < datatypes::MAXDECIMALWIDTH)
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+
+            if (width < datatypes::MAXDECIMALWIDTH)
             {
-                func.reset(new WF_sum_avg<int64_t, int128_t>(id, name));
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_sum_avg<uint64_t, int128_t>(id, name));
+                else
+                    func.reset(new WF_sum_avg<int64_t, int128_t>(id, name));
             }
-            else if (wc->functionParms()[0]->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            else if (width == datatypes::MAXDECIMALWIDTH)
             {
                 func.reset(new WF_sum_avg<int128_t, int128_t>(id, name));
             }

@@ -2992,7 +2992,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::DECIMAL:
                         case CalpontSystemCatalog::UDECIMAL:
                         {
-                            // WIP MCOL-641
                             if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
                                 int128_t* dec;
@@ -3007,9 +3006,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                                 break;
                             }
-
-                            // else
-                            //     fall through to integer cases
+                            [[fallthrough]];
                         }
                         /* fall through */
 
@@ -3360,7 +3357,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             {
                                 if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                                 {
-                                    // WIP MCOL-641
                                     int128_t* dec;
                                     char buf[datatypes::Decimal::MAXLENGTH16BYTES];
                                     dec = row.getBinaryField<int128_t>(fetchColPos);
@@ -3373,9 +3369,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                                     break;
                                 }
-
-                                // else
-                                //     fall through to integer cases
+                                [[fallthrough]];
                             }
                             /* fall through */
 

@@ -725,7 +725,6 @@ protected:
     static const static_any::any& ushortTypeId;
     static const static_any::any& uintTypeId;
     static const static_any::any& ulongTypeId;
-    static const static_any::any& uint128TypeId;
     static const static_any::any& ullTypeId;
     static const static_any::any& floatTypeId;
     static const static_any::any& doubleTypeId;

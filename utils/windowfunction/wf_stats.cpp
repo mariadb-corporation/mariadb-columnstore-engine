@@ -84,11 +84,16 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            if (wc->functionParms()[0]->resultType().colWidth < datatypes::MAXDECIMALWIDTH)
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+            if (width < datatypes::MAXDECIMALWIDTH)
             {
-                func.reset(new WF_stats<int64_t>(id, name));
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_stats<uint64_t>(id, name));
+                else
+                    func.reset(new WF_stats<int64_t>(id, name));
             }
-            else if (wc->functionParms()[0]->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            else if (width == datatypes::MAXDECIMALWIDTH)
             {
                 func.reset(new WF_stats<int128_t>(id, name));
             }
