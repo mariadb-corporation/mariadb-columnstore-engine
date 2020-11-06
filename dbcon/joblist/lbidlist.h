@@ -55,12 +55,12 @@ struct MinMaxPartition
     uint32_t blksScanned;
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min;
     };
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max;
     };
 };

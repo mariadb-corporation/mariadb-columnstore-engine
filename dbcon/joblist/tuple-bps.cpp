@@ -927,7 +927,7 @@ void TupleBPS::prepCasualPartitioning()
 {
     uint32_t i;
     int64_t min, max, seq;
-    __int128 bigMin, bigMax;
+    int128_t bigMin, bigMax;
     boost::mutex::scoped_lock lk(cpMutex);
 
     for (i = 0; i < scannedExtents.size(); i++)
@@ -1889,15 +1889,15 @@ abort:
 struct _CPInfo
 {
     _CPInfo(int64_t MIN, int64_t MAX, uint64_t l, bool val) : min(MIN), max(MAX), LBID(l), valid(val) { };
-    _CPInfo(__int128 BIGMIN, __int128 BIGMAX, uint64_t l, bool val) : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val) { };
+    _CPInfo(int128_t BIGMIN, int128_t BIGMAX, uint64_t l, bool val) : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val) { };
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min;
     };
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max;
     };
     uint64_t LBID;
@@ -1918,8 +1918,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
     bool validCPData;
     bool hasBinaryColumn;
-    __int128 min;
-    __int128 max;
+    int128_t min;
+    int128_t max;
     uint64_t lbid;
     vector<_CPInfo> cpv;
     uint32_t cachedIO;
@@ -3212,7 +3212,7 @@ void TupleBPS::setJoinFERG(const RowGroup& rg)
     fBPP->setJoinFERG(rg);
 }
 
-void TupleBPS::addCPPredicates(uint32_t OID, const vector<__int128>& vals, bool isRange,
+void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool isRange,
                                bool isSmallSideWideDecimal)
 {
 
@@ -3221,7 +3221,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<__int128>& vals, bool 
 
     uint32_t i, j, k;
     int64_t min, max, seq;
-    __int128 bigMin, bigMax;
+    int128_t bigMin, bigMax;
     bool isValid, intersection;
     vector<SCommand> colCmdVec = fBPP->getFilterSteps();
     ColumnCommandJL* cmd;
@@ -3292,7 +3292,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<__int128>& vals, bool 
                             }
                             else
                             {
-                                runtimeCPFlags[j] = ll.checkRangeOverlap((__int128) min, (__int128) max, vals[0], vals[1],
+                                runtimeCPFlags[j] = ll.checkRangeOverlap((int128_t) min, (int128_t) max, vals[0], vals[1],
                                                     colType.colDataType) && runtimeCPFlags[j];
                             }
                         }
@@ -3310,7 +3310,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<__int128>& vals, bool 
                                 else
                                 {
                                     intersection = intersection ||
-                                                   ll.checkSingleValue((__int128) min, (__int128) max, vals[k], colType.colDataType);
+                                                   ll.checkSingleValue((int128_t) min, (int128_t) max, vals[k], colType.colDataType);
                                 }
                             }
 

@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <cstring>
+#include "mcs_basic_types.h"
 
 namespace static_any
 {
@@ -127,8 +128,8 @@ namespace anyimpl
 #define BIG_POLICY(TYPE) template<> struct \
    choose_policy<TYPE> { typedef big_any_policy<TYPE> type; };
 
-   BIG_POLICY(__int128);
-   BIG_POLICY(unsigned __int128);
+   BIG_POLICY(int128_t);
+   BIG_POLICY(uint128_t);
    
    /// Specializations for small types.
 #define SMALL_POLICY(TYPE) template<> struct \

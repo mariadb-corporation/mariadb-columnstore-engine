@@ -88,7 +88,7 @@ public:
         fNewExtent(true)   { }
 
     // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(__int128 bigMinVal, __int128 bigMaxVal) :
+    ColExtInfEntry(int128_t bigMinVal, int128_t bigMaxVal) :
         fLbid(INVALID_LBID),
         fNewExtent(true),
         fbigMinVal(bigMinVal),
@@ -102,11 +102,11 @@ public:
         fNewExtent(true)   { }
 
     // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(unsigned __int128 bigMinVal, unsigned __int128 bigMaxVal) :
+    ColExtInfEntry(uint128_t bigMinVal, uint128_t bigMaxVal) :
         fLbid(INVALID_LBID),
         fNewExtent(true),
-        fbigMinVal(static_cast<__int128>(bigMinVal)),
-        fbigMaxVal(static_cast<__int128>(bigMaxVal)) { }
+        fbigMinVal(static_cast<int128_t>(bigMinVal)),
+        fbigMaxVal(static_cast<int128_t>(bigMaxVal)) { }
 
     BRM::LBID_t fLbid;     // LBID for an extent; should be the starting LBID
     int64_t     fMinVal;   // minimum value for extent associated with LBID
@@ -114,12 +114,12 @@ public:
     bool        fNewExtent;// is this a new extent
     union
     {
-        __int128 fbigMinVal;
+        int128_t fbigMinVal;
         int64_t fMinVal_;
     };
     union
     {
-        __int128 fbigMaxVal;
+        int128_t fbigMaxVal;
         int64_t fMaxVal_;
     };
 };
@@ -159,8 +159,8 @@ public:
                                    int width ) { }
 
     virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   __int128 minVal,
-                                   __int128 maxVal,
+                                   int128_t minVal,
+                                   int128_t maxVal,
                                    ColDataType colDataType,
                                    int width ) { }
 
@@ -231,7 +231,7 @@ public:
     }
 
     virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   __int128 minVal, __int128 maxVal,
+                                   int128_t minVal, int128_t maxVal,
                                    ColDataType colDataType,
                                    int width )
     {

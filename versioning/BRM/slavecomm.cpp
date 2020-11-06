@@ -1330,7 +1330,7 @@ void SlaveComm::do_setExtentsMaxMin(ByteStream& msg)
     uint64_t tmp64;
     uint32_t tmp32;
     uint8_t tmp8;
-    unsigned __int128 tmp128;
+    uint128_t tmp128;
     int err;
     ByteStream reply;
     int32_t updateCount;

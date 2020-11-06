@@ -21,11 +21,10 @@
 #include <cstdint>
 #include <cfloat>
 #include <limits>
+#include "mcs_basic_types.h"
 #include "exceptclasses.h"
 #include "widedecimalutils.h"
 
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
 
 namespace datatypes
 {

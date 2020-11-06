@@ -731,12 +731,12 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in,
 }
 
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out,
-        bool* validCPData, uint64_t* lbid, __int128* min, __int128* max,
+        bool* validCPData, uint64_t* lbid, int128_t* min, int128_t* max,
         uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks, bool* countThis,
         uint32_t threadID, bool* hasWideColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
 {
     uint64_t tmp64;
-    unsigned __int128 tmp128;
+    uint128_t tmp128;
     uint8_t tmp8;
     RGData rgData;
     uint32_t rowCount;

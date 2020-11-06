@@ -32,10 +32,6 @@ typedef int32_t mcs_sint32_t;
 #endif
 
 
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
-
-
 // Because including my_sys.h in a Columnstore header causes too many conflicts
 struct charset_info_st;
 typedef const struct charset_info_st CHARSET_INFO;

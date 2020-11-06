@@ -302,7 +302,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
     int32_t     iDate;
     char        charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
     long long   llVal = 0, llDate = 0;
-    __int128 bigllVal = 0;
+    int128_t    bigllVal = 0;
     uint64_t    tmp64;
     uint32_t    tmp32;
     uint8_t     ubiVal;
