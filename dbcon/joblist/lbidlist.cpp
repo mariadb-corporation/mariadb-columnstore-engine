@@ -236,7 +236,7 @@ bool LBIDList::GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
 
                 if (isUnsigned(colDataType))
                 {
-                    if (typeid(T) == typeid(__int128))
+                    if (typeid(T) == typeid(int128_t))
                     {
                         mmp->bigMax = 0;
                         mmp->bigMin = -1;
@@ -249,7 +249,7 @@ bool LBIDList::GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
                 }
                 else
                 {
-                    if (typeid(T) == typeid(__int128))
+                    if (typeid(T) == typeid(int128_t))
                     {
                         utils::int128Min(mmp->bigMax);
                         utils::int128Max(mmp->bigMin);
@@ -296,7 +296,7 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
 
         if (isUnsigned(colDataType))
         {
-            if (typeid(T) == typeid(__int128))
+            if (typeid(T) == typeid(int128_t))
             {
                 mmp->bigMax = 0;
                 mmp->bigMin = -1;
@@ -309,7 +309,7 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
         }
         else
         {
-            if (typeid(T) == typeid(__int128))
+            if (typeid(T) == typeid(int128_t))
             {
                 utils::int128Min(mmp->bigMax);
                 utils::int128Max(mmp->bigMin);
@@ -327,7 +327,7 @@ bool LBIDList::GetMinMax(T* min, T* max, int64_t* seq,
         return false;
     }
 
-    if (typeid(T) == typeid(__int128))
+    if (typeid(T) == typeid(int128_t))
     {
         *min = entry.partition.cprange.bigLoVal;
         *max = entry.partition.cprange.bigHiVal;
@@ -356,7 +356,7 @@ int LBIDList::getMinMaxFromEntries(T& min, T& max, int32_t& seq,
 
         if (lbid >= EMEntries[i].range.start && lbid <= lastLBID)
         {
-            if (typeid(T) == typeid(__int128))
+            if (typeid(T) == typeid(int128_t))
             {
                 min = EMEntries[i].partition.cprange.bigLoVal;
                 max = EMEntries[i].partition.cprange.bigHiVal;
@@ -426,12 +426,12 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
                 }
                 else if (datatypes::isUnsigned(type))
                 {
-                    if (typeid(T) == typeid(__int128))
+                    if (typeid(T) == typeid(int128_t))
                     {
-                        if (static_cast<unsigned __int128>(min) < static_cast<unsigned __int128>(mmp->bigMin))
+                        if (static_cast<uint128_t>(min) < static_cast<uint128_t>(mmp->bigMin))
                             mmp->bigMin = min;
 
-                        if (static_cast<unsigned __int128>(max) > static_cast<unsigned __int128>(mmp->bigMax))
+                        if (static_cast<uint128_t>(max) > static_cast<uint128_t>(mmp->bigMax))
                             mmp->bigMax = max;
                     }
                     else
@@ -445,7 +445,7 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
                 }
                 else
                 {
-                    if (typeid(T) == typeid(__int128))
+                    if (typeid(T) == typeid(int128_t))
                     {
                         if (min < mmp->bigMin)
                             mmp->bigMin = min;
@@ -686,7 +686,7 @@ bool LBIDList::checkSingleValue(T min, T max, T value,
     if (isCharType(type))
     {
         // MCOL-641 LBIDList::CasualPartitionDataType() returns false if
-        // width > 8 for a character type, so T cannot be __int128 here
+        // width > 8 for a character type, so T cannot be int128_t here
         uint64_t mmin = order_swap(min);
         uint64_t mmax = order_swap(max);
         uint64_t vvalue = order_swap(value);
@@ -694,10 +694,10 @@ bool LBIDList::checkSingleValue(T min, T max, T value,
     }
     else if (isUnsigned(type))
     {
-        if (typeid(T) == typeid(__int128))
+        if (typeid(T) == typeid(int128_t))
         {
-            return (static_cast<unsigned __int128>(value) >= static_cast<unsigned __int128>(min) &&
-                    static_cast<unsigned __int128>(value) <= static_cast<unsigned __int128>(max));
+            return (static_cast<uint128_t>(value) >= static_cast<uint128_t>(min) &&
+                    static_cast<uint128_t>(value) <= static_cast<uint128_t>(max));
         }
         else
         {
@@ -718,7 +718,7 @@ bool LBIDList::checkRangeOverlap(T min, T max, T tmin, T tmax,
     if (isCharType(type))
     {
         // MCOL-641 LBIDList::CasualPartitionDataType() returns false if
-        // width > 8 for a character type, so T cannot be __int128 here
+        // width > 8 for a character type, so T cannot be int128_t here
         uint64_t min2 = order_swap(min);
         uint64_t max2 = order_swap(max);
         uint64_t tmin2 = order_swap(tmin);
@@ -727,10 +727,10 @@ bool LBIDList::checkRangeOverlap(T min, T max, T tmin, T tmax,
     }
     else if (isUnsigned(type))
     {
-        if (typeid(T) == typeid(__int128))
+        if (typeid(T) == typeid(int128_t))
         {
-            return (static_cast<unsigned __int128>(tmin) <= static_cast<unsigned __int128>(max) &&
-                    static_cast<unsigned __int128>(tmax) >= static_cast<unsigned __int128>(min));
+            return (static_cast<uint128_t>(tmin) <= static_cast<uint128_t>(max) &&
+                    static_cast<uint128_t>(tmax) >= static_cast<uint128_t>(min));
         }
         else
         {
@@ -755,7 +755,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     const char* MsgDataPtr = (const char*) bs->buf();
     bool scan = true;
     int64_t value = 0;
-    __int128 bigValue = 0;
+    int128_t bigValue = 0;
     bool bIsUnsigned = datatypes::isUnsigned(ct.colDataType);
     bool bIsChar = datatypes::isCharType(ct.colDataType);
 
@@ -891,7 +891,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
             }
             else
             {
-                scan = compareVal(static_cast<unsigned __int128>(cpRange.bigLoVal), static_cast<unsigned __int128>(cpRange.bigHiVal), static_cast<unsigned __int128>(bigValue), op, lcf);
+                scan = compareVal(static_cast<uint128_t>(cpRange.bigLoVal), static_cast<uint128_t>(cpRange.bigHiVal), static_cast<uint128_t>(bigValue), op, lcf);
             }
         }
         else
@@ -959,7 +959,7 @@ void LBIDList::copyLbidList(const LBIDList& rhs)
 }
 
 template
-bool LBIDList::GetMinMax<__int128>(__int128& min, __int128& max, int64_t& seq, int64_t lbid,
+bool LBIDList::GetMinMax<int128_t>(int128_t& min, int128_t& max, int64_t& seq, int64_t lbid,
                                    const std::vector<struct BRM::EMEntry>* pEMEntries,
                                    execplan::CalpontSystemCatalog::ColDataType colDataType);
 template
@@ -968,7 +968,7 @@ bool LBIDList::GetMinMax<int64_t>(int64_t& min, int64_t& max, int64_t& seq, int6
                                   execplan::CalpontSystemCatalog::ColDataType colDataType);
 
 template
-bool LBIDList::GetMinMax<__int128>(__int128* min, __int128* max, int64_t* seq,
+bool LBIDList::GetMinMax<int128_t>(int128_t* min, int128_t* max, int64_t* seq,
                                    int64_t lbid, const tr1::unordered_map<int64_t, BRM::EMEntry>& entries,
                                    execplan::CalpontSystemCatalog::ColDataType colDataType);
 
@@ -978,7 +978,7 @@ bool LBIDList::GetMinMax<int64_t>(int64_t* min, int64_t* max, int64_t* seq,
                                   execplan::CalpontSystemCatalog::ColDataType colDataType);
 
 template
-void LBIDList::UpdateMinMax<__int128>(__int128 min, __int128 max, int64_t lbid,
+void LBIDList::UpdateMinMax<int128_t>(int128_t min, int128_t max, int64_t lbid,
                                       execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
 
 template
@@ -986,7 +986,7 @@ void LBIDList::UpdateMinMax<int64_t>(int64_t min, int64_t max, int64_t lbid,
                                      execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
 
 template
-bool LBIDList::checkSingleValue<__int128>(__int128 min, __int128 max, __int128 value,
+bool LBIDList::checkSingleValue<int128_t>(int128_t min, int128_t max, int128_t value,
                                 execplan::CalpontSystemCatalog::ColDataType type);
 
 template
@@ -994,7 +994,7 @@ bool LBIDList::checkSingleValue<int64_t>(int64_t min, int64_t max, int64_t value
                                execplan::CalpontSystemCatalog::ColDataType type);
 
 template
-bool LBIDList::checkRangeOverlap<__int128>(__int128 min, __int128 max, __int128 tmin, __int128 tmax,
+bool LBIDList::checkRangeOverlap<int128_t>(int128_t min, int128_t max, int128_t tmin, int128_t tmax,
                                  execplan::CalpontSystemCatalog::ColDataType type);
 
 template

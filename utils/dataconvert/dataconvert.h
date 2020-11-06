@@ -160,10 +160,6 @@ const int32_t MIN_TIMESTAMP_VALUE = 0;
 namespace dataconvert
 {
 
-// WIP MCOL-641
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
-
 enum CalpontDateTimeFormat
 {
     CALPONTDATE_ENUM     = 1, // date format is: "YYYY-MM-DD"
@@ -1474,7 +1470,7 @@ inline bool greaterThan128(int128_t a, int128_t b)
     return a > b;
 }
 
-// Naive __int128 version of strtoll
+// Naive int128_t version of strtoll
 inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
 {
     int128_t res = 0;

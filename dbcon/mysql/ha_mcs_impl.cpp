@@ -56,6 +56,7 @@ using namespace std;
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
 
+#include "mcs_basic_types.h"
 #include "idb_mysql.h"
 
 #define NEED_CALPONT_INTERFACE
@@ -145,7 +146,6 @@ namespace cal_impl_if
 extern bool nonConstFunc(Item_func* ifp);
 }
 
-using int128_t = __int128;
 
 namespace
 {

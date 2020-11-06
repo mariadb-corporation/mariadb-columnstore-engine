@@ -26,8 +26,6 @@
 #define WIDE_DEC_PRECISION 38U
 #define INITIAL_ROW_OFFSET 2
 
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
 using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
 
 class RowDecimalTest : public ::testing::Test {

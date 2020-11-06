@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <cstring>
 
+#include "mcs_basic_types.h"
 #include "exceptclasses.h"
 #include "serializeable.h"
 #include "any.hpp"
@@ -45,8 +46,6 @@ class ByteStreamTestSuite;
 #define EXPORT
 #endif
 
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
 
 namespace messageqcpp
 {

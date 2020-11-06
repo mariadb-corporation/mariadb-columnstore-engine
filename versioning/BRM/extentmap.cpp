@@ -132,7 +132,7 @@ EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64
     isValid = CP_INVALID;
 }
 
-EMCasualPartition_struct::EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum)
+EMCasualPartition_struct::EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, const int32_t seqNum)
 {
     bigLoVal = bigLo;
     bigHiVal = bigHi;
@@ -890,15 +890,15 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                                 }
                                 else
                                 {
-                                    if (static_cast<unsigned __int128>(it->second.bigMin) <
-                                            static_cast<unsigned __int128>(fExtentMap[i].partition.cprange.bigLoVal))
+                                    if (static_cast<uint128_t>(it->second.bigMin) <
+                                            static_cast<uint128_t>(fExtentMap[i].partition.cprange.bigLoVal))
                                     {
                                         fExtentMap[i].partition.cprange.bigLoVal =
                                             it->second.bigMin;
                                     }
 
-                                    if (static_cast<unsigned __int128>(it->second.bigMax) >
-                                            static_cast<unsigned __int128>(fExtentMap[i].partition.cprange.bigHiVal))
+                                    if (static_cast<uint128_t>(it->second.bigMax) >
+                                            static_cast<uint128_t>(fExtentMap[i].partition.cprange.bigHiVal))
                                     {
                                         fExtentMap[i].partition.cprange.bigHiVal =
                                             it->second.bigMax;
@@ -1033,7 +1033,7 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
 {
     if (isUnsigned(type))
     {
-        if (typeid(T) != typeid(__int128))
+        if (typeid(T) != typeid(int128_t))
         {
             if ( (static_cast<uint64_t>(min) >= (numeric_limits<uint64_t>::max() - 1)) ||
                     (static_cast<uint64_t>(max) >= (numeric_limits<uint64_t>::max() - 1)) )
@@ -1043,11 +1043,11 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
         }
         else
         {
-            unsigned __int128 temp;
+            uint128_t temp;
             utils::uint128Max(temp);
 
-            if ( (static_cast<unsigned __int128>(min) >= (temp - 1)) ||
-                    (static_cast<unsigned __int128>(max) >= (temp - 1)) )
+            if ( (static_cast<uint128_t>(min) >= (temp - 1)) ||
+                    (static_cast<uint128_t>(max) >= (temp - 1)) )
             {
                 return false;
             }
@@ -1055,7 +1055,7 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
     }
     else
     {
-        if (typeid(T) != typeid(__int128))
+        if (typeid(T) != typeid(int128_t))
         {
             if ( (min <= (numeric_limits<int64_t>::min() + 1)) ||
                     (max <= (numeric_limits<int64_t>::min() + 1)) )
@@ -1065,7 +1065,7 @@ bool ExtentMap::isValidCPRange(const T& max, const T& min, execplan::CalpontSyst
         }
         else
         {
-            __int128 temp;
+            int128_t temp;
             utils::int128Min(temp);
 
             if ( (min <= (temp + 1)) ||
@@ -1105,9 +1105,9 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
     }
 
 #endif
-    if (typeid(T) == typeid(__int128))
+    if (typeid(T) == typeid(int128_t))
     {
-        __int128 tmpMax, tmpMin;
+        int128_t tmpMax, tmpMin;
         utils::int128Min(tmpMax);
         utils::int128Max(tmpMin);
         max = tmpMax;
@@ -1143,7 +1143,7 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
 
             if (lbid >= fExtentMap[i].range.start && lbid <= lastBlock)
             {
-                if (typeid(T) == typeid(__int128))
+                if (typeid(T) == typeid(int128_t))
                 {
                     max = fExtentMap[i].partition.cprange.bigHiVal;
                     min = fExtentMap[i].partition.cprange.bigLoVal;
@@ -6059,7 +6059,7 @@ void ExtentMap::dumpTo(ostream& os)
 */
 
 template
-int ExtentMap::getMaxMin<__int128>(const LBID_t lbidRange, __int128& max, __int128& min, int32_t& seqNum);
+int ExtentMap::getMaxMin<int128_t>(const LBID_t lbidRange, int128_t& max, int128_t& min, int32_t& seqNum);
 
 template
 int ExtentMap::getMaxMin<int64_t>(const LBID_t lbidRange, int64_t& max, int64_t& min, int32_t& seqNum);

@@ -57,7 +57,6 @@ typedef uint32_t        FID;            /** @brief File ID */
 typedef uint64_t        RID;            /** @brief Row ID */
 typedef uint32_t        TxnID;          /** @brief Transaction ID (New)*/
 typedef uint32_t        HWM;            /** @brief high water mark */
-typedef unsigned __int128 uint128_t;
 
 /************************************************************************
  * Type enumerations

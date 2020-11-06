@@ -560,7 +560,7 @@ int DBRM::setExtentsMaxMin(const CPInfoList_t& cpInfos) DBRM_THROW
     {
         if (it->isBinaryColumn)
         {
-            command << (uint8_t)1 << (uint64_t)it->firstLbid << (unsigned __int128)it->bigMax << (unsigned __int128)it->bigMin << (uint32_t)it->seqNum;
+            command << (uint8_t)1 << (uint64_t)it->firstLbid << (uint128_t)it->bigMax << (uint128_t)it->bigMin << (uint32_t)it->seqNum;
         }
         else
         {
@@ -4583,7 +4583,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
 }
 
 template
-int DBRM::getExtentMaxMin<__int128>(const LBID_t lbid, __int128& max, __int128& min, int32_t& seqNum) throw();
+int DBRM::getExtentMaxMin<int128_t>(const LBID_t lbid, int128_t& max, int128_t& min, int32_t& seqNum) throw();
 
 template
 int DBRM::getExtentMaxMin<int64_t>(const LBID_t lbid, int64_t& max, int64_t& min, int32_t& seqNum) throw();
