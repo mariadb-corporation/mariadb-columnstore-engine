@@ -94,6 +94,26 @@ void added_a_pm(int)
 }
 }
 
+
+static void setupSignalHandlers()
+{
+#ifndef _MSC_VER
+    /* set up some signal handlers */
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = added_a_pm;
+    sigaction(SIGHUP, &ign, 0);
+    ign.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &ign, 0);
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
+#endif
+}
+
+
 int main(int argc, char* argv[])
 {
     // Set locale language
@@ -126,20 +146,8 @@ int main(int argc, char* argv[])
 
     ResourceManager* rm = ResourceManager::instance();
     Dec = DistributedEngineComm::instance(rm);
-#ifndef _MSC_VER
-    /* set up some signal handlers */
-    struct sigaction ign;
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = added_a_pm;
-    sigaction(SIGHUP, &ign, 0);
-    ign.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &ign, 0);
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &ign, 0);
-    sigaction(SIGABRT, &ign, 0);
-    sigaction(SIGFPE, &ign, 0);
-#endif
+
+    setupSignalHandlers();
 
     ddlprocessor::DDLProcessor ddlprocessor(1, 20);
 

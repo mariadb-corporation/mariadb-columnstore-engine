@@ -74,29 +74,9 @@ void coreSM(int sig)
     signalCaught = true;
 }
 
-int main(int argc, char** argv)
+
+static void setupSignalHandlers()
 {
-
-    SMLogging* logger = SMLogging::get();
-    IOCoordinator* ioc = NULL;
-    Cache* cache = NULL;
-    Synchronizer* sync = NULL;
-    Replicator* rep = NULL;
-
-    /* Instantiate objects to have them verify config settings before continuing */
-    try
-    {
-        ioc = IOCoordinator::get();
-        cache = Cache::get();
-        sync = Synchronizer::get();
-        rep = Replicator::get();
-    }
-    catch (exception &e)
-    {
-        logger->log(LOG_INFO, "StorageManager init FAIL: %s", e.what());
-        return -1;
-    }
-
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
 
@@ -123,6 +103,33 @@ int main(int argc, char** argv)
  
     sa.sa_handler = printKPIs;
     sigaction(SIGUSR2, &sa, NULL);
+}
+
+
+int main(int argc, char** argv)
+{
+
+    SMLogging* logger = SMLogging::get();
+    IOCoordinator* ioc = NULL;
+    Cache* cache = NULL;
+    Synchronizer* sync = NULL;
+    Replicator* rep = NULL;
+
+    /* Instantiate objects to have them verify config settings before continuing */
+    try
+    {
+        ioc = IOCoordinator::get();
+        cache = Cache::get();
+        sync = Synchronizer::get();
+        rep = Replicator::get();
+    }
+    catch (exception &e)
+    {
+        logger->log(LOG_INFO, "StorageManager init FAIL: %s", e.what());
+        return -1;
+    }
+
+    setupSignalHandlers();
     
     int ret = 0;
 
