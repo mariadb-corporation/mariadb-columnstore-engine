@@ -39,6 +39,7 @@
 #include <iosfwd>
 #include <limits>
 
+#include "mcs_basic_types.h"
 #include "../../writeengine/shared/we_typeext.h"
 #include "columnresult.h"
 #include "bytestream.h"

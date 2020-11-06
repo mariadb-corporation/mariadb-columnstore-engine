@@ -48,9 +48,6 @@ using namespace rowgroup;
 
 #include "joblisttypes.h"
 #include "mcs_decimal.h"
-
-using int128_t = __int128;
-
 #include "collation.h"
 
 // See agg_arg_charsets in sql_type.h to see conversion rules for 
@@ -856,13 +853,14 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::UDECIMAL:
             {
                 // equal compare. ignore sign and null
-                if (fRow1.getColumnWidth(*i) < datatypes::MAXDECIMALWIDTH)
+                if (UNLIKELY(fRow1.getColumnWidth(*i) < datatypes::MAXDECIMALWIDTH))
                 {
                     eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
                 }
                 else if (fRow1.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH)
                 {
-                    eq = (fRow1.getUint128Field(*i) == fRow2.getUint128Field(*i));
+                    eq = (*fRow1.getBinaryField<int128_t>(*i) ==
+                            *fRow2.getBinaryField<int128_t>(*i));
                 }
                 break;
             }

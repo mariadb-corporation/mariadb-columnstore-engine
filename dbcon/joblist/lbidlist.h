@@ -55,12 +55,12 @@ struct MinMaxPartition
     uint32_t blksScanned;
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min;
     };
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max;
     };
 };
@@ -91,7 +91,7 @@ public:
     // Functions to handle min/max values per lbid for casual partitioning;
     // If pEMEntries is provided, then min/max will be extracted from that
     // vector, else extents in BRM will be searched. If type is unsigned, caller
-    // should static cast returned min and max to uint64_t/uint128_t
+    // should static cast returned min and max to uint64_t/int128_t
     template<typename T>
     bool GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
                    const std::vector<struct BRM::EMEntry>* pEMEntries,

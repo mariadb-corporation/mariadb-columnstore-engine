@@ -42,6 +42,7 @@ using namespace boost;
 #include "primproc.h"
 #include "dataconvert.h"
 #include "mcs_decimal.h"
+
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -765,6 +766,8 @@ inline void store(const NewColRequestHeader* in,
 
             default:
                 std::cout << __func__ << " WARNING!!! unspecified column width." << std::endl;
+                [[fallthrough]];
+                
             case 8:
                 ptr2 += (rid << 3);
                 memcpy(ptr1, ptr2, 8);
@@ -1723,22 +1726,31 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
         // Set the min and max if necessary.  Ignore nulls.
         if (out->ValidMinMax && !isNull && !isEmpty)
         {
+
             if (in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR)
             {
                 // !!! colCompare is overloaded with int128_t only yet.
                 if (colCompare(out->Min, val, COMPARE_GT, false, in->DataType, W, placeholderRegex))
+                {
                     out->Min = val;
+                }
 
                 if (colCompare(out->Max, val, COMPARE_LT, false, in->DataType, W, placeholderRegex))
+                {
                     out->Max = val;
+                }
             }
             else
             {
                 if (out->Min > val)
+                {
                     out->Min = val;
+                }
 
                 if (out->Max < val)
+                {
                     out->Max = val;
+                }
             }
         }
 
@@ -1828,6 +1840,7 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
 
         case 32:
             std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
+            [[fallthrough]];
 
         default:
             idbassert(0);
@@ -1918,7 +1931,7 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
 
                 case 8:
                     ret->prestored_argVals[argIndex] = *reinterpret_cast<const uint64_t*>(args->val);
-                    break;  
+                    break;
             }
         }
         else
@@ -1956,7 +1969,11 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
                     break;
 
                 case 16:
-                    ret->prestored_argVals128[argIndex] = *reinterpret_cast<const int128_t*>(args->val);
+                {
+                    datatypes::TSInt128::assignPtrPtr(&(ret->prestored_argVals128[argIndex]),
+                                                            args->val);
+                    break;
+                }
             }
         }
 

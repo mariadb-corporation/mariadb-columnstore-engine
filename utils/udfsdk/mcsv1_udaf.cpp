@@ -18,6 +18,7 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include "mcs_basic_types.h"
 #include "mcsv1_udaf.h"
 #include "bytestream.h"
 #include "objectreader.h"
@@ -278,13 +279,12 @@ const static_any::any& mcsv1_UDAF::shortTypeId((short)1);
 const static_any::any& mcsv1_UDAF::intTypeId((int)1);
 const static_any::any& mcsv1_UDAF::longTypeId((long)1);
 const static_any::any& mcsv1_UDAF::llTypeId((long long)1);
-const static_any::any& mcsv1_UDAF::int128TypeId((__int128)1);
+const static_any::any& mcsv1_UDAF::int128TypeId((int128_t)1);
 const static_any::any& mcsv1_UDAF::ucharTypeId((unsigned char)1);
 const static_any::any& mcsv1_UDAF::ushortTypeId((unsigned short)1);
 const static_any::any& mcsv1_UDAF::uintTypeId((unsigned int)1);
 const static_any::any& mcsv1_UDAF::ulongTypeId((unsigned long)1);
 const static_any::any& mcsv1_UDAF::ullTypeId((unsigned long long)1);
-const static_any::any& mcsv1_UDAF::uint128TypeId((unsigned __int128)1);
 const static_any::any& mcsv1_UDAF::floatTypeId((float)1);
 const static_any::any& mcsv1_UDAF::doubleTypeId((double)1);
 const static_any::any& mcsv1_UDAF::strTypeId(typeStr);

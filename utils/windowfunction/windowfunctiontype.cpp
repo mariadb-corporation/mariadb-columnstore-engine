@@ -58,7 +58,6 @@ using namespace joblist;
 #include "wf_stats.h"
 #include "wf_sum_avg.h"
 #include "wf_udaf.h"
-#include "mcs_decimal.h"
 
 namespace windowfunction
 {
@@ -310,17 +309,7 @@ template<> void WindowFunctionType::getValue<string>(uint64_t i, string& t, CDT*
 
 template<> void WindowFunctionType::getValue<int128_t>(uint64_t i, int128_t& t, CDT* cdt)
 {
-    t = fRow.getInt128Field(i);
-
-    if (cdt)
-    {
-        *cdt = execplan::CalpontSystemCatalog::DECIMAL;
-    }
-}
-
-template<> void WindowFunctionType::getValue<uint128_t>(uint64_t i, uint128_t& t, CDT* cdt)
-{
-    t = fRow.getUint128Field(i);
+    fRow.getInt128Field(i, t);
 
     if (cdt)
     {
@@ -360,11 +349,6 @@ template<> void WindowFunctionType::setValue<long double>(uint64_t i, long doubl
 template<> void WindowFunctionType::setValue<int128_t>(uint64_t i, int128_t& t)
 {
     fRow.setInt128Field(t, i);
-}
-
-template<> void WindowFunctionType::setValue<uint128_t>(uint64_t i, uint128_t& t)
-{
-    fRow.setUint128Field(t, i);
 }
 
 template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
@@ -460,7 +444,7 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
                 }
                 else
                 {
-                    uint128_t iv = *v;
+                    int128_t iv = *v;
                     setValue(i, iv);
                 }
                 break;
@@ -525,22 +509,22 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
         }
 
         case CalpontSystemCatalog::DECIMAL:
-        {
-            uint32_t w = fRow.getColumnWidth(i);
-            if (w < 16)
-                t = (T) fRow.getIntField(i);
-            else 
-                t = (T) fRow.getInt128Field(i);
-            break;
-        }
-
         case CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t w = fRow.getColumnWidth(i);
-            if (w < 16)
-                t = (T) fRow.getUintField(i);
-            else 
-                t = (T) fRow.getUint128Field(i);
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                fRow.getColumnWidth(i);;
+
+            if (width < datatypes::MAXDECIMALWIDTH)
+            {
+                t = (ct == execplan::CalpontSystemCatalog::DECIMAL) ?
+                        (T) fRow.getIntField(i) :
+                        (T) fRow.getUintField(i);
+            }
+            else if (width == datatypes::MAXDECIMALWIDTH)
+            {
+                datatypes::TSInt128::assignPtrPtr(&t,
+                                                        fRow.getBinaryField<int128_t>(i));
+            }
             break;
         }
 
@@ -616,12 +600,6 @@ void WindowFunctionType::getConstValue<int128_t>(ConstantColumn* cc, int128_t& t
 }
 
 template<>
-void WindowFunctionType::getConstValue<uint128_t>(ConstantColumn* cc, uint128_t& t, bool& b)
-{
-    t = cc->getDecimalVal(fRow, b).s128Value;
-}
-
-template<>
 void WindowFunctionType::getConstValue<double>(ConstantColumn* cc, double& t, bool& b)
 {
     t = cc->getDoubleVal(fRow, b);
@@ -651,15 +629,12 @@ template void WindowFunctionType::implicit2T<float>(uint64_t, float&, int);
 template void WindowFunctionType::implicit2T<double>(uint64_t, double&, int);
 template void WindowFunctionType::implicit2T<long double>(uint64_t, long double&, int);
 template void WindowFunctionType::implicit2T<int128_t>(uint64_t, int128_t&, int);
-template void WindowFunctionType::implicit2T<uint128_t>(uint64_t, uint128_t&, int);
-
 template void WindowFunctionType::setValue<int64_t>(int, int64_t, int64_t, int64_t, int64_t*);
 template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int64_t, uint64_t*);
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
 template void WindowFunctionType::setValue<long double>(int, int64_t, int64_t, int64_t, long double*);
 template void WindowFunctionType::setValue<int128_t>(int, int64_t, int64_t, int64_t, int128_t*);
-template void WindowFunctionType::setValue<uint128_t>(int, int64_t, int64_t, int64_t, uint128_t*);
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
 {

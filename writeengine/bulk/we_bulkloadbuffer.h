@@ -45,12 +45,12 @@ public:
     int64_t satCount;
     union
     {
-        __int128 bigMinBufferVal;
+        int128_t bigMinBufferVal;
         int64_t minBufferVal_;
     };
     union
     {
-        __int128 bigMaxBufferVal;
+        int128_t bigMaxBufferVal;
         int64_t maxBufferVal_;
     };
     BLBufferStats(ColDataType colDataType) : satCount(0)

@@ -237,13 +237,12 @@ const static_any::any& RowAggregation::shortTypeId((short)1);
 const static_any::any& RowAggregation::intTypeId((int)1);
 const static_any::any& RowAggregation::longTypeId((long)1);
 const static_any::any& RowAggregation::llTypeId((long long)1);
-const static_any::any& RowAggregation::int128TypeId((__int128)1);
+const static_any::any& RowAggregation::int128TypeId((int128_t)1);
 const static_any::any& RowAggregation::ucharTypeId((unsigned char)1);
 const static_any::any& RowAggregation::ushortTypeId((unsigned short)1);
 const static_any::any& RowAggregation::uintTypeId((unsigned int)1);
 const static_any::any& RowAggregation::ulongTypeId((unsigned long)1);
 const static_any::any& RowAggregation::ullTypeId((unsigned long long)1);
-const static_any::any& RowAggregation::uint128TypeId((unsigned __int128)1);
 const static_any::any& RowAggregation::floatTypeId((float)1);
 const static_any::any& RowAggregation::doubleTypeId((double)1);
 const static_any::any& RowAggregation::longdoubleTypeId((long double)1);
@@ -2183,7 +2182,10 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         if (LIKELY(fRowGroupIn.getColumnWidth(colIn)
                             == datatypes::MAXDECIMALWIDTH))
                         {
-                            datum.columnData = rowIn.getInt128Field(colIn);
+                            // We can't control boost::any asignment
+                            // so let's get an aligned memory
+                            datatypes::TSInt128 val = rowIn.getTSInt128Field(colIn);
+                            datum.columnData = val.s128Value;
                         }
                         else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
                         {
@@ -2751,7 +2753,7 @@ void RowAggregationUM::calculateAvgColumns()
                 bool isWideDecimal =
                     datatypes::Decimal::isWideDecimalTypeByPrecision(precision);
 
-                if (LIKELY(!isWideDecimal))
+                if (!isWideDecimal)
                 {
                     long double sum = 0.0;
                     long double avg = 0.0;

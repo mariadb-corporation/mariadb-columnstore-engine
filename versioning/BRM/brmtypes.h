@@ -31,6 +31,7 @@
 #include <climits>
 #include <string>
 #include <time.h>
+#include "mcs_basic_types.h"
 #include "logicalpartition.h"
 
 #ifndef _MSC_VER
@@ -153,12 +154,12 @@ struct CPInfo
     int32_t seqNum;
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max_;
     };
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min_;
     };
     bool isBinaryColumn;
@@ -173,12 +174,12 @@ struct CPMaxMin
     int32_t seqNum;
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max_;
     };
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min_;
     };
     bool isBinaryColumn;
@@ -198,12 +199,12 @@ struct CPInfoMerge
     bool	newExtent; // is this to be treated as a new extent
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max_;
     };
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min_;
     };
 };
@@ -221,12 +222,12 @@ struct CPMaxMinMerge
     bool    newExtent;
     union
     {
-        __int128 bigMax;
+        int128_t bigMax;
         int64_t max_;
     };
     union
     {
-        __int128 bigMin;
+        int128_t bigMin;
         int64_t min_;
     };
 };
