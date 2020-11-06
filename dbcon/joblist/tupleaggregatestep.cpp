@@ -5205,7 +5205,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     bool locked = false;
     bool more = true;
     RowGroupDL* dlIn = NULL;
-    bool caughtException = false;
 
     RowAggregationMultiDistinct* multiDist = NULL;
 
