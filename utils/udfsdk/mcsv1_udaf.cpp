@@ -285,7 +285,6 @@ const static_any::any& mcsv1_UDAF::ushortTypeId((unsigned short)1);
 const static_any::any& mcsv1_UDAF::uintTypeId((unsigned int)1);
 const static_any::any& mcsv1_UDAF::ulongTypeId((unsigned long)1);
 const static_any::any& mcsv1_UDAF::ullTypeId((unsigned long long)1);
-const static_any::any& mcsv1_UDAF::uint128TypeId((uint128_t)1);
 const static_any::any& mcsv1_UDAF::floatTypeId((float)1);
 const static_any::any& mcsv1_UDAF::doubleTypeId((double)1);
 const static_any::any& mcsv1_UDAF::strTypeId(typeStr);

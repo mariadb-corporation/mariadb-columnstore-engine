@@ -548,7 +548,6 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     static const static_any::any& uintTypeId = (unsigned int)1;
     static const static_any::any& ulongTypeId = (unsigned long)1;
     static const static_any::any& ullTypeId = (unsigned long long)1;
-    static const static_any::any& uint128TypeId = (uint128_t)1;
     static const static_any::any& floatTypeId = (float)1;
     static const static_any::any& doubleTypeId = (double)1;
     static const std::string typeStr("");
@@ -563,7 +562,6 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
     int64_t intOut = 0;
     uint64_t uintOut = 0;
     int128_t int128Out = 0;
-    uint128_t uint128Out = 0;
     float floatOut = 0.0;
     double doubleOut = 0.0;
     long double longdoubleOut = 0.0;
@@ -660,15 +658,6 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         floatOut = int128Out;
         doubleOut = int128Out;
         longdoubleOut = int128Out;
-        oss << longdoubleOut;
-    }
-    else if (valOut.compatible(uint128TypeId))
-    {
-        uint128Out = valOut.cast<uint128_t>();
-        uintOut = intOut = uint128Out; // may truncate
-        floatOut = uint128Out;
-        doubleOut = uint128Out;
-        longdoubleOut = uint128Out;
         oss << longdoubleOut;
     }
 

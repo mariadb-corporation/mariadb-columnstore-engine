@@ -736,7 +736,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         uint32_t threadID, bool* hasWideColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
 {
     uint64_t tmp64;
-    uint128_t tmp128;
+    int128_t tmp128;
     uint8_t tmp8;
     RGData rgData;
     uint32_t rowCount;

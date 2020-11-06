@@ -129,7 +129,6 @@ namespace anyimpl
    choose_policy<TYPE> { typedef big_any_policy<TYPE> type; };
 
    BIG_POLICY(int128_t);
-   BIG_POLICY(uint128_t);
    
    /// Specializations for small types.
 #define SMALL_POLICY(TYPE) template<> struct \

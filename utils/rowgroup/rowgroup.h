@@ -55,6 +55,7 @@
 #include "mcsv1_udaf.h"
 
 #include "branchpred.h"
+#include "datatypes/mcs_int128.h"
 
 #include "../winport/winport.h"
 
@@ -350,8 +351,8 @@ public:
         return 0.0;   // TODO: Do something here
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
-    inline int128_t getInt128Field(uint32_t colIndex) const;
-    inline uint128_t getUint128Field(uint32_t colIndex) const;
+    inline void getInt128Field(uint32_t colIndex, int128_t& x) const;
+    inline datatypes::TSInt128 getTSInt128Field(uint32_t colIndex) const;
 
     inline uint64_t getBaseRid() const;
     inline uint64_t getRid() const;
@@ -382,7 +383,6 @@ public:
     inline void setDecimalField(double val, uint32_t colIndex) { };  // TODO: Do something here
     inline void setLongDoubleField(const long double& val, uint32_t colIndex);
     inline void setInt128Field(const int128_t& val, uint32_t colIndex);
-    inline void setUint128Field(const uint128_t& val, uint32_t colIndex);
 
     inline void setRid(uint64_t rid);
 
@@ -393,11 +393,11 @@ public:
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField(T* strdata, uint32_t width, uint32_t colIndex);
+    inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField(T* strdata, uint32_t colIndex);
+    inline void setBinaryField(const T* value, uint32_t colIndex);
     template<typename T>
-    inline void setBinaryField_offset(T* strdata, uint32_t width, uint32_t colIndex);
+    inline void setBinaryField_offset(const T* value, uint32_t width, uint32_t colIndex);
     // support VARBINARY
     // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
     // treated the same, could use one of the length bit to distinguish these two cases.
@@ -785,44 +785,41 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
 }
 
 template<typename T>
-inline void Row::setBinaryField(T* value, uint32_t width, uint32_t colIndex)
+inline void Row::setBinaryField(const T* value, uint32_t width, uint32_t colIndex)
 {
     memcpy(&data[offsets[colIndex]], value, width);
 }
 
 template<typename T>
-inline void Row::setBinaryField(T* value, uint32_t colIndex)
+inline void Row::setBinaryField(const T* value, uint32_t colIndex)
 {
     *reinterpret_cast<T*>(&data[offsets[colIndex]]) = *value;
 }
 
+template<>
+inline void Row::setBinaryField<int128_t>(const int128_t* value, uint32_t colIndex)
+{
+    datatypes::TSInt128::assignPtrPtr(&data[offsets[colIndex]], value);
+}
+
+
 // This method !cannot! be applied to uint8_t* buffers.
 template<typename T>
-inline void Row::setBinaryField_offset(T* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset(const T* value, uint32_t width, uint32_t offset)
 {
     *reinterpret_cast<T*>(&data[offset]) = *value;
 }
 
 template<>
-inline void Row::setBinaryField_offset<uint8_t>(uint8_t* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset<uint8_t>(const uint8_t* value, uint32_t width, uint32_t offset)
 {
    memcpy(&data[offset], value, width);
 }
 
 template<>
-inline void Row::setBinaryField_offset<int128_t>(int128_t* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t width, uint32_t offset)
 {
-    int128_t *dst128Ptr = reinterpret_cast<int128_t*>(&data[offset]);
-    __asm__ volatile("movdqu %0,%%xmm0;"
-        : 
-        :"m"( *value ) // input
-        :"xmm0" // clobbered
-    );
-    __asm__ volatile("movups %%xmm0,%0;"
-        : "=m" (*dst128Ptr)// output
-        : // input
-        : "memory", "xmm0" // clobbered
-    );
+     datatypes::TSInt128::assignPtrPtr(&data[offset], value);
 }
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
@@ -939,18 +936,15 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]);
 }
 
-// !!! Never ever try to remove inline from this f() b/c it returns
-// non-integral 16 byte DT
-inline int128_t Row::getInt128Field(uint32_t colIndex) const
+inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 {
-    return *((int128_t*) &data[offsets[colIndex]]);
+    datatypes::TSInt128::assignPtrPtr(&x, &data[offsets[colIndex]]);
 }
 
-// !!! Never ever try to remove inline from this f() b/c it returns
-// non-integral 16 byte DT
-inline uint128_t Row::getUint128Field(uint32_t colIndex) const
+inline datatypes::TSInt128 Row::getTSInt128Field(uint32_t colIndex) const
 {
-    return *((uint128_t*) &data[offsets[colIndex]]);
+    const int128_t* ptr = getBinaryField<int128_t>(colIndex);
+    return datatypes::TSInt128(ptr);
 }
 
 inline uint64_t Row::getRid() const
@@ -1162,12 +1156,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 {
-    *((int128_t*)&data[offsets[colIndex]]) = val;
-}
-
-inline void Row::setUint128Field(const uint128_t& val, uint32_t colIndex)
-{
-    *((uint128_t*)&data[offsets[colIndex]]) = val;
+    setBinaryField<int128_t>(&val, colIndex);
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)
