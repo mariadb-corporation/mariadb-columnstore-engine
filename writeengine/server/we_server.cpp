@@ -102,6 +102,26 @@ int setupResources()
     return 0;
 }
 
+
+static void setupSignalHandlers()
+{
+#ifndef _MSC_VER
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = added_a_pm;
+    sigaction(SIGHUP, &sa, 0);
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &sa, 0);
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &sa, 0);
+    sigaction(SIGABRT, &sa, 0);
+    sigaction(SIGFPE, &sa, 0);
+#endif
+}
+
+
 int main(int argc, char** argv)
 {
     // Set locale language
@@ -142,20 +162,7 @@ int main(int argc, char** argv)
         }
     }
 
-#ifndef _MSC_VER
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = added_a_pm;
-    sigaction(SIGHUP, &sa, 0);
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &sa, 0);
-
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &sa, 0);
-    sigaction(SIGABRT, &sa, 0);
-    sigaction(SIGFPE, &sa, 0);
-#endif
+    setupSignalHandlers();
 
     // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_WE_SRV );
