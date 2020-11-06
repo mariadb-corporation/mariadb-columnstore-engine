@@ -92,7 +92,7 @@ void ColExtInf::addOrUpdateEntryTemplate( RID     lastInputRow,
         // If all rows had null value for this column, then minVal will be
         // MAX_INT and maxVal will be MIN_INT (see getCPInfoForBRM()).
 
-        __int128 bigMinValInit;
+        int128_t bigMinValInit;
         utils::int128Max(bigMinValInit);
         if ((iter->second.fMinVal == LLONG_MIN && width <= 8) ||
             (iter->second.fbigMinVal == bigMinValInit && width > 8)) // init the range
@@ -124,12 +124,12 @@ void ColExtInf::addOrUpdateEntryTemplate( RID     lastInputRow,
                 }
                 else
                 {
-                    if (static_cast<unsigned __int128>(minVal)
-                            < static_cast<unsigned __int128>(iter->second.fbigMinVal))
+                    if (static_cast<uint128_t>(minVal)
+                            < static_cast<uint128_t>(iter->second.fbigMinVal))
                         iter->second.fbigMinVal = minVal;
 
-                    if (static_cast<unsigned __int128>(maxVal)
-                            > static_cast<unsigned __int128>(iter->second.fbigMaxVal))
+                    if (static_cast<uint128_t>(maxVal)
+                            > static_cast<uint128_t>(iter->second.fbigMaxVal))
                         iter->second.fbigMaxVal = maxVal;
                 }
             }
@@ -214,8 +214,8 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
         // if applicable (indicating an extent with no non-NULL values).
         int64_t minVal = iter->second.fMinVal;
         int64_t maxVal = iter->second.fMaxVal;
-        __int128 bigMinVal = iter->second.fbigMinVal;
-        __int128 bigMaxVal = iter->second.fbigMaxVal;
+        int128_t bigMinVal = iter->second.fbigMinVal;
+        int128_t bigMaxVal = iter->second.fbigMaxVal;
 
         if ( bIsChar )
         {

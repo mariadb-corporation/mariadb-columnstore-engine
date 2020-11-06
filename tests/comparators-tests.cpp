@@ -42,7 +42,6 @@
 #define DEBUG
 #define MEMORY_LIMIT 14983602176
 
-using int128_t = __int128;
 using namespace std;
 using namespace joblist;
 using namespace messageqcpp;

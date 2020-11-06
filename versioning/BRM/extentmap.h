@@ -137,17 +137,17 @@ struct EMCasualPartition_struct
     char isValid; //CP_INVALID - No min/max and no DML in progress. CP_UPDATING - Update in progress. CP_VALID- min/max is valid
     union
     {
-        __int128 bigLoVal; // These need to be reinterpreted as unsigned for uint64_t/uint128_t column types.
+        int128_t bigLoVal; // These need to be reinterpreted as unsigned for uint64_t/uint128_t column types.
         int64_t loVal;
     };
     union
     {
-        __int128 bigHiVal;
+        int128_t bigHiVal;
         int64_t hiVal;
     };
     EXPORT EMCasualPartition_struct();
     EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
-    EXPORT EMCasualPartition_struct(const __int128 bigLo, const __int128 bigHi, const int32_t seqNum);
+    EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, const int32_t seqNum);
     EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
     EXPORT EMCasualPartition_struct& operator= (const EMCasualPartition_struct& em);
 };

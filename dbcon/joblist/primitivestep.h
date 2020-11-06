@@ -46,6 +46,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
+#include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "brm.h"
@@ -1327,7 +1328,7 @@ public:
      * Note that it is an adder not a setter.  For an extent to be scanned, all calls
      * must have a non-empty intersection.
      */
-    void addCPPredicates(uint32_t OID, const std::vector<__int128>& vals, bool isRange,
+    void addCPPredicates(uint32_t OID, const std::vector<int128_t>& vals, bool isRange,
                          bool isSmallSideWideDecimal);
 
     /* semijoin adds */

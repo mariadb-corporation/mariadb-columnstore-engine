@@ -19,9 +19,7 @@
 #define WIDE_DECIMAL_UTILS_H
 
 #include <cstdint>
-
-using int128_t = __int128;
-using uint128_t = unsigned __int128;
+#include "mcs_basic_types.h"
 
 namespace utils
 {
