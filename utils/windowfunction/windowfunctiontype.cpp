@@ -801,7 +801,8 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
             v = &longDoubleNull;
             break;
         case CalpontSystemCatalog::BINARY:
-             cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+            cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << endl;
+            //fallthrough
         case CalpontSystemCatalog::VARBINARY:
         default:
             std::ostringstream oss;

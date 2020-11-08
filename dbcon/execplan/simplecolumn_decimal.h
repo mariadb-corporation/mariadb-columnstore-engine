@@ -144,6 +144,7 @@ void SimpleColumn_Decimal<len>::setNullVal()
             break;
         case 16:
             std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+            //fallthrough
         default:
             fNullVal = joblist::BIGINTNULL;
     }
