@@ -384,8 +384,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                         bigValue = static_cast<int128_t>(val);
                         break;
                     }
-                    /* fall through */
                 }
+                // fallthrough
 
                 case 8:
                 default:
@@ -430,8 +430,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                         bigValue = static_cast<int128_t>(val);
                         break;
                     }
-                    /* fall through */
                 }
+                // fallthrough
 
                 case 8:
                 default:

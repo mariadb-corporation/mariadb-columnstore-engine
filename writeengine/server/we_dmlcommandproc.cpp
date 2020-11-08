@@ -3006,7 +3006,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                                 break;
                             }
-                            [[fallthrough]];
                         }
                         /* fall through */
 
@@ -3369,7 +3368,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                                     break;
                                 }
-                                [[fallthrough]];
                             }
                             /* fall through */
 
