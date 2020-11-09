@@ -640,8 +640,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<1>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -653,8 +655,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<2>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<2>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -666,8 +670,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<4>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<4>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -679,8 +685,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<8>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<8>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -688,13 +696,14 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 
                 case 16:
                 {
-                    datatypes::TSInt128 dec(row.getBinaryField<int128_t>(fInputIndex));
-                    if (dec == datatypes::Decimal128Null)
+                    int128_t val;
+                    row.getInt128Field(fInputIndex, val);
+
+                    if (val == datatypes::Decimal128Null)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal = dec;
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(0, fResultType.scale, fResultType.precision, val);
                     }
 
                     break;
