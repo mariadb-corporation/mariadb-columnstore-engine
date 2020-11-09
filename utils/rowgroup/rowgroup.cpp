@@ -647,7 +647,7 @@ string Row::toString() const
                         os << buf << " ";
                         break;
                     }
-                    // fallthrough if the legacy DECIMAL
+                    //fallthrough
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -711,6 +711,7 @@ string Row::toCSV() const
                 }
                 case CalpontSystemCatalog::BINARY:
                     std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
+                    //fallthrough
 
                 default:
                     os << getIntField(i);
@@ -1783,6 +1784,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
                 case CalpontSystemCatalog::BINARY:
                     std::cout << __FILE__<< __LINE__ << __func__<< std::endl;
+                //fallthrough
                 default:
                     cr->PutData(row.getIntField<8>(j));
             }

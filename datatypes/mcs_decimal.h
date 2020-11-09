@@ -270,7 +270,7 @@ class Decimal
             @brief The method detects whether decimal type is wide
             using precision.
         */
-        static constexpr inline bool isWideDecimalTypeByPrecision(const int32_t precision)
+        static inline bool isWideDecimalTypeByPrecision(const int32_t precision)
         {
             return precision > INT64MAXPRECISION
                 && precision <= INT128MAXPRECISION;

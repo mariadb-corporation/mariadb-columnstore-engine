@@ -491,6 +491,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                     break;
                 case 16:
                     cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
+                    //fallthrough
                 default:
                     if (row.equals(CPNULLSTRMARK, fInputIndex))
                         isNull = true;
