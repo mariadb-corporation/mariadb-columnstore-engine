@@ -134,7 +134,7 @@ string Func_char::getStrVal(Row& row,
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+                IDB_Decimal d = rc->getDecimalVal(row, isNull);
 
                 if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
@@ -154,30 +154,16 @@ string Func_char::getStrVal(Row& row,
                         tmpval++;
 
                     value = datatypes::Decimal::getInt32FromWideDecimal(tmpval);
-
-                    // WIP MCOL-641
-                    /*if ( !getChar((int64_t)tmpval, buf) )
-                    {
-                        isNull = true;
-                        return "";
-                    }*/
                 }
                 else
                 {
                     double dscale = d.scale;
                     // get decimal and round up
-                    int value = d.value / pow(10.0, dscale);
+                    value = d.value / pow(10.0, dscale);
                     int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
                     if ( lefto > 4 )
                         value++;
-
-                    // WIP MCOL-641
-                    /*if ( !getChar((int64_t)value, buf) )
-                    {
-                        isNull = true;
-                        return "";
-                    }*/
                 }
             }
             break;
