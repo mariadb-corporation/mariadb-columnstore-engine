@@ -247,7 +247,7 @@ public:
         @brief The method detects whether decimal type is wide
         using csc colType.
     */
-    constexpr inline bool isWideDecimalType() const
+    inline bool isWideDecimalType() const
     {
         return (colDataType == DECIMAL ||
                 colDataType == UDECIMAL) &&
@@ -262,7 +262,7 @@ public:
     @brief The method detects whether decimal type is wide
     using datatype and width.
 */
-static constexpr inline bool isWideDecimalType(const datatypes::SystemCatalog::ColDataType &dt,
+static inline bool isWideDecimalType(const datatypes::SystemCatalog::ColDataType &dt,
                                                const int32_t width)
 {
   return width == MAXDECIMALWIDTH &&
