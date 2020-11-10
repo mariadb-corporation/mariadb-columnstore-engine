@@ -740,13 +740,9 @@ string Func_truncate::getStrVal(Row& row,
     }
 
     if (!op_ct.isWideDecimalType())
-        return dataconvert::DataConvert::decimalToString(x.value, x.scale, op_ct.colDataType);
+        return x.toString();
     else
-    {
-        char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-        dataconvert::DataConvert::decimalToString( &x.s128Value, x.scale, buf, (uint8_t) sizeof(buf), op_ct.colDataType);
-        return string(buf);
-    }
+        return x.toString(true);
 }
 
 

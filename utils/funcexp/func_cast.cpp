@@ -540,15 +540,10 @@ string Func_cast_char::getStrVal(Row& row,
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
-            char buf[80];
-
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-                dataconvert::DataConvert::decimalToString( &d.s128Value, d.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+                return d.toString(true).substr(0, length);
             else
-                dataconvert::DataConvert::decimalToString( d.value, d.scale, buf, 80, parm[0]->data()->resultType().colDataType);
-
-            string sbuf = buf;
-            return sbuf.substr(0, length);
+                return d.toString().substr(0, length);
         }
         break;
 
@@ -1229,17 +1224,10 @@ string Func_cast_decimal::getStrVal(Row& row,
                           parm,
                           isNull,
                           operationColType);
-
-    char buf[80];
-
-    if (decimal.precision > datatypes::INT64MAXPRECISION)
-        dataconvert::DataConvert::decimalToString( &decimal.s128Value, decimal.scale, buf, 80, operationColType.colDataType);
+    if (operationColType.colWidth == datatypes::MAXDECIMALWIDTH)
+        return decimal.toString(true);
     else
-        dataconvert::DataConvert::decimalToString( decimal.value, decimal.scale, buf, 80, operationColType.colDataType);
-
-    string value = buf;
-    return value;
-
+        return decimal.toString();
 }
 
 

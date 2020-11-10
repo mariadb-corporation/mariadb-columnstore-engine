@@ -300,7 +300,6 @@ void BRMReporter::sendCPToFile( )
 {
     if (fCPInfo.size() > 0)
     {
-        char buf[datatypes::Decimal::MAXLENGTH16BYTES];
         std::ostringstream oss;
         oss << "Writing " << fCPInfo.size() << " CP updates for table " <<
             fTableName << " to report file " << fRptFileName;
@@ -319,14 +318,9 @@ void BRMReporter::sendCPToFile( )
             }
             else
             {
-                std::string bigMin, bigMax;
-
-                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMin, 0, buf, (uint8_t) sizeof(buf), fCPInfo[i].type);
-                bigMin = buf;
-
-                dataconvert::DataConvert::decimalToString(&fCPInfo[i].bigMax, 0, buf, (uint8_t) sizeof(buf), fCPInfo[i].type);
-                bigMax = buf;
-
+                datatypes::TSInt128 bigMin(&fCPInfo[i].bigMin);
+                datatypes::TSInt128 bigMax(&fCPInfo[i].bigMax);
+        
                 fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
                          bigMax               << ' ' <<
                          bigMin               << ' ' <<

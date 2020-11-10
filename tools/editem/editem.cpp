@@ -191,14 +191,7 @@ const string fmt(T v)
         }
         else
         {
-            char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-
-            int128_t tmp = v;
-
-            dataconvert::DataConvert::decimalToString(
-                &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-
-            oss << buf;
+            oss << datatypes::TSInt128(v);
         }
     }
     else if (uflg)
@@ -218,14 +211,7 @@ const string fmt(T v)
             }
             else
             {
-                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-
-                int128_t tmp = static_cast<uint128_t>(v);
-
-                dataconvert::DataConvert::decimalToString(
-                    &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-
-                oss << buf;
+                oss << datatypes::TSInt128(v);
             }
         }
     }
@@ -247,14 +233,7 @@ const string fmt(T v)
             }
             else
             {
-                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-
-                int128_t tmp = v;
-
-                dataconvert::DataConvert::decimalToString(
-                    &tmp, 0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-
-                oss << buf;
+                oss << datatypes::TSInt128(v);
             }
         }
     }

@@ -1849,8 +1849,7 @@ string Func_format::getStrVal(Row& row,
         {
             IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-            char buf[80];
-
+            // This is an unacceptable way of doing rounding
             //perform rouding if needed
             if ( scale < 0 )
                 scale = 0;
@@ -1912,9 +1911,7 @@ string Func_format::getStrVal(Row& row,
 
                     decimal.s128Value = x;
                 }
-
-                dataconvert::DataConvert::decimalToString(&decimal.s128Value,
-                    decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+                value = decimal.toString(true);
             }
             else
             {
@@ -1973,12 +1970,8 @@ string Func_format::getStrVal(Row& row,
 
                     decimal.value = x;
                 }
-
-                dataconvert::DataConvert::decimalToString( decimal.value,
-                    decimal.scale, buf, 80, parm[0]->data()->resultType().colDataType);
+                value = decimal.toString();
             }
-
-            value = buf;
         }
         break;
 

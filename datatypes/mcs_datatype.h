@@ -720,6 +720,7 @@ public:
   virtual ~StoreField() {}
   virtual int32_t colWidth() const = 0;
   virtual int32_t precision() const = 0;
+  virtual int32_t scale() const = 0;
   virtual int store_date(int64_t val) = 0;
   virtual int store_datetime(int64_t val) = 0;
   virtual int store_time(int64_t val) = 0;
@@ -730,8 +731,8 @@ public:
   virtual int store_float(float val) = 0;
   virtual int store_double(double val) = 0;
   virtual int store_long_double(long double val) = 0;
-  virtual int store_decimal64(int64_t val) = 0;
-  virtual int store_decimal128(const int128_t &val) = 0;
+  virtual int store_decimal64(const datatypes::VDecimal& dec) = 0;
+  virtual int store_decimal128(const datatypes::VDecimal& dec) = 0;
   virtual int store_lob(const char *str, size_t length) = 0;
 };
 

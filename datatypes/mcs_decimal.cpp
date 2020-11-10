@@ -195,45 +195,6 @@ namespace datatypes
         }
     }
 
-    std::string Decimal::toString(VDecimal& value)
-    {
-        char buf[Decimal::MAXLENGTH16BYTES];
-        if (value.s128Value == Decimal128Null)
-        {
-            return std::string("NULL");
-        }
-        else if (value.s128Value == Decimal128Empty)
-        {
-            return std::string("EMPTY");
-        }
-        dataconvert::DataConvert::decimalToString(&value.s128Value,
-            value.scale, buf, (uint8_t) sizeof(buf),
-            datatypes::SystemCatalog::DECIMAL);
-        return std::string(buf);
-    }
-
-    std::string Decimal::toString(const VDecimal& value)
-    {
-        return toString(const_cast<VDecimal&>(value));
-    }
-
-    std::string Decimal::toString(const int128_t& value)
-    {
-        char buf[Decimal::MAXLENGTH16BYTES];
-        if (value == Decimal128Null)
-        {
-            return std::string("NULL");
-        }
-        else if (value == Decimal128Empty)
-        {
-            return std::string("EMPTY");
-        }
-        int128_t& constLessValue = const_cast<int128_t&>(value);
-        dataconvert::DataConvert::decimalToString(&constLessValue,
-            0, buf, sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-        return std::string(buf);
-    }
-
     int Decimal::compare(const VDecimal& l, const VDecimal& r)
     {
         int128_t divisorL, divisorR;
@@ -558,5 +519,222 @@ namespace datatypes
                                        (double)result.value / mcs_pow_10[l.scale + r.scale - result.scale] - 0.5));
         }
     }
+
+    // Writes integer part of a Decimal using int128 argument provided
+    uint8_t VDecimal::writeIntPart(const int128_t& x,
+                                   char* buf,
+                                   const uint8_t buflen) const
+    {
+        char* p = buf;
+        int128_t intPart = x;
+        int128_t high = 0, mid = 0, low = 0;
+        uint64_t maxUint64divisor = 10000000000000000000ULL;
+
+        // Assuming scale = [0, 56]
+        switch (scale / datatypes::maxPowOf10)
+        {
+            case 2: // scale = [38, 56]
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                low = intPart;
+                break;
+            case 1: // scale = [19, 37]
+                intPart /= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                intPart /= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
+                low = intPart % maxUint64divisor;
+                mid = intPart / maxUint64divisor;
+                break;
+            case 0: // scale = [0, 18]
+                intPart /= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
+                low = intPart % maxUint64divisor;
+                intPart /= maxUint64divisor;
+                mid = intPart % maxUint64divisor;
+                high = intPart / maxUint64divisor;
+                break;
+            default:
+                throw logging::QueryDataExcept("VDecimal::writeIntPart() bad scale",
+                                               logging::formatErr);
+        }
+
+        p += printPodParts(p, high, mid, low);
+        uint8_t written = p - buf;
+        if (buflen <= written)
+        {
+            throw logging::QueryDataExcept("VDecimal::writeIntPart() char buffer overflow.",
+                                           logging::formatErr);
+        }
+
+        return written;
+    }
+
+    uint8_t VDecimal::writeFractionalPart(const int128_t& x,
+                                          char* buf,
+                                          const uint8_t buflen) const
+    {
+        int128_t scaleDivisor = 1;
+        char* p = buf;
+
+        switch (scale / datatypes::maxPowOf10)
+        {
+            case 2:
+                scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                break;
+            case 1:
+                scaleDivisor *= datatypes::mcs_pow_10[datatypes::maxPowOf10];
+                //fallthrough
+            case 0:
+                scaleDivisor *= datatypes::mcs_pow_10[scale % datatypes::maxPowOf10];
+        }
+
+        int128_t fractionalPart = x % scaleDivisor;
+
+        // divide by the base until we have non-zero quotient
+        scaleDivisor /= 10;
+
+        while (scaleDivisor > 1 && fractionalPart / scaleDivisor == 0)
+        {
+            *p++ = '0';
+            scaleDivisor /= 10;
+        }
+        size_t written = p - buf;;
+        p += TSInt128::writeIntPart(fractionalPart, p, buflen - written);
+        return p - buf;
+    }
+
+    // The method writes Decimal based on TSInt128 with scale provided.
+    // It first writes sign, then extracts integer part
+    // prints delimiter and then decimal part.
+    std::string VDecimal::toStringTSInt128WithScale() const
+    {
+        char buf[Decimal::MAXLENGTH16BYTES];
+        uint8_t left = sizeof(buf); 
+        char* p = buf;
+        int128_t tempValue = s128Value;
+        // sign
+        if (tempValue < static_cast<int128_t>(0))
+        {
+            *p++ = '-';
+            tempValue *= -1;
+            left--;
+        }
+
+        // integer part
+        p += writeIntPart(tempValue, p, left);
+
+        // decimal delimiter
+        *p++ = '.';
+        // decimal part
+        left = sizeof(buf) - (p - buf);
+        p += writeFractionalPart(tempValue, p, left);
+
+        *p = '\0';
+
+        uint8_t written = p - buf;
+        if (sizeof(buf) <= written)
+        {
+            throw logging::QueryDataExcept("VDecimal::toString() char buffer overflow.",
+                                           logging::formatErr);
+        }
+        return std::string(buf);
+    }
+
+    std::string VDecimal::toStringTSInt64() const
+    {
+        char buf[Decimal::MAXLENGTH8BYTES];
+        // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
+        // We don't make a copy of value b/c we mutate its string
+        // representation.
+#ifndef __LP64__
+            snprintf(buf, sizeof(buf), "%lld", value);
+#else
+            snprintf(buf, sizeof(buf), "%ld", value);
+#endif
+
+        //we want to move the last dt_scale chars right by one spot
+        // to insert the dp we want to move the trailing null as well,
+        // so it's really dt_scale+1 chars
+        size_t l1 = strlen(buf);
+        char* ptr = &buf[0];
+
+        if (value < 0)
+        {
+            ptr++;
+            idbassert(l1 >= 2);
+            l1--;
+        }
+
+        //need to make sure we have enough leading zeros for this to work.
+        //at this point scale is always > 0
+        size_t l2 = 1;
+
+        if ((unsigned)scale > l1)
+        {
+            const char* zeros = "00000000000000000000"; //20 0's
+            size_t diff = 0;
+
+            if (value != 0)
+                diff = scale - l1; //this will always be > 0
+            else
+                diff = scale;
+
+            memmove((ptr + diff), ptr, l1 + 1); //also move null
+            memcpy(ptr, zeros, diff);
+
+            if (value != 0)
+                l1 = 0;
+            else
+                l1 = 1;
+        }
+        else if ((unsigned)scale == l1)
+        {
+            l1 = 0;
+            l2 = 2;
+        }
+        else
+        {
+            l1 -= scale;
+        }
+
+        memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
+
+        if (l2 == 2)
+            *(ptr + l1++) = '0';
+
+        *(ptr + l1) = '.';
+        return std::string(buf);
+    }
+    
+    // Dispatcher method for toString() implementations
+    std::string VDecimal::toString(bool hasTSInt128) const
+    {
+        // There must be no empty at this point though
+        if (isNull())
+        {
+            return std::string("NULL");
+        }
+
+        if(LIKELY(hasTSInt128 || isTSInt128ByPrecision()))
+        {
+            if (scale)
+            {
+                return toStringTSInt128WithScale();
+            }
+            return TSInt128::toString();
+        }
+        // TSInt64 Decimal
+        if (scale)
+        {
+            return toStringTSInt64();
+        }
+        return std::to_string(value);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const VDecimal& dec)
+    {
+        os << dec.toString();
+        return os;
+    }
+
 
 } // end of namespace
