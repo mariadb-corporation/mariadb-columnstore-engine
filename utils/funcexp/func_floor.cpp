@@ -436,11 +436,11 @@ string Func_floor::getStrVal(Row& row,
 
         if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
         {
-            dataconvert::DataConvert::decimalToString(&d.s128Value, d.scale, tmp, 511, op_ct.colDataType);
+            return d.toString(true);
         }
         else
         {
-            dataconvert::DataConvert::decimalToString(d.value, d.scale, tmp, 511, op_ct.colDataType);
+            return d.toString();
         }
     }
     else if (isUnsigned(op_ct.colDataType))

@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <string>
 
 // Inline asm has three argument lists: output, input and clobber list
 #if defined(__GNUC__) && (__GNUC___ > 7)
@@ -116,17 +117,40 @@ static inline long double getLongDoubleFromFloat128(const __float128& value)
 class TSInt128
 {
   public:
-    // A variety of ctors for aligned and unaligned arguments
+    static constexpr uint8_t MAXLENGTH16BYTES = 42;
+    static constexpr int128_t NullValue = int128_t(0x8000000000000000LL) << 64;
+    static constexpr int128_t EmptyValue = (int128_t(0x8000000000000000LL) << 64) + 1;
+
+
+    //  A variety of ctors for aligned and unaligned arguments
     TSInt128(): s128Value(0) { }
 
-    // aligned argument
+    //    aligned argument
     TSInt128(const int128_t& x) { s128Value = x; }
 
-    // unaligned argument
+    //    unaligned argument
     TSInt128(const int128_t* x) { assignPtrPtr(&s128Value, x); }
 
-    // unaligned argument
+    //    unaligned argument
     TSInt128(const unsigned char* x) { assignPtrPtr(&s128Value, x); }
+
+    //    Method returns max length of a string representation
+    static constexpr uint8_t maxLength()
+    {
+      return TSInt128::MAXLENGTH16BYTES;
+    }
+
+    //    Checks if the value is NULL
+    inline bool isNull() const
+    {
+      return s128Value == NullValue;
+    }
+
+    //    Checks if the value is Empty
+    inline bool isEmpty() const
+    {
+      return s128Value == EmptyValue;
+    }
 
     //     The method copies 16 bytes from one memory cell
     //     into another using memcpy or SIMD.
@@ -157,6 +181,22 @@ class TSInt128
     {
       return s128Value == static_cast<int128_t>(x);
     }
+
+    //    print int128_t parts represented as PODs
+    uint8_t printPodParts(char* buf,
+                          const int128_t& high,
+                          const int128_t& mid,
+                          const int128_t& low) const;
+
+    //    writes integer part of dec into a buffer
+    uint8_t writeIntPart(const int128_t& x,
+                         char* buf,
+                         const uint8_t buflen) const;
+
+    //    string representation of TSInt128
+    std::string toString() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const TSInt128& x);
 
     //     The method converts a wide decimal s128Value to a double.
     inline double getDoubleFromWideDecimal();

@@ -38,6 +38,7 @@ public:
   const CalpontSystemCatalog::ColType &type() const { return m_type; }
   int32_t colWidth() const override { return m_type.colWidth; }
   int32_t precision() const override { return m_type.precision; }
+  int32_t scale() const override { return m_type.scale; }
 
   int store_date(int64_t val) override
   {
@@ -160,30 +161,16 @@ public:
     return m_field->store(static_cast<double>(dl));
   }
 
-  int store_decimal64(int64_t val) override
+  int store_decimal64(const datatypes::VDecimal& dec) override
   {
-    // @bug4388 stick to InfiniDB's scale in case mysql gives wrong scale due
-    // to create vtable limitation.
-    //if (f2->dec < m_type.scale)
-    //  f2->dec = m_type.scale;
-
-    // WIP MCOL-641
-    // This is too much
-    char buf[256];
-    dataconvert::DataConvert::decimalToString(val, (unsigned)m_type.scale,
-                                              buf, sizeof(buf), m_type.colDataType);
-    return m_field->store(buf, strlen(buf), m_field->charset());
+    std::string decAsAStr = dec.toString();
+    return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
-  int store_decimal128(const int128_t &val) override
+  int store_decimal128(const datatypes::VDecimal& dec) override
   {
-    // We won't have more than [+-][0][.] + up to 38 digits
-    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-    dataconvert::DataConvert::decimalToString((int128_t*) &val,
-                                              (unsigned) m_type.scale,
-                                              buf, (uint8_t) sizeof(buf),
-                                              m_type.colDataType);
-    return m_field->store(buf, strlen(buf), m_field->charset());
+    std::string decAsAStr = dec.toString(true);
+    return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
   int store_lob(const char *str, size_t length) override

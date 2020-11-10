@@ -2994,16 +2994,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         {
                             if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
-                                int128_t* dec;
-                                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-                                dec = row.getBinaryField<int128_t>(fetchColPos);
-
-                                dataconvert::DataConvert::decimalToString(dec,
-                                    (unsigned)fetchColScales[fetchColPos], buf,
-                                    (uint8_t) sizeof(buf), fetchColTypes[fetchColPos]);
-
-                                value.assign(buf);
-
+                                datatypes::VDecimal dec(0,
+                                                        fetchColScales[fetchColPos],
+                                                        rowGroups[txnId]->getPrecision()[fetchColPos],
+                                                        row.getBinaryField<int128_t>(fetchColPos));
+                                value = dec.toString(true);
                                 break;
                             }
                         }
@@ -3042,12 +3037,10 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                 }
                                 else
                                 {
-                                    const int ctmp_size = 65 + 1 + 1 + 1;
-                                    char ctmp[ctmp_size] = {0};
-                                    DataConvert::decimalToString(
-                                        intColVal, fetchColScales[fetchColPos],
-                                        ctmp, ctmp_size, fetchColTypes[fetchColPos]);
-                                    value = ctmp;  // null termination by decimalToString
+                                    datatypes::VDecimal dec(intColVal,
+                                                            fetchColScales[fetchColPos],
+                                                            rowGroups[txnId]->getPrecision()[fetchColPos]);
+                                    value = dec.toString();
                                 }
                             }
                             break;
@@ -3356,16 +3349,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             {
                                 if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                                 {
-                                    int128_t* dec;
-                                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-                                    dec = row.getBinaryField<int128_t>(fetchColPos);
-
-                                    dataconvert::DataConvert::decimalToString(dec,
-                                        (unsigned)fetchColScales[fetchColPos], buf,
-                                        (uint8_t) sizeof(buf), fetchColTypes[fetchColPos]);
-
-                                    value = buf;
-
+                                    datatypes::VDecimal dec(0,
+                                                            fetchColScales[fetchColPos],
+                                                            rowGroups[txnId]->getPrecision()[fetchColPos],
+                                                            row.getBinaryField<int128_t>(fetchColPos));
+                                    value = dec.toString(true);
                                     break;
                                 }
                             }
@@ -3405,12 +3393,10 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                     }
                                     else
                                     {
-                                        const int ctmp_size = 65 + 1 + 1 + 1;
-                                        char ctmp[ctmp_size] = {0};
-                                        DataConvert::decimalToString(
-                                            intColVal, fetchColScales[fetchColPos],
-                                            ctmp, ctmp_size, fetchColTypes[fetchColPos]);
-                                        value = ctmp;  // null termination by decimalToString
+                                        datatypes::VDecimal dec(intColVal,
+                                                                fetchColScales[fetchColPos],
+                                                                rowGroups[txnId]->getPrecision()[fetchColPos]);
+                                        value = dec.toString();
                                     }
                                 }
                                 break;
