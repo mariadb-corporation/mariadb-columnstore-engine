@@ -126,7 +126,7 @@ int SqlFileParser::Parse(const string& sqlfile)
         throw length_error("SqlFileParser has file size hard limit of 16K.");
     }
 
-    unsigned rcount;
+    std::streamsize rcount;
     rcount = ifsql.readsome(sqlbuf, sizeof(sqlbuf) - 1);
 
     if (rcount < 0)
