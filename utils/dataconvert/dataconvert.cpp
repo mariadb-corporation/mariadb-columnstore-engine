@@ -1372,451 +1372,425 @@ void DataConvert::decimalToString(int128_t* dec,
     }
 }
 
+
 boost::any
-DataConvert::convertColumnData(cscDataType typeCode,
-                                const datatypes::SystemCatalog::TypeAttributesStd& colType,
-                                const std::string& dataOrig, bool& pushWarning,
-                                const std::string& timeZone, bool nulFlag,
-                                bool noRoundup, bool isUpdate)
+DataConvert::StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                         const datatypes::ConvertFromStringParam &prm,
+                         const std::string& dataOrig,
+                         bool& pushWarning)
 {
-    boost::any value;
-    int64_t val64;
-    // WIP
-    std::string data( dataOrig );
-    pushWarning = false;
+    std::string data(dataOrig);
+    unsigned int x = data.find("(");
 
-    //if ( !data.empty() )
-    if (!nulFlag)
+    if (x <= data.length())
     {
-        switch (typeCode)
+        data.replace ( x, 1, " ");
+    }
+
+    x = data.find(")");
+
+    if (x <= data.length())
+    {
+        data.replace (x, 1, " ");
+    }
+
+    int64_t tmp = 0;
+
+    number_int_value (data, datatypes::SystemCatalog::BIT, colType, pushWarning, prm.noRoundup(), tmp);
+
+    if (tmp)
+    {
+        bool bitvalue;
+
+        if (from_string<bool>(bitvalue, data, std::dec ))
         {
-            case datatypes::SystemCatalog::BIT:
-            {
-                unsigned int x = data.find("(");
-
-                if (x <= data.length())
-                {
-                    data.replace ( x, 1, " ");
-                }
-
-                x = data.find(")");
-
-                if (x <= data.length())
-                {
-                    data.replace (x, 1, " ");
-                }
-
-                int64_t tmp = 0;
-
-                number_int_value (data, typeCode, colType, pushWarning, noRoundup, tmp);
-
-                if (tmp)
-                {
-                    bool bitvalue;
-
-                    if (from_string<bool>(bitvalue, data, std::dec ))
-                    {
-                        value = bitvalue;
-                    }
-                    else
-                    {
-                        throw QueryDataExcept("range, valid value or conversion error on BIT type.", formatErr);
-                    }
-                }
-            }
-            break;
-
-            case datatypes::SystemCatalog::TINYINT:
-                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                value = (char) val64;
-                break;
-
-            case datatypes::SystemCatalog::SMALLINT:
-                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                value = (short) val64;
-                break;
-
-            case datatypes::SystemCatalog::MEDINT:
-            case datatypes::SystemCatalog::INT:
-                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                value = (int) val64;
-                break;
-
-            case datatypes::SystemCatalog::BIGINT:
-                number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                value = (long long) val64;
-                break;
-
-            case datatypes::SystemCatalog::DECIMAL:
-                if (LIKELY(colType.colWidth == 16))
-                {
-                    int128_t val128;
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val128);
-                    value = (int128_t) val128;
-                }
-                else if (colType.colWidth == 8)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    value = (long long) val64;
-                }
-                else if (colType.colWidth == 4)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    value = (int) val64;
-                }
-                else if (colType.colWidth == 2)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    value = (short) val64;
-                }
-                else if (colType.colWidth == 1)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    value = (char) val64;
-                }
-                //else if (colType.colWidth == 32)
-                //    value = data;
-
-                break;
-
-            case datatypes::SystemCatalog::UDECIMAL:
-
-                // UDECIMAL numbers may not be negative
-                if (LIKELY(colType.colWidth == 16))
-                {
-                    int128_t val128;
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val128);
-
-                    if (val128 < 0 &&
-                        !datatypes::Decimal::isWideDecimalNullValue(val128) &&
-                        !datatypes::Decimal::isWideDecimalEmptyValue(val128))
-                    {
-                        val128 = 0;
-                        pushWarning = true;
-                    }
-
-                    value = val128;
-                }
-                else if (colType.colWidth == 8)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    long long ival = static_cast<long long>(val64);
-
-                    if (ival < 0 &&
-                            ival != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
-                            ival != static_cast<long long>(joblist::BIGINTNULL))
-                    {
-                        ival = 0;
-                        pushWarning = true;
-                    }
-
-                    value = ival;
-                }
-                else if (colType.colWidth == 4)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    int ival = static_cast<int>(val64);
-
-                    if (ival < 0 &&
-                            ival != static_cast<int>(joblist::INTEMPTYROW) &&
-                            ival != static_cast<int>(joblist::INTNULL))
-                    {
-                        ival = 0;
-                        pushWarning = true;
-                    }
-
-                    value = ival;
-                }
-                else if (colType.colWidth == 2)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    short ival = (short) val64;
-
-                    if (ival < 0 &&
-                            ival != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
-                            ival != static_cast<int16_t>(joblist::SMALLINTNULL))
-                    {
-                        ival = 0;
-                        pushWarning = true;
-                    }
-
-                    value = ival;
-                }
-                else if (colType.colWidth == 1)
-                {
-                    number_int_value(data, typeCode, colType, pushWarning, noRoundup, val64);
-                    char ival = (char) val64;
-
-                    if (ival < 0 &&
-                            ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
-                            ival != static_cast<int8_t>(joblist::TINYINTNULL))
-                    {
-                        ival = 0;
-                        pushWarning = true;
-                    }
-
-                    value = ival;
-                }
-
-                break;
-
-            case datatypes::SystemCatalog::FLOAT:
-            case datatypes::SystemCatalog::UFLOAT:
-            {
-                string::size_type x = data.find('(');
-
-                if (x < string::npos)
-                    data.erase(x, 1);
-
-                x = data.find(')');
-
-                if (x < string::npos)
-                    data.erase(x, 1);
-
-                if ( number_value ( data ) )
-                {
-                    float floatvalue;
-                    errno = 0;
-#ifdef _MSC_VER
-                    double dval = strtod(data.c_str(), 0);
-
-                    if (dval > MAX_FLOAT)
-                    {
-                        pushWarning = true;
-                        floatvalue = MAX_FLOAT;
-                    }
-                    else if (dval < MIN_FLOAT)
-                    {
-                        pushWarning = true;
-                        floatvalue = MIN_FLOAT;
-                    }
-                    else
-                    {
-                        floatvalue = (float)dval;
-                    }
-
-#else
-                    floatvalue = strtof(data.c_str(), 0);
-#endif
-
-                    if (errno == ERANGE)
-                    {
-                        pushWarning = true;
-#ifdef _MSC_VER
-
-                        if ( abs(floatvalue) == HUGE_VAL )
-#else
-                        if ( abs(floatvalue) == HUGE_VALF )
-#endif
-                        {
-                            if ( floatvalue > 0 )
-                                floatvalue = MAX_FLOAT;
-                            else
-                                floatvalue = MIN_FLOAT;
-                        }
-                        else
-                            floatvalue = 0;
-                    }
-
-                    if (floatvalue < 0.0 &&
-                            typeCode == datatypes::SystemCatalog::UFLOAT &&
-                            floatvalue != joblist::FLOATEMPTYROW &&
-                            floatvalue != joblist::FLOATNULL)
-                    {
-                        value = 0.0;
-                        pushWarning = true;
-                    }
-
-                    value = floatvalue;
-                }
-                else
-                    throw QueryDataExcept("range, valid value or conversion error on FLOAT type.", formatErr);
-            }
-            break;
-
-            case datatypes::SystemCatalog::DOUBLE:
-            case datatypes::SystemCatalog::UDOUBLE:
-            {
-                string::size_type x = data.find('(');
-
-                if (x < string::npos)
-                    data.erase(x, 1);
-
-                x = data.find(')');
-
-                if (x < string::npos)
-                    data.erase(x, 1);
-
-                if ( number_value ( data ) )
-                {
-                    double doublevalue;
-                    errno = 0;
-                    doublevalue = strtod(data.c_str(), 0);
-
-                    if (errno == ERANGE)
-                    {
-                        pushWarning = true;
-#ifdef _MSC_VER
-
-                        if ( abs(doublevalue) == HUGE_VAL )
-#else
-                        if ( abs(doublevalue) == HUGE_VALL )
-#endif
-                        {
-                            if ( doublevalue > 0 )
-                                value = MAX_DOUBLE;
-                            else
-                                value = MIN_DOUBLE;
-                        }
-                        else
-                            value = 0;
-                    }
-                    else
-                        value = doublevalue;
-
-                    if (doublevalue < 0.0 &&
-                            typeCode == datatypes::SystemCatalog::UDOUBLE &&
-                            doublevalue != joblist::DOUBLEEMPTYROW &&
-                            doublevalue != joblist::DOUBLENULL)
-                    {
-                        doublevalue = 0.0;
-                        pushWarning = true;
-                    }
-                }
-                else
-                {
-                    throw QueryDataExcept("range, valid value or conversion error on DOUBLE type.", formatErr);
-                }
-            }
-            break;
-
-            case datatypes::SystemCatalog::UTINYINT:
-                value = (uint8_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
-                break;
-
-            case datatypes::SystemCatalog::USMALLINT:
-                value = (uint16_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
-                break;
-
-            case datatypes::SystemCatalog::UMEDINT:
-            case datatypes::SystemCatalog::UINT:
-                value = (uint32_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
-                break;
-
-            case datatypes::SystemCatalog::UBIGINT:
-                value = (uint64_t)number_uint_value(data, typeCode, colType, pushWarning, noRoundup);
-                break;
-
-            case datatypes::SystemCatalog::CHAR:
-            case datatypes::SystemCatalog::VARCHAR:
-            case datatypes::SystemCatalog::TEXT:
-            {
-                //check data length
-                if ( data.length() > (unsigned int)colType.colWidth )
-                {
-                    data = data.substr(0, colType.colWidth);
-                    pushWarning = true;
-                }
-                else
-                {
-                    if ( (unsigned int)colType.colWidth > data.length())
-                    {
-                        //Pad null character to the string
-                        data.resize(colType.colWidth, 0);
-                    }
-                }
-
-                value = data;
-            }
-            break;
-
-            case datatypes::SystemCatalog::DATE:
-            {
-                Date aDay;
-
-                if (stringToDateStruct(data, aDay))
-                {
-                    value = (*(reinterpret_cast<uint32_t*> (&aDay)));
-                }
-                else
-                {
-                    value = (uint32_t) 0;
-                    pushWarning = true;
-                }
-            }
-            break;
-
-            case datatypes::SystemCatalog::DATETIME:
-            {
-                DateTime aDatetime;
-
-                if (stringToDatetimeStruct(data, aDatetime, 0))
-                {
-                    value = *(reinterpret_cast<uint64_t*>(&aDatetime));
-                }
-                else
-                {
-                    value = (uint64_t) 0;
-                    pushWarning = true;
-                }
-            }
-            break;
-
-            case datatypes::SystemCatalog::TIME:
-            {
-                Time aTime;
-
-                if (!stringToTimeStruct(data, aTime, colType.precision))
-                {
-                    pushWarning = true;
-                }
-
-                value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
-            }
-            break;
-
-            case datatypes::SystemCatalog::TIMESTAMP:
-            {
-                TimeStamp aTimestamp;
-
-                if (!stringToTimestampStruct(data, aTimestamp, timeZone))
-                {
-                    pushWarning = true;
-                }
-
-                value = (uint64_t) *(reinterpret_cast<uint64_t*>(&aTimestamp));
-            }
-            break;
-
-            case datatypes::SystemCatalog::BLOB:
-            case datatypes::SystemCatalog::CLOB:
-                value = data;
-                break;
-
-            case datatypes::SystemCatalog::VARBINARY:
-                value = data;
-                break;
-
-            case datatypes::SystemCatalog::BINARY:
-                value = data;
-                break;
-
-            default:
-                throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
-                break;
+            boost::any value = bitvalue;
+            return value;
+        }
+        else
+        {
+            throw QueryDataExcept("range, valid value or conversion error on BIT type.", formatErr);
         }
     }
-    else									//null
-    {
-        const datatypes::TypeHandler *h= datatypes::TypeHandler::find(typeCode, colType);
-        if (!h)
-            throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
-        else
-            return h->getNullValueForType(colType);
-    }
+    return boost::any();
+}
 
+
+boost::any
+DataConvert::StringToSDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                              const datatypes::ConvertFromStringParam &prm,
+                              const std::string& data, bool& pushWarning)
+{
+    const cscDataType typeCode= datatypes::SystemCatalog::DECIMAL;
+    if (LIKELY(colType.colWidth == 16))
+    {
+        int128_t val128;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val128);
+        boost::any value = (int128_t) val128;
+        return value;
+    }
+    else if (colType.colWidth == 8)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        boost::any value = (long long) val64;
+        return value;
+    }
+    else if (colType.colWidth == 4)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        boost::any value = (int) val64;
+        return value;
+    }
+    else if (colType.colWidth == 2)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        boost::any value = (short) val64;
+        return value;
+    }
+    else if (colType.colWidth == 1)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        boost::any value = (char) val64;
+        return value;
+    }
+    //else if (colType.colWidth == 32)
+    //    value = data;
+    return boost::any();
+}
+
+
+boost::any
+DataConvert::StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                              const datatypes::ConvertFromStringParam &prm,
+                              const std::string& data, bool& pushWarning)
+{
+    const cscDataType typeCode= datatypes::SystemCatalog::UDECIMAL;
+    
+    // UDECIMAL numbers may not be negative
+    if (LIKELY(colType.colWidth == 16))
+    {
+        int128_t val128;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val128);
+
+        if (val128 < 0 &&
+            !datatypes::Decimal::isWideDecimalNullValue(val128) &&
+            !datatypes::Decimal::isWideDecimalEmptyValue(val128))
+        {
+            val128 = 0;
+            pushWarning = true;
+        }
+
+        boost::any value = val128;
+        return value;
+    }
+    else if (colType.colWidth == 8)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        long long ival = static_cast<long long>(val64);
+
+        if (ival < 0 &&
+                ival != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
+                ival != static_cast<long long>(joblist::BIGINTNULL))
+        {
+            ival = 0;
+            pushWarning = true;
+        }
+
+        boost::any value = ival;
+        return value;
+    }
+    else if (colType.colWidth == 4)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        int ival = static_cast<int>(val64);
+
+        if (ival < 0 &&
+                ival != static_cast<int>(joblist::INTEMPTYROW) &&
+                ival != static_cast<int>(joblist::INTNULL))
+        {
+            ival = 0;
+            pushWarning = true;
+        }
+
+        boost::any value = ival;
+        return value;
+    }
+    else if (colType.colWidth == 2)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        short ival = (short) val64;
+
+        if (ival < 0 &&
+                ival != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
+                ival != static_cast<int16_t>(joblist::SMALLINTNULL))
+        {
+            ival = 0;
+            pushWarning = true;
+        }
+
+        boost::any value = ival;
+        return value;
+    }
+    else if (colType.colWidth == 1)
+    {
+        int64_t val64;
+        number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
+        char ival = (char) val64;
+
+        if (ival < 0 &&
+                ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
+                ival != static_cast<int8_t>(joblist::TINYINTNULL))
+        {
+            ival = 0;
+            pushWarning = true;
+        }
+
+        boost::any value = ival;
+        return value;
+    }
+    return boost::any();
+}
+
+
+boost::any
+DataConvert::StringToFloat(cscDataType typeCode,
+                           const std::string& dataOrig,
+                           bool& pushWarning)
+{
+    boost::any value;
+    std::string data(dataOrig);
+
+    string::size_type x = data.find('(');
+
+    if (x < string::npos)
+        data.erase(x, 1);
+
+    x = data.find(')');
+
+    if (x < string::npos)
+        data.erase(x, 1);
+
+    if ( number_value ( data ) )
+    {
+        float floatvalue;
+        errno = 0;
+#ifdef _MSC_VER
+        double dval = strtod(data.c_str(), 0);
+
+        if (dval > MAX_FLOAT)
+        {
+            pushWarning = true;
+            floatvalue = MAX_FLOAT;
+        }
+        else if (dval < MIN_FLOAT)
+        {
+            pushWarning = true;
+            floatvalue = MIN_FLOAT;
+        }
+        else
+        {
+            floatvalue = (float)dval;
+        }
+#else
+        floatvalue = strtof(data.c_str(), 0);
+#endif
+
+        if (errno == ERANGE)
+        {
+            pushWarning = true;
+#ifdef _MSC_VER
+
+            if ( abs(floatvalue) == HUGE_VAL )
+#else
+            if ( abs(floatvalue) == HUGE_VALF )
+#endif
+            {
+                if ( floatvalue > 0 )
+                    floatvalue = MAX_FLOAT;
+                else
+                    floatvalue = MIN_FLOAT;
+            }
+            else
+                floatvalue = 0;
+        }
+
+        if (floatvalue < 0.0 &&
+                typeCode == datatypes::SystemCatalog::UFLOAT &&
+                floatvalue != joblist::FLOATEMPTYROW &&
+                floatvalue != joblist::FLOATNULL)
+        {
+            value = 0.0; // QQ: should it assign floatvalue?
+            pushWarning = true;
+        }
+
+        value = floatvalue;
+    }
+    else
+        throw QueryDataExcept("range, valid value or conversion error on FLOAT type.", formatErr);
+   return value;
+}
+
+
+
+boost::any
+DataConvert::StringToDouble(cscDataType typeCode,
+                            const std::string& dataOrig,
+                            bool& pushWarning)
+{
+    boost::any value;
+    std::string data(dataOrig);
+
+    string::size_type x = data.find('(');
+
+    if (x < string::npos)
+        data.erase(x, 1);
+
+    x = data.find(')');
+
+    if (x < string::npos)
+        data.erase(x, 1);
+
+    if ( number_value ( data ) )
+    {
+        double doublevalue;
+        errno = 0;
+        doublevalue = strtod(data.c_str(), 0);
+
+        if (errno == ERANGE)
+        {
+            pushWarning = true;
+#ifdef _MSC_VER
+
+            if ( abs(doublevalue) == HUGE_VAL )
+#else
+            if ( abs(doublevalue) == HUGE_VALL )
+#endif
+            {
+                if ( doublevalue > 0 )
+                    value = MAX_DOUBLE;
+                else
+                    value = MIN_DOUBLE;
+            }
+            else
+                value = 0;
+        }
+        else
+            value = doublevalue;
+
+        if (doublevalue < 0.0 &&
+                typeCode == datatypes::SystemCatalog::UDOUBLE &&
+                doublevalue != joblist::DOUBLEEMPTYROW &&
+                doublevalue != joblist::DOUBLENULL)
+        {
+            doublevalue = 0.0; // QQ: should it assign "value" ?
+            pushWarning = true;
+        }
+    }
+    else
+    {
+        throw QueryDataExcept("range, valid value or conversion error on DOUBLE type.", formatErr);
+    }
     return value;
 }
+
+
+boost::any
+DataConvert::StringToString(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                            const std::string& dataOrig,
+                            bool& pushWarning)
+
+{
+    std::string data(dataOrig);
+    //check data length
+    if ( data.length() > (unsigned int)colType.colWidth )
+    {
+        data = data.substr(0, colType.colWidth);
+        pushWarning = true;
+        boost::any value = data;
+        return value;
+    }
+    if ( (unsigned int)colType.colWidth > data.length())
+    {
+        //Pad null character to the string
+        data.resize(colType.colWidth, 0);
+    }
+    boost::any value = data;
+    return value;
+}
+
+
+boost::any
+DataConvert::StringToDate(const std::string& data, bool& pushWarning)
+{
+    Date aDay;
+
+    if (stringToDateStruct(data, aDay))
+    {
+        boost::any value = (*(reinterpret_cast<uint32_t*> (&aDay)));
+        return value;
+    }
+    boost::any value = (uint32_t) 0;
+    pushWarning = true;
+    return value;
+}
+
+
+boost::any
+DataConvert::StringToDatetime(const std::string& data, bool& pushWarning)
+{
+    DateTime aDatetime;
+
+    if (stringToDatetimeStruct(data, aDatetime, 0)) // QQ: why 0?
+    {
+        boost::any value = *(reinterpret_cast<uint64_t*>(&aDatetime));
+        return value;
+    }
+    boost::any value = (uint64_t) 0;
+    pushWarning = true;
+    return value;
+}
+
+
+boost::any
+DataConvert::StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                          const std::string& data,
+                          bool& pushWarning)
+{
+    Time aTime;
+
+    if (!stringToTimeStruct(data, aTime, colType.precision))
+    {
+        pushWarning = true;
+    }
+
+    boost::any value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
+    return value;
+}
+
+
+boost::any
+DataConvert::StringToTimestamp(const datatypes::ConvertFromStringParam &prm,
+                               const std::string& data,
+                               bool& pushWarning)
+{
+    TimeStamp aTimestamp;
+
+    if (!stringToTimestampStruct(data, aTimestamp, prm.timeZone()))
+    {
+        pushWarning = true;
+    }
+
+    boost::any value = (uint64_t) *(reinterpret_cast<uint64_t*>(&aTimestamp));
+    return value;
+}
+
 
 //------------------------------------------------------------------------------
 // Convert date string to binary date.  Used by BulkLoad.
