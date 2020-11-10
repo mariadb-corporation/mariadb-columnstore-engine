@@ -3896,11 +3896,8 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
                     curStr = boost::lexical_cast<string>(boost::any_cast<long long>(curTuple.data));
                 else if (curTuple.data.type() == typeid(int128_t))
                 {
-                    // WIP replace with a single call
-                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-                    int128_t val = boost::any_cast<int128_t>(curTuple.data);
-                    dataconvert::DataConvert::decimalToString(&val, 0, buf, (uint8_t) sizeof(buf), curColStruct.colDataType);
-                    curStr.assign(buf);
+                    datatypes::TSInt128 val(boost::any_cast<int128_t>(curTuple.data));
+                    curStr = val.toString();
                 }
                 else if (curTuple.data.type() == typeid(double))
                     curStr = boost::lexical_cast<string>(boost::any_cast<double>(curTuple.data));
