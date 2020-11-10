@@ -3160,6 +3160,9 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                         unionedType.colDataType = datatypes::SystemCatalog::DECIMAL;
                     }
 
+                    if (type.precision > unionedType.precision)
+                        unionedType.precision = type.precision;
+
                     unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
                     break;
 
@@ -3390,7 +3393,6 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                 case datatypes::SystemCatalog::MEDINT:
                 case datatypes::SystemCatalog::INT:
                 case datatypes::SystemCatalog::BIGINT:
-                case datatypes::SystemCatalog::DECIMAL:
                 case datatypes::SystemCatalog::FLOAT:
                 case datatypes::SystemCatalog::DOUBLE:
                 case datatypes::SystemCatalog::UTINYINT:
@@ -3398,12 +3400,21 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                 case datatypes::SystemCatalog::UMEDINT:
                 case datatypes::SystemCatalog::UINT:
                 case datatypes::SystemCatalog::UBIGINT:
-                case datatypes::SystemCatalog::UDECIMAL:
                 case datatypes::SystemCatalog::UFLOAT:
                 case datatypes::SystemCatalog::UDOUBLE:
                     unionedType.colDataType = datatypes::SystemCatalog::DOUBLE;
                     unionedType.scale = 0;
                     unionedType.colWidth = sizeof(double);
+                    break;
+
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::UDECIMAL:
+                    if (unionedType.colWidth != datatypes::MAXDECIMALWIDTH)
+                    {
+                        unionedType.colDataType = datatypes::SystemCatalog::DOUBLE;
+                        unionedType.scale = 0;
+                        unionedType.colWidth = sizeof(double);
+                    }
                     break;
 
                 default:
@@ -3446,7 +3457,6 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                 case datatypes::SystemCatalog::MEDINT:
                 case datatypes::SystemCatalog::INT:
                 case datatypes::SystemCatalog::BIGINT:
-                case datatypes::SystemCatalog::DECIMAL:
                 case datatypes::SystemCatalog::FLOAT:
                 case datatypes::SystemCatalog::DOUBLE:
                 case datatypes::SystemCatalog::UTINYINT:
@@ -3454,7 +3464,6 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                 case datatypes::SystemCatalog::UMEDINT:
                 case datatypes::SystemCatalog::UINT:
                 case datatypes::SystemCatalog::UBIGINT:
-                case datatypes::SystemCatalog::UDECIMAL:
                 case datatypes::SystemCatalog::UFLOAT:
                 case datatypes::SystemCatalog::UDOUBLE:
                 case datatypes::SystemCatalog::LONGDOUBLE:
@@ -3462,6 +3471,17 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                     unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
                     unionedType.colWidth = sizeof(long double);
                     unionedType.precision = -1;
+                    break;
+
+                case datatypes::SystemCatalog::DECIMAL:
+                case datatypes::SystemCatalog::UDECIMAL:
+                    if (unionedType.colWidth != datatypes::MAXDECIMALWIDTH)
+                    {
+                        unionedType.colDataType = datatypes::SystemCatalog::LONGDOUBLE;
+                        unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
+                        unionedType.colWidth = sizeof(long double);
+                        unionedType.precision = -1;
+                    }
                     break;
 
                 default:

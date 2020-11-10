@@ -536,7 +536,11 @@ dec1:
                         else
                             val *= (uint64_t) pow((double) 10, (double) diff);
 
-                        out->setIntField(val, i);
+                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                            out->setInt128Field(val, i);
+                        else
+                            out->setIntField(val, i);
+
                         break;
                     }
 
@@ -663,7 +667,11 @@ dec2:
                         else
                             val *= (uint64_t) pow((double) 10, (double) diff);
 
-                        out->setIntField(val, i);
+                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                            out->setInt128Field(val, i);
+                        else
+                            out->setIntField(val, i);
+
                         break;
                     }
 
@@ -981,7 +989,7 @@ dec2:
                     case CalpontSystemCatalog::DECIMAL:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
-dec3:					/* have to pick a scale to use for the double. using 5... */
+dec3:                   /* have to pick a scale to use for the double. using 5... */
                         uint32_t scale = 5;
                         uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
                         int diff = out->getScale(i) - scale;
@@ -991,7 +999,11 @@ dec3:					/* have to pick a scale to use for the double. using 5... */
                         else
                             ival *= (uint64_t) pow((double) 10, (double) diff);
 
-                        out->setIntField((int64_t) val, i);
+                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                            out->setInt128Field(ival, i);
+                        else
+                            out->setIntField(ival, i);
+
                         break;
                     }
 
@@ -1068,7 +1080,11 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
                         else
                             ival *= (uint64_t) pow((double) 10, (double) diff);
 
-                        out->setIntField((int64_t) val, i);
+                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                            out->setInt128Field(ival, i);
+                        else
+                            out->setIntField(ival, i);
+
                         break;
                     }
 
@@ -1085,8 +1101,19 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                int64_t val = in.getIntField(i);
-                uint32_t    scale = in.getScale(i);
+                int64_t val;
+                int128_t val128;
+                bool isInputWide = false;
+
+                if (in.getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                {
+                    in.getInt128Field(i, val128);
+                    isInputWide = true;
+                }
+                else
+                    val = in.getIntField(i);
+
+                uint32_t scale = in.getScale(i);
 
                 switch (out->getColTypes()[i])
                 {
@@ -1103,12 +1130,31 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
                     case CalpontSystemCatalog::DECIMAL:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
-                        if (out->getScale(i) == scale)
-                            out->setIntField(val, i);
-                        else if (out->getScale(i) > scale)
-                            out->setIntField(IDB_pow[out->getScale(i) - scale]*val, i);
-                        else // should not happen, the output's scale is the largest
-                            throw logic_error("TupleUnion::normalize(): incorrect scale setting");
+                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                        {
+                            if (out->getScale(i) == scale)
+                                out->setInt128Field(isInputWide ? val128 : val, i);
+                            else if (out->getScale(i) > scale)
+                            {
+                                int128_t divisor = 1;
+                                datatypes::getScaleDivisor(divisor, out->getScale(i) - scale);
+                                int128_t temp = isInputWide ? divisor*val128 : divisor*val;
+                                out->setInt128Field(temp, i);
+                            }
+                            else // should not happen, the output's scale is the largest
+                                throw logic_error("TupleUnion::normalize(): incorrect scale setting");
+                        }
+                        // If output type is narrow decimal, input type
+                        // has to be narrow decimal as well.
+                        else
+                        {
+                            if (out->getScale(i) == scale)
+                                out->setIntField(val, i);
+                            else if (out->getScale(i) > scale)
+                                out->setIntField(IDB_pow[out->getScale(i) - scale]*val, i);
+                            else // should not happen, the output's scale is the largest
+                                throw logic_error("TupleUnion::normalize(): incorrect scale setting");
+                        }
 
                         break;
                     }
