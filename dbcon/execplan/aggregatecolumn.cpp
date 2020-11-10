@@ -190,7 +190,7 @@ void AggregateColumn::serialize(messageqcpp::ByteStream& b) const
     b << fTimeZone;
     //b << fAlias;
     b << fTableAlias;
-    b << static_cast<const ByteStream::doublebyte>(fAsc);
+    b << static_cast<ByteStream::doublebyte>(fAsc);
 
     if (fConstCol.get() == 0)
         b << (uint8_t) ObjectReader::NULL_CLASS;

@@ -365,7 +365,7 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
     b << fData;
     b << fTableAlias;
     b << (uint32_t) fSequence;
-    b << static_cast<const ByteStream::doublebyte>(fisColumnStore);
+    b << static_cast<ByteStream::doublebyte>(fisColumnStore);
 }
 
 void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
