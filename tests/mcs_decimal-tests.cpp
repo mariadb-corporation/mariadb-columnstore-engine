@@ -943,3 +943,246 @@ TEST(Decimal, multiplicationWithOverflowCheck)
     dataconvert::DataConvert::decimalToString(&result.s128Value, result.scale, buf, 42, colDataType);
     EXPECT_EQ("21267647932558653966460912964485513216", std::string(buf));
 }
+
+TEST(Decimal, DecimalToStringCheckScale0)
+{
+    string input, expected;
+    int128_t res;
+    int precision = 38;
+    int scale = 0;
+    res = 0;
+    datatypes::VDecimal dec(0, scale, precision, res);
+
+    // test simple values
+    expected = "0";
+    EXPECT_EQ(dec.toString(), expected);
+    res = 2;
+    expected = "2";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -2;
+    expected = "-2";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 123;
+    expected = "123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -123;
+    expected = "-123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "99999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-99999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+}
+TEST(Decimal, DecimalToStringCheckScale10)
+{
+    string input, expected;
+    int128_t res;
+    int precision = 38;
+    int scale = 10;
+    res = 0;
+    datatypes::VDecimal dec(0, scale, precision, res);
+
+    // test simple values
+    expected = "0.0000000000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    res = 2;
+    expected = "0.0000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    res = -2;
+    expected = "-0.0000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    res = 123;
+    expected = "0.0000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -123;
+    expected = "-0.0000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 12345678901;
+    expected = "1.2345678901";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -12345678901;
+    expected = "-1.2345678901";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "9999999999999999999999999999.9999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-9999999999999999999999999999.9999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "0.0000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-0.0000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test leading zeros
+    res = 10000000009;
+    expected = "1.0000000009";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-1.0000000009";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+}
+
+TEST(Decimal, DecimalToStringCheckScale38)
+{
+    string input, expected;
+    int128_t res;
+    int precision = 38;
+    int scale = 38;
+    res = 0;
+    datatypes::VDecimal dec(0, scale, precision, res);
+
+    // test simple values
+    res = 0;
+    expected = "0.00000000000000000000000000000000000000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 2;
+    expected = "0.00000000000000000000000000000000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -2;
+    expected = "-0.00000000000000000000000000000000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 123;
+    expected = "0.00000000000000000000000000000000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -123;
+    expected = "-0.00000000000000000000000000000000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = ((((((int128_t)1234567890 * 10000000000) + 1234567890) * 10000000000) + 1234567890) * 100000000 ) + 12345678;
+    expected = "0.12345678901234567890123456789012345678";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-0.12345678901234567890123456789012345678";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "0.99999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-0.99999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "0.00000000000000000000000000000000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-0.00000000000000000000000000000000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+}
+
+TEST(Decimal, DecimalToStringCheckScale37)
+{
+    string input, expected;
+    int128_t res;
+    int precision = 38;
+    int scale = 37;
+    res = 0;
+    datatypes::VDecimal dec(0, scale, precision, res);
+
+    // test simple values
+    res = 0;
+    expected = "0.0000000000000000000000000000000000000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 2;
+    expected = "0.0000000000000000000000000000000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -2;
+    expected = "-0.0000000000000000000000000000000000002";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = 123;
+    expected = "0.0000000000000000000000000000000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -123;
+    expected = "-0.0000000000000000000000000000000000123";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = ((((((int128_t)1234567890 * 10000000000) + 1234567890) * 10000000000) + 1234567890) * 100000000 ) + 12345678;
+    expected = "1.2345678901234567890123456789012345678";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-1.2345678901234567890123456789012345678";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test max/min decimal (i.e. 38 9's)
+    res = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000 ) + 999999999) * 100) + 99;
+    expected = "9.9999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-9.9999999999999999999999999999999999999";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+
+    // test trailing zeros
+    res = 123000;
+    expected = "0.0000000000000000000000000000000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+    res = -res;
+    expected = "-0.0000000000000000000000000000000123000";
+    dec.setTSInt128Value(res);
+    EXPECT_EQ(dec.toString(), expected);
+}
+
+

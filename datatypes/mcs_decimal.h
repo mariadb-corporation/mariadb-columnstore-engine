@@ -131,8 +131,8 @@ const int128_t mcs_pow_10_128[20] =
 };
 
 constexpr uint32_t maxPowOf10 = sizeof(mcs_pow_10)/sizeof(mcs_pow_10[0])-1;
-constexpr int128_t Decimal128Null = int128_t(0x8000000000000000LL) << 64;
-constexpr int128_t Decimal128Empty = (int128_t(0x8000000000000000LL) << 64) + 1;
+constexpr int128_t Decimal128Null = TSInt128::NullValue;
+constexpr int128_t Decimal128Empty = TSInt128::EmptyValue;
 
 
 /**
@@ -172,7 +172,7 @@ class Decimal
         Decimal() { };
         ~Decimal() { };
 
-        static constexpr uint8_t MAXLENGTH16BYTES = 42;
+        static constexpr uint8_t MAXLENGTH16BYTES = TSInt128::maxLength();
         static constexpr uint8_t MAXLENGTH8BYTES = 23;
 
         static inline bool isWideDecimalNullValue(const int128_t& val)
@@ -819,9 +819,32 @@ class VDecimal: public TSInt128
         }
     }
 
+    inline bool isTSInt128ByPrecision() const
+    {
+        return precision > INT64MAXPRECISION
+            && precision <= INT128MAXPRECISION;
+    }
+    std::string toString() const;
+    friend std::ostream& operator<<(std::ostream& os, const VDecimal& dec);
+
     int64_t value;
     int8_t  scale;	  // 0~38
     uint8_t precision;  // 1~38
+
+    // STRICTLY for unit tests!!!
+    void setTSInt64Value(const int64_t x) { value = x; }
+    void setTSInt128Value(const int128_t& x) { s128Value = x; }
+
+private:
+    uint8_t writeIntPart(const int128_t& x,
+                         char* buf,
+                         const uint8_t buflen) const;
+    uint8_t writeFractionalPart(const int128_t& x,
+                                char* buf,
+                                const uint8_t buflen) const;
+    std::string toStringTSInt128WithScale() const;
+    std::string toStringTSInt64() const; 
+
 };
 
 } //end of namespace
