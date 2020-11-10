@@ -53,7 +53,7 @@ void ColumnBufferSection::write(const void* const data, int nRows)
 {
 //Casting void * to unsigned char * without modifying the constness
     const unsigned char* const tData =
-        static_cast<const unsigned char* const>(data);
+        static_cast<const unsigned char* >(data);
 
     if (fCurrRowId + nRows + 1 > fEndRowId)
     {

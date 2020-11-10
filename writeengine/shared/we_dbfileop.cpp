@@ -444,12 +444,12 @@ int DbFileOp::writeVB( IDBDataFile* pFile, const OID oid, const uint64_t lbid )
         return NO_ERROR;
 
     int rc;
-    TxnID transId = getTransId();
+    const TxnID transId = getTransId();
 
     if (transId != ((TxnID)INVALID_NUM))
     {
         rc = BRMWrapper::getInstance()->writeVB( pFile,
-                (const VER_t)transId,
+                (VER_t)transId,
                 oid, lbid, this );
 //@Bug 4671. The error is already logged by worker node.
         /*        if (rc != NO_ERROR)

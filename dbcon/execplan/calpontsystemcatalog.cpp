@@ -411,7 +411,7 @@ void CalpontSystemCatalog::TableAliasName::serialize(messageqcpp::ByteStream& b)
     b << table;
     b << alias;
     b << view;
-    b << static_cast<const ByteStream::doublebyte>(fisColumnStore);
+    b << static_cast<ByteStream::doublebyte>(fisColumnStore);
 }
 
 void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& b)
