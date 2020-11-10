@@ -51,6 +51,9 @@ using namespace BRM;
 #include "cacheutils.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
+
+#include "checks.h"
+
 namespace WriteEngine
 {
 //StopWatch timer;
@@ -1839,7 +1842,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 {
                                     bs >> val8;
 
-                                    if (val8 < 0 &&
+                                    if (utils::is_negative(val8) &&
                                             val8 != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
                                             val8 != static_cast<int8_t>(joblist::TINYINTNULL))
                                     {
@@ -1853,7 +1856,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 {
                                     bs >> val16;
 
-                                    if (val16 < 0 &&
+                                    if (utils::is_negative(val16) &&
                                             val16 != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
                                             val16 != static_cast<int16_t>(joblist::SMALLINTNULL))
                                     {
@@ -1867,9 +1870,9 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 {
                                     bs >> val32;
 
-                                    if (val32 < 0 &&
-                                            val32 != static_cast<int>(joblist::INTEMPTYROW) &&
-                                            val32 != static_cast<int>(joblist::INTNULL))
+                                    if (utils::is_negative(val32) &&
+                                            val32 != joblist::INTEMPTYROW &&
+                                            val32 != joblist::INTNULL)
                                     {
                                         val32 = 0;
                                         pushWarning = true;
@@ -1881,9 +1884,9 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 {
                                     bs >> val64;
 
-                                    if (val64 < 0 &&
-                                            val64 != static_cast<long long>(joblist::BIGINTEMPTYROW) &&
-                                            val64 != static_cast<long long>(joblist::BIGINTNULL))
+                                    if (utils::is_negative(val64) &&
+                                            val64 != joblist::BIGINTEMPTYROW &&
+                                            val64 != joblist::BIGINTNULL)
                                     {
                                         val64 = 0;
                                         pushWarning = true;

@@ -148,7 +148,7 @@ int DMLFileParser::parse(const string& fileName)
         throw length_error("DMLFileParser has file size hard limit of 16K.");
     }
 
-    unsigned rcount;
+    std::streamsize rcount;
     rcount = ifdml.readsome(dmlbuf, sizeof(dmlbuf) - 1);
 
     if (rcount < 0)

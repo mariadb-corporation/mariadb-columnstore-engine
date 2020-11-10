@@ -43,6 +43,8 @@ using namespace logging;
 using namespace dataconvert;
 #include "collation.h"
 
+#include "checks.h"
+
 namespace
 {
 struct lconv* convData = localeconv();
@@ -349,7 +351,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
             uint64_t value = d.value / pow(10.0, dscale);
             int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( value >= 0 && lefto > 4 )
+            if ( utils::is_nonnegative(value) && lefto > 4 )
                 value++;
 
             return value;

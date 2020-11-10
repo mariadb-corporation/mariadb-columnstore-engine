@@ -28,6 +28,7 @@ namespace bi = boost::interprocess;
 #include "IDBPolicy.h"
 #include "utils_utf8.h"
 #include "crashtrace.h"
+#include "checks.h"
 
 using namespace std;
 using namespace messageqcpp;
@@ -2594,7 +2595,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
                 }
             }
 
-            if (  PID < 0 )
+            if (!utils::is_nonnegative(PID))
                 PID = 0;
 
             log.writeLog(__LINE__, "statusControl: Set Process " + moduleName + "/" + processName +  + " State = " + oamState[state] + " PID = " + oam.itoa(PID), LOG_TYPE_DEBUG);

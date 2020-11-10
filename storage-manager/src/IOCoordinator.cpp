@@ -29,6 +29,7 @@
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
 #include <iostream>
+#include "checks.h"
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
@@ -823,7 +824,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        assert(objects[0].offset >= 0 && objectSize > (newSize - objects[0].offset));
+        assert(utils::is_nonnegative(objects[0].offset) && objectSize > (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);
