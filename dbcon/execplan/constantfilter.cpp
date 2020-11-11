@@ -74,6 +74,7 @@ ConstantFilter::ConstantFilter(SimpleFilter* sf)
 }
 
 ConstantFilter::ConstantFilter(const ConstantFilter& rhs):
+    Filter(rhs),
     fOp(rhs.fOp),
     fCol(rhs.fCol)
 {

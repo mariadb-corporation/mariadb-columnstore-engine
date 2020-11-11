@@ -50,6 +50,7 @@ SelectFilter::SelectFilter(const vector<SRCP>& cols,
 {}
 
 SelectFilter::SelectFilter(const SelectFilter& rhs):
+    Filter(rhs),
     fCols(rhs.fCols),
     fOp(rhs.fOp),
     fSub(rhs.fSub),
