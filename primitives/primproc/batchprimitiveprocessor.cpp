@@ -53,6 +53,7 @@ using namespace boost;
 #include "blockcacheclient.h"
 #include "MonitorProcMem.h"
 #include "threadnaming.h"
+#include "vlarray.h"
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL
@@ -589,7 +590,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         // properly-named functions for clarity.
         if (typelessJoin[joinerNum])
         {
-            vector<pair<TypelessData, uint32_t> > tmpBuckets[processorThreads];
+            utils::VLArray<vector<pair<TypelessData, uint32_t> > > tmpBuckets(processorThreads);
             TypelessData tlLargeKey;
             uint8_t nullFlag;
             PoolAllocator &storedKeyAllocator = storedKeyAllocators[joinerNum];
@@ -652,7 +653,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             uint64_t nullValue = joinNullValues[joinerNum];
             bool &l_doMatchNulls = doMatchNulls[joinerNum];
             joblist::JoinType joinType = joinTypes[joinerNum];
-            vector<pair<uint64_t, uint32_t> > tmpBuckets[processorThreads];
+            utils::VLArray<vector<pair<uint64_t, uint32_t> > > tmpBuckets(processorThreads);
 
             if (joinType & MATCHNULLS)
             {

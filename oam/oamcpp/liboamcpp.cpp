@@ -64,6 +64,7 @@
 #include "sessionmanager.h"
 #include "IDBPolicy.h"
 #include "IDBDataFile.h"
+#include "vlarray.h"
 
 #if defined(__GNUC__)
 #include <string>
@@ -8954,8 +8955,8 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             int numberNewDBRoots = (dbrootCount - dbrootID) + 1;
             int numberDBRootsPerPM = numberNewDBRoots / numberNewPMs;
 
-            std::vector<int> dbrootPms[dbrootCount];
-            DataRedundancySetup DataRedundancyConfigs[numberPMs];
+            utils::VLArray<std::vector<int> > dbrootPms(dbrootCount);
+            utils::VLArray<DataRedundancySetup> DataRedundancyConfigs(numberPMs);
             int startDBRootID = dbrootID;
 
             for (int pm = (pmID - 1); pm < numberPMs; pm++, startDBRootID++)
@@ -9067,7 +9068,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
 
             //Need to wait since peer probe success does not always mean it is ready for volume create command
             sleep(10);
-            int pmnextbrick[numberPMs];
+            utils::VLArray<int> pmnextbrick(numberPMs);
 
             for (int pm = (pmID - 1); pm < numberPMs; pm++)
             {
