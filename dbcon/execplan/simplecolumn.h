@@ -335,20 +335,18 @@ public:
         //      the original decimal scale is stored in scale field, which is no use for double.
         if (fResultType.precision == -1)
         {
-            IDB_Decimal rv;
             if (fResultType.colDataType == CalpontSystemCatalog::DOUBLE)
             {
-                rv.scale = fResultType.scale;
-                rv.precision = 15;
-                rv.value = (int64_t)(TreeNode::getDoubleVal() * IDB_pow[rv.scale]);
+                IDB_Decimal rv(
+                    (int64_t)(TreeNode::getDoubleVal() * IDB_pow[fResultType.scale]),
+                    fResultType.scale, 15);
                 return rv;
             }
             else if (fResultType.colDataType == CalpontSystemCatalog::LONGDOUBLE)
             {
-                IDB_Decimal rv;
-                rv.scale = fResultType.scale;
-                rv.precision = 19;
-                rv.value = (int64_t)(TreeNode::getLongDoubleVal() * IDB_pow[rv.scale]);
+                IDB_Decimal rv (
+                    (int64_t)(TreeNode::getLongDoubleVal() * IDB_pow[fResultType.scale]),
+                    fResultType.scale, fResultType.precision);
                 return rv;
             }
         }

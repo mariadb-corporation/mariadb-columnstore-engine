@@ -75,6 +75,12 @@ int64_t Func_ceil::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
+            if (op_ct.scale == 0)
+            {
+                ret = parm[0]->data()->getIntVal(row, isNull);
+                break;
+            }
+
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
             if (isNull)
@@ -222,6 +228,12 @@ uint64_t Func_ceil::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
+            if (op_ct.scale == 0)
+            {
+                ret = parm[0]->data()->getIntVal(row, isNull);
+                break;
+            }
+
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
             if (isNull)
