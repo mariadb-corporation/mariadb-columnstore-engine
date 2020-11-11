@@ -76,8 +76,8 @@ pthread_mutex_t PROCESS_LOCK;
 namespace processmonitor
 {
 
-void sendAlarmThread (sendAlarmInfo_t* t);
-void sendProcessThread (sendProcessInfo_t* t);
+void* sendAlarmThread (sendAlarmInfo_t* t);
+void* sendProcessThread (sendProcessInfo_t* t);
 
 using namespace oam;
 
@@ -2961,7 +2961,7 @@ void	ProcessMonitor::sendAlarm(string alarmItem, ALARMS alarmID, int action)
 * purpose:	send a trap and log the process information
 *
 ******************************************************************************************/
-void 	sendAlarmThread(sendAlarmInfo_t* t)
+void* 	sendAlarmThread(sendAlarmInfo_t* t)
 {
     MonitorLog log;
     Oam oam;
@@ -3052,7 +3052,7 @@ bool ProcessMonitor::updateProcessInfo(std::string processName, int state, pid_t
 * purpose:	Send msg to update process state and status change time on disk
 *
 ******************************************************************************************/
-void sendProcessThread(sendProcessInfo_t* t)
+void* sendProcessThread(sendProcessInfo_t* t)
 {
     MonitorLog log;
     MonitorConfig config;
@@ -3081,7 +3081,7 @@ void sendProcessThread(sendProcessInfo_t* t)
     delete t;
 //	pthread_mutex_unlock(&PROCESS_LOCK);
 
-    return;
+    return NULL;
 }
 
 /******************************************************************************************
