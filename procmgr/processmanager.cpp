@@ -345,7 +345,7 @@ ProcessManager::~ProcessManager()
 *
 ******************************************************************************************/
 //void	ProcessManager::processMSG( messageqcpp::IOSocket fIos, messageqcpp::ByteStream msg)
-void processMSG(messageqcpp::IOSocket* cfIos)
+void* processMSG(messageqcpp::IOSocket* cfIos)
 {
     messageqcpp::IOSocket fIos = *cfIos;
 
@@ -3382,6 +3382,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
     fIos.close();
     pthread_detach (ThreadId);
     pthread_exit(0);
+    return NULL;
 }
 
 /******************************************************************************************
@@ -6800,9 +6801,10 @@ bool ProcessManager::createModuleFile(string remoteModuleName)
 * purpose:	Send Messages to Module Process Monitors to start Processes
 *
 *****************************************************************************************/
-void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
+void* startSystemThread(oam::DeviceNetworkList* Devicenetworklist)
 {
-    oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
+    assert(Devicenetworklist);
+    oam::DeviceNetworkList devicenetworklist = *Devicenetworklist;
 
     ProcessLog log;
     Configuration config;
@@ -7410,11 +7412,11 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 * purpose:	Send Messages to Module Process Monitors to start Processes
 *
 *****************************************************************************************/
-void startModuleThread(string module)
+void* startModuleThread(string* module)
 {
-
+    assert(module);
     //store in a local variable
-    string moduleName = module;
+    string moduleName = *module;
 
     ProcessLog log;
     Configuration config;
@@ -7516,9 +7518,10 @@ void startModuleThread(string module)
 * purpose:	Send Messages to Module Process Monitors to stop Processes
 *
 *****************************************************************************************/
-void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
+void* stopSystemThread(oam::DeviceNetworkList* Devicenetworklist)
 {
-    oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
+    assert(Devicenetworklist);
+    oam::DeviceNetworkList devicenetworklist = *Devicenetworklist;
 
     ProcessLog log;
     Configuration config;
@@ -7759,10 +7762,11 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
 * purpose:	Send Messages to Module Process Monitors to stop Processes
 *
 *****************************************************************************************/
-void stopModuleThread(string module)
+void* stopModuleThread(string* module)
 {
+    assert(module);
     //store in a local variable
-    string moduleName = module;
+    string moduleName = *module;
 
     ProcessLog log;
     Configuration config;

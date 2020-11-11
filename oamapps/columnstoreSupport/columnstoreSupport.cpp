@@ -71,10 +71,11 @@ typedef boost::tuple<ChildModuleList::iterator, string > threadInfo_t;
 
 bool LOCAL = false;
 
-void childReportThread(threadInfo_t& st)
+void* childReportThread(threadInfo_t* st)
 {
-    ChildModuleList::iterator& list = boost::get<0>(st);
-    string reportType = boost::get<1>(st);
+    assert(st);
+    ChildModuleList::iterator& list = boost::get<0>(*st);
+    string reportType = boost::get<1>(*st);
 
     string remoteModuleName = (*list).moduleName;
     string remoteModuleIP = (*list).moduleIP;
@@ -144,9 +145,10 @@ void childReportThread(threadInfo_t& st)
     pthread_exit(0);
 }
 
-void reportThread(string reporttype)
+void* reportThread(string* reporttype)
 {
-    string reportType = reporttype;
+    assert(reporttype);
+    string reportType = *reporttype;
 
     Oam oam;
 
