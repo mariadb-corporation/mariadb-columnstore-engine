@@ -28,6 +28,7 @@
 #include "hasher.h"
 #include "lbidlist.h"
 #include "spinlock.h"
+#include "vlarray.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -279,8 +280,8 @@ void TupleJoiner::bucketsToTables(buckets_t *buckets, hash_table_t *tables)
 
 void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row &r)
 {
-    TypelessData td[rowCount];
-    vector<pair<TypelessData, Row::Pointer> > v[bucketCount];
+    utils::VLArray<TypelessData> td(rowCount);
+    utils::VLArray<vector<pair<TypelessData, Row::Pointer> > > v(bucketCount);
     uint i;
     FixedAllocator *alloc = &storedKeyAlloc[threadID];
 
@@ -298,7 +299,7 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row &r)
 
 void TupleJoiner::um_insertLongDouble(uint rowCount, Row &r)
 {
-    vector<pair<long double, Row::Pointer> > v[bucketCount];
+    utils::VLArray<vector<pair<long double, Row::Pointer> > > v(bucketCount);
     uint i;
     uint smallKeyColumn = smallKeyColumns[0];
 
@@ -318,7 +319,7 @@ void TupleJoiner::um_insertInlineRows(uint rowCount, Row &r)
 {
     uint i;
     int64_t smallKey;
-    vector<pair<int64_t, uint8_t *> > v[bucketCount];
+    utils::VLArray<vector<pair<int64_t, uint8_t *> > > v(bucketCount);
     uint smallKeyColumn = smallKeyColumns[0];
 
     for (i = 0; i < rowCount; i++, r.nextRow())
@@ -340,7 +341,7 @@ void TupleJoiner::um_insertStringTable(uint rowCount, Row &r)
 {
     int64_t smallKey;
     uint i;
-    vector<pair<int64_t, Row::Pointer> > v[bucketCount];
+    utils::VLArray<vector<pair<int64_t, Row::Pointer> > > v(bucketCount);
     uint smallKeyColumn = smallKeyColumns[0];
 
     for (i = 0; i < rowCount; i++, r.nextRow())
@@ -810,7 +811,7 @@ void TupleJoiner::setInUM()
     size = rows.size();
     size_t chunkSize = ((size / numCores) + 1 < 50000 ? 50000 : (size / numCores) + 1);  // don't start a thread to process < 50k rows
 
-    uint64_t jobs[numCores];
+    utils::VLArray<uint64_t> jobs(numCores);
     i = 0;
     for (size_t firstRow = 0; i < (uint) numCores && firstRow < size; i++, firstRow += chunkSize)
         jobs[i] = jobstepThreadPool->invoke([this, firstRow, chunkSize, size] {
@@ -862,7 +863,7 @@ void TupleJoiner::setInUM(vector<RGData> &rgs)
     size = rgs.size();
     size_t chunkSize = ((size / numCores) + 1 < 10 ? 10 : (size / numCores) + 1);  // don't issue jobs for < 10 rowgroups
 
-    uint64_t jobs[numCores];
+    utils::VLArray<uint64_t> jobs(numCores);
     i = 0;
     for (size_t firstRow = 0; i < (uint) numCores && firstRow < size; i++, firstRow += chunkSize)
         jobs[i] = jobstepThreadPool->invoke([this, firstRow, chunkSize, size, i, &rgs] {

@@ -50,6 +50,7 @@
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
 #include "utils_utf8.h"
+#include "vlarray.h"
 
 #include "collation.h"
 
@@ -1935,8 +1936,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 {
     uint32_t paramCount = fRGContext.getParameterCount();
     // The vector of parameters to be sent to the UDAF
-    mcsv1sdk::ColumnDatum valsIn[paramCount];
-    uint32_t dataFlags[paramCount];
+    utils::VLArray<mcsv1sdk::ColumnDatum> valsIn(paramCount);
+    utils::VLArray<uint32_t> dataFlags(paramCount);
     execplan::ConstantColumn* cc;
     bool bIsNull = false;
     execplan::CalpontSystemCatalog::ColDataType colDataType;
@@ -2204,6 +2205,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
             ++funcColsIdx;
             colIn  = fFunctionCols[funcColsIdx]->fInputColumnIndex;
             colOut = fFunctionCols[funcColsIdx]->fOutputColumnIndex;
+            (void)colOut;
         }
         else
         {

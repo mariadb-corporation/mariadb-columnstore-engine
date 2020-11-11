@@ -36,6 +36,7 @@
 #endif
 
 #include "installdir.h"
+#include "vlarray.h"
 
 
 using namespace std;
@@ -246,7 +247,7 @@ void IDBPolicy::configIDBPolicy()
     // The feature is used in the FileOp code and enabled by default.
     char configSectionPref[] = "DBRoot";
     int confSectionLen = sizeof(configSectionPref)+oam::MAX_MODULE_ID_SIZE;
-    char configSection[confSectionLen];
+    utils::VLArray<char, 1024> configSection(confSectionLen);
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
     s_configed = true;
@@ -283,8 +284,8 @@ void IDBPolicy::configIDBPolicy()
         oam::DBRootConfigList::iterator dbRootIter = dbRootVec.begin();
         for(; dbRootIter != dbRootVec.end(); dbRootIter++)
         {
-            ::memset(configSection + sizeof(configSectionPref), 0, oam::MAX_MODULE_ID_SIZE);
-            rc = snprintf(configSection, confSectionLen, "%s%d", configSectionPref, *dbRootIter);
+            ::memset(configSection.data() + sizeof(configSectionPref), 0, oam::MAX_MODULE_ID_SIZE);
+            rc = snprintf(configSection.data(), confSectionLen, "%s%d", configSectionPref, *dbRootIter);
             // gcc 8.2 warnings
             if ( rc < 0 || rc >= confSectionLen)
             {
@@ -292,7 +293,7 @@ void IDBPolicy::configIDBPolicy()
                 oss << "IDBPolicy::configIDBPolicy: failed to parse DBRootX section.";
                 throw runtime_error(oss.str());
             }
-            string setting = cf->getConfig(configSection, "PreallocSpace");
+            string setting = cf->getConfig(configSection.data(), "PreallocSpace");
 
             if ( setting.length() != 0 )
             {
