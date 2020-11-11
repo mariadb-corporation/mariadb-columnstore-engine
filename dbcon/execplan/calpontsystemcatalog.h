@@ -301,6 +301,7 @@ public:
         const CHARSET_INFO* cs;
 
         ColType(const ColType& rhs);
+        ColType& operator=(const ColType& rhs);
 
         CHARSET_INFO* getCharset();
         // for F&E use. only serialize necessary info for now
