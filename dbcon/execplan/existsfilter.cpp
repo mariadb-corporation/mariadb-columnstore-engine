@@ -50,6 +50,7 @@ ExistsFilter::ExistsFilter( const SCSEP& sub,
 {}
 
 ExistsFilter::ExistsFilter(const ExistsFilter& rhs):
+    Filter(rhs),
     fSub (rhs.fSub),
     fNotExists (rhs.fNotExists),
     fCorrelated (rhs.fCorrelated),
