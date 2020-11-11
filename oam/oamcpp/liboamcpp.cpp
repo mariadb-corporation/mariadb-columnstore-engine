@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/progress.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #if defined(__linux__)
