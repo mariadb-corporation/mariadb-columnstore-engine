@@ -381,7 +381,7 @@ int ha_mcs::end_bulk_insert()
 
     @see
 */
-int ha_mcs::update_row(const uchar* old_data, uchar* new_data)
+int ha_mcs::update_row(const uchar* old_data, const uchar* new_data)
 {
 
     DBUG_ENTER("ha_mcs::update_row");
@@ -1034,8 +1034,8 @@ int ha_mcs::rename_table(const char* from, const char* to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_mcs::records_in_range(uint32_t inx, key_range* min_key,
-                                     key_range* max_key)
+ha_rows ha_mcs::records_in_range(uint32_t inx, const key_range* min_key,
+                                     const key_range* max_key, page_range* res)
 {
     DBUG_ENTER("ha_mcs::records_in_range");
     DBUG_RETURN(10);                         // low number to force index usage
