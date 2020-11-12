@@ -6,15 +6,14 @@ PartOf=mcs-workernode@1.service
 After=network.target mcs-workernode@1.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStartPre=/bin/sleep 7
-ExecStart=@ENGINE_BINDIR@/controllernode fg
+ExecStart=@ENGINE_BINDIR@/controllernode
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
 
 Restart=on-failure

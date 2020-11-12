@@ -54,10 +54,73 @@ using namespace oam;
 
 #include "collation.h"
 
+#include "service.h"
+
 using namespace WriteEngine;
 
 namespace
 {
+
+class Opt
+{
+public:
+    int m_debug;
+    bool m_fg;
+    Opt(int argc, char *argv[])
+     :m_debug(0),
+      m_fg(false)
+    {
+        int c;
+        while ((c = getopt(argc, argv, "df")) != EOF)
+        {
+            switch(c)
+            {
+                case 'd':
+                    m_debug++;
+                    break;
+                case 'f':
+                    m_fg= true;
+                    break;
+                case '?':
+                default:
+                    break;
+            }
+        }
+  }
+};
+
+
+class ServiceWriteEngine: public Service, public Opt
+{
+    void log(logging::LOG_TYPE type, const std::string &str)
+    {
+        logging::LoggingID logid(SUBSYSTEM_ID_WE_SRV);
+        logging::Message::Args args;
+        logging::Message msg(1);
+        args.add(str);
+        msg.format(args);
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(type, msg, logid);
+    }
+    int setupResources();
+    void setupChildSignalHandlers();
+public:
+    ServiceWriteEngine(const Opt &opt)
+      :Service("WriteEngine"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        log(logging::LOG_TYPE_CRITICAL, strerror(errno));
+    }
+    void ParentLogChildMessage(const std::string &str)
+    {
+        log(logging::LOG_TYPE_INFO, str);
+    }
+    int Child() override;
+    int Run() { return m_fg ? Child() : RunForking(); }
+};
+
+
 void added_a_pm(int)
 {
     logging::LoggingID logid(21, 0, 0);
@@ -71,7 +134,7 @@ void added_a_pm(int)
 }
 }
 
-int setupResources()
+int ServiceWriteEngine::setupResources()
 {
 #ifndef _MSC_VER
     struct rlimit rlim;
@@ -103,7 +166,7 @@ int setupResources()
 }
 
 
-static void setupSignalHandlers()
+void ServiceWriteEngine::setupChildSignalHandlers()
 {
 #ifndef _MSC_VER
     struct sigaction sa;
@@ -122,31 +185,8 @@ static void setupSignalHandlers()
 }
 
 
-int main(int argc, char** argv)
+int ServiceWriteEngine::Child()
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
-
-    // This is unset due to the way we start it
-    program_invocation_short_name = const_cast<char*>("WriteEngineServ");
-
-    int gDebug = 0;
-    int c;
-    while ((c = getopt(argc, argv, "d")) != EOF)
-    {
-        switch (c)
-        {
-            case 'd':
-                gDebug++;
-                break;
-            case '?':
-            default:
-                break;
-        }
-    }
 
     //set BUSY_INIT state
     {
@@ -162,7 +202,7 @@ int main(int argc, char** argv)
         }
     }
 
-    setupSignalHandlers();
+    setupChildSignalHandlers();
 
     // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_WE_SRV );
@@ -228,14 +268,14 @@ int main(int argc, char** argv)
                 logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
                 logging::MessageLog ml(lid);
                 ml.logCriticalMessage( message );
-
+                NotifyServiceInitializationFailed();
                 return 2;
             }
         }
     }
 
     int err = 0;
-    if (!gDebug)
+    if (!m_debug)
         err = setupResources();
     string errMsg;
 
@@ -278,6 +318,7 @@ int main(int argc, char** argv)
         {
         }
 
+        NotifyServiceInitializationFailed();
         return 2;
     }
 
@@ -300,6 +341,8 @@ int main(int argc, char** argv)
         }
     }
     cout << "WriteEngineServer is ready" << endl;
+    NotifyServiceStarted();
+
     BRM::DBRM dbrm;
 
     for (;;)
@@ -339,3 +382,18 @@ int main(int argc, char** argv)
     return 1;
 }
 
+
+int main(int argc, char** argv)
+{
+    Opt opt(argc, argv);
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("WriteEngineServ");
+    // Initialize the charset library
+    my_init();
+
+    return ServiceWriteEngine(opt).Run();
+}

@@ -76,6 +76,61 @@ using namespace idbdatafile;
 
 #include "collation.h"
 
+#include "service.h"
+
+
+class Opt
+{
+public:
+    int m_debug;
+    bool m_fg;
+    Opt(int argc, char *argv[])
+     :m_debug(0),
+      m_fg(false)
+    {
+        int c;
+
+        while ((c = getopt(argc, argv, "df")) != EOF)
+        {
+            switch(c)
+            {
+                case 'd':
+                    m_debug++;
+                    break;
+                case 'f':
+                    m_fg= true;
+                    break;
+                case '?':
+                default:
+                    break;
+            }
+        }
+  }
+};
+
+
+class ServicePrimProc: public Service, public Opt
+{
+public:
+    ServicePrimProc(const Opt &opt)
+     :Service("PrimProc"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        cerr << strerror(errno) << endl;
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        cout << str << endl;
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
+
 namespace primitiveprocessor
 {
 
@@ -311,33 +366,9 @@ void* waitForSIGUSR1(void* p)
 
 }
 
-int main(int argc, char* argv[])
+
+int ServicePrimProc::Child()
 {
-    // This is unset due to the way we start it
-    program_invocation_short_name = const_cast<char*>("PrimProc");
-
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
-
-    int gDebug = 0;
-    int c;
-
-    while ((c = getopt(argc, argv, "d")) != EOF)
-    {
-        switch(c)
-        {
-            case 'd':
-                gDebug++;
-                break;
-            case '?':
-            default:
-                break;
-        }
-    }
-
     Config* cf = Config::makeConfig();
 
     setupSignalHandlers();
@@ -347,7 +378,7 @@ int main(int argc, char* argv[])
 
     mlp = new primitiveprocessor::Logger();
 
-    if (!gDebug)
+    if (!m_debug)
         err = setupResources();
     string errMsg;
 
@@ -388,6 +419,7 @@ int main(int argc, char* argv[])
         {
         }
 
+        NotifyServiceInitializationFailed();
         return 2;
     }
 
@@ -767,10 +799,26 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    server.start();
+    server.start(this);
 
     cerr << "server.start() exited!" << endl;
 
     return 1;
+}
+
+
+int main(int argc, char** argv)
+{
+    Opt opt(argc, argv);
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("PrimProc");
+    // Initialize the charset library
+    my_init();
+
+    return ServicePrimProc(opt).Run();
 }
 // vim:ts=4 sw=4:

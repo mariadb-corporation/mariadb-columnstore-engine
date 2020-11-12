@@ -6,7 +6,7 @@ PartOf=mcs-primproc.service
 After=network.target mcs-primproc.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
