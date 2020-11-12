@@ -195,45 +195,6 @@ namespace datatypes
         }
     }
 
-    std::string Decimal::toString(VDecimal& value)
-    {
-        char buf[Decimal::MAXLENGTH16BYTES];
-        if (value.s128Value == Decimal128Null)
-        {
-            return std::string("NULL");
-        }
-        else if (value.s128Value == Decimal128Empty)
-        {
-            return std::string("EMPTY");
-        }
-        dataconvert::DataConvert::decimalToString(&value.s128Value,
-            value.scale, buf, (uint8_t) sizeof(buf),
-            datatypes::SystemCatalog::DECIMAL);
-        return std::string(buf);
-    }
-
-    std::string Decimal::toString(const VDecimal& value)
-    {
-        return toString(const_cast<VDecimal&>(value));
-    }
-
-    std::string Decimal::toString(const int128_t& value)
-    {
-        char buf[Decimal::MAXLENGTH16BYTES];
-        if (value == Decimal128Null)
-        {
-            return std::string("NULL");
-        }
-        else if (value == Decimal128Empty)
-        {
-            return std::string("EMPTY");
-        }
-        int128_t& constLessValue = const_cast<int128_t&>(value);
-        dataconvert::DataConvert::decimalToString(&constLessValue,
-            0, buf, sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-        return std::string(buf);
-    }
-
     int Decimal::compare(const VDecimal& l, const VDecimal& r)
     {
         int128_t divisorL, divisorR;
@@ -745,7 +706,7 @@ namespace datatypes
     }
     
     // Dispatcher method for toString() implementations
-    std::string VDecimal::toString() const
+    std::string VDecimal::toString(bool hasTSInt128) const
     {
         // There must be no empty at this point though
         if (isNull())
@@ -753,7 +714,7 @@ namespace datatypes
             return std::string("NULL");
         }
 
-        if(LIKELY(isTSInt128ByPrecision()))
+        if(LIKELY(hasTSInt128 || isTSInt128ByPrecision()))
         {
             if (scale)
             {

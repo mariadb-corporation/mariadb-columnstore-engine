@@ -1037,15 +1037,6 @@ public:
     EXPORT static bool      isColumnTimeValid( int64_t time );
     EXPORT static bool      isColumnTimeStampValid( int64_t timeStamp );
 
-    static inline std::string decimalToString(int64_t value, uint8_t scale, cscDataType colDataType);
-    static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, cscDataType colDataType);
-
-    static void decimalToString(int128_t* dec, const uint8_t scale, char* buf, const unsigned int buflen, cscDataType colDataType);
-    static size_t writeIntPart(int128_t* dec, char* p, const unsigned int buflen,
-        const uint8_t scale);
-    static size_t writeFractionalPart(int128_t* dec, char* p, const unsigned int buflen,
-        const uint8_t scale);
-
     static inline std::string constructRegexp(const std::string& str);
     static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)
@@ -1296,96 +1287,6 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
               (unsigned)((timevalue >> 14) & 0xff)
             );
 #endif
-}
-
-inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, cscDataType colDataType)
-{
-    // This is too much
-    char buf[80];
-    DataConvert::decimalToString(value, scale, buf, 80, colDataType);
-    return std::string(buf);
-}
-
-inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale,
-    char* buf, unsigned int buflen, cscDataType colDataType)
-{
-    // Need to convert a string with a binary unsigned number in it to a 64-bit signed int
-
-    // MySQL seems to round off values unless we use the string store method. Groan.
-    // Taken from ha_mcs_impl.cpp
-
-    //biggest Calpont supports is DECIMAL(18,x), or 18 total digits+dp+sign for column
-    // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
-    if (isUnsigned(colDataType))
-    {
-#ifndef __LP64__
-        snprintf(buf, buflen, "%llu", static_cast<uint64_t>(int_val));
-#else
-        snprintf(buf, buflen, "%lu", static_cast<uint64_t>(int_val));
-#endif
-    }
-    else
-    {
-#ifndef __LP64__
-        snprintf(buf, buflen, "%lld", int_val);
-#else
-        snprintf(buf, buflen, "%ld", int_val);
-#endif
-    }
-
-    if (scale == 0)
-        return;
-
-    //we want to move the last dt_scale chars right by one spot to insert the dp
-    //we want to move the trailing null as well, so it's really dt_scale+1 chars
-    size_t l1 = strlen(buf);
-    char* ptr = &buf[0];
-
-    if (int_val < 0)
-    {
-        ptr++;
-        idbassert(l1 >= 2);
-        l1--;
-    }
-
-    //need to make sure we have enough leading zeros for this to work...
-    //at this point scale is always > 0
-    size_t l2 = 1;
-
-    if ((unsigned)scale > l1)
-    {
-        const char* zeros = "00000000000000000000"; //20 0's
-        size_t diff = 0;
-
-        if (int_val != 0)
-            diff = scale - l1; //this will always be > 0
-        else
-            diff = scale;
-
-        memmove((ptr + diff), ptr, l1 + 1); //also move null
-        memcpy(ptr, zeros, diff);
-
-        if (int_val != 0)
-            l1 = 0;
-        else
-            l1 = 1;
-    }
-    else if ((unsigned)scale == l1)
-    {
-        l1 = 0;
-        l2 = 2;
-    }
-    else
-    {
-        l1 -= scale;
-    }
-
-    memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
-
-    if (l2 == 2)
-        *(ptr + l1++) = '0';
-
-    *(ptr + l1) = '.';
 }
 
 inline void DataConvert::trimWhitespace(int64_t& charData)

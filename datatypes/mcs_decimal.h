@@ -260,13 +260,6 @@ class Decimal
             VDecimal& result);
 
         /**
-            @brief Convenience methods to put decimal into a std::string.
-        */
-        static std::string toString(VDecimal& value);
-        static std::string toString(const VDecimal& value);
-        static std::string toString(const int128_t& value);
-
-        /**
             @brief The method detects whether decimal type is wide
             using precision.
         */
@@ -558,6 +551,14 @@ class VDecimal: public TSInt128
         precision(p)
     { }
 
+    VDecimal(int64_t unused, int8_t s, uint8_t p, const int128_t* val128Ptr) :
+        TSInt128(val128Ptr),
+        value(unused),
+        scale(s),
+        precision(p)
+    { }
+
+
     int decimalComp(const VDecimal& d) const
     {
         lldiv_t d1 = lldiv(value, static_cast<int64_t>(mcs_pow_10[scale]));
@@ -824,7 +825,10 @@ class VDecimal: public TSInt128
         return precision > INT64MAXPRECISION
             && precision <= INT128MAXPRECISION;
     }
-    std::string toString() const;
+    // hasTSInt128 explicitly tells to print int128 out in cases
+    // where precision can't detect decimal type properly, e.g.
+    // DECIMAL(10)/DECIMAL(38)
+    std::string toString(bool hasTSInt128 = false) const;
     friend std::ostream& operator<<(std::ostream& os, const VDecimal& dec);
 
     int64_t value;

@@ -639,12 +639,11 @@ string Row::toString() const
                 case CalpontSystemCatalog::UDECIMAL:
                     if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
                     {
-                        unsigned int buflen = datatypes::Decimal::MAXLENGTH16BYTES;
-                        char *buf = (char*)alloca(buflen);
-                        // empty the buffer
-                        dataconvert::DataConvert::decimalToString(getBinaryField<int128_t>(i),
-                            scale[i], buf, buflen, types[i]);
-                        os << buf << " ";
+                        datatypes::VDecimal dec(0,
+                                                scale[i],
+                                                precision[i],
+                                                getBinaryField<int128_t>(i));
+                        os << dec << " ";
                         break;
                     }
                     //fallthrough

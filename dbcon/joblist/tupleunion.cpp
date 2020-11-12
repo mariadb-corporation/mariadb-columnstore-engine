@@ -1101,8 +1101,8 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                int64_t val;
-                int128_t val128;
+                int64_t val = 0;
+                int128_t val128 = 0;
                 bool isInputWide = false;
 
                 if (in.getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
@@ -1187,15 +1187,21 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
                     case CalpontSystemCatalog::VARCHAR:
                     default:
                     {
-                        char buf[50];
-                        dataconvert::DataConvert::decimalToString(val, scale, buf, 50, out->getColTypes()[i]);
-                        /*	ostringstream oss;
-                        	if (scale == 0)
-                        		oss << val;
-                        	else
-                        		oss << (val / IDB_pow[scale]) << "."
-                        			<< setw(scale) << setfill('0') << (val % IDB_pow[scale]); */
-                        out->setStringField(string(buf), i);
+                        if (LIKELY(isInputWide))
+                        {
+                            datatypes::VDecimal dec(0,
+                                                    in.getScale(i),
+                                                    in.getPrecision(i),
+                                                    val128);
+                            out->setStringField(dec.toString(), i);
+                        }
+                        else
+                        {
+                            datatypes::VDecimal dec(val,
+                                                    in.getScale(i),
+                                                    in.getPrecision(i));
+                            out->setStringField(dec.toString(), i);
+                        }
                         break;
                     }
                 }

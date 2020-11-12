@@ -24,9 +24,6 @@ using namespace std;
 using namespace dataconvert;
 #include "joblisttypes.h"
 #include "columnwidth.h"
-#include "calpontsystemcatalog.h"
-
-using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
 
 TEST(DataConvertTest, Strtoll128)
 {
