@@ -1842,9 +1842,10 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 {
                                     bs >> val8;
 
+                                    // FIXME: IDK what would it mean if valN are unsigned
                                     if (utils::is_negative(val8) &&
-                                            val8 != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
-                                            val8 != static_cast<int8_t>(joblist::TINYINTNULL))
+                                            val8 != joblist::TINYINTEMPTYROW &&
+                                            val8 != joblist::TINYINTNULL)
                                     {
                                         val8 = 0;
                                         pushWarning = true;
@@ -1857,8 +1858,8 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                     bs >> val16;
 
                                     if (utils::is_negative(val16) &&
-                                            val16 != static_cast<int16_t>(joblist::SMALLINTEMPTYROW) &&
-                                            val16 != static_cast<int16_t>(joblist::SMALLINTNULL))
+                                            val16 != joblist::SMALLINTEMPTYROW &&
+                                            val16 != joblist::SMALLINTNULL)
                                     {
                                         val16 = 0;
                                         pushWarning = true;
@@ -1953,6 +1954,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                     }
                                 }
 
+                                // FIXME: colValue is uint64_t (8 bytes)
                                 memcpy(&colValue, valStr.c_str(), valStr.length());
                                 break;
 

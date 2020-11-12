@@ -1868,6 +1868,8 @@ static int columnstore_init_func(void* p)
 #ifdef HAVE_PSI_INTERFACE
     uint count = sizeof(all_mutexes)/sizeof(all_mutexes[0]);
     mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
+#else
+    (void)key_LOCK_cache_share;
 #endif
     mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
 
