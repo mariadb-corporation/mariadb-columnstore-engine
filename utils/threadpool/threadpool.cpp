@@ -130,6 +130,8 @@ void ThreadPool::setMaxThreads(size_t maxThreads)
 void ThreadPool::stop()
 {
     boost::mutex::scoped_lock lock1(fMutex);
+    if (fStop)
+      return; // Was stopped earlier
     fStop = true;
     lock1.unlock();
 

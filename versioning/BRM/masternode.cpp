@@ -35,13 +35,15 @@
 #include "IDBPolicy.h"
 #include "brmtypes.h"
 #include "utils_utf8.h"
+#include "service.h"
+#include "jobstep.h"
 
 #include "crashtrace.h"
 
 #define MAX_RETRIES 10
 
 BRM::MasterDBRMNode* m;
-bool die;
+bool die= false;
 
 using namespace std;
 using namespace BRM;
@@ -59,6 +61,48 @@ void fail()
         cerr << "failed to notify OAM of server failure" << endl;
     }
 }
+
+
+class Opt
+{
+protected:
+    const char *m_progname;
+    bool m_fg;
+public:
+    Opt(int argc, char **argv)
+     :m_progname(argv[0]),
+      m_fg(argc >= 2 && string(argv[1]) == "fg")
+    { }
+};
+
+
+class ServiceControllerNode: public Service, public Opt
+{
+protected:
+    void setupChildSignalHandlers();
+
+public:
+    ServiceControllerNode(const Opt &opt)
+     :Service("ControllerNode"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        perror(m_progname);
+        log_errno(std::string(m_progname));
+        fail();
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        log(str, logging::LOG_TYPE_INFO);
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
+
 
 void stop(int num)
 {
@@ -101,7 +145,7 @@ void reload(int num)
 */
 
 
-static void setupSignalHandlers()
+void ServiceControllerNode::setupChildSignalHandlers()
 {
     /* XXXPAT: we might want to install signal handlers for every signal */
 
@@ -122,37 +166,13 @@ static void setupSignalHandlers()
 }
 
 
-int main(int argc, char** argv)
+int ServiceControllerNode::Child()
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-
-
-    BRM::logInit ( BRM::SubSystemLogId_controllerNode );
-
-    int retries = 0, err;
-    std::string arg;
-
-    die = false;
-
-    if (!(argc >= 2 && (arg = argv[1]) == "fg"))
-    {
-        if ((err = fork()) < 0)
-        {
-            perror(argv[0]);
-            log_errno(string(argv[0]));
-            fail();
-            exit(1);
-        }
-
-        if (err > 0)
-            exit(0);
-    }
+    int retries = 0;
 
     (void)config::Config::makeConfig();
 
-    setupSignalHandlers();
+    setupChildSignalHandlers();
 
     idbdatafile::IDBPolicy::configIDBPolicy();
 
@@ -166,6 +186,8 @@ int main(int argc, char** argv)
                 delete m;
 
             m = new BRM::MasterDBRMNode();
+
+            NotifyServiceStarted();
 
             try
             {
@@ -203,11 +225,31 @@ int main(int argc, char** argv)
 
     if (retries == MAX_RETRIES)
     {
+        NotifyServiceInitializationFailed();
         log(string("Exiting after too many errors"));
         fail();
+        return 1;
     }
 
     std::cerr << "Exiting..." << std::endl;
-    exit(0);
+    return 0;
 }
 
+
+int main(int argc, char** argv)
+{
+    Opt opt(argc, argv);
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+
+    BRM::logInit ( BRM::SubSystemLogId_controllerNode );
+
+    /*
+      Need to shutdown TheadPool before fork(),
+      otherwise it would get stuck when trying to join fPruneThread.
+    */
+    joblist::JobStep::jobstepThreadPool.stop();
+
+    return ServiceControllerNode(opt).Run();
+}
