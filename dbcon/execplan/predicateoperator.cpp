@@ -216,6 +216,10 @@ void PredicateOperator::setOpType(Type& l, Type& r)
                 // should following the result type that MySQL gives
                 fOperationType = l;
                 fOperationType.scale = (l.scale > r.scale ? l.scale : r.scale);
+                fOperationType.precision = (l.precision > r.precision ?
+                    l.precision : r.precision);
+                fOperationType.colWidth = (l.colWidth > r.colWidth ?
+                    l.colWidth : r.colWidth);
                 break;
             }
 
@@ -229,7 +233,9 @@ void PredicateOperator::setOpType(Type& l, Type& r)
             case execplan::CalpontSystemCatalog::UBIGINT:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
                 fOperationType.scale = l.scale;
-                fOperationType.colWidth = 8;
+                fOperationType.precision = l.precision;
+                fOperationType.colWidth = (l.colWidth == datatypes::MAXDECIMALWIDTH) ?
+                    l.colWidth : 8;
                 break;
 
             default:
@@ -261,7 +267,9 @@ void PredicateOperator::setOpType(Type& l, Type& r)
             case execplan::CalpontSystemCatalog::UBIGINT:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
                 fOperationType.scale = r.scale;
-                fOperationType.colWidth = 8;
+                fOperationType.precision = r.precision;
+                fOperationType.colWidth = (r.colWidth == datatypes::MAXDECIMALWIDTH) ?
+                    r.colWidth : 8;
                 break;
 
             case execplan::CalpontSystemCatalog::LONGDOUBLE:

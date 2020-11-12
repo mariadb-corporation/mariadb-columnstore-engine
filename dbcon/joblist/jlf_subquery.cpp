@@ -90,19 +90,38 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const strin
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            data = row.getIntField(i);
-            oss << (data / IDB_pow[row.getScale(i)]);
-
-            if (row.getScale(i) > 0)
+            if (row.getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
             {
-                if (data > 0)
-                    oss << "." << (data % IDB_pow[row.getScale(i)]);
-                else if (data < 0)
-                    oss << "." << (-data % IDB_pow[row.getScale(i)]);
-            }
+                int128_t val128;
+                row.getInt128Field(i, val128);
 
-            *cc = new ConstantColumn(oss.str(),
-                                     IDB_Decimal(data, row.getScale(i), row.getPrecision(i)));
+                char buf[datatypes::Decimal::MAXLENGTH16BYTES];
+
+                dataconvert::DataConvert::decimalToString(
+                    &val128, row.getScale(i), buf,
+                    datatypes::Decimal::MAXLENGTH16BYTES, row.getColTypes()[i]);
+
+                oss << buf;
+
+                *cc = new ConstantColumn(oss.str(),
+                                         IDB_Decimal(0, row.getScale(i), row.getPrecision(i), val128));
+            }
+            else
+            {
+                data = row.getIntField(i);
+                oss << (data / IDB_pow[row.getScale(i)]);
+
+                if (row.getScale(i) > 0)
+                {
+                    if (data > 0)
+                        oss << "." << (data % IDB_pow[row.getScale(i)]);
+                    else if (data < 0)
+                        oss << "." << (-data % IDB_pow[row.getScale(i)]);
+                }
+
+                *cc = new ConstantColumn(oss.str(),
+                                         IDB_Decimal(data, row.getScale(i), row.getPrecision(i)));
+            }
             break;
 
         case CalpontSystemCatalog::UTINYINT:
