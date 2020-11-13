@@ -42,6 +42,7 @@ class CompressedInetStreamSocket : public InetStreamSocket
 {
 public:
     CompressedInetStreamSocket();
+    CompressedInetStreamSocket(const CompressedInetStreamSocket&) = default;
     virtual ~CompressedInetStreamSocket(){};
 
     using InetStreamSocket::operator=;
