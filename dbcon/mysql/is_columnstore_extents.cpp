@@ -112,12 +112,11 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 else
                 {
                     table->field[4]->set_notnull();
-
-                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-                    dataconvert::DataConvert::decimalToString(
-                        &iter->partition.cprange.bigLoVal,
-                        0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-                    table->field[4]->store(buf, strlen(buf), table->field[4]->charset());
+                    std::string decAsAStr = datatypes::TSInt128(iter->partition.cprange.bigLoVal)
+                                                                .toString();
+                    table->field[4]->store(decAsAStr.c_str(),
+                                           decAsAStr.length(),
+                                           table->field[4]->charset());
                 }
 
                 if (iter->partition.cprange.bigHiVal <= (utils::minInt128 + 1))
@@ -127,12 +126,11 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 else
                 {
                     table->field[5]->set_notnull();
-
-                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-                    dataconvert::DataConvert::decimalToString(
-                        &iter->partition.cprange.bigHiVal,
-                        0, buf, (uint8_t) sizeof(buf), datatypes::SystemCatalog::DECIMAL);
-                    table->field[5]->store(buf, strlen(buf), table->field[5]->charset());
+                    std::string decAsAStr = datatypes::TSInt128(iter->partition.cprange.bigHiVal)
+                                                                .toString();
+                    table->field[5]->store(decAsAStr.c_str(),
+                                           decAsAStr.length(),
+                                           table->field[5]->charset());
                 }
             }
 

@@ -785,10 +785,6 @@ string longDoubleToString(long double ld)
     return buf;
 }
 
-//@bug6146, remove duplicate function with incorrect impl. Use the DataConvert::decimalToString()
-//string decimalToString( execplan::IDB_Decimal x, int p )
-
-
 uint64_t dateAdd( uint64_t time, const std::string& expr, execplan::IntervalColumn::interval_type unit, bool dateType, execplan::OpType funcType );
 const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&);
 const std::string timediff(int64_t, int64_t, bool isDateTime = true);

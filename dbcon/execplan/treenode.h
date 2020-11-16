@@ -632,10 +632,10 @@ inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
         case CalpontSystemCatalog::UDECIMAL:
         {
             if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
-                dataconvert::DataConvert::decimalToString(&fResult.decimalVal.s128Value, fResult.decimalVal.scale, tmp, datatypes::Decimal::MAXLENGTH16BYTES, fResultType.colDataType);
+                // Explicit path for TSInt128 decimals with low precision
+                fResult.strVal = fResult.decimalVal.toString(true);
             else
-                dataconvert::DataConvert::decimalToString(fResult.decimalVal.value, fResult.decimalVal.scale, tmp, 22, fResultType.colDataType);
-            fResult.strVal = std::string(tmp);
+                fResult.strVal = fResult.decimalVal.toString();
             break;
         }
 

@@ -460,13 +460,11 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
                 if (LIKELY(row.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH))
                 {
-                    char buf[datatypes::Decimal::MAXLENGTH16BYTES];
-
-                    int128_t* dec = row.getBinaryField<int128_t>(*i);
-                    dataconvert::DataConvert::decimalToString(dec,
-                        static_cast<uint32_t>(scale), buf,
-                        (uint8_t) sizeof(buf), types[*i]);
-                    oss << fixed << buf;
+                    datatypes::VDecimal dec(0,
+                                            scale,
+                                            row.getPrecision(*i),
+                                            row.getBinaryField<int128_t>(*i));
+                    oss << fixed << dec;
                 }
                 else
                 {
