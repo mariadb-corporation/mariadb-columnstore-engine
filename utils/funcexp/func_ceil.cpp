@@ -392,7 +392,7 @@ double Func_ceil::getDoubleVal(Row& row,
 
         if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
         {
-            ret = datatypes::Decimal::getDoubleFromWideDecimal(tmp.s128Value);
+            ret = static_cast<double>(tmp.toTSInt128());
         }
         else
         {
@@ -448,7 +448,7 @@ long double Func_ceil::getLongDoubleVal(Row& row,
 
         if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
         {
-            ret = datatypes::Decimal::getLongDoubleFromWideDecimal(tmp.s128Value);
+            ret = static_cast<long double>(tmp.toTSInt128());
         }
         else
         {

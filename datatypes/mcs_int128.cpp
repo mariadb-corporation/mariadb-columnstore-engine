@@ -24,18 +24,6 @@
 
 namespace datatypes
 {
-  //     The method converts a wide decimal s128Value to a double.
-  inline double TSInt128::getDoubleFromWideDecimal()
-  {
-      return getDoubleFromFloat128(static_cast<__float128>(s128Value));
-  }
-
-  //     The method converts a wide decimal s128Value to a long double.
-  inline long double TSInt128::getLongDoubleFromWideDecimal()
-  {
-      return getLongDoubleFromFloat128(static_cast<__float128>(s128Value));
-  }
-
   uint8_t TSInt128::printPodParts(char* buf,
                                   const int128_t& high,
                                   const int128_t& mid,

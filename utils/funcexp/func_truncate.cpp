@@ -233,7 +233,7 @@ double Func_truncate::getDoubleVal(Row& row,
     if (!op_ct.isWideDecimalType())
         d = x.value;
     else
-        d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
+        d = static_cast<double>(x.toTSInt128());
 
     if (x.scale > 0)
     {
@@ -293,7 +293,7 @@ long double Func_truncate::getLongDoubleVal(Row& row,
     if (!op_ct.isWideDecimalType())
         d = x.value;
     else
-        d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
+        d = static_cast<double>(x.toTSInt128());
 
     if (x.scale > 0)
     {
